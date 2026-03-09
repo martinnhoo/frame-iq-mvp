@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Video, FileText, Globe, Brain, Sparkles, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import VideoDropZone from "@/components/VideoDropZone";
 
 const Index = () => {
   const features = [
@@ -220,6 +221,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Video Drop Zone */}
+      <VideoDropZone />
 
       {/* Features Section */}
       <section id="features" className="py-24 px-6">
