@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.upgrade-plan]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false

@@ -92,7 +92,29 @@ export default function DashboardLayout() {
           .eq("id", session.user.id)
           .single();
 
-        if (profileData) setProfile(profileData);
+        if (profileData) {
+          setProfile(profileData);
+
+          // Send welcome email on first login (onboarding not completed)
+          if (!profileData.onboarding_completed) {
+            const browserLang = navigator.language || 'en';
+            const firstName = profileData.name?.split(' ')[0] || session.user.user_metadata?.full_name?.split(' ')[0] || '';
+            
+            supabase.functions.invoke('send-welcome-email', {
+              body: {
+                user_id: session.user.id,
+                language: browserLang,
+                first_name: firstName,
+              }
+            }).then(() => {
+              // Mark onboarding as completed
+              supabase.from("profiles")
+                .update({ onboarding_completed: true })
+                .eq("id", session.user.id)
+                .then(() => {});
+            }).catch(err => console.error('Welcome email error:', err));
+          }
+        }
         await fetchUsage(session.user.id);
         setLoading(false);
       }
