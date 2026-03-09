@@ -49,9 +49,15 @@ interface DashboardSidebarProps {
     avatar_url: string | null;
     plan: string;
   } | null;
+  usageDetails?: {
+    analyses: { used: number; limit: number; remaining: number };
+    boards: { used: number; limit: number; remaining: number };
+    videos: { used: number; limit: number; remaining: number };
+    translations: { used: number; limit: number; remaining: number };
+  } | null;
 }
 
-export function DashboardSidebar({ profile }: DashboardSidebarProps) {
+export function DashboardSidebar({ profile, usageDetails }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
