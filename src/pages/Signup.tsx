@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,43 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
+const DISPOSABLE_DOMAINS = [
+  "mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com",
+  "throwaway.email", "yopmail.com", "trashmail.com", "sharklasers.com",
+  "guerrillamailblock.com", "grr.la", "dispostable.com", "maildrop.cc",
+];
+
+const MAX_ATTEMPTS = 3;
+const COOLDOWN_SECONDS = 60;
+
 const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
+
+  // Countdown timer
+  useEffect(() => {
+    if (!cooldownEnd) { setCountdown(0); return; }
+    const tick = () => {
+      const remaining = Math.ceil((cooldownEnd - Date.now()) / 1000);
+      if (remaining <= 0) { setCooldownEnd(null); setCountdown(0); setFailedAttempts(0); }
+      else setCountdown(remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [cooldownEnd]);
+
+  const isDisposableEmail = useCallback((email: string) => {
+    const domain = email.split("@")[1]?.toLowerCase();
+    return domain ? DISPOSABLE_DOMAINS.includes(domain) : false;
+  }, []);
 
   const passwordStrength = () => {
     if (!password) return { score: 0, label: "", color: "" };
@@ -24,39 +54,48 @@ const Signup = () => {
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
-
     const levels = [
       { label: "Weak", color: "bg-destructive" },
       { label: "Fair", color: "bg-yellow-500" },
       { label: "Good", color: "bg-blue-500" },
       { label: "Strong", color: "bg-green-500" },
     ];
-
     return { score, ...levels[Math.min(score, levels.length) - 1] };
   };
 
   const strength = passwordStrength();
+  const isCoolingDown = countdown > 0;
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isCoolingDown) return;
 
     if (password.length < 8) {
       toast.error("Password must be at least 8 characters");
       return;
     }
 
+    if (isDisposableEmail(email)) {
+      toast.error("Please use a valid business email address.");
+      setFailedAttempts((prev) => {
+        const next = prev + 1;
+        if (next >= MAX_ATTEMPTS) setCooldownEnd(Date.now() + COOLDOWN_SECONDS * 1000);
+        return next;
+      });
+      return;
+    }
+
     setLoading(true);
 
-    // Check rate limit before signup
+    // Check server-side rate limit
     try {
       const ipRes = await fetch("https://api.ipify.org?format=json");
       const { ip } = await ipRes.json();
-      
       const { data: rateData, error: rateError } = await supabase.functions.invoke(
         "check-signup-rate",
         { body: { ip_address: ip } }
       );
-
       if (rateError || (rateData && !rateData.allowed)) {
         toast.error(rateData?.error || "Too many signup attempts. Please try again later.");
         setLoading(false);
@@ -76,7 +115,17 @@ const Signup = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      // Handle duplicate email
+      if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already been registered")) {
+        toast.error("An account with this email already exists. Sign in instead.");
+      } else {
+        toast.error(error.message);
+      }
+      setFailedAttempts((prev) => {
+        const next = prev + 1;
+        if (next >= MAX_ATTEMPTS) setCooldownEnd(Date.now() + COOLDOWN_SECONDS * 1000);
+        return next;
+      });
     } else {
       navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
     }
@@ -88,7 +137,6 @@ const Signup = () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/dashboard",
     });
-
     if (error) {
       toast.error(error.message);
       setLoading(false);
@@ -98,7 +146,6 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-block text-3xl font-bold">
             <span className="text-foreground font-medium">Frame</span>
@@ -188,7 +235,6 @@ const Signup = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {/* Strength indicator */}
                 {password && (
                   <div className="space-y-1.5">
                     <div className="flex gap-1">
@@ -211,10 +257,18 @@ const Signup = () => {
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"
-                disabled={loading || password.length < 8}
+                disabled={loading || password.length < 8 || isCoolingDown}
               >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create account
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : isCoolingDown ? (
+                  `Try again in ${countdown}s...`
+                ) : (
+                  "Create account"
+                )}
               </Button>
             </form>
 
