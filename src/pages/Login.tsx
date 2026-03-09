@@ -66,12 +66,17 @@ const Login = () => {
               {t("auth_google")}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              {t("auth_no_account")}{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                {t("auth_create")}
+            <div className="text-center space-y-3">
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Forgot your password?
               </Link>
-            </p>
+              <p className="text-sm text-muted-foreground">
+                {t("auth_no_account")}{" "}
+                <Link to="/signup" className="text-primary hover:underline font-medium">
+                  {t("auth_create")}
+                </Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
