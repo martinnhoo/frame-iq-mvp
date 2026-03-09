@@ -305,8 +305,8 @@ const Index = () => {
                   <ul className="space-y-3">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        <span className="text-muted-foreground">{feature}</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
+                        <span className="text-secondary">{feature}</span>
                       </li>
                     ))}
                   </ul>
