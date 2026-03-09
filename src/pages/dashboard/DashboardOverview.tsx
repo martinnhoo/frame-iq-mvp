@@ -69,6 +69,10 @@ const DashboardOverview = () => {
     };
     run();
   }, [user.id, dateFilter]);
+
+  useEffect(() => {
+    const run = async () => {
+      const [{ data: analyses }, { data: boards }] = await Promise.all([
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
         supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
       ]);
