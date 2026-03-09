@@ -54,7 +54,7 @@ const VideoDropZone = () => {
   };
 
   return (
-    <section className="py-20 px-6" style={{ background: '#000000' }}>
+    <section id="drop-video" className="py-20 px-6" style={{ background: '#000000' }}>
       <div className="container mx-auto max-w-[680px]">
         <div className="text-center mb-8">
           <div className="text-[12px] tracking-[2px] uppercase mb-4" style={{ color: '#555' }}>

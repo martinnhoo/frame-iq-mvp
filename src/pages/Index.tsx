@@ -80,7 +80,7 @@ const Index = () => {
     }
   ];
 
-  const navLinks = ["Features", "Pricing", "Docs"];
+  const navLinks = ["Features", "Pricing", "Drop Video"];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
