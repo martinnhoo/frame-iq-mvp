@@ -79,7 +79,7 @@ const BoardDetail = () => {
         <Card className="border-border bg-card"><CardContent className="py-12 text-center text-muted-foreground">This board has no generated content yet.</CardContent></Card>
       ) : (
         <div className="space-y-4">
-          <Section id="overview" icon={Target} title="Campaign Overview" badge={<span className="text-lg">{meta.market_flag}</span>}>
+          <Section id="overview" icon={Target} title="Campaign Overview" badge={<span className="text-lg">{String(meta.market_flag ?? "")}</span>}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div><span className="text-muted-foreground block">Market</span><span className="font-medium">{String(meta.market_flag)} {String(meta.market)}</span></div>
               <div><span className="text-muted-foreground block">Platform</span><span className="font-medium capitalize">{String(meta.platform)}</span></div>
