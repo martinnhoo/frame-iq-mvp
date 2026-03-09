@@ -139,7 +139,7 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center px-6 overflow-hidden" style={{ paddingTop: '140px', paddingBottom: '120px' }}>
+      <section className="relative flex items-center justify-center px-6 overflow-hidden" style={{ paddingTop: '140px', paddingBottom: '60px' }}>
         {/* Animated background glow */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
