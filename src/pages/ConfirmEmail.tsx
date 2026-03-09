@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const RESEND_COOLDOWN = 60;
 
@@ -14,6 +16,7 @@ const ConfirmEmail = () => {
   const [resending, setResending] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -32,7 +35,6 @@ const ConfirmEmail = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Resend cooldown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const id = setInterval(() => {
@@ -65,9 +67,9 @@ const ConfirmEmail = () => {
             <div className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">Email confirmed!</h2>
+            <h2 className="text-xl font-bold text-foreground">{t("confirm_confirmed_title")}</h2>
             <p className="text-muted-foreground text-sm">
-              Your account is verified. Redirecting to dashboard...
+              {t("confirm_confirmed_text")}
             </p>
           </CardContent>
         </Card>
@@ -77,8 +79,10 @@ const ConfirmEmail = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md space-y-6">
-        {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-block text-3xl font-bold">
             <span className="text-foreground font-medium">Frame</span>
@@ -93,23 +97,22 @@ const ConfirmEmail = () => {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-foreground">Check your inbox</h2>
+              <h2 className="text-xl font-bold text-foreground">{t("confirm_title")}</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                We sent a verification link to{" "}
+                {t("confirm_text")}{" "}
                 {email ? (
                   <span className="font-semibold text-foreground">{email}</span>
                 ) : (
                   "your email"
                 )}
-                .<br />
-                Click the link to activate your account.
+                .
               </p>
             </div>
 
             <div className="w-full space-y-4">
               <div className="rounded-lg bg-muted/50 p-4 text-left space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Didn't receive it? Check your spam folder or{" "}
+                  {t("confirm_didnt_receive")}{" "}
                   {email ? (
                     <button
                       onClick={handleResend}
@@ -119,8 +122,8 @@ const ConfirmEmail = () => {
                       {resending
                         ? "Sending..."
                         : resendCooldown > 0
-                        ? `resend email (${resendCooldown}s)`
-                        : "resend email"}
+                        ? `${t("confirm_resend")} (${resendCooldown}s)`
+                        : t("confirm_resend")}
                     </button>
                   ) : (
                     <span className="text-muted-foreground">try signing up again</span>
@@ -137,8 +140,8 @@ const ConfirmEmail = () => {
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${resending ? "animate-spin" : ""}`} />
                   {resendCooldown > 0
-                    ? `Resend available in ${resendCooldown}s`
-                    : "Resend confirmation email"}
+                    ? `${t("confirm_resend")} (${resendCooldown}s)`
+                    : t("confirm_resend")}
                 </Button>
               )}
             </div>
@@ -146,7 +149,7 @@ const ConfirmEmail = () => {
             <Link to="/login">
               <Button variant="ghost" className="text-muted-foreground">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to login
+                {t("confirm_back")}
               </Button>
             </Link>
           </CardContent>

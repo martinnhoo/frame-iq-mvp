@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -35,41 +36,43 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/confirm-email" element={<ConfirmEmail />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/book-demo" element={<BookDemo />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/features/:slug" element={<FeatureDetail />} />
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/book-demo" element={<BookDemo />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/features/:slug" element={<FeatureDetail />} />
 
-            {/* Dashboard with sidebar layout */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="analyses" element={<AnalysesList />} />
-              <Route path="analyses/new" element={<NewAnalysis />} />
-              <Route path="boards" element={<BoardsList />} />
-              <Route path="boards/new" element={<NewBoard />} />
-              <Route path="videos" element={<VideosList />} />
-              <Route path="translate" element={<TranslatePage />} />
-              <Route path="intelligence" element={<IntelligencePage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+              {/* Dashboard with sidebar layout */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<DashboardOverview />} />
+                <Route path="analyses" element={<AnalysesList />} />
+                <Route path="analyses/new" element={<NewAnalysis />} />
+                <Route path="boards" element={<BoardsList />} />
+                <Route path="boards/new" element={<NewBoard />} />
+                <Route path="videos" element={<VideosList />} />
+                <Route path="translate" element={<TranslatePage />} />
+                <Route path="intelligence" element={<IntelligencePage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );
