@@ -10,6 +10,7 @@ import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import LegalModal from "@/components/LegalModal";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AuthPromptModal from "@/components/AuthPromptModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Index = () => {
