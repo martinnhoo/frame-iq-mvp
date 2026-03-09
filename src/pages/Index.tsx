@@ -70,7 +70,7 @@ const Index = () => {
 
   const navLinks = [
     { label: t("nav_features"), href: "#features" },
-    { label: t("nav_pricing"), href: "#pricing" },
+    { label: t("nav_pricing"), href: "/pricing", isRoute: true },
     { label: t("nav_blog"), href: "/blog", isRoute: true },
     { label: t("nav_faq"), href: "/faq", isRoute: true },
     { label: t("nav_contact"), href: "/contact", isRoute: true },
