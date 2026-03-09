@@ -760,7 +760,7 @@ const Index = () => {
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-secondary">
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
-                <li><Link to="/community" className="hover:text-foreground transition-colors">Community</Link></li>
+                <li><Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               </ul>
             </div>
@@ -768,8 +768,8 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
+                <li><button onClick={() => setLegalModal("privacy")} className="hover:text-foreground transition-colors">Privacy Policy</button></li>
+                <li><button onClick={() => setLegalModal("terms")} className="hover:text-foreground transition-colors">Terms of Service</button></li>
               </ul>
             </div>
           </div>
