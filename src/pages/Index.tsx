@@ -681,8 +681,8 @@ const Index = () => {
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-1">
               <div className="text-2xl font-bold mb-4">
-                <span className="text-foreground">Frame</span>
-                <span className="gradient-text">IQ</span>
+                <span className="text-foreground font-medium">Frame</span>
+                <span className="gradient-text font-black">IQ</span>
               </div>
               <p className="text-sm text-secondary leading-relaxed">
                 AI-powered creative intelligence for performance marketing teams.
