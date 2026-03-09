@@ -287,13 +287,13 @@ const Index = () => {
               >
                 {plan.badge && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
+                    <Badge className="bg-foreground text-background">
                       {plan.badge}
                     </Badge>
                   </div>
                 )}
                 <CardHeader className="text-center pb-8">
-                  <CardTitle className="text-lg text-muted-foreground font-normal mb-2">
+                  <CardTitle className="text-lg text-secondary font-normal mb-2">
                     {plan.name}
                   </CardTitle>
                   <div className="flex items-baseline justify-center gap-1">
