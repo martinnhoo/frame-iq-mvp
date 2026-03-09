@@ -173,7 +173,7 @@ const Index = () => {
                       {link.label}
                     </a>
                   )
-                ))
+                ))}
                 <Button 
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   onClick={() => navigate("/signup")}
