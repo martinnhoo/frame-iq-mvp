@@ -340,14 +340,14 @@ const Index = () => {
                 <a
                   key={link}
                   href={`#${link.toLowerCase()}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-secondary hover:text-foreground transition-colors"
                 >
                   {link}
                 </a>
               ))}
             </div>
             
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-secondary">
               © 2024 FrameIQ. All rights reserved.
             </div>
           </div>
