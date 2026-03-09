@@ -270,7 +270,7 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold">
               Simple, transparent pricing.
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-secondary text-lg">
               No hidden credits. No surprise charges. Cancel anytime.
             </p>
           </div>
