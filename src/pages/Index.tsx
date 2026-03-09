@@ -198,21 +198,21 @@ const Index = () => {
                     </Badge>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-background/50 rounded-lg p-4 border border-border">
+                    <div className="bg-background rounded-lg p-4 border border-border">
                       <div className="text-2xl font-bold text-foreground">247</div>
-                      <div className="text-xs text-muted-foreground">Videos analyzed</div>
+                      <div className="text-xs text-secondary">Videos analyzed</div>
                     </div>
-                    <div className="bg-background/50 rounded-lg p-4 border border-border">
+                    <div className="bg-background rounded-lg p-4 border border-border">
                       <div className="text-2xl font-bold text-foreground">89%</div>
-                      <div className="text-xs text-muted-foreground">Accuracy rate</div>
+                      <div className="text-xs text-secondary">Accuracy rate</div>
                     </div>
-                    <div className="bg-background/50 rounded-lg p-4 border border-border">
+                    <div className="bg-background rounded-lg p-4 border border-border">
                       <div className="text-2xl font-bold text-foreground">&lt; 60s</div>
-                      <div className="text-xs text-muted-foreground">Avg. analysis</div>
+                      <div className="text-xs text-secondary">Avg. analysis</div>
                     </div>
                   </div>
-                  <div className="bg-background/30 rounded-lg p-4 border border-border">
-                    <div className="text-xs text-muted-foreground mb-2">Detected Format</div>
+                  <div className="bg-background rounded-lg p-4 border border-border">
+                    <div className="text-xs text-secondary mb-2">Detected Format</div>
                     <div className="text-sm text-foreground">Problem-Agitate-Solution / Testimonial Hook</div>
                   </div>
                 </div>
