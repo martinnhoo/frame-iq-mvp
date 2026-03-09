@@ -67,11 +67,11 @@ All colors MUST be HSL.
 
 @keyframes glow-pulse {
   0%, 100% {
-    opacity: 0.08;
+    opacity: 0.03;
     transform: scale(1);
   }
   50% {
-    opacity: 0.12;
+    opacity: 0.06;
     transform: scale(1.05);
   }
 }

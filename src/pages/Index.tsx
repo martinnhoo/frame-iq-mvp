@@ -123,7 +123,7 @@ const Index = () => {
                   <a
                     key={link}
                     href={`#${link.toLowerCase()}`}
-                    className="text-lg text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-lg text-secondary hover:text-foreground transition-colors"
                   >
                     {link}
                   </a>
