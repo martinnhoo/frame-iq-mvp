@@ -97,7 +97,7 @@ const Index = () => {
             {navLinks.map((link) => (
               <a
                 key={link}
-                href={`#${link.toLowerCase()}`}
+                href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
                 className="text-sm text-secondary hover:text-foreground transition-colors"
               >
                 {link}
