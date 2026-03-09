@@ -714,9 +714,6 @@ const Index = () => {
       <VideoDropZone />
 
 
-            <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              Insights para times criativos
-            </h2>
             <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
               Conteúdo exclusivo sobre estratégia criativa, performance marketing e IA para equipes de growth.
             </p>
