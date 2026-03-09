@@ -240,16 +240,16 @@ const Index = () => {
               return (
                 <Card 
                   key={index}
-                  className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10"
+                  className="bg-card border-border hover:border-foreground/40 transition-all duration-300 hover:-translate-y-1"
                 >
                   <CardHeader>
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                      <Icon className="w-6 h-6 text-primary" />
+                    <div className="w-12 h-12 rounded-lg bg-foreground/5 flex items-center justify-center mb-4 border border-border">
+                      <Icon className="w-6 h-6 text-foreground" />
                     </div>
                     <CardTitle className="text-xl">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-muted-foreground leading-relaxed">
+                    <CardDescription className="text-secondary leading-relaxed">
                       {feature.description}
                     </CardDescription>
                   </CardContent>
