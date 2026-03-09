@@ -298,7 +298,7 @@ const Index = () => {
                   </CardTitle>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-5xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
+                    <span className="text-secondary">{plan.period}</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
