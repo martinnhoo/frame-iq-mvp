@@ -13,6 +13,7 @@ import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
 import BookDemo from "./pages/BookDemo";
 import Community from "./pages/Community";
+import FeatureDetail from "./pages/FeatureDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
