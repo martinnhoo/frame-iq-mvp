@@ -603,7 +603,8 @@ const Index = () => {
                   viewport={{ once: true }}
                 >
                   <Card 
-                    className="bg-card/50 border-border/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 h-full backdrop-blur-sm"
+                    className="bg-card/50 border-border/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 h-full backdrop-blur-sm cursor-pointer"
+                    onClick={() => navigate(`/features/${feature.slug}`)}
                   >
                     <CardHeader>
                       <div 
@@ -618,6 +619,9 @@ const Index = () => {
                       <CardDescription className="text-secondary leading-relaxed">
                         {feature.description}
                       </CardDescription>
+                      <span className="text-xs text-purple-400 mt-3 inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Learn more <ArrowRight className="w-3 h-3" />
+                      </span>
                     </CardContent>
                   </Card>
                 </motion.div>
