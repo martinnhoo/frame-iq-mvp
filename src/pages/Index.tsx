@@ -313,8 +313,8 @@ const Index = () => {
                   <Button 
                     className={`w-full ${
                       plan.highlighted 
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30' 
-                        : 'bg-muted text-foreground hover:bg-muted/80'
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10' 
+                        : 'bg-card text-foreground hover:bg-muted border border-border'
                     }`}
                   >
                     {plan.cta}
