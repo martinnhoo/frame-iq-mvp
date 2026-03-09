@@ -795,6 +795,9 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
+      <CookieConsent />
     </div>
   );
 };

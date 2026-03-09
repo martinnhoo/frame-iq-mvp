@@ -144,6 +144,13 @@ const VideoAnalysisDemo = () => (
       </p>
     </div>
 
+    <div className="p-4 rounded-xl mb-4" style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}>
+      <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '10px' }}>Brief</div>
+      <p style={{ color: '#aaa', fontSize: '13px', lineHeight: '1.7', fontFamily: '"DM Mono", monospace', fontStyle: 'italic' }}>
+        Studio product demo for Nike running campaign. High-production close-ups with performance data overlay. Aspirational VO with technical credibility. CTA at 00:18 with urgency driver. Vertical 9:16 optimized for Reels/Stories.
+      </p>
+    </div>
+
     <div className="flex flex-wrap gap-2">
       {['🌐 EN', '⏱ 0:30', '📍 Global', '👟 Sports', '🏃 Athletes 18-35'].map(b => (
         <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
