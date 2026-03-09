@@ -244,7 +244,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
-            className="relative mt-20 max-w-4xl mx-auto"
+            className="relative mt-12 sm:mt-20 max-w-4xl mx-auto hidden sm:block"
           >
             <div className="relative text-center mb-4">
               <span style={{ color: '#555', fontSize: '11px', letterSpacing: '3px', fontWeight: 600 }}>
