@@ -713,12 +713,68 @@ const Index = () => {
       {/* Video Drop Zone */}
       <VideoDropZone />
 
-
+      {/* Footer */}
+      <footer className="border-t border-border/50 bg-card/50">
+        <div className="container mx-auto px-6 py-16">
+          <div className="grid md:grid-cols-4 gap-12">
+            <div className="md:col-span-1">
+              <div className="text-2xl font-bold mb-4">
+                <span className="text-foreground font-medium">Frame</span>
+                <span className="gradient-text font-black">IQ</span>
+              </div>
+              <p className="text-sm text-secondary leading-relaxed">
+                AI-powered creative intelligence for performance marketing teams.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Product</h4>
+              <ul className="space-y-2 text-sm text-secondary">
+                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-secondary">
+                <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm text-secondary">
+                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
+              </ul>
+            </div>
+          </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                category: "Estratégia Criativa",
+          <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-secondary">
+              © 2026 FrameIQ. All rights reserved.
+            </div>
+            <div className="flex items-center gap-4 text-sm text-secondary">
+              <span className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                SOC 2 Compliant
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                99.9% Uptime
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Index;
                 title: "Como analisar anúncios de concorrentes sem perder horas",
                 description: "Aprenda a metodologia que Creative Strategists usam para extrair insights de vídeos em minutos.",
                 readTime: "5 min",
