@@ -8,6 +8,7 @@ import {
   Globe,
   Brain,
   LogOut,
+  Layers,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -36,6 +37,7 @@ const mainItems = [
 ];
 
 const toolItems = [
+  { title: "Templates", url: "/dashboard/templates", icon: Layers },
   { title: "New Analysis", url: "/dashboard/analyses/new", icon: Plus },
   { title: "Create Board", url: "/dashboard/boards/new", icon: Plus },
   { title: "Translate", url: "/dashboard/translate", icon: Globe },

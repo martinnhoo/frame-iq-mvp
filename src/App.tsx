@@ -33,6 +33,7 @@ import VideosList from "./pages/dashboard/VideosList";
 import TranslatePage from "./pages/dashboard/TranslatePage";
 import IntelligencePage from "./pages/dashboard/IntelligencePage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
+import TemplatesPage from "./pages/dashboard/TemplatesPage";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="translate" element={<TranslatePage />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="templates" element={<TemplatesPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

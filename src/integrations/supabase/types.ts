@@ -209,6 +209,30 @@ export type Database = {
         }
         Relationships: []
       }
+      template_usage: {
+        Row: {
+          created_at: string
+          id: string
+          template_id: string
+          template_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          template_id: string
+          template_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          template_id?: string
+          template_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       translations: {
         Row: {
           character_count: number | null
