@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Language, languageNames, languageFlags } from "@/i18n/translations";
 
-const languages: Language[] = ["en", "es", "fr", "de", "ar", "zh"];
+const languages: Language[] = ["en", "pt", "es", "fr", "de", "ar", "zh"];
 
 const LanguageSwitcher = () => {
   const { language, setLanguage } = useLanguage();
