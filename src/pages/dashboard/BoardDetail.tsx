@@ -118,7 +118,7 @@ const BoardDetail = () => {
               {scenes.map((scene, i) => (
                 <div key={i} className="p-3 bg-muted rounded-lg text-sm space-y-2">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-primary/20 text-primary border-0">Scene {scene.scene_number}</Badge>
+                    <Badge className="bg-primary/20 text-primary border-0">Scene {String(scene.scene_number ?? i + 1)}</Badge>
                     <span className="text-muted-foreground text-xs">{String(scene.timestamp)}</span>
                   </div>
                   <p className="text-foreground">{String(scene.visual_description)}</p>
