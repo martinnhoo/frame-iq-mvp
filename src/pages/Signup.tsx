@@ -47,6 +47,25 @@ const Signup = () => {
 
     setLoading(true);
 
+    // Check rate limit before signup
+    try {
+      const ipRes = await fetch("https://api.ipify.org?format=json");
+      const { ip } = await ipRes.json();
+      
+      const { data: rateData, error: rateError } = await supabase.functions.invoke(
+        "check-signup-rate",
+        { body: { ip_address: ip } }
+      );
+
+      if (rateError || (rateData && !rateData.allowed)) {
+        toast.error(rateData?.error || "Too many signup attempts. Please try again later.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // If rate limit check fails, allow signup to proceed
+    }
+
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
