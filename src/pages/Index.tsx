@@ -185,42 +185,123 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Dashboard Mockup */}
+          {/* Example Output */}
           <div className="relative mt-16 max-w-4xl mx-auto">
             <div 
               className="absolute inset-0 bg-white/5 blur-3xl rounded-full"
               style={{ transform: 'translateY(20%)' }}
             />
-            <Card className="relative border-border shadow-2xl overflow-hidden bg-card">
-              <div className="bg-card p-8 md:p-12 border border-border">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-secondary">Analysis Complete</div>
-                    <Badge className="bg-foreground/10 text-foreground border-foreground/20">
-                      Hook detected: 2.4s
-                    </Badge>
+            
+            <div className="relative text-center mb-4">
+              <span style={{ color: '#444', fontSize: '12px', letterSpacing: '2px', fontWeight: 500 }}>
+                EXAMPLE OUTPUT
+              </span>
+            </div>
+
+            <div 
+              className="relative mx-auto text-left"
+              style={{ 
+                background: '#0a0a0a', 
+                border: '1px solid #222', 
+                borderRadius: '16px', 
+                padding: '24px',
+                maxWidth: '680px'
+              }}
+            >
+              {/* Top Row */}
+              <div className="flex items-center justify-between mb-5">
+                <span style={{ color: '#666', fontSize: '12px', fontFamily: '"DM Mono", monospace' }}>
+                  competitor_ad_india_v3.mp4
+                </span>
+                <span 
+                  style={{ 
+                    background: '#0a0a0a', 
+                    border: '1px solid #222', 
+                    borderRadius: '9999px',
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    color: '#aaa'
+                  }}
+                >
+                  Analysis Complete ✓
+                </span>
+              </div>
+
+              {/* Frames Row */}
+              <div className="mb-6">
+                <div className="flex gap-2 mb-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div 
+                      key={i}
+                      style={{ 
+                        width: '80px', 
+                        height: '45px', 
+                        background: '#1a1a1a', 
+                        border: '1px solid #333', 
+                        borderRadius: '6px' 
+                      }}
+                    />
+                  ))}
+                </div>
+                <span style={{ color: '#444', fontSize: '12px' }}>8 frames extracted</span>
+              </div>
+
+              {/* Three Columns */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {/* Column 1 — Model */}
+                <div>
+                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                    CREATIVE MODEL
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-background rounded-lg p-4 border border-border">
-                      <div className="text-2xl font-bold text-foreground">247</div>
-                      <div className="text-xs text-secondary">Videos analyzed</div>
-                    </div>
-                    <div className="bg-background rounded-lg p-4 border border-border">
-                      <div className="text-2xl font-bold text-foreground">89%</div>
-                      <div className="text-xs text-secondary">Accuracy rate</div>
-                    </div>
-                    <div className="bg-background rounded-lg p-4 border border-border">
-                      <div className="text-2xl font-bold text-foreground">&lt; 60s</div>
-                      <div className="text-xs text-secondary">Avg. analysis</div>
-                    </div>
+                  <div style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
+                    UGC
                   </div>
-                  <div className="bg-background rounded-lg p-4 border border-border">
-                    <div className="text-xs text-secondary mb-2">Detected Format</div>
-                    <div className="text-sm text-foreground">Problem-Agitate-Solution / Testimonial Hook</div>
+                </div>
+
+                {/* Column 2 — Hook */}
+                <div>
+                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                    HOOK (0–3s)
+                  </div>
+                  <div style={{ color: '#aaa', fontSize: '13px', fontFamily: '"DM Mono", monospace', lineHeight: '1.5' }}>
+                    "Guy looks directly at camera: 'I was losing ₹500/day until I found this'"
+                  </div>
+                </div>
+
+                {/* Column 3 — Score */}
+                <div>
+                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                    ENGAGEMENT
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span style={{ color: '#fff', fontSize: '32px', fontWeight: 700 }}>8.4</span>
+                    <span style={{ color: '#666', fontSize: '14px' }}>/ 10</span>
                   </div>
                 </div>
               </div>
-            </Card>
+
+              {/* Bottom Row — Brief */}
+              <div>
+                <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                  BRIEF
+                </div>
+                <p style={{ color: '#888', fontSize: '13px', fontFamily: '"DM Mono", monospace', fontStyle: 'italic', lineHeight: '1.6', marginBottom: '10px' }}>
+                  UGC-style ad targeting Indian market. Strong direct-to-camera hook with loss aversion framing. Promo code revealed at 18s.
+                </p>
+                <span 
+                  style={{ 
+                    background: '#1a1a1a', 
+                    border: '1px solid #333', 
+                    borderRadius: '9999px',
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    color: '#aaa'
+                  }}
+                >
+                  🌐 Hindi → EN
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
