@@ -1,4 +1,4 @@
-export type Language = "en" | "es" | "fr" | "de" | "ar" | "zh";
+export type Language = "en" | "es" | "fr" | "de" | "ar" | "zh" | "pt";
 
 export const languageNames: Record<Language, string> = {
   en: "English",
@@ -7,6 +7,7 @@ export const languageNames: Record<Language, string> = {
   de: "Deutsch",
   ar: "العربية",
   zh: "中文",
+  pt: "Português",
 };
 
 export const languageFlags: Record<Language, string> = {
@@ -16,6 +17,7 @@ export const languageFlags: Record<Language, string> = {
   de: "🇩🇪",
   ar: "🇸🇦",
   zh: "🇨🇳",
+  pt: "🇧🇷",
 };
 
 type TranslationKeys = {
@@ -756,5 +758,109 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_confirmed_text: "您的账户已验证。正在跳转到控制面板...",
 
     powered_by: "技术支持",
+  },
+
+  pt: {
+    nav_features: "Funcionalidades",
+    nav_pricing: "Preços",
+    nav_blog: "Blog",
+    nav_faq: "FAQ",
+    nav_contact: "Contato",
+    nav_signin: "Entrar",
+    nav_get_started: "Comece grátis",
+
+    hero_badge: "Usado por mais de 147 equipes de performance marketing",
+    hero_title_1: "Pare de adivinhar.",
+    hero_title_2: "Comece a converter.",
+    hero_subtitle: "O FrameIQ analisa anúncios dos concorrentes, extrai o que converte e gera briefings prontos para produção — para que sua equipe produza 10x mais criativos, 10x mais rápido.",
+    hero_cta_primary: "Comece grátis — sem cartão",
+    hero_cta_secondary: "Assista a demo de 2 min",
+    hero_check_1: "Sem cartão de crédito",
+    hero_check_2: "Configuração em 2 min",
+    hero_check_3: "Cancele quando quiser",
+    hero_screenshot_label: "RESULTADO REAL DA ANÁLISE",
+
+    stats_videos: "Vídeos Analisados",
+    stats_teams: "Equipes Enterprise",
+    stats_countries: "Países",
+    stats_time: "Tempo Médio de Análise",
+
+    how_label: "Como funciona",
+    how_title: "Do upload à execução\nem menos de 3 minutos",
+    how_step1_title: "Envie ou cole o link",
+    how_step1_desc: "Arraste qualquer anúncio, vídeo de concorrente ou arquivo de referência",
+    how_step2_title: "A IA extrai insights",
+    how_step2_desc: "Hook, modelo criativo, transcrição, frames-chave — tudo em 60s",
+    how_step3_title: "Gere seu board",
+    how_step3_desc: "Receba um briefing pronto para produção que sua equipe pode executar hoje",
+
+    features_label: "Funcionalidades",
+    features_title: "Tudo que sua equipe criativa precisa",
+    features_subtitle: "Pare de perder horas decifrando anúncios da concorrência. Deixe a IA fazer em segundos.",
+    feature_video_title: "Análise de Vídeo",
+    feature_video_desc: "Envie qualquer vídeo. Frames, transcrição, modelo criativo e hook extraídos em menos de 60 segundos.",
+    feature_board_title: "Geração de Boards",
+    feature_board_desc: "Digite um prompt. Receba um board de produção completo com cenas, roteiro de VO e notas para o editor.",
+    feature_translation_title: "Tradução Automática",
+    feature_translation_desc: "Qualquer idioma, qualquer mercado — sempre entregue em inglês para sua equipe global.",
+    feature_intelligence_title: "Inteligência Criativa",
+    feature_intelligence_desc: "Cada vídeo classificado por formato. Hook extraído dos primeiros 3 segundos.",
+    feature_ai_video_title: "Geração de Vídeo com IA",
+    feature_ai_video_desc: "Do conceito ao MP4 com narração de IA. Sem necessidade de editores.",
+    feature_api_title: "Acesso à API",
+    feature_api_desc: "Integre o FrameIQ ao seu fluxo de trabalho existente com nossa API REST.",
+
+    pricing_label: "Preços",
+    pricing_title: "Preços simples e transparentes",
+    pricing_subtitle: "Comece grátis. Escale quando estiver pronto.",
+    pricing_free: "Grátis",
+    pricing_studio: "Studio",
+    pricing_scale: "Scale",
+    pricing_most_popular: "Mais Popular",
+    pricing_mo: "/mês",
+    pricing_cta_free: "Comece grátis",
+    pricing_cta_trial: "Teste de 14 dias",
+    pricing_cta_demo: "Agende uma demo",
+
+    cta_title: "Pronto para multiplicar sua produção criativa por 10?",
+    cta_subtitle: "Junte-se a mais de 147 equipes de performance que produzem mais criativos, mais rápido.",
+    cta_primary: "Comece grátis",
+    cta_secondary: "Agende uma demo",
+
+    footer_desc: "Inteligência criativa alimentada por IA para equipes de performance marketing.",
+    footer_product: "Produto",
+    footer_company: "Empresa",
+    footer_legal: "Legal",
+    footer_privacy: "Política de Privacidade",
+    footer_terms: "Termos de Serviço",
+    footer_rights: "© 2026 FrameIQ. Todos os direitos reservados.",
+    footer_soc2: "Conforme SOC 2",
+    footer_uptime: "99.9% Uptime",
+    footer_book_demo: "Agendar Demo",
+
+    auth_login_title: "Bem-vindo de volta",
+    auth_login_subtitle: "Entre na sua conta FrameIQ",
+    auth_signup_title: "Crie sua conta",
+    auth_signup_subtitle: "Comece a analisar vídeos e escalar seus criativos",
+    auth_email: "Email corporativo",
+    auth_password: "Senha",
+    auth_name: "Nome completo",
+    auth_forgot: "Esqueceu a senha?",
+    auth_no_account: "Não tem uma conta?",
+    auth_has_account: "Já tem uma conta?",
+    auth_signin: "Entrar",
+    auth_create: "Criar conta",
+    auth_google: "Continuar com Google",
+    auth_or_email: "Ou continue com email",
+
+    confirm_title: "Verifique sua caixa de entrada",
+    confirm_text: "Enviamos um link de verificação para",
+    confirm_didnt_receive: "Não recebeu? Verifique o spam ou",
+    confirm_resend: "reenviar email",
+    confirm_back: "Voltar ao login",
+    confirm_confirmed_title: "Email confirmado!",
+    confirm_confirmed_text: "Sua conta foi verificada. Redirecionando para o dashboard...",
+
+    powered_by: "Desenvolvido por",
   },
 };

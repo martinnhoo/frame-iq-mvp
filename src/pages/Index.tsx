@@ -70,7 +70,7 @@ const Index = () => {
 
   const navLinks = [
     { label: t("nav_features"), href: "#features" },
-    { label: t("nav_pricing"), href: "#pricing" },
+    { label: t("nav_pricing"), href: "/pricing", isRoute: true },
     { label: t("nav_blog"), href: "/blog", isRoute: true },
     { label: t("nav_faq"), href: "/faq", isRoute: true },
     { label: t("nav_contact"), href: "/contact", isRoute: true },
@@ -705,6 +705,7 @@ const Index = () => {
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">{t("nav_blog")}</Link></li>
                 <li><Link to="/faq" className="hover:text-foreground transition-colors">{t("nav_faq")}</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">{t("nav_contact")}</Link></li>
+                <li><Link to="/careers" className="hover:text-foreground transition-colors">Careers</Link></li>
               </ul>
             </div>
             
