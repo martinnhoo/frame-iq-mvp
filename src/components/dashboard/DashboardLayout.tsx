@@ -3,6 +3,7 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Menu, AlertCircle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 
 export interface DashboardContext {
@@ -67,12 +68,11 @@ export default function DashboardLayout() {
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       if (profileData && mounted) {
         setProfile(profileData);
+
+        // New user — redirect to onboarding
         if (!profileData.onboarding_completed) {
-          const lang = navigator.language || "en";
-          const firstName = profileData.name?.split(" ")[0] || "";
-          supabase.functions.invoke("send-welcome-email", { body: { user_id: session.user.id, language: lang, first_name: firstName } })
-            .then(() => supabase.from("profiles").update({ onboarding_completed: true }).eq("id", session.user.id).then(() => {}))
-            .catch(() => {});
+          navigate("/onboarding");
+          return;
         }
       }
       await fetchUsage(session.user.id);
@@ -113,11 +113,8 @@ export default function DashboardLayout() {
             <Menu className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-white/10 border border-white/20 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-sm bg-white" />
+              <Logo size="sm" />
             </div>
-            <span className="text-sm font-bold text-white">Frame<span className="text-white/40">IQ</span></span>
-          </div>
         </header>
 
         {/* Alerts */}

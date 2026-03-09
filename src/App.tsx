@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 
 // Dashboard
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -37,6 +38,7 @@ import SettingsPage from "./pages/dashboard/SettingsPage";
 import TemplatesPage from "./pages/dashboard/TemplatesPage";
 import PreflightCheck from "./pages/dashboard/PreflightCheck";
 import CompetitorTracker from "./pages/dashboard/CompetitorTracker";
+import PersonaPage from "./pages/dashboard/PersonaPage";
 import SupportChat from "./components/SupportChat";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,7 @@ const App = () => (
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<Onboarding />} />
 
               {/* Dashboard with sidebar layout */}
               <Route path="/dashboard" element={<DashboardLayout />}>
@@ -82,6 +85,7 @@ const App = () => (
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="preflight" element={<PreflightCheck />} />
                 <Route path="competitor" element={<CompetitorTracker />} />
+                <Route path="persona" element={<PersonaPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

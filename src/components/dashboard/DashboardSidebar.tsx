@@ -1,8 +1,10 @@
 import {
-  BarChart3, LayoutGrid, Video, Settings, Home,
+  BarChart3, LayoutGrid, Video, Home,
   Plus, Globe, Brain, LogOut, Layers, Plane, Radar,
-  ChevronRight, Zap,
+  ChevronRight, Zap, Users,
 } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +23,7 @@ const toolItems = [
   { title: "Translate", url: "/dashboard/translate", icon: Globe },
   { title: "Pre-flight", url: "/dashboard/preflight", icon: Plane },
   { title: "Competitor", url: "/dashboard/competitor", icon: Radar },
+  { title: "Persona", url: "/dashboard/persona", icon: Users },
   { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain },
 ];
 
@@ -84,16 +87,8 @@ export function DashboardSidebar({ profile, open, onClose }: SidebarProps) {
       `}>
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/[0.06]">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-sm bg-white" />
-            </div>
-            <span className="text-base font-bold text-white tracking-tight">
-              Frame<span className="text-white/40">IQ</span>
-            </span>
+          <button onClick={() => navigate("/dashboard")} className="hover:opacity-80 transition-opacity">
+            <Logo size="md" />
           </button>
         </div>
 
@@ -134,6 +129,11 @@ export function DashboardSidebar({ profile, open, onClose }: SidebarProps) {
               <ChevronRight className="h-3.5 w-3.5 opacity-40" />
             </NavLink>
           )}
+
+          {/* Language switcher */}
+          <div className="px-1">
+            <LanguageSwitcher />
+          </div>
 
           <div className="flex items-center gap-3 px-1">
             <Avatar className="h-8 w-8 shrink-0">

@@ -1,0 +1,427 @@
+import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { Users, ArrowRight, ArrowLeft, Check, Download, Copy, Loader2, Sparkles, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+interface PersonaResult {
+  name: string;
+  age: string;
+  gender: string;
+  headline: string;
+  bio: string;
+  pains: string[];
+  desires: string[];
+  objections: string[];
+  triggers: string[];
+  media_habits: string[];
+  best_platforms: string[];
+  best_formats: string[];
+  hook_angles: string[];
+  language_style: string;
+  cta_style: string;
+  avatar_emoji: string;
+}
+
+// ─── Steps ───────────────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    id: "product",
+    q: "What are you advertising?",
+    sub: "Be specific — the more context, the better the persona",
+    type: "text",
+    placeholder: "e.g. Online sports betting app targeting casual football fans",
+  },
+  {
+    id: "gender",
+    q: "Primary gender target?",
+    sub: "",
+    type: "single",
+    options: [
+      { value: "male", label: "Mostly Male", emoji: "👨" },
+      { value: "female", label: "Mostly Female", emoji: "👩" },
+      { value: "both", label: "Both / Mixed", emoji: "👥" },
+    ],
+  },
+  {
+    id: "age",
+    q: "Primary age range?",
+    sub: "",
+    type: "single",
+    options: [
+      { value: "18-24", label: "18 – 24", emoji: "🎓" },
+      { value: "25-34", label: "25 – 34", emoji: "💼" },
+      { value: "35-44", label: "35 – 44", emoji: "🏠" },
+      { value: "45-54", label: "45 – 54", emoji: "👔" },
+      { value: "55+",   label: "55+",     emoji: "🧓" },
+    ],
+  },
+  {
+    id: "income",
+    q: "Income level?",
+    sub: "This shapes their pain points and purchase triggers",
+    type: "single",
+    options: [
+      { value: "low",    label: "Budget conscious",    emoji: "💵" },
+      { value: "mid",    label: "Middle income",       emoji: "💰" },
+      { value: "high",   label: "High income",         emoji: "💎" },
+      { value: "mixed",  label: "Mixed / Unknown",     emoji: "🔀" },
+    ],
+  },
+  {
+    id: "market",
+    q: "Which market / country?",
+    sub: "",
+    type: "single",
+    options: [
+      { value: "BR", label: "Brazil",         emoji: "🇧🇷" },
+      { value: "MX", label: "Mexico",         emoji: "🇲🇽" },
+      { value: "US", label: "United States",  emoji: "🇺🇸" },
+      { value: "IN", label: "India",          emoji: "🇮🇳" },
+      { value: "GB", label: "United Kingdom", emoji: "🇬🇧" },
+      { value: "ES", label: "Spain",          emoji: "🇪🇸" },
+      { value: "GLOBAL", label: "Global",     emoji: "🌍" },
+    ],
+  },
+  {
+    id: "platform",
+    q: "Main platform you're running ads on?",
+    sub: "Shapes media habits and format recommendations",
+    type: "single",
+    options: [
+      { value: "meta",    label: "Meta (FB/IG)", emoji: "📘" },
+      { value: "tiktok",  label: "TikTok",       emoji: "🎵" },
+      { value: "youtube", label: "YouTube",      emoji: "▶️" },
+      { value: "google",  label: "Google",       emoji: "🔍" },
+      { value: "multi",   label: "Multiple",     emoji: "📡" },
+    ],
+  },
+  {
+    id: "pain",
+    q: "What's the biggest pain this product solves?",
+    sub: "One sentence — the core problem your audience faces",
+    type: "text",
+    placeholder: "e.g. They love football but feel left out when friends bet and win big",
+  },
+];
+
+export default function PersonaPage() {
+  const { user } = useOutletContext<DashboardContext>();
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<PersonaResult | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const current = STEPS[step];
+  const answer = answers[current.id] || "";
+  const canNext = answer.trim().length > 0;
+
+  const selectSingle = (value: string) => {
+    setAnswers(a => ({ ...a, [current.id]: value }));
+    setTimeout(() => {
+      if (step < STEPS.length - 1) setStep(s => s + 1);
+      else generatePersona({ ...answers, [current.id]: value });
+    }, 260);
+  };
+
+  const handleTextNext = () => {
+    if (!canNext) return;
+    if (step < STEPS.length - 1) setStep(s => s + 1);
+    else generatePersona(answers);
+  };
+
+  const generatePersona = async (finalAnswers: Record<string, string>) => {
+    setLoading(true);
+    try {
+      const prompt = `You are an expert performance marketing strategist. Create a highly detailed buyer persona for paid advertising.
+
+INPUT:
+- Product/offer: ${finalAnswers.product}
+- Gender: ${finalAnswers.gender}
+- Age: ${finalAnswers.age}
+- Income: ${finalAnswers.income}
+- Market/Country: ${finalAnswers.market}
+- Main platform: ${finalAnswers.platform}
+- Core pain: ${finalAnswers.pain}
+
+Return ONLY a valid JSON object with these exact keys:
+{
+  "name": "fictional first name that fits the demographic",
+  "age": "specific age",
+  "gender": "gender",
+  "headline": "one-line persona description (e.g. The Weekend Warrior Bettor)",
+  "bio": "2-3 sentence vivid description of their daily life and mindset",
+  "pains": ["3-4 specific pain points"],
+  "desires": ["3-4 deep desires and aspirations"],
+  "objections": ["3 common objections to buying"],
+  "triggers": ["3-4 emotional/rational purchase triggers"],
+  "media_habits": ["3-4 specific media consumption habits"],
+  "best_platforms": ["2-3 best platforms to reach them"],
+  "best_formats": ["3-4 best ad formats for this persona"],
+  "hook_angles": ["4-5 specific hook angles that work for this persona"],
+  "language_style": "description of how they speak and what resonates (slang, formality, etc)",
+  "cta_style": "what kind of CTA works best and why",
+  "avatar_emoji": "one emoji that represents them"
+}`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      const data = await response.json();
+      const text = data.content?.[0]?.text || "";
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed: PersonaResult = JSON.parse(clean);
+      setResult(parsed);
+
+      // Save to Supabase
+      try {
+        await supabase.from("personas" as never).insert({
+          user_id: user.id,
+          answers: finalAnswers,
+          result: parsed,
+        });
+      } catch { /* table may not exist yet */ }
+
+    } catch {
+      toast.error("Generation failed — add ANTHROPIC_API_KEY to Supabase Secrets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    const text = `PERSONA: ${result.name}, ${result.age} — ${result.headline}
+
+BIO: ${result.bio}
+
+PAINS:
+${result.pains.map(p => `• ${p}`).join("\n")}
+
+DESIRES:
+${result.desires.map(d => `• ${d}`).join("\n")}
+
+HOOK ANGLES:
+${result.hook_angles.map(h => `• ${h}`).join("\n")}
+
+BEST FORMATS: ${result.best_formats.join(", ")}
+LANGUAGE: ${result.language_style}
+CTA: ${result.cta_style}`;
+
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copied");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const reset = () => { setStep(0); setAnswers({}); setResult(null); };
+
+  const pct = Math.round(((step + 1) / STEPS.length) * 100);
+
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (loading) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-8">
+      <div className="relative h-16 w-16">
+        <div className="absolute inset-0 rounded-full border-2 border-purple-500/20 animate-ping" />
+        <div className="absolute inset-2 rounded-full border-2 border-purple-500/40 animate-pulse" />
+        <div className="absolute inset-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+          <Sparkles className="h-4 w-4 text-purple-400" />
+        </div>
+      </div>
+      <p className="text-white/40 text-sm">Building your persona...</p>
+    </div>
+  );
+
+  // ── Result ─────────────────────────────────────────────────────────────────
+  if (result) return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+          <Users className="h-5 w-5 text-white/40" />
+          Your Persona
+        </h1>
+        <div className="flex items-center gap-2">
+          <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+            Copy
+          </button>
+          <button onClick={reset} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
+            <RefreshCw className="h-3.5 w-3.5" /> New persona
+          </button>
+        </div>
+      </div>
+
+      {/* Identity card */}
+      <div className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6">
+        <div className="flex items-start gap-5">
+          <div className="text-5xl shrink-0">{result.avatar_emoji}</div>
+          <div>
+            <h2 className="text-2xl font-bold text-white">{result.name}</h2>
+            <p className="text-white/40 text-sm">{result.age} · {result.gender}</p>
+            <p className="text-purple-300 font-semibold mt-1">{result.headline}</p>
+            <p className="text-white/50 text-sm mt-3 leading-relaxed">{result.bio}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {[
+          { title: "😤 Pain Points", items: result.pains, color: "text-red-400" },
+          { title: "✨ Desires", items: result.desires, color: "text-yellow-400" },
+          { title: "🚧 Objections", items: result.objections, color: "text-orange-400" },
+          { title: "⚡ Purchase Triggers", items: result.triggers, color: "text-green-400" },
+        ].map(({ title, items, color }) => (
+          <div key={title} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
+            <ul className="space-y-2">
+              {items.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-white/60">
+                  <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Ad strategy */}
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
+        <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Ad Strategy for {result.name}</h3>
+
+        <div>
+          <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Hook Angles</p>
+          <div className="space-y-2">
+            {result.hook_angles.map((h, i) => (
+              <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.04]">
+                <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center shrink-0">{i+1}</span>
+                <p className="text-sm text-white/70">{h}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Formats</p>
+            <div className="flex flex-wrap gap-2">
+              {result.best_formats.map(f => (
+                <span key={f} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">{f}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Platforms</p>
+            <div className="flex flex-wrap gap-2">
+              {result.best_platforms.map(p => (
+                <span key={p} className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 text-xs border border-purple-500/20">{p}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+          <div>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">Language Style</p>
+            <p className="text-sm text-white/60">{result.language_style}</p>
+          </div>
+          <div>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">CTA Style</p>
+            <p className="text-sm text-white/60">{result.cta_style}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Builder steps ──────────────────────────────────────────────────────────
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-8">
+        <Users className="h-5 w-5 text-white/40" />
+        <h1 className="text-lg font-bold text-white">Persona Builder</h1>
+        <span className="ml-auto text-xs font-mono text-white/20">{step + 1}/{STEPS.length}</span>
+      </div>
+
+      {/* Progress */}
+      <div className="h-1 bg-white/[0.05] rounded-full mb-8 overflow-hidden">
+        <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500" style={{ width: `${pct}%` }} />
+      </div>
+
+      {/* Question */}
+      <h2 className="text-2xl font-bold text-white mb-2">{current.q}</h2>
+      {current.sub && <p className="text-white/35 text-sm mb-6">{current.sub}</p>}
+
+      {/* Text input */}
+      {current.type === "text" && (
+        <div className="space-y-4">
+          <textarea
+            value={answer}
+            onChange={e => setAnswers(a => ({ ...a, [current.id]: e.target.value }))}
+            placeholder={(current as { placeholder?: string }).placeholder}
+            rows={3}
+            autoFocus
+            className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm resize-none outline-none focus:border-white/25 transition-colors"
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleTextNext(); } }}
+          />
+          <div className="flex items-center justify-between">
+            {step > 0 ? (
+              <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
+                <ArrowLeft className="h-4 w-4" /> Back
+              </button>
+            ) : <span />}
+            <button
+              onClick={handleTextNext}
+              disabled={!canNext}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 disabled:opacity-30 transition-all"
+            >
+              {step === STEPS.length - 1 ? "Generate persona" : "Continue"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Single select */}
+      {current.type === "single" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2.5">
+            {(current as { options: { value: string; label: string; emoji: string }[] }).options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => selectSingle(opt.value)}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all ${
+                  answer === opt.value
+                    ? "border-white/40 bg-white/10 text-white"
+                    : "border-white/[0.08] bg-white/[0.02] text-white/50 hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                }`}
+              >
+                <span className="text-xl">{opt.emoji}</span>
+                <span className="text-sm font-medium">{opt.label}</span>
+                {answer === opt.value && <Check className="ml-auto h-3.5 w-3.5 text-white/50" />}
+              </button>
+            ))}
+          </div>
+          {step > 0 && (
+            <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-1 text-sm text-white/20 hover:text-white/40 transition-colors mt-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
