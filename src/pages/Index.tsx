@@ -281,9 +281,9 @@ const Index = () => {
                 key={index}
                 className={`relative ${
                   plan.highlighted 
-                    ? 'border-primary shadow-xl shadow-primary/20 md:-translate-y-4' 
+                    ? 'border-foreground shadow-xl shadow-white/10 md:-translate-y-4' 
                     : 'border-border'
-                } transition-all duration-300 hover:-translate-y-2`}
+                } transition-all duration-300 hover:-translate-y-2 bg-background`}
               >
                 {plan.badge && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
