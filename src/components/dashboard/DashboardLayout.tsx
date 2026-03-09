@@ -78,53 +78,53 @@ export default function DashboardLayout() {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-        setUser(session.user);
+    let mounted = true;
 
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-        if (profileData) {
-          setProfile(profileData);
-
-          // Send welcome email on first login (onboarding not completed)
-          if (!profileData.onboarding_completed) {
-            const browserLang = navigator.language || 'en';
-            const firstName = profileData.name?.split(' ')[0] || session.user.user_metadata?.full_name?.split(' ')[0] || '';
-            
-            supabase.functions.invoke('send-welcome-email', {
-              body: {
-                user_id: session.user.id,
-                language: browserLang,
-                first_name: firstName,
-              }
-            }).then(() => {
-              // Mark onboarding as completed
-              supabase.from("profiles")
-                .update({ onboarding_completed: true })
-                .eq("id", session.user.id)
-                .then(() => {});
-            }).catch(err => console.error('Welcome email error:', err));
-          }
-        }
-        await fetchUsage(session.user.id);
-        setLoading(false);
+      if (!session) {
+        navigate("/login");
+        return;
       }
-    );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      setUser(session.user);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileData && mounted) {
+        setProfile(profileData);
+
+        if (!profileData.onboarding_completed) {
+          const browserLang = navigator.language || 'en';
+          const firstName = profileData.name?.split(' ')[0] || session.user.user_metadata?.full_name?.split(' ')[0] || '';
+          supabase.functions.invoke('send-welcome-email', {
+            body: { user_id: session.user.id, language: browserLang, first_name: firstName }
+          }).then(() => {
+            supabase.from("profiles").update({ onboarding_completed: true }).eq("id", session.user.id).then(() => {});
+          }).catch(err => console.error('Welcome email error:', err));
+        }
+      }
+
+      await fetchUsage(session.user.id);
+      if (mounted) setLoading(false);
+    };
+
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) navigate("/login");
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   if (loading) {
