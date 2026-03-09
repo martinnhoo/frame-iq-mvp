@@ -150,36 +150,34 @@ const Index = () => {
         
         <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
           <Badge variant="outline" className="border-border text-secondary px-4 py-2">
-            Creative Intelligence Platform
+            Trusted by performance marketing teams
           </Badge>
           
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight">
-            Analyze. Generate. Scale.
+          <h1 className="text-5xl md:text-6xl lg:text-[80px] font-bold tracking-tight leading-[0.95] max-w-4xl mx-auto">
+            The AI brain for your creative team.
           </h1>
           
-          <p className="text-xl text-secondary max-w-2xl mx-auto">
-            Your creative intelligence platform.
+          <p className="text-[18px] text-secondary max-w-[520px] mx-auto leading-relaxed">
+            Analyze competitor videos in any language. Generate production boards for your editors. Create full videos with AI voiceover. All in one platform.
           </p>
           
-          <p className="text-base text-secondary max-w-lg mx-auto leading-relaxed">
-            Stop guessing what makes creatives convert. FrameIQ analyzes competitor videos in any language, 
-            generates production-ready boards for your editors, and creates full videos with AI voiceover — in minutes.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button 
-              size="lg" 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10 hover:shadow-white/20 transition-all px-8"
-            >
-              Start for free
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-border text-foreground hover:bg-card hover:border-foreground/20"
-            >
-              See how it works
-            </Button>
+          <div className="flex flex-col items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10 hover:shadow-white/20 transition-all text-base px-[28px] py-[14px] h-auto"
+              >
+                Start for free — no card needed
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-border text-foreground hover:bg-card hover:border-foreground/20 text-base px-[28px] py-[14px] h-auto"
+              >
+                Watch demo
+              </Button>
+            </div>
+            <p className="text-[#525252] text-[13px] mt-2">
+              Join 500+ teams analyzing creatives with AI
+            </p>
           </div>
           
           {/* Dashboard Mockup */}
