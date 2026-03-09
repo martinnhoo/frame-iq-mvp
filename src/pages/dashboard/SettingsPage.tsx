@@ -107,8 +107,10 @@ const SettingsPage = () => {
               <p className="font-medium text-foreground capitalize">{profile?.plan} Plan</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.plan === "free"
-                  ? "Limited to 5 analyses, 3 boards, 2 videos per month"
-                  : "Full access to all features"}
+                  ? "3 analyses, 3 boards per month. No video generation."
+                  : profile?.plan === "studio"
+                  ? "30 analyses, 30 boards, 5 videos per month."
+                  : "500 analyses, 300 boards, 50 videos per month."}
               </p>
             </div>
             <Badge variant="outline" className="capitalize border-border text-muted-foreground">
@@ -116,8 +118,8 @@ const SettingsPage = () => {
             </Badge>
           </div>
           {profile?.plan === "free" && (
-            <Button variant="outline" className="border-border" onClick={() => navigate("/book-demo")}>
-              Upgrade to Pro
+            <Button variant="outline" className="border-border" onClick={() => navigate("/pricing")}>
+              Upgrade to Studio
             </Button>
           )}
         </CardContent>

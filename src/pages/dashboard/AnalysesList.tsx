@@ -44,8 +44,19 @@ const AnalysesList = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-48 bg-muted animate-pulse rounded mt-2" />
+          </div>
+          <div className="h-10 w-36 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-[72px] bg-card border border-border rounded-lg animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }

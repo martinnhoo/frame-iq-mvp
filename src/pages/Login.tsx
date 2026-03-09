@@ -32,7 +32,8 @@ const Login = () => {
       </div>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/" className="inline-block text-3xl font-bold">
+          <Link to="/" className="inline-flex items-center gap-2 text-3xl font-bold">
+            <img src="/logo.png" alt="FrameIQ" className="h-10 w-10" />
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>
@@ -65,12 +66,17 @@ const Login = () => {
               {t("auth_google")}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              {t("auth_no_account")}{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
-                {t("auth_create")}
+            <div className="text-center space-y-3">
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Forgot your password?
               </Link>
-            </p>
+              <p className="text-sm text-muted-foreground">
+                {t("auth_no_account")}{" "}
+                <Link to="/signup" className="text-primary hover:underline font-medium">
+                  {t("auth_create")}
+                </Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

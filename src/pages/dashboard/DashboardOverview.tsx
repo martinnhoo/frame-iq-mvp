@@ -20,9 +20,9 @@ const DashboardOverview = () => {
   const navigate = useNavigate();
 
   const planLimits = {
-    free: { analyses: 5, boards: 3, videos: 2 },
-    pro: { analyses: 50, boards: 30, videos: 20 },
-    enterprise: { analyses: 500, boards: 300, videos: 200 },
+    free: { analyses: 3, boards: 3, videos: 0 },
+    studio: { analyses: 30, boards: 30, videos: 5 },
+    scale: { analyses: 500, boards: 300, videos: 50 },
   };
 
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
@@ -221,17 +221,17 @@ const DashboardOverview = () => {
                 <Zap className="h-6 w-6 text-accent-foreground" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Unlock more with Pro</p>
+                <p className="font-semibold text-foreground">Unlock more with Studio</p>
                 <p className="text-sm text-muted-foreground">
-                  10x your limits, API access, and priority support.
+                  10x your limits, video generation, and priority support.
                 </p>
               </div>
             </div>
             <Button
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shrink-0"
-              onClick={() => navigate("/book-demo")}
+              onClick={() => navigate("/pricing")}
             >
-              Upgrade to Pro
+              Upgrade to Studio
             </Button>
           </CardContent>
         </Card>

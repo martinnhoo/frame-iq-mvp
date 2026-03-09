@@ -77,8 +77,13 @@ export function DashboardSidebar({ profile, usageDetails }: DashboardSidebarProp
         {/* Logo */}
         <div className="px-4 py-5 border-b border-sidebar-border">
           <NavLink to="/" className="flex items-center gap-2">
-            <span className="text-lg font-medium text-sidebar-foreground">Frame</span>
-            {!collapsed && <span className="text-lg font-black gradient-text">IQ</span>}
+            <img src="/logo.png" alt="FrameIQ" className="h-7 w-7 shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="text-lg font-medium text-sidebar-foreground">Frame</span>
+                <span className="text-lg font-black gradient-text">IQ</span>
+              </>
+            )}
           </NavLink>
         </div>
 

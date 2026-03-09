@@ -1,15 +1,54 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, ArrowRight, Shield, HelpCircle } from "lucide-react";
+import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useLanguage } from "@/i18n/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
+
+  const handleUpgrade = async (planName: string) => {
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/signup");
+      return;
+    }
+
+    if (planName === "Scale") {
+      navigate("/book-demo");
+      return;
+    }
+
+    // For Studio, try the upgrade flow
+    setUpgrading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('upgrade-plan', {
+        body: { user_id: session.user.id, new_plan: 'studio' }
+      });
+
+      if (error) throw error;
+
+      if (data?.mock_mode) {
+        setUpgradeModal("studio");
+      } else if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+      }
+    } catch (err) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setUpgrading(false);
+    }
+  };
 
   const plans = [
     {
@@ -18,11 +57,14 @@ const Pricing = () => {
       period: "/mo",
       description: "For individuals exploring FrameIQ's capabilities.",
       features: [
-        "3 video analyses per month",
-        "3 board generations per month",
-        "1 team seat",
-        "Community support",
-        "Basic export (PDF)",
+        { text: "3 video analyses per month", included: true },
+        { text: "3 board generations per month", included: true },
+        { text: "1 team seat", included: true },
+        { text: "Community support", included: true },
+        { text: "Basic export (PDF)", included: true },
+        { text: "Video generation", included: false },
+        { text: "Auto translation", included: false },
+        { text: "API access", included: false },
       ],
       cta: "Get started free",
       ctaAction: () => navigate("/signup"),
@@ -34,17 +76,17 @@ const Pricing = () => {
       period: "/mo",
       description: "For growing creative teams that need speed and scale.",
       features: [
-        "30 video analyses per month",
-        "30 board generations per month",
-        "5 AI-generated videos per month",
-        "Auto translation (all languages)",
-        "1 team seat",
-        "Priority email support",
-        "Export to Notion, PDF, CSV",
-        "Creative Intelligence dashboard",
+        { text: "30 video analyses per month", included: true },
+        { text: "30 board generations per month", included: true },
+        { text: "5 AI-generated videos per month", included: true },
+        { text: "Auto translation (all languages)", included: true },
+        { text: "1 team seat", included: true },
+        { text: "Priority email support", included: true },
+        { text: "Export to Notion, PDF, CSV", included: true },
+        { text: "Creative Intelligence dashboard", included: true },
       ],
       cta: "Start 14-day free trial",
-      ctaAction: () => navigate("/signup"),
+      ctaAction: () => handleUpgrade("Studio"),
       highlighted: true,
       badge: "Most Popular",
     },
@@ -54,19 +96,17 @@ const Pricing = () => {
       period: "/mo",
       description: "For agencies and enterprise teams at scale.",
       features: [
-        "500 video analyses per month",
-        "300 board generations per month",
-        "50 AI-generated videos per month",
-        "Auto translation (all languages)",
-        "Up to 10 team seats",
-        "REST API access",
-        "Custom integrations",
-        "Dedicated Customer Success Manager",
-        "SSO & advanced security",
-        "SLA guarantee",
+        { text: "500 video analyses per month", included: true },
+        { text: "300 board generations per month", included: true },
+        { text: "50 AI-generated videos per month", included: true },
+        { text: "Auto translation (all languages)", included: true },
+        { text: "Up to 10 team seats", included: true },
+        { text: "REST API access", included: true },
+        { text: "Custom integrations", included: true },
+        { text: "Dedicated CSM + SLA", included: true },
       ],
       cta: "Book a demo",
-      ctaAction: () => navigate("/book-demo"),
+      ctaAction: () => handleUpgrade("Scale"),
       highlighted: false,
     },
   ];
@@ -74,27 +114,27 @@ const Pricing = () => {
   const faqs = [
     {
       q: "Can I cancel anytime?",
-      a: "Yes. All plans are month-to-month with no long-term contracts. You can cancel or downgrade anytime from your account settings. Your access continues until the end of the billing period.",
+      a: "Yes. All plans are month-to-month with no long-term contracts. You can cancel or downgrade anytime from your account settings.",
     },
     {
       q: "What happens when I exceed my plan limits?",
-      a: "You'll receive a notification when approaching your limits. You can upgrade at any time. We never cut access mid-project — you'll always finish what you started.",
+      a: "You'll receive a notification when approaching your limits. You can upgrade at any time. We never cut access mid-project.",
     },
     {
       q: "Is there a free trial for paid plans?",
-      a: "Yes. Studio comes with a 14-day free trial. No credit card required to start. Scale plans include a personalized demo and trial period.",
+      a: "Yes. Studio comes with a 14-day free trial. No credit card required. Scale plans include a personalized demo and trial period.",
     },
     {
       q: "How does billing work?",
-      a: "We bill monthly via credit card (Visa, Mastercard, Amex). Invoices are available in your account. For annual billing or custom invoicing, contact our sales team.",
+      a: "We bill monthly via credit card (Visa, Mastercard, Amex). For annual billing or custom invoicing, contact our sales team.",
     },
     {
       q: "Do you offer refunds?",
-      a: "We offer a 30-day money-back guarantee on your first payment for Studio plans. If you're not satisfied, contact support for a full refund.",
+      a: "We offer a 30-day money-back guarantee on your first payment for Studio plans.",
     },
     {
       q: "Is my data secure?",
-      a: "Yes. FrameIQ is SOC 2 compliant with 256-bit encryption at rest and in transit. We never share or sell your data. See our Privacy Policy for details.",
+      a: "Yes. FrameIQ uses 256-bit encryption at rest and in transit. We never share or sell your data.",
     },
   ];
 
@@ -103,7 +143,8 @@ const Pricing = () => {
       {/* Nav */}
       <nav className="border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
+          <Link to="/" className="text-2xl font-bold flex items-center gap-2">
+            <img src="/logo.png" alt="FrameIQ" className="h-8 w-8" />
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>
@@ -169,8 +210,14 @@ const Pricing = () => {
                     <ul className="space-y-3 flex-1">
                       {plan.features.map((feature, j) => (
                         <li key={j} className="flex items-start gap-3 text-sm">
-                          <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                          <span className="text-muted-foreground">{feature}</span>
+                          {feature.included ? (
+                            <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                          ) : (
+                            <X className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
+                          )}
+                          <span className={feature.included ? "text-muted-foreground" : "text-muted-foreground/40"}>
+                            {feature.text}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -181,7 +228,11 @@ const Pricing = () => {
                           : "bg-card text-foreground hover:bg-muted border border-border"
                       }`}
                       onClick={plan.ctaAction}
+                      disabled={upgrading}
                     >
+                      {upgrading && plan.name === "Studio" && (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      )}
                       {plan.cta}
                     </Button>
                   </CardContent>
@@ -198,10 +249,6 @@ const Pricing = () => {
           <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
-              SOC 2 Compliant
-            </span>
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
               256-bit Encryption
             </span>
             <span className="flex items-center gap-2">
@@ -211,6 +258,10 @@ const Pricing = () => {
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
               99.9% Uptime SLA
+            </span>
+            <span className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-500" />
+              30-day money-back
             </span>
           </div>
         </div>
@@ -268,32 +319,55 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Legal footer */}
+      {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-6">
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All plans are billed monthly unless otherwise specified. Sales tax may apply depending on your jurisdiction. 
-              Studio plan includes a 14-day free trial; you will not be charged until the trial ends. 
-              You may cancel at any time before the trial expires to avoid charges.
-            </p>
-            <p>
-              30-day money-back guarantee applies to first-time Studio subscribers only. 
-              Refund requests must be submitted within 30 days of the initial charge. 
-              Scale plan pricing and terms are customized per agreement.
+              Prices shown in USD. All plans are billed monthly. Studio plan includes a 14-day free trial.
+              You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">
-              © 2026 FrameIQ, Inc. All rights reserved. FrameIQ is a registered trademark.
+              © 2026 FrameIQ, Inc. All rights reserved.
               {" · "}
               <Link to="/" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               {" · "}
               <Link to="/" className="hover:text-foreground transition-colors">Terms of Service</Link>
-              {" · "}
-              <Link to="/" className="hover:text-foreground transition-colors">Cookie Policy</Link>
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Upgrade Modal */}
+      <Dialog open={upgradeModal !== null} onOpenChange={() => setUpgradeModal(null)}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Payment coming soon</DialogTitle>
+            <DialogDescription className="text-muted-foreground pt-2 leading-relaxed">
+              The Studio plan is currently in preview. You'll be notified when full payment processing launches.
+              In the meantime, your plan has been updated to Studio with all features unlocked.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <Button
+              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+              onClick={() => {
+                setUpgradeModal(null);
+                navigate("/dashboard");
+              }}
+            >
+              Go to Dashboard
+            </Button>
+            <Button
+              variant="outline"
+              className="border-border"
+              onClick={() => setUpgradeModal(null)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
