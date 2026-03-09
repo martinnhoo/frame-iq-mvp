@@ -92,7 +92,12 @@ const Index = () => {
     }
   ];
 
-  const navLinks = ["Features", "Pricing", "Drop", "Blog", "Contato"];
+  const navLinks = [
+    { label: "Features", href: "#features" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Blog", href: "/blog", isRoute: true },
+    { label: "Contact", href: "/contact", isRoute: true },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
