@@ -169,14 +169,14 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Button 
               size="lg" 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all px-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10 hover:shadow-white/20 transition-all px-8"
             >
               Start for free
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-border text-foreground hover:bg-muted"
+              className="border-border text-foreground hover:bg-card hover:border-foreground/20"
             >
               See how it works
             </Button>
