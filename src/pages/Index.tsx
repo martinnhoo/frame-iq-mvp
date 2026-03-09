@@ -157,7 +157,7 @@ const Index = () => {
             Analyze. Generate. Scale.
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-secondary max-w-2xl mx-auto">
             Your creative intelligence platform.
           </p>
           
