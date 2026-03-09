@@ -389,14 +389,27 @@ const Index = () => {
                     Hook (0–3s)
                   </div>
                   <p style={{ color: '#e5e5e5', fontSize: '15px', lineHeight: '1.6', fontFamily: '"DM Mono", monospace' }}>
-                    "Virginia holds perfume close, whispering: <span style={{ color: '#a78bfa' }}>'Esse é o perfume que uso todo dia antes de gravar'</span>"
+                    "Câmera abre em close do perfume, Virginia sussurra: <span style={{ color: '#a78bfa' }}>'Gente, vocês não tão preparadas pro que eu vou contar'</span>"
+                  </p>
+                </div>
+
+                {/* Brief Section */}
+                <div 
+                  className="p-4 rounded-xl mb-4"
+                  style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
+                >
+                  <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '10px' }}>
+                    Brief
+                  </div>
+                  <p style={{ color: '#aaa', fontSize: '13px', lineHeight: '1.7', fontFamily: '"DM Mono", monospace', fontStyle: 'italic' }}>
+                    UGC de influenciadora para perfume WePink. Hook parasocial com abertura em close do produto + frase de curiosidade. CTA com código promocional aparece em 00:22. Formato vertical 9:16 otimizado para Stories/Reels.
                   </p>
                 </div>
 
                 {/* Bottom Row */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-2">
-                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 Brazil', '👥 Female 18-34'].map((badge) => (
+                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beleza'].map((badge) => (
                       <span 
                         key={badge}
                         style={{ 
@@ -414,9 +427,11 @@ const Index = () => {
                   </div>
                   <Button 
                     size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs border-0"
+                    variant="outline"
+                    className="text-xs"
+                    style={{ background: '#141414', border: '1px solid #333', color: '#888' }}
                   >
-                    Generate Board →
+                    ← Voltar ao menu
                   </Button>
                 </div>
               </div>
