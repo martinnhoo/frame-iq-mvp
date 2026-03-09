@@ -212,6 +212,10 @@ const Index = () => {
               variant="outline" 
               className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group"
               style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+              onClick={() => {
+                const el = document.getElementById('demo-preview');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors" />
               {t("hero_cta_secondary")}
