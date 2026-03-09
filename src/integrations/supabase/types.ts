@@ -17,29 +17,47 @@ export type Database = {
       analyses: {
         Row: {
           created_at: string
+          file_size_mb: number | null
+          hook_strength: string | null
           id: string
+          improvement_suggestions: string[] | null
+          processing_time_seconds: number | null
+          recommended_platforms: string[] | null
           result: Json | null
           status: string
           title: string | null
           user_id: string
+          video_duration_seconds: number | null
           video_url: string | null
         }
         Insert: {
           created_at?: string
+          file_size_mb?: number | null
+          hook_strength?: string | null
           id?: string
+          improvement_suggestions?: string[] | null
+          processing_time_seconds?: number | null
+          recommended_platforms?: string[] | null
           result?: Json | null
           status?: string
           title?: string | null
           user_id: string
+          video_duration_seconds?: number | null
           video_url?: string | null
         }
         Update: {
           created_at?: string
+          file_size_mb?: number | null
+          hook_strength?: string | null
           id?: string
+          improvement_suggestions?: string[] | null
+          processing_time_seconds?: number | null
+          recommended_platforms?: string[] | null
           result?: Json | null
           status?: string
           title?: string | null
           user_id?: string
+          video_duration_seconds?: number | null
           video_url?: string | null
         }
         Relationships: []
@@ -48,29 +66,50 @@ export type Database = {
         Row: {
           content: Json | null
           created_at: string
+          duration_seconds: number | null
+          has_talent: boolean | null
           id: string
+          market_flag: string | null
+          platform: string | null
           prompt: string | null
+          scene_count: number | null
           status: string
+          talent_name: string | null
           title: string | null
           user_id: string
+          vo_language: string | null
         }
         Insert: {
           content?: Json | null
           created_at?: string
+          duration_seconds?: number | null
+          has_talent?: boolean | null
           id?: string
+          market_flag?: string | null
+          platform?: string | null
           prompt?: string | null
+          scene_count?: number | null
           status?: string
+          talent_name?: string | null
           title?: string | null
           user_id: string
+          vo_language?: string | null
         }
         Update: {
           content?: Json | null
           created_at?: string
+          duration_seconds?: number | null
+          has_talent?: boolean | null
           id?: string
+          market_flag?: string | null
+          platform?: string | null
           prompt?: string | null
+          scene_count?: number | null
           status?: string
+          talent_name?: string | null
           title?: string | null
           user_id?: string
+          vo_language?: string | null
         }
         Relationships: []
       }
@@ -117,7 +156,12 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          onboarding_completed: boolean | null
           plan: string
+          plan_started_at: string | null
+          preferred_language: string | null
+          preferred_market: string | null
+          stripe_customer_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -125,7 +169,12 @@ export type Database = {
           email?: string | null
           id: string
           name?: string | null
+          onboarding_completed?: boolean | null
           plan?: string
+          plan_started_at?: string | null
+          preferred_language?: string | null
+          preferred_market?: string | null
+          stripe_customer_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -133,7 +182,12 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          onboarding_completed?: boolean | null
           plan?: string
+          plan_started_at?: string | null
+          preferred_language?: string | null
+          preferred_market?: string | null
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }
@@ -155,6 +209,45 @@ export type Database = {
         }
         Relationships: []
       }
+      translations: {
+        Row: {
+          character_count: number | null
+          context: string | null
+          created_at: string
+          from_language: string | null
+          id: string
+          source_text: string
+          to_language: string
+          tone: string | null
+          translated_text: string | null
+          user_id: string
+        }
+        Insert: {
+          character_count?: number | null
+          context?: string | null
+          created_at?: string
+          from_language?: string | null
+          id?: string
+          source_text: string
+          to_language: string
+          tone?: string | null
+          translated_text?: string | null
+          user_id: string
+        }
+        Update: {
+          character_count?: number | null
+          context?: string | null
+          created_at?: string
+          from_language?: string | null
+          id?: string
+          source_text?: string
+          to_language?: string
+          tone?: string | null
+          translated_text?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       usage: {
         Row: {
           analyses_count: number
@@ -162,6 +255,7 @@ export type Database = {
           created_at: string
           id: string
           period: string
+          translations_count: number | null
           user_id: string
           videos_count: number
         }
@@ -171,6 +265,7 @@ export type Database = {
           created_at?: string
           id?: string
           period: string
+          translations_count?: number | null
           user_id: string
           videos_count?: number
         }
@@ -180,6 +275,7 @@ export type Database = {
           created_at?: string
           id?: string
           period?: string
+          translations_count?: number | null
           user_id?: string
           videos_count?: number
         }
@@ -187,31 +283,52 @@ export type Database = {
       }
       videos_generated: {
         Row: {
+          aspect_ratio: string | null
           board_id: string | null
           created_at: string
+          duration_seconds: number | null
+          file_size_mb: number | null
+          has_captions: boolean | null
           id: string
+          output_url: string | null
+          scene_count: number | null
           status: string
           title: string | null
           user_id: string
           video_url: string | null
+          voice_id: string | null
         }
         Insert: {
+          aspect_ratio?: string | null
           board_id?: string | null
           created_at?: string
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          has_captions?: boolean | null
           id?: string
+          output_url?: string | null
+          scene_count?: number | null
           status?: string
           title?: string | null
           user_id: string
           video_url?: string | null
+          voice_id?: string | null
         }
         Update: {
+          aspect_ratio?: string | null
           board_id?: string | null
           created_at?: string
+          duration_seconds?: number | null
+          file_size_mb?: number | null
+          has_captions?: boolean | null
           id?: string
+          output_url?: string | null
+          scene_count?: number | null
           status?: string
           title?: string | null
           user_id?: string
           video_url?: string | null
+          voice_id?: string | null
         }
         Relationships: [
           {

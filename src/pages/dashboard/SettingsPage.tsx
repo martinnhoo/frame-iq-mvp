@@ -123,6 +123,73 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Integrations */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base">API Integrations</CardTitle>
+          <CardDescription>Connect external AI services to enable full functionality.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <div>
+                <p className="font-medium text-sm text-foreground">Anthropic Claude</p>
+                <p className="text-xs text-muted-foreground">Board generation, analysis, translation</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="border-border text-muted-foreground text-xs">
+              Not configured
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <div>
+                <p className="font-medium text-sm text-foreground">OpenAI</p>
+                <p className="text-xs text-muted-foreground">Whisper transcription, DALL-E images</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="border-border text-muted-foreground text-xs">
+              Not configured
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <div>
+                <p className="font-medium text-sm text-foreground">ElevenLabs</p>
+                <p className="text-xs text-muted-foreground">Voiceover generation (Studio/Scale only)</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="border-border text-muted-foreground text-xs">
+              Not configured
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-muted" />
+              <div>
+                <p className="font-medium text-sm text-foreground">Stripe</p>
+                <p className="text-xs text-muted-foreground">Payment processing (coming soon)</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="border-border text-muted-foreground text-xs">
+              Coming soon
+            </Badge>
+          </div>
+
+          <div className="pt-3 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Add API keys via Supabase secrets to enable full AI-powered features. Currently running in mock mode.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Security */}
       <Card className="border-border bg-card">
         <CardHeader>
