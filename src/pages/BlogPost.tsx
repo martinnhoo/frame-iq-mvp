@@ -4,6 +4,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const blogPosts: Record<string, {
   title: string;
