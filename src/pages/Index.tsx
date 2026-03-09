@@ -102,7 +102,7 @@ const Index = () => {
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "#pricing" },
     { label: "Blog", href: "/blog", isRoute: true },
-    { label: "Community", href: "/community", isRoute: true },
+    { label: "FAQ", href: "/faq", isRoute: true },
     { label: "Contact", href: "/contact", isRoute: true },
   ];
 
