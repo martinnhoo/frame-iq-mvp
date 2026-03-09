@@ -320,8 +320,7 @@ const Index = () => {
                 </div>
 
                 {/* Metrics Grid */}
-                <div 
-                  className="grid grid-cols-3 gap-4 mb-6 p-4 rounded-xl"
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 rounded-xl"
                   style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
                 >
                   <div>
