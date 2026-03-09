@@ -10,6 +10,7 @@ import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import LegalModal from "@/components/LegalModal";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AuthPromptModal from "@/components/AuthPromptModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Index = () => {
@@ -221,7 +222,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex items-center justify-center gap-6 mt-8 text-sm"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-8 text-xs sm:text-sm"
             style={{ color: '#666' }}
           >
             <span className="flex items-center gap-2">
@@ -243,7 +244,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
-            className="relative mt-20 max-w-4xl mx-auto"
+            className="relative mt-12 sm:mt-20 max-w-4xl mx-auto hidden sm:block"
           >
             <div className="relative text-center mb-4">
               <span style={{ color: '#555', fontSize: '11px', letterSpacing: '3px', fontWeight: 600 }}>
@@ -319,8 +320,7 @@ const Index = () => {
                 </div>
 
                 {/* Metrics Grid */}
-                <div 
-                  className="grid grid-cols-3 gap-4 mb-6 p-4 rounded-xl"
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 rounded-xl"
                   style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
                 >
                   <div>
@@ -737,6 +737,7 @@ const Index = () => {
 
       <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
       <CookieConsent />
+      <AuthPromptModal />
     </div>
   );
 };

@@ -4,6 +4,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const blogPosts: Record<string, {
   title: string;
@@ -671,6 +673,11 @@ const BlogPost = () => {
     );
   }
 
+  const { language } = useLanguage();
+  const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
+  const hrefLangCode = langMap[language] || "en";
+  const baseUrl = "https://frame-iq-mvp.lovable.app";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
@@ -680,25 +687,34 @@ const BlogPost = () => {
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.description} />
         <meta property="og:type" content="article" />
-        <link rel="canonical" href={`https://frameiq.com/blog/${slug}`} />
+        <link rel="canonical" href={`${baseUrl}/blog/${slug}`} />
+        <link rel="alternate" hrefLang="en" href={`${baseUrl}/blog/${slug}`} />
+        <link rel="alternate" hrefLang="es" href={`${baseUrl}/blog/${slug}?lang=es`} />
+        <link rel="alternate" hrefLang="fr" href={`${baseUrl}/blog/${slug}?lang=fr`} />
+        <link rel="alternate" hrefLang="de" href={`${baseUrl}/blog/${slug}?lang=de`} />
+        <link rel="alternate" hrefLang="ar" href={`${baseUrl}/blog/${slug}?lang=ar`} />
+        <link rel="alternate" hrefLang="zh" href={`${baseUrl}/blog/${slug}?lang=zh`} />
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/blog/${slug}`} />
+        <html lang={hrefLangCode} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Article",
-            "headline": post.title,
-            "description": post.description,
-            "author": { "@type": "Organization", "name": "FrameIQ" },
-            "publisher": { "@type": "Organization", "name": "FrameIQ" },
-            "datePublished": post.date,
-            "keywords": post.keywords.join(", "),
+            headline: post.title,
+            description: post.description,
+            author: { "@type": "Organization", name: "FrameIQ" },
+            publisher: { "@type": "Organization", name: "FrameIQ" },
+            datePublished: post.date,
+            keywords: post.keywords.join(", "),
+            inLanguage: hrefLangCode,
+            url: `${baseUrl}/blog/${slug}`,
           })}
         </script>
       </Helmet>
 
-      {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
+        <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
+          <Link to="/" className="text-xl sm:text-2xl font-bold flex items-center">
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>
@@ -709,22 +725,26 @@ const BlogPost = () => {
             <Link to="/contact" className="text-sm text-secondary hover:text-foreground transition-colors">Contact</Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
-            </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col gap-6 mt-8">
-                <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
-                <Link to="/blog" className="text-lg text-foreground">Blog</Link>
-                <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
+              </SheetTrigger>
+              <SheetContent>
+                <div className="flex flex-col gap-6 mt-8">
+                  <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
+                  <Link to="/blog" className="text-lg text-foreground">Blog</Link>
+                  <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </nav>
 
