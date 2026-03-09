@@ -143,8 +143,7 @@ const Pricing = () => {
       {/* Nav */}
       <nav className="border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center gap-2">
-            <img src="/logo.png" alt="FrameIQ" className="h-8 w-8" />
+          <Link to="/" className="text-2xl font-bold flex items-center">
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>
