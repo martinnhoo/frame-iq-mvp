@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Video, FileText, Globe, Brain, Sparkles, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import VideoDropZone from "@/components/VideoDropZone";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const features = [
