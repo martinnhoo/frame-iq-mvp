@@ -69,7 +69,7 @@ const Index = () => {
       name: "Free",
       price: "$0",
       period: "/mo",
-      features: ["3 video analyses", "3 boards", "1 user", "Community support"],
+      features: ["3 video analyses", "3 boards", "1 seat", "Community support"],
       cta: "Get started free",
       highlighted: false
     },
@@ -77,17 +77,17 @@ const Index = () => {
       name: "Studio",
       price: "$49",
       period: "/mo",
-      features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "2 team members", "Priority support", "Export to Notion"],
+      features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "1 seat", "Priority support", "Export to Notion"],
       cta: "Start 14-day trial",
       highlighted: true,
       badge: "Most Popular"
     },
     {
       name: "Scale",
-      price: "$499",
+      price: "$399",
       period: "/mo",
-      features: ["500 analyses/mo", "300 boards/mo", "50 videos/mo", "10 team members", "API access", "Custom integrations", "Dedicated CSM"],
-      cta: "Talk to sales",
+      features: ["500 analyses/mo", "300 boards/mo", "50 videos/mo", "10 seats", "API access", "Custom integrations", "Dedicated CSM"],
+      cta: "Book a demo",
       highlighted: false
     }
   ];
