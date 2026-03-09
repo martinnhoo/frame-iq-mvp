@@ -7,6 +7,7 @@ import VideoDropZone from "@/components/VideoDropZone";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const features = [
     {
       icon: Video,
