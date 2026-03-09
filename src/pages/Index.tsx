@@ -433,7 +433,7 @@ const Index = () => {
                 {/* Bottom Row */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-2">
-                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beauty'].map((badge) => (
+                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beauty', '👩 Women 25-34'].map((badge) => (
                       <span 
                         key={badge}
                         style={{ 
