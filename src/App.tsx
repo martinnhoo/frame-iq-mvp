@@ -12,7 +12,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
 import BookDemo from "./pages/BookDemo";
-import Community from "./pages/Community";
+import FAQ from "./pages/FAQ";
 import FeatureDetail from "./pages/FeatureDetail";
 import NotFound from "./pages/NotFound";
 
@@ -34,7 +34,7 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/book-demo" element={<BookDemo />} />
-            <Route path="/community" element={<Community />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/features/:slug" element={<FeatureDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

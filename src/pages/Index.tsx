@@ -1,15 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Video, FileText, Globe, Brain, Sparkles, Menu, ArrowRight, Play, Zap, Shield, Clock, Check } from "lucide-react";
+import { Video, FileText, Globe, Brain, Sparkles, Menu, ArrowRight, Play, Zap, Shield, Clock, Check, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import VideoDropZone from "@/components/VideoDropZone";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import CookieConsent from "@/components/CookieConsent";
+import LegalModal from "@/components/LegalModal";
 
 const Index = () => {
   const navigate = useNavigate();
-  
+  const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
+
   const features = [
     {
       icon: Video,
@@ -62,7 +66,6 @@ const Index = () => {
     { value: "< 60s", label: "Avg. Analysis Time" },
   ];
 
-  const logos = ["Betano", "Nubank", "Shein", "Revolut", "Stake", "Shopify", "Gymshark", "Wise"];
 
   const steps = [
     { number: "01", title: "Upload or paste link", description: "Drop any ad, competitor video, or reference file" },
@@ -102,7 +105,7 @@ const Index = () => {
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "#pricing" },
     { label: "Blog", href: "/blog", isRoute: true },
-    { label: "Community", href: "/community", isRoute: true },
+    { label: "FAQ", href: "/faq", isRoute: true },
     { label: "Contact", href: "/contact", isRoute: true },
   ];
 
@@ -497,25 +500,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Social Proof Logos */}
-      <section className="py-16 px-6 border-b border-border/50">
-        <div className="container mx-auto max-w-6xl">
-          <p className="text-center text-sm mb-8" style={{ color: '#555' }}>
-            Trusted by performance teams at
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 md:gap-16">
-            {logos.map((logo) => (
-              <span 
-                key={logo}
-                className="text-xl font-semibold opacity-30 hover:opacity-60 transition-opacity cursor-default"
-                style={{ color: '#fff' }}
-              >
-                {logo}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Stats Section */}
       <section className="py-20 px-6">
@@ -779,7 +763,7 @@ const Index = () => {
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-secondary">
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
-                <li><Link to="/community" className="hover:text-foreground transition-colors">Community</Link></li>
+                <li><Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               </ul>
             </div>
@@ -787,8 +771,8 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
+                <li><button onClick={() => setLegalModal("privacy")} className="hover:text-foreground transition-colors">Privacy Policy</button></li>
+                <li><button onClick={() => setLegalModal("terms")} className="hover:text-foreground transition-colors">Terms of Service</button></li>
               </ul>
             </div>
           </div>
@@ -810,6 +794,9 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
+      <CookieConsent />
     </div>
   );
 };
