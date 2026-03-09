@@ -104,7 +104,19 @@ const AnalysisDetail = () => {
         </div>
       </div>
 
-      {analysis.status === "completed" && (
+      {analysis.status === "completed" && !result && (
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardContent className="py-12 flex flex-col items-center text-center">
+            <AlertCircle className="h-10 w-10 text-amber-400 mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">API key not configured</h3>
+            <p className="text-muted-foreground text-sm max-w-sm">
+              The analysis was queued but no AI result was returned. Add <span className="font-mono text-amber-400">ANTHROPIC_API_KEY</span> and <span className="font-mono text-amber-400">OPENAI_API_KEY</span> to Supabase secrets to enable real analysis.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {analysis.status === "completed" && result && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Hook Benchmark */}
           {hookScore !== null && (
