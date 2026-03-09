@@ -172,6 +172,7 @@ const Index = () => {
             <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base h-auto border-0 rounded-lg"
               style={{ padding: '14px 32px' }}
+              onClick={() => navigate("/signup")}
             >
               Start for free — no card needed
             </Button>
