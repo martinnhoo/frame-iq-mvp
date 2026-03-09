@@ -281,6 +281,7 @@ const Index = () => {
                 overflow: 'hidden',
                 boxShadow: '0 40px 100px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.2)',
                 animation: 'float 6s ease-in-out infinite',
+                transform: 'rotate(-1.5deg)',
               }}
             >
               {/* Browser Chrome */}

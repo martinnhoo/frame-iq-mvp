@@ -86,7 +86,7 @@ All colors MUST be HSL.
     transform: translateY(0px) rotate(-1.5deg);
   }
   50% {
-    transform: translateY(-10px) rotate(-1.5deg);
+    transform: translateY(-8px) rotate(-1.5deg);
   }
 }
 
