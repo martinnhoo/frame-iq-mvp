@@ -676,7 +676,7 @@ const BlogPost = () => {
   const { language } = useLanguage();
   const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
   const hrefLangCode = langMap[language] || "en";
-  const baseUrl = "https://frame-iq-mvp.lovable.app";
+  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.frameiq.com";
 
   return (
     <div className="min-h-screen bg-background text-foreground">

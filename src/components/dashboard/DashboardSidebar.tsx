@@ -12,19 +12,19 @@ import { toast } from "sonner";
 import { useState } from "react";
 
 const mainItems = [
-  { title: "Overview", url: "/dashboard", icon: Home, end: true },
-  { title: "Analyses", url: "/dashboard/analyses", icon: BarChart3 },
-  { title: "Boards", url: "/dashboard/boards", icon: LayoutGrid },
-  { title: "Videos", url: "/dashboard/videos", icon: Video },
+  { title: "Overview",  url: "/dashboard",          icon: Home,      end: true, accent: "text-white" },
+  { title: "Analyses",  url: "/dashboard/analyses", icon: BarChart3,            accent: "text-purple-400" },
+  { title: "Boards",    url: "/dashboard/boards",   icon: LayoutGrid,           accent: "text-blue-400" },
+  { title: "Videos",    url: "/dashboard/videos",   icon: Video,                accent: "text-green-400" },
 ];
 
 const toolItems = [
-  { title: "Templates", url: "/dashboard/templates", icon: Layers },
-  { title: "Translate", url: "/dashboard/translate", icon: Globe },
-  { title: "Pre-flight", url: "/dashboard/preflight", icon: Plane },
-  { title: "Competitor", url: "/dashboard/competitor", icon: Radar },
-  { title: "Persona", url: "/dashboard/persona", icon: Users },
-  { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain },
+  { title: "Templates",    url: "/dashboard/templates",   icon: Layers,  accent: "text-pink-400" },
+  { title: "Translate",    url: "/dashboard/translate",   icon: Globe,   accent: "text-emerald-400" },
+  { title: "Pre-flight",   url: "/dashboard/preflight",   icon: Plane,   accent: "text-yellow-400" },
+  { title: "Competitor",   url: "/dashboard/competitor",  icon: Radar,   accent: "text-orange-400" },
+  { title: "Persona",      url: "/dashboard/persona",     icon: Users,   accent: "text-cyan-400" },
+  { title: "Intelligence", url: "/dashboard/intelligence",icon: Brain,   accent: "text-violet-400" },
 ];
 
 interface SidebarProps {
@@ -60,7 +60,7 @@ export function DashboardSidebar({ profile, open, onClose }: SidebarProps) {
             : "text-white/50 hover:text-white hover:bg-white/8"
           }`}
       >
-        <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-black" : "text-white/40 group-hover:text-white/70"}`} />
+        <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-black" : `${(item as { accent?: string }).accent || "text-white/40"} opacity-70 group-hover:opacity-100`}`} />
         <span className="flex-1">{item.title}</span>
         {active && <ChevronRight className="h-3 w-3 text-black/40" />}
       </NavLink>

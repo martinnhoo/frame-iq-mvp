@@ -29,6 +29,7 @@ const DashboardOverview = () => {
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [clearingActivity, setClearingActivity] = useState(false);
+  const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
 
   const planLimits = {
     free: { analyses: 3, boards: 3, videos: 0 },
@@ -41,8 +42,14 @@ const DashboardOverview = () => {
 
   useEffect(() => {
     const run = async () => {
-      const { data } = await supabase.from("analyses").select("result, hook_strength").eq("user_id", user.id).eq("status", "completed");
-      if (!data?.length) return;
+      let query = supabase.from("analyses").select("result, hook_strength, created_at").eq("user_id", user.id).eq("status", "completed");
+      if (dateFilter !== "all") {
+        const days = dateFilter === "7d" ? 7 : 30;
+        const since = new Date(Date.now() - days * 86400000).toISOString();
+        query = query.gte("created_at", since);
+      }
+      const { data } = await query;
+      if (!data?.length) { setInsights({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 }); return; }
       let total = 0, count = 0;
       const models: Record<string, number> = {}, markets: Record<string, number> = {};
       data.forEach((a) => {
@@ -61,11 +68,7 @@ const DashboardOverview = () => {
       });
     };
     run();
-  }, [user.id]);
-
-  useEffect(() => {
-    const run = async () => {
-      const [{ data: analyses }, { data: boards }] = await Promise.all([
+  }, [user.id, dateFilter]);
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
         supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
       ]);
@@ -98,12 +101,12 @@ const DashboardOverview = () => {
   ];
 
   const quickActions = [
-    { title: "New Analysis", desc: "Upload a video for AI insights", icon: BarChart3, url: "/dashboard/analyses/new", hot: true },
-    { title: "Create Board", desc: "Generate a production board", icon: LayoutGrid, url: "/dashboard/boards/new" },
-    { title: "Pre-flight", desc: "Review before posting", icon: Plane, url: "/dashboard/preflight" },
-    { title: "Translate", desc: "Adapt scripts to any market", icon: Globe, url: "/dashboard/translate" },
-    { title: "Templates", desc: "Start from proven formats", icon: Sparkles, url: "/dashboard/templates" },
-    { title: "Competitor", desc: "Track rival creatives", icon: Target, url: "/dashboard/competitor" },
+    { title: "New Analysis",  desc: "Upload a video for AI insights",   icon: BarChart3, url: "/dashboard/analyses/new", hot: true,  accent: "text-purple-400", bg: "bg-purple-500/10" },
+    { title: "Create Board",  desc: "Generate a production board",      icon: LayoutGrid, url: "/dashboard/boards/new",           accent: "text-blue-400",   bg: "bg-blue-500/10" },
+    { title: "Pre-flight",    desc: "Review before posting",            icon: Plane,      url: "/dashboard/preflight",            accent: "text-yellow-400", bg: "bg-yellow-500/10" },
+    { title: "Translate",     desc: "Adapt scripts to any market",      icon: Globe,      url: "/dashboard/translate",            accent: "text-green-400",  bg: "bg-green-500/10" },
+    { title: "Templates",     desc: "Start from proven formats",        icon: Sparkles,   url: "/dashboard/templates",            accent: "text-pink-400",   bg: "bg-pink-500/10" },
+    { title: "Competitor",    desc: "Track rival creatives",            icon: Target,     url: "/dashboard/competitor",           accent: "text-orange-400", bg: "bg-orange-500/10" },
   ];
 
   const firstName = profile?.name?.split(" ")[0] || "there";
@@ -184,8 +187,8 @@ const DashboardOverview = () => {
                   New
                 </span>
               )}
-              <div className="h-8 w-8 rounded-xl bg-white/[0.08] flex items-center justify-center mb-3 group-hover:bg-white/[0.12] transition-colors">
-                <action.icon className="h-4 w-4 text-white/50 group-hover:text-white/80 transition-colors" />
+              <div className={`h-8 w-8 rounded-xl ${action.bg} flex items-center justify-center mb-3 transition-colors`}>
+                <action.icon className={`h-4 w-4 ${action.accent}`} />
               </div>
               <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{action.title}</p>
               <p className="text-xs text-white/30 mt-0.5 hidden sm:block">{action.desc}</p>
@@ -199,9 +202,19 @@ const DashboardOverview = () => {
 
         {/* Performance Insights */}
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <div className="flex items-center gap-2 mb-5">
-            <TrendingUp className="h-4 w-4 text-white/40" />
-            <h3 className="text-sm font-semibold text-white/70">Performance Insights</h3>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-white/40" />
+              <h3 className="text-sm font-semibold text-white/70">Performance Insights</h3>
+            </div>
+            <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] border border-white/[0.06] p-0.5">
+              {(["7d", "30d", "all"] as const).map(f => (
+                <button key={f} onClick={() => setDateFilter(f)}
+                  className={`px-2 py-1 rounded-md text-[10px] font-mono transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/25 hover:text-white/50"}`}>
+                  {f === "all" ? "All" : f}
+                </button>
+              ))}
+            </div>
           </div>
           {insights.totalAnalyzed === 0 ? (
             <div className="flex flex-col items-center text-center py-8 gap-3">
