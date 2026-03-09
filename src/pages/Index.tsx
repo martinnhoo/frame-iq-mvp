@@ -131,7 +131,7 @@ const Index = () => {
                     {link}
                   </a>
                 ))}
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>
                   Get started
                 </Button>
               </div>
