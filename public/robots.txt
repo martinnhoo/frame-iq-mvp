@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://frame-iq-mvp.lovable.app/sitemap.xml
