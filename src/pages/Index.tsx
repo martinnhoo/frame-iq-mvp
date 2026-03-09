@@ -9,104 +9,70 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import LegalModal from "@/components/LegalModal";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
+  const { t } = useLanguage();
 
   const features = [
-    {
-      icon: Video,
-      title: "Video Analysis",
-      description: "Upload any video. Frames, transcript, creative model and hook extracted in under 60 seconds.",
-      gradient: "from-purple-500/20 to-pink-500/20",
-      slug: "video-analysis"
-    },
-    {
-      icon: FileText,
-      title: "Board Generation",
-      description: "Type a prompt. Get a full production board with scenes, VO script, and editor notes.",
-      gradient: "from-blue-500/20 to-cyan-500/20",
-      slug: "board-generation"
-    },
-    {
-      icon: Globe,
-      title: "Auto Translation",
-      description: "Any language, any market — always delivered in English for your global team.",
-      gradient: "from-green-500/20 to-emerald-500/20",
-      slug: "auto-translation"
-    },
-    {
-      icon: Brain,
-      title: "Creative Intelligence",
-      description: "Every video classified by format. Hook extracted from the first 3 seconds.",
-      gradient: "from-orange-500/20 to-amber-500/20",
-      slug: "creative-intelligence"
-    },
-    {
-      icon: Sparkles,
-      title: "AI Video Generation",
-      description: "From concept board to MP4 with AI voiceover. No editors needed.",
-      gradient: "from-pink-500/20 to-rose-500/20",
-      slug: "ai-video-generation"
-    },
-    {
-      icon: Zap,
-      title: "API Access",
-      description: "Integrate FrameIQ into your existing workflow with our REST API.",
-      gradient: "from-violet-500/20 to-purple-500/20",
-      slug: "api-access"
-    }
+    { icon: Video, title: t("feature_video_title"), description: t("feature_video_desc"), gradient: "from-purple-500/20 to-pink-500/20", slug: "video-analysis" },
+    { icon: FileText, title: t("feature_board_title"), description: t("feature_board_desc"), gradient: "from-blue-500/20 to-cyan-500/20", slug: "board-generation" },
+    { icon: Globe, title: t("feature_translation_title"), description: t("feature_translation_desc"), gradient: "from-green-500/20 to-emerald-500/20", slug: "auto-translation" },
+    { icon: Brain, title: t("feature_intelligence_title"), description: t("feature_intelligence_desc"), gradient: "from-orange-500/20 to-amber-500/20", slug: "creative-intelligence" },
+    { icon: Sparkles, title: t("feature_ai_video_title"), description: t("feature_ai_video_desc"), gradient: "from-pink-500/20 to-rose-500/20", slug: "ai-video-generation" },
+    { icon: Zap, title: t("feature_api_title"), description: t("feature_api_desc"), gradient: "from-violet-500/20 to-purple-500/20", slug: "api-access" },
   ];
 
   const stats = [
-    { value: "2.4M+", label: "Videos Analyzed" },
-    { value: "147", label: "Enterprise Teams" },
-    { value: "12", label: "Countries" },
-    { value: "< 60s", label: "Avg. Analysis Time" },
+    { value: "2.4M+", label: t("stats_videos") },
+    { value: "147", label: t("stats_teams") },
+    { value: "12", label: t("stats_countries") },
+    { value: "< 60s", label: t("stats_time") },
   ];
 
-
   const steps = [
-    { number: "01", title: "Upload or paste link", description: "Drop any ad, competitor video, or reference file" },
-    { number: "02", title: "AI extracts insights", description: "Hook, creative model, transcript, key frames — all in 60s" },
-    { number: "03", title: "Generate your board", description: "Get a production-ready brief your team can execute today" },
+    { number: "01", title: t("how_step1_title"), description: t("how_step1_desc") },
+    { number: "02", title: t("how_step2_title"), description: t("how_step2_desc") },
+    { number: "03", title: t("how_step3_title"), description: t("how_step3_desc") },
   ];
 
   const plans = [
     {
-      name: "Free",
+      name: t("pricing_free"),
       price: "$0",
-      period: "/mo",
+      period: t("pricing_mo"),
       features: ["3 video analyses", "3 boards", "1 seat", "Community support"],
-      cta: "Get started free",
+      cta: t("pricing_cta_free"),
       highlighted: false
     },
     {
-      name: "Studio",
+      name: t("pricing_studio"),
       price: "$49",
-      period: "/mo",
+      period: t("pricing_mo"),
       features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "1 seat", "Priority support", "Export to Notion"],
-      cta: "Start 14-day trial",
+      cta: t("pricing_cta_trial"),
       highlighted: true,
-      badge: "Most Popular"
+      badge: t("pricing_most_popular")
     },
     {
-      name: "Scale",
+      name: t("pricing_scale"),
       price: "$399",
-      period: "/mo",
+      period: t("pricing_mo"),
       features: ["500 analyses/mo", "300 boards/mo", "50 videos/mo", "10 seats", "API access", "Custom integrations", "Dedicated CSM"],
-      cta: "Book a demo",
+      cta: t("pricing_cta_demo"),
       highlighted: false
     }
   ];
 
   const navLinks = [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Blog", href: "/blog", isRoute: true },
-    { label: "FAQ", href: "/faq", isRoute: true },
-    { label: "Contact", href: "/contact", isRoute: true },
+    { label: t("nav_features"), href: "#features" },
+    { label: t("nav_pricing"), href: "#pricing" },
+    { label: t("nav_blog"), href: "/blog", isRoute: true },
+    { label: t("nav_faq"), href: "/faq", isRoute: true },
+    { label: t("nav_contact"), href: "/contact", isRoute: true },
   ];
 
   return (
@@ -122,19 +88,11 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               link.isRoute ? (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="text-sm text-secondary hover:text-foreground transition-colors"
-                >
+                <Link key={link.label} to={link.href} className="text-sm text-secondary hover:text-foreground transition-colors">
                   {link.label}
                 </Link>
               ) : (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm text-secondary hover:text-foreground transition-colors"
-                >
+                <a key={link.label} href={link.href} className="text-sm text-secondary hover:text-foreground transition-colors">
                   {link.label}
                 </a>
               )
@@ -142,57 +100,46 @@ const Index = () => {
           </div>
           
           <div className="hidden md:flex items-center gap-3">
-            <Button 
-              variant="ghost"
-              className="text-secondary hover:text-foreground"
-              onClick={() => navigate("/login")}
-            >
-              Sign in
+            <LanguageSwitcher />
+            <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>
+              {t("nav_signin")}
             </Button>
             <Button 
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
               onClick={() => navigate("/signup")}
             >
-              Get started free
+              {t("nav_get_started")}
             </Button>
           </div>
 
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col gap-6 mt-8">
-                {navLinks.map((link) => (
-                  link.isRoute ? (
-                    <Link
-                      key={link.label}
-                      to={link.href}
-                      className="text-lg text-secondary hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ) : (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      className="text-lg text-secondary hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  )
-                ))}
-                <Button 
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                  onClick={() => navigate("/signup")}
-                >
-                  Get started
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
                 </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetTrigger>
+              <SheetContent>
+                <div className="flex flex-col gap-6 mt-8">
+                  {navLinks.map((link) => (
+                    link.isRoute ? (
+                      <Link key={link.label} to={link.href} className="text-lg text-secondary hover:text-foreground transition-colors">
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a key={link.label} href={link.href} className="text-lg text-secondary hover:text-foreground transition-colors">
+                        {link.label}
+                      </a>
+                    )
+                  ))}
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>
+                    {t("nav_get_started")}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </nav>
 
@@ -224,7 +171,7 @@ const Index = () => {
             style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(139, 92, 246, 0.3)' }}
           >
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span style={{ color: '#ccc' }}>Trusted by 147+ performance marketing teams</span>
+            <span style={{ color: '#ccc' }}>{t("hero_badge")}</span>
           </motion.div>
           
           <motion.h1 
@@ -233,8 +180,8 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[44px] md:text-[56px] lg:text-[72px] font-bold text-foreground leading-[1.05] tracking-tight"
           >
-            Stop guessing.<br />
-            <span className="gradient-text">Start converting.</span>
+            {t("hero_title_1")}<br />
+            <span className="gradient-text">{t("hero_title_2")}</span>
           </motion.h1>
           
           <motion.p 
@@ -244,8 +191,7 @@ const Index = () => {
             className="text-[18px] md:text-[20px] max-w-[600px] mx-auto mt-6 leading-relaxed"
             style={{ color: '#888' }}
           >
-            FrameIQ analyzes competitor ads, extracts what converts, and generates 
-            production-ready briefs — so your team ships 10x more creative, 10x faster.
+            {t("hero_subtitle")}
           </motion.p>
           
           <motion.div 
@@ -258,7 +204,7 @@ const Index = () => {
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/25"
               onClick={() => navigate("/signup")}
             >
-              Start free — no card needed
+              {t("hero_cta_primary")}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <Button 
@@ -267,7 +213,7 @@ const Index = () => {
               style={{ border: '1px solid rgba(255,255,255,0.15)' }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors" />
-              Watch 2-min demo
+              {t("hero_cta_secondary")}
             </Button>
           </motion.div>
 
@@ -280,15 +226,15 @@ const Index = () => {
           >
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              No credit card
+              {t("hero_check_1")}
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              Setup in 2 min
+              {t("hero_check_2")}
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              Cancel anytime
+              {t("hero_check_3")}
             </span>
           </motion.div>
           
@@ -301,7 +247,7 @@ const Index = () => {
           >
             <div className="relative text-center mb-4">
               <span style={{ color: '#555', fontSize: '11px', letterSpacing: '3px', fontWeight: 600 }}>
-                REAL ANALYSIS OUTPUT
+                {t("hero_screenshot_label")}
               </span>
             </div>
 
@@ -478,17 +424,15 @@ const Index = () => {
         <div className="container mx-auto max-w-4xl">
           <div className="flex flex-col items-center gap-6">
             <p className="text-xs tracking-widest uppercase" style={{ color: '#555' }}>
-              Powered by
+              {t("powered_by")}
             </p>
             <div className="flex items-center gap-10 md:gap-16">
-              {/* OpenAI Logo */}
               <div className="flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.998 5.998 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor"/>
                 </svg>
                 <span className="text-lg font-semibold" style={{ color: '#fff' }}>OpenAI</span>
               </div>
-              {/* Anthropic Logo */}
               <div className="flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M17.304 3.541h-3.483l6.196 16.918h3.483L17.304 3.541zm-10.608 0L.5 20.459h3.59l1.278-3.554h6.281l1.278 3.554h3.59L10.321 3.541H6.696zm.894 10.563l2.058-5.715 2.058 5.715H7.59z" fill="currentColor"/>
@@ -499,7 +443,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
 
       {/* Stats Section */}
       <section className="py-20 px-6">
@@ -533,10 +476,10 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              How it works
+              {t("how_label")}
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              From upload to execution<br />in under 3 minutes
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 whitespace-pre-line">
+              {t("how_title")}
             </h2>
           </div>
           
@@ -565,13 +508,13 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              Features
+              {t("features_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              Everything your creative team needs
+              {t("features_title")}
             </h2>
             <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
-              Stop wasting hours reverse-engineering competitor ads. Let AI do it in seconds.
+              {t("features_subtitle")}
             </p>
           </div>
           
@@ -603,9 +546,6 @@ const Index = () => {
                       <CardDescription className="text-secondary leading-relaxed">
                         {feature.description}
                       </CardDescription>
-                      <span className="text-xs text-purple-400 mt-3 inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        Learn more <ArrowRight className="w-3 h-3" />
-                      </span>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -624,13 +564,13 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              Pricing
+              {t("pricing_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              Simple, transparent pricing
+              {t("pricing_title")}
             </h2>
             <p className="text-secondary text-lg mt-4">
-              Start free. Scale when you're ready.
+              {t("pricing_subtitle")}
             </p>
           </div>
           
@@ -681,7 +621,7 @@ const Index = () => {
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' 
                           : 'bg-card text-foreground hover:bg-muted border border-border'
                       }`}
-                      onClick={() => plan.name === "Scale" ? navigate("/book-demo") : navigate("/signup")}
+                      onClick={() => plan.name === t("pricing_scale") ? navigate("/book-demo") : navigate("/signup")}
                     >
                       {plan.cta}
                     </Button>
@@ -707,17 +647,17 @@ const Index = () => {
             }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to 10x your creative output?
+              {t("cta_title")}
             </h2>
             <p className="text-secondary text-lg mb-8 max-w-xl mx-auto">
-              Join 147+ performance teams shipping more creative, faster.
+              {t("cta_subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4"
                 onClick={() => navigate("/signup")}
               >
-                Get started free
+                {t("cta_primary")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <Button 
@@ -726,7 +666,7 @@ const Index = () => {
                 style={{ border: '1px solid rgba(255,255,255,0.2)' }}
                 onClick={() => navigate("/book-demo")}
               >
-                Book a demo
+                {t("cta_secondary")}
               </Button>
             </div>
           </motion.div>
@@ -746,49 +686,49 @@ const Index = () => {
                 <span className="gradient-text font-black">IQ</span>
               </div>
               <p className="text-sm text-secondary leading-relaxed">
-                AI-powered creative intelligence for performance marketing teams.
+                {t("footer_desc")}
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
+              <h4 className="font-semibold mb-4">{t("footer_product")}</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
-                <li><Link to="/book-demo" className="hover:text-foreground transition-colors">Book a Demo</Link></li>
+                <li><a href="#features" className="hover:text-foreground transition-colors">{t("nav_features")}</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">{t("nav_pricing")}</a></li>
+                <li><Link to="/book-demo" className="hover:text-foreground transition-colors">{t("footer_book_demo")}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
+              <h4 className="font-semibold mb-4">{t("footer_company")}</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
-                <li><Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link></li>
-                <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+                <li><Link to="/blog" className="hover:text-foreground transition-colors">{t("nav_blog")}</Link></li>
+                <li><Link to="/faq" className="hover:text-foreground transition-colors">{t("nav_faq")}</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground transition-colors">{t("nav_contact")}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">{t("footer_legal")}</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><button onClick={() => setLegalModal("privacy")} className="hover:text-foreground transition-colors">Privacy Policy</button></li>
-                <li><button onClick={() => setLegalModal("terms")} className="hover:text-foreground transition-colors">Terms of Service</button></li>
+                <li><button onClick={() => setLegalModal("privacy")} className="hover:text-foreground transition-colors">{t("footer_privacy")}</button></li>
+                <li><button onClick={() => setLegalModal("terms")} className="hover:text-foreground transition-colors">{t("footer_terms")}</button></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-secondary">
-              © 2026 FrameIQ. All rights reserved.
+              {t("footer_rights")}
             </div>
             <div className="flex items-center gap-4 text-sm text-secondary">
               <span className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
-                SOC 2 Compliant
+                {t("footer_soc2")}
               </span>
               <span className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                99.9% Uptime
+                {t("footer_uptime")}
               </span>
             </div>
           </div>
