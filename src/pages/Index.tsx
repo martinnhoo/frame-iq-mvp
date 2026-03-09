@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Video, FileText, Globe, Brain, Sparkles, Menu, ArrowRight, Play, Zap, Shield, Clock, Check } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import VideoDropZone from "@/components/VideoDropZone";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -92,7 +92,12 @@ const Index = () => {
     }
   ];
 
-  const navLinks = ["Features", "Pricing", "Drop", "Blog", "Contato"];
+  const navLinks = [
+    { label: "Features", href: "#features" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Blog", href: "/blog", isRoute: true },
+    { label: "Contact", href: "/contact", isRoute: true },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -106,17 +111,24 @@ const Index = () => {
           
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-                className="text-sm text-secondary hover:text-foreground transition-colors"
-              >
-                {link}
-              </a>
+              link.isRoute ? (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  className="text-sm text-secondary hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm text-secondary hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </a>
+              )
             ))}
-            <a href="#" className="text-sm text-secondary hover:text-foreground transition-colors">
-              Login
-            </a>
           </div>
           
           <div className="hidden md:flex items-center gap-3">
@@ -144,13 +156,23 @@ const Index = () => {
             <SheetContent>
               <div className="flex flex-col gap-6 mt-8">
                 {navLinks.map((link) => (
-                  <a
-                    key={link}
-                    href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="text-lg text-secondary hover:text-foreground transition-colors"
-                  >
-                    {link}
-                  </a>
+                  link.isRoute ? (
+                    <Link
+                      key={link.label}
+                      to={link.href}
+                      className="text-lg text-secondary hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      className="text-lg text-secondary hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  )
                 ))}
                 <Button 
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
@@ -390,7 +412,7 @@ const Index = () => {
                     Hook (0–3s)
                   </div>
                   <p style={{ color: '#e5e5e5', fontSize: '15px', lineHeight: '1.6', fontFamily: '"DM Mono", monospace' }}>
-                    "Câmera abre em close do perfume, Virginia sussurra: <span style={{ color: '#a78bfa' }}>'Gente, vocês não tão preparadas pro que eu vou contar'</span>"
+                    "Camera opens on close-up of perfume, Virginia whispers: <span style={{ color: '#a78bfa' }}>'You guys aren't ready for what I'm about to tell you'</span>"
                   </p>
                 </div>
 
@@ -403,14 +425,14 @@ const Index = () => {
                     Brief
                   </div>
                   <p style={{ color: '#aaa', fontSize: '13px', lineHeight: '1.7', fontFamily: '"DM Mono", monospace', fontStyle: 'italic' }}>
-                    UGC de influenciadora para perfume WePink. Hook parasocial com abertura em close do produto + frase de curiosidade. CTA com código promocional aparece em 00:22. Formato vertical 9:16 otimizado para Stories/Reels.
+                    Influencer UGC for WePink perfume. Parasocial hook with product close-up + curiosity-driven opening line. Promo code CTA appears at 00:22. Vertical 9:16 format optimized for Stories/Reels.
                   </p>
                 </div>
 
                 {/* Bottom Row */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-2">
-                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beleza'].map((badge) => (
+                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beauty'].map((badge) => (
                       <span 
                         key={badge}
                         style={{ 
@@ -432,7 +454,7 @@ const Index = () => {
                     className="text-xs"
                     style={{ background: '#141414', border: '1px solid #333', color: '#888' }}
                   >
-                    ← Voltar ao menu
+                    ← Back to menu
                   </Button>
                 </div>
               </div>
@@ -691,142 +713,6 @@ const Index = () => {
       {/* Video Drop Zone */}
       <VideoDropZone />
 
-      {/* Blog Section */}
-      <section id="blog" className="py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              Blog
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              Insights para times criativos
-            </h2>
-            <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
-              Conteúdo exclusivo sobre estratégia criativa, performance marketing e IA para equipes de growth.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                category: "Estratégia Criativa",
-                title: "Como analisar anúncios de concorrentes sem perder horas",
-                description: "Aprenda a metodologia que Creative Strategists usam para extrair insights de vídeos em minutos.",
-                readTime: "5 min",
-                date: "Mar 2026"
-              },
-              {
-                category: "Performance",
-                title: "O framework de hooks que aumenta CTR em 47%",
-                description: "Descubra os padrões de abertura que convertem mais, baseado em análise de 10.000+ vídeos.",
-                readTime: "7 min",
-                date: "Mar 2026"
-              },
-              {
-                category: "Inteligência Artificial",
-                title: "IA na produção criativa: guia completo para 2026",
-                description: "Como empresas estão economizando capital e testando mais rápido sem depender de agências.",
-                readTime: "10 min",
-                date: "Mar 2026"
-              }
-            ].map((post, index) => (
-              <motion.article
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="group cursor-pointer"
-              >
-                <div 
-                  className="rounded-2xl p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
-                  style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span 
-                      className="px-3 py-1 rounded-full text-xs font-medium"
-                      style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}
-                    >
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{post.date}</span>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3 group-hover:text-purple-400 transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-secondary text-sm leading-relaxed mb-4">
-                    {post.description}
-                  </p>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {post.readTime} de leitura
-                  </div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contato" className="py-24 px-6">
-        <div className="container mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              Contato
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
-              Fale com nosso time
-            </h2>
-            <p className="text-secondary text-lg mb-12 max-w-xl mx-auto">
-              Dúvidas, parcerias ou suporte — estamos aqui para ajudar.
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <a 
-                href="mailto:suporte@frameiq.com"
-                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
-                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
-              >
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}
-                >
-                  <span className="text-xl">✉️</span>
-                </div>
-                <div className="text-left">
-                  <div className="text-sm text-secondary">Email</div>
-                  <div className="font-semibold">suporte@frameiq.com</div>
-                </div>
-              </a>
-              
-              <a 
-                href="https://wa.me/5511999999999"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
-                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
-              >
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)' }}
-                >
-                  <span className="text-xl">💬</span>
-                </div>
-                <div className="text-left">
-                  <div className="text-sm text-secondary">WhatsApp</div>
-                  <div className="font-semibold">+55 11 99999-9999</div>
-                </div>
-              </a>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-border/50 bg-card/50">
         <div className="container mx-auto px-6 py-16">
@@ -847,17 +733,14 @@ const Index = () => {
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Integrations</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-secondary">
-                <li><a href="#" className="hover:text-foreground transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
+                <li><Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               </ul>
             </div>
             
@@ -866,14 +749,13 @@ const Index = () => {
               <ul className="space-y-2 text-sm text-secondary">
                 <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
-                <li><a href="#" className="hover:text-foreground transition-colors">Security</a></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-sm text-secondary">
-              © 2024 FrameIQ. All rights reserved.
+              © 2026 FrameIQ. All rights reserved.
             </div>
             <div className="flex items-center gap-4 text-sm text-secondary">
               <span className="flex items-center gap-2">
