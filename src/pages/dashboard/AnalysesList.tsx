@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { HookStrengthBadge } from "@/components/dashboard/HookStrengthBadge";
 
 interface Analysis {
   id: string;
@@ -15,6 +16,7 @@ interface Analysis {
   created_at: string;
   video_url: string | null;
   result: Record<string, unknown> | null;
+  hook_strength: string | null;
 }
 
 const statusConfig: Record<string, { label: string; icon: typeof Clock; className: string }> = {
