@@ -185,11 +185,11 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Example Output */}
+          {/* App Screenshot */}
           <div className="relative mt-16 max-w-4xl mx-auto">
             <div 
-              className="absolute inset-0 bg-white/5 blur-3xl rounded-full"
-              style={{ transform: 'translateY(20%)' }}
+              className="absolute inset-0 blur-3xl rounded-full"
+              style={{ background: 'rgba(255,255,255,0.03)', transform: 'translateY(20%)' }}
             />
             
             <div className="relative text-center mb-4">
@@ -201,105 +201,104 @@ const Index = () => {
             <div 
               className="relative mx-auto text-left"
               style={{ 
-                background: '#0a0a0a', 
-                border: '1px solid #222', 
-                borderRadius: '16px', 
-                padding: '24px',
-                maxWidth: '680px'
+                transform: 'rotate(-1.5deg)',
+                maxWidth: '720px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px #2a2a2a',
               }}
             >
-              {/* Top Row */}
-              <div className="flex items-center justify-between mb-5">
-                <span style={{ color: '#666', fontSize: '12px', fontFamily: '"DM Mono", monospace' }}>
-                  competitor_ad_india_v3.mp4
-                </span>
-                <span 
+              {/* Browser Chrome */}
+              <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: '#1a1a1a', borderBottom: '1px solid #2a2a2a' }}>
+                <div className="flex gap-1.5">
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f57' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#febc2e' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#28c840' }} />
+                </div>
+                <div 
+                  className="flex-1 text-center mx-8"
                   style={{ 
-                    background: '#0a0a0a', 
-                    border: '1px solid #222', 
-                    borderRadius: '9999px',
-                    padding: '4px 12px',
-                    fontSize: '12px',
-                    color: '#aaa'
+                    background: '#0f0f0f', 
+                    borderRadius: '6px', 
+                    padding: '4px 12px', 
+                    fontSize: '11px', 
+                    color: '#555',
+                    fontFamily: '"DM Mono", monospace'
                   }}
                 >
-                  Analysis Complete ✓
-                </span>
+                  app.frameiq.com/analysis/vg-wepink-01
+                </div>
               </div>
 
-              {/* Frames Row */}
-              <div className="mb-6">
-                <div className="flex gap-2 mb-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div 
-                      key={i}
+              {/* App Content */}
+              <div style={{ background: '#0f0f0f', padding: '24px' }}>
+                {/* Top Bar */}
+                <div className="flex items-center justify-between mb-6">
+                  <span style={{ color: '#555', fontSize: '12px', fontFamily: '"DM Mono", monospace' }}>
+                    virginia_wepink_wepink_perfume_ugc.mp4
+                  </span>
+                  <span className="flex items-center gap-1.5" style={{ fontSize: '12px', color: '#4ade80' }}>
+                    <span style={{ fontSize: '8px' }}>●</span> Analysis Complete
+                  </span>
+                </div>
+
+                {/* Three Columns */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                      CREATIVE MODEL
+                    </div>
+                    <div style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
+                      UGC-Influencer
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                      HOOK (0–3s)
+                    </div>
+                    <div style={{ color: '#aaa', fontSize: '13px', fontFamily: '"DM Mono", monospace', lineHeight: '1.5' }}>
+                      "Virginia holds perfume close to camera whispering: 'Esse é o perfume que uso todo dia antes de gravar'"
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
+                      ENGAGEMENT
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span style={{ color: '#fff', fontSize: '32px', fontWeight: 700 }}>9.1</span>
+                      <span style={{ color: '#666', fontSize: '14px' }}>/ 10</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brief */}
+                <div className="mb-5">
+                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                    BRIEF
+                  </div>
+                  <p style={{ color: '#888', fontSize: '13px', fontFamily: '"DM Mono", monospace', fontStyle: 'italic', lineHeight: '1.6' }}>
+                    Influencer UGC for WePink perfume. Strong parasocial hook — Virginia uses intimacy and daily routine framing to drive impulse purchase. Product visible within first 2 seconds.
+                  </p>
+                </div>
+
+                {/* Bottom Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market'].map((badge) => (
+                    <span 
+                      key={badge}
                       style={{ 
-                        width: '80px', 
-                        height: '45px', 
                         background: '#1a1a1a', 
                         border: '1px solid #333', 
-                        borderRadius: '6px' 
+                        borderRadius: '9999px',
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        color: '#aaa'
                       }}
-                    />
+                    >
+                      {badge}
+                    </span>
                   ))}
                 </div>
-                <span style={{ color: '#444', fontSize: '12px' }}>8 frames extracted</span>
-              </div>
-
-              {/* Three Columns */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                {/* Column 1 — Model */}
-                <div>
-                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
-                    CREATIVE MODEL
-                  </div>
-                  <div style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>
-                    UGC
-                  </div>
-                </div>
-
-                {/* Column 2 — Hook */}
-                <div>
-                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
-                    HOOK (0–3s)
-                  </div>
-                  <div style={{ color: '#aaa', fontSize: '13px', fontFamily: '"DM Mono", monospace', lineHeight: '1.5' }}>
-                    "Guy looks directly at camera: 'I was losing ₹500/day until I found this'"
-                  </div>
-                </div>
-
-                {/* Column 3 — Score */}
-                <div>
-                  <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px' }}>
-                    ENGAGEMENT
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span style={{ color: '#fff', fontSize: '32px', fontWeight: 700 }}>8.4</span>
-                    <span style={{ color: '#666', fontSize: '14px' }}>/ 10</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Row — Brief */}
-              <div>
-                <div style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
-                  BRIEF
-                </div>
-                <p style={{ color: '#888', fontSize: '13px', fontFamily: '"DM Mono", monospace', fontStyle: 'italic', lineHeight: '1.6', marginBottom: '10px' }}>
-                  UGC-style ad targeting Indian market. Strong direct-to-camera hook with loss aversion framing. Promo code revealed at 18s.
-                </p>
-                <span 
-                  style={{ 
-                    background: '#1a1a1a', 
-                    border: '1px solid #333', 
-                    borderRadius: '9999px',
-                    padding: '4px 10px',
-                    fontSize: '12px',
-                    color: '#aaa'
-                  }}
-                >
-                  🌐 Hindi → EN
-                </span>
               </div>
             </div>
           </div>
