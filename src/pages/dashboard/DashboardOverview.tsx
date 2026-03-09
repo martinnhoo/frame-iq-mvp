@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3,
   LayoutGrid,
@@ -13,11 +15,26 @@ import {
   TrendingUp,
   Clock,
   Zap,
+  Target,
 } from "lucide-react";
+import { HookStrengthBadge } from "@/components/dashboard/HookStrengthBadge";
+
+interface InsightsData {
+  avgHookScore: number | null;
+  bestModel: string | null;
+  mostUsedMarket: string | null;
+  totalAnalyzed: number;
+}
 
 const DashboardOverview = () => {
-  const { profile, usage } = useOutletContext<DashboardContext>();
+  const { user, profile, usage } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const [insights, setInsights] = useState<InsightsData>({
+    avgHookScore: null,
+    bestModel: null,
+    mostUsedMarket: null,
+    totalAnalyzed: 0,
+  });
 
   const planLimits = {
     free: { analyses: 3, boards: 3, videos: 0 },
@@ -26,6 +43,52 @@ const DashboardOverview = () => {
   };
 
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
+
+  // Fetch real insights from analyses
+  useEffect(() => {
+    const fetchInsights = async () => {
+      const { data } = await supabase
+        .from("analyses")
+        .select("result, hook_strength")
+        .eq("user_id", user.id)
+        .eq("status", "completed");
+
+      if (!data || data.length === 0) return;
+
+      let totalScore = 0;
+      let scoreCount = 0;
+      const modelCounts: Record<string, number> = {};
+      const marketCounts: Record<string, number> = {};
+
+      data.forEach((a) => {
+        const result = a.result as Record<string, unknown> | null;
+        if (!result) return;
+
+        const hookScore = (result.hook_score as number) ?? (result.engagement_score as number) ?? null;
+        if (hookScore !== null) {
+          totalScore += hookScore;
+          scoreCount++;
+        }
+
+        const model = result.creative_model as string;
+        if (model) modelCounts[model] = (modelCounts[model] || 0) + 1;
+
+        const market = result.market as string;
+        if (market) marketCounts[market] = (marketCounts[market] || 0) + 1;
+      });
+
+      const bestModel = Object.entries(modelCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+      const mostUsedMarket = Object.entries(marketCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+      setInsights({
+        avgHookScore: scoreCount > 0 ? totalScore / scoreCount : null,
+        bestModel,
+        mostUsedMarket,
+        totalAnalyzed: data.length,
+      });
+    };
+    fetchInsights();
+  }, [user.id]);
 
   const stats = [
     {
@@ -107,14 +170,13 @@ const DashboardOverview = () => {
             </CardHeader>
             <CardContent>
               <Progress
-                value={(stat.value / stat.limit) * 100}
+                value={stat.limit > 0 ? (stat.value / stat.limit) * 100 : 0}
                 className="h-2"
               />
               <p className="text-xs text-muted-foreground mt-2">
                 {stat.limit - stat.value} remaining this month
               </p>
             </CardContent>
-            {/* Subtle gradient accent */}
             <div
               className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-5 rounded-full -translate-y-8 translate-x-8`}
             />
@@ -147,32 +209,63 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Performance Summary */}
+      {/* Performance Insights + Activity */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-accent" />
+              <TrendingUp className="h-4 w-4 text-primary" />
               Performance Insights
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Avg. Hook Score</span>
-              <span className="text-sm font-semibold text-foreground">7.8 / 10</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Top Creative Model</span>
-              <Badge variant="secondary" className="text-xs">Problem → Solution</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Best Performing Hook</span>
-              <span className="text-sm font-semibold text-foreground">Question-based</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Avg. Predicted CTR</span>
-              <span className="text-sm font-semibold text-foreground">3.2%</span>
-            </div>
+            {insights.totalAnalyzed === 0 ? (
+              <div className="flex flex-col items-center text-center py-6">
+                <Target className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Analyze your first video to see insights</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 border-border"
+                  onClick={() => navigate("/dashboard/analyses/new")}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  New Analysis
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Avg. Hook Score</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      {insights.avgHookScore?.toFixed(1) ?? "—"} / 10
+                    </span>
+                    {insights.avgHookScore !== null && (
+                      <HookStrengthBadge score={insights.avgHookScore} />
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Top Creative Model</span>
+                  {insights.bestModel ? (
+                    <Badge variant="secondary" className="text-xs">{insights.bestModel}</Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Most Used Market</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {insights.mostUsedMarket || "—"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Hooks Analyzed</span>
+                  <span className="text-sm font-semibold text-foreground">{insights.totalAnalyzed}</span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
