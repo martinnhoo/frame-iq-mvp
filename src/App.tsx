@@ -48,8 +48,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <SupportChat />
           <BrowserRouter>
+            <SupportChat />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
