@@ -25,6 +25,7 @@ import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import AnalysesList from "./pages/dashboard/AnalysesList";
+import AnalysisDetail from "./pages/dashboard/AnalysisDetail";
 import NewAnalysis from "./pages/dashboard/NewAnalysis";
 import BoardsList from "./pages/dashboard/BoardsList";
 import NewBoard from "./pages/dashboard/NewBoard";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="analyses" element={<AnalysesList />} />
+                <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<NewAnalysis />} />
                 <Route path="boards" element={<BoardsList />} />
                 <Route path="boards/new" element={<NewBoard />} />
