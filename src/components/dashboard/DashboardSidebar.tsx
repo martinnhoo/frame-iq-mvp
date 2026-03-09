@@ -1,38 +1,17 @@
 import {
-  BarChart3,
-  LayoutGrid,
-  Video,
-  Settings,
-  Home,
-  Plus,
-  Globe,
-  Brain,
-  LogOut,
-  Layers,
-  Plane,
-  Radar,
+  BarChart3, LayoutGrid, Video, Settings, Home,
+  Plus, Globe, Brain, LogOut, Layers, Plane, Radar,
+  ChevronRight, Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
-} from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const mainItems = [
-  { title: "Overview", url: "/dashboard", icon: Home },
+  { title: "Overview", url: "/dashboard", icon: Home, end: true },
   { title: "Analyses", url: "/dashboard/analyses", icon: BarChart3 },
   { title: "Boards", url: "/dashboard/boards", icon: LayoutGrid },
   { title: "Videos", url: "/dashboard/videos", icon: Video },
@@ -40,160 +19,140 @@ const mainItems = [
 
 const toolItems = [
   { title: "Templates", url: "/dashboard/templates", icon: Layers },
-  { title: "New Analysis", url: "/dashboard/analyses/new", icon: Plus },
-  { title: "Create Board", url: "/dashboard/boards/new", icon: Plus },
   { title: "Translate", url: "/dashboard/translate", icon: Globe },
   { title: "Pre-flight", url: "/dashboard/preflight", icon: Plane },
   { title: "Competitor", url: "/dashboard/competitor", icon: Radar },
   { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain },
 ];
 
-interface DashboardSidebarProps {
-  profile: {
-    name: string | null;
-    email: string | null;
-    avatar_url: string | null;
-    plan: string;
-  } | null;
-  usageDetails?: {
-    analyses: { used: number; limit: number; remaining: number };
-    boards: { used: number; limit: number; remaining: number };
-    videos: { used: number; limit: number; remaining: number };
-    translations: { used: number; limit: number; remaining: number };
-  } | null;
+interface SidebarProps {
+  profile: { name: string | null; email: string | null; avatar_url: string | null; plan: string } | null;
+  usageDetails?: { analyses: { used: number; limit: number }; boards: { used: number; limit: number } } | null;
+  open: boolean;
+  onClose: () => void;
 }
 
-export function DashboardSidebar({ profile, usageDetails }: DashboardSidebarProps) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+export function DashboardSidebar({ profile, open, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Logged out successfully");
+    toast.success("Logged out");
     navigate("/login");
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (url: string, end?: boolean) =>
+    end ? location.pathname === url : location.pathname.startsWith(url);
+
+  const NavItem = ({ item }: { item: typeof mainItems[0] }) => {
+    const active = isActive(item.url, (item as { end?: boolean }).end);
+    return (
+      <NavLink
+        to={item.url}
+        end={(item as { end?: boolean }).end}
+        onClick={onClose}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 group
+          ${active
+            ? "bg-white text-black font-semibold"
+            : "text-white/50 hover:text-white hover:bg-white/8"
+          }`}
+      >
+        <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-black" : "text-white/40 group-hover:text-white/70"}`} />
+        <span className="flex-1">{item.title}</span>
+        {active && <ChevronRight className="h-3 w-3 text-black/40" />}
+      </NavLink>
+    );
+  };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
+    <>
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-[260px] flex flex-col
+        bg-[#080808] border-r border-white/[0.06]
+        transition-transform duration-300 ease-out
+        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+      `}>
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-sidebar-border">
-          <NavLink to="/" className="flex items-center gap-2">
-            <span className="text-lg font-medium text-sidebar-foreground">Frame</span>
-            {!collapsed && <span className="text-lg font-black gradient-text">IQ</span>}
-          </NavLink>
-        </div>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => {
-                const getUsageBadge = () => {
-                  if (!usageDetails || collapsed) return null;
-                  if (item.title === 'Analyses') {
-                    return usageDetails.analyses.remaining < 3 ? (
-                      <span className="ml-auto text-xs text-amber-500">{usageDetails.analyses.remaining}</span>
-                    ) : null;
-                  }
-                  if (item.title === 'Boards') {
-                    return usageDetails.boards.remaining < 3 ? (
-                      <span className="ml-auto text-xs text-amber-500">{usageDetails.boards.remaining}</span>
-                    ) : null;
-                  }
-                  if (item.title === 'Videos') {
-                    return usageDetails.videos.remaining < 2 ? (
-                      <span className="ml-auto text-xs text-amber-500">{usageDetails.videos.remaining}</span>
-                    ) : null;
-                  }
-                  return null;
-                };
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className="hover:bg-sidebar-accent"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                        {getUsageBadge()}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {toolItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className="hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
-              {profile?.name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {profile?.name || "User"}
-              </p>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.plan} plan</p>
+        <div className="px-5 py-5 border-b border-white/[0.06]">
+          <NavLink to="/" className="flex items-center gap-1.5">
+            <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-sm bg-white" />
             </div>
-          )}
-          {!collapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        {!collapsed && (
-          <NavLink to="/dashboard/settings">
-            <Button variant="ghost" size="sm" className="w-full justify-start mt-2 text-muted-foreground">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
+            <span className="text-base font-bold text-white tracking-tight">
+              Frame<span className="text-white/40">IQ</span>
+            </span>
           </NavLink>
-        )}
-      </SidebarFooter>
-    </Sidebar>
+        </div>
+
+        {/* New analysis CTA */}
+        <div className="px-4 pt-4">
+          <NavLink
+            to="/dashboard/analyses/new"
+            onClick={onClose}
+            className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            New Analysis
+          </NavLink>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/20 px-3 mb-2">Main</p>
+            {mainItems.map((item) => <NavItem key={item.url} item={item} />)}
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/20 px-3 mb-2">Tools</p>
+            {toolItems.map((item) => <NavItem key={item.url} item={item} />)}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/[0.06] space-y-3">
+          {profile?.plan === "free" && (
+            <NavLink
+              to="/pricing"
+              onClick={onClose}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-xs hover:bg-white/10 hover:text-white transition-all"
+            >
+              <Zap className="h-3.5 w-3.5 text-yellow-400" />
+              <span className="flex-1">Upgrade plan</span>
+              <ChevronRight className="h-3.5 w-3.5 opacity-40" />
+            </NavLink>
+          )}
+
+          <div className="flex items-center gap-3 px-1">
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="bg-white/10 text-white text-xs font-semibold">
+                {profile?.name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{profile?.name || "User"}</p>
+              <p className="text-[11px] text-white/40 capitalize">{profile?.plan} plan</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="h-7 w-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
