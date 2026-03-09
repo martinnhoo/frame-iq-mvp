@@ -42,27 +42,27 @@ const Index = () => {
 
   const plans = [
     {
-      name: t("pricing_free"),
-      price: "$0",
+      name: "Creator",
+      price: "$9",
       period: t("pricing_mo"),
-      features: ["3 video analyses", "3 boards", "1 seat", "Community support"],
-      cta: t("pricing_cta_free"),
+      features: ["3 analyses/mo", "1 board/mo", "10 scripts/mo", "10 translations", "Pre-flight checks"],
+      cta: "Get started",
       highlighted: false
     },
     {
-      name: t("pricing_studio"),
+      name: "Studio",
       price: "$49",
       period: t("pricing_mo"),
-      features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "1 seat", "Priority support", "Export to Notion"],
-      cta: t("pricing_cta_trial"),
+      features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "Brand Kit", "Competitor Tracker", "2 seats"],
+      cta: "Start Studio",
       highlighted: true,
       badge: t("pricing_most_popular")
     },
     {
-      name: t("pricing_scale"),
-      price: "$399",
+      name: "Scale",
+      price: "$499",
       period: t("pricing_mo"),
-      features: ["500 analyses/mo", "300 boards/mo", "50 videos/mo", "10 seats", "API access", "Custom integrations", "Dedicated CSM"],
+      features: ["500 analyses/mo", "300 boards/mo", "10 videos/day", "Meta Ads Connect", "10 seats", "API + White Label"],
       cta: t("pricing_cta_demo"),
       highlighted: false
     }
@@ -625,7 +625,7 @@ const Index = () => {
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' 
                           : 'bg-card text-foreground hover:bg-muted border border-border'
                       }`}
-                      onClick={() => plan.name === t("pricing_scale") ? navigate("/book-demo") : navigate("/signup")}
+                      onClick={() => plan.name === "Scale" ? navigate("/book-demo") : navigate("/signup")}
                     >
                       {plan.cta}
                     </Button>
@@ -633,6 +633,17 @@ const Index = () => {
                 </Card>
               </motion.div>
             ))}
+          </div>
+          <div className="text-center mt-10 space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Also available: <span className="text-foreground font-medium">Free plan</span> — 3 analyses, 3 boards, no credit card.
+            </p>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            >
+              See all plans and full feature comparison →
+            </button>
           </div>
         </div>
       </section>
