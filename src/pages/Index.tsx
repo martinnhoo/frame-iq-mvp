@@ -714,10 +714,6 @@ const Index = () => {
       <VideoDropZone />
 
 
-            <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
-              Conteúdo exclusivo sobre estratégia criativa, performance marketing e IA para equipes de growth.
-            </p>
-          </div>
           
           <div className="grid md:grid-cols-3 gap-8">
             {[
