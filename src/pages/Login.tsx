@@ -29,10 +29,7 @@ const Login = () => {
     });
 
     if (error) {
-      if (error.message.includes("Email not confirmed")) {
-        toast.error("Please confirm your email before signing in.");
-        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
-      } else if (error.message.includes("Invalid login credentials")) {
+      if (error.message.includes("Invalid login credentials")) {
         toast.error("Invalid email or password. Check your credentials or sign up for a new account.");
       } else {
         toast.error(error.message);
