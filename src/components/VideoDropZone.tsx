@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Upload, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AuthPromptModal from "@/components/AuthPromptModal";
 
 const VideoDropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const steps = [
     "Extracting frames",
@@ -26,11 +28,11 @@ const VideoDropZone = () => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    startProcessing();
+    setShowAuthPrompt(true);
   };
 
   const handleFileSelect = () => {
-    startProcessing();
+    setShowAuthPrompt(true);
   };
 
   const startProcessing = () => {
