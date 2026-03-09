@@ -28,6 +28,7 @@ const DashboardOverview = () => {
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [clearingActivity, setClearingActivity] = useState(false);
 
   const planLimits = {
     free: { analyses: 3, boards: 3, videos: 0 },
@@ -268,12 +269,25 @@ const DashboardOverview = () => {
                   <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
                 </button>
               ))}
-              <button
-                onClick={() => navigate("/dashboard/analyses")}
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs text-white/25 hover:text-white/50 transition-colors mt-1"
-              >
-                View all <ArrowRight className="h-3 w-3" />
-              </button>
+              <div className="flex items-center justify-between mt-1">
+                <button
+                  onClick={async () => {
+                    if (!confirm("Clear recent activity display?")) return;
+                    setClearingActivity(true);
+                    setRecentActivity([]);
+                    setClearingActivity(false);
+                  }}
+                  className="text-xs text-white/15 hover:text-white/35 transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => navigate("/dashboard/analyses")}
+                  className="flex items-center gap-1.5 text-xs text-white/25 hover:text-white/50 transition-colors"
+                >
+                  View all <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           )}
         </div>

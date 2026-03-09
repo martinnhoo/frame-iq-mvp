@@ -4,8 +4,7 @@ import {
   ChevronRight, Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocation, useNavigate } from "react-router-dom";import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -85,14 +84,17 @@ export function DashboardSidebar({ profile, open, onClose }: SidebarProps) {
       `}>
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/[0.06]">
-          <NavLink to="/" className="flex items-center gap-1.5">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+          >
             <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
               <div className="w-3 h-3 rounded-sm bg-white" />
             </div>
             <span className="text-base font-bold text-white tracking-tight">
               Frame<span className="text-white/40">IQ</span>
             </span>
-          </NavLink>
+          </button>
         </div>
 
         {/* New analysis CTA */}

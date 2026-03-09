@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2, Trash2, XCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { HookStrengthBadge } from "@/components/dashboard/HookStrengthBadge";
+import { toast } from "sonner";
 
 interface Analysis {
   id: string;
@@ -19,10 +16,17 @@ interface Analysis {
   hook_strength: string | null;
 }
 
-const statusConfig: Record<string, { label: string; icon: typeof Clock; className: string }> = {
-  pending: { label: "Processing", icon: Clock, className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-  completed: { label: "Completed", icon: CheckCircle, className: "bg-green-500/10 text-green-400 border-green-500/20" },
-  failed: { label: "Failed", icon: AlertCircle, className: "bg-destructive/10 text-destructive border-destructive/20" },
+const statusConfig: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
+  pending:   { label: "Processing", icon: Clock,         cls: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20" },
+  completed: { label: "Completed",  icon: CheckCircle,  cls: "text-green-400  bg-green-500/10  border-green-500/20" },
+  failed:    { label: "Failed",     icon: AlertCircle,  cls: "text-red-400    bg-red-500/10    border-red-500/20" },
+};
+
+const hookColor = (score: number | null) => {
+  if (!score) return "text-white/30";
+  if (score >= 8) return "text-green-400";
+  if (score >= 6) return "text-yellow-400";
+  return "text-red-400";
 };
 
 const AnalysesList = () => {
@@ -30,114 +34,116 @@ const AnalysesList = () => {
   const navigate = useNavigate();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAnalyses = async () => {
-      const { data } = await supabase
-        .from("analyses")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      if (data) setAnalyses(data as Analysis[]);
-      setLoading(false);
-    };
-    fetchAnalyses();
-  }, [user.id]);
+  const load = async () => {
+    const { data } = await supabase
+      .from("analyses").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (data) setAnalyses(data as Analysis[]);
+    setLoading(false);
+  };
 
-  if (loading) {
-    return (
-      <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
-            <div className="h-4 w-48 bg-muted animate-pulse rounded mt-2" />
-          </div>
-          <div className="h-10 w-36 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-[72px] bg-card border border-border rounded-lg animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => { load(); }, [user.id]);
+
+  const handleDelete = async (e: React.MouseEvent, analysisId: string, status: string) => {
+    e.stopPropagation();
+    const action = status === "pending" ? "Cancel" : "Delete";
+    if (!confirm(`${action} this analysis?`)) return;
+    setDeleting(analysisId);
+    const { error } = await supabase.from("analyses").delete().eq("id", analysisId);
+    if (error) { toast.error("Failed to delete"); }
+    else {
+      toast.success(`Analysis ${action.toLowerCase()}ed`);
+      setAnalyses((prev) => prev.filter((a) => a.id !== analysisId));
+    }
+    setDeleting(null);
+  };
+
+  if (loading) return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4">
+      <div className="h-8 w-32 bg-white/5 animate-pulse rounded-lg" />
+      {[1,2,3].map(i => <div key={i} className="h-16 bg-white/5 animate-pulse rounded-2xl" />)}
+    </div>
+  );
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Analyses</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            All your video analyses in one place.
-          </p>
+          <h1 className="text-xl font-bold text-white">Analyses</h1>
+          <p className="text-white/30 text-sm mt-0.5">{analyses.length} total</p>
         </div>
-        <Button
+        <button
           onClick={() => navigate("/dashboard/analyses/new")}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          New Analysis
-        </Button>
+          <Plus className="h-4 w-4" /> New Analysis
+        </button>
       </div>
 
       {analyses.length === 0 ? (
-        <Card className="border-border bg-card">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <BarChart3 className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No analyses yet</h3>
-            <p className="text-muted-foreground text-sm mb-6 max-w-sm">
-              Upload a video to get AI-powered insights on hooks, creative models, and predicted performance.
-            </p>
-            <Button
-              onClick={() => navigate("/dashboard/analyses/new")}
-              variant="outline"
-              className="border-border"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create your first analysis
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] py-16 flex flex-col items-center text-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-white/[0.06] flex items-center justify-center">
+            <BarChart3 className="h-6 w-6 text-white/20" />
+          </div>
+          <div>
+            <p className="text-white/50 font-medium">No analyses yet</p>
+            <p className="text-white/25 text-sm mt-1">Upload a video to get AI-powered creative insights</p>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard/analyses/new")}
+            className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/50 hover:text-white hover:border-white/20 text-sm transition-all"
+          >
+            Create first analysis
+          </button>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {analyses.map((analysis) => {
-            const config = statusConfig[analysis.status] || statusConfig.pending;
-            const StatusIcon = config.icon;
+        <div className="space-y-2">
+          {analyses.map((a) => {
+            const cfg = statusConfig[a.status] || statusConfig.pending;
+            const StatusIcon = cfg.icon;
+            const hookScore = (a.result?.hook_score as number) ?? null;
             return (
-              <Card
-                key={analysis.id}
-                className="border-border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
-                onClick={() => navigate(`/dashboard/analyses/${analysis.id}`)}
+              <div
+                key={a.id}
+                onClick={() => navigate(`/dashboard/analyses/${a.id}`)}
+                className="group flex items-center gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04] transition-all cursor-pointer"
               >
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">
-                      {analysis.title || "Untitled Analysis"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(analysis.created_at), { addSuffix: true })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {analysis.status === "completed" && (
-                      <HookStrengthBadge
-                        score={(analysis.result?.hook_score as number) ?? null}
-                        strength={analysis.hook_strength}
-                      />
-                    )}
-                    <Badge variant="outline" className={config.className}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {config.label}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                  <BarChart3 className="h-4 w-4 text-purple-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white/80 group-hover:text-white truncate transition-colors">
+                    {a.title || "Untitled Analysis"}
+                  </p>
+                  <p className="text-xs text-white/25 mt-0.5">
+                    {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {hookScore !== null && (
+                    <span className={`font-mono text-sm font-bold ${hookColor(hookScore)}`}>
+                      {hookScore.toFixed(1)}
+                    </span>
+                  )}
+                  <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs ${cfg.cls}`}>
+                    <StatusIcon className="h-3 w-3" />
+                    {cfg.label}
+                  </span>
+                  <button
+                    onClick={(e) => handleDelete(e, a.id, a.status)}
+                    disabled={deleting === a.id}
+                    className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  >
+                    {deleting === a.id
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : a.status === "pending"
+                        ? <XCircle className="h-3.5 w-3.5" />
+                        : <Trash2 className="h-3.5 w-3.5" />
+                    }
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>

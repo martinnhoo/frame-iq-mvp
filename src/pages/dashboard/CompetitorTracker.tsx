@@ -1,241 +1,255 @@
-import { useState } from "react";
-import { Search, Eye, TrendingUp, Clock, Plus, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Eye, TrendingUp, Plus, Trash2, Loader2, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
+// Competitor tracker - UI ready, live data needs Meta Ads API + TikTok API keys in Supabase secrets
+// Table: competitor_trackers (user_id, name, market, platform, created_at)
+
 const MARKETS = [
-  { value: "BR", label: "🇧🇷 Brazil" },
-  { value: "MX", label: "🇲🇽 Mexico" },
-  { value: "IN", label: "🇮🇳 India" },
-  { value: "US", label: "🇺🇸 United States" },
-  { value: "GB", label: "🇬🇧 United Kingdom" },
-  { value: "GLOBAL", label: "🌐 Global" },
+  { value: "BR", flag: "🇧🇷", label: "Brazil" },
+  { value: "MX", flag: "🇲🇽", label: "Mexico" },
+  { value: "IN", flag: "🇮🇳", label: "India" },
+  { value: "US", flag: "🇺🇸", label: "United States" },
+  { value: "GB", flag: "🇬🇧", label: "United Kingdom" },
+  { value: "GLOBAL", flag: "🌐", label: "Global" },
 ];
 
-const MOCK_COMPETITORS = [
-  {
-    id: "1",
-    name: "Betway",
-    market: "BR",
-    platform: "Meta",
-    ads_count: 47,
-    new_this_week: 8,
-    last_seen: "2h ago",
-    top_format: "UGC",
-    avg_hook_score: 7.8,
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Sportingbet",
-    market: "BR",
-    platform: "TikTok",
-    ads_count: 23,
-    new_this_week: 3,
-    last_seen: "5h ago",
-    top_format: "Promo",
-    avg_hook_score: 6.4,
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "1xBet",
-    market: "IN",
-    platform: "Meta",
-    ads_count: 91,
-    new_this_week: 14,
-    last_seen: "30m ago",
-    top_format: "Testimonial",
-    avg_hook_score: 8.1,
-    status: "active",
-  },
-];
+const PLATFORMS = ["Meta", "TikTok", "YouTube", "Both"];
 
-const MOCK_RECENT_ADS = [
-  {
-    id: "1",
-    competitor: "Betway",
-    platform: "Meta",
-    format: "UGC",
-    hook_score: 8.4,
-    detected: "2h ago",
-    hook_preview: "Guy looks at camera: 'I turned R$50 into R$800 yesterday'",
-    market: "BR",
-  },
-  {
-    id: "2",
-    competitor: "1xBet",
-    platform: "TikTok",
-    format: "Promo",
-    hook_score: 7.9,
-    detected: "4h ago",
-    hook_preview: "Fast cuts of wins + 'Get 500% bonus today only'",
-    market: "IN",
-  },
-  {
-    id: "3",
-    competitor: "Sportingbet",
-    platform: "Meta",
-    format: "Testimonial",
-    hook_score: 6.8,
-    detected: "6h ago",
-    hook_preview: "Woman smiling: 'This changed how I watch football'",
-    market: "BR",
-  },
-];
+interface Competitor {
+  id: string;
+  name: string;
+  market: string;
+  platform: string;
+  created_at: string;
+}
+
+type DateFilter = "7d" | "30d" | "all";
 
 export default function CompetitorTracker() {
+  const { user } = useOutletContext<DashboardContext>();
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [market, setMarket] = useState("BR");
   const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [form, setForm] = useState({ name: "", market: "BR", platform: "Meta" });
 
-  const handleAdd = () => {
-    if (!newName.trim()) return;
-    toast.success(`Tracking "${newName}" — API connection needed for live data.`);
-    setNewName("");
-    setAdding(false);
+  const load = async () => {
+    // Try loading from Supabase — will fail gracefully if table doesn't exist yet
+    try {
+      const { data } = await supabase
+        .from("competitor_trackers" as never)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (data) setCompetitors(data as Competitor[]);
+    } catch {
+      // table may not exist yet — that's ok, show empty state
+    }
+    setLoading(false);
   };
 
-  const filtered = MOCK_COMPETITORS.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => { load(); }, [user.id]);
+
+  const handleAdd = async () => {
+    if (!form.name.trim()) return;
+    try {
+      const { data, error } = await supabase
+        .from("competitor_trackers" as never)
+        .insert({ user_id: user.id, name: form.name.trim(), market: form.market, platform: form.platform })
+        .select()
+        .single();
+      if (error) throw error;
+      setCompetitors(p => [data as Competitor, ...p]);
+      setForm({ name: "", market: "BR", platform: "Meta" });
+      setAdding(false);
+      toast.success(`Now tracking "${form.name}"`);
+    } catch {
+      toast.error("Failed to add — Supabase table may need to be created. Check docs.");
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Remove "${name}" from tracking?`)) return;
+    setDeleting(id);
+    try {
+      await supabase.from("competitor_trackers" as never).delete().eq("id", id);
+      setCompetitors(p => p.filter(c => c.id !== id));
+      toast.success("Removed");
+    } catch {
+      toast.error("Failed to remove");
+    }
+    setDeleting(null);
+  };
+
+  const filtered = competitors.filter(c => {
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (dateFilter !== "all") {
+      const days = dateFilter === "7d" ? 7 : 30;
+      if (Date.now() - new Date(c.created_at).getTime() > days * 86400000) return false;
+    }
+    return true;
+  });
+
+  const marketData = (code: string) => MARKETS.find(m => m.value === code);
+
+  const timeAgo = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return "today";
+    if (days === 1) return "yesterday";
+    return `${days}d ago`;
+  };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Eye className="h-6 w-6" /> Competitor Tracker
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Eye className="h-5 w-5 text-white/40" />
+            Competitor Tracker
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">Monitor competitor ads across Meta and TikTok in real time.</p>
+          <p className="text-white/30 text-sm mt-0.5">
+            Track competitor brands — live data requires Meta Ads + TikTok API.
+          </p>
         </div>
-        <Button onClick={() => setAdding(true)} className="bg-white text-black hover:bg-white/90">
-          <Plus className="h-4 w-4 mr-2" /> Add Competitor
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-xl bg-white/[0.04] border border-white/[0.06] p-1">
+            {(["7d", "30d", "all"] as DateFilter[]).map(f => (
+              <button key={f} onClick={() => setDateFilter(f)}
+                className={`px-2.5 py-1 rounded-lg text-xs transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"}`}>
+                {f === "7d" ? "7d" : f === "30d" ? "30d" : "All"}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setAdding(a => !a)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" /> Add Competitor
+          </button>
+        </div>
       </div>
 
-      {/* Add competitor */}
+      {/* Add form */}
       {adding && (
-        <Card className="bg-[#0a0a0a] border-[#333]">
-          <CardContent className="p-4 flex gap-3">
-            <Input
-              placeholder="Brand or company name..."
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              className="bg-[#111] border-[#333] text-white flex-1"
+        <div className="rounded-2xl border border-white/[0.1] bg-white/[0.03] p-4 space-y-3">
+          <p className="text-sm font-semibold text-white/70">Track a new competitor</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              placeholder="Brand name (e.g. Betway)"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               onKeyDown={e => e.key === "Enter" && handleAdd()}
               autoFocus
+              className="flex-1 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm placeholder:text-white/25 outline-none focus:border-white/20"
             />
-            <Select value={market} onValueChange={setMarket}>
-              <SelectTrigger className="bg-[#111] border-[#333] text-white w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#111] border-[#333]">
-                {MARKETS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAdd} className="bg-white text-black hover:bg-white/90">Track</Button>
-            <Button variant="ghost" onClick={() => setAdding(false)} className="text-muted-foreground">Cancel</Button>
-          </CardContent>
-        </Card>
+            <select
+              value={form.market}
+              onChange={e => setForm(f => ({ ...f, market: e.target.value }))}
+              className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm outline-none focus:border-white/20"
+            >
+              {MARKETS.map(m => <option key={m.value} value={m.value}>{m.flag} {m.label}</option>)}
+            </select>
+            <select
+              value={form.platform}
+              onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
+              className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm outline-none focus:border-white/20"
+            >
+              {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleAdd} className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+              Start tracking
+            </button>
+            <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-white/40 hover:text-white text-sm transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search competitors..."
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+        <input
+          placeholder="Search tracked competitors..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="bg-[#0a0a0a] border-[#222] text-white pl-9"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-white/20 outline-none focus:border-white/20"
         />
       </div>
 
-      {/* Competitors table */}
-      <Card className="bg-[#0a0a0a] border-[#222]">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-muted-foreground uppercase tracking-widest">Tracked Competitors</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#1a1a1a]">
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Brand</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Market</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Platform</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Total Ads</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">New this week</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Top Format</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Avg Hook</th>
-                <th className="px-4 py-3 text-left text-xs text-muted-foreground font-normal">Last seen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id} className="border-t border-[#1a1a1a] hover:bg-white/[0.02] cursor-pointer">
-                  <td className="px-4 py-3 text-white font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{c.market}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{c.platform}</td>
-                  <td className="px-4 py-3 text-white font-mono text-xs">{c.ads_count}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-green-400 font-mono text-xs">+{c.new_this_week}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs px-2 py-0.5 rounded border border-[#333] text-white/70">{c.top_format}</span>
-                  </td>
-                  <td className="px-4 py-3 text-white font-mono text-xs">{c.avg_hook_score}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs flex items-center gap-1">
-                    <Clock className="h-3 w-3" />{c.last_seen}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      {/* Recent ads feed */}
-      <div>
-        <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-3">Recent Ads Detected</h2>
-        <div className="space-y-3">
-          {MOCK_RECENT_ADS.map((ad) => (
-            <Card key={ad.id} className="bg-[#0a0a0a] border-[#222] hover:border-[#333] transition-colors cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium text-sm">{ad.competitor}</span>
-                      <span className="text-xs px-2 py-0.5 rounded border border-[#333] text-white/50">{ad.platform}</span>
-                      <span className="text-xs px-2 py-0.5 rounded border border-[#333] text-white/50">{ad.format}</span>
-                      <span className="text-xs text-muted-foreground">{ad.market}</span>
-                    </div>
-                    <p className="text-white/60 text-xs font-mono">"{ad.hook_preview}"</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-white font-mono text-lg font-bold">{ad.hook_score}</div>
-                    <div className="text-muted-foreground text-xs">hook score</div>
-                    <div className="text-muted-foreground text-xs mt-1">{ad.detected}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {/* API notice */}
+      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/[0.08] border border-amber-500/20 text-amber-300/80 text-xs">
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+        <span>
+          <strong>Live data not connected.</strong> To enable real ad monitoring, add <code className="bg-white/10 px-1 rounded">META_ADS_ACCESS_TOKEN</code> and <code className="bg-white/10 px-1 rounded">TIKTOK_ACCESS_TOKEN</code> to your Supabase Edge Function secrets. Tracked brands are saved and ready.
+        </span>
       </div>
 
-      {/* Notice */}
-      <Card className="bg-[#0a0a0a] border-[#333] border-dashed">
-        <CardContent className="p-4 text-center">
-          <TrendingUp className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">Live competitor tracking requires Meta Ads API and TikTok API connection.</p>
-          <p className="text-muted-foreground text-xs mt-1">Data above is a preview. Connect your API keys to enable real monitoring.</p>
-        </CardContent>
-      </Card>
+      {/* Competitors list */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-white/20" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] py-14 flex flex-col items-center gap-4 text-center">
+          <div className="h-12 w-12 rounded-2xl bg-white/[0.06] flex items-center justify-center">
+            <TrendingUp className="h-5 w-5 text-white/20" />
+          </div>
+          <div>
+            <p className="text-white/40 font-medium">No competitors tracked yet</p>
+            <p className="text-white/20 text-sm mt-1">Add a brand to start monitoring their ads</p>
+          </div>
+          <button
+            onClick={() => setAdding(true)}
+            className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/40 hover:text-white hover:border-white/20 text-sm transition-all"
+          >
+            Add first competitor
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
+          <div className="hidden sm:grid grid-cols-[1fr_80px_100px_80px_40px] gap-4 px-5 py-3 border-b border-white/[0.06] text-[10px] text-white/25 uppercase tracking-widest">
+            <span>Brand</span>
+            <span>Market</span>
+            <span>Platform</span>
+            <span>Added</span>
+            <span />
+          </div>
+          {filtered.map((c) => {
+            const mkt = marketData(c.market);
+            return (
+              <div
+                key={c.id}
+                className="group flex flex-col sm:grid sm:grid-cols-[1fr_80px_100px_80px_40px] gap-2 sm:gap-4 px-5 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors"
+              >
+                <span className="text-white font-medium">{c.name}</span>
+                <span className="text-white/50 text-sm">{mkt?.flag} {c.market}</span>
+                <span className="text-white/50 text-sm">{c.platform}</span>
+                <span className="text-white/25 text-xs flex items-center gap-1">
+                  <Clock className="h-3 w-3" />{timeAgo(c.created_at)}
+                </span>
+                <button
+                  onClick={() => handleDelete(c.id, c.name)}
+                  disabled={deleting === c.id}
+                  className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  {deleting === c.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
