@@ -25,11 +25,36 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background effects */}
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.08) 0%, transparent 60%)',
+          filter: 'blur(80px)',
+        }}
+      />
+      <div 
+        className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.06) 0%, transparent 60%)',
+          filter: 'blur(80px)',
+        }}
+      />
+      
+      {/* Grid pattern */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
       </div>
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="text-center">
           <Link to="/" className="inline-block text-3xl font-bold">
             <span className="text-foreground font-medium">Frame</span>
@@ -37,7 +62,7 @@ const Signup = () => {
           </Link>
         </div>
 
-        <Card className="w-full border-border bg-card">
+        <Card className="w-full border-border/50 bg-card/80 backdrop-blur-sm shadow-xl shadow-purple-500/5">
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-2xl font-bold tracking-tight">{t("auth_signup_title")}</CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -47,7 +72,7 @@ const Signup = () => {
           <CardContent className="space-y-6">
             <Button
               variant="outline"
-              className="w-full h-12 text-base font-medium border-border hover:bg-muted"
+              className="w-full h-12 text-base font-medium border-border/50 hover:bg-muted hover:border-purple-500/30 transition-all"
               onClick={handleGoogleSignup}
               disabled={loading}
             >

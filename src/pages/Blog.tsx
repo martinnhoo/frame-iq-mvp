@@ -158,7 +158,7 @@ const Blog = () => {
                       <Clock className="w-3 h-3 mr-1" />
                       {post.readTime} read
                     </div>
-                    <span className="text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    <span className="text-xs text-purple-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                       Read more <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -131,7 +131,7 @@ const FAQ = () => {
         </div>
       </section>
 
-      <section className="px-6 pb-24">
+      <section className="px-6 pb-16">
         <div className="container mx-auto max-w-2xl">
           <Accordion type="single" collapsible className="space-y-3">
             {filtered.map((item, i) => (
@@ -154,6 +154,40 @@ const FAQ = () => {
           {filtered.length === 0 && (
             <p className="text-center text-muted-foreground py-12">No results found. Try a different search or contact support@frameiq.com.</p>
           )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 pb-24">
+        <div className="container mx-auto max-w-2xl">
+          <div
+            className="p-8 sm:p-10 rounded-2xl text-center"
+            style={{
+              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(236, 72, 153, 0.08))",
+              border: "1px solid rgba(139, 92, 246, 0.2)",
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-3">Still have questions?</h2>
+            <p className="text-secondary mb-6">
+              Our team is here to help. Reach out and we'll get back to you within 24 hours.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+                onClick={() => navigate("/contact")}
+              >
+                Contact us
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+              <Button
+                variant="outline"
+                className="border-border"
+                onClick={() => navigate("/book-demo")}
+              >
+                Book a demo
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
     </div>

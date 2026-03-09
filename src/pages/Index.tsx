@@ -212,6 +212,10 @@ const Index = () => {
               variant="outline" 
               className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group"
               style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+              onClick={() => {
+                const el = document.getElementById('demo-preview');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors" />
               {t("hero_cta_secondary")}
@@ -240,7 +244,7 @@ const Index = () => {
           </motion.div>
           
           {/* App Screenshot */}
-          <motion.div 
+          <motion.div id="demo-preview"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
