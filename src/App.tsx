@@ -35,6 +35,9 @@ import TranslatePage from "./pages/dashboard/TranslatePage";
 import IntelligencePage from "./pages/dashboard/IntelligencePage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import TemplatesPage from "./pages/dashboard/TemplatesPage";
+import PreflightCheck from "./pages/dashboard/PreflightCheck";
+import CompetitorTracker from "./pages/dashboard/CompetitorTracker";
+import SupportChat from "./components/SupportChat";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <SupportChat />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -76,6 +80,8 @@ const App = () => (
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="templates" element={<TemplatesPage />} />
+                <Route path="preflight" element={<PreflightCheck />} />
+                <Route path="competitor" element={<CompetitorTracker />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

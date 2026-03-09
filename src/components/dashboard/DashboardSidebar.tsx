@@ -9,6 +9,8 @@ import {
   Brain,
   LogOut,
   Layers,
+  Plane,
+  Radar,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -41,6 +43,8 @@ const toolItems = [
   { title: "New Analysis", url: "/dashboard/analyses/new", icon: Plus },
   { title: "Create Board", url: "/dashboard/boards/new", icon: Plus },
   { title: "Translate", url: "/dashboard/translate", icon: Globe },
+  { title: "Pre-flight", url: "/dashboard/preflight", icon: Plane },
+  { title: "Competitor", url: "/dashboard/competitor", icon: Radar },
   { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain },
 ];
 
