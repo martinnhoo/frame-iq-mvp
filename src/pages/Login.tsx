@@ -32,7 +32,8 @@ const Login = () => {
       </div>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/" className="inline-block text-3xl font-bold">
+          <Link to="/" className="inline-flex items-center gap-2 text-3xl font-bold">
+            <img src="/logo.png" alt="FrameIQ" className="h-10 w-10" />
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>

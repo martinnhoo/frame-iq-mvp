@@ -682,7 +682,8 @@ const Index = () => {
         <div className="container mx-auto px-6 py-16">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-1">
-              <div className="text-2xl font-bold mb-4">
+              <div className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <img src="/logo.png" alt="FrameIQ" className="h-7 w-7" />
                 <span className="text-foreground font-medium">Frame</span>
                 <span className="gradient-text font-black">IQ</span>
               </div>
