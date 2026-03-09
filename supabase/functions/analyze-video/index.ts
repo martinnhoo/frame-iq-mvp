@@ -5,205 +5,173 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AnalysisRequest {
-  video_file: File;
-  market: string;
-  campaign_goal?: string;
-  notes?: string;
-  user_id: string;
-}
-
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const formData = await req.formData();
-    const videoFile = formData.get('video_file') as File;
-    const market = formData.get('market') as string;
+    const videoFile = formData.get('video_file') as File | null;
+    const videoUrl = formData.get('video_url') as string | null;
+    const market = (formData.get('market') as string) || 'GLOBAL';
     const campaign_goal = formData.get('campaign_goal') as string | null;
-    const notes = formData.get('notes') as string | null;
     const user_id = formData.get('user_id') as string;
+    const analysis_id = formData.get('analysis_id') as string;
+    const title = formData.get('title') as string;
 
-    // Pre-flight: Validate file
-    if (!videoFile) {
-      return new Response(
-        JSON.stringify({ error: 'No video file provided' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+
+    if (!ANTHROPIC_API_KEY) {
+      // Update record to failed state
+      await supabase.from('analyses').update({
+        status: 'failed',
+        result: { error: 'API key not configured' }
+      }).eq('id', analysis_id);
+
+      return new Response(JSON.stringify({ 
+        error: 'api_key_missing',
+        message: 'ANTHROPIC_API_KEY not configured in Supabase Secrets'
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/webm'];
-    if (!allowedTypes.includes(videoFile.type)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid file type. Allowed: MP4, MOV, AVI, MKV, WebM' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const startTime = Date.now();
+
+    // Step 1 — Transcribe audio if file provided
+    let transcript = '';
+    let duration = 30;
+
+    if (videoFile && OPENAI_API_KEY) {
+      try {
+        const whisperForm = new FormData();
+        whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
+        whisperForm.append('model', 'whisper-1');
+        whisperForm.append('response_format', 'verbose_json');
+
+        const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+          body: whisperForm,
+        });
+
+        if (whisperRes.ok) {
+          const whisperData = await whisperRes.json();
+          transcript = whisperData.text || '';
+          duration = Math.round(whisperData.duration || 30);
+        }
+      } catch (e) {
+        console.error('Whisper error:', e);
+        transcript = '[Audio transcription failed — analyzing visual context only]';
+      }
+    } else if (videoUrl) {
+      transcript = `[Video from URL: ${videoUrl} — analyzing from URL context]`;
     }
 
-    const maxSize = 500 * 1024 * 1024; // 500MB
-    if (videoFile.size > maxSize) {
-      return new Response(
-        JSON.stringify({ error: 'File too large. Maximum size: 500MB' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Step 2 — Analyze with Claude
+    const prompt = `You are a world-class creative intelligence analyst for performance marketing.
+
+Analyze this video ad and return ONLY valid JSON (no markdown, no explanation) with this exact structure:
+
+{
+  "creative_model": "UGC|Testimonial|Tutorial|Problem-Solution|Before-After|Promo|React|Slideshow|Demo|Talking-Head",
+  "visual_hook": "What happens visually in the first 3 seconds",
+  "audio_hook": "Exact words or sounds in the first 3 seconds",
+  "hook_score": <number 1-10>,
+  "hook_strength": "low|medium|high|viral",
+  "brief": "2-3 sentence creative strategy breakdown",
+  "summary": "One paragraph full analysis of what makes this ad work or not",
+  "language_detected": "<language code>",
+  "market_guess": "<country code>",
+  "format": "<vertical|horizontal|square>",
+  "pacing": "slow|medium|fast|very_fast",
+  "tone": "emotional|humorous|aggressive|soft|educational|inspirational",
+  "cta_type": "verbal|text|both|none",
+  "recommended_platforms": ["platform1", "platform2"],
+  "improvement_suggestions": ["suggestion1", "suggestion2", "suggestion3"],
+  "hook_type": "curiosity|social_proof|pattern_interrupt|direct_offer|emotional|question|statement"
+}
+
+Market context: ${market}
+Campaign goal: ${campaign_goal || 'conversions'}
+Transcript: ${transcript || '[No transcript available]'}
+${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!claudeRes.ok) {
+      const err = await claudeRes.text();
+      throw new Error(`Claude API error: ${claudeRes.status} ${err}`);
     }
 
-    // Check usage limits
-    const currentPeriod = new Date().toISOString().slice(0, 7);
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('plan')
-      .eq('id', user_id)
-      .single();
+    const claudeData = await claudeRes.json();
+    const rawText = claudeData.content?.[0]?.text || '{}';
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    const analysis = JSON.parse(clean);
 
-    const { data: usage } = await supabaseClient
+    const processingTime = Math.round((Date.now() - startTime) / 1000);
+
+    // Save result
+    await supabase.from('analyses').update({
+      status: 'completed',
+      result: analysis,
+      hook_strength: analysis.hook_strength,
+      hook_score: analysis.hook_score,
+      recommended_platforms: analysis.recommended_platforms,
+      improvement_suggestions: analysis.improvement_suggestions,
+      processing_time_seconds: processingTime,
+    }).eq('id', analysis_id);
+
+    // Increment usage
+    const { data: currentUsage } = await supabase
       .from('usage')
       .select('analyses_count')
       .eq('user_id', user_id)
-      .eq('period', currentPeriod)
       .single();
 
-    const limits = { free: 3, studio: 30, scale: 500 };
-    const plan = profile?.plan || 'free';
-    const usageCount = usage?.analyses_count || 0;
+    await supabase.from('usage').upsert({
+      user_id,
+      analyses_count: (currentUsage?.analyses_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
 
-    if (usageCount >= limits[plan as keyof typeof limits]) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'limit_reached', 
-          plan,
-          message: `You've reached your ${plan} plan limit of ${limits[plan as keyof typeof limits]} analyses this month.`
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Save to creative_memory for AI learning
+    await supabase.from('creative_memory').insert({
+      user_id,
+      analysis_id,
+      hook_type: analysis.hook_type,
+      creative_model: analysis.creative_model,
+      platform: analysis.recommended_platforms?.[0] || null,
+      market: analysis.market_guess || market,
+      hook_score: analysis.hook_score,
+    }).catch(() => {}); // non-blocking
 
-    // Step 1 — Extract audio (MOCK)
-    // TODO: Uncomment when OPENAI_API_KEY is available:
-    /*
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-    
-    const transcription = await openai.audio.transcriptions.create({
-      file: videoFile,
-      model: 'whisper-1',
-      response_format: 'verbose_json'
-    });
-    */
-
-    // MOCK transcription
-    const transcription = {
-      text: 'Mock transcript — connect OpenAI API key to enable real transcription. This is a sample of what would be extracted from your video.',
-      language: 'en',
-      duration: 30
-    };
-
-    // Step 2 — Analyze with Claude (MOCK)
-    // TODO: Uncomment when ANTHROPIC_API_KEY is available:
-    /*
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-    
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: `You are a creative intelligence analyst for performance marketing. 
-        Analyze this video transcript and return ONLY valid JSON with this structure:
-        {
-          creative_model: "ugc|testimonial|tutorial|promo|react|slideshow|general",
-          visual_hook: "what happens in first 3 seconds",
-          audio_hook: "exact words in first 3 seconds",
-          brief: "2-3 sentences on creative strategy",
-          engagement_score: 1-10,
-          language_detected: "language code",
-          market_guess: "country code",
-          hook_strength: "low|medium|high|viral",
-          recommended_platforms: ["platform1", "platform2"],
-          improvement_suggestions: ["suggestion1", "suggestion2", "suggestion3"]
-        }`,
-      messages: [{ 
-        role: 'user', 
-        content: transcription.text 
-      }]
-    });
-    
-    const analysis = JSON.parse(response.content[0].text);
-    */
-
-    // MOCK analysis
-    const analysis = {
-      creative_model: 'UGC',
-      visual_hook: 'Creator holds product directly to camera with confident smile',
-      audio_hook: 'Mock hook — connect ANTHROPIC_API_KEY to analyze real content',
-      brief: 'This appears to be a UGC-style product demonstration following the problem-solution narrative arc. The creator establishes trust through direct eye contact and authentic delivery.',
-      engagement_score: 7,
-      language_detected: transcription.language,
-      market_guess: market || 'US',
-      hook_strength: 'medium',
-      recommended_platforms: ['reels', 'tiktok', 'youtube_shorts'],
-      improvement_suggestions: [
-        'Add API keys to see real AI-powered suggestions',
-        'Connect OPENAI_API_KEY for transcription',
-        'Connect ANTHROPIC_API_KEY for creative analysis'
-      ]
-    };
-
-    // Save to analyses table
-    const { data: analysisRecord, error: insertError } = await supabaseClient
-      .from('analyses')
-      .insert({
-        user_id,
-        status: 'completed',
-        title: videoFile.name,
-        video_url: null, // Would be storage URL in production
-        result: analysis,
-        hook_strength: analysis.hook_strength,
-        recommended_platforms: analysis.recommended_platforms,
-        improvement_suggestions: analysis.improvement_suggestions,
-        video_duration_seconds: Math.round(transcription.duration),
-        file_size_mb: Number((videoFile.size / (1024 * 1024)).toFixed(2)),
-        processing_time_seconds: 2
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      throw insertError;
-    }
-
-    // Increment usage count
-    await supabaseClient
-      .from('usage')
-      .upsert({
-        user_id,
-        period: currentPeriod,
-        analyses_count: usageCount + 1
-      }, {
-        onConflict: 'user_id,period'
-      });
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        analysis: analysisRecord,
-        mock_mode: true,
-        message: 'Analysis completed using mock data. Add OPENAI_API_KEY and ANTHROPIC_API_KEY to enable real AI processing.'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ 
+      success: true, 
+      analysis_id,
+      mock_mode: false,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    console.error('Error in analyze-video:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('analyze-video error:', error);
+    return new Response(JSON.stringify({ error: String(error) }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });

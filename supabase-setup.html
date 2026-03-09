@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FrameIQ — Database Setup</title>
+<style>
+  body { font-family: monospace; background: #0a0a0a; color: #fff; padding: 40px; max-width: 800px; margin: 0 auto; }
+  button { background: #7c3aed; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; }
+  button:hover { background: #6d28d9; }
+  button:disabled { background: #333; cursor: not-allowed; }
+  .log { background: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; margin-top: 20px; min-height: 200px; white-space: pre-wrap; font-size: 13px; line-height: 1.6; }
+  .ok { color: #4ade80; }
+  .err { color: #f87171; }
+  .info { color: #60a5fa; }
+  h1 { color: #a78bfa; }
+</style>
+</head>
+<body>
+<h1>FrameIQ — Database Setup</h1>
+<p style="color:#999">Este arquivo cria todas as tabelas necessárias no Supabase. Clique em Run uma vez.</p>
+
+<button id="btn" onclick="run()">▶ Run Setup</button>
+<div class="log" id="log">Aguardando...</div>
+
+<script>
+const SUPABASE_URL = "https://pibkslzvwcnnarlcllmx.supabase.co";
+const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmtzbHp2d2NubmFybGNsbG14Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzA3NzgyOCwiZXhwIjoyMDg4NjUzODI4fQ.9WHicGdMKlSBqV8ztQl6pXFS31xq4GuCj2A9yO1Cqlg";
+
+const STATEMENTS = [
+`CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text, name text, avatar_url text,
+  plan text DEFAULT 'free',
+  preferred_market text, preferred_language text,
+  onboarding_completed boolean DEFAULT false,
+  onboarding_data jsonb,
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own profile" ON public.profiles`,
+`CREATE POLICY "Users manage own profile" ON public.profiles FOR ALL TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id)`,
+`CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name)
+  VALUES (new.id, new.email, new.raw_user_meta_data->>'name')
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER`,
+`DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users`,
+`CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user()`,
+`CREATE TABLE IF NOT EXISTS public.analyses (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title text, status text DEFAULT 'pending',
+  video_url text, result jsonb,
+  hook_strength text, hook_score numeric,
+  recommended_platforms jsonb, improvement_suggestions jsonb,
+  processing_time_seconds integer,
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.analyses ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own analyses" ON public.analyses`,
+`CREATE POLICY "Users manage own analyses" ON public.analyses FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.boards (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title text, prompt text, status text DEFAULT 'pending',
+  content jsonb, platform text, market_flag text,
+  has_talent boolean DEFAULT false, talent_name text,
+  vo_language text, duration_seconds integer,
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.boards ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own boards" ON public.boards`,
+`CREATE POLICY "Users manage own boards" ON public.boards FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.videos_generated (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  board_id uuid REFERENCES public.boards(id) ON DELETE SET NULL,
+  title text, status text DEFAULT 'pending', video_url text,
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.videos_generated ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own videos" ON public.videos_generated`,
+`CREATE POLICY "Users manage own videos" ON public.videos_generated FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.usage (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  analyses_count integer DEFAULT 0, boards_count integer DEFAULT 0,
+  videos_count integer DEFAULT 0, translations_count integer DEFAULT 0,
+  updated_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.usage ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own usage" ON public.usage`,
+`CREATE POLICY "Users manage own usage" ON public.usage FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.personas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  answers jsonb, result jsonb,
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.personas ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own personas" ON public.personas`,
+`CREATE POLICY "Users manage own personas" ON public.personas FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.creative_memory (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  hook_type text, creative_model text, platform text, market text,
+  hook_score numeric, ctr numeric, cpc numeric, roas numeric,
+  analysis_id uuid REFERENCES public.analyses(id) ON DELETE SET NULL,
+  notes text, created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.creative_memory ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own creative memory" ON public.creative_memory`,
+`CREATE POLICY "Users manage own creative memory" ON public.creative_memory FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`,
+`CREATE TABLE IF NOT EXISTS public.user_ai_profile (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  top_performing_hooks jsonb DEFAULT '[]',
+  top_performing_models jsonb DEFAULT '[]',
+  best_markets jsonb DEFAULT '[]',
+  best_platforms jsonb DEFAULT '[]',
+  avg_hook_score numeric, total_analyses integer DEFAULT 0,
+  industry text, target_markets jsonb DEFAULT '[]',
+  ad_platforms jsonb DEFAULT '[]',
+  ai_summary text, ai_recommendations jsonb DEFAULT '[]',
+  last_updated timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now()
+)`,
+`ALTER TABLE public.user_ai_profile ENABLE ROW LEVEL SECURITY`,
+`DROP POLICY IF EXISTS "Users manage own AI profile" ON public.user_ai_profile`,
+`CREATE POLICY "Users manage own AI profile" ON public.user_ai_profile FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`
+];
+
+function log(msg, type = 'info') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<span class="${type}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function runSQL(sql) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+    method: 'POST',
+    headers: {
+      'apikey': SERVICE_KEY,
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query: sql })
+  });
+  
+  // Try pg endpoint directly
+  const res2 = await fetch(`${SUPABASE_URL}/pg`, {
+    method: 'POST', 
+    headers: {
+      'apikey': SERVICE_KEY,
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query: sql })
+  });
+  
+  return { status: res2.status, body: await res2.text() };
+}
+
+async function run() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  document.getElementById('log').innerHTML = '';
+  
+  log('🚀 Iniciando setup do banco de dados...', 'info');
+  log(`📡 Conectando em: ${SUPABASE_URL}\n`, 'info');
+  
+  let ok = 0, fail = 0;
+  
+  for (let i = 0; i < STATEMENTS.length; i++) {
+    const stmt = STATEMENTS[i];
+    const preview = stmt.replace(/\s+/g, ' ').substring(0, 60) + '...';
+    
+    try {
+      const result = await runSQL(stmt);
+      if (result.status < 300 || result.status === 409) {
+        log(`✓ [${i+1}/${STATEMENTS.length}] ${preview}`, 'ok');
+        ok++;
+      } else {
+        log(`✗ [${i+1}/${STATEMENTS.length}] ${preview}`, 'err');
+        log(`  → Status: ${result.status} | ${result.body.substring(0, 100)}`, 'err');
+        fail++;
+      }
+    } catch(e) {
+      log(`✗ [${i+1}/${STATEMENTS.length}] ${preview}`, 'err');
+      log(`  → ${e.message}`, 'err');
+      fail++;
+    }
+    
+    await new Promise(r => setTimeout(r, 100));
+  }
+  
+  log(`\n${'─'.repeat(50)}`, 'info');
+  log(`✓ ${ok} statements OK  |  ✗ ${fail} falhas`, ok > 0 ? 'ok' : 'err');
+  log('\nVerifica em Supabase → Table Editor se as tabelas aparecem.', 'info');
+  
+  btn.textContent = 'Setup completo';
+}
+</script>
+</body>
+</html>

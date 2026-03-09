@@ -37,7 +37,6 @@ import IntelligencePage from "./pages/dashboard/IntelligencePage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import TemplatesPage from "./pages/dashboard/TemplatesPage";
 import PreflightCheck from "./pages/dashboard/PreflightCheck";
-import CompetitorTracker from "./pages/dashboard/CompetitorTracker";
 import PersonaPage from "./pages/dashboard/PersonaPage";
 import SupportChat from "./components/SupportChat";
 
@@ -84,7 +83,6 @@ const App = () => (
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="preflight" element={<PreflightCheck />} />
-                <Route path="competitor" element={<CompetitorTracker />} />
                 <Route path="persona" element={<PersonaPage />} />
               </Route>
 

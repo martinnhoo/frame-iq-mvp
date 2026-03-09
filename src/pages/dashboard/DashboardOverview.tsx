@@ -110,7 +110,7 @@ const DashboardOverview = () => {
     { title: "Pre-flight",    desc: "Review before posting",            icon: Plane,      url: "/dashboard/preflight",            accent: "text-yellow-400", bg: "bg-yellow-500/10" },
     { title: "Translate",     desc: "Adapt scripts to any market",      icon: Globe,      url: "/dashboard/translate",            accent: "text-green-400",  bg: "bg-green-500/10" },
     { title: "Templates",     desc: "Start from proven formats",        icon: Sparkles,   url: "/dashboard/templates",            accent: "text-pink-400",   bg: "bg-pink-500/10" },
-    { title: "Competitor",    desc: "Track rival creatives",            icon: Target,     url: "/dashboard/competitor",           accent: "text-orange-400", bg: "bg-orange-500/10" },
+    { title: "Persona",       desc: "Build your target audience",       icon: Target,     url: "/dashboard/persona",              accent: "text-cyan-400",   bg: "bg-cyan-500/10" },
   ];
 
   const firstName = profile?.name?.split(" ")[0] || "there";

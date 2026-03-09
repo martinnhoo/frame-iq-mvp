@@ -1,6 +1,6 @@
 import {
   BarChart3, LayoutGrid, Video, Home,
-  Plus, Globe, Brain, LogOut, Layers, Plane, Radar,
+  Plus, Globe, Brain, LogOut, Layers, Plane,
   ChevronRight, Zap, Users,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -22,7 +22,6 @@ const toolItems = [
   { title: "Templates",    url: "/dashboard/templates",   icon: Layers,  accent: "text-pink-400" },
   { title: "Translate",    url: "/dashboard/translate",   icon: Globe,   accent: "text-emerald-400" },
   { title: "Pre-flight",   url: "/dashboard/preflight",   icon: Plane,   accent: "text-yellow-400" },
-  { title: "Competitor",   url: "/dashboard/competitor",  icon: Radar,   accent: "text-orange-400" },
   { title: "Persona",      url: "/dashboard/persona",     icon: Users,   accent: "text-cyan-400" },
   { title: "Intelligence", url: "/dashboard/intelligence",icon: Brain,   accent: "text-violet-400" },
 ];
