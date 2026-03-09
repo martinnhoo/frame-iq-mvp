@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_requests: {
+        Row: {
+          company: string
+          company_size: string | null
+          created_at: string
+          creative_volume: string | null
+          email: string
+          id: string
+          main_challenge: string | null
+          monthly_ad_spend: string | null
+          name: string
+        }
+        Insert: {
+          company: string
+          company_size?: string | null
+          created_at?: string
+          creative_volume?: string | null
+          email: string
+          id?: string
+          main_challenge?: string | null
+          monthly_ad_spend?: string | null
+          name: string
+        }
+        Update: {
+          company?: string
+          company_size?: string | null
+          created_at?: string
+          creative_volume?: string | null
+          email?: string
+          id?: string
+          main_challenge?: string | null
+          monthly_ad_spend?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

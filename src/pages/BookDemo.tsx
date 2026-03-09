@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -7,6 +7,10 @@ import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const questions = [
   {
@@ -71,6 +75,8 @@ const BookDemo = () => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [contactInfo, setContactInfo] = useState({ name: "", email: "", company: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const currentQuestion = questions[step];
   const totalSteps = questions.length;
@@ -78,16 +84,47 @@ const BookDemo = () => {
 
   const canProceed = () => {
     if (currentQuestion.type === "contact") {
-      return contactInfo.name && contactInfo.email && contactInfo.company;
+      const validEmail = EMAIL_REGEX.test(contactInfo.email);
+      return contactInfo.name.trim() && validEmail && contactInfo.company.trim();
     }
     return !!answers[currentQuestion.id];
   };
 
-  const handleNext = () => {
+  const handleEmailChange = (value: string) => {
+    setContactInfo({ ...contactInfo, email: value });
+    if (value && !EMAIL_REGEX.test(value)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps - 1) {
       setStep(step + 1);
     } else {
-      setSubmitted(true);
+      setSubmitting(true);
+      try {
+        const { error } = await supabase.from("demo_requests").insert({
+          name: contactInfo.name.trim(),
+          email: contactInfo.email.trim(),
+          company: contactInfo.company.trim(),
+          company_size: answers.company_size || null,
+          monthly_ad_spend: answers.monthly_ad_spend || null,
+          creative_volume: answers.creative_volume || null,
+          main_challenge: answers.main_challenge || null,
+        });
+        if (error) throw error;
+        setSubmitted(true);
+      } catch {
+        toast({
+          title: "Something went wrong",
+          description: "Please try again or contact us directly.",
+          variant: "destructive",
+        });
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -125,7 +162,6 @@ const BookDemo = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Minimal nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <Link to="/" className="text-2xl font-bold flex items-center">
@@ -136,7 +172,6 @@ const BookDemo = () => {
         </div>
       </nav>
 
-      {/* Progress bar */}
       <div className="fixed top-[65px] left-0 right-0 z-50 h-1 bg-border/30">
         <motion.div
           className="h-full"
@@ -181,9 +216,12 @@ const BookDemo = () => {
                         type="email"
                         placeholder="john@company.com"
                         value={contactInfo.email}
-                        onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-                        className="mt-1.5"
+                        onChange={(e) => handleEmailChange(e.target.value)}
+                        className={`mt-1.5 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
+                      {emailError && (
+                        <p className="text-sm text-destructive mt-1">{emailError}</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="company">Company name</Label>
@@ -206,12 +244,11 @@ const BookDemo = () => {
                   {currentQuestion.options?.map((option) => (
                     <label
                       key={option.value}
-                      className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-200 ${
+                      className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-200 border ${
                         answers[currentQuestion.id] === option.value
-                          ? 'border-purple-500/50 bg-purple-500/5'
-                          : 'border-border/50 bg-card/50 hover:border-purple-500/20'
+                          ? 'border-primary/50 bg-primary/5'
+                          : 'border-border/50 bg-card/50 hover:border-primary/20'
                       }`}
-                      style={{ border: '1px solid' }}
                     >
                       <RadioGroupItem value={option.value} />
                       <div>
@@ -234,11 +271,11 @@ const BookDemo = () => {
                 </Button>
                 <Button
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-8"
-                  disabled={!canProceed()}
+                  disabled={!canProceed() || submitting}
                   onClick={handleNext}
                 >
-                  {step === totalSteps - 1 ? "Submit" : "Continue"}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {submitting ? "Submitting..." : step === totalSteps - 1 ? "Submit" : "Continue"}
+                  {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               </div>
             </motion.div>
