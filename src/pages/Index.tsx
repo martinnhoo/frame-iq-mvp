@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Video, FileText, Globe, Brain, Sparkles, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import VideoDropZone from "@/components/VideoDropZone";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const features = [
     {
       icon: Video,
@@ -106,7 +108,7 @@ const Index = () => {
           </div>
           
           <div className="hidden md:block">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10" onClick={() => navigate("/signup")}>
               Get started
             </Button>
           </div>
@@ -129,7 +131,7 @@ const Index = () => {
                     {link}
                   </a>
                 ))}
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>
                   Get started
                 </Button>
               </div>
@@ -170,6 +172,7 @@ const Index = () => {
             <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base h-auto border-0 rounded-lg"
               style={{ padding: '14px 32px' }}
+              onClick={() => navigate("/signup")}
             >
               Start for free — no card needed
             </Button>
@@ -317,6 +320,7 @@ const Index = () => {
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10' 
                         : 'bg-card text-foreground hover:bg-muted border border-border'
                     }`}
+                    onClick={() => navigate("/signup")}
                   >
                     {plan.cta}
                   </Button>
