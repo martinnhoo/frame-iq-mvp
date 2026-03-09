@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +17,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +58,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md space-y-6">
-        {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-block text-3xl font-bold">
             <span className="text-foreground font-medium">Frame</span>
@@ -66,9 +71,9 @@ const Login = () => {
 
         <Card className="w-full border-border bg-card">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight">{t("auth_login_title")}</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Sign in to continue to your dashboard
+              {t("auth_login_subtitle")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -88,7 +93,7 @@ const Login = () => {
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
               )}
-              Continue with Google
+              {t("auth_google")}
             </Button>
 
             <div className="relative">
@@ -96,13 +101,13 @@ const Login = () => {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">{t("auth_or_email")}</span>
               </div>
             </div>
 
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">Email</Label>
+                <Label htmlFor="email" className="text-foreground">{t("auth_email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -115,12 +120,12 @@ const Login = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-foreground">Password</Label>
+                  <Label htmlFor="password" className="text-foreground">{t("auth_password")}</Label>
                   <Link
                     to="/forgot-password"
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Forgot password?
+                    {t("auth_forgot")}
                   </Link>
                 </div>
                 <div className="relative">
@@ -144,14 +149,14 @@ const Login = () => {
               </div>
               <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign in
+                {t("auth_signin")}
               </Button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t("auth_no_account")}{" "}
               <Link to="/signup" className="text-primary hover:underline font-medium">
-                Sign up
+                {t("auth_create")}
               </Link>
             </p>
           </CardContent>

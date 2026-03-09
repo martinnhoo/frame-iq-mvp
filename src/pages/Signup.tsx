@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const DISPOSABLE_DOMAINS = [
   "mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com",
@@ -28,8 +30,8 @@ const Signup = () => {
   const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
-  // Countdown timer
   useEffect(() => {
     if (!cooldownEnd) { setCountdown(0); return; }
     const tick = () => {
@@ -68,7 +70,6 @@ const Signup = () => {
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (isCoolingDown) return;
 
     if (password.length < 8) {
@@ -88,7 +89,6 @@ const Signup = () => {
 
     setLoading(true);
 
-    // Check server-side rate limit
     try {
       const ipRes = await fetch("https://api.ipify.org?format=json");
       const { ip } = await ipRes.json();
@@ -115,7 +115,6 @@ const Signup = () => {
     });
 
     if (error) {
-      // Handle duplicate email
       if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already been registered")) {
         toast.error("An account with this email already exists. Sign in instead.");
       } else {
@@ -145,6 +144,9 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <Link to="/" className="inline-block text-3xl font-bold">
@@ -155,9 +157,9 @@ const Signup = () => {
 
         <Card className="w-full border-border bg-card">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold tracking-tight">Create your account</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight">{t("auth_signup_title")}</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Start analyzing videos and scaling your creatives
+              {t("auth_signup_subtitle")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -177,7 +179,7 @@ const Signup = () => {
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
               )}
-              Continue with Google
+              {t("auth_google")}
             </Button>
 
             <div className="relative">
@@ -185,13 +187,13 @@ const Signup = () => {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+                <span className="bg-card px-2 text-muted-foreground">{t("auth_or_email")}</span>
               </div>
             </div>
 
             <form onSubmit={handleEmailSignup} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground">Full Name</Label>
+                <Label htmlFor="name" className="text-foreground">{t("auth_name")}</Label>
                 <Input
                   id="name"
                   type="text"
@@ -203,7 +205,7 @@ const Signup = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">Work email</Label>
+                <Label htmlFor="email" className="text-foreground">{t("auth_email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -215,7 +217,7 @@ const Signup = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground">Password</Label>
+                <Label htmlFor="password" className="text-foreground">{t("auth_password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -262,20 +264,20 @@ const Signup = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    {t("auth_create")}...
                   </>
                 ) : isCoolingDown ? (
                   `Try again in ${countdown}s...`
                 ) : (
-                  "Create account"
+                  t("auth_create")
                 )}
               </Button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              {t("auth_has_account")}{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign in
+                {t("auth_signin")}
               </Link>
             </p>
           </CardContent>
