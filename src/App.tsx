@@ -7,7 +7,6 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
@@ -15,6 +14,18 @@ import BookDemo from "./pages/BookDemo";
 import FAQ from "./pages/FAQ";
 import FeatureDetail from "./pages/FeatureDetail";
 import NotFound from "./pages/NotFound";
+
+// Dashboard
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import AnalysesList from "./pages/dashboard/AnalysesList";
+import NewAnalysis from "./pages/dashboard/NewAnalysis";
+import BoardsList from "./pages/dashboard/BoardsList";
+import NewBoard from "./pages/dashboard/NewBoard";
+import VideosList from "./pages/dashboard/VideosList";
+import TranslatePage from "./pages/dashboard/TranslatePage";
+import IntelligencePage from "./pages/dashboard/IntelligencePage";
+import SettingsPage from "./pages/dashboard/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -29,13 +40,26 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/book-demo" element={<BookDemo />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/features/:slug" element={<FeatureDetail />} />
+
+            {/* Dashboard with sidebar layout */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="analyses" element={<AnalysesList />} />
+              <Route path="analyses/new" element={<NewAnalysis />} />
+              <Route path="boards" element={<BoardsList />} />
+              <Route path="boards/new" element={<NewBoard />} />
+              <Route path="videos" element={<VideosList />} />
+              <Route path="translate" element={<TranslatePage />} />
+              <Route path="intelligence" element={<IntelligencePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
