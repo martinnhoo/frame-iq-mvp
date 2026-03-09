@@ -110,6 +110,7 @@ const AnalysesList = () => {
               <Card
                 key={analysis.id}
                 className="border-border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => navigate(`/dashboard/analyses/${analysis.id}`)}
               >
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
@@ -123,10 +124,18 @@ const AnalysesList = () => {
                       {formatDistanceToNow(new Date(analysis.created_at), { addSuffix: true })}
                     </p>
                   </div>
-                  <Badge variant="outline" className={config.className}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
-                    {config.label}
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {analysis.status === "completed" && (
+                      <HookStrengthBadge
+                        score={(analysis.result?.hook_score as number) ?? null}
+                        strength={analysis.hook_strength}
+                      />
+                    )}
+                    <Badge variant="outline" className={config.className}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {config.label}
+                    </Badge>
+                  </div>
                 </CardContent>
               </Card>
             );

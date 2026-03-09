@@ -66,6 +66,7 @@ const App = () => (
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardOverview />} />
                 <Route path="analyses" element={<AnalysesList />} />
+                <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<NewAnalysis />} />
                 <Route path="boards" element={<BoardsList />} />
                 <Route path="boards/new" element={<NewBoard />} />
