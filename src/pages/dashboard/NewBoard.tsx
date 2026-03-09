@@ -155,6 +155,24 @@ const NewBoard = () => {
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      {/* Template banner */}
+      {fromTemplate && (
+        <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <Layers className="h-5 w-5 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">
+              Using template: <span className="text-primary">{fromTemplate}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Edit the prompt below to customize before generating.
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => { setFromTemplate(null); setPrompt(""); }}>
+            Clear
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
