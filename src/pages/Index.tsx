@@ -497,25 +497,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Social Proof Logos */}
-      <section className="py-16 px-6 border-b border-border/50">
-        <div className="container mx-auto max-w-6xl">
-          <p className="text-center text-sm mb-8" style={{ color: '#555' }}>
-            Trusted by performance teams at
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-12 md:gap-16">
-            {logos.map((logo) => (
-              <span 
-                key={logo}
-                className="text-xl font-semibold opacity-30 hover:opacity-60 transition-opacity cursor-default"
-                style={{ color: '#fff' }}
-              >
-                {logo}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Stats Section */}
       <section className="py-20 px-6">
