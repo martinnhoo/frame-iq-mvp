@@ -14,6 +14,8 @@ import Contact from "./pages/Contact";
 import BookDemo from "./pages/BookDemo";
 import FAQ from "./pages/FAQ";
 import FeatureDetail from "./pages/FeatureDetail";
+import Pricing from "./pages/Pricing";
+import Careers from "./pages/Careers";
 import NotFound from "./pages/NotFound";
 
 // Dashboard
@@ -43,11 +45,12 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/book-demo" element={<BookDemo />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/careers" element={<Careers />} />
               <Route path="/features/:slug" element={<FeatureDetail />} />
 
               {/* Dashboard with sidebar layout */}
