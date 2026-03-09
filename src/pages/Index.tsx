@@ -105,7 +105,7 @@ const Index = () => {
           </div>
           
           <div className="hidden md:block">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10">
               Get started
             </Button>
           </div>
