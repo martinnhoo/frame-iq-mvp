@@ -165,7 +165,7 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden pt-20">
+      <section className="relative flex flex-col justify-center px-6 overflow-hidden pt-28 pb-16">
         {/* Background Effects */}
         <div 
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none"
