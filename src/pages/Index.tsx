@@ -143,7 +143,7 @@ const Index = () => {
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{
-            background: 'radial-gradient(circle at center, rgba(124, 58, 237, 0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%)',
             animation: 'glow-pulse 8s ease-in-out infinite'
           }}
         />
