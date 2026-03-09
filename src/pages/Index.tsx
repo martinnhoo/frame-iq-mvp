@@ -56,7 +56,7 @@ const Index = () => {
     { value: "< 60s", label: "Avg. Analysis Time" },
   ];
 
-  const logos = ["WePink", "Shein", "Shopee", "Mercado Livre", "Amazon", "Hotmart"];
+  const logos = ["Betano", "Nubank", "Shein", "Revolut", "Stake", "Shopify", "Gymshark", "Wise"];
 
   const steps = [
     { number: "01", title: "Upload or paste link", description: "Drop any ad, competitor video, or reference file" },
