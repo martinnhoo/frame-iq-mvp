@@ -17,6 +17,9 @@ import FeatureDetail from "./pages/FeatureDetail";
 import Pricing from "./pages/Pricing";
 import Careers from "./pages/Careers";
 import NotFound from "./pages/NotFound";
+import ConfirmEmail from "./pages/ConfirmEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Dashboard
 import DashboardLayout from "./components/dashboard/DashboardLayout";
