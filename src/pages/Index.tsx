@@ -185,10 +185,10 @@ const Index = () => {
           {/* Dashboard Mockup */}
           <div className="relative mt-16 max-w-4xl mx-auto">
             <div 
-              className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"
+              className="absolute inset-0 bg-white/5 blur-3xl rounded-full"
               style={{ transform: 'translateY(20%)' }}
             />
-            <Card className="relative border-border shadow-2xl overflow-hidden">
+            <Card className="relative border-border shadow-2xl overflow-hidden bg-card">
               <div className="bg-gradient-to-br from-card to-muted p-8 md:p-12">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
