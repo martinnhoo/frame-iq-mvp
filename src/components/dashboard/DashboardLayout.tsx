@@ -3,13 +3,15 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { User } from "@supabase/supabase-js";
 
 export interface DashboardContext {
   user: User;
   profile: Profile;
   usage: Usage;
+  usageDetails: UsageDetails | null;
   refreshUsage: () => Promise<void>;
 }
 
@@ -25,6 +27,17 @@ export interface Usage {
   analyses_count: number;
   boards_count: number;
   videos_count: number;
+}
+
+export interface UsageDetails {
+  plan: string;
+  analyses: { used: number; limit: number; remaining: number };
+  boards: { used: number; limit: number; remaining: number };
+  videos: { used: number; limit: number; remaining: number };
+  translations: { used: number; limit: number; remaining: number };
+  reset_date: string;
+  is_over_limit: boolean;
+  show_warning: boolean;
 }
 
 export default function DashboardLayout() {
