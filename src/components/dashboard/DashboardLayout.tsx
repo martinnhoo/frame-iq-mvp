@@ -97,8 +97,9 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex">
       <DashboardSidebar
+        user={user}
         profile={profile}
-        usageDetails={usageDetails}
+        onProfileUpdate={(p) => setProfile(p as typeof profile)}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
