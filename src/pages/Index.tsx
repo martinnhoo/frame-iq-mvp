@@ -92,7 +92,7 @@ const Index = () => {
     }
   ];
 
-  const navLinks = ["Features", "Pricing", "Drop Video"];
+  const navLinks = ["Features", "Pricing", "Drop", "Blog", "Contato"];
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
