@@ -25,6 +25,7 @@ import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import AnalysesList from "./pages/dashboard/AnalysesList";
+import AnalysisDetail from "./pages/dashboard/AnalysisDetail";
 import NewAnalysis from "./pages/dashboard/NewAnalysis";
 import BoardsList from "./pages/dashboard/BoardsList";
 import NewBoard from "./pages/dashboard/NewBoard";
