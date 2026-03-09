@@ -49,9 +49,15 @@ interface DashboardSidebarProps {
     avatar_url: string | null;
     plan: string;
   } | null;
+  usageDetails?: {
+    analyses: { used: number; limit: number; remaining: number };
+    boards: { used: number; limit: number; remaining: number };
+    videos: { used: number; limit: number; remaining: number };
+    translations: { used: number; limit: number; remaining: number };
+  } | null;
 }
 
-export function DashboardSidebar({ profile }: DashboardSidebarProps) {
+export function DashboardSidebar({ profile, usageDetails }: DashboardSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
@@ -80,21 +86,44 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
           <SidebarGroupLabel>Main</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className="hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainItems.map((item) => {
+                const getUsageBadge = () => {
+                  if (!usageDetails || collapsed) return null;
+                  if (item.title === 'Analyses') {
+                    return usageDetails.analyses.remaining < 3 ? (
+                      <span className="ml-auto text-xs text-amber-500">{usageDetails.analyses.remaining}</span>
+                    ) : null;
+                  }
+                  if (item.title === 'Boards') {
+                    return usageDetails.boards.remaining < 3 ? (
+                      <span className="ml-auto text-xs text-amber-500">{usageDetails.boards.remaining}</span>
+                    ) : null;
+                  }
+                  if (item.title === 'Videos') {
+                    return usageDetails.videos.remaining < 2 ? (
+                      <span className="ml-auto text-xs text-amber-500">{usageDetails.videos.remaining}</span>
+                    ) : null;
+                  }
+                  return null;
+                };
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="hover:bg-sidebar-accent"
+                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                        {getUsageBadge()}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
