@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useOutletContext, useNavigate, useLocation } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layers } from "lucide-react";
 
 const MARKETS = [
   { code: "ANY", flag: "🌍", name: "Global" },
@@ -56,9 +56,17 @@ const promptSuggestions = [
   "Before/after transformation for a skincare brand",
 ];
 
+interface LocationState {
+  templatePrompt?: string;
+  templateName?: string;
+  templateDuration?: number;
+}
+
 const NewBoard = () => {
   const { user, refreshUsage } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as LocationState | null;
 
   // Form state
   const [title, setTitle] = useState("");
@@ -72,6 +80,20 @@ const NewBoard = () => {
   const [context, setContext] = useState("");
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState("");
+  const [fromTemplate, setFromTemplate] = useState<string | null>(null);
+
+  // Pre-fill from template if navigating from templates page
+  useEffect(() => {
+    if (state?.templatePrompt) {
+      setPrompt(state.templatePrompt);
+      setFromTemplate(state.templateName || null);
+      if (state.templateDuration) {
+        setDuration(state.templateDuration);
+      }
+      // Clear location state to prevent re-filling on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [state]);
 
   const selectedMarket = MARKETS.find((m) => m.code === market)!;
   const selectedPlatform = PLATFORMS.find((p) => p.value === platform)!;

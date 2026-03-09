@@ -73,6 +73,7 @@ const App = () => (
                 <Route path="translate" element={<TranslatePage />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="templates" element={<TemplatesPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
