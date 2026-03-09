@@ -81,7 +81,8 @@ const Index = () => {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <div className="text-2xl font-bold flex items-center">
+          <div className="text-2xl font-bold flex items-center gap-2">
+            <img src="/logo.png" alt="FrameIQ" className="h-8 w-8" />
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </div>
