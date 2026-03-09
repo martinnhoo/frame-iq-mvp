@@ -189,11 +189,11 @@ const Index = () => {
               style={{ transform: 'translateY(20%)' }}
             />
             <Card className="relative border-border shadow-2xl overflow-hidden bg-card">
-              <div className="bg-gradient-to-br from-card to-muted p-8 md:p-12">
+              <div className="bg-card p-8 md:p-12 border border-border">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">Analysis Complete</div>
-                    <Badge className="bg-primary/20 text-primary border-primary/30">
+                    <div className="text-sm text-secondary">Analysis Complete</div>
+                    <Badge className="bg-foreground/10 text-foreground border-foreground/20">
                       Hook detected: 2.4s
                     </Badge>
                   </div>
