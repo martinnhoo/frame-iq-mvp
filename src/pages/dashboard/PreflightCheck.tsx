@@ -94,10 +94,26 @@ export default function PreflightCheck() {
   const runCheck = async () => {
     if (!file) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 2200));
-    setResult(MOCK_RESULT);
-    setLoading(false);
-    toast.success("Pre-flight check complete.");
+    try {
+      const { data, error } = await supabase.functions.invoke("run-preflight", {
+        body: { video_name: file.name, platform, market },
+      });
+
+      if (error) throw error;
+
+      if (data?.mock_mode) {
+        toast.error("API keys not configured yet. Add ANTHROPIC_API_KEY to Supabase secrets to enable Pre-flight Check.");
+        setLoading(false);
+        return;
+      }
+
+      setResult(data);
+      toast.success("Pre-flight check complete.");
+    } catch {
+      toast.error("Pre-flight check unavailable. Add ANTHROPIC_API_KEY to Supabase secrets.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const errCount = result ? [
