@@ -80,7 +80,7 @@ const Index = () => {
     }
   ];
 
-  const navLinks = ["Features", "Pricing", "Docs"];
+  const navLinks = ["Features", "Pricing", "Drop Video"];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -97,7 +97,7 @@ const Index = () => {
             {navLinks.map((link) => (
               <a
                 key={link}
-                href={`#${link.toLowerCase()}`}
+                href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
                 className="text-sm text-secondary hover:text-foreground transition-colors"
               >
                 {link}
@@ -123,7 +123,7 @@ const Index = () => {
                 {navLinks.map((link) => (
                   <a
                     key={link}
-                    href={`#${link.toLowerCase()}`}
+                    href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
                     className="text-lg text-secondary hover:text-foreground transition-colors"
                   >
                     {link}
@@ -342,7 +342,7 @@ const Index = () => {
               {navLinks.map((link) => (
                 <a
                   key={link}
-                  href={`#${link.toLowerCase()}`}
+                  href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
                   className="text-sm text-secondary hover:text-foreground transition-colors"
                 >
                   {link}
