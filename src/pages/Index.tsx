@@ -207,7 +207,7 @@ const Index = () => {
                       <div className="text-xs text-muted-foreground">Accuracy rate</div>
                     </div>
                     <div className="bg-background/50 rounded-lg p-4 border border-border">
-                      <div className="text-2xl font-bold text-foreground">< 60s</div>
+                      <div className="text-2xl font-bold text-foreground">&lt; 60s</div>
                       <div className="text-xs text-muted-foreground">Avg. analysis</div>
                     </div>
                   </div>
