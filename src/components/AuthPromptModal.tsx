@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const AUTH_PROMPT_KEY = "frameiq_auth_prompt_dismissed";
 const TIMER_MS = 5 * 60 * 1000; // 5 minutes
@@ -14,9 +15,26 @@ interface AuthPromptModalProps {
 
 const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) => {
   const [show, setShow] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Never show for authenticated users
+    if (isAuthenticated) return;
+    if (isAuthenticated === null) return; // still loading
+
     if (forceShow) {
       setShow(true);
       return;
@@ -30,7 +48,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
     }, TIMER_MS);
 
     return () => clearTimeout(timer);
-  }, [forceShow]);
+  }, [forceShow, isAuthenticated]);
 
   const dismiss = () => {
     setShow(false);
