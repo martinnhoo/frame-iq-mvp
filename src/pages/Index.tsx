@@ -53,7 +53,7 @@ const Index = () => {
     { value: "2.4M+", label: "Videos Analyzed" },
     { value: "147", label: "Enterprise Teams" },
     { value: "12", label: "Countries" },
-    { value: "94%", label: "Time Saved" },
+    { value: "< 60s", label: "Avg. Analysis Time" },
   ];
 
   const logos = ["WePink", "Shein", "Shopee", "Mercado Livre", "Amazon", "Hotmart"];
