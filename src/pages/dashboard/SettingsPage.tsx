@@ -116,7 +116,7 @@ const SettingsPage = () => {
             </Badge>
           </div>
           {profile?.plan === "free" && (
-            <Button variant="outline" className="border-border">
+            <Button variant="outline" className="border-border" onClick={() => navigate("/book-demo")}>
               Upgrade to Pro
             </Button>
           )}

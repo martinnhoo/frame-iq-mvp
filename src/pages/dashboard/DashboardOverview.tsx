@@ -227,7 +227,10 @@ const DashboardOverview = () => {
                 </p>
               </div>
             </div>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shrink-0">
+            <Button
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shrink-0"
+              onClick={() => navigate("/book-demo")}
+            >
               Upgrade to Pro
             </Button>
           </CardContent>
