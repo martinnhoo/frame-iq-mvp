@@ -44,6 +44,7 @@ export default function DashboardLayout() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0, videos_count: 0 });
+  const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -61,6 +62,18 @@ export default function DashboardLayout() {
         boards_count: data.boards_count,
         videos_count: data.videos_count,
       });
+    }
+
+    // Fetch detailed usage from check-usage function
+    try {
+      const { data: detailsData, error } = await supabase.functions.invoke('check-usage', {
+        body: { user_id: userId }
+      });
+      if (!error && detailsData) {
+        setUsageDetails(detailsData);
+      }
+    } catch (error) {
+      console.error('Error fetching usage details:', error);
     }
   };
 
