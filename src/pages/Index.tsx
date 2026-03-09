@@ -320,6 +320,7 @@ const Index = () => {
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10' 
                         : 'bg-card text-foreground hover:bg-muted border border-border'
                     }`}
+                    onClick={() => navigate("/signup")}
                   >
                     {plan.cta}
                   </Button>
