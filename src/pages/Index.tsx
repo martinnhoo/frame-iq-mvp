@@ -226,7 +226,7 @@ const Index = () => {
       <section id="features" className="py-24 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16 space-y-4">
-            <div className="text-sm font-semibold text-primary tracking-wider uppercase">
+            <div className="text-sm font-semibold text-secondary tracking-wider uppercase">
               What it does
             </div>
             <h2 className="text-4xl md:text-5xl font-bold">
