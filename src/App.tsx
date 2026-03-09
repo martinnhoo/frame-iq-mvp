@@ -56,6 +56,9 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/features/:slug" element={<FeatureDetail />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Dashboard with sidebar layout */}
               <Route path="/dashboard" element={<DashboardLayout />}>
