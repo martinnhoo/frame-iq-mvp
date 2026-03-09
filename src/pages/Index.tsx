@@ -19,7 +19,7 @@ const Index = () => {
     {
       icon: Globe,
       title: "Auto Translation",
-      description: "Hindi, Spanish, Portuguese — always delivered in English."
+      description: "Any language, any market — always delivered in English."
     },
     {
       icon: Brain,
