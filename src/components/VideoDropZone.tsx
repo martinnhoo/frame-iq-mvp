@@ -54,14 +54,14 @@ const VideoDropZone = () => {
   };
 
   return (
-    <section id="drop-video" className="py-20 px-6" style={{ background: '#000000' }}>
+    <section id="drop" className="py-20 px-6" style={{ background: '#000000' }}>
       <div className="container mx-auto max-w-[680px]">
         <div className="text-center mb-8">
           <div className="text-[12px] tracking-[2px] uppercase mb-4" style={{ color: '#555' }}>
             TRY IT NOW
           </div>
           <h2 className="text-[32px] font-bold text-foreground mb-3">
-            Drop a video. Get insights in 60 seconds.
+            Drop a file. Get insights in 60 seconds.
           </h2>
           <p className="text-[16px]" style={{ color: '#666' }}>
             No account needed to try.
