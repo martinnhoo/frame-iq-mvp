@@ -108,7 +108,7 @@ const Index = () => {
           </div>
           
           <div className="hidden md:block">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10" onClick={() => navigate("/signup")}>
               Get started
             </Button>
           </div>
