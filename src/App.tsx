@@ -25,6 +25,7 @@ import AnalysesList from "./pages/dashboard/AnalysesList";
 import NewAnalysis from "./pages/dashboard/NewAnalysis";
 import BoardsList from "./pages/dashboard/BoardsList";
 import NewBoard from "./pages/dashboard/NewBoard";
+import BoardDetail from "./pages/dashboard/BoardDetail";
 import VideosList from "./pages/dashboard/VideosList";
 import TranslatePage from "./pages/dashboard/TranslatePage";
 import IntelligencePage from "./pages/dashboard/IntelligencePage";
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="analyses/new" element={<NewAnalysis />} />
                 <Route path="boards" element={<BoardsList />} />
                 <Route path="boards/new" element={<NewBoard />} />
+                <Route path="boards/:id" element={<BoardDetail />} />
                 <Route path="videos" element={<VideosList />} />
                 <Route path="translate" element={<TranslatePage />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
