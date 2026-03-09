@@ -1,1 +1,7 @@
 project_id = "mtrovtowcpttdqygtrwq"
+
+[functions.generate-board]
+verify_jwt = false
+
+[functions.check-signup-rate]
+verify_jwt = false
