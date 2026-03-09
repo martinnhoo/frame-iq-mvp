@@ -113,6 +113,7 @@ const Contact = () => {
               </p>
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+                onClick={() => navigate("/book-demo")}
               >
                 Book a demo call
               </Button>

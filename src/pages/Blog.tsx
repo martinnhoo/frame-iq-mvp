@@ -126,6 +126,7 @@ const Blog = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08 }}
                 className="group cursor-pointer"
+                onClick={() => navigate(`/blog/${post.slug}`)}
               >
                 <div 
                   className="rounded-2xl p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
