@@ -111,17 +111,24 @@ const Index = () => {
           
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-                className="text-sm text-secondary hover:text-foreground transition-colors"
-              >
-                {link}
-              </a>
+              link.isRoute ? (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  className="text-sm text-secondary hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm text-secondary hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </a>
+              )
             ))}
-            <a href="#" className="text-sm text-secondary hover:text-foreground transition-colors">
-              Login
-            </a>
           </div>
           
           <div className="hidden md:flex items-center gap-3">
