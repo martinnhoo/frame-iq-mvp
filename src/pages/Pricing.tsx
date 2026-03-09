@@ -182,11 +182,14 @@ const Pricing = () => {
                 transition={{ delay: i * 0.1 }}
               >
                 <Card
-                  className={`relative h-full flex flex-col ${
+                  className={`relative h-full flex flex-col transition-all duration-300 ${
                     plan.highlighted
-                      ? "border-primary/50 shadow-lg shadow-primary/10"
-                      : "border-border"
-                  } bg-card`}
+                      ? "border-purple-500/50 shadow-xl shadow-purple-500/15 md:scale-105 bg-card"
+                      : "border-border bg-card hover:-translate-y-1"
+                  }`}
+                  style={plan.highlighted ? {
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.04))',
+                  } : {}}
                 >
                   {plan.badge && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">

@@ -244,7 +244,7 @@ const Index = () => {
           </motion.div>
           
           {/* App Screenshot */}
-          <motion.div 
+          <motion.div id="demo-preview"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
