@@ -15,37 +15,43 @@ const Index = () => {
       icon: Video,
       title: "Video Analysis",
       description: "Upload any video. Frames, transcript, creative model and hook extracted in under 60 seconds.",
-      gradient: "from-purple-500/20 to-pink-500/20"
+      gradient: "from-purple-500/20 to-pink-500/20",
+      slug: "video-analysis"
     },
     {
       icon: FileText,
       title: "Board Generation",
       description: "Type a prompt. Get a full production board with scenes, VO script, and editor notes.",
-      gradient: "from-blue-500/20 to-cyan-500/20"
+      gradient: "from-blue-500/20 to-cyan-500/20",
+      slug: "board-generation"
     },
     {
       icon: Globe,
       title: "Auto Translation",
       description: "Any language, any market — always delivered in English for your global team.",
-      gradient: "from-green-500/20 to-emerald-500/20"
+      gradient: "from-green-500/20 to-emerald-500/20",
+      slug: "auto-translation"
     },
     {
       icon: Brain,
       title: "Creative Intelligence",
       description: "Every video classified by format. Hook extracted from the first 3 seconds.",
-      gradient: "from-orange-500/20 to-amber-500/20"
+      gradient: "from-orange-500/20 to-amber-500/20",
+      slug: "creative-intelligence"
     },
     {
       icon: Sparkles,
       title: "AI Video Generation",
       description: "From concept board to MP4 with AI voiceover. No editors needed.",
-      gradient: "from-pink-500/20 to-rose-500/20"
+      gradient: "from-pink-500/20 to-rose-500/20",
+      slug: "ai-video-generation"
     },
     {
       icon: Zap,
       title: "API Access",
       description: "Integrate FrameIQ into your existing workflow with our REST API.",
-      gradient: "from-violet-500/20 to-purple-500/20"
+      gradient: "from-violet-500/20 to-purple-500/20",
+      slug: "api-access"
     }
   ];
 
