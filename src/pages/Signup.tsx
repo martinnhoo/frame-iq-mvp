@@ -126,7 +126,8 @@ const Signup = () => {
         return next;
       });
     } else {
-      navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
+      toast.success("Account created successfully!");
+      navigate("/dashboard");
     }
     setLoading(false);
   };
