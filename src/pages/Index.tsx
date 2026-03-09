@@ -19,7 +19,7 @@ const Index = () => {
     {
       icon: Globe,
       title: "Auto Translation",
-      description: "Hindi, Spanish, Portuguese — always delivered in English."
+      description: "Any language, any market — always delivered in English."
     },
     {
       icon: Brain,
@@ -138,7 +138,7 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden">
+      <section className="relative flex items-center justify-center px-6 overflow-hidden" style={{ paddingTop: '140px', paddingBottom: '120px' }}>
         {/* Animated background glow */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -148,36 +148,37 @@ const Index = () => {
           }}
         />
         
-        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
-          <Badge variant="outline" className="border-border text-secondary px-4 py-2">
-            Trusted by performance marketing teams
-          </Badge>
+        <div className="relative z-10 max-w-[680px] mx-auto text-center">
+          <div className="inline-flex items-center rounded-full px-4 py-1.5 text-[12px] mb-8" style={{ background: '#1a1a1a', border: '1px solid #444', color: '#888' }}>
+            AI-powered creative intelligence
+          </div>
           
-          <h1 className="text-5xl md:text-6xl lg:text-[80px] font-bold tracking-tight leading-[0.95] max-w-4xl mx-auto">
-            The AI brain for your creative team.
+          <h1 className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground" style={{ lineHeight: '1.1', letterSpacing: '-0.5px' }}>
+            Your creatives, finally working as hard as your budget.
           </h1>
           
-          <p className="text-[18px] text-secondary max-w-[520px] mx-auto leading-relaxed">
-            Analyze competitor videos in any language. Generate production boards for your editors. Create full videos with AI voiceover. All in one platform.
+          <p className="text-[17px] max-w-[500px] mx-auto mt-6" style={{ color: '#888888', lineHeight: '1.7' }}>
+            FrameIQ analyzes what converts, generates boards your editors can execute, and creates videos with AI voiceover — so you test more, spend less, and stop depending on agencies.
+          </p>
+
+          <p className="text-[13px] mt-4" style={{ color: '#444' }}>
+            Used by performance teams across 12 countries
           </p>
           
-          <div className="flex flex-col items-center gap-4 pt-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-white/10 hover:shadow-white/20 transition-all text-base px-[28px] py-[14px] h-auto"
-              >
-                Start for free — no card needed
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-border text-foreground hover:bg-card hover:border-foreground/20 text-base px-[28px] py-[14px] h-auto"
-              >
-                Watch demo
-              </Button>
-            </div>
-            <p className="text-[#525252] text-[13px] mt-2">
-              Join 500+ teams analyzing creatives with AI
-            </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-10">
+            <Button 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base h-auto border-0 rounded-lg"
+              style={{ padding: '14px 32px' }}
+            >
+              Start for free — no card needed
+            </Button>
+            <Button 
+              variant="outline" 
+              className="bg-transparent text-foreground hover:bg-card text-base h-auto rounded-lg"
+              style={{ padding: '14px 32px', border: '1px solid #333' }}
+            >
+              Watch demo
+            </Button>
           </div>
           
           {/* Dashboard Mockup */}
