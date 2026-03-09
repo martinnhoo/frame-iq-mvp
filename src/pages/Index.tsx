@@ -156,14 +156,24 @@ const Index = () => {
             <SheetContent>
               <div className="flex flex-col gap-6 mt-8">
                 {navLinks.map((link) => (
-                  <a
-                    key={link}
-                    href={`#${link.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="text-lg text-secondary hover:text-foreground transition-colors"
-                  >
-                    {link}
-                  </a>
-                ))}
+                  link.isRoute ? (
+                    <Link
+                      key={link.label}
+                      to={link.href}
+                      className="text-lg text-secondary hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      className="text-lg text-secondary hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  )
+                ))
                 <Button 
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   onClick={() => navigate("/signup")}
