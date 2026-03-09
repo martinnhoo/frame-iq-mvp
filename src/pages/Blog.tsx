@@ -4,9 +4,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Blog = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
 
   const posts = [
     { category: "Creative Strategy", title: "How to Analyze Competitor Ads Without Wasting Hours", description: "Learn the methodology Creative Strategists use to extract actionable insights from video ads in minutes, not days.", readTime: "5 min", date: "Mar 2026", slug: "analyze-competitor-ads" },
@@ -32,18 +35,55 @@ const Blog = () => {
     { category: "Creative Strategy", title: "5 Signs You Don't Need a Creative Strategist (Yet)", description: "Not every team needs a full-time strategist. Here's how to know if AI tools can cover your needs — and when to finally hire.", readTime: "5 min", date: "Mar 2026", slug: "signs-you-dont-need-creative-strategist" },
   ];
 
+  const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
+  const hrefLangCode = langMap[language] || "en";
+  const baseUrl = "https://frame-iq-mvp.lovable.app";
+
+  // JSON-LD structured data for blog listing
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "FrameIQ Blog",
+    description: "Expert insights on creative strategy, AI-powered ad production, and performance marketing.",
+    url: `${baseUrl}/blog`,
+    inLanguage: hrefLangCode,
+    publisher: {
+      "@type": "Organization",
+      name: "FrameIQ",
+      url: baseUrl,
+    },
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      description: p.description,
+      url: `${baseUrl}/blog/${p.slug}`,
+      datePublished: p.date,
+      author: { "@type": "Organization", name: "FrameIQ" },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
         <title>FrameIQ Blog — Creative Strategy, AI & Performance Marketing Insights</title>
         <meta name="description" content="Expert insights on creative strategy, AI-powered ad production, performance marketing, and scaling ad creative for growth teams and Creative Strategists." />
         <meta name="keywords" content="creative strategy blog, AI ad production, performance marketing, ad creative, video ad analysis, creative strategist, DTC ads, TikTok ads, Meta ads" />
-        <link rel="canonical" href="https://frameiq.com/blog" />
+        <link rel="canonical" href={`${baseUrl}/blog`} />
+        {/* Hreflang tags */}
+        <link rel="alternate" hrefLang="en" href={`${baseUrl}/blog`} />
+        <link rel="alternate" hrefLang="es" href={`${baseUrl}/blog?lang=es`} />
+        <link rel="alternate" hrefLang="fr" href={`${baseUrl}/blog?lang=fr`} />
+        <link rel="alternate" hrefLang="de" href={`${baseUrl}/blog?lang=de`} />
+        <link rel="alternate" hrefLang="ar" href={`${baseUrl}/blog?lang=ar`} />
+        <link rel="alternate" hrefLang="zh" href={`${baseUrl}/blog?lang=zh`} />
+        <link rel="alternate" hrefLang="x-default" href={`${baseUrl}/blog`} />
+        <html lang={hrefLangCode} />
+        <script type="application/ld+json">{JSON.stringify(blogJsonLd)}</script>
       </Helmet>
 
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
+        <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
+          <Link to="/" className="text-xl sm:text-2xl font-bold flex items-center">
             <span className="text-foreground font-medium">Frame</span>
             <span className="gradient-text font-black">IQ</span>
           </Link>
@@ -55,58 +95,64 @@ const Blog = () => {
             <Link to="/contact" className="text-sm text-secondary hover:text-foreground transition-colors">Contact</Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
-            </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col gap-6 mt-8">
-                <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
-                <Link to="/blog" className="text-lg text-foreground">Blog</Link>
-                <Link to="/faq" className="text-lg text-secondary hover:text-foreground">FAQ</Link>
-                <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageSwitcher />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
+              </SheetTrigger>
+              <SheetContent>
+                <div className="flex flex-col gap-6 mt-8">
+                  <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
+                  <Link to="/blog" className="text-lg text-foreground">Blog</Link>
+                  <Link to="/faq" className="text-lg text-secondary hover:text-foreground">FAQ</Link>
+                  <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </nav>
 
-      <section className="pt-32 pb-16 px-6">
+      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6">
         <div className="container mx-auto max-w-6xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12 sm:mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">Blog</span>
-            <h1 className="text-4xl md:text-5xl font-bold mt-4">Insights for Creative Teams</h1>
-            <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-4">Insights for Creative Teams</h1>
+            <p className="text-secondary text-base sm:text-lg mt-4 max-w-2xl mx-auto">
               Strategy, performance marketing, and AI — everything your growth team needs to ship better creative, faster.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {posts.map((post, index) => (
               <motion.article
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
                 className="group cursor-pointer"
                 onClick={() => navigate(`/blog/${post.slug}`)}
+                itemScope
+                itemType="https://schema.org/BlogPosting"
               >
                 <div
-                  className="rounded-2xl p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
+                  className="rounded-2xl p-5 sm:p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
                   style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}>
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <span className="px-2 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}>
                       {post.category}
                     </span>
-                    <span className="text-xs text-muted-foreground">{post.date}</span>
+                    <span className="text-[11px] sm:text-xs text-muted-foreground">{post.date}</span>
                   </div>
-                  <h2 className="text-xl font-semibold mb-3 group-hover:text-purple-400 transition-colors">{post.title}</h2>
-                  <p className="text-secondary text-sm leading-relaxed mb-4">{post.description}</p>
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:text-purple-400 transition-colors" itemProp="headline">{post.title}</h2>
+                  <p className="text-secondary text-sm leading-relaxed mb-3 sm:mb-4" itemProp="description">{post.description}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="w-3 h-3 mr-1" />
