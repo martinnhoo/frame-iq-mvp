@@ -690,6 +690,142 @@ const Index = () => {
       {/* Video Drop Zone */}
       <VideoDropZone />
 
+      {/* Blog Section */}
+      <section id="blog" className="py-24 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
+              Blog
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4">
+              Insights para times criativos
+            </h2>
+            <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
+              Conteúdo exclusivo sobre estratégia criativa, performance marketing e IA para equipes de growth.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                category: "Estratégia Criativa",
+                title: "Como analisar anúncios de concorrentes sem perder horas",
+                description: "Aprenda a metodologia que Creative Strategists usam para extrair insights de vídeos em minutos.",
+                readTime: "5 min",
+                date: "Mar 2026"
+              },
+              {
+                category: "Performance",
+                title: "O framework de hooks que aumenta CTR em 47%",
+                description: "Descubra os padrões de abertura que convertem mais, baseado em análise de 10.000+ vídeos.",
+                readTime: "7 min",
+                date: "Mar 2026"
+              },
+              {
+                category: "Inteligência Artificial",
+                title: "IA na produção criativa: guia completo para 2026",
+                description: "Como empresas estão economizando capital e testando mais rápido sem depender de agências.",
+                readTime: "10 min",
+                date: "Mar 2026"
+              }
+            ].map((post, index) => (
+              <motion.article
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="group cursor-pointer"
+              >
+                <div 
+                  className="rounded-2xl p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
+                  style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span 
+                      className="px-3 py-1 rounded-full text-xs font-medium"
+                      style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}
+                    >
+                      {post.category}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{post.date}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3 group-hover:text-purple-400 transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="text-secondary text-sm leading-relaxed mb-4">
+                    {post.description}
+                  </p>
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {post.readTime} de leitura
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contato" className="py-24 px-6">
+        <div className="container mx-auto max-w-4xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
+              Contato
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
+              Fale com nosso time
+            </h2>
+            <p className="text-secondary text-lg mb-12 max-w-xl mx-auto">
+              Dúvidas, parcerias ou suporte — estamos aqui para ajudar.
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <a 
+                href="mailto:suporte@frameiq.com"
+                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
+                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}
+                >
+                  <span className="text-xl">✉️</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-secondary">Email</div>
+                  <div className="font-semibold">suporte@frameiq.com</div>
+                </div>
+              </a>
+              
+              <a 
+                href="https://wa.me/5511999999999"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
+                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)' }}
+                >
+                  <span className="text-xl">💬</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-secondary">WhatsApp</div>
+                  <div className="font-semibold">+55 11 99999-9999</div>
+                </div>
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border/50 bg-card/50">
         <div className="container mx-auto px-6 py-16">
