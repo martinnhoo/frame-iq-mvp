@@ -90,6 +90,39 @@ const DashboardOverview = () => {
     fetchInsights();
   }, [user.id]);
 
+  interface ActivityItem {
+    id: string;
+    type: "analysis" | "board";
+    title: string;
+    created_at: string;
+  }
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      const [{ data: analyses }, { data: boards }] = await Promise.all([
+        supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
+        supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(3),
+      ]);
+      const items: ActivityItem[] = [
+        ...(analyses || []).map((a) => ({ id: a.id, type: "analysis" as const, title: a.title || "Untitled analysis", created_at: a.created_at })),
+        ...(boards || []).map((b) => ({ id: b.id, type: "board" as const, title: b.title || "Untitled board", created_at: b.created_at })),
+      ];
+      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setRecentActivity(items.slice(0, 4));
+    };
+    fetchActivity();
+  }, [user.id]);
+
+  const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
+
   const stats = [
     {
       label: "Analyses",
@@ -128,10 +161,16 @@ const DashboardOverview = () => {
       action: () => navigate("/dashboard/boards/new"),
     },
     {
-      title: "Generate Video",
-      description: "Turn a board into a ready-to-publish video",
-      icon: Video,
-      action: () => navigate("/dashboard/videos"),
+      title: "Pre-flight Check",
+      description: "Review your video before posting",
+      icon: Zap,
+      action: () => navigate("/dashboard/preflight"),
+    },
+    {
+      title: "Translate Script",
+      description: "Translate ad scripts to any market",
+      icon: Target,
+      action: () => navigate("/dashboard/translate"),
     },
   ];
 
@@ -277,28 +316,31 @@ const DashboardOverview = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="h-2 w-2 rounded-full bg-accent mt-2 shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Video analysis completed</p>
-                <p className="text-xs text-muted-foreground">Nike Running — Q1 Campaign • 2h ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground mt-2 shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Board generated</p>
-                <p className="text-xs text-muted-foreground">Fintech Onboarding Flow • 5h ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground mt-2 shrink-0" />
-              <div>
-                <p className="text-sm text-foreground">Video exported</p>
-                <p className="text-xs text-muted-foreground">Betano Summer Promo • 1d ago</p>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50">
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No activity yet. Start by creating an analysis.</p>
+            ) : (
+              recentActivity.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
+                >
+                  <div className={`h-2 w-2 rounded-full mt-2 shrink-0 ${item.type === "analysis" ? "bg-accent" : "bg-blue-400"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground truncate">
+                      {item.type === "analysis" ? "Analysis completed" : "Board generated"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{item.title} • {timeAgo(item.created_at)}</p>
+                  </div>
+                </div>
+              ))
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mt-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50"
+              onClick={() => navigate("/dashboard/analyses")}
+            >
               View all activity →
             </Button>
           </CardContent>

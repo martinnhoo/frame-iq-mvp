@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Globe, ArrowRight, Copy, Check, Upload, Video, FolderOpen, X } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 const targetLanguages = [
   { code: "en", flag: "🇺🇸", name: "English" },
@@ -90,17 +91,35 @@ const TranslatePage = () => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     if (mode === "script" && !input.trim()) return;
     if (mode === "video" && files.length === 0) return;
 
     setTranslating(true);
-    setTimeout(() => {
-      setOutput(
-        `This is a simulated translation to ${selectedLangData.name}. In production, FrameIQ's AI engine translates your ad scripts while preserving cultural nuance, slang adaptation, and emotional tone for each target market.`
-      );
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: {
+          text: input,
+          target_language: selectedLang,
+          target_language_name: selectedLangData.name,
+          mode,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.mock_mode || !data?.translated_text) {
+        setOutput(
+          `[Mock] Translation to ${selectedLangData.name}:\n\n${input}\n\n(Add ANTHROPIC_API_KEY to Supabase secrets to enable real translation.)`
+        );
+      } else {
+        setOutput(data.translated_text);
+      }
+    } catch {
+      toast.error("Translation failed. Please try again.");
+    } finally {
       setTranslating(false);
-    }, 2000);
+    }
   };
 
   const handleCopy = () => {
