@@ -161,7 +161,7 @@ const Index = () => {
             Your creative intelligence platform.
           </p>
           
-          <p className="text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
+          <p className="text-base text-secondary max-w-lg mx-auto leading-relaxed">
             Stop guessing what makes creatives convert. FrameIQ analyzes competitor videos in any language, 
             generates production-ready boards for your editors, and creates full videos with AI voiceover — in minutes.
           </p>
