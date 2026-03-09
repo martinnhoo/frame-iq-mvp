@@ -352,7 +352,7 @@ const Index = () => {
             </div>
           </div>
           
-          <div className="text-center mt-8 text-sm text-muted-foreground">
+          <div className="text-center mt-8 text-sm text-secondary">
             No credit card required to get started.
           </div>
         </div>
