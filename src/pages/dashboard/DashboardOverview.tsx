@@ -298,8 +298,8 @@ const DashboardOverview = () => {
                 <p className="text-xs text-muted-foreground">Betano Summer Promo • 1d ago</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="w-full mt-2 text-muted-foreground">
-              View all activity
+            <Button variant="ghost" size="sm" className="w-full mt-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-border/50">
+              View all activity →
             </Button>
           </CardContent>
         </Card>
