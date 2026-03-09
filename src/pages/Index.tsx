@@ -222,6 +222,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video Drop Zone */}
+      <VideoDropZone />
+
       {/* Features Section */}
       <section id="features" className="py-24 px-6">
         <div className="container mx-auto max-w-6xl">
