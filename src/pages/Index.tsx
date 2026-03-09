@@ -12,7 +12,8 @@ import LegalModal from "@/components/LegalModal";
 
 const Index = () => {
   const navigate = useNavigate();
-  
+  const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
+
   const features = [
     {
       icon: Video,
