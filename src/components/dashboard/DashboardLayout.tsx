@@ -116,13 +116,32 @@ export default function DashboardLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <DashboardSidebar profile={profile} />
+        <DashboardSidebar profile={profile} usageDetails={usageDetails} />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center border-b border-border px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
             <SidebarTrigger className="mr-4" />
           </header>
+          
+          {usageDetails?.show_warning && !usageDetails?.is_over_limit && (
+            <Alert className="mx-4 mt-4 border-amber-500 bg-amber-500/10">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-900 dark:text-amber-100">
+                You're running low on your monthly quota. Consider upgrading to continue using all features.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {usageDetails?.is_over_limit && (
+            <Alert className="mx-4 mt-4 border-destructive bg-destructive/10">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-destructive">
+                You've reached your monthly limit. Upgrade your plan to continue.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <main className="flex-1 overflow-auto">
-            <Outlet context={{ user, profile, usage, refreshUsage: () => fetchUsage(user!.id) } satisfies DashboardContext} />
+            <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id) } satisfies DashboardContext} />
           </main>
         </div>
       </div>
