@@ -705,6 +705,7 @@ const Index = () => {
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">{t("nav_blog")}</Link></li>
                 <li><Link to="/faq" className="hover:text-foreground transition-colors">{t("nav_faq")}</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">{t("nav_contact")}</Link></li>
+                <li><Link to="/careers" className="hover:text-foreground transition-colors">Careers</Link></li>
               </ul>
             </div>
             
