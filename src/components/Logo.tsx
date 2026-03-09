@@ -1,40 +1,26 @@
-// Shared FrameIQ logo — use this everywhere for consistency
+// Shared FrameIQ logo — matches landing page exactly
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
 export const Logo = ({ size = "md", className = "" }: LogoProps) => {
-  const sizes = {
-    sm: { mark: "w-5 h-5", inner: "w-2 h-2", text: "text-sm" },
-    md: { mark: "w-7 h-7", inner: "w-3 h-3", text: "text-base" },
-    lg: { mark: "w-9 h-9", inner: "w-4 h-4", text: "text-xl" },
-  };
-  const s = sizes[size];
+  const textSize = { sm: "text-lg", md: "text-xl", lg: "text-2xl" }[size];
   return (
-    <span className={`flex items-center gap-1.5 ${className}`}>
-      <span className={`${s.mark} rounded-lg bg-white/10 border border-white/20 flex items-center justify-center shrink-0`}>
-        <span className={`${s.inner} rounded-sm bg-white`} />
-      </span>
-      <span className={`${s.text} font-bold text-white tracking-tight`}>
-        Frame<span className="text-white/40">IQ</span>
-      </span>
+    <span className={`flex items-center font-bold ${textSize} ${className}`}>
+      <span className="text-white font-medium">Frame</span>
+      <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-black">IQ</span>
     </span>
   );
 };
 
-// Light version for use on white/light backgrounds
+// Light version for landing/light backgrounds
 export const LogoLight = ({ size = "md", className = "" }: LogoProps) => {
-  const sizes = {
-    sm: { text: "text-sm" },
-    md: { text: "text-base" },
-    lg: { text: "text-xl" },
-  };
-  const s = sizes[size];
+  const textSize = { sm: "text-lg", md: "text-xl", lg: "text-2xl" }[size];
   return (
-    <span className={`flex items-center gap-0.5 ${className}`}>
-      <span className={`${s.text} font-bold font-medium text-foreground`}>Frame</span>
-      <span className={`${s.text} font-black gradient-text`}>IQ</span>
+    <span className={`flex items-center font-bold ${textSize} ${className}`}>
+      <span className="text-foreground font-medium">Frame</span>
+      <span className="gradient-text font-black">IQ</span>
     </span>
   );
 };
