@@ -714,12 +714,6 @@ const Index = () => {
       <VideoDropZone />
 
 
-      <section id="blog" className="py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              Blog
-            </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4">
               Insights para times criativos
             </h2>
