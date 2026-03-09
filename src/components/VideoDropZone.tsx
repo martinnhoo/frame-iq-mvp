@@ -142,6 +142,7 @@ const VideoDropZone = () => {
           )}
         </div>
       </div>
+      <AuthPromptModal forceShow={showAuthPrompt} onClose={() => setShowAuthPrompt(false)} />
     </section>
   );
 };
