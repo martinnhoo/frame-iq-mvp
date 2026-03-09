@@ -703,6 +703,7 @@ const Index = () => {
                 variant="outline" 
                 className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4"
                 style={{ border: '1px solid rgba(255,255,255,0.2)' }}
+                onClick={() => navigate("/book-demo")}
               >
                 Book a demo
               </Button>
