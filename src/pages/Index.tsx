@@ -149,7 +149,7 @@ const Index = () => {
         />
         
         <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
-          <Badge variant="outline" className="border-border text-muted-foreground px-4 py-2">
+          <Badge variant="outline" className="border-border text-secondary px-4 py-2">
             Creative Intelligence Platform
           </Badge>
           
