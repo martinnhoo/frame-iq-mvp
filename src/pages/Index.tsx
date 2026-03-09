@@ -327,6 +327,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video Drop Zone */}
+      <VideoDropZone />
+
       {/* Footer */}
       <footer className="border-t border-border bg-background">
         <div className="container mx-auto px-6 py-12">
