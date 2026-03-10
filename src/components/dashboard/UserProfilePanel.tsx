@@ -260,8 +260,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .order("created_at" as never, { ascending: false });
 
       if (!error && data) {
+        const rows = data as Array<{ id: string; created_at: string; result: unknown }>;
         setPersonas(
-          data.map((row) => ({
+          rows.map((row) => ({
             id: row.id,
             created_at: row.created_at,
             ...(row.result as Omit<PersonaRecord, "id" | "created_at">),

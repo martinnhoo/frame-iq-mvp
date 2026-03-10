@@ -1383,7 +1383,7 @@ const TemplatesPage = () => {
         user_id: user.id,
         template_id: template.id,
         template_name: template.name,
-      }).then(() => {});
+      } as never);
     } catch {}
     navigate("/dashboard/boards/new", {
       state: {
