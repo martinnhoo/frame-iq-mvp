@@ -45,7 +45,7 @@ const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: strin
   low:    { color: "text-red-400",    label: "Low",     bar: "bg-red-400" },
 };
 
-const syne = { fontFamily: "'Syne', sans-serif" } as const;
+const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 export default function HookGenerator() {
   const { user } = useOutletContext<DashboardContext>();

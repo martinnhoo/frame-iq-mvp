@@ -4,8 +4,8 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, LayoutGrid, Video, Plus, ArrowRight,
-  TrendingUp, Clock, Zap, Target, Globe, Plane,
-  ChevronRight, Sparkles, Brain, Cpu, AlertTriangle,
+  TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
+  ChevronRight, Sparkles, Plane, Wand2, Search, Layers,
 } from "lucide-react";
 
 interface InsightsData {
@@ -14,136 +14,112 @@ interface InsightsData {
   mostUsedMarket: string | null;
   totalAnalyzed: number;
 }
-
 interface ActivityItem {
-  id: string;
-  type: "analysis" | "board";
-  title: string;
-  created_at: string;
+  id: string; type: "analysis" | "board"; title: string; created_at: string;
 }
-
 interface IntelItem {
-  id: string;
-  icon: string;
-  color: string;
-  title: string;
-  body: string;
-  url?: string;
-  tag?: string;
+  id: string; icon: string; color: string; borderColor: string;
+  title: string; body: string; url?: string; tag: string;
 }
 
-interface TrendPoint { date: string; score: number; }
+const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
-const DashboardOverview = () => {
+const Glow = ({ color, size = 300, opacity = 0.12, top = "0%", left = "50%" }: { color: string; size?: number; opacity?: number; top?: string; left?: string }) => (
+  <div className="absolute pointer-events-none rounded-full"
+    style={{ width: size, height: size, top, left, transform: "translate(-50%, -50%)", background: `radial-gradient(circle, ${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")}, transparent 70%)`, filter: "blur(40px)" }} />
+);
+
+const StatBar = ({ used, limit, accent }: { used: number; limit: number; accent: string }) => {
+  const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+  const critical = pct >= 85;
+  return (
+    <div className="h-1 rounded-full overflow-hidden w-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+      <div className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${pct}%`, background: pct >= 100 ? "#f87171" : critical ? "#fbbf24" : `linear-gradient(90deg, ${accent}80, ${accent})` }} />
+    </div>
+  );
+};
+
+export default function DashboardOverview() {
   const { user, profile, usage, usageDetails } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-  const [clearingActivity, setClearingActivity] = useState(false);
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
   const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
-  const [trendData, setTrendData] = useState<TrendPoint[]>([]);
+  const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
 
   const planLimits = {
-    free: { analyses: 3, boards: 3, videos: 0 },
-    creator: { analyses: 3, boards: 1, videos: 0 },
-    starter: { analyses: 15, boards: 10, videos: 0 },
-    studio: { analyses: 30, boards: 30, videos: 5 },
-    scale: { analyses: 500, boards: 300, videos: 300 },
+    free:    { analyses: 3,   boards: 3,   videos: 0 },
+    creator: { analyses: 3,   boards: 1,   videos: 0 },
+    starter: { analyses: 15,  boards: 10,  videos: 0 },
+    studio:  { analyses: 30,  boards: 30,  videos: 5 },
+    scale:   { analyses: 500, boards: 300, videos: 300 },
   };
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
 
   useEffect(() => {
     const run = async () => {
-      let query = supabase.from("analyses").select("result, hook_strength, created_at").eq("user_id", user.id).eq("status", "completed");
+      let q = supabase.from("analyses").select("result, created_at").eq("user_id", user.id).eq("status", "completed");
       if (dateFilter !== "all") {
-        const days = dateFilter === "7d" ? 7 : 30;
-        const since = new Date(Date.now() - days * 86400000).toISOString();
-        query = query.gte("created_at", since);
+        const since = new Date(Date.now() - (dateFilter === "7d" ? 7 : 30) * 86400000).toISOString();
+        q = q.gte("created_at", since);
       }
-      const { data } = await query;
+      const { data } = await q;
       if (!data?.length) { setInsights({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 }); return; }
       let total = 0, count = 0;
       const models: Record<string, number> = {}, markets: Record<string, number> = {};
-      data.forEach((a) => {
+      data.forEach(a => {
         const r = a.result as Record<string, unknown> | null;
         if (!r) return;
-        const s = (r.hook_score as number) ?? (r.engagement_score as number) ?? null;
+        const s = (r.hook_score as number) ?? null;
         if (s !== null) { total += s; count++; }
         const m = r.creative_model as string; if (m) models[m] = (models[m] || 0) + 1;
         const mk = r.market as string; if (mk) markets[mk] = (markets[mk] || 0) + 1;
       });
-      setInsights({
-        avgHookScore: count > 0 ? total / count : null,
-        bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null,
-        mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null,
-        totalAnalyzed: data.length,
-      });
+      setInsights({ avgHookScore: count > 0 ? total / count : null, bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null, mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null, totalAnalyzed: data.length });
     };
     run();
   }, [user.id, dateFilter]);
 
-  // Build intelligence feed + trend from analyses
   useEffect(() => {
     const run = async () => {
-      const { data } = await supabase.from("analyses").select("result, hook_strength, created_at, title")
+      const { data } = await supabase.from("analyses").select("result, created_at, title")
         .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(30);
       if (!data?.length) return;
-
       const feed: IntelItem[] = [];
-
-      // Best recent score
       const recent = data.slice(0, 5);
-      const recentScores = recent.map(a => (a.result as Record<string,unknown>)?.hook_score as number || 0).filter(Boolean);
-      const avgRecent = recentScores.length ? recentScores.reduce((a,b)=>a+b,0)/recentScores.length : 0;
-
-      // Overall avg
-      const allScores = data.map(a => (a.result as Record<string,unknown>)?.hook_score as number || 0).filter(Boolean);
-      const avgAll = allScores.length ? allScores.reduce((a,b)=>a+b,0)/allScores.length : 0;
-
+      const recentScores = recent.map(a => (a.result as Record<string, unknown>)?.hook_score as number || 0).filter(Boolean);
+      const avgRecent = recentScores.length ? recentScores.reduce((a, b) => a + b, 0) / recentScores.length : 0;
+      const allScores = data.map(a => (a.result as Record<string, unknown>)?.hook_score as number || 0).filter(Boolean);
+      const avgAll = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
       if (avgRecent > 0 && avgAll > 0) {
         const delta = avgRecent - avgAll;
-        if (delta > 0.5) feed.push({ id:"trend_up", icon:"📈", color:"text-green-400", title:"Hook score improving", body:`Your last 5 analyses averaged ${avgRecent.toFixed(1)}/10 — ${delta.toFixed(1)} above your overall average. Keep it up.`, url:"/dashboard/intelligence", tag:"Trend" });
-        else if (delta < -0.5) feed.push({ id:"trend_down", icon:"⚠️", color:"text-yellow-400", title:"Hook score declining", body:`Recent analyses averaged ${avgRecent.toFixed(1)}/10, below your ${avgAll.toFixed(1)} average. Consider refreshing your creative approach.`, url:"/dashboard/hooks", tag:"Alert" });
+        if (delta > 0.5) feed.push({ id: "trend_up", icon: "📈", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: "Hook score improving", body: `Last 5 averaged ${avgRecent.toFixed(1)}/10 — ${delta.toFixed(1)} above your baseline.`, url: "/dashboard/intelligence", tag: "Trend" });
+        else if (delta < -0.5) feed.push({ id: "trend_down", icon: "⚠️", color: "#fbbf24", borderColor: "rgba(251,191,36,0.2)", title: "Hook score declining", body: `Recent avg ${avgRecent.toFixed(1)}/10 vs ${avgAll.toFixed(1)} baseline. Refresh formats.`, url: "/dashboard/hooks", tag: "Alert" });
       }
-
-      // Creative fatigue — same model used 3+ times in last 5
-      const models = recent.map(a => (a.result as Record<string,unknown>)?.creative_model as string).filter(Boolean);
-      const modelCount = models.reduce<Record<string,number>>((acc,m) => { acc[m]=(acc[m]||0)+1; return acc; }, {});
-      const topModel = Object.entries(modelCount).sort((a,b)=>b[1]-a[1])[0];
-      if (topModel && topModel[1] >= 3) {
-        feed.push({ id:"fatigue", icon:"🔄", color:"text-orange-400", title:`${topModel[0]} overuse detected`, body:`You've used the ${topModel[0]} model ${topModel[1]}x in recent analyses. Creative fatigue may be reducing performance. Try a different format.`, url:"/dashboard/hooks", tag:"Fatigue" });
-      }
-
-      // Best score ever
-      const bestEntry = data.reduce<{r:Record<string,unknown>,t:string}|null>((best,a) => {
-        const s = (a.result as Record<string,unknown>)?.hook_score as number || 0;
-        const bs = best ? (best.r?.hook_score as number || 0) : 0;
-        return s > bs ? {r:a.result as Record<string,unknown>, t:a.title||"Untitled"} : best;
+      const models = recent.map(a => (a.result as Record<string, unknown>)?.creative_model as string).filter(Boolean);
+      const modelCount = models.reduce<Record<string, number>>((acc, m) => { acc[m] = (acc[m] || 0) + 1; return acc; }, {});
+      const topModel = Object.entries(modelCount).sort((a, b) => b[1] - a[1])[0];
+      if (topModel && topModel[1] >= 3) feed.push({ id: "fatigue", icon: "🔄", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `${topModel[0]} overuse detected`, body: `Used ${topModel[1]}× recently. Creative fatigue may be hurting CTR.`, url: "/dashboard/hooks", tag: "Fatigue" });
+      const bestEntry = data.reduce<{ r: Record<string, unknown>; t: string } | null>((best, a) => {
+        const s = (a.result as Record<string, unknown>)?.hook_score as number || 0;
+        return s > (best?.r?.hook_score as number || 0) ? { r: a.result as Record<string, unknown>, t: a.title || "Untitled" } : best;
       }, null);
-      if (bestEntry) {
-        const model = bestEntry.r.creative_model as string;
-        if (model) feed.push({ id:"best", icon:"⚡", color:"text-purple-400", title:`Top performer: ${bestEntry.t.slice(0,30)}`, body:`Your best hook used the "${model}" model with a ${bestEntry.r.hook_score}/10 score. Replicate this framework for your next campaign.`, url:"/dashboard/boards/new", tag:"Insight" });
-      }
-
-      // Hook generator nudge if < 3 analyses
-      if (data.length < 3) {
-        feed.push({ id:"nudge_gen", icon:"💡", color:"text-cyan-400", title:"Generate hooks before producing", body:"Use the Hook Generator to predict performance before spending on production. It takes 30 seconds.", url:"/dashboard/hooks", tag:"Tip" });
-      }
-
+      if (bestEntry?.r.creative_model) feed.push({ id: "best", icon: "⚡", color: "#a78bfa", borderColor: "rgba(167,139,250,0.2)", title: `Best: ${String(bestEntry.t).slice(0, 28)}`, body: `Model "${bestEntry.r.creative_model}" scored ${bestEntry.r.hook_score}/10. Replicate this.`, url: "/dashboard/boards/new", tag: "Insight" });
+      if (data.length < 3) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Score hooks before spending", body: "Hook Generator predicts performance in 30s — before committing to production.", url: "/dashboard/hooks", tag: "Tip" });
       setIntelFeed(feed.slice(0, 4));
-
-      // Trend data — last 14 days grouped by day
       const points: Record<string, { sum: number; count: number }> = {};
       data.forEach(a => {
-        const score = (a.result as Record<string,unknown>)?.hook_score as number;
+        const score = (a.result as Record<string, unknown>)?.hook_score as number;
         if (!score) return;
-        const day = new Date(a.created_at).toLocaleDateString("en", {month:"short",day:"numeric"});
+        const day = new Date(a.created_at).toLocaleDateString("en", { month: "short", day: "numeric" });
         if (!points[day]) points[day] = { sum: 0, count: 0 };
         points[day].sum += score; points[day].count++;
       });
-      setTrendData(Object.entries(points).slice(-10).map(([date,{sum,count}]) => ({ date, score: Math.round((sum/count)*10)/10 })).reverse());
+      setTrendData(Object.entries(points).slice(-14).map(([date, { sum, count }]) => ({ date, score: Math.round((sum / count) * 10) / 10 })).reverse());
     };
     run();
   }, [user.id]);
@@ -154,18 +130,16 @@ const DashboardOverview = () => {
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
         supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
       ]);
-      const items: ActivityItem[] = [
+      setRecentActivity([
         ...(analyses || []).map(a => ({ id: a.id, type: "analysis" as const, title: a.title || "Untitled", created_at: a.created_at })),
         ...(boards || []).map(b => ({ id: b.id, type: "board" as const, title: b.title || "Untitled", created_at: b.created_at })),
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
-      setRecentActivity(items);
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6));
     };
     run();
   }, [user.id]);
 
   const timeAgo = (d: string) => {
-    const diff = Date.now() - new Date(d).getTime();
-    const m = Math.floor(diff / 60000);
+    const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
     if (m < 60) return `${m}m ago`;
     const h = Math.floor(m / 60);
     if (h < 24) return `${h}h ago`;
@@ -176,309 +150,361 @@ const DashboardOverview = () => {
   const usedBoards = usageDetails?.boards.used ?? usage.boards_count;
   const usedVideos = usageDetails?.videos.used ?? usage.videos_count;
 
-  const stats = [
-    { label: "Analyses", used: usedAnalyses, limit: limits.analyses, icon: BarChart3, url: "/dashboard/analyses", accent: "#a78bfa" },
-    { label: "Boards", used: usedBoards, limit: limits.boards, icon: LayoutGrid, url: "/dashboard/boards", accent: "#60a5fa" },
-    { label: "Videos", used: usedVideos, limit: limits.videos, icon: Video, url: "/dashboard/videos", accent: "#34d399" },
-  ];
-
-  const quickActions = [
-    { title: "New Analysis",  desc: "Upload a video for AI insights",   icon: BarChart3, url: "/dashboard/analyses/new", hot: true,  accent: "text-purple-400", bg: "bg-purple-500/10" },
-    { title: "Create Board",  desc: "Generate a production board",      icon: LayoutGrid, url: "/dashboard/boards/new",           accent: "text-blue-400",   bg: "bg-blue-500/10" },
-    { title: "Pre-flight",    desc: "Review before posting",            icon: Plane,      url: "/dashboard/preflight",            accent: "text-yellow-400", bg: "bg-yellow-500/10" },
-    { title: "Translate",     desc: "Adapt scripts to any market",      icon: Globe,      url: "/dashboard/translate",            accent: "text-green-400",  bg: "bg-green-500/10" },
-    { title: "Templates",     desc: "Start from proven formats",        icon: Sparkles,   url: "/dashboard/templates",            accent: "text-pink-400",   bg: "bg-pink-500/10" },
-    { title: "Persona",       desc: "Build your target audience",       icon: Target,     url: "/dashboard/persona",              accent: "text-cyan-400",   bg: "bg-cyan-500/10" },
-    { title: "Hook Generator", desc: "AI-score hooks before producing",    icon: Cpu,        url: "/dashboard/hooks",                accent: "text-orange-400", bg: "bg-orange-500/10" },
-    { title: "Competitor",    desc: "Decode competitor ad frameworks",    icon: Brain,      url: "/dashboard/competitor",           accent: "text-cyan-400",   bg: "bg-cyan-500/10" },
-  ];
-
   const firstName = profile?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const hasData = insights.totalAnalyzed > 0;
+
+  const tools = [
+    { title: "Analyze",     desc: "Hook score in 60s",        icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
+    { title: "Board",       desc: "Production brief",          icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
+    { title: "Hooks",       desc: "10 angles in 30s",          icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
+    { title: "Translate",   desc: "Any market",                icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
+    { title: "Templates",   desc: "183 formats",               icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
+    { title: "Pre-flight",  desc: "Before going live",         icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
+    { title: "Competitor",  desc: "Decode any ad",             icon: Search,    url: "/dashboard/competitor",   accent: "#22d3ee", badge: "AI" },
+    { title: "Persona",     desc: "Define audience",           icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
+  ];
+
+  const usageBlocks = [
+    { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
+    { label: "Boards",   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
+    { label: "Videos",   used: usedVideos,   limit: limits.videos,   url: "/dashboard/videos",       accent: "#34d399", icon: Video },
+  ];
 
   return (
-    <div className="p-5 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 page-enter">
-
-      {/* Welcome header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-[11px] text-white/20 uppercase tracking-[0.15em] mb-1.5" style={{fontFamily:"'DM Mono', monospace"}}>{greeting}</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{fontFamily:"'Syne', sans-serif", letterSpacing:'-0.03em'}}>
-            {firstName}
-          </h1>
-          <p className="text-sm text-white/30 mt-1">Creative intelligence workspace</p>
-        </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-[11px] text-white/40 capitalize" style={{fontFamily:"'DM Mono', monospace"}}>
-            {profile?.plan || "free"} plan
-          </span>
-          {(profile?.plan === "free" || !profile?.plan) && (
-            <button
-              onClick={() => navigate("/pricing")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold hover:bg-white/90 transition-all glow-white"
-            >
-              <Zap className="h-3 w-3" /> Upgrade
-            </button>
-          )}
-        </div>
+    <div className="min-h-full relative">
+      {/* Ambient glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <Glow color="#a78bfa" size={500} opacity={0.06} top="0%" left="30%" />
+        <Glow color="#f472b6" size={400} opacity={0.04} top="50%" left="80%" />
       </div>
 
-      {/* Usage Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {stats.map((stat) => {
-          const pct = stat.limit > 0 ? Math.min((stat.used / stat.limit) * 100, 100) : 0;
-          const critical = pct >= 90;
-          return (
-            <button
-              key={stat.label}
-              onClick={() => navigate(stat.url)}
-              className="stat-card group text-left p-4 sm:p-5 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all duration-200"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{background: `${stat.accent}15`}}>
-                  <stat.icon className="h-4 w-4" style={{color: stat.accent}} />
+      <div className="relative p-4 sm:p-6 max-w-6xl mx-auto space-y-6 page-enter">
+
+        {/* ── HEADER ──────────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4 pt-2">
+          <div>
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.22em] mb-1.5" style={mono}>{greeting}</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
+              <span className="text-white">{firstName}, </span>
+              <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                let's ship.
+              </span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
+              <button onClick={() => navigate("/pricing")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
+                style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+                <Zap className="h-3 w-3" /> Upgrade
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── TOP ROW: Usage + Performance ──────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {/* Usage blocks */}
+          {usageBlocks.map(s => (
+            <button key={s.label} onClick={() => navigate(s.url)}
+              className="group flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200 hover:scale-[1.02]"
+              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${s.accent}30`; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}>
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: `${s.accent}12`, border: `1px solid ${s.accent}20` }}>
+                <s.icon style={{ color: s.accent, width: 18, height: 18 }} />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{s.used}</span>
+                  <span className="text-xs text-white/25">/ {s.limit > 0 ? s.limit : "∞"}</span>
                 </div>
-                <span className={`text-[10px] font-mono ${critical ? "text-red-400" : "text-white/15"}`}>
-                  {stat.limit > 0 ? `${stat.limit - stat.used} left` : "—"}
-                </span>
+                <p className="text-[11px] text-white/35">{s.label}</p>
+                <StatBar used={s.used} limit={s.limit} accent={s.accent} />
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 counter" style={{fontFamily:"'Syne', sans-serif"}}>{stat.used}</div>
-              <div className="text-[11px] text-white/30 mb-3">{stat.label}</div>
-              <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, background: critical ? "#f87171" : `linear-gradient(90deg, ${stat.accent}80, ${stat.accent})` }}
-                />
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/20" style={{fontFamily:"'Syne', sans-serif"}}>Quick Actions</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {quickActions.map((action) => (
-            <button
-              key={action.title}
-              onClick={() => navigate(action.url)}
-              className="card-lift group text-left p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all duration-200 relative overflow-hidden"
-            >
-              {action.hot && (
-                <span className="absolute top-2.5 right-2.5 text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border" style={{fontFamily:"'DM Mono', monospace", color:"#a78bfa", borderColor:"#a78bfa40", background:"#a78bfa10"}}>
-                  AI
-                </span>
-              )}
-              <div className={`h-8 w-8 rounded-xl ${action.bg} flex items-center justify-center mb-3 transition-transform group-hover:scale-110 duration-200`}>
-                <action.icon className={`h-4 w-4 ${action.accent}`} />
-              </div>
-              <p className="text-sm font-semibold text-white/75 group-hover:text-white transition-colors" style={{fontFamily:"'Syne', sans-serif"}}>{action.title}</p>
-              <p className="text-xs text-white/25 mt-0.5 hidden sm:block">{action.desc}</p>
             </button>
           ))}
-        </div>
-      </div>
 
-      {/* Bottom row: Insights + Activity */}
-      <div className="grid gap-4 lg:grid-cols-2">
-
-        {/* Performance Insights */}
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-white/40" />
-              <h3 className="text-sm font-semibold text-white/60" style={{fontFamily:"'Syne', sans-serif"}}>Insights</h3>
+          {/* Hook score card */}
+          <div className="flex items-center gap-4 p-4 rounded-2xl"
+            style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.2)" }}>
+              <TrendingUp style={{ color: "#34d399", width: 18, height: 18 }} />
             </div>
-            <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] border border-white/[0.06] p-0.5">
-              {(["7d", "30d", "all"] as const).map(f => (
-                <button key={f} onClick={() => setDateFilter(f)}
-                  className={`px-2 py-1 rounded-md text-[10px] font-mono transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/25 hover:text-white/50"}`}>
-                  {f === "all" ? "All" : f}
-                </button>
-              ))}
+            <div className="min-w-0">
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>
+                  {hasData && insights.avgHookScore ? insights.avgHookScore.toFixed(1) : "—"}
+                </span>
+                {hasData && insights.avgHookScore && <span className="text-xs text-white/25">/ 10</span>}
+              </div>
+              <p className="text-[11px] text-white/35">Avg hook score</p>
+              {hasData && (
+                <p className="text-[10px] mt-0.5" style={{ color: "#34d399", ...mono }}>
+                  {insights.totalAnalyzed} analyzed
+                </p>
+              )}
             </div>
           </div>
-          {insights.totalAnalyzed === 0 ? (
-            <div className="flex flex-col items-center text-center py-8 gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-white/20" />
-              </div>
-              <p className="text-sm text-white/30">Analyze your first video to see insights</p>
-              <button
-                onClick={() => navigate("/dashboard/analyses/new")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 text-white/70 text-sm hover:bg-white/15 hover:text-white transition-all"
-              >
-                <Plus className="h-3.5 w-3.5" /> Analyze now
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {[
-                { label: "Avg. Hook Score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—" },
-                { label: "Top Creative Model", value: insights.bestModel || "—" },
-                { label: "Most Used Market", value: insights.mostUsedMarket || "—" },
-                { label: "Total Analyzed", value: String(insights.totalAnalyzed) },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-sm text-white/30">{label}</span>
-                  <span className="text-sm font-semibold text-white font-mono">{value}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Recent Activity */}
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <div className="flex items-center gap-2 mb-5">
-            <Clock className="h-4 w-4 text-white/40" />
-            <h3 className="text-sm font-semibold text-white/60" style={{fontFamily:"'Syne', sans-serif"}}>Activity</h3>
-          </div>
-          {recentActivity.length === 0 ? (
-            <div className="flex flex-col items-center text-center py-8 gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-white/20" />
-              </div>
-              <p className="text-sm text-white/30">No activity yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentActivity.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.05] transition-colors text-left group"
-                >
-                  <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${
-                    item.type === "analysis" ? "bg-purple-500/15" : "bg-blue-500/15"
-                  }`}>
-                    {item.type === "analysis"
-                      ? <BarChart3 className="h-3.5 w-3.5 text-purple-400" />
-                      : <LayoutGrid className="h-3.5 w-3.5 text-blue-400" />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white/70 group-hover:text-white truncate transition-colors">{item.title}</p>
-                    <p className="text-xs text-white/25 capitalize">{item.type} • {timeAgo(item.created_at)}</p>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
-                </button>
-              ))}
-              <div className="flex items-center justify-between mt-1">
-                <button
-                  onClick={async () => {
-                    if (!confirm("Clear recent activity display?")) return;
-                    setClearingActivity(true);
-                    setRecentActivity([]);
-                    setClearingActivity(false);
-                  }}
-                  className="text-xs text-white/15 hover:text-white/35 transition-colors"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => navigate("/dashboard/analyses")}
-                  className="flex items-center gap-1.5 text-xs text-white/25 hover:text-white/50 transition-colors"
-                >
-                  View all <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-
-      {/* Intelligence Feed */}
-      {intelFeed.length > 0 && (
+        {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-purple-400" />
-              <h2 className="text-sm font-semibold text-white" style={{fontFamily:"'Syne',sans-serif"}}>Intelligence feed</h2>
-            </div>
-            <button onClick={() => navigate("/dashboard/intelligence")} className="text-xs text-white/20 hover:text-white/50 transition-colors">View all →</button>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>Tools</p>
+            <button onClick={() => navigate("/dashboard/analyses/new")}
+              className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition-colors" style={mono}>
+              <Plus className="h-3 w-3" /> New analysis
+            </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {intelFeed.map(item => (
-              <button key={item.id} onClick={() => item.url && navigate(item.url)}
-                className="text-left p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all group">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl shrink-0">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-white/80" style={{fontFamily:"'Syne',sans-serif"}}>{item.title}</span>
-                      {item.tag && <span className={`text-[9px] px-1.5 py-0.5 rounded-full border border-white/[0.08] ${item.color} uppercase tracking-wide font-bold`} style={{fontFamily:"'DM Mono',monospace"}}>{item.tag}</span>}
-                    </div>
-                    <p className="text-xs text-white/30 leading-relaxed line-clamp-2">{item.body}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {tools.map(t => (
+              <button key={t.title} onClick={() => navigate(t.url)}
+                className="group relative flex flex-col gap-3 p-4 rounded-2xl text-left transition-all duration-200 hover:scale-[1.02] overflow-hidden"
+                style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = `${t.accent}35`;
+                  (e.currentTarget as HTMLElement).style.background = `${t.accent}08`;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
+                  (e.currentTarget as HTMLElement).style.background = "#0f0f0f";
+                }}>
+                {/* Gradient corner glow */}
+                <div className="absolute top-0 right-0 w-16 h-16 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: `radial-gradient(circle, ${t.accent}25, transparent 70%)`, transform: "translate(30%, -30%)" }} />
+                {/* Icon */}
+                <div className="h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                  style={{ background: `${t.accent}15`, border: `1px solid ${t.accent}25` }}>
+                  <t.icon style={{ color: t.accent, width: 17, height: 17 }} />
+                </div>
+                {/* Text */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[13px] font-bold text-white" style={syne}>{t.title}</span>
+                    {t.badge && (
+                      <span className="text-[8px] font-bold px-1 py-0.5 rounded"
+                        style={{ ...mono, color: t.accent, background: `${t.accent}18`, border: `1px solid ${t.accent}30` }}>
+                        {t.badge}
+                      </span>
+                    )}
                   </div>
+                  <p className="text-[11px] text-white/30 hidden sm:block">{t.desc}</p>
                 </div>
               </button>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Hook Score Trend sparkline */}
-      {trendData.length >= 3 && (
-        <div className="p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-white/30" />
-              <span className="text-xs font-semibold text-white/60" style={{fontFamily:"'Syne',sans-serif"}}>Hook score trend</span>
-            </div>
-            <button onClick={() => navigate("/dashboard/intelligence")} className="text-[10px] text-white/15 hover:text-white/40 transition-colors">Details →</button>
-          </div>
-          <div className="flex items-end gap-1.5 h-14">
-            {trendData.map((p, i) => {
-              const h = Math.round((p.score / 10) * 100);
-              const isLast = i === trendData.length - 1;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block text-[10px] text-white/60 bg-[#111] border border-white/[0.08] px-1.5 py-0.5 rounded whitespace-nowrap z-10" style={{fontFamily:"'DM Mono',monospace"}}>
-                    {p.score} · {p.date}
-                  </div>
-                  <div
-                    className={`w-full rounded-sm transition-all ${isLast ? "bg-purple-400" : "bg-white/20"}`}
-                    style={{ height: `${h}%`, minHeight: 2 }}
-                  />
+        {/* ── BOTTOM ROW: Intel + Activity + Performance ──────── */}
+        <div className="grid gap-4 lg:grid-cols-5">
+
+          {/* Intelligence feed — 3/5 */}
+          <div className="lg:col-span-3 rounded-2xl overflow-hidden flex flex-col"
+            style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(167,139,250,0.12)" }}>
+                  <Brain className="h-4 w-4" style={{ color: "#a78bfa" }} />
                 </div>
-              );
-            })}
-          </div>
-          <div className="flex justify-between mt-2">
-            <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>{trendData[0]?.date}</span>
-            <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>{trendData[trendData.length-1]?.date}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Sticky upgrade CTA — free plan only */}
-      {profile?.plan === "free" && (
-        <div className="sticky bottom-0 z-20 px-6 pb-4 pt-2 pointer-events-none">
-          <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
-            <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white">Ready to scale? ⚡</p>
-                <p className="text-xs text-white/35 truncate">Studio: 30 analyses · 30 boards · 5 videos/mo</p>
+                <div>
+                  <p className="text-sm font-bold text-white" style={syne}>Intelligence feed</p>
+                  <p className="text-[10px] text-white/25">AI-powered creative signals</p>
+                </div>
               </div>
-              <button
-                onClick={() => navigate("/pricing")}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
-              >
-                See plans <ArrowRight className="h-3.5 w-3.5" />
+              <button onClick={() => navigate("/dashboard/intelligence")}
+                className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+                All <ArrowRight className="h-3 w-3" />
               </button>
             </div>
+
+            <div className="p-4 flex-1">
+              {intelFeed.length === 0 ? (
+                <div className="flex flex-col items-center text-center py-10 gap-4">
+                  <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl"
+                    style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.12)" }}>🧠</div>
+                  <div>
+                    <p className="text-sm font-bold text-white mb-1" style={syne}>No signals yet</p>
+                    <p className="text-xs text-white/30 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
+                  </div>
+                  <button onClick={() => navigate("/dashboard/analyses/new")}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
+                    style={{ ...syne, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                    <Plus className="h-3.5 w-3.5" /> Start analyzing
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {intelFeed.map(item => (
+                    <button key={item.id} onClick={() => item.url && navigate(item.url)}
+                      className="w-full text-left flex items-start gap-3 p-3.5 rounded-xl transition-all hover:scale-[1.01]"
+                      style={{ border: `1px solid ${item.borderColor}`, background: `${item.color}06` }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${item.color}10`; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${item.color}06`; }}>
+                      <span className="text-xl shrink-0 leading-none mt-0.5">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-bold text-white truncate" style={syne}>{item.title}</p>
+                          <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase"
+                            style={{ ...mono, color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}30` }}>
+                            {item.tag}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/40 leading-relaxed">{item.body}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-white/15 group-hover:text-white/50 shrink-0 mt-1" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Sparkline */}
+              {trendData.length >= 4 && (
+                <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>Hook score trend</span>
+                    <span className="text-[10px]" style={{ color: "#34d399", ...mono }}>
+                      latest: {trendData[trendData.length - 1]?.score.toFixed(1)}/10
+                    </span>
+                  </div>
+                  <div className="flex items-end gap-1 h-10">
+                    {trendData.map((p, i) => {
+                      const h = Math.round((p.score / 10) * 100);
+                      const isLast = i === trendData.length - 1;
+                      const color = p.score >= 7 ? "#34d399" : p.score >= 5 ? "#a78bfa" : "#f87171";
+                      return (
+                        <div key={i} title={`${p.score} · ${p.date}`}
+                          className="flex-1 rounded-sm"
+                          style={{ height: `${h}%`, minHeight: 3, background: isLast ? "#fff" : color, opacity: isLast ? 1 : 0.45 }} />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right col — 2/5 */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+
+            {/* Recent activity */}
+            <div className="rounded-2xl overflow-hidden flex-1"
+              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <Clock className="h-4 w-4 text-white/35" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white" style={syne}>Recent work</p>
+                    <p className="text-[10px] text-white/25">Latest activity</p>
+                  </div>
+                </div>
+                <button onClick={() => navigate("/dashboard/analyses")}
+                  className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+                  All <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="p-2">
+                {recentActivity.length === 0 ? (
+                  <div className="flex flex-col items-center text-center py-8 gap-3">
+                    <span className="text-3xl">📂</span>
+                    <p className="text-sm text-white/30">No work yet</p>
+                    <button onClick={() => navigate("/dashboard/analyses/new")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
+                      style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
+                      <Plus className="h-3 w-3" /> Get started
+                    </button>
+                  </div>
+                ) : recentActivity.map(item => (
+                  <button key={item.id}
+                    onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all group"
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                    <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: item.type === "analysis" ? "rgba(167,139,250,0.12)" : "rgba(96,165,250,0.12)" }}>
+                      {item.type === "analysis"
+                        ? <BarChart3 className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                        : <LayoutGrid className="h-4 w-4" style={{ color: "#60a5fa" }} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/70 group-hover:text-white truncate transition-colors">{item.title}</p>
+                      <p className="text-[10px] text-white/25 capitalize" style={mono}>
+                        {item.type} · {timeAgo(item.created_at)}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 shrink-0 transition-colors" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Performance snapshot */}
+            <div className="rounded-2xl overflow-hidden"
+              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
+                    <TrendingUp className="h-4 w-4" style={{ color: "#34d399" }} />
+                  </div>
+                  <p className="text-sm font-bold text-white" style={syne}>Performance</p>
+                </div>
+                <div className="flex items-center gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  {(["7d", "30d", "all"] as const).map(f => (
+                    <button key={f} onClick={() => setDateFilter(f)}
+                      className="px-2 py-0.5 rounded-md text-[10px] transition-all"
+                      style={{ ...mono, background: dateFilter === f ? "rgba(255,255,255,0.1)" : "transparent", color: dateFilter === f ? "#fff" : "rgba(255,255,255,0.3)" }}>
+                      {f === "all" ? "All" : f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-5">
+                {!hasData ? (
+                  <p className="text-xs text-white/25 text-center py-3 leading-relaxed">Analyze videos to see<br />performance metrics</p>
+                ) : (
+                  <div className="space-y-3.5">
+                    {[
+                      { label: "Avg hook score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
+                      { label: "Top model",       value: insights.bestModel || "—",       accent: "#f472b6" },
+                      { label: "Top market",      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
+                      { label: "Total analyzed",  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
+                    ].map(s => (
+                      <div key={s.label} className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-white/35">{s.label}</span>
+                        <span className="text-xs font-bold truncate" style={{ color: s.accent, ...mono }}>{s.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upgrade nudge */}
+            {(!profile?.plan || profile.plan === "free") && (
+              <div className="rounded-2xl p-5 relative overflow-hidden"
+                style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.1), rgba(244,114,182,0.06))", border: "1px solid rgba(167,139,250,0.2)" }}>
+                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+                  style={{ background: "radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%)" }} />
+                <div className="relative">
+                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>Unlock full access ⚡</p>
+                  <p className="text-xs text-white/40 mb-3 leading-relaxed">More analyses, boards, and AI tools — from $9/mo.</p>
+                  <button onClick={() => navigate("/pricing")}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
+                    style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                    See plans <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
-};
-
-export default DashboardOverview;
+}

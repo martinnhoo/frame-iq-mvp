@@ -39,7 +39,7 @@ const HOOK_TYPE_COLORS: Record<string, string> = {
 
 const INDUSTRIES = ["iGaming / Betting", "E-commerce / DTC", "Finance / Fintech", "Health & Wellness", "SaaS / Tech", "Fashion / Beauty", "Food & Beverage", "Real Estate", "Education", "Other"];
 
-const syne = { fontFamily: "'Syne', sans-serif" } as const;
+const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function CompetitorDecoder() {
@@ -88,22 +88,65 @@ export default function CompetitorDecoder() {
         </div>
       </div>
 
+      {/* Tip banner */}
+      <div className="flex items-start gap-3 px-4 py-3 rounded-2xl" style={{ background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.14)" }}>
+        <span className="text-lg shrink-0">💡</span>
+        <div>
+          <p className="text-xs font-semibold text-white mb-0.5">How to get the ad script</p>
+          <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+            Don't have the transcript yet?{" "}
+            <a href="/dashboard/translate" className="underline" style={{ color: "#22d3ee" }}>
+              Go to Translate → Video → Transcript
+            </a>
+            {" "}to extract the script from any video, then paste it here.
+            Or share the TikTok / Instagram URL below and we'll fetch the caption.
+          </p>
+        </div>
+      </div>
+
       {/* Input */}
       <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-5 space-y-4">
+        {/* URL field */}
         <div>
-          <label className="block text-xs text-white/30 mb-2">Paste the competitor ad (transcript, caption, or script) <span className="text-white/15">*</span></label>
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/30 mb-2" style={mono}>Video URL <span className="text-white/15 normal-case font-sans">(TikTok, Instagram, YouTube — optional)</span></label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              placeholder="https://www.tiktok.com/@brand/video/..."
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}
+            />
+            <button className="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ background: "rgba(34,211,238,0.1)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.2)" }}>
+              Fetch
+            </button>
+          </div>
+          <p className="text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.18)" }}>Caption and visible text will be extracted automatically</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>or paste the script directly</span>
+          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+        </div>
+
+        <div>
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/30 mb-2" style={mono}>Ad script / transcript</label>
           <textarea
             value={adText}
             onChange={e => setAdText(e.target.value)}
-            placeholder="Paste the transcript, caption, voiceover script, or any text from the competitor ad..."
+            placeholder={"Paste the full transcript, caption, or VO script here...\n\nTip: use Translate → Video → Transcript to extract any video first."}
             rows={6}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/20 transition-colors resize-none"
+            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-colors resize-none"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}
           />
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[10px] text-white/20" style={mono}>{adText.length} chars</span>
+            <span className="text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>{adText.length} chars · min 20</span>
             <button onClick={() => setAdText(EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)])}
-              className="text-[10px] text-white/20 hover:text-white/50 transition-colors">
-              Load example
+              className="text-[10px] transition-colors" style={{ color: "rgba(255,255,255,0.2)" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.2)"}>
+              Load example →
             </button>
           </div>
         </div>

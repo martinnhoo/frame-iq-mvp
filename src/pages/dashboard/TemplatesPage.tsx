@@ -1604,7 +1604,7 @@ const TemplatesPage = () => {
     return counts;
   }, []);
 
-  const syne = { fontFamily: "'Syne', sans-serif" } as const;
+  const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
   const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
   return (

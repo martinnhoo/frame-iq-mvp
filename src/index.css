@@ -47,17 +47,23 @@
 /* ── Base Typography ─────────────────────────────────────────────────────────── */
 
 html, body {
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   background: #000;
   color: #fff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6,
-.font-display {
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+/* Syne ONLY for logo mark */
+.font-logo {
   font-family: 'Syne', system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-weight: 800;
 }
 
 .font-mono,
