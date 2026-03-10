@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Play, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Play, Trash2, Shuffle, ChevronUp, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 interface BoardData {
@@ -46,6 +46,10 @@ const BoardDetail = () => {
     overview: true, audience: false, strategy: false, scenes: true, production: false,
   });
   const [copied, setCopied] = useState<string | null>(null);
+  const [abLoading, setAbLoading] = useState(false);
+  const [abVariants, setAbVariants] = useState<Array<{angle:string;hook:string;script_rewrite:string;predicted_score:number;hook_type:string;key_change:string}>>([]);
+  const [abExpanded, setAbExpanded] = useState<number|null>(null);
+  const [abCopied, setAbCopied] = useState<number|null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -63,6 +67,21 @@ const BoardDetail = () => {
     setCopied(key);
     toast.success("Copied");
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const generateAB = async () => {
+    const voScript = (content?.vo_script as string) || (content?.script as string) || board?.prompt || "";
+    if (!voScript.trim()) { toast.error("No VO script found to generate variants from"); return; }
+    setAbLoading(true);
+    setAbVariants([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-ab-variants", {
+        body: { script: voScript, product: board?.prompt?.slice(0,100), platform: (content?.platform as string) || "TikTok", market: (content?.market_flag as string) || "GLOBAL" },
+      });
+      if (error) throw error;
+      setAbVariants(data.variants || []);
+      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY for real AI variants");
+    } catch { toast.error("Variant generation failed"); } finally { setAbLoading(false); }
   };
 
   const handleDelete = async () => {
@@ -300,6 +319,67 @@ const BoardDetail = () => {
               </div>
             </Section>
           )}
+          {/* A/B Script Variants */}
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4">
+              <span className="flex items-center gap-2.5 text-sm font-semibold text-white/80">
+                <Shuffle className="h-4 w-4 text-white/40" />
+                A/B Script Variants
+              </span>
+              <button onClick={generateAB} disabled={abLoading}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 disabled:opacity-40 transition-all"
+                style={{fontFamily:"'Syne',sans-serif"}}>
+                {abLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating...</> : <><Zap className="h-3.5 w-3.5" /> Generate 3 Variants</>}
+              </button>
+            </div>
+            {abVariants.length > 0 && (
+              <div className="px-5 pb-5 space-y-3">
+                {abVariants.map((v, i) => {
+                  const exp = abExpanded === i;
+                  const scoreColor = v.predicted_score >= 8 ? "text-green-400" : v.predicted_score >= 6.5 ? "text-yellow-400" : "text-white/50";
+                  return (
+                    <div key={i} className="rounded-xl border border-white/[0.07] bg-[#0a0a0a] overflow-hidden">
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="shrink-0 text-center w-10">
+                          <div className={`text-sm font-bold font-mono ${scoreColor}`}>{v.predicted_score?.toFixed(1)}</div>
+                          <div className="text-[9px] text-white/20 uppercase">/10</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold text-white" style={{fontFamily:"'Syne',sans-serif"}}>{v.angle}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.08] text-white/25">{v.hook_type}</span>
+                          </div>
+                          <p className="text-xs text-white/50 leading-relaxed italic">"{v.hook}"</p>
+                          <p className="text-[11px] text-white/25 mt-1">{v.key_change}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={async () => { await navigator.clipboard.writeText(v.script_rewrite); setAbCopied(i); toast.success("Script copied!"); setTimeout(() => setAbCopied(null), 2000); }}
+                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-white/30 hover:text-white transition-all">
+                            {abCopied === i ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
+                          </button>
+                          <button onClick={() => setAbExpanded(exp ? null : i)}
+                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-white/30 hover:text-white transition-all">
+                            {exp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          </button>
+                        </div>
+                      </div>
+                      {exp && (
+                        <div className="border-t border-white/[0.05] px-4 pb-4 pt-3">
+                          <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2" style={{fontFamily:"'DM Mono',monospace"}}>Full script</p>
+                          <p className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{v.script_rewrite}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {abVariants.length === 0 && !abLoading && (
+              <div className="px-5 pb-5 text-center">
+                <p className="text-xs text-white/20">Click "Generate 3 Variants" to create A/B test versions of this board's VO script</p>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

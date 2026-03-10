@@ -38,6 +38,8 @@ import SettingsPage from "./pages/dashboard/SettingsPage";
 import TemplatesPage from "./pages/dashboard/TemplatesPage";
 import PreflightCheck from "./pages/dashboard/PreflightCheck";
 import PersonaPage from "./pages/dashboard/PersonaPage";
+import HookGenerator from "./pages/dashboard/HookGenerator";
+import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
 import SupportChat from "./components/SupportChat";
 
 const queryClient = new QueryClient();
@@ -84,6 +86,8 @@ const App = () => (
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="preflight" element={<PreflightCheck />} />
                 <Route path="persona" element={<PersonaPage />} />
+                <Route path="hooks" element={<HookGenerator />} />
+                <Route path="competitor" element={<CompetitorDecoder />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

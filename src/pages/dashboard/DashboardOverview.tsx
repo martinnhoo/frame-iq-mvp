@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, LayoutGrid, Video, Plus, ArrowRight,
   TrendingUp, Clock, Zap, Target, Globe, Plane,
-  ChevronRight, Sparkles,
+  ChevronRight, Sparkles, Brain, Cpu, AlertTriangle,
 } from "lucide-react";
 
 interface InsightsData {
@@ -22,6 +22,18 @@ interface ActivityItem {
   created_at: string;
 }
 
+interface IntelItem {
+  id: string;
+  icon: string;
+  color: string;
+  title: string;
+  body: string;
+  url?: string;
+  tag?: string;
+}
+
+interface TrendPoint { date: string; score: number; }
+
 const DashboardOverview = () => {
   const { user, profile, usage, usageDetails } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
@@ -30,6 +42,8 @@ const DashboardOverview = () => {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [clearingActivity, setClearingActivity] = useState(false);
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
+  const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
+  const [trendData, setTrendData] = useState<TrendPoint[]>([]);
 
   const planLimits = {
     free: { analyses: 3, boards: 3, videos: 0 },
@@ -69,6 +83,70 @@ const DashboardOverview = () => {
     };
     run();
   }, [user.id, dateFilter]);
+
+  // Build intelligence feed + trend from analyses
+  useEffect(() => {
+    const run = async () => {
+      const { data } = await supabase.from("analyses").select("result, hook_strength, created_at, title")
+        .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(30);
+      if (!data?.length) return;
+
+      const feed: IntelItem[] = [];
+
+      // Best recent score
+      const recent = data.slice(0, 5);
+      const recentScores = recent.map(a => (a.result as Record<string,unknown>)?.hook_score as number || 0).filter(Boolean);
+      const avgRecent = recentScores.length ? recentScores.reduce((a,b)=>a+b,0)/recentScores.length : 0;
+
+      // Overall avg
+      const allScores = data.map(a => (a.result as Record<string,unknown>)?.hook_score as number || 0).filter(Boolean);
+      const avgAll = allScores.length ? allScores.reduce((a,b)=>a+b,0)/allScores.length : 0;
+
+      if (avgRecent > 0 && avgAll > 0) {
+        const delta = avgRecent - avgAll;
+        if (delta > 0.5) feed.push({ id:"trend_up", icon:"📈", color:"text-green-400", title:"Hook score improving", body:`Your last 5 analyses averaged ${avgRecent.toFixed(1)}/10 — ${delta.toFixed(1)} above your overall average. Keep it up.`, url:"/dashboard/intelligence", tag:"Trend" });
+        else if (delta < -0.5) feed.push({ id:"trend_down", icon:"⚠️", color:"text-yellow-400", title:"Hook score declining", body:`Recent analyses averaged ${avgRecent.toFixed(1)}/10, below your ${avgAll.toFixed(1)} average. Consider refreshing your creative approach.`, url:"/dashboard/hooks", tag:"Alert" });
+      }
+
+      // Creative fatigue — same model used 3+ times in last 5
+      const models = recent.map(a => (a.result as Record<string,unknown>)?.creative_model as string).filter(Boolean);
+      const modelCount = models.reduce<Record<string,number>>((acc,m) => { acc[m]=(acc[m]||0)+1; return acc; }, {});
+      const topModel = Object.entries(modelCount).sort((a,b)=>b[1]-a[1])[0];
+      if (topModel && topModel[1] >= 3) {
+        feed.push({ id:"fatigue", icon:"🔄", color:"text-orange-400", title:`${topModel[0]} overuse detected`, body:`You've used the ${topModel[0]} model ${topModel[1]}x in recent analyses. Creative fatigue may be reducing performance. Try a different format.`, url:"/dashboard/hooks", tag:"Fatigue" });
+      }
+
+      // Best score ever
+      const bestEntry = data.reduce<{r:Record<string,unknown>,t:string}|null>((best,a) => {
+        const s = (a.result as Record<string,unknown>)?.hook_score as number || 0;
+        const bs = best ? (best.r?.hook_score as number || 0) : 0;
+        return s > bs ? {r:a.result as Record<string,unknown>, t:a.title||"Untitled"} : best;
+      }, null);
+      if (bestEntry) {
+        const model = bestEntry.r.creative_model as string;
+        if (model) feed.push({ id:"best", icon:"⚡", color:"text-purple-400", title:`Top performer: ${bestEntry.t.slice(0,30)}`, body:`Your best hook used the "${model}" model with a ${bestEntry.r.hook_score}/10 score. Replicate this framework for your next campaign.`, url:"/dashboard/boards/new", tag:"Insight" });
+      }
+
+      // Hook generator nudge if < 3 analyses
+      if (data.length < 3) {
+        feed.push({ id:"nudge_gen", icon:"💡", color:"text-cyan-400", title:"Generate hooks before producing", body:"Use the Hook Generator to predict performance before spending on production. It takes 30 seconds.", url:"/dashboard/hooks", tag:"Tip" });
+      }
+
+      setIntelFeed(feed.slice(0, 4));
+
+      // Trend data — last 14 days grouped by day
+      const points: Record<string, { sum: number; count: number }> = {};
+      data.forEach(a => {
+        const score = (a.result as Record<string,unknown>)?.hook_score as number;
+        if (!score) return;
+        const day = new Date(a.created_at).toLocaleDateString("en", {month:"short",day:"numeric"});
+        if (!points[day]) points[day] = { sum: 0, count: 0 };
+        points[day].sum += score; points[day].count++;
+      });
+      setTrendData(Object.entries(points).slice(-10).map(([date,{sum,count}]) => ({ date, score: Math.round((sum/count)*10)/10 })).reverse());
+    };
+    run();
+  }, [user.id]);
 
   useEffect(() => {
     const run = async () => {
@@ -111,6 +189,8 @@ const DashboardOverview = () => {
     { title: "Translate",     desc: "Adapt scripts to any market",      icon: Globe,      url: "/dashboard/translate",            accent: "text-green-400",  bg: "bg-green-500/10" },
     { title: "Templates",     desc: "Start from proven formats",        icon: Sparkles,   url: "/dashboard/templates",            accent: "text-pink-400",   bg: "bg-pink-500/10" },
     { title: "Persona",       desc: "Build your target audience",       icon: Target,     url: "/dashboard/persona",              accent: "text-cyan-400",   bg: "bg-cyan-500/10" },
+    { title: "Hook Generator", desc: "AI-score hooks before producing",    icon: Cpu,        url: "/dashboard/hooks",                accent: "text-orange-400", bg: "bg-orange-500/10" },
+    { title: "Competitor",    desc: "Decode competitor ad frameworks",    icon: Brain,      url: "/dashboard/competitor",           accent: "text-cyan-400",   bg: "bg-cyan-500/10" },
   ];
 
   const firstName = profile?.name?.split(" ")[0] || "there";
@@ -312,6 +392,70 @@ const DashboardOverview = () => {
         </div>
       </div>
 
+
+      {/* Intelligence Feed */}
+      {intelFeed.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4 text-purple-400" />
+              <h2 className="text-sm font-semibold text-white" style={{fontFamily:"'Syne',sans-serif"}}>Intelligence feed</h2>
+            </div>
+            <button onClick={() => navigate("/dashboard/intelligence")} className="text-xs text-white/20 hover:text-white/50 transition-colors">View all →</button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {intelFeed.map(item => (
+              <button key={item.id} onClick={() => item.url && navigate(item.url)}
+                className="text-left p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all group">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-white/80" style={{fontFamily:"'Syne',sans-serif"}}>{item.title}</span>
+                      {item.tag && <span className={`text-[9px] px-1.5 py-0.5 rounded-full border border-white/[0.08] ${item.color} uppercase tracking-wide font-bold`} style={{fontFamily:"'DM Mono',monospace"}}>{item.tag}</span>}
+                    </div>
+                    <p className="text-xs text-white/30 leading-relaxed line-clamp-2">{item.body}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Hook Score Trend sparkline */}
+      {trendData.length >= 3 && (
+        <div className="p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-white/30" />
+              <span className="text-xs font-semibold text-white/60" style={{fontFamily:"'Syne',sans-serif"}}>Hook score trend</span>
+            </div>
+            <button onClick={() => navigate("/dashboard/intelligence")} className="text-[10px] text-white/15 hover:text-white/40 transition-colors">Details →</button>
+          </div>
+          <div className="flex items-end gap-1.5 h-14">
+            {trendData.map((p, i) => {
+              const h = Math.round((p.score / 10) * 100);
+              const isLast = i === trendData.length - 1;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block text-[10px] text-white/60 bg-[#111] border border-white/[0.08] px-1.5 py-0.5 rounded whitespace-nowrap z-10" style={{fontFamily:"'DM Mono',monospace"}}>
+                    {p.score} · {p.date}
+                  </div>
+                  <div
+                    className={`w-full rounded-sm transition-all ${isLast ? "bg-purple-400" : "bg-white/20"}`}
+                    style={{ height: `${h}%`, minHeight: 2 }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-2">
+            <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>{trendData[0]?.date}</span>
+            <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>{trendData[trendData.length-1]?.date}</span>
+          </div>
+        </div>
+      )}
 
       {/* Sticky upgrade CTA — free plan only */}
       {profile?.plan === "free" && (

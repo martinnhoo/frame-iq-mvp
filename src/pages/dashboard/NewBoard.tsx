@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layers } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layers, Zap, TrendingUp } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 const MARKETS = [
   { code: "ANY", flag: "🌍", name: "Global" },
@@ -81,6 +82,9 @@ const NewBoard = () => {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState("");
   const [fromTemplate, setFromTemplate] = useState<string | null>(null);
+  const [hookPreview, setHookPreview] = useState<{ score: number; type: string; feedback: string } | null>(null);
+  const [hookScoring, setHookScoring] = useState(false);
+  const hookDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pre-fill from template if navigating from templates page
   useEffect(() => {
@@ -94,6 +98,25 @@ const NewBoard = () => {
       window.history.replaceState({}, document.title);
     }
   }, [state]);
+
+  // Live hook score preview — debounced 1.5s after typing
+  useEffect(() => {
+    if (hookDebounceRef.current) clearTimeout(hookDebounceRef.current);
+    if (prompt.trim().length < 20) { setHookPreview(null); return; }
+    hookDebounceRef.current = setTimeout(async () => {
+      setHookScoring(true);
+      try {
+        const { data } = await supabase.functions.invoke("generate-hooks", {
+          body: { product: prompt.trim(), count: 1, market, platform, tone: "Aggressive / Urgent" },
+        });
+        const first = data?.hooks?.[0];
+        if (first) {
+          setHookPreview({ score: first.predicted_score, type: first.hook_type, feedback: first.why });
+        }
+      } catch { /* silent */ } finally { setHookScoring(false); }
+    }, 1500);
+    return () => { if (hookDebounceRef.current) clearTimeout(hookDebounceRef.current); };
+  }, [prompt, market, platform]);
 
   const selectedMarket = MARKETS.find((m) => m.code === market)!;
   const selectedPlatform = PLATFORMS.find((p) => p.value === platform)!;
@@ -226,6 +249,35 @@ const NewBoard = () => {
                   Minimum 10 characters. Be specific about product, audience, tone, and format.
                 </p>
               </div>
+
+              {/* Live Hook Score Preview */}
+              {(hookPreview || hookScoring) && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.07] bg-white/[0.03]">
+                  {hookScoring ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white/30 shrink-0" />
+                      <span className="text-xs text-white/30">Scoring hook preview...</span>
+                    </>
+                  ) : hookPreview ? (
+                    <>
+                      <Zap className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-white/40">Predicted hook score</span>
+                          <span className={`text-sm font-bold font-mono ${hookPreview.score >= 8 ? "text-green-400" : hookPreview.score >= 6.5 ? "text-yellow-400" : "text-red-400"}`}>
+                            {hookPreview.score.toFixed(1)}/10
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.08] text-white/25 capitalize">
+                            {hookPreview.type?.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-white/25 mt-0.5 truncate">{hookPreview.feedback}</p>
+                      </div>
+                      <TrendingUp className="h-3.5 w-3.5 text-white/15 shrink-0" />
+                    </>
+                  ) : null}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">Try a suggestion:</p>
