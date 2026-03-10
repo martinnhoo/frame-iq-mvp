@@ -13,7 +13,10 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem("frameiq-lang");
-    return (saved as Language) || "en";
+    const valid: Language[] = ["en", "pt", "es", "fr", "de", "ar", "zh"];
+    if (saved && valid.includes(saved as Language)) return saved as Language;
+    localStorage.removeItem("frameiq-lang");
+    return "en";
   });
 
   const setLanguage = useCallback((lang: Language) => {
