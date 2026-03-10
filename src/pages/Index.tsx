@@ -180,14 +180,14 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground leading-[1.08] tracking-tight font-display"
           >
-            Your hook score
+            Creative intelligence
             <br />
             <span style={{
               background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-            }}>is costing you ROAS.</span>
+            }}>for performance teams.</span>
           </motion.h1>
           
           <motion.p 
@@ -196,7 +196,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-[17px] md:text-[19px] max-w-[640px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body"
           >
-            Upload any competitor ad. FrameIQ scores the hook, decodes the creative model, and generates a production-ready board — in 60 seconds. Your team ships. Your ROAS climbs.
+            Every day without it, your competitors are shipping better hooks, higher-scoring ads, and production boards your team can execute — while you're still guessing. Stop guessing.
           </motion.p>
 
           {/* Pricing preview right in hero */}
