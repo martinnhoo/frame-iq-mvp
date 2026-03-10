@@ -11,6 +11,7 @@ import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { motion } from "framer-motion";
+import { Logo } from "@/components/Logo";
 
 const Signup = () => {
   const [loading, setLoading] = useState(false);
