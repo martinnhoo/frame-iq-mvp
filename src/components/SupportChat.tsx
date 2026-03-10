@@ -25,9 +25,9 @@ export default function SupportChat() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
-        supabase.from("user_ai_profile").select("top_performing_models, best_platforms, avg_hook_score, creative_style")
-          .eq("user_id", data.user.id).maybeSingle()
-          .then(({ data: profile }) => { if (profile) setUserContext(profile as Record<string, unknown>); });
+        supabase.from("user_ai_profile" as never).select("top_performing_models, best_platforms, avg_hook_score" as never)
+          .eq("user_id" as never, data.user.id).maybeSingle()
+          .then(({ data: profile }: { data: unknown }) => { if (profile) setUserContext(profile as Record<string, unknown>); });
       }
     });
   }, []);

@@ -20,6 +20,9 @@ export interface Profile {
   email: string | null;
   avatar_url: string | null;
   plan: string;
+  preferred_market: string | null;
+  preferred_language: string | null;
+  onboarding_data?: Record<string, unknown> | null;
 }
 
 export interface Usage {

@@ -298,7 +298,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this persona permanently? This cannot be undone.")) return;
     setDeletingId(id);
-    const { error } = await supabase.from("personas").delete().eq("id", id).eq("user_id", user.id);
+    const { error } = await supabase.from("personas" as never).delete().eq("id" as never, id).eq("user_id" as never, user.id);
     if (!error) {
       setPersonas((prev) => prev.filter((p) => p.id !== id));
       toast.success("Persona deleted");
