@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
