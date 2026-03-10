@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Video, FileText, Globe, Brain, Sparkles, Menu, ArrowRight, Play, Zap, Shield, Clock, Check, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import VideoDropZone from "@/components/VideoDropZone";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -260,158 +259,163 @@ const Index = () => {
           </motion.div>
           
           {/* App Screenshot */}
+          {/* Rich Dashboard Mock */}
           <motion.div id="demo-preview"
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="relative mt-12 sm:mt-20 max-w-4xl mx-auto hidden sm:block"
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="relative mt-16 sm:mt-24 max-w-5xl mx-auto hidden sm:block"
           >
-            <div className="relative text-center mb-4">
-              <span className="text-muted-foreground/40 text-[11px] tracking-[3px] font-semibold font-display uppercase">
-                {t("hero_screenshot_label")}
-              </span>
-            </div>
+            <p className="text-center text-[11px] tracking-[3px] uppercase text-muted-foreground/30 mb-5 font-display">Live analysis output</p>
 
-            <div 
-              className="relative mx-auto text-left"
-              style={{ 
-                maxWidth: '780px',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                boxShadow: '0 40px 100px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.2)',
-                animation: 'float 6s ease-in-out infinite',
-                transform: 'rotate(-1.5deg)',
-              }}
-            >
-              {/* Browser Chrome */}
-              <div 
-                className="flex items-center gap-2 px-4 py-3"
-                style={{ background: 'linear-gradient(180deg, #1a1a1a 0%, #141414 100%)', borderBottom: '1px solid #2a2a2a' }}
-              >
-                <div className="flex gap-2">
-                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f57' }} />
-                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#febc2e' }} />
-                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
+            {/* Outer glow */}
+            <div className="absolute -inset-1 rounded-2xl pointer-events-none" style={{background:"linear-gradient(135deg,rgba(167,139,250,0.15),rgba(244,114,182,0.1))",filter:"blur(20px)"}} />
+
+            <div className="relative rounded-2xl overflow-hidden" style={{boxShadow:"0 50px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.2)",background:"#080808"}}>
+              {/* Browser bar */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{background:"#0e0e0e",borderColor:"rgba(255,255,255,0.06)"}}>
+                <div className="flex gap-1.5">
+                  {["#ff5f57","#febc2e","#28c840"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}} />)}
                 </div>
-                <div 
-                  className="flex-1 text-center mx-12 font-mono"
-                  style={{ 
-                    background: '#0a0a0a', 
-                    borderRadius: '8px', 
-                    padding: '6px 16px', 
-                    fontSize: '12px', 
-                    color: '#666',
-                    border: '1px solid #222'
-                  }}
-                >
-                  <span style={{ color: '#4ade80' }}>🔒</span> app.frameiq.com/analysis/vg-wepink-01
+                <div className="flex-1 mx-8 py-1.5 px-4 rounded-lg text-center text-[11px] text-white/25" style={{background:"#111",border:"1px solid rgba(255,255,255,0.05)",fontFamily:"'DM Mono',monospace"}}>
+                  <span style={{color:"#4ade80"}}>🔒</span> app.frameiq.com/dashboard/analyses/ugc-br-0312
                 </div>
                 <div className="w-16" />
               </div>
 
-              {/* App Content */}
-              <div style={{ background: 'linear-gradient(180deg, #0c0c0c 0%, #080808 100%)', padding: '28px' }}>
-                {/* Top Bar */}
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}
-                    >
-                      <Video className="w-5 h-5 text-white" />
+              {/* Dashboard layout */}
+              <div className="flex" style={{minHeight:520}}>
+                {/* Sidebar mini */}
+                <div className="w-12 border-r flex flex-col items-center py-4 gap-4" style={{background:"#060606",borderColor:"rgba(255,255,255,0.05)"}}>
+                  {[["#a78bfa","▦"],["#60a5fa","▤"],["#f472b6","◈"],["#34d399","⊞"],["#fb923c","⚡"],["#c084fc","◉"]].map(([c,s],i)=>(
+                    <div key={i} className="w-7 h-7 rounded-lg flex items-center justify-center text-[13px]"
+                      style={{background:i===0?`${c}22`:"transparent",color:i===0?c:"rgba(255,255,255,0.2)",border:i===0?`1px solid ${c}30`:"none"}}>
+                      {s}
                     </div>
-                    <div>
-                      <div className="text-foreground text-sm font-semibold font-body">
-                        virginia_wepink_perfume_ugc.mp4
-                      </div>
-                      <div className="text-muted-foreground text-xs font-mono">
-                        Uploaded 2 min ago
-                      </div>
-                    </div>
-                  </div>
-                  <div 
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-                    style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.3)' }}
-                  >
-                    <span className="text-[10px] text-green-400">●</span>
-                    <span className="text-xs text-green-400 font-medium font-body">Analysis Complete</span>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Metrics Grid */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 rounded-xl bg-card border border-border">
-                  <div>
-                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
-                      Creative Model
+                {/* Main content */}
+                <div className="flex-1 p-5 space-y-4 overflow-hidden">
+
+                  {/* Top: file + status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{background:"linear-gradient(135deg,#8b5cf6,#ec4899)"}}>🎬</div>
+                      <div>
+                        <p className="text-white text-sm font-semibold" style={{fontFamily:"'Syne',sans-serif"}}>virginia_wepink_br_ugc.mp4</p>
+                        <p className="text-white/25 text-[11px]" style={{fontFamily:"'DM Mono',monospace"}}>0:28 · 9:16 · PT-BR · 14.2MB · Analyzed 2m ago</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400 font-body">
-                        UGC
-                      </span>
-                      <span className="text-foreground text-base font-semibold font-body">
-                        Influencer
-                      </span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-green-400" style={{background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.2)"}}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                        Analysis complete
+                      </div>
+                      <div className="px-3 py-1.5 rounded-full text-[11px] text-white/40 border border-white/[0.08]">
+                        Export board →
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
-                      Hook Score
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-green-400 text-[28px] font-bold font-display">9.1</span>
-                      <span className="text-muted-foreground text-sm font-body">/ 10</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
-                      Predicted CTR
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-foreground text-[28px] font-bold font-display">3.2%</span>
-                      <span className="text-green-400 text-xs font-body">↑ 47%</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Hook Preview */}
-                <div className="p-4 rounded-xl mb-4 bg-card border border-border">
-                  <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2.5 font-display">
-                    Hook (0–3s)
-                  </div>
-                  <p className="text-foreground/90 text-[15px] leading-[1.6] font-mono">
-                    "Camera opens on close-up of perfume, Virginia whispers: <span className="text-purple-400">'You guys aren't ready for what I'm about to tell you'</span>"
-                  </p>
-                </div>
-
-                {/* Brief Section */}
-                <div className="p-4 rounded-xl mb-4 bg-card border border-border">
-                  <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2.5 font-display">
-                    Brief
-                  </div>
-                  <p className="text-muted-foreground text-[13px] leading-[1.7] font-mono italic">
-                    Influencer UGC for WePink perfume. Parasocial hook with product close-up + curiosity-driven opening line. Promo code CTA appears at 00:22. Vertical 9:16 format optimized for Stories/Reels.
-                  </p>
-                </div>
-
-                {/* Bottom Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
-                    {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beauty', '👩 Women 25-34'].map((badge) => (
-                      <span 
-                        key={badge}
-                        className="bg-card border border-border rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground font-body"
-                      >
-                        {badge}
-                      </span>
+                  {/* Score row */}
+                  <div className="grid grid-cols-5 gap-3">
+                    {[
+                      {label:"Hook Score", val:"9.1", sub:"viral", color:"#4ade80", bar:91},
+                      {label:"Creative Model", val:"UGC", sub:"Influencer", color:"#a78bfa", bar:null},
+                      {label:"Hook Type", val:"Curiosity", sub:"parasocial", color:"#f472b6", bar:null},
+                      {label:"Platform Fit", val:"TikTok", sub:"Reels ✓ YT ✓", color:"#60a5fa", bar:null},
+                      {label:"Audience", val:"F 25–34", sub:"BR · Beauty", color:"#fb923c", bar:null},
+                    ].map((m,i)=>(
+                      <div key={i} className="rounded-xl p-3" style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                        <p className="text-[9px] uppercase tracking-widest text-white/25 mb-1.5" style={{fontFamily:"'DM Mono',monospace"}}>{m.label}</p>
+                        <p className="text-base font-bold" style={{color:m.color,fontFamily:"'Syne',sans-serif"}}>{m.val}</p>
+                        {m.bar ? (
+                          <div className="mt-1.5 h-1 rounded-full" style={{background:"rgba(255,255,255,0.06)"}}>
+                            <div className="h-full rounded-full" style={{width:`${m.bar}%`,background:m.color}} />
+                          </div>
+                        ) : (
+                          <p className="text-[10px] text-white/25 mt-0.5">{m.sub}</p>
+                        )}
+                      </div>
                     ))}
                   </div>
-                  <Button 
-                    size="sm"
-                    variant="outline"
-                    className="text-xs bg-card border-border text-muted-foreground font-body"
-                  >
-                    ← Back to menu
-                  </Button>
+
+                  {/* Middle row: hook + transcript + suggestions */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Hook breakdown */}
+                    <div className="rounded-xl p-4 space-y-3" style={{background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.15)"}}>
+                      <p className="text-[9px] uppercase tracking-widest text-purple-400/50" style={{fontFamily:"'DM Mono',monospace"}}>Hook (0–3s)</p>
+                      <p className="text-white/70 text-[12px] leading-relaxed" style={{fontFamily:"'DM Mono',monospace"}}>
+                        Camera: product close-up. <span className="text-purple-300">"Vocês não estão prontos pro que eu vou contar"</span>
+                      </p>
+                      <div className="flex gap-1.5">
+                        {["Curiosity gap","Parasocial","Whisper tone"].map(t=>(
+                          <span key={t} className="text-[9px] px-2 py-0.5 rounded-full text-purple-300/70" style={{background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.2)"}}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Transcript snippet */}
+                    <div className="rounded-xl p-4" style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[9px] uppercase tracking-widest text-white/25" style={{fontFamily:"'DM Mono',monospace"}}>Transcript</p>
+                        <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>PT-BR</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[["00:00","Vocês não estão prontos...","#a78bfa"],["00:04","Esse perfume ficou 3 meses...","#fff4"],["00:12","A fixação é absurda, juro.","#fff4"],["00:19","Usa VIRGINIA10 e ganha 20%","#f472b6"],["00:24","[product close-up + smile]","#fff2"]].map(([t,line,c])=>(
+                          <div key={t} className="flex items-start gap-2">
+                            <span className="text-[9px] shrink-0 mt-0.5" style={{color:"rgba(255,255,255,0.2)",fontFamily:"'DM Mono',monospace"}}>{t}</span>
+                            <span className="text-[11px] leading-relaxed" style={{color:c}}>{line}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Improvement suggestions */}
+                    <div className="rounded-xl p-4" style={{background:"rgba(251,191,36,0.04)",border:"1px solid rgba(251,191,36,0.12)"}}>
+                      <p className="text-[9px] uppercase tracking-widest text-amber-400/50 mb-3" style={{fontFamily:"'DM Mono',monospace"}}>AI Suggestions</p>
+                      <div className="space-y-2.5">
+                        {[
+                          {t:"Add on-screen text at 0:00–0:03 to reinforce the hook visually",s:"high"},
+                          {t:"CTA placement at 0:19 is late — move to 0:15 for +CTR",s:"high"},
+                          {t:"Test a second version with a direct benefit hook (A/B)",s:"medium"},
+                        ].map((s,i)=>(
+                          <div key={i} className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{background:s.s==="high"?"#f472b6":"#fbbf24"}} />
+                            <p className="text-[11px] text-white/45 leading-relaxed">{s.t}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom: production board preview strip */}
+                  <div className="rounded-xl p-4" style={{background:"rgba(96,165,250,0.04)",border:"1px solid rgba(96,165,250,0.12)"}}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[9px] uppercase tracking-widest text-blue-400/50" style={{fontFamily:"'DM Mono',monospace"}}>Generated production board · 4 scenes</p>
+                      <span className="text-[10px] text-blue-400/50 border border-blue-400/20 px-2 py-0.5 rounded-full">View full board →</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        {sc:"01",dur:"0:00–0:03",desc:"Product close-up. Whisper VO. No on-screen text.",vo:"'Vocês não estão prontos...'",type:"Hook"},
+                        {sc:"02",dur:"0:03–0:12",desc:"Face cam. Natural light. Casual movement.",vo:"'Ficou 3 meses esgotado...'",type:"Story"},
+                        {sc:"03",dur:"0:12–0:19",desc:"Spray on wrist. Close-up skin.",vo:"'A fixação é absurda...'",type:"Demo"},
+                        {sc:"04",dur:"0:19–0:28",desc:"Full face + product. Smile to camera.",vo:"'VIRGINIA10 → 20% off'",type:"CTA"},
+                      ].map((scene)=>(
+                        <div key={scene.sc} className="rounded-lg p-3 space-y-1.5" style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)"}}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold text-white/50" style={{fontFamily:"'DM Mono',monospace"}}>SC {scene.sc}</span>
+                            <span className="text-[8px] px-1.5 py-0.5 rounded text-blue-300/60" style={{background:"rgba(96,165,250,0.1)"}}>{scene.type}</span>
+                          </div>
+                          <p className="text-[9px] text-white/25" style={{fontFamily:"'DM Mono',monospace"}}>{scene.dur}</p>
+                          <p className="text-[10px] text-white/50 leading-relaxed">{scene.desc}</p>
+                          <p className="text-[10px] text-blue-300/60 leading-relaxed italic">{scene.vo}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -733,8 +737,6 @@ const Index = () => {
       </section>
 
       {/* Video Drop Zone */}
-      <VideoDropZone />
-
       {/* Footer */}
       <footer className="border-t border-border/50 bg-card/50">
         <div className="container mx-auto px-6 py-16">
