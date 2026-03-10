@@ -254,10 +254,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     setPersonasLoading(true);
     try {
       const { data, error } = await supabase
-        .from("personas")
-        .select("id, created_at, result")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .from("personas" as never)
+        .select("id, created_at, result" as never)
+        .eq("user_id" as never, user.id)
+        .order("created_at" as never, { ascending: false });
 
       if (!error && data) {
         setPersonas(
