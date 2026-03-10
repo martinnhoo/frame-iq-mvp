@@ -1,4 +1,4 @@
-// Shared FrameIQ logo — matches landing page exactly
+// Shared FrameIQ logo — Syne font for brand identity
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -7,20 +7,45 @@ interface LogoProps {
 export const Logo = ({ size = "md", className = "" }: LogoProps) => {
   const textSize = { sm: "text-lg", md: "text-xl", lg: "text-2xl" }[size];
   return (
-    <span className={`flex items-center font-bold ${textSize} ${className}`}>
-      <span className="text-white font-medium">Frame</span>
-      <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-black">IQ</span>
+    <span
+      className={`flex items-center ${textSize} ${className}`}
+      style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}
+    >
+      <span className="text-white font-semibold tracking-tight">Frame</span>
+      <span
+        className="font-extrabold"
+        style={{
+          background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        IQ
+      </span>
     </span>
   );
 };
 
-// Light version for landing/light backgrounds
 export const LogoLight = ({ size = "md", className = "" }: LogoProps) => {
   const textSize = { sm: "text-lg", md: "text-xl", lg: "text-2xl" }[size];
   return (
-    <span className={`flex items-center font-bold ${textSize} ${className}`}>
-      <span className="text-foreground font-medium">Frame</span>
-      <span className="gradient-text font-black">IQ</span>
+    <span
+      className={`flex items-center ${textSize} ${className}`}
+      style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}
+    >
+      <span className="text-white font-semibold">Frame</span>
+      <span
+        className="font-extrabold"
+        style={{
+          background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        IQ
+      </span>
     </span>
   );
 };

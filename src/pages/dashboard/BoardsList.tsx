@@ -43,7 +43,7 @@ const BoardsList = () => {
   };
 
   if (loading) return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4">
+    <div className="page-enter p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4">
       <div className="h-8 w-24 bg-white/5 animate-pulse rounded-lg" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[1,2,3].map(i => <div key={i} className="h-40 bg-white/5 animate-pulse rounded-2xl" />)}

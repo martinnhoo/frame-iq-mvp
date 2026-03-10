@@ -2,9 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ── Design System ──────────────────────────────────────────────────────────── */
 
 @layer base {
   :root {
@@ -35,88 +33,154 @@ All colors MUST be HSL.
     --border: 0 0% 13%;
     --input: 0 0% 13%;
     --ring: 0 0% 100%;
-
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 4%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 7%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 13%;
-    --sidebar-ring: 0 0% 100%;
-
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 85% 65%) 50%, hsl(320 80% 60%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsla(262 83% 58% / 0.15) 0%, transparent 70%);
+    /* Brand accent variables */
+    --purple: 258 89% 66%;
+    --purple-glow: rgba(124, 58, 237, 0.15);
+    --coral: 0 100% 71%;
+    --emerald: 160 84% 39%;
+    --sidebar-w: 252px;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+/* ── Base Typography ─────────────────────────────────────────────────────────── */
 
-  body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
+html, body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background: #000;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes glow-pulse {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.05);
-  }
+h1, h2, h3, h4, h5, h6,
+.font-display {
+  font-family: 'Syne', system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(-1.5deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(-1.5deg);
-  }
+.font-mono,
+code, pre,
+[class*="font-mono"] {
+  font-family: 'DM Mono', 'Fira Code', monospace;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+/* ── Grain overlay (subtle texture on backgrounds) ──────────────────────────── */
+
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.4;
 }
+
+/* ── Glows ───────────────────────────────────────────────────────────────────── */
+
+.glow-purple {
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2), 0 0 20px rgba(124, 58, 237, 0.12), 0 0 40px rgba(124, 58, 237, 0.05);
+}
+
+.glow-white {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 4px 24px rgba(255,255,255,0.06);
+}
+
+/* ── Sidebar active glow bar ─────────────────────────────────────────────────── */
+
+.nav-active-bar {
+  position: relative;
+}
+.nav-active-bar::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.6);
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Animated gradient text ─────────────────────────────────────────────────── */
 
 .gradient-text {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #fb923c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.shimmer-border {
-  position: relative;
+/* ── Card hover lift ─────────────────────────────────────────────────────────── */
+
+.card-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
 }
 
-.shimmer-border::before {
+/* ── Stat card glow on hover ─────────────────────────────────────────────────── */
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.stat-card::before {
   content: '';
   position: absolute;
   inset: -1px;
+  background: linear-gradient(135deg, transparent 60%, rgba(124,58,237,0.12));
   border-radius: inherit;
-  background: linear-gradient(90deg, transparent, hsla(262 83% 58% / 0.5), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.stat-card:hover::before { opacity: 1; }
+
+/* ── Page fade-in ────────────────────────────────────────────────────────────── */
+
+.page-enter {
+  animation: pageIn 0.3s ease;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Shimmer loading ─────────────────────────────────────────────────────────── */
+
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
   background-size: 200% 100%;
-  animation: shimmer 3s infinite;
-  z-index: -1;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Number counter animation ────────────────────────────────────────────────── */
+
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sidebar transition ───────────────────────────────────────────────────────── */
+
+.sidebar-transition {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }

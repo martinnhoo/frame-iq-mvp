@@ -118,25 +118,25 @@ const DashboardOverview = () => {
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-5 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 page-enter">
 
       {/* Welcome header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-mono text-white/30 uppercase tracking-widest mb-1">{greeting}</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            {firstName} <span className="text-white/30">👋</span>
+          <p className="text-[11px] text-white/20 uppercase tracking-[0.15em] mb-1.5" style={{fontFamily:"'DM Mono', monospace"}}>{greeting}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{fontFamily:"'Syne', sans-serif", letterSpacing:'-0.03em'}}>
+            {firstName}
           </h1>
-          <p className="text-sm text-white/40 mt-1">Your creative intelligence workspace</p>
+          <p className="text-sm text-white/30 mt-1">Creative intelligence workspace</p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-mono text-white/50 capitalize">
-            {profile?.plan} plan
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-[11px] text-white/40 capitalize" style={{fontFamily:"'DM Mono', monospace"}}>
+            {profile?.plan || "free"} plan
           </span>
-          {profile?.plan === "free" && (
+          {(profile?.plan === "free" || !profile?.plan) && (
             <button
               onClick={() => navigate("/pricing")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-xs font-bold hover:bg-white/90 transition-all glow-white"
             >
               <Zap className="h-3 w-3" /> Upgrade
             </button>
@@ -145,7 +145,7 @@ const DashboardOverview = () => {
       </div>
 
       {/* Usage Stats */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {stats.map((stat) => {
           const pct = stat.limit > 0 ? Math.min((stat.used / stat.limit) * 100, 100) : 0;
           const critical = pct >= 90;
@@ -153,20 +153,22 @@ const DashboardOverview = () => {
             <button
               key={stat.label}
               onClick={() => navigate(stat.url)}
-              className="group text-left p-4 sm:p-5 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] transition-all duration-200"
+              className="stat-card group text-left p-4 sm:p-5 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all duration-200"
             >
-              <div className="flex items-center justify-between mb-3">
-                <stat.icon className="h-4 w-4 text-white/30 group-hover:text-white/60 transition-colors" />
-                <span className={`text-[10px] font-mono ${critical ? "text-red-400" : "text-white/20"}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{background: `${stat.accent}15`}}>
+                  <stat.icon className="h-4 w-4" style={{color: stat.accent}} />
+                </div>
+                <span className={`text-[10px] font-mono ${critical ? "text-red-400" : "text-white/15"}`}>
                   {stat.limit > 0 ? `${stat.limit - stat.used} left` : "—"}
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{stat.used}</div>
-              <div className="text-xs text-white/30 mb-3">{stat.label}</div>
-              <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 counter" style={{fontFamily:"'Syne', sans-serif"}}>{stat.used}</div>
+              <div className="text-[11px] text-white/30 mb-3">{stat.label}</div>
+              <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%`, backgroundColor: critical ? "#f87171" : stat.accent }}
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${pct}%`, background: critical ? "#f87171" : `linear-gradient(90deg, ${stat.accent}80, ${stat.accent})` }}
                 />
               </div>
             </button>
@@ -177,25 +179,25 @@ const DashboardOverview = () => {
       {/* Quick Actions */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white/60 uppercase tracking-widest text-[11px]">Quick Actions</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/20" style={{fontFamily:"'Syne', sans-serif"}}>Quick Actions</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {quickActions.map((action) => (
             <button
               key={action.title}
               onClick={() => navigate(action.url)}
-              className="group text-left p-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] transition-all duration-200 relative overflow-hidden"
+              className="card-lift group text-left p-4 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] hover:border-white/[0.14] transition-all duration-200 relative overflow-hidden"
             >
               {action.hot && (
-                <span className="absolute top-3 right-3 text-[9px] font-bold font-mono uppercase tracking-wider text-white/30 border border-white/10 rounded px-1.5 py-0.5">
-                  New
+                <span className="absolute top-2.5 right-2.5 text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border" style={{fontFamily:"'DM Mono', monospace", color:"#a78bfa", borderColor:"#a78bfa40", background:"#a78bfa10"}}>
+                  AI
                 </span>
               )}
-              <div className={`h-8 w-8 rounded-xl ${action.bg} flex items-center justify-center mb-3 transition-colors`}>
+              <div className={`h-8 w-8 rounded-xl ${action.bg} flex items-center justify-center mb-3 transition-transform group-hover:scale-110 duration-200`}>
                 <action.icon className={`h-4 w-4 ${action.accent}`} />
               </div>
-              <p className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{action.title}</p>
-              <p className="text-xs text-white/30 mt-0.5 hidden sm:block">{action.desc}</p>
+              <p className="text-sm font-semibold text-white/75 group-hover:text-white transition-colors" style={{fontFamily:"'Syne', sans-serif"}}>{action.title}</p>
+              <p className="text-xs text-white/25 mt-0.5 hidden sm:block">{action.desc}</p>
             </button>
           ))}
         </div>
@@ -209,7 +211,7 @@ const DashboardOverview = () => {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-white/40" />
-              <h3 className="text-sm font-semibold text-white/70">Performance Insights</h3>
+              <h3 className="text-sm font-semibold text-white/60" style={{fontFamily:"'Syne', sans-serif"}}>Insights</h3>
             </div>
             <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] border border-white/[0.06] p-0.5">
               {(["7d", "30d", "all"] as const).map(f => (
@@ -254,7 +256,7 @@ const DashboardOverview = () => {
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
           <div className="flex items-center gap-2 mb-5">
             <Clock className="h-4 w-4 text-white/40" />
-            <h3 className="text-sm font-semibold text-white/70">Recent Activity</h3>
+            <h3 className="text-sm font-semibold text-white/60" style={{fontFamily:"'Syne', sans-serif"}}>Activity</h3>
           </div>
           {recentActivity.length === 0 ? (
             <div className="flex flex-col items-center text-center py-8 gap-3">

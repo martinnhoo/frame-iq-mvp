@@ -120,7 +120,7 @@ const TranslatePage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-5">
+    <div className="page-enter p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-white">Transcript & Translate</h1>

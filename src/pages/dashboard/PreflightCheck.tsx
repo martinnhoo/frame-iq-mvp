@@ -147,7 +147,7 @@ export default function PreflightCheck() {
 
       {/* Upload card */}
       <Card className="bg-[#0a0a0a] border-[#222]">
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="page-enter p-6 space-y-4">
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}

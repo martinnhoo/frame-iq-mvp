@@ -60,7 +60,7 @@ const AnalysesList = () => {
   };
 
   if (loading) return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4">
+    <div className="page-enter p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-4">
       <div className="h-8 w-32 bg-white/5 animate-pulse rounded-lg" />
       {[1,2,3].map(i => <div key={i} className="h-16 bg-white/5 animate-pulse rounded-2xl" />)}
     </div>

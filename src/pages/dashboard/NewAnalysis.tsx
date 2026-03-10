@@ -136,7 +136,7 @@ const NewAnalysis = () => {
   const pct = Math.round(((activeStep + 1) / STEPS.length) * 100);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6">
+    <div className="page-enter p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -147,7 +147,7 @@ const NewAnalysis = () => {
         </button>
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-purple-400" />
-          <h1 className="text-lg font-bold text-white">New Analysis</h1>
+          <h1 className="text-lg font-bold text-white" style={{fontFamily:"'Syne', sans-serif", letterSpacing:"-0.02em"}}>New Analysis</h1>
         </div>
       </div>
 

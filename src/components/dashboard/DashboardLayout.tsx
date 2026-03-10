@@ -132,7 +132,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-[#050505]">
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id) } satisfies DashboardContext} />
         </main>
       </div>
