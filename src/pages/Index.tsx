@@ -429,10 +429,10 @@ const Index = () => {
         <div className="container mx-auto max-w-4xl">
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
             {[
-              { value: "2.4M+",  label: "Ads analyzed" },
-              { value: "147",    label: "Performance teams" },
-              { value: "12",     label: "Countries" },
-              { value: "< 60s",  label: "Avg. analysis time" },
+              { value: "2.4M+",  label: t("social_ads") },
+              { value: "147",    label: t("social_teams") },
+              { value: "12",     label: t("social_countries") },
+              { value: "< 60s",  label: t("social_time") },
             ].map((s) => (
               <div key={s.value} className="text-center">
                 <div className="text-2xl font-bold font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.value}</div>
@@ -449,20 +449,19 @@ const Index = () => {
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-14">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">The cost of slow creative</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">{t("problem_label")}</p>
             <h2 className="text-3xl md:text-4xl font-bold font-display" style={{letterSpacing:"-0.02em"}}>
-              Most teams waste 60% of their creative budget<br className="hidden md:block" />
-              <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}> before a single ad goes live.</span>
+              <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{t("problem_title")}</span>
             </h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto font-body text-base">
-              Weak hooks. Untested angles. Briefs that editors ignore. FrameIQ fixes every one of those — before you spend a dollar on production.
+              {t("problem_subtitle")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { stat: "60s", label: "From upload to full creative brief", sub: "vs. 8 hours of manual analysis" },
-              { stat: "10×", label: "More ad variations per sprint",       sub: "same team, same budget" },
-              { stat: "−43%", label: "Average drop in wasted creative spend", sub: "by scoring hooks before production" },
+              { stat: "60s",  label: t("stat1_label"), sub: t("stat1_sub") },
+              { stat: "10×",  label: t("stat2_label"), sub: t("stat2_sub") },
+              { stat: "−43%", label: t("stat3_label"), sub: t("stat3_sub") },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
                 className="rounded-2xl border border-border/40 p-6 text-center" style={{background:"rgba(139,92,246,0.04)"}}>
@@ -554,13 +553,13 @@ const Index = () => {
           </div>
           <div className="text-center mt-10 space-y-2 font-body">
             <p className="text-sm text-muted-foreground">
-              Also available: <span className="text-foreground font-medium">Free plan</span> — 3 analyses, 3 boards, no credit card.
+              {t("pricing_free_note")}
             </p>
             <button
               onClick={() => navigate("/pricing")}
               className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
             >
-              See all plans and full feature comparison →
+              {t("pricing_see_all")}
             </button>
           </div>
         </div>
@@ -573,10 +572,10 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl relative">
           <div className="text-center mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              How it works
+              {t("how_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
-              From competitor ad to<br/>production board in 3 steps
+              {t("how_title")}
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6 relative">
@@ -585,23 +584,23 @@ const Index = () => {
             {[
               {
                 n:"01", emoji:"⬆️",
-                title:"Upload any ad",
-                desc:"Drop a competitor video, paste a URL, or upload your own. Supports TikTok, Reels, YouTube Shorts, Meta.",
-                result:"Result: full transcript + key frames in 60s",
+                title:t("how_step1_title"),
+                desc:t("how_step1_desc"),
+                result:t("how_step1_result"),
                 color:"#a78bfa",
               },
               {
                 n:"02", emoji:"🧠",
-                title:"AI decodes the creative",
-                desc:"Hook score, creative model, emotional triggers, persuasion tactics, platform fit — all extracted automatically.",
-                result:"Result: hook score + creative framework identified",
+                title:t("how_step2_title"),
+                desc:t("how_step2_desc"),
+                result:t("how_step2_result"),
                 color:"#f472b6",
               },
               {
                 n:"03", emoji:"📋",
-                title:"Generate & brief your team",
-                desc:"One click produces a production board: scene-by-scene, VO script, editor notes, CTA placement. Ready to execute.",
-                result:"Result: brief your editor in minutes, not days",
+                title:t("how_step3_title"),
+                desc:t("how_step3_desc"),
+                result:t("how_step3_result"),
                 color:"#34d399",
               },
             ].map((step,i) => (
@@ -627,53 +626,28 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              What changes
+              {t("features_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
-              Stop doing this.<br/>
-              <span className="text-muted-foreground/50">Start doing that.</span>
+              {t("features_title1")}<br/>
+              <span className="text-muted-foreground/50">{t("features_title2")}</span>
             </h2>
           </div>
 
           <div className="space-y-4">
             {[
-              {
-                before: "Watching competitor ads manually, taking notes, trying to reverse-engineer what's working",
-                after:  "Upload any ad → get hook score, creative model, transcript, and improvement suggestions in 60 seconds",
-                tag:    "Analysis",
-                accent: "#a78bfa",
-              },
-              {
-                before: "Writing briefs in Google Docs that editors misinterpret — 3 revision cycles per video",
-                after:  "AI generates a production board: scene list, VO script, on-screen text, editor notes. One doc, zero ambiguity",
-                tag:    "Boards",
-                accent: "#60a5fa",
-              },
-              {
-                before: "Guessing which hook angle will convert before committing to production",
-                after:  "Hook Generator produces 10 scored variations in 30 seconds. Test on paper before spending on production",
-                tag:    "Hook Generator",
-                accent: "#fb923c",
-              },
-              {
-                before: "Translating scripts manually or with Google Translate — losing tone, slang, and cultural context",
-                after:  "AI localizes scripts for BR, MX, IN, US and 10+ markets with cultural adaptation built in",
-                tag:    "Localization",
-                accent: "#34d399",
-              },
-              {
-                before: "Running the same UGC format 4 weeks straight and watching CTR collapse",
-                after:  "Intelligence feed detects creative fatigue, flags model overuse, and suggests what to rotate into",
-                tag:    "Intelligence",
-                accent: "#c084fc",
-              },
+              { before: t("feat1_before"), after: t("feat1_after"), tag: t("feat1_tag"), accent: "#a78bfa" },
+              { before: t("feat2_before"), after: t("feat2_after"), tag: t("feat2_tag"), accent: "#60a5fa" },
+              { before: t("feat3_before"), after: t("feat3_after"), tag: t("feat3_tag"), accent: "#fb923c" },
+              { before: t("feat4_before"), after: t("feat4_after"), tag: t("feat4_tag"), accent: "#34d399" },
+              { before: t("feat5_before"), after: t("feat5_after"), tag: t("feat5_tag"), accent: "#c084fc" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.07}} viewport={{once:true}}
                 className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-border/40">
                 {/* Before */}
                 <div className="p-5 md:p-6" style={{background:"rgba(239,68,68,0.04)",borderRight:"1px solid rgba(255,255,255,0.05)"}}>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/60 font-display">Before</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/60 font-display">{t("before_label")}</span>
                     <span className="h-px flex-1 bg-red-400/10" />
                   </div>
                   <p className="text-sm text-muted-foreground/70 leading-relaxed font-body">{item.before}</p>
@@ -681,7 +655,7 @@ const Index = () => {
                 {/* After */}
                 <div className="p-5 md:p-6 relative" style={{background:"rgba(167,139,250,0.04)"}}>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.7}}>After · {item.tag}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.7}}>{t("after_label")} · {item.tag}</span>
                     <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
                   </div>
                   <p className="text-sm leading-relaxed font-body" style={{color:"rgba(255,255,255,0.7)"}}>{item.after}</p>
@@ -701,34 +675,34 @@ const Index = () => {
             {/* glow */}
             <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% 0%,rgba(167,139,250,0.2),transparent 60%)"}} />
             <div className="relative z-10">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">Your competitors aren't waiting</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">{t("cta_urgency")}</p>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
-                Analyze your first ad<br />
+                {t("cta_title1")}<br />
                 <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-                  free. Right now.
+                  {t("cta_title2")}
                 </span>
               </h2>
               <p className="text-muted-foreground text-base mb-3 max-w-lg mx-auto font-body">
-                No credit card. No setup. Upload any video and get a full creative intelligence report in under 60 seconds.
+                {t("cta_desc")}
               </p>
               <div className="flex items-center justify-center gap-6 mb-8 text-sm text-muted-foreground/50 font-body">
-                <span>✓ Free plan included</span>
-                <span>✓ No credit card</span>
-                <span>✓ Cancel anytime</span>
+                <span>{t("cta_check1")}</span>
+                <span>{t("cta_check2")}</span>
+                <span>{t("cta_check3")}</span>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/30 font-body"
                   onClick={() => navigate("/signup")}
                 >
-                  Start analyzing — it's free
+                  {t("cta_primary_btn")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 <Button variant="outline"
                   className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 border-border/30 font-body"
                   onClick={() => navigate("/book-demo")}
                 >
-                  Book a 15-min demo
+                  {t("cta_secondary_btn")}
                 </Button>
               </div>
             </div>
