@@ -41,6 +41,10 @@ import PersonaPage from "./pages/dashboard/PersonaPage";
 import HookGenerator from "./pages/dashboard/HookGenerator";
 import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
 import SupportChat from "./components/SupportChat";
+import ToolsIndex from "@/pages/seo/ToolsIndex";
+import ToolPage from "@/pages/seo/ToolPage";
+import GuidesIndex from "@/pages/seo/GuidesIndex";
+import { CompareIndex, CompareDetail } from "@/pages/seo/ComparePages";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +93,13 @@ const App = () => (
                 <Route path="hooks" element={<HookGenerator />} />
                 <Route path="competitor" element={<CompetitorDecoder />} />
               </Route>
+
+              {/* ── SEO PUBLIC ROUTES ── */}
+              <Route path="/tools"          element={<ToolsIndex />} />
+              <Route path="/tools/:slug"    element={<ToolPage />} />
+              <Route path="/guides"         element={<GuidesIndex />} />
+              <Route path="/compare"        element={<CompareIndex />} />
+              <Route path="/compare/:slug"  element={<CompareDetail />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
