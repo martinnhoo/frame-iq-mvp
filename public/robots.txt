@@ -1,8 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /signup
-Disallow: /onboarding
 
 Sitemap: https://www.frameiq.com/sitemap.xml

@@ -44,7 +44,10 @@ import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
 import ToolPage from "@/pages/seo/ToolPage";
 import GuidesIndex from "@/pages/seo/GuidesIndex";
+import GuidePage from "@/pages/seo/GuidePage";
 import { CompareIndex, CompareDetail } from "@/pages/seo/ComparePages";
+import { AdsLibraryIndex, AdsLibraryLanding } from "@/pages/seo/AdsLibrary";
+import AdHooksPage from "@/pages/seo/AdHooksPage";
 
 const queryClient = new QueryClient();
 
@@ -92,14 +95,26 @@ const App = () => (
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="hooks" element={<HookGenerator />} />
                 <Route path="competitor" element={<CompetitorDecoder />} />
-              </Route>
+              </Route>              {/* ── SEO: Tools ── */}
+              <Route path="/tools"         element={<ToolsIndex />} />
+              <Route path="/tools/:slug"   element={<ToolPage />} />
 
-              {/* ── SEO PUBLIC ROUTES ── */}
-              <Route path="/tools"          element={<ToolsIndex />} />
-              <Route path="/tools/:slug"    element={<ToolPage />} />
-              <Route path="/guides"         element={<GuidesIndex />} />
-              <Route path="/compare"        element={<CompareIndex />} />
-              <Route path="/compare/:slug"  element={<CompareDetail />} />
+              {/* ── SEO: Guides ── */}
+              <Route path="/guides"        element={<GuidesIndex />} />
+              <Route path="/guides/:slug"  element={<GuidePage />} />
+
+              {/* ── SEO: Compare ── */}
+              <Route path="/compare"       element={<CompareIndex />} />
+              <Route path="/compare/:slug" element={<CompareDetail />} />
+
+              {/* ── SEO: Ads Library ── */}
+              <Route path="/ads-library"          element={<AdsLibraryIndex />} />
+              <Route path="/tiktok-ad-examples"   element={<AdsLibraryLanding />} />
+              <Route path="/facebook-ad-examples" element={<AdsLibraryLanding />} />
+              <Route path="/ugc-ad-examples"      element={<AdsLibraryLanding />} />
+              <Route path="/igaming-ad-examples"  element={<AdsLibraryLanding />} />
+              <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
+              <Route path="/best-ad-hooks"        element={<AdHooksPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
