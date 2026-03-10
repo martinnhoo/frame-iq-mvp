@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Logo } from "@/components/Logo";
 
 const blogPosts: Record<string, {
   title: string;
