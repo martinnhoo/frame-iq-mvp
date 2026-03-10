@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon, Globe, X, ChevronDown, Loader2, Sparkles } from "lucide-react";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
@@ -18,6 +18,193 @@ interface Template {
   duration: 15 | 30 | 60;
   prompt: string;
 }
+
+const LANGUAGES = [
+  { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
+  { code: "pt", flag: "🇧🇷", name: "Português",  market: "Brazil" },
+  { code: "es", flag: "🇲🇽", name: "Español",    market: "MX / LATAM" },
+  { code: "hi", flag: "🇮🇳", name: "Hindi",      market: "India" },
+  { code: "fr", flag: "🇫🇷", name: "Français",   market: "France / CA" },
+  { code: "de", flag: "🇩🇪", name: "Deutsch",    market: "Germany" },
+  { code: "it", flag: "🇮🇹", name: "Italiano",   market: "Italy" },
+  { code: "ar", flag: "🇸🇦", name: "عربي",       market: "MENA" },
+  { code: "zh", flag: "🇨🇳", name: "中文",        market: "China" },
+  { code: "ja", flag: "🇯🇵", name: "日本語",      market: "Japan" },
+  { code: "ko", flag: "🇰🇷", name: "한국어",      market: "Korea" },
+  { code: "tr", flag: "🇹🇷", name: "Türkçe",     market: "Turkey" },
+  { code: "ru", flag: "🇷🇺", name: "Русский",    market: "Russia" },
+  { code: "nl", flag: "🇳🇱", name: "Nederlands", market: "Netherlands" },
+  { code: "id", flag: "🇮🇩", name: "Bahasa",     market: "Indonesia" },
+  { code: "th", flag: "🇹🇭", name: "ภาษาไทย",   market: "Thailand" },
+  { code: "vi", flag: "🇻🇳", name: "Tiếng Việt", market: "Vietnam" },
+  { code: "pl", flag: "🇵🇱", name: "Polski",     market: "Poland" },
+];
+
+interface TranslateModalProps {
+  template: Template;
+  onClose: () => void;
+  onUse: (template: Template, translatedPrompt?: string, lang?: string) => void;
+  userId: string;
+}
+
+const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProps) => {
+  const [selectedLang, setSelectedLang] = useState("en");
+  const [adLang, setAdLang] = useState("en"); // language the ad itself will be in
+  const [translating, setTranslating] = useState(false);
+  const [preview, setPreview] = useState<{ text: string; notes: string } | null>(null);
+  const [langOpen, setLangOpen] = useState(false);
+  const [adLangOpen, setAdLangOpen] = useState(false);
+
+  const lang = LANGUAGES.find(l => l.code === selectedLang)!;
+  const adLangData = LANGUAGES.find(l => l.code === adLang)!;
+
+  const handleTranslate = async () => {
+    setTranslating(true);
+    setPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-text", {
+        body: {
+          source_text: template.prompt,
+          from_language: "en",
+          from_language_name: "English",
+          to_language: selectedLang,
+          to_language_name: lang.name,
+          context: `Ad script template: "${template.name}". Ad will target the ${lang.market} market. The ad dialogue/VO will be in ${adLangData.name}.`,
+          tone: "Aggressive / Urgent",
+          user_id: userId,
+        },
+      });
+      if (error) throw error;
+      setPreview({
+        text: data.translated_text || data.translation?.translated_text || template.prompt,
+        notes: data.cultural_adaptation || "",
+      });
+    } catch {
+      toast.error("Translation failed — check API key");
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const handleUseTranslated = () => {
+    onUse(template, preview?.text, selectedLang);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-3xl border border-white/[0.1] bg-[#0a0a0a] shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <Globe className="h-4 w-4 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white" style={{ fontFamily: "'Syne',sans-serif" }}>Translate template</p>
+              <p className="text-[11px] text-white/30">{template.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-white/30 hover:text-white transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Target market */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Target market</p>
+              <div className="relative">
+                <button onClick={() => setLangOpen(o => !o)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-sm transition-all">
+                  <span className="text-base">{lang.flag}</span>
+                  <span className="flex-1 text-left font-medium">{lang.name}</span>
+                  <ChevronDown className="h-3 w-3 text-white/30" />
+                </button>
+                {langOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
+                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.08] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
+                      {LANGUAGES.map(l => (
+                        <button key={l.code} onClick={() => { setSelectedLang(l.code); setLangOpen(false); setPreview(null); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors ${l.code === selectedLang ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/[0.06]"}`}>
+                          <span>{l.flag}</span>
+                          <span className="flex-1 text-left">{l.name}</span>
+                          <span className="text-white/20 text-[10px]">{l.market}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Ad language (VO)</p>
+              <div className="relative">
+                <button onClick={() => setAdLangOpen(o => !o)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-sm transition-all">
+                  <span className="text-base">{adLangData.flag}</span>
+                  <span className="flex-1 text-left font-medium">{adLangData.name}</span>
+                  <ChevronDown className="h-3 w-3 text-white/30" />
+                </button>
+                {adLangOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setAdLangOpen(false)} />
+                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.08] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
+                      {LANGUAGES.map(l => (
+                        <button key={l.code} onClick={() => { setAdLang(l.code); setAdLangOpen(false); setPreview(null); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors ${l.code === adLang ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/[0.06]"}`}>
+                          <span>{l.flag}</span>
+                          <span className="flex-1 text-left">{l.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          {preview ? (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+                <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Translated brief</p>
+                <p className="text-xs text-white/60 leading-relaxed">{preview.text}</p>
+              </div>
+              {preview.notes && (
+                <div className="rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15 px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-widest text-emerald-400/50 mb-1" style={{ fontFamily: "'DM Mono',monospace" }}>Cultural adaptation</p>
+                  <p className="text-[11px] text-white/35 leading-relaxed">{preview.notes}</p>
+                </div>
+              )}
+              <button onClick={handleUseTranslated}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all" style={{ fontFamily: "'Syne',sans-serif" }}>
+                {lang.flag} Use this translated template <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleTranslate} disabled={translating}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold text-sm hover:bg-emerald-500/20 disabled:opacity-40 transition-all" style={{ fontFamily: "'Syne',sans-serif" }}>
+              {translating
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Adapting for {lang.market}...</>
+                : <><Sparkles className="h-4 w-4" /> Adapt for {lang.flag} {lang.name} market</>}
+            </button>
+          )}
+
+          {/* Skip */}
+          <button onClick={() => { onUse(template); onClose(); }}
+            className="w-full text-center text-xs text-white/20 hover:text-white/40 transition-colors py-1">
+            Skip translation — use original in English →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const T = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
   ({ id, name, description, category, duration, prompt });
@@ -1359,6 +1546,7 @@ const TemplatesPage = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [translateModal, setTranslateModal] = useState<Template | null>(null);
 
   const filtered = useMemo(() => {
     setPage(1);
@@ -1376,7 +1564,7 @@ const TemplatesPage = () => {
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const handleUse = async (template: Template) => {
+  const handleUse = async (template: Template, translatedPrompt?: string, lang?: string) => {
     setLoading(template.id);
     try {
       await supabase.from("template_usage" as never).insert({
@@ -1387,9 +1575,10 @@ const TemplatesPage = () => {
     } catch {}
     navigate("/dashboard/boards/new", {
       state: {
-        templatePrompt: template.prompt,
-        templateName: template.name,
+        templatePrompt: translatedPrompt || template.prompt,
+        templateName: lang ? `${template.name} (${LANGUAGES.find(l => l.code === lang)?.name || lang})` : template.name,
         templateDuration: template.duration,
+        templateLang: lang,
       },
     });
     setLoading(null);
@@ -1403,6 +1592,14 @@ const TemplatesPage = () => {
 
   return (
     <div className="relative flex flex-col min-h-screen">
+      {translateModal && (
+        <TranslateModal
+          template={translateModal}
+          onClose={() => setTranslateModal(null)}
+          onUse={handleUse}
+          userId={user.id}
+        />
+      )}
     <div className="p-5 lg:p-6 max-w-7xl mx-auto space-y-5 flex-1">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -1411,7 +1608,7 @@ const TemplatesPage = () => {
             <Layers className="h-4 w-4 text-white/40" /> Templates
           </h1>
           <p className="text-white/30 text-xs mt-1">
-            {TEMPLATES.length} ready-to-use formats across {Object.keys(CAT_META).length} industries
+            {TEMPLATES.length} ready-to-use formats across {Object.keys(CAT_META).length} industries · <span className="text-emerald-400/60"><Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />Translate any template to 18 languages</span>
           </p>
         </div>
         <span className="text-[11px] text-white/20 font-mono mt-1 shrink-0">{filtered.length} shown</span>
@@ -1496,15 +1693,25 @@ const TemplatesPage = () => {
                   <p className="text-xs text-white/35 mb-4 flex-1 leading-relaxed">
                     {template.description}
                   </p>
-                  <Button
-                    onClick={() => handleUse(template)}
-                    disabled={loading === template.id}
-                    className="w-full bg-white/[0.07] hover:bg-white text-white hover:text-black text-xs h-8 border-0 transition-all duration-200"
-                  >
-                    {loading === template.id ? "Loading..." : (
-                      <span className="flex items-center gap-1.5">Use template <ArrowRight className="h-3.5 w-3.5" /></span>
-                    )}
-                  </Button>
+                  <div className="flex gap-1.5 mt-auto">
+                    <Button
+                      onClick={() => handleUse(template)}
+                      disabled={loading === template.id}
+                      className="flex-1 bg-white/[0.07] hover:bg-white text-white hover:text-black text-xs h-8 border-0 transition-all duration-200"
+                    >
+                      {loading === template.id ? "Loading..." : (
+                        <span className="flex items-center gap-1.5">Use <ArrowRight className="h-3 w-3" /></span>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => setTranslateModal(template)}
+                      disabled={loading === template.id}
+                      title="Translate this template to your language"
+                      className="h-8 w-8 p-0 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 transition-all duration-200"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
