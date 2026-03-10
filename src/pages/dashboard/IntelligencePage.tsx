@@ -85,6 +85,8 @@ export default function IntelligencePage() {
     loadData();
   }, [user.id]);
 
+  const [rebuilding, setRebuilding] = useState(false);
+
   const loadData = async () => {
     setLoading(true);
     const [{ data: analysesData }, { data: profileData }] = await Promise.all([
@@ -99,11 +101,22 @@ export default function IntelligencePage() {
         .from("user_ai_profile")
         .select("*")
         .eq("user_id", user.id)
-        .single(),
+        .maybeSingle(),
     ]);
     if (analysesData) setAnalyses(analysesData as AnalysisRow[]);
     if (profileData) setAiProfile(profileData as Record<string, unknown>);
     setLoading(false);
+  };
+
+  const rebuildProfile = async () => {
+    setRebuilding(true);
+    try {
+      await supabase.functions.invoke("update-ai-profile", {
+        body: { user_id: user.id, trigger: "manual_rebuild" },
+      });
+      await loadData();
+    } catch {}
+    setRebuilding(false);
   };
 
   // ── Computed stats ──────────────────────────────────────────────────────────
@@ -212,16 +225,33 @@ export default function IntelligencePage() {
         <div className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-violet-400" />
           <div>
-            <h1 className="text-xl font-bold text-white">Intelligence</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-white">Intelligence</h1>
+              {aiProfile?.creative_style && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full border border-violet-500/25 bg-violet-500/10 text-violet-400 font-medium hidden sm:inline">
+                  {String(aiProfile.creative_style)}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-white/25 mt-0.5">Patterns from your {overallStats.total} completed analyses</p>
           </div>
         </div>
-        <button
-          onClick={loadData}
-          className="h-8 w-8 rounded-xl bg-white/[0.05] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.08] transition-all"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={rebuildProfile}
+            disabled={rebuilding}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs hover:bg-violet-500/20 disabled:opacity-40 transition-all"
+          >
+            <RefreshCw className={`h-3 w-3 ${rebuilding ? "animate-spin" : ""}`} />
+            {rebuilding ? "Rebuilding..." : "Rebuild AI profile"}
+          </button>
+          <button
+            onClick={loadData}
+            className="h-8 w-8 rounded-xl bg-white/[0.05] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.08] transition-all"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Top KPIs */}
@@ -364,9 +394,16 @@ export default function IntelligencePage() {
             The AI builds your profile as you run analyses. After 5+ analyses, you'll see personalized insights here — what formats work for your brand, which hooks resonate with your audience, and which markets respond best.
           </p>
         )}
-        <div className="mt-3 pt-3 border-t border-violet-500/10 flex items-center gap-2">
-          <Info className="h-3 w-3 text-white/15 shrink-0" />
-          <p className="text-[10px] text-white/20">Updated automatically after each completed analysis</p>
+        <div className="mt-3 pt-3 border-t border-violet-500/10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Info className="h-3 w-3 text-white/15 shrink-0" />
+            <p className="text-[10px] text-white/20">Updated automatically after each completed analysis</p>
+          </div>
+          {aiProfile?.last_updated && (
+            <p className="text-[10px] text-white/15 font-mono shrink-0">
+              {new Date(String(aiProfile.last_updated)).toLocaleDateString()}
+            </p>
+          )}
         </div>
       </div>
     </div>

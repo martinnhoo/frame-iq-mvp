@@ -24,7 +24,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, user_id, user_context } = await req.json();
+    
+    // Build personalized system prompt with user context
+    const personalizedSystem = user_context
+      ? `${SYSTEM_PROMPT}
+
+CURRENT USER CONTEXT:
+- Creative style: ${user_context.creative_style || 'not yet determined'}
+- Top models they use: ${(user_context.top_performing_models || []).join(', ') || 'none yet'}
+- Best platforms: ${(user_context.best_platforms || []).join(', ') || 'none yet'}
+- Avg hook score: ${user_context.avg_hook_score || 'unknown'}/10
+Use this to give more personalized, relevant answers.`
+      : SYSTEM_PROMPT;
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
     // Mock mode if no API key
@@ -44,7 +56,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 300,
-        system: SYSTEM_PROMPT,
+        system: personalizedSystem ?? SYSTEM_PROMPT,
         messages: messages.map((m: { role: string; content: string }) => ({
           role: m.role,
           content: m.content,

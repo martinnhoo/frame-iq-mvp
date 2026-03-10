@@ -159,7 +159,19 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
       platform: analysis.recommended_platforms?.[0] || null,
       market: analysis.market_guess || market,
       hook_score: analysis.hook_score,
-    }).catch(() => {}); // non-blocking
+    }).catch(() => {});
+
+    // Trigger AI profile update (non-blocking)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    fetch(`${supabaseUrl}/functions/v1/update-ai-profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ user_id, trigger: 'analysis_completed' }),
+    }).catch(() => {});
 
     return new Response(JSON.stringify({ 
       success: true, 

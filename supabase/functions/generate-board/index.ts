@@ -121,14 +121,67 @@ Deno.serve(async (req) => {
     const aspect_ratio = platformConfig.aspect_ratio;
     const scene_count = Math.ceil(duration / 6);
 
-    // TODO: Uncomment when ANTHROPIC_API_KEY is available
-    /*
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    // Step 1-7: Claude API calls for talent, audience, character, strategy, scenes, production, compliance
-    */
 
-    // MOCK board
-    const mockBoard = {
+    // Load user's AI profile for personalized context
+    const { data: userAiProfile } = await supabaseClient
+      .from('user_ai_profile')
+      .select('top_performing_models, best_platforms, avg_hook_score, ai_summary, creative_style')
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    const aiContext = userAiProfile ? `
+USER CONTEXT (from their previous work):
+- Their best performing creative models: ${(userAiProfile.top_performing_models || []).join(', ') || 'none yet'}
+- Their best platforms: ${(userAiProfile.best_platforms || []).join(', ') || 'none yet'}
+- Their average hook score: ${userAiProfile.avg_hook_score || 'unknown'}/10
+- Their creative style: ${userAiProfile.creative_style || 'not yet determined'}
+Use this context to make the board MORE relevant to what works for this specific creator.` : '';
+
+    let board: Record<string, unknown>;
+
+    if (ANTHROPIC_API_KEY) {
+      const sysPrompt = `You are a world-class performance marketing creative director. Generate a complete production board for a ${duration}s ${platform} video ad.
+Market: ${marketConfig.name} (${marketConfig.code}), Language: ${vo_language}
+Talent: ${has_talent ? `Yes — ${talent_name || 'unnamed creator'}` : 'Product-only, no talent'}
+${aiContext}
+${context ? `Additional context: ${context}` : ''}
+
+Return ONLY valid JSON (no markdown) with this exact structure:
+{
+  "overview": {"campaign_title":"string","market":"string","market_code":"string","platform":"string","duration_seconds":${duration},"aspect_ratio":"${aspect_ratio}","vo_language":"${vo_language}","scene_count":${scene_count}},
+  "audience": {"age_range":"string","gender_skew":"string","income_level":"string","pain_points":["array"],"desires":["array"],"hook_insight":"string"},
+  "hook": {"type":"curiosity|social_proof|pattern_interrupt|direct_offer|emotional|question|statement","hook_line":"exact first words spoken","visual_hook":"what viewer sees in first 3s","hook_score_prediction":5},
+  "scenes": [{"scene_number":1,"duration_seconds":5,"title":"Scene title","visual_description":"what to film","dialogue_or_vo":"exact words","on_screen_text":"text overlay","transition":"cut|fade|swipe","notes":"director note"}],
+  "production": {"location":"home|studio|outdoor|product-only","props":["array"],"lighting":"ring-light|natural|studio","editing_style":"string","music_bpm":"number range","aspect_ratio":"${aspect_ratio}","resolution":"string","fps":30,"export_format":"MP4","editor_briefing":"string"},
+  "compliance": {"platform_safe":true,"overall_risk":"low|medium|high","issues":[],"suggestions":["array"],"disclaimer_needed":false,"disclaimer_text":null}
+}`;
+
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 3000,
+          system: sysPrompt,
+          messages: [{ role: 'user', content: `Create the board for this brief: ${prompt}` }],
+        }),
+      });
+
+      if (claudeRes.ok) {
+        const claudeData = await claudeRes.json();
+        const rawText = (claudeData.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+        board = JSON.parse(rawText);
+      } else {
+        throw new Error(`Claude API error: ${claudeRes.status}`);
+      }
+    } else {
+      // MOCK board (API key not set)
+      board = {
       overview: {
         campaign_title: prompt.substring(0, 60),
         market: marketConfig.name,
@@ -214,12 +267,14 @@ Deno.serve(async (req) => {
       }
     };
 
+    } // end else mock block
+
     // Save to boards table
     const { data: boardRecord, error: insertError } = await supabaseClient
       .from('boards')
       .insert({
         user_id,
-        title: prompt.substring(0, 100),
+        title: (board.overview as Record<string, unknown>)?.campaign_title as string || prompt.substring(0, 100),
         prompt,
         market: marketConfig.code,
         market_flag,
@@ -230,12 +285,37 @@ Deno.serve(async (req) => {
         talent_name: talent_name || null,
         vo_language,
         status: 'generated',
-        content: mockBoard
+        content: board,
       })
       .select()
       .single();
 
     if (insertError) throw insertError;
+
+    // Capture prompt to creative_memory for AI learning
+    const hookPrediction = (board.hook as Record<string, unknown>)?.type as string || null;
+    supabaseClient.from('creative_memory').insert({
+      user_id,
+      analysis_id: null,
+      hook_type: hookPrediction,
+      creative_model: null,
+      platform,
+      market: marketConfig.code,
+      hook_score: (board.hook as Record<string, unknown>)?.hook_score_prediction as number || null,
+      notes: prompt.substring(0, 500),
+    }).catch(() => {});
+
+    // Trigger AI profile update (non-blocking)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    fetch(`${supabaseUrl}/functions/v1/update-ai-profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ user_id, trigger: 'board_generated' }),
+    }).catch(() => {});
 
     // Increment usage
     if (usage) {
@@ -251,7 +331,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, board: boardRecord, mock_mode: true }),
+      JSON.stringify({ success: true, board: boardRecord, board_id: boardRecord.id, mock_mode: !ANTHROPIC_API_KEY }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

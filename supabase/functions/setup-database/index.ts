@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       best_markets jsonb DEFAULT '[]',
       best_platforms jsonb DEFAULT '[]',
       avg_hook_score numeric, total_analyses integer DEFAULT 0,
-      industry text, target_markets jsonb DEFAULT '[]',
+      industry text, creative_style text, target_markets jsonb DEFAULT '[]',
       ad_platforms jsonb DEFAULT '[]',
       ai_summary text, ai_recommendations jsonb DEFAULT '[]',
       last_updated timestamp with time zone DEFAULT now(),

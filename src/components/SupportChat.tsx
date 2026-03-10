@@ -18,7 +18,19 @@ export default function SupportChat() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userContext, setUserContext] = useState<Record<string, unknown> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Load user AI profile for context
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        supabase.from("user_ai_profile").select("top_performing_models, best_platforms, avg_hook_score, creative_style")
+          .eq("user_id", data.user.id).maybeSingle()
+          .then(({ data: profile }) => { if (profile) setUserContext(profile as Record<string, unknown>); });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,7 +45,7 @@ export default function SupportChat() {
 
     try {
       const { data, error } = await supabase.functions.invoke("support-chat", {
-        body: { messages: [...messages, userMsg] },
+        body: { messages: [...messages, userMsg], user_context: userContext },
       });
 
       if (error) throw error;
