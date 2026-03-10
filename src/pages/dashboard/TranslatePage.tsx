@@ -115,8 +115,9 @@ const TranslatePage = () => {
           user_id: user.id,
         },
       });
-      if (error) throw error;
-      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY for real translation");
+      if (error) throw new Error(error.message || JSON.stringify(error));
+      if (data?.error) throw new Error(data.error);
+      if (data?.mock_mode) toast.info("Add ANTHROPIC_API_KEY in Supabase Secrets for real AI translation");
 
       const rawResults = data.multi ?? [{ lang: targetLangs[0], translated_text: data.translated_text, cultural_adaptation: data.cultural_adaptation }];
       setResults(rawResults.map((r: { lang: string; translated_text: string; cultural_adaptation: string }) => ({
@@ -127,8 +128,10 @@ const TranslatePage = () => {
         cultural_adaptation: r.cultural_adaptation,
         copied: false,
       })));
-    } catch {
-      toast.error("Translation failed");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Translation failed: ${msg}`);
+      console.error("TranslatePage error:", err);
     } finally {
       setLoading(false);
     }
