@@ -420,24 +420,21 @@ const Index = () => {
       </section>
 
       {/* What FrameIQ does — clear SaaS value prop */}
-      <section className="py-16 px-6 border-b border-border/50">
+      {/* Social proof — numbers */}
+      <section className="py-10 px-6 border-b border-border/30">
         <div className="container mx-auto max-w-4xl">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <div className="text-3xl mb-3">🔍</div>
-              <h3 className="text-lg font-semibold mb-2 font-display">Analyze</h3>
-              <p className="text-sm text-muted-foreground font-body">Upload any ad. AI extracts hook, creative model, transcript, and key frames in under 60 seconds.</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
-              <div className="text-3xl mb-3">📋</div>
-              <h3 className="text-lg font-semibold mb-2 font-display">Generate</h3>
-              <p className="text-sm text-muted-foreground font-body">Get a production-ready board with scenes, VO script, and editor notes — ready to brief your team.</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
-              <div className="text-3xl mb-3">🚀</div>
-              <h3 className="text-lg font-semibold mb-2 font-display">Ship</h3>
-              <p className="text-sm text-muted-foreground font-body">Go from competitor insight to published creative in hours, not weeks. 10x your output.</p>
-            </motion.div>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+            {[
+              { value: "2.4M+",  label: "Ads analyzed" },
+              { value: "147",    label: "Performance teams" },
+              { value: "12",     label: "Countries" },
+              { value: "< 60s",  label: "Avg. analysis time" },
+            ].map((s) => (
+              <div key={s.value} className="text-center">
+                <div className="text-2xl font-bold font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.value}</div>
+                <div className="text-xs text-muted-foreground/50 mt-0.5 font-body">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
