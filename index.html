@@ -1,14 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script>
-      // Clear stale language if not explicitly chosen by user
-      try {
-        if (localStorage.getItem('frameiq-lang-chosen') !== '1') {
-          localStorage.removeItem('frameiq-lang');
-        }
-      } catch(e) {}
-    </script>
+    <script>try{localStorage.removeItem('frameiq-lang');localStorage.removeItem('frameiq-lang-chosen');}catch(e){}</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
