@@ -310,21 +310,24 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Upgrade banner — free plan only */}
+
+      {/* Sticky upgrade CTA — free plan only */}
       {profile?.plan === "free" && (
-        <div className="relative rounded-2xl border border-white/[0.1] overflow-hidden p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-pink-900/20" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-            <div>
-              <p className="text-base font-bold text-white mb-1">Ready to scale?</p>
-              <p className="text-sm text-white/40">Studio gives you 30 analyses/month, production boards, and video generation.</p>
+        <div className="sticky bottom-0 z-20 px-6 pb-4 pt-2 pointer-events-none">
+          <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white">Ready to scale? ⚡</p>
+                <p className="text-xs text-white/35 truncate">Studio: 30 analyses · 30 boards · 5 videos/mo</p>
+              </div>
+              <button
+                onClick={() => navigate("/pricing")}
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
+              >
+                See plans <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             </div>
-            <button
-              onClick={() => navigate("/pricing")}
-              className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 transition-colors"
-            >
-              See plans <ArrowRight className="h-4 w-4" />
-            </button>
           </div>
         </div>
       )}

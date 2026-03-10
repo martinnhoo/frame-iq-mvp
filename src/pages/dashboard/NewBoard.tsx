@@ -131,6 +131,7 @@ const NewBoard = () => {
             talent_name: hasTalent && talentName.trim() ? talentName.trim() : undefined,
             product_only: productOnly,
             context: context.trim() || undefined,
+            user_id: user.id,
           }),
         },
       );

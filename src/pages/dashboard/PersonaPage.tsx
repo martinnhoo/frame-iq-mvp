@@ -47,16 +47,9 @@ const STEPS = [
   },
   {
     id: "age",
-    q: "Primary age range?",
-    sub: "",
-    type: "single",
-    options: [
-      { value: "18-24", label: "18 – 24", emoji: "🎓" },
-      { value: "25-34", label: "25 – 34", emoji: "💼" },
-      { value: "35-44", label: "35 – 44", emoji: "🏠" },
-      { value: "45-54", label: "45 – 54", emoji: "👔" },
-      { value: "55+",   label: "55+",     emoji: "🧓" },
-    ],
+    q: "Age range?",
+    sub: "Drag both handles to set your target range",
+    type: "range",
   },
   {
     id: "income",
@@ -114,10 +107,15 @@ export default function PersonaPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PersonaResult | null>(null);
   const [copied, setCopied] = useState(false);
+  // Dual range slider state
+  const [ageMin, setAgeMin] = useState(18);
+  const [ageMax, setAgeMax] = useState(35);
 
   const current = STEPS[step];
   const answer = answers[current.id] || "";
-  const canNext = answer.trim().length > 0;
+  const canNext = current.type === "range"
+    ? true
+    : answer.trim().length > 0;
 
   const selectSingle = (value: string) => {
     setAnswers(a => ({ ...a, [current.id]: value }));
@@ -125,6 +123,14 @@ export default function PersonaPage() {
       if (step < STEPS.length - 1) setStep(s => s + 1);
       else generatePersona({ ...answers, [current.id]: value });
     }, 260);
+  };
+
+  const handleRangeNext = () => {
+    const label = ageMax >= 55 ? `${ageMin}-55+` : `${ageMin}-${ageMax}`;
+    const updated = { ...answers, age: label };
+    setAnswers(updated);
+    if (step < STEPS.length - 1) setStep(s => s + 1);
+    else generatePersona(updated);
   };
 
   const handleTextNext = () => {
@@ -420,6 +426,88 @@ CTA: ${result.cta_style}`;
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
           )}
+        </div>
+      )}
+
+      {/* Dual range slider */}
+      {current.type === "range" && (
+        <div className="space-y-6">
+          {/* Display */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
+              <p className="text-xs text-white/30 mb-0.5">From</p>
+              <p className="text-2xl font-bold text-white">{ageMin}</p>
+            </div>
+            <div className="h-px w-8 bg-white/20" />
+            <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
+              <p className="text-xs text-white/30 mb-0.5">To</p>
+              <p className="text-2xl font-bold text-white">{ageMax >= 55 ? "55+" : ageMax}</p>
+            </div>
+          </div>
+
+          {/* Slider track */}
+          <div className="relative px-2">
+            <div className="relative h-2 mx-2">
+              {/* Track bg */}
+              <div className="absolute inset-0 rounded-full bg-white/[0.08]" />
+              {/* Active track */}
+              <div
+                className="absolute h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                style={{
+                  left: `${((ageMin - 18) / (55 - 18)) * 100}%`,
+                  right: `${100 - ((Math.min(ageMax, 55) - 18) / (55 - 18)) * 100}%`,
+                }}
+              />
+              {/* Min handle */}
+              <input
+                type="range" min={18} max={54} value={ageMin}
+                onChange={e => {
+                  const v = Number(e.target.value);
+                  if (v < ageMax) setAgeMin(v);
+                }}
+                className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+                style={{ zIndex: ageMin > 50 ? 5 : 3 }}
+              />
+              {/* Max handle */}
+              <input
+                type="range" min={19} max={55} value={ageMax}
+                onChange={e => {
+                  const v = Number(e.target.value);
+                  if (v > ageMin) setAgeMax(v);
+                }}
+                className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+                style={{ zIndex: 4 }}
+              />
+              {/* Visual handles */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white shadow-lg border-2 border-purple-500 pointer-events-none transition-all"
+                style={{ left: `calc(${((ageMin - 18) / (55 - 18)) * 100}% - 10px)` }}
+              />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white shadow-lg border-2 border-pink-500 pointer-events-none transition-all"
+                style={{ left: `calc(${((Math.min(ageMax, 55) - 18) / (55 - 18)) * 100}% - 10px)` }}
+              />
+            </div>
+            {/* Labels */}
+            <div className="flex justify-between mt-4 px-2 text-[10px] text-white/20">
+              <span>18</span><span>25</span><span>35</span><span>45</span><span>55+</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            {step > 0 ? (
+              <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
+                <ArrowLeft className="h-4 w-4" /> Back
+              </button>
+            ) : <span />}
+            <button
+              onClick={handleRangeNext}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all"
+            >
+              {step === STEPS.length - 1 ? "Generate persona" : "Continue"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

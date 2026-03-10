@@ -605,14 +605,23 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   </p>
                   <p className="text-xs text-white/20 mt-0.5">Your AI audience profiles</p>
                 </div>
-                <button
-                  onClick={loadPersonas}
-                  disabled={personasLoading}
-                  className="h-7 w-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.08] transition-all disabled:opacity-30"
-                  title="Refresh"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${personasLoading ? "animate-spin" : ""}`} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="/dashboard/persona"
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.06] border border-white/[0.09] text-white/50 text-xs font-medium hover:bg-white/[0.1] hover:text-white transition-all"
+                    title="Create new persona"
+                  >
+                    <span className="text-base leading-none">+</span> New
+                  </a>
+                  <button
+                    onClick={loadPersonas}
+                    disabled={personasLoading}
+                    className="h-7 w-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.08] transition-all disabled:opacity-30"
+                    title="Refresh"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${personasLoading ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
               </div>
 
               {personasLoading ? (

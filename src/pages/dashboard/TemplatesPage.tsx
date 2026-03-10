@@ -276,7 +276,7 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 const TemplatesPage = () => {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [activeDuration, setActiveDuration] = useState<Duration>("all");
@@ -321,7 +321,8 @@ const TemplatesPage = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="relative flex flex-col min-h-screen">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 flex-1">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -430,6 +431,28 @@ const TemplatesPage = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+    </div>
+
+      {/* Sticky upgrade CTA */}
+      {profile?.plan === "free" && (
+        <div className="sticky bottom-0 z-20 px-6 pb-4 pt-2 pointer-events-none">
+          <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white">Unlock all 1000+ templates ⚡</p>
+                <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · 5 videos/mo</p>
+              </div>
+              <button
+                onClick={() => navigate("/pricing")}
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
+              >
+                Upgrade <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

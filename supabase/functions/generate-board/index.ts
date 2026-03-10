@@ -49,8 +49,26 @@ Deno.serve(async (req) => {
       platform: rawPlatform = 'all',
       has_talent = false,
       talent_name,
-      user_id
+      user_id: bodyUserId,
+      title,
+      context,
     } = body;
+
+    // Resolve user_id from body OR JWT
+    let user_id = bodyUserId;
+    if (!user_id) {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const token = authHeader.replace('Bearer ', '');
+      if (token) {
+        const anonClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          { global: { headers: { Authorization: `Bearer ${token}` } } }
+        );
+        const { data: { user } } = await anonClient.auth.getUser();
+        user_id = user?.id;
+      }
+    }
 
     if (!prompt || prompt.length < 10) {
       return new Response(
@@ -61,8 +79,8 @@ Deno.serve(async (req) => {
 
     if (!user_id) {
       return new Response(
-        JSON.stringify({ error: 'Missing required field: user_id' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Authentication required. Please log in again.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
