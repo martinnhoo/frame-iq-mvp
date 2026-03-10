@@ -1538,6 +1538,20 @@ const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
 
 const PER_PAGE = 24;
 
+const getCatAccent = (cat: string): string => {
+  const map: Record<string, string> = {
+    ugc: "#a78bfa", testimonial: "#34d399", promo: "#fb923c", tutorial: "#60a5fa",
+    hook: "#f87171", product: "#22d3ee", story: "#fbbf24", react: "#f472b6",
+    app: "#a3e635", b2b: "#818cf8", seasonal: "#2dd4bf", ecommerce: "#facc15",
+    finance: "#34d399", health: "#fb7185", beauty: "#e879f9", food: "#fb923c",
+    gaming: "#c084fc", real_estate: "#38bdf8", education: "#93c5fd", travel: "#67e8f9",
+    igaming: "#c084fc", fintech: "#6ee7b7", saas: "#60a5fa", fitness: "#4ade80",
+    fashion: "#f9a8d4", automotive: "#a1a1aa", crypto: "#fde047", insurance: "#94a3b8",
+    hr: "#a78bfa", ngo: "#fda4af", pet: "#fcd34d",
+  };
+  return map[cat] || "#a78bfa";
+};
+
 const TemplatesPage = () => {
   const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
@@ -1590,6 +1604,9 @@ const TemplatesPage = () => {
     return counts;
   }, []);
 
+  const syne = { fontFamily: "'Syne', sans-serif" } as const;
+  const mono = { fontFamily: "'DM Mono', monospace" } as const;
+
   return (
     <div className="relative flex flex-col min-h-screen">
       {translateModal && (
@@ -1600,47 +1617,50 @@ const TemplatesPage = () => {
           userId={user.id}
         />
       )}
-    <div className="p-5 lg:p-6 max-w-7xl mx-auto space-y-5 flex-1">
+    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4 flex-1">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Layers className="h-4 w-4 text-white/40" /> Templates
+          <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
+            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> Ad Templates
           </h1>
           <p className="text-white/30 text-xs mt-1">
-            {TEMPLATES.length} ready-to-use formats across {Object.keys(CAT_META).length} industries · <span className="text-emerald-400/60"><Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />Translate any template to 18 languages</span>
+            <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> proven formats · {Object.keys(CAT_META).length} industries ·{" "}
+            <span style={{ color: "#34d399" }}>
+              <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 languages
+            </span>
           </p>
         </div>
-        <span className="text-[11px] text-white/20 font-mono mt-1 shrink-0">{filtered.length} shown</span>
+        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} shown</span>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search templates..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/20 transition-colors"
+          placeholder="Search templates, formats, industries..."
+          className="w-full pl-11 pr-4 py-3 rounded-2xl text-sm outline-none transition-colors"
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#fff" }}
         />
       </div>
 
-      {/* Category filter — horizontal scroll */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+      {/* Category pills — horizontal scroll */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
             onClick={() => { setActiveCategory(cat.value); setPage(1); }}
-            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 ${
-              activeCategory === cat.value
-                ? "bg-white text-black border-white"
-                : "border-white/[0.07] text-white/35 hover:text-white/60 hover:border-white/15"
-            }`}
+            className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-xl text-xs font-semibold border transition-all shrink-0"
+            style={activeCategory === cat.value
+              ? { background: "#fff", color: "#000", borderColor: "#fff" }
+              : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.07)" }}
           >
             <span>{cat.emoji}</span>
             {cat.label}
             {catCounts[cat.value] !== undefined && (
-              <span className={`font-mono text-[10px] ${activeCategory === cat.value ? "text-black/40" : "text-white/20"}`}>
+              <span style={{ opacity: 0.5, ...mono, fontSize: 10 }}>
                 {catCounts[cat.value]}
               </span>
             )}
@@ -1649,19 +1669,17 @@ const TemplatesPage = () => {
       </div>
 
       {/* Duration filter */}
-      <div className="flex gap-1.5">
-        {(["all", "15", "30", "60"] as Duration[]).map(d => (
+      <div className="flex gap-2">
+        {([["all", "Any"], ["15", "15s"], ["30", "30s"], ["60", "60s"]] as [Duration, string][]).map(([d, label]) => (
           <button
             key={d}
             onClick={() => { setActiveDuration(d); setPage(1); }}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs border transition-all ${
-              activeDuration === d
-                ? "bg-white/10 border-white/25 text-white"
-                : "border-white/[0.06] text-white/25 hover:border-white/15 hover:text-white/50"
-            }`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+            style={activeDuration === d
+              ? { background: "rgba(167,139,250,0.15)", borderColor: "rgba(167,139,250,0.4)", color: "#a78bfa" }
+              : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}
           >
-            <Clock className="h-3 w-3" />
-            {d === "all" ? "Any length" : `${d}s`}
+            <Clock className="h-3 w-3" />{label}
           </button>
         ))}
       </div>
@@ -1669,51 +1687,62 @@ const TemplatesPage = () => {
       {/* Grid */}
       {paginated.length === 0 ? (
         <div className="text-center py-16 text-white/20">
-          <p className="text-3xl mb-3">🔍</p>
-          <p>No templates match your filters</p>
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="font-medium">No templates match your filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {paginated.map((template) => {
             const meta = CAT_META[template.category];
             return (
-              <Card key={template.id} className="border-white/[0.08] bg-[#111] hover:border-white/[0.15] transition-all duration-200 group flex flex-col">
-                <CardContent className="p-4 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold ${meta?.color || "text-white/40 border-white/10"}`}>
+              <div key={template.id}
+                className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.01]"
+                style={{ background: "#111", border: "1px solid rgba(255,255,255,0.07)" }}>
+                {/* Color accent top bar */}
+                <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${getCatAccent(template.category)}, transparent)` }} />
+                <div className="p-4 flex flex-col flex-1">
+                  {/* Category + Duration */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
                       {meta?.emoji} {meta?.label || template.category}
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-white/25">
+                    <span className="flex items-center gap-1 text-[10px] text-white/25" style={mono}>
                       <Clock className="h-3 w-3" />{template.duration}s
                     </span>
                   </div>
-                  <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-white/90 transition-colors">
+                  {/* Name + desc */}
+                  <h3 className="font-bold text-white text-sm mb-1.5 leading-snug" style={syne}>
                     {template.name}
                   </h3>
-                  <p className="text-xs text-white/35 mb-4 flex-1 leading-relaxed">
+                  <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
                     {template.description}
                   </p>
-                  <div className="flex gap-1.5 mt-auto">
-                    <Button
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-auto">
+                    <button
                       onClick={() => handleUse(template)}
                       disabled={loading === template.id}
-                      className="flex-1 bg-white/[0.07] hover:bg-white text-white hover:text-black text-xs h-8 border-0 transition-all duration-200"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+                      style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
                     >
-                      {loading === template.id ? "Loading..." : (
-                        <span className="flex items-center gap-1.5">Use <ArrowRight className="h-3 w-3" /></span>
-                      )}
-                    </Button>
-                    <Button
+                      {loading === template.id ? "Loading..." : <><span>Use template</span><ArrowRight className="h-3.5 w-3.5" /></>}
+                    </button>
+                    <button
                       onClick={() => setTranslateModal(template)}
                       disabled={loading === template.id}
-                      title="Translate this template to your language"
-                      className="h-8 w-8 p-0 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 transition-all duration-200"
+                      title="Translate to your market"
+                      className="flex items-center justify-center h-9 w-9 rounded-xl transition-all"
+                      style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.18)", color: "#34d399" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(52,211,153,0.18)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(52,211,153,0.08)"; }}
                     >
                       <Globe className="h-3.5 w-3.5" />
-                    </Button>
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
