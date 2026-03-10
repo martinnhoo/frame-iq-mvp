@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Reset stale or invalid language preference
+      try {
+        var saved = localStorage.getItem('frameiq-lang');
+        var valid = ['en','pt','es','fr','de','ar','zh'];
+        if (saved && !valid.includes(saved)) localStorage.removeItem('frameiq-lang');
+      } catch(e) {}
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

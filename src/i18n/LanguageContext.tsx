@@ -12,16 +12,26 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("frameiq-lang");
     const valid: Language[] = ["en", "pt", "es", "fr", "de", "ar", "zh"];
+    
+    // 1. Check localStorage — but only if it's a valid supported language
+    const saved = localStorage.getItem("frameiq-lang");
     if (saved && valid.includes(saved as Language)) return saved as Language;
-    localStorage.removeItem("frameiq-lang");
+    
+    // 2. Detect from browser language
+    const browserLang = navigator.language?.slice(0, 2).toLowerCase();
+    const langMap: Record<string, Language> = {
+      pt: "pt", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh",
+    };
+    if (browserLang && langMap[browserLang]) return langMap[browserLang];
+    
+    // 3. Default to English
     return "en";
   });
 
   const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
     localStorage.setItem("frameiq-lang", lang);
+    setLanguageState(lang);
   }, []);
 
   const t = useCallback(
