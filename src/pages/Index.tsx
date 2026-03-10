@@ -442,48 +442,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Powered By AI */}
-      <section className="py-10 px-6 border-b border-border/50">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex flex-col items-center gap-6">
-            <p className="text-xs tracking-widest uppercase text-muted-foreground/50 font-display">
-              {t("powered_by")}
-            </p>
-            <div className="flex items-center gap-10 md:gap-16">
-              <div className="flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.998 5.998 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor"/>
-                </svg>
-                <span className="text-lg font-semibold text-foreground font-body">OpenAI</span>
-              </div>
-              <div className="flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.304 3.541h-3.483l6.196 16.918h3.483L17.304 3.541zm-10.608 0L.5 20.459h3.59l1.278-3.554h6.281l1.278 3.554h3.59L10.321 3.541H6.696zm.894 10.563l2.058-5.715 2.058 5.715H7.59z" fill="currentColor"/>
-                </svg>
-                <span className="text-lg font-semibold text-foreground font-body">Anthropic</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Stats Section */}
+
+      {/* The problem + outcome numbers */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-5xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className="text-4xl md:text-5xl font-bold gradient-text mb-2 font-display">
-                  {stat.value}
+          <div className="text-center mb-14">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">The cost of slow creative</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display" style={{letterSpacing:"-0.02em"}}>
+              Most teams waste 60% of their creative budget<br className="hidden md:block" />
+              <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}> before a single ad goes live.</span>
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto font-body text-base">
+              Weak hooks. Untested angles. Briefs that editors ignore. FrameIQ fixes every one of those — before you spend a dollar on production.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { stat: "60s", label: "From upload to full creative brief", sub: "vs. 8 hours of manual analysis" },
+              { stat: "10×", label: "More ad variations per sprint",       sub: "same team, same budget" },
+              { stat: "−43%", label: "Average drop in wasted creative spend", sub: "by scoring hooks before production" },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
+                className="rounded-2xl border border-border/40 p-6 text-center" style={{background:"rgba(139,92,246,0.04)"}}>
+                <div className="text-5xl font-bold font-display mb-2" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+                  {item.stat}
                 </div>
-                <div className="text-sm text-muted-foreground font-body">{stat.label}</div>
+                <p className="text-sm font-semibold text-foreground mb-1 font-display">{item.label}</p>
+                <p className="text-xs text-muted-foreground/60 font-body">{item.sub}</p>
               </motion.div>
             ))}
           </div>
@@ -580,126 +566,170 @@ const Index = () => {
       </section>
 
       {/* How It Works */}
+      {/* How it works — 3 steps with result */}
       <section className="py-24 px-6 relative">
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.05) 0%, transparent 50%)' }}
-        />
-        <div className="container mx-auto max-w-6xl relative">
+        <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at center,hsla(262,83%,58%,0.05) 0%,transparent 50%)"}} />
+        <div className="container mx-auto max-w-5xl relative">
           <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
-              {t("how_label")}
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              How it works
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 whitespace-pre-line font-display">
-              {t("how_title")}
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
+              From competitor ad to<br/>production board in 3 steps
             </h2>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((step, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.15 }}
-                viewport={{ once: true }}
-                className="relative p-6 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
-              >
-                <span className="text-5xl font-bold gradient-text opacity-30 font-display">{step.number}</span>
-                <h3 className="text-xl font-semibold mt-4 mb-2 font-display">{step.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed font-body">{step.description}</p>
+          <div className="grid md:grid-cols-3 gap-6 relative">
+            {/* connector line desktop */}
+            <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-px" style={{background:"linear-gradient(90deg,transparent,rgba(167,139,250,0.3),transparent)"}} />
+            {[
+              {
+                n:"01", emoji:"⬆️",
+                title:"Upload any ad",
+                desc:"Drop a competitor video, paste a URL, or upload your own. Supports TikTok, Reels, YouTube Shorts, Meta.",
+                result:"Result: full transcript + key frames in 60s",
+                color:"#a78bfa",
+              },
+              {
+                n:"02", emoji:"🧠",
+                title:"AI decodes the creative",
+                desc:"Hook score, creative model, emotional triggers, persuasion tactics, platform fit — all extracted automatically.",
+                result:"Result: hook score + creative framework identified",
+                color:"#f472b6",
+              },
+              {
+                n:"03", emoji:"📋",
+                title:"Generate & brief your team",
+                desc:"One click produces a production board: scene-by-scene, VO script, editor notes, CTA placement. Ready to execute.",
+                result:"Result: brief your editor in minutes, not days",
+                color:"#34d399",
+              },
+            ].map((step,i) => (
+              <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.15}} viewport={{once:true}}
+                className="relative p-6 rounded-2xl" style={{background:"linear-gradient(135deg,rgba(139,92,246,0.05),rgba(236,72,153,0.02))",border:"1px solid rgba(139,92,246,0.12)"}}>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-4xl font-bold font-display" style={{color:step.color,opacity:0.25}}>{step.n}</span>
+                  <span className="text-2xl">{step.emoji}</span>
+                </div>
+                <h3 className="text-lg font-bold mb-2 font-display">{step.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed font-body mb-4">{step.desc}</p>
+                <div className="pt-3 border-t border-border/30">
+                  <p className="text-xs font-semibold font-display" style={{color:step.color}}>→ {step.result}</p>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features — before/after by use case */}
       <section id="features" className="py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
+        <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
-              {t("features_label")}
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              What changes
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
-              {t("features_title")}
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
+              Stop doing this.<br/>
+              <span className="text-muted-foreground/50">Start doing that.</span>
             </h2>
-            <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto font-body">
-              {t("features_subtitle")}
-            </p>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card 
-                    className="bg-card/50 border-border/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 h-full backdrop-blur-sm cursor-pointer"
-                    onClick={() => navigate(`/features/${feature.slug}`)}
-                  >
-                    <CardHeader>
-                      <div 
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 border border-border/30`}
-                      >
-                        <Icon className="w-6 h-6 text-foreground" />
-                      </div>
-                      <CardTitle className="text-xl font-display">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-muted-foreground leading-relaxed font-body">
-                        {feature.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+
+          <div className="space-y-4">
+            {[
+              {
+                before: "Watching competitor ads manually, taking notes, trying to reverse-engineer what's working",
+                after:  "Upload any ad → get hook score, creative model, transcript, and improvement suggestions in 60 seconds",
+                tag:    "Analysis",
+                accent: "#a78bfa",
+              },
+              {
+                before: "Writing briefs in Google Docs that editors misinterpret — 3 revision cycles per video",
+                after:  "AI generates a production board: scene list, VO script, on-screen text, editor notes. One doc, zero ambiguity",
+                tag:    "Boards",
+                accent: "#60a5fa",
+              },
+              {
+                before: "Guessing which hook angle will convert before committing to production",
+                after:  "Hook Generator produces 10 scored variations in 30 seconds. Test on paper before spending on production",
+                tag:    "Hook Generator",
+                accent: "#fb923c",
+              },
+              {
+                before: "Translating scripts manually or with Google Translate — losing tone, slang, and cultural context",
+                after:  "AI localizes scripts for BR, MX, IN, US and 10+ markets with cultural adaptation built in",
+                tag:    "Localization",
+                accent: "#34d399",
+              },
+              {
+                before: "Running the same UGC format 4 weeks straight and watching CTR collapse",
+                after:  "Intelligence feed detects creative fatigue, flags model overuse, and suggests what to rotate into",
+                tag:    "Intelligence",
+                accent: "#c084fc",
+              },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.07}} viewport={{once:true}}
+                className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-border/40">
+                {/* Before */}
+                <div className="p-5 md:p-6" style={{background:"rgba(239,68,68,0.04)",borderRight:"1px solid rgba(255,255,255,0.05)"}}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/60 font-display">Before</span>
+                    <span className="h-px flex-1 bg-red-400/10" />
+                  </div>
+                  <p className="text-sm text-muted-foreground/70 leading-relaxed font-body">{item.before}</p>
+                </div>
+                {/* After */}
+                <div className="p-5 md:p-6 relative" style={{background:"rgba(167,139,250,0.04)"}}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.7}}>After · {item.tag}</span>
+                    <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
+                  </div>
+                  <p className="text-sm leading-relaxed font-body" style={{color:"rgba(255,255,255,0.7)"}}>{item.after}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section — result focused, aggressive */}
       <section className="py-24 px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
+          <motion.div initial={{opacity:0,scale:0.95}} whileInView={{opacity:1,scale:1}} viewport={{once:true}}
             className="p-12 rounded-3xl relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1))',
-              border: '1px solid rgba(139, 92, 246, 0.2)'
-            }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display">
-              {t("cta_title")}
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto font-body">
-              {t("cta_subtitle")}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 font-body"
-                onClick={() => navigate("/signup")}
-              >
-                {t("cta_primary")}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button 
-                variant="outline" 
-                className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 border-border/30 font-body"
-                onClick={() => navigate("/book-demo")}
-              >
-                {t("cta_secondary")}
-              </Button>
+            style={{background:"linear-gradient(135deg,rgba(139,92,246,0.15),rgba(236,72,153,0.1))",border:"1px solid rgba(139,92,246,0.2)"}}>
+            {/* glow */}
+            <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% 0%,rgba(167,139,250,0.2),transparent 60%)"}} />
+            <div className="relative z-10">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">Your competitors aren't waiting</p>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
+                Analyze your first ad<br />
+                <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+                  free. Right now.
+                </span>
+              </h2>
+              <p className="text-muted-foreground text-base mb-3 max-w-lg mx-auto font-body">
+                No credit card. No setup. Upload any video and get a full creative intelligence report in under 60 seconds.
+              </p>
+              <div className="flex items-center justify-center gap-6 mb-8 text-sm text-muted-foreground/50 font-body">
+                <span>✓ Free plan included</span>
+                <span>✓ No credit card</span>
+                <span>✓ Cancel anytime</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/30 font-body"
+                  onClick={() => navigate("/signup")}
+                >
+                  Start analyzing — it's free
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button variant="outline"
+                  className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 border-border/30 font-body"
+                  onClick={() => navigate("/book-demo")}
+                >
+                  Book a 15-min demo
+                </Button>
+              </div>
             </div>
           </motion.div>
         </div>
