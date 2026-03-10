@@ -8,6 +8,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Logo } from "@/components/Logo";
 
 const Contact = () => {
   const navigate = useNavigate();
