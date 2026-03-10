@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <script>
-      // Reset stale or invalid language preference
+      // Clear stale language if not explicitly chosen by user
       try {
-        var saved = localStorage.getItem('frameiq-lang');
-        var valid = ['en','pt','es','fr','de','ar','zh'];
-        if (saved && !valid.includes(saved)) localStorage.removeItem('frameiq-lang');
+        if (localStorage.getItem('frameiq-lang-chosen') !== '1') {
+          localStorage.removeItem('frameiq-lang');
+        }
       } catch(e) {}
     </script>
     <meta charset="UTF-8" />

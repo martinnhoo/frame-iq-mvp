@@ -10,27 +10,31 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const VALID: Language[] = ["en", "pt", "es", "fr", "de", "ar", "zh"];
+const BROWSER_MAP: Record<string, Language> = { pt: "pt", es: "es", fr: "fr", de: "de", ar: "ar" };
+// zh intentionally excluded from auto-detect — must be explicitly chosen
+
+function detectLanguage(): Language {
+  // Only trust localStorage if user explicitly chose it (marked by -chosen key)
+  const saved = localStorage.getItem("frameiq-lang");
+  const chosen = localStorage.getItem("frameiq-lang-chosen") === "1";
+  if (saved && chosen && VALID.includes(saved as Language)) return saved as Language;
+
+  // Clear any stale auto-saved value
+  localStorage.removeItem("frameiq-lang");
+  localStorage.removeItem("frameiq-lang-chosen");
+
+  // Browser language detection (zh excluded from auto)
+  const browser = navigator.language?.slice(0, 2).toLowerCase();
+  return BROWSER_MAP[browser] ?? "en";
+}
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    const valid: Language[] = ["en", "pt", "es", "fr", "de", "ar", "zh"];
-    
-    // 1. Check localStorage — but only if it's a valid supported language
-    const saved = localStorage.getItem("frameiq-lang");
-    if (saved && valid.includes(saved as Language)) return saved as Language;
-    
-    // 2. Detect from browser language
-    const browserLang = navigator.language?.slice(0, 2).toLowerCase();
-    const langMap: Record<string, Language> = {
-      pt: "pt", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh",
-    };
-    if (browserLang && langMap[browserLang]) return langMap[browserLang];
-    
-    // 3. Default to English
-    return "en";
-  });
+  const [language, setLanguageState] = useState<Language>(detectLanguage);
 
   const setLanguage = useCallback((lang: Language) => {
     localStorage.setItem("frameiq-lang", lang);
+    localStorage.setItem("frameiq-lang-chosen", "1");
     setLanguageState(lang);
   }, []);
 
