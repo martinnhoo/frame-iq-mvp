@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 
-type Category = "all" | "ugc" | "testimonial" | "promo" | "tutorial" | "react" | "product" | "story" | "hook" | "seasonal" | "b2b" | "app" | "ecommerce" | "finance" | "health" | "beauty" | "food" | "gaming" | "real_estate" | "education" | "travel" | "igaming";
+type Category = "all" | "ugc" | "testimonial" | "promo" | "tutorial" | "react" | "product" | "story" | "hook" | "seasonal" | "b2b" | "app" | "ecommerce" | "finance" | "health" | "beauty" | "food" | "gaming" | "real_estate" | "education" | "travel" | "igaming" | "fintech" | "saas" | "fitness" | "pet" | "automotive" | "luxury" | "sustainability";
 type Duration = "all" | "15" | "30" | "60";
 
 interface Template {

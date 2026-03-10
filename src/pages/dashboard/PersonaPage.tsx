@@ -195,7 +195,7 @@ Return ONLY a valid JSON object with these exact keys:
           user_id: user.id,
           answers: finalAnswers,
           result: parsed,
-        });
+        } as never);
       } catch { /* table may not exist yet */ }
 
     } catch {
