@@ -159,7 +159,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
       platform: analysis.recommended_platforms?.[0] || null,
       market: analysis.market_guess || market,
       hook_score: analysis.hook_score,
-    }).catch(() => {});
+    });
 
     // Trigger AI profile update (non-blocking)
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';

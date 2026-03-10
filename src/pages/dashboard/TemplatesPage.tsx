@@ -7,19 +7,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 
-type Category = "all" | "ugc" | "testimonial" | "promo" | "tutorial" | "react" | "product" | "story" | "hook" | "seasonal" | "b2b" | "app" | "ecommerce" | "finance" | "health" | "beauty" | "food" | "gaming" | "real_estate" | "education" | "travel";
+type Category = string;
 type Duration = "all" | "15" | "30" | "60";
 
 interface Template {
   id: string;
   name: string;
   description: string;
-  category: Exclude<Category, "all">;
+  category: string;
   duration: 15 | 30 | 60;
   prompt: string;
 }
 
-const T = (id: string, name: string, description: string, category: Exclude<Category, "all">, duration: 15 | 30 | 60, prompt: string): Template =>
+const T = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
   ({ id, name, description, category, duration, prompt });
 
 const TEMPLATES: Template[] = [
@@ -1383,7 +1383,7 @@ const TemplatesPage = () => {
         user_id: user.id,
         template_id: template.id,
         template_name: template.name,
-      }).then(() => {});
+      } as never);
     } catch {}
     navigate("/dashboard/boards/new", {
       state: {

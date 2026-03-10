@@ -11,6 +11,7 @@ import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { motion } from "framer-motion";
+import { Logo } from "@/components/Logo";
 
 const Signup = () => {
   const [loading, setLoading] = useState(false);
@@ -104,9 +105,8 @@ const Signup = () => {
       
       <div className="w-full max-w-md space-y-6 relative z-10">
         <motion.div className="text-center" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Link to="/" className="inline-block text-3xl font-bold">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/" className="inline-block">
+            <Logo size="lg" />
           </Link>
         </motion.div>
 

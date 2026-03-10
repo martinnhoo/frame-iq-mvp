@@ -61,7 +61,7 @@ export default function CompetitorTracker() {
     try {
       const { data, error } = await supabase
         .from("competitor_trackers" as never)
-        .insert({ user_id: user.id, name: form.name.trim(), market: form.market, platform: form.platform })
+        .insert({ user_id: user.id, name: form.name.trim(), market: form.market, platform: form.platform } as never)
         .select()
         .single();
       if (error) throw error;

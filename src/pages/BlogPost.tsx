@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Logo } from "@/components/Logo";
 
 const blogPosts: Record<string, {
   title: string;
@@ -714,9 +715,8 @@ const BlogPost = () => {
 
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-4">
-          <Link to="/" className="text-xl sm:text-2xl font-bold flex items-center">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/">
+            <Logo size="lg" />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link to="/#features" className="text-sm text-secondary hover:text-foreground transition-colors">Features</Link>

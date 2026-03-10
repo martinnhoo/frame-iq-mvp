@@ -303,7 +303,7 @@ Return ONLY valid JSON (no markdown) with this exact structure:
       market: marketConfig.code,
       hook_score: (board.hook as Record<string, unknown>)?.hook_score_prediction as number || null,
       notes: prompt.substring(0, 500),
-    }).catch(() => {});
+    });
 
     // Trigger AI profile update (non-blocking)
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';

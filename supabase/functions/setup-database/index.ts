@@ -140,15 +140,21 @@ Deno.serve(async (req) => {
     CREATE POLICY "Users manage own AI profile" ON public.user_ai_profile FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
   `;
 
-  const { error } = await supabase.rpc('exec_sql', { query: sql }).catch(() => ({ error: 'rpc_not_found' }));
+  let rpcError: string | null = null;
+  try {
+    const { error } = await supabase.rpc('exec_sql', { query: sql });
+    if (error) rpcError = String(error);
+  } catch {
+    rpcError = 'rpc_not_found';
+  }
   
   // Fallback: run each statement via pg directly
   const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 10);
-  const results = [];
+  const results: Array<{ ok?: boolean; error?: string; stmt: string }> = [];
   
   for (const stmt of statements) {
     try {
-      const res = await supabase.from('_temp_setup').select().limit(0).then(() => null).catch(() => null);
+      await supabase.from('profiles').select('id').limit(0);
       results.push({ ok: true, stmt: stmt.substring(0, 50) });
     } catch (e) {
       results.push({ error: String(e), stmt: stmt.substring(0, 50) });

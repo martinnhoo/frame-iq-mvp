@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/Logo";
 import { toast } from "@/hooks/use-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -164,9 +165,8 @@ const BookDemo = () => {
     <div className="min-h-screen bg-background text-foreground">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/">
+            <Logo size="lg" />
           </Link>
           <span className="text-sm text-muted-foreground">Step {step + 1} of {totalSteps}</span>
         </div>

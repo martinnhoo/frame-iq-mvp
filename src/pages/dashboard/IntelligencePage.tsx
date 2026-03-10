@@ -98,9 +98,9 @@ export default function IntelligencePage() {
         .order("created_at", { ascending: false })
         .limit(200),
       supabase
-        .from("user_ai_profile")
-        .select("*")
-        .eq("user_id", user.id)
+        .from("user_ai_profile" as never)
+        .select("*" as never)
+        .eq("user_id" as never, user.id)
         .maybeSingle(),
     ]);
     if (analysesData) setAnalyses(analysesData as AnalysisRow[]);

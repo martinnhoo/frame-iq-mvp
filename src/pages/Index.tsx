@@ -5,13 +5,14 @@ import { Video, FileText, Globe, Brain, Sparkles, Menu, ArrowRight, Play, Zap, S
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import VideoDropZone from "@/components/VideoDropZone";
 import { useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import LegalModal from "@/components/LegalModal";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AuthPromptModal from "@/components/AuthPromptModal";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Logo } from "@/components/Logo";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const Index = () => {
 
   const navLinks = [
     { label: t("nav_features"), href: "#features" },
-    { label: t("nav_pricing"), href: "/pricing", isRoute: true },
+    { label: t("nav_pricing"), href: "#pricing" },
     { label: t("nav_blog"), href: "/blog", isRoute: true },
     { label: t("nav_faq"), href: "/faq", isRoute: true },
     { label: t("nav_contact"), href: "/contact", isRoute: true },
@@ -81,19 +82,18 @@ const Index = () => {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <div className="text-2xl font-bold flex items-center">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
-          </div>
+          <Link to="/">
+            <Logo size="lg" />
+          </Link>
           
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               link.isRoute ? (
-                <Link key={link.label} to={link.href} className="text-sm text-secondary hover:text-foreground transition-colors">
+                <Link key={link.label} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-body">
                   {link.label}
                 </Link>
               ) : (
-                <a key={link.label} href={link.href} className="text-sm text-secondary hover:text-foreground transition-colors">
+                <a key={link.label} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-body">
                   {link.label}
                 </a>
               )
@@ -102,11 +102,11 @@ const Index = () => {
           
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
-            <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-body" onClick={() => navigate("/login")}>
               {t("nav_signin")}
             </Button>
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 font-body"
               onClick={() => navigate("/signup")}
             >
               {t("nav_get_started")}
@@ -125,16 +125,16 @@ const Index = () => {
                 <div className="flex flex-col gap-6 mt-8">
                   {navLinks.map((link) => (
                     link.isRoute ? (
-                      <Link key={link.label} to={link.href} className="text-lg text-secondary hover:text-foreground transition-colors">
+                      <Link key={link.label} to={link.href} className="text-lg text-muted-foreground hover:text-foreground transition-colors font-body">
                         {link.label}
                       </Link>
                     ) : (
-                      <a key={link.label} href={link.href} className="text-lg text-secondary hover:text-foreground transition-colors">
+                      <a key={link.label} href={link.href} className="text-lg text-muted-foreground hover:text-foreground transition-colors font-body">
                         {link.label}
                       </a>
                     )
                   ))}
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-body" onClick={() => navigate("/signup")}>
                     {t("nav_get_started")}
                   </Button>
                 </div>
@@ -152,7 +152,6 @@ const Index = () => {
           style={{
             background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.12) 0%, transparent 60%)',
             filter: 'blur(60px)',
-            animation: 'glow-pulse 6s ease-in-out infinite'
           }}
         />
         <div 
@@ -168,41 +167,54 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center rounded-full px-4 py-1.5 text-[12px] mb-8 gap-2 shimmer-border"
+            className="inline-flex items-center rounded-full px-4 py-1.5 text-[12px] mb-8 gap-2 font-body"
             style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(139, 92, 246, 0.3)' }}
           >
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span style={{ color: '#ccc' }}>{t("hero_badge")}</span>
+            <span className="text-muted-foreground">{t("hero_badge")}</span>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-[44px] md:text-[56px] lg:text-[72px] font-bold text-foreground leading-[1.05] tracking-tight"
+            className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground leading-[1.08] tracking-tight font-display"
           >
-            {t("hero_title_1")}<br />
-            <span className="gradient-text">{t("hero_title_2")}</span>
+            The AI platform that turns<br />
+            <span className="gradient-text">competitor ads into your next winner</span>
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-[18px] md:text-[20px] max-w-[600px] mx-auto mt-6 leading-relaxed"
-            style={{ color: '#888' }}
+            className="text-[17px] md:text-[19px] max-w-[640px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body"
           >
-            {t("hero_subtitle")}
+            Upload any video ad. FrameIQ extracts hook, creative model, and transcript in 60 seconds — then generates production-ready boards so your team ships 10x faster.
           </motion.p>
+
+          {/* Pricing preview right in hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="flex items-center justify-center gap-6 mt-6 font-body"
+          >
+            <span className="text-sm text-muted-foreground">Free to start</span>
+            <span className="text-muted-foreground/30">·</span>
+            <span className="text-sm text-muted-foreground">Plans from <span className="text-foreground font-semibold">$9/mo</span></span>
+            <span className="text-muted-foreground/30">·</span>
+            <a href="#pricing" className="text-sm text-primary hover:underline">See pricing →</a>
+          </motion.div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
           >
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/25"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/25 font-body"
               onClick={() => navigate("/signup")}
             >
               {t("hero_cta_primary")}
@@ -210,8 +222,7 @@ const Index = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group"
-              style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+              className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 group border-border/30 font-body"
               onClick={() => {
                 const el = document.getElementById('demo-preview');
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -226,8 +237,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-8 text-xs sm:text-sm"
-            style={{ color: '#666' }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-8 text-xs sm:text-sm text-muted-foreground font-body"
           >
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
@@ -251,7 +261,7 @@ const Index = () => {
             className="relative mt-12 sm:mt-20 max-w-4xl mx-auto hidden sm:block"
           >
             <div className="relative text-center mb-4">
-              <span style={{ color: '#555', fontSize: '11px', letterSpacing: '3px', fontWeight: 600 }}>
+              <span className="text-muted-foreground/40 text-[11px] tracking-[3px] font-semibold font-display uppercase">
                 {t("hero_screenshot_label")}
               </span>
             </div>
@@ -278,14 +288,13 @@ const Index = () => {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
                 </div>
                 <div 
-                  className="flex-1 text-center mx-12"
+                  className="flex-1 text-center mx-12 font-mono"
                   style={{ 
                     background: '#0a0a0a', 
                     borderRadius: '8px', 
                     padding: '6px 16px', 
                     fontSize: '12px', 
                     color: '#666',
-                    fontFamily: '"DM Mono", monospace',
                     border: '1px solid #222'
                   }}
                 >
@@ -306,10 +315,10 @@ const Index = () => {
                       <Video className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontSize: '14px', fontWeight: 600 }}>
+                      <div className="text-foreground text-sm font-semibold font-body">
                         virginia_wepink_perfume_ugc.mp4
                       </div>
-                      <div style={{ color: '#555', fontSize: '12px', fontFamily: '"DM Mono", monospace' }}>
+                      <div className="text-muted-foreground text-xs font-mono">
                         Uploaded 2 min ago
                       </div>
                     </div>
@@ -318,73 +327,62 @@ const Index = () => {
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.3)' }}
                   >
-                    <span style={{ fontSize: '10px', color: '#4ade80' }}>●</span>
-                    <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 500 }}>Analysis Complete</span>
+                    <span className="text-[10px] text-green-400">●</span>
+                    <span className="text-xs text-green-400 font-medium font-body">Analysis Complete</span>
                   </div>
                 </div>
 
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 rounded-xl"
-                  style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
-                >
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 p-3 sm:p-4 rounded-xl bg-card border border-border">
                   <div>
-                    <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
                       Creative Model
                     </div>
                     <div className="flex items-center gap-2">
-                      <span 
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}
-                      >
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400 font-body">
                         UGC
                       </span>
-                      <span style={{ color: '#fff', fontSize: '16px', fontWeight: 600 }}>
+                      <span className="text-foreground text-base font-semibold font-body">
                         Influencer
                       </span>
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
                       Hook Score
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span style={{ color: '#4ade80', fontSize: '28px', fontWeight: 700 }}>9.1</span>
-                      <span style={{ color: '#444', fontSize: '14px' }}>/ 10</span>
+                      <span className="text-green-400 text-[28px] font-bold font-display">9.1</span>
+                      <span className="text-muted-foreground text-sm font-body">/ 10</span>
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>
+                    <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2 font-display">
                       Predicted CTR
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span style={{ color: '#fff', fontSize: '28px', fontWeight: 700 }}>3.2%</span>
-                      <span style={{ color: '#4ade80', fontSize: '12px' }}>↑ 47%</span>
+                      <span className="text-foreground text-[28px] font-bold font-display">3.2%</span>
+                      <span className="text-green-400 text-xs font-body">↑ 47%</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Hook Preview */}
-                <div 
-                  className="p-4 rounded-xl mb-4"
-                  style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
-                >
-                  <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '10px' }}>
+                <div className="p-4 rounded-xl mb-4 bg-card border border-border">
+                  <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2.5 font-display">
                     Hook (0–3s)
                   </div>
-                  <p style={{ color: '#e5e5e5', fontSize: '15px', lineHeight: '1.6', fontFamily: '"DM Mono", monospace' }}>
-                    "Camera opens on close-up of perfume, Virginia whispers: <span style={{ color: '#a78bfa' }}>'You guys aren't ready for what I'm about to tell you'</span>"
+                  <p className="text-foreground/90 text-[15px] leading-[1.6] font-mono">
+                    "Camera opens on close-up of perfume, Virginia whispers: <span className="text-purple-400">'You guys aren't ready for what I'm about to tell you'</span>"
                   </p>
                 </div>
 
                 {/* Brief Section */}
-                <div 
-                  className="p-4 rounded-xl mb-4"
-                  style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}
-                >
-                  <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '10px' }}>
+                <div className="p-4 rounded-xl mb-4 bg-card border border-border">
+                  <div className="text-muted-foreground text-[11px] uppercase tracking-[1.5px] mb-2.5 font-display">
                     Brief
                   </div>
-                  <p style={{ color: '#aaa', fontSize: '13px', lineHeight: '1.7', fontFamily: '"DM Mono", monospace', fontStyle: 'italic' }}>
+                  <p className="text-muted-foreground text-[13px] leading-[1.7] font-mono italic">
                     Influencer UGC for WePink perfume. Parasocial hook with product close-up + curiosity-driven opening line. Promo code CTA appears at 00:22. Vertical 9:16 format optimized for Stories/Reels.
                   </p>
                 </div>
@@ -395,14 +393,7 @@ const Index = () => {
                     {['🌐 PT-BR → EN', '⏱ 0:28', '📍 BR Market', '💄 Beauty', '👩 Women 25-34'].map((badge) => (
                       <span 
                         key={badge}
-                        style={{ 
-                          background: '#141414', 
-                          border: '1px solid #222', 
-                          borderRadius: '6px',
-                          padding: '6px 10px',
-                          fontSize: '11px',
-                          color: '#888'
-                        }}
+                        className="bg-card border border-border rounded-md px-2.5 py-1.5 text-[11px] text-muted-foreground font-body"
                       >
                         {badge}
                       </span>
@@ -411,8 +402,7 @@ const Index = () => {
                   <Button 
                     size="sm"
                     variant="outline"
-                    className="text-xs"
-                    style={{ background: '#141414', border: '1px solid #333', color: '#888' }}
+                    className="text-xs bg-card border-border text-muted-foreground font-body"
                   >
                     ← Back to menu
                   </Button>
@@ -423,11 +413,34 @@ const Index = () => {
         </div>
       </section>
 
+      {/* What FrameIQ does — clear SaaS value prop */}
+      <section className="py-16 px-6 border-b border-border/50">
+        <div className="container mx-auto max-w-4xl">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <div className="text-3xl mb-3">🔍</div>
+              <h3 className="text-lg font-semibold mb-2 font-display">Analyze</h3>
+              <p className="text-sm text-muted-foreground font-body">Upload any ad. AI extracts hook, creative model, transcript, and key frames in under 60 seconds.</p>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
+              <div className="text-3xl mb-3">📋</div>
+              <h3 className="text-lg font-semibold mb-2 font-display">Generate</h3>
+              <p className="text-sm text-muted-foreground font-body">Get a production-ready board with scenes, VO script, and editor notes — ready to brief your team.</p>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
+              <div className="text-3xl mb-3">🚀</div>
+              <h3 className="text-lg font-semibold mb-2 font-display">Ship</h3>
+              <p className="text-sm text-muted-foreground font-body">Go from competitor insight to published creative in hours, not weeks. 10x your output.</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Powered By AI */}
       <section className="py-10 px-6 border-b border-border/50">
         <div className="container mx-auto max-w-4xl">
           <div className="flex flex-col items-center gap-6">
-            <p className="text-xs tracking-widest uppercase" style={{ color: '#555' }}>
+            <p className="text-xs tracking-widest uppercase text-muted-foreground/50 font-display">
               {t("powered_by")}
             </p>
             <div className="flex items-center gap-10 md:gap-16">
@@ -435,13 +448,13 @@ const Index = () => {
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.998 5.998 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor"/>
                 </svg>
-                <span className="text-lg font-semibold" style={{ color: '#fff' }}>OpenAI</span>
+                <span className="text-lg font-semibold text-foreground font-body">OpenAI</span>
               </div>
               <div className="flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M17.304 3.541h-3.483l6.196 16.918h3.483L17.304 3.541zm-10.608 0L.5 20.459h3.59l1.278-3.554h6.281l1.278 3.554h3.59L10.321 3.541H6.696zm.894 10.563l2.058-5.715 2.058 5.715H7.59z" fill="currentColor"/>
                 </svg>
-                <span className="text-lg font-semibold" style={{ color: '#fff' }}>Anthropic</span>
+                <span className="text-lg font-semibold text-foreground font-body">Anthropic</span>
               </div>
             </div>
           </div>
@@ -461,105 +474,17 @@ const Index = () => {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                <div className="text-4xl md:text-5xl font-bold gradient-text mb-2">
+                <div className="text-4xl md:text-5xl font-bold gradient-text mb-2 font-display">
                   {stat.value}
                 </div>
-                <div className="text-sm text-secondary">{stat.label}</div>
+                <div className="text-sm text-muted-foreground font-body">{stat.label}</div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-24 px-6 relative">
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.05) 0%, transparent 50%)' }}
-        />
-        <div className="container mx-auto max-w-6xl relative">
-          <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              {t("how_label")}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 whitespace-pre-line">
-              {t("how_title")}
-            </h2>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((step, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.15 }}
-                viewport={{ once: true }}
-                className="relative p-6 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
-              >
-                <span className="text-5xl font-bold gradient-text opacity-30">{step.number}</span>
-                <h3 className="text-xl font-semibold mt-4 mb-2">{step.title}</h3>
-                <p className="text-secondary text-sm leading-relaxed">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
-              {t("features_label")}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4">
-              {t("features_title")}
-            </h2>
-            <p className="text-secondary text-lg mt-4 max-w-2xl mx-auto">
-              {t("features_subtitle")}
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card 
-                    className="bg-card/50 border-border/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 h-full backdrop-blur-sm cursor-pointer"
-                    onClick={() => navigate(`/features/${feature.slug}`)}
-                  >
-                    <CardHeader>
-                      <div 
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4`}
-                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
-                        <Icon className="w-6 h-6 text-foreground" />
-                      </div>
-                      <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-secondary leading-relaxed">
-                        {feature.description}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
+      {/* Pricing Section — moved up before features */}
       <section id="pricing" className="py-24 px-6 relative">
         <div 
           className="absolute inset-0 pointer-events-none"
@@ -567,13 +492,13 @@ const Index = () => {
         />
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
-            <span className="text-sm font-semibold tracking-wider uppercase gradient-text">
+            <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
               {t("pricing_label")}
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4">
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
               {t("pricing_title")}
             </h2>
-            <p className="text-secondary text-lg mt-4">
+            <p className="text-muted-foreground text-lg mt-4 font-body">
               {t("pricing_subtitle")}
             </p>
           </div>
@@ -596,31 +521,31 @@ const Index = () => {
                 >
                   {plan.badge && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-4">
+                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-4 font-body">
                         {plan.badge}
                       </Badge>
                     </div>
                   )}
                   <CardHeader className="text-center pb-6">
-                    <CardTitle className="text-lg text-secondary font-normal mb-2">
+                    <CardTitle className="text-lg text-muted-foreground font-normal mb-2 font-body">
                       {plan.name}
                     </CardTitle>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-5xl font-bold">{plan.price}</span>
-                      <span className="text-secondary">{plan.period}</span>
+                      <span className="text-5xl font-bold font-display">{plan.price}</span>
+                      <span className="text-muted-foreground font-body">{plan.period}</span>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ul className="space-y-3">
                       {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-3 text-sm">
+                        <li key={i} className="flex items-center gap-3 text-sm font-body">
                           <Check className="w-4 h-4 text-green-500 shrink-0" />
-                          <span className="text-secondary">{feature}</span>
+                          <span className="text-muted-foreground">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Button 
-                      className={`w-full ${
+                      className={`w-full font-body ${
                         plan.highlighted 
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' 
                           : 'bg-card text-foreground hover:bg-muted border border-border'
@@ -634,7 +559,7 @@ const Index = () => {
               </motion.div>
             ))}
           </div>
-          <div className="text-center mt-10 space-y-2">
+          <div className="text-center mt-10 space-y-2 font-body">
             <p className="text-sm text-muted-foreground">
               Also available: <span className="text-foreground font-medium">Free plan</span> — 3 analyses, 3 boards, no credit card.
             </p>
@@ -644,6 +569,93 @@ const Index = () => {
             >
               See all plans and full feature comparison →
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-24 px-6 relative">
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.05) 0%, transparent 50%)' }}
+        />
+        <div className="container mx-auto max-w-6xl relative">
+          <div className="text-center mb-16">
+            <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
+              {t("how_label")}
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 whitespace-pre-line font-display">
+              {t("how_title")}
+            </h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.15 }}
+                viewport={{ once: true }}
+                className="relative p-6 rounded-2xl"
+                style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
+              >
+                <span className="text-5xl font-bold gradient-text opacity-30 font-display">{step.number}</span>
+                <h3 className="text-xl font-semibold mt-4 mb-2 font-display">{step.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed font-body">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-24 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
+              {t("features_label")}
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
+              {t("features_title")}
+            </h2>
+            <p className="text-muted-foreground text-lg mt-4 max-w-2xl mx-auto font-body">
+              {t("features_subtitle")}
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card 
+                    className="bg-card/50 border-border/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 h-full backdrop-blur-sm cursor-pointer"
+                    onClick={() => navigate(`/features/${feature.slug}`)}
+                  >
+                    <CardHeader>
+                      <div 
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 border border-border/30`}
+                      >
+                        <Icon className="w-6 h-6 text-foreground" />
+                      </div>
+                      <CardTitle className="text-xl font-display">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-muted-foreground leading-relaxed font-body">
+                        {feature.description}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -661,15 +673,15 @@ const Index = () => {
               border: '1px solid rgba(139, 92, 246, 0.2)'
             }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display">
               {t("cta_title")}
             </h2>
-            <p className="text-secondary text-lg mb-8 max-w-xl mx-auto">
+            <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto font-body">
               {t("cta_subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 font-body"
                 onClick={() => navigate("/signup")}
               >
                 {t("cta_primary")}
@@ -677,8 +689,7 @@ const Index = () => {
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4"
-                style={{ border: '1px solid rgba(255,255,255,0.2)' }}
+                className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 border-border/30 font-body"
                 onClick={() => navigate("/book-demo")}
               >
                 {t("cta_secondary")}
@@ -696,18 +707,17 @@ const Index = () => {
         <div className="container mx-auto px-6 py-16">
           <div className="grid md:grid-cols-4 gap-12">
             <div className="md:col-span-1">
-              <div className="text-2xl font-bold mb-4">
-                <span className="text-foreground font-medium">Frame</span>
-                <span className="gradient-text font-black">IQ</span>
+              <div className="mb-4">
+                <Logo size="lg" />
               </div>
-              <p className="text-sm text-secondary leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed font-body">
                 {t("footer_desc")}
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">{t("footer_product")}</h4>
-              <ul className="space-y-2 text-sm text-secondary">
+              <h4 className="font-semibold mb-4 font-display">{t("footer_product")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground font-body">
                 <li><a href="#features" className="hover:text-foreground transition-colors">{t("nav_features")}</a></li>
                 <li><a href="#pricing" className="hover:text-foreground transition-colors">{t("nav_pricing")}</a></li>
                 <li><Link to="/book-demo" className="hover:text-foreground transition-colors">{t("footer_book_demo")}</Link></li>
@@ -715,8 +725,8 @@ const Index = () => {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">{t("footer_company")}</h4>
-              <ul className="space-y-2 text-sm text-secondary">
+              <h4 className="font-semibold mb-4 font-display">{t("footer_company")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground font-body">
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">{t("nav_blog")}</Link></li>
                 <li><Link to="/faq" className="hover:text-foreground transition-colors">{t("nav_faq")}</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">{t("nav_contact")}</Link></li>
@@ -725,8 +735,8 @@ const Index = () => {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">{t("footer_legal")}</h4>
-              <ul className="space-y-2 text-sm text-secondary">
+              <h4 className="font-semibold mb-4 font-display">{t("footer_legal")}</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground font-body">
                 <li><button onClick={() => setLegalModal("privacy")} className="hover:text-foreground transition-colors">{t("footer_privacy")}</button></li>
                 <li><button onClick={() => setLegalModal("terms")} className="hover:text-foreground transition-colors">{t("footer_terms")}</button></li>
               </ul>
@@ -734,10 +744,10 @@ const Index = () => {
           </div>
           
           <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-secondary">
+            <div className="text-sm text-muted-foreground font-body">
               {t("footer_rights")}
             </div>
-            <div className="flex items-center gap-4 text-sm text-secondary">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground font-body">
               <span className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 {t("footer_soc2")}

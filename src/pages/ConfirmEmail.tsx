@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -84,9 +85,8 @@ const ConfirmEmail = () => {
       </div>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Link to="/" className="inline-block text-3xl font-bold">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/" className="inline-block">
+            <Logo size="lg" />
           </Link>
         </div>
 

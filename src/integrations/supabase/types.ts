@@ -113,6 +113,62 @@ export type Database = {
         }
         Relationships: []
       }
+      creative_memory: {
+        Row: {
+          analysis_id: string | null
+          cpc: number | null
+          created_at: string | null
+          creative_model: string | null
+          ctr: number | null
+          hook_score: number | null
+          hook_type: string | null
+          id: string
+          market: string | null
+          notes: string | null
+          platform: string | null
+          roas: number | null
+          user_id: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          cpc?: number | null
+          created_at?: string | null
+          creative_model?: string | null
+          ctr?: number | null
+          hook_score?: number | null
+          hook_type?: string | null
+          id?: string
+          market?: string | null
+          notes?: string | null
+          platform?: string | null
+          roas?: number | null
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string | null
+          cpc?: number | null
+          created_at?: string | null
+          creative_model?: string | null
+          ctr?: number | null
+          hook_score?: number | null
+          hook_type?: string | null
+          id?: string
+          market?: string | null
+          notes?: string | null
+          platform?: string | null
+          roas?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_memory_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_requests: {
         Row: {
           company: string
@@ -149,6 +205,30 @@ export type Database = {
         }
         Relationships: []
       }
+      personas: {
+        Row: {
+          answers: Json | null
+          created_at: string | null
+          id: string
+          result: Json | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          created_at?: string | null
+          id?: string
+          result?: Json | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          created_at?: string | null
+          id?: string
+          result?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -157,6 +237,7 @@ export type Database = {
           id: string
           name: string | null
           onboarding_completed: boolean | null
+          onboarding_data: Json | null
           plan: string
           plan_started_at: string | null
           preferred_language: string | null
@@ -170,6 +251,7 @@ export type Database = {
           id: string
           name?: string | null
           onboarding_completed?: boolean | null
+          onboarding_data?: Json | null
           plan?: string
           plan_started_at?: string | null
           preferred_language?: string | null
@@ -183,6 +265,7 @@ export type Database = {
           id?: string
           name?: string | null
           onboarding_completed?: boolean | null
+          onboarding_data?: Json | null
           plan?: string
           plan_started_at?: string | null
           preferred_language?: string | null
@@ -302,6 +385,60 @@ export type Database = {
           translations_count?: number | null
           user_id?: string
           videos_count?: number
+        }
+        Relationships: []
+      }
+      user_ai_profile: {
+        Row: {
+          ad_platforms: Json | null
+          ai_recommendations: Json | null
+          ai_summary: string | null
+          avg_hook_score: number | null
+          best_markets: Json | null
+          best_platforms: Json | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          last_updated: string | null
+          target_markets: Json | null
+          top_performing_hooks: Json | null
+          top_performing_models: Json | null
+          total_analyses: number | null
+          user_id: string
+        }
+        Insert: {
+          ad_platforms?: Json | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          avg_hook_score?: number | null
+          best_markets?: Json | null
+          best_platforms?: Json | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          last_updated?: string | null
+          target_markets?: Json | null
+          top_performing_hooks?: Json | null
+          top_performing_models?: Json | null
+          total_analyses?: number | null
+          user_id: string
+        }
+        Update: {
+          ad_platforms?: Json | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          avg_hook_score?: number | null
+          best_markets?: Json | null
+          best_platforms?: Json | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          last_updated?: string | null
+          target_markets?: Json | null
+          top_performing_hooks?: Json | null
+          top_performing_models?: Json | null
+          total_analyses?: number | null
+          user_id?: string
         }
         Relationships: []
       }

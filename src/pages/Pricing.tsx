@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -162,9 +163,8 @@ const Pricing = () => {
       {/* Nav */}
       <nav className="border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/">
+            <Logo size="lg" />
           </Link>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />

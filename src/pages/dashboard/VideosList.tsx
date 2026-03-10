@@ -246,7 +246,7 @@ const VideosList = () => {
               <div className="flex gap-2">
                 <button
                   onClick={handleRegenerate}
-                  disabled={!feedbackNote.trim() || genStatus === "generating"}
+                  disabled={!feedbackNote.trim() || (genStatus as string) === "generating"}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/30 disabled:opacity-30 transition-all"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Regenerate with corrections

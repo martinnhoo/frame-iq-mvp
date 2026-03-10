@@ -254,14 +254,15 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     setPersonasLoading(true);
     try {
       const { data, error } = await supabase
-        .from("personas")
-        .select("id, created_at, result")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .from("personas" as never)
+        .select("id, created_at, result" as never)
+        .eq("user_id" as never, user.id)
+        .order("created_at" as never, { ascending: false });
 
       if (!error && data) {
+        const rows = data as Array<{ id: string; created_at: string; result: unknown }>;
         setPersonas(
-          data.map((row) => ({
+          rows.map((row) => ({
             id: row.id,
             created_at: row.created_at,
             ...(row.result as Omit<PersonaRecord, "id" | "created_at">),
@@ -298,7 +299,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this persona permanently? This cannot be undone.")) return;
     setDeletingId(id);
-    const { error } = await supabase.from("personas").delete().eq("id", id).eq("user_id", user.id);
+    const { error } = await supabase.from("personas" as never).delete().eq("id" as never, id).eq("user_id" as never, user.id);
     if (!error) {
       setPersonas((prev) => prev.filter((p) => p.id !== id));
       toast.success("Persona deleted");

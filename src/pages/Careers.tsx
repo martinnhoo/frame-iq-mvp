@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Clock, DollarSign, Users, Briefcase, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { Logo } from "@/components/Logo";
 
 const openPositions = [
   {
@@ -52,9 +53,8 @@ const Careers = () => {
       {/* Header */}
       <nav className="border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/" className="text-2xl font-bold flex items-center">
-            <span className="text-foreground font-medium">Frame</span>
-            <span className="gradient-text font-black">IQ</span>
+          <Link to="/">
+            <Logo size="lg" />
           </Link>
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
