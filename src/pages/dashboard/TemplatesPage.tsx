@@ -19,7 +19,7 @@ interface Template {
   prompt: string;
 }
 
-const T = (id: string, name: string, description: string, category: Exclude<Category, "all">, duration: 15 | 30 | 60, prompt: string): Template =>
+const T = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
   ({ id, name, description, category, duration, prompt });
 
 const TEMPLATES: Template[] = [
