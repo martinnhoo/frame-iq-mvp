@@ -389,277 +389,7 @@ const TEMPLATES: Template[] = [
     `Budget travel. 'I traveled Europe for $1500'. How they did it. Product/service that helped. Specific tips. CTA.`),
   T("travel-adventure", "Adventure Travel", "Extreme/adventure travel.", "travel", 60,
     `Adventure travel. Adrenaline footage. 'Life's too short for ordinary trips'. Product for adventurers. Safety + thrill. CTA.`),
-];
 
-const CAT_META: Record<string, { label: string; color: string; emoji: string }> = {
-  ugc:        { label: "UGC",          color: "text-violet-400 bg-violet-400/10 border-violet-400/25",  emoji: "📱" },
-  testimonial:{ label: "Testimonial",  color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "⭐" },
-  promo:      { label: "Promo",        color: "text-orange-400 bg-orange-400/10 border-orange-400/25",  emoji: "🔥" },
-  tutorial:   { label: "Tutorial",     color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "🎓" },
-  hook:       { label: "Hook",         color: "text-red-400 bg-red-400/10 border-red-400/25",           emoji: "🎣" },
-  product:    { label: "Product",      color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/25",        emoji: "📦" },
-  story:      { label: "Story",        color: "text-amber-400 bg-amber-400/10 border-amber-400/25",     emoji: "📖" },
-  react:      { label: "React",        color: "text-pink-400 bg-pink-400/10 border-pink-400/25",        emoji: "😂" },
-  app:        { label: "App",          color: "text-lime-400 bg-lime-400/10 border-lime-400/25",        emoji: "📲" },
-  b2b:        { label: "B2B",          color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/25",  emoji: "🏢" },
-  seasonal:   { label: "Seasonal",     color: "text-teal-400 bg-teal-400/10 border-teal-400/25",        emoji: "🗓️" },
-  ecommerce:  { label: "E-commerce",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/25", emoji: "🛒" },
-  finance:    { label: "Finance",      color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",emoji: "💰" },
-  health:     { label: "Health",       color: "text-rose-400 bg-rose-400/10 border-rose-400/25",        emoji: "💊" },
-  beauty:     { label: "Beauty",       color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/25",emoji: "💄" },
-  food:       { label: "Food",         color: "text-orange-300 bg-orange-300/10 border-orange-300/25",  emoji: "🍔" },
-  gaming:     { label: "Gaming",       color: "text-purple-400 bg-purple-400/10 border-purple-400/25",  emoji: "🎮" },
-  real_estate:{ label: "Real Estate",  color: "text-sky-400 bg-sky-400/10 border-sky-400/25",           emoji: "🏠" },
-  education:  { label: "Education",    color: "text-blue-300 bg-blue-300/10 border-blue-300/25",        emoji: "📚" },
-  travel:     { label: "Travel",       color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/25",        emoji: "✈️" },
-};
-
-const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
-  { value: "all", label: "All", emoji: "🌐" },
-  ...Object.entries(CAT_META).map(([k, v]) => ({ value: k as Category, label: v.label, emoji: v.emoji })),
-];
-
-const PER_PAGE = 24;
-
-const TemplatesPage = () => {
-  const { user, profile } = useOutletContext<DashboardContext>();
-  const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<Category>("all");
-  const [activeDuration, setActiveDuration] = useState<Duration>("all");
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-
-  const filtered = useMemo(() => {
-    setPage(1);
-    return TEMPLATES.filter((t) => {
-      if (activeCategory !== "all" && t.category !== activeCategory) return false;
-      if (activeDuration !== "all" && String(t.duration) !== activeDuration) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        if (!t.name.toLowerCase().includes(q) && !t.description.toLowerCase().includes(q) && !t.category.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [activeCategory, activeDuration, search]);
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  const handleUse = async (template: Template) => {
-    setLoading(template.id);
-    try {
-      await supabase.from("template_usage" as never).insert({
-        user_id: user.id,
-        template_id: template.id,
-        template_name: template.name,
-      }).then(() => {});
-    } catch {}
-    navigate("/dashboard/boards/new", {
-      state: {
-        templatePrompt: template.prompt,
-        templateName: template.name,
-        templateDuration: template.duration,
-      },
-    });
-    setLoading(null);
-  };
-
-  const catCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: TEMPLATES.length };
-    TEMPLATES.forEach((t) => { counts[t.category] = (counts[t.category] || 0) + 1; });
-    return counts;
-  }, []);
-
-  return (
-    <div className="relative flex flex-col min-h-screen">
-    <div className="p-5 lg:p-6 max-w-7xl mx-auto space-y-5 flex-1">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Layers className="h-4 w-4 text-white/40" /> Templates
-          </h1>
-          <p className="text-white/30 text-xs mt-1">
-            {TEMPLATES.length} ready-to-use formats across {Object.keys(CAT_META).length} industries
-          </p>
-        </div>
-        <span className="text-[11px] text-white/20 font-mono mt-1 shrink-0">{filtered.length} shown</span>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-        <input
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search templates..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/20 transition-colors"
-        />
-      </div>
-
-      {/* Category filter — horizontal scroll */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => { setActiveCategory(cat.value); setPage(1); }}
-            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 ${
-              activeCategory === cat.value
-                ? "bg-white text-black border-white"
-                : "border-white/[0.07] text-white/35 hover:text-white/60 hover:border-white/15"
-            }`}
-          >
-            <span>{cat.emoji}</span>
-            {cat.label}
-            {catCounts[cat.value] !== undefined && (
-              <span className={`font-mono text-[10px] ${activeCategory === cat.value ? "text-black/40" : "text-white/20"}`}>
-                {catCounts[cat.value]}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Duration filter */}
-      <div className="flex gap-1.5">
-        {(["all", "15", "30", "60"] as Duration[]).map(d => (
-          <button
-            key={d}
-            onClick={() => { setActiveDuration(d); setPage(1); }}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs border transition-all ${
-              activeDuration === d
-                ? "bg-white/10 border-white/25 text-white"
-                : "border-white/[0.06] text-white/25 hover:border-white/15 hover:text-white/50"
-            }`}
-          >
-            <Clock className="h-3 w-3" />
-            {d === "all" ? "Any length" : `${d}s`}
-          </button>
-        ))}
-      </div>
-
-      {/* Grid */}
-      {paginated.length === 0 ? (
-        <div className="text-center py-16 text-white/20">
-          <p className="text-3xl mb-3">🔍</p>
-          <p>No templates match your filters</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {paginated.map((template) => {
-            const meta = CAT_META[template.category];
-            return (
-              <Card key={template.id} className="border-white/[0.08] bg-[#111] hover:border-white/[0.15] transition-all duration-200 group flex flex-col">
-                <CardContent className="p-4 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold ${meta?.color || "text-white/40 border-white/10"}`}>
-                      {meta?.emoji} {meta?.label || template.category}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-white/25">
-                      <Clock className="h-3 w-3" />{template.duration}s
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-white/90 transition-colors">
-                    {template.name}
-                  </h3>
-                  <p className="text-xs text-white/35 mb-4 flex-1 leading-relaxed">
-                    {template.description}
-                  </p>
-                  <Button
-                    onClick={() => handleUse(template)}
-                    disabled={loading === template.id}
-                    className="w-full bg-white/[0.07] hover:bg-white text-white hover:text-black text-xs h-8 border-0 transition-all duration-200"
-                  >
-                    {loading === template.id ? "Loading..." : (
-                      <span className="flex items-center gap-1.5">Use template <ArrowRight className="h-3.5 w-3.5" /></span>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2 pb-4">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-
-          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-            let p: number;
-            if (totalPages <= 7) {
-              p = i + 1;
-            } else if (page <= 4) {
-              p = i + 1;
-              if (i === 6) p = totalPages;
-            } else if (page >= totalPages - 3) {
-              p = totalPages - 6 + i;
-            } else {
-              const map = [1, page - 2, page - 1, page, page + 1, page + 2, totalPages];
-              p = map[i];
-            }
-            return (
-              <button
-                key={i}
-                onClick={() => setPage(p)}
-                className={`h-8 min-w-[2rem] px-2 rounded-lg text-xs font-mono transition-all ${
-                  p === page
-                    ? "bg-white text-black font-bold"
-                    : "bg-white/[0.04] border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20"
-                }`}
-              >
-                {p}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
-          >
-            <ChevronRightIcon className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-    </div>
-
-    {/* Sticky upgrade CTA */}
-    {profile?.plan === "free" && (
-      <div className="sticky bottom-0 z-20 px-5 pb-4 pt-2 pointer-events-none">
-        <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-white">Unlock all {TEMPLATES.length} templates ⚡</p>
-              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · 5 videos/mo</p>
-            </div>
-            <button
-              onClick={() => navigate("/pricing")}
-              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
-            >
-              Upgrade <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-    </div>
-  );
-};
-
-export default TemplatesPage
-
-  // ── INDUSTRY TEMPLATES ──────────────────────────────────
-  // iGaming
   T("ig-welcome-bonus", "Welcome Bonus Reveal", "Big number hook revealing the welcome bonus.", "igaming", 15,
     `Scene 1 (0-3s): Big number on screen — bonus amount
 Scene 2 (4-9s): How to claim — simple steps
@@ -1577,4 +1307,283 @@ Scene 2 (4-9s): Auto-ship setup
 Scene 3 (10-12s): Discount on subscription
 Scene 4 (13-15s): Set up auto-ship CTA
 Tone: Convenient.`),
-;
+];
+
+
+const CAT_META: Record<string, { label: string; color: string; emoji: string }> = {
+  ugc:        { label: "UGC",          color: "text-violet-400 bg-violet-400/10 border-violet-400/25",  emoji: "📱" },
+  testimonial:{ label: "Testimonial",  color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "⭐" },
+  promo:      { label: "Promo",        color: "text-orange-400 bg-orange-400/10 border-orange-400/25",  emoji: "🔥" },
+  tutorial:   { label: "Tutorial",     color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "🎓" },
+  hook:       { label: "Hook",         color: "text-red-400 bg-red-400/10 border-red-400/25",           emoji: "🎣" },
+  product:    { label: "Product",      color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/25",        emoji: "📦" },
+  story:      { label: "Story",        color: "text-amber-400 bg-amber-400/10 border-amber-400/25",     emoji: "📖" },
+  react:      { label: "React",        color: "text-pink-400 bg-pink-400/10 border-pink-400/25",        emoji: "😂" },
+  app:        { label: "App",          color: "text-lime-400 bg-lime-400/10 border-lime-400/25",        emoji: "📲" },
+  b2b:        { label: "B2B",          color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/25",  emoji: "🏢" },
+  seasonal:   { label: "Seasonal",     color: "text-teal-400 bg-teal-400/10 border-teal-400/25",        emoji: "🗓️" },
+  ecommerce:  { label: "E-commerce",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/25", emoji: "🛒" },
+  finance:    { label: "Finance",      color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",emoji: "💰" },
+  health:     { label: "Health",       color: "text-rose-400 bg-rose-400/10 border-rose-400/25",        emoji: "💊" },
+  beauty:     { label: "Beauty",       color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/25",emoji: "💄" },
+  food:       { label: "Food",         color: "text-orange-300 bg-orange-300/10 border-orange-300/25",  emoji: "🍔" },
+  gaming:     { label: "Gaming",       color: "text-purple-400 bg-purple-400/10 border-purple-400/25",  emoji: "🎮" },
+  real_estate:{ label: "Real Estate",  color: "text-sky-400 bg-sky-400/10 border-sky-400/25",           emoji: "🏠" },
+  education:  { label: "Education",    color: "text-blue-300 bg-blue-300/10 border-blue-300/25",        emoji: "📚" },
+  travel:     { label: "Travel",       color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/25",        emoji: "✈️" },
+  igaming:    { label: "iGaming",      color: "text-purple-300 bg-purple-300/10 border-purple-300/25",  emoji: "🎰" },
+  fintech:    { label: "Fintech",      color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/25",emoji: "💳" },
+  saas:       { label: "SaaS",         color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "☁️" },
+  fitness:    { label: "Fitness",      color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "💪" },
+  fashion:    { label: "Fashion",      color: "text-pink-300 bg-pink-300/10 border-pink-300/25",        emoji: "👗" },
+  automotive: { label: "Automotive",   color: "text-zinc-400 bg-zinc-400/10 border-zinc-400/25",        emoji: "🚗" },
+  crypto:     { label: "Crypto",       color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/25",  emoji: "₿" },
+  insurance:  { label: "Insurance",    color: "text-slate-400 bg-slate-400/10 border-slate-400/25",     emoji: "🛡️" },
+  hr:         { label: "HR",           color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "👥" },
+  ngo:        { label: "NGO",          color: "text-rose-300 bg-rose-300/10 border-rose-300/25",        emoji: "❤️" },
+  pet:        { label: "Pet",          color: "text-amber-300 bg-amber-300/10 border-amber-300/25",     emoji: "🐾" },
+};
+
+const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
+  { value: "all", label: "All", emoji: "🌐" },
+  ...Object.entries(CAT_META).map(([k, v]) => ({ value: k as Category, label: v.label, emoji: v.emoji })),
+];
+
+const PER_PAGE = 24;
+
+const TemplatesPage = () => {
+  const { user, profile } = useOutletContext<DashboardContext>();
+  const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [activeDuration, setActiveDuration] = useState<Duration>("all");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    setPage(1);
+    return TEMPLATES.filter((t) => {
+      if (activeCategory !== "all" && t.category !== activeCategory) return false;
+      if (activeDuration !== "all" && String(t.duration) !== activeDuration) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!t.name.toLowerCase().includes(q) && !t.description.toLowerCase().includes(q) && !t.category.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [activeCategory, activeDuration, search]);
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const handleUse = async (template: Template) => {
+    setLoading(template.id);
+    try {
+      await supabase.from("template_usage" as never).insert({
+        user_id: user.id,
+        template_id: template.id,
+        template_name: template.name,
+      }).then(() => {});
+    } catch {}
+    navigate("/dashboard/boards/new", {
+      state: {
+        templatePrompt: template.prompt,
+        templateName: template.name,
+        templateDuration: template.duration,
+      },
+    });
+    setLoading(null);
+  };
+
+  const catCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: TEMPLATES.length };
+    TEMPLATES.forEach((t) => { counts[t.category] = (counts[t.category] || 0) + 1; });
+    return counts;
+  }, []);
+
+  return (
+    <div className="relative flex flex-col min-h-screen">
+    <div className="p-5 lg:p-6 max-w-7xl mx-auto space-y-5 flex-1">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Layers className="h-4 w-4 text-white/40" /> Templates
+          </h1>
+          <p className="text-white/30 text-xs mt-1">
+            {TEMPLATES.length} ready-to-use formats across {Object.keys(CAT_META).length} industries
+          </p>
+        </div>
+        <span className="text-[11px] text-white/20 font-mono mt-1 shrink-0">{filtered.length} shown</span>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+        <input
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Search templates..."
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/20 transition-colors"
+        />
+      </div>
+
+      {/* Category filter — horizontal scroll */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.value}
+            onClick={() => { setActiveCategory(cat.value); setPage(1); }}
+            className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 ${
+              activeCategory === cat.value
+                ? "bg-white text-black border-white"
+                : "border-white/[0.07] text-white/35 hover:text-white/60 hover:border-white/15"
+            }`}
+          >
+            <span>{cat.emoji}</span>
+            {cat.label}
+            {catCounts[cat.value] !== undefined && (
+              <span className={`font-mono text-[10px] ${activeCategory === cat.value ? "text-black/40" : "text-white/20"}`}>
+                {catCounts[cat.value]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Duration filter */}
+      <div className="flex gap-1.5">
+        {(["all", "15", "30", "60"] as Duration[]).map(d => (
+          <button
+            key={d}
+            onClick={() => { setActiveDuration(d); setPage(1); }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs border transition-all ${
+              activeDuration === d
+                ? "bg-white/10 border-white/25 text-white"
+                : "border-white/[0.06] text-white/25 hover:border-white/15 hover:text-white/50"
+            }`}
+          >
+            <Clock className="h-3 w-3" />
+            {d === "all" ? "Any length" : `${d}s`}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      {paginated.length === 0 ? (
+        <div className="text-center py-16 text-white/20">
+          <p className="text-3xl mb-3">🔍</p>
+          <p>No templates match your filters</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {paginated.map((template) => {
+            const meta = CAT_META[template.category];
+            return (
+              <Card key={template.id} className="border-white/[0.08] bg-[#111] hover:border-white/[0.15] transition-all duration-200 group flex flex-col">
+                <CardContent className="p-4 flex flex-col flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold ${meta?.color || "text-white/40 border-white/10"}`}>
+                      {meta?.emoji} {meta?.label || template.category}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-white/25">
+                      <Clock className="h-3 w-3" />{template.duration}s
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-white/90 transition-colors">
+                    {template.name}
+                  </h3>
+                  <p className="text-xs text-white/35 mb-4 flex-1 leading-relaxed">
+                    {template.description}
+                  </p>
+                  <Button
+                    onClick={() => handleUse(template)}
+                    disabled={loading === template.id}
+                    className="w-full bg-white/[0.07] hover:bg-white text-white hover:text-black text-xs h-8 border-0 transition-all duration-200"
+                  >
+                    {loading === template.id ? "Loading..." : (
+                      <span className="flex items-center gap-1.5">Use template <ArrowRight className="h-3.5 w-3.5" /></span>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2 pb-4">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            let p: number;
+            if (totalPages <= 7) {
+              p = i + 1;
+            } else if (page <= 4) {
+              p = i + 1;
+              if (i === 6) p = totalPages;
+            } else if (page >= totalPages - 3) {
+              p = totalPages - 6 + i;
+            } else {
+              const map = [1, page - 2, page - 1, page, page + 1, page + 2, totalPages];
+              p = map[i];
+            }
+            return (
+              <button
+                key={i}
+                onClick={() => setPage(p)}
+                className={`h-8 min-w-[2rem] px-2 rounded-lg text-xs font-mono transition-all ${
+                  p === page
+                    ? "bg-white text-black font-bold"
+                    : "bg-white/[0.04] border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20"
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Sticky upgrade CTA */}
+    {profile?.plan === "free" && (
+      <div className="sticky bottom-0 z-20 px-5 pb-4 pt-2 pointer-events-none">
+        <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-white">Unlock all {TEMPLATES.length} templates ⚡</p>
+              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · 5 videos/mo</p>
+            </div>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
+            >
+              Upgrade <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </div>
+  );
+};
+
+export default TemplatesPage;

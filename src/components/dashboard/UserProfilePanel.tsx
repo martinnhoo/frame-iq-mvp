@@ -7,6 +7,7 @@ import {
   ChevronRight, Zap, Settings, Camera,
 } from "lucide-react";
 import type { User as SupaUser } from "@supabase/supabase-js";
+import { PlanUpgradeModal } from "./PlanUpgradeModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -237,6 +238,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [personas, setPersonas] = useState<PersonaRecord[]>([]);
   const [personasLoading, setPersonasLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [planModalOpen, setPlanModalOpen] = useState(false);
 
   // Sync fields when panel opens
   useEffect(() => {
@@ -665,6 +667,13 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
         </div>
       </div>
+      {planModalOpen && (
+        <PlanUpgradeModal
+          open={planModalOpen}
+          onClose={() => setPlanModalOpen(false)}
+          currentPlan={profile?.plan || "free"}
+        />
+      )}
     </>
   );
 }

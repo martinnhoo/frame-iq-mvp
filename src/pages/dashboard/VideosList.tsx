@@ -15,7 +15,7 @@ interface GeneratedVideo {
   board_id?: string | null;
 }
 
-type GenStatus = "idle" | "generating" | "done" | "error";
+type GenStatus = "idle" | "generating" | "done" | "error" | "retry";
 
 const PROGRESS_STEPS = [
   { label: "Preparing scenes...", pct: 12 },
