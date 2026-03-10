@@ -14,7 +14,7 @@ interface Template {
   id: string;
   name: string;
   description: string;
-  category: Exclude<Category, "all">;
+  category: string;
   duration: 15 | 30 | 60;
   prompt: string;
 }
