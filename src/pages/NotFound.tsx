@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowLeft, Home, Search } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const NotFound = () => {
   const location = useLocation();
