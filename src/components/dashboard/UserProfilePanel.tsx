@@ -521,26 +521,38 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               </div>
 
               {/* Upgrade options */}
-              {profile?.plan === "free" && (
+              {(profile?.plan === "free" || profile?.plan === "creator" || profile?.plan === "starter") && (
                 <>
-                  <p className="text-[10px] uppercase tracking-widest text-white/20">Upgrade to</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2">Upgrade to</p>
                   <div className="space-y-2">
                     {(["creator", "starter", "studio", "scale"] as const)
-                      .filter((k) => k !== profile.plan)
+                      .filter((k) => {
+                        const order = ["free", "creator", "starter", "studio", "scale"];
+                        return order.indexOf(k) > order.indexOf(profile?.plan || "free");
+                      })
                       .map((key) => {
                         const p = PLAN_INFO[key];
+                        const isPopular = key === "studio";
                         return (
                           <button
                             key={key}
-                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04] transition-all group"
+                            onClick={() => window.location.href = "/pricing"}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all group ${
+                              isPopular
+                                ? "border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50 hover:bg-purple-500/10"
+                                : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
+                            }`}
                           >
                             <div className="text-left">
-                              <p className="text-sm font-semibold text-white">{p.label}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-white">{p.label}</p>
+                                {isPopular && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/20 font-bold">POPULAR</span>}
+                              </div>
                               <p className="text-xs text-white/30">{p.desc}</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-sm font-bold text-white/60">{p.price}</span>
-                              <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                              <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
                             </div>
                           </button>
                         );

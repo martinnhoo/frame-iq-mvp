@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useOutletContext, useLocation } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Video, Play, Download, Loader2, Film, Trash2, AlertCircle } from "lucide-react";
+import { Video, Play, Download, Loader2, Film, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -62,31 +62,48 @@ const VideosList = () => {
     }, 2800);
   };
 
-  const handleGenerate = async () => {
+  // 3-chances system
+  const [attemptsLeft, setAttemptsLeft] = useState(3);
+  const [feedbackNote, setFeedbackNote] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [generatedVideoId, setGeneratedVideoId] = useState<string | null>(null);
+
+  const handleGenerate = async (note?: string) => {
     if (!boardState?.boardId) return;
+    if (attemptsLeft <= 0) {
+      toast.error("No attempts remaining for this video");
+      return;
+    }
     setGenStatus("generating");
     setGenProgress(5);
     setGenLabel("Initializing...");
+    setShowFeedback(false);
     simulateProgress();
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-video", {
-        body: { board_id: boardState.boardId, user_id: user.id },
+        body: {
+          board_id: boardState.boardId,
+          user_id: user.id,
+          correction_note: note || undefined,
+          attempt: 4 - attemptsLeft,
+        },
       });
 
       if (progressRef.current) clearInterval(progressRef.current);
 
       if (error || data?.mock_mode) {
         setGenStatus("error");
-        toast.error("Add ANTHROPIC_API_KEY + ELEVENLABS_API_KEY to enable video generation");
+        toast.error("Add ELEVENLABS_API_KEY to enable video generation");
         return;
       }
 
       setGenProgress(100);
       setGenLabel("Done!");
       setGenStatus("done");
+      setAttemptsLeft(a => a - 1);
+      if (data?.video_id) setGeneratedVideoId(data.video_id);
 
-      // Trigger download if URL returned
       if (data?.video_url) {
         const a = document.createElement("a");
         a.href = data.video_url;
@@ -95,7 +112,11 @@ const VideosList = () => {
         toast.success("Video ready — downloading...");
       }
 
-      // Refresh list
+      // Show feedback option if attempts remain
+      if (attemptsLeft - 1 > 0) {
+        setTimeout(() => setShowFeedback(true), 1500);
+      }
+
       const { data: newVideos } = await supabase
         .from("videos_generated").select("*").eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -106,6 +127,15 @@ const VideosList = () => {
       setGenStatus("error");
       toast.error("Video generation failed");
     }
+  };
+
+  const handleRegenerate = () => {
+    if (!feedbackNote.trim()) {
+      toast.error("Please describe what to improve");
+      return;
+    }
+    handleGenerate(feedbackNote);
+    setFeedbackNote("");
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -136,16 +166,35 @@ const VideosList = () => {
         </div>
       </div>
 
-      {/* Generation panel — shown when coming from a board */}
-      {boardState?.boardId && genStatus !== "done" && (
+      {/* Generation panel */}
+      {boardState?.boardId && (
         <div className="rounded-2xl border border-white/[0.1] bg-white/[0.03] p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-              <Film className="h-5 w-5 text-green-400" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <Film className="h-5 w-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {genStatus === "done" ? "Video generated!" : "Ready to generate"}
+                </p>
+                <p className="text-xs text-white/30">
+                  {genStatus === "done" ? "Want changes? Describe them below." : "Video will be ready for download"}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Ready to generate</p>
-              <p className="text-xs text-white/30">Video will be ready for direct download — not stored in the system</p>
+            {/* Attempts indicator */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className={`h-2 w-2 rounded-full transition-all ${
+                    i < attemptsLeft ? "bg-green-400" : "bg-white/10"
+                  }`}
+                  title={`${attemptsLeft} attempt${attemptsLeft !== 1 ? "s" : ""} left`}
+                />
+              ))}
+              <span className="text-[10px] text-white/20 ml-1">{attemptsLeft} left</span>
             </div>
           </div>
 
@@ -167,18 +216,56 @@ const VideosList = () => {
           {genStatus === "error" && (
             <div className="flex items-start gap-2 text-xs text-red-400/80 bg-red-500/[0.08] border border-red-500/20 rounded-xl px-3 py-2.5">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              Add ELEVENLABS_API_KEY and OPENAI_API_KEY to Supabase Secrets to enable video generation.
+              Add ELEVENLABS_API_KEY to Supabase Secrets to enable video generation.
             </div>
           )}
 
-          {genStatus === "idle" && (
+          {(genStatus === "idle" || genStatus === "error") && attemptsLeft > 0 && (
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
             >
               <Play className="h-4 w-4" />
               Generate video from board
             </button>
+          )}
+
+          {/* 3-chances feedback panel */}
+          {genStatus === "done" && showFeedback && attemptsLeft > 0 && (
+            <div className="space-y-3 border-t border-white/[0.06] pt-4">
+              <p className="text-xs text-white/40">
+                Not quite right? Describe what to improve and we'll regenerate. ({attemptsLeft} attempt{attemptsLeft !== 1 ? "s" : ""} left)
+              </p>
+              <textarea
+                value={feedbackNote}
+                onChange={e => setFeedbackNote(e.target.value)}
+                placeholder="e.g. Make the hook stronger, change the background music, speed up the pacing..."
+                rows={2}
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 text-xs resize-none outline-none focus:border-white/20 transition-colors"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRegenerate}
+                  disabled={!feedbackNote.trim() || genStatus === "generating"}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-semibold hover:bg-green-500/30 disabled:opacity-30 transition-all"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Regenerate with corrections
+                </button>
+                <button
+                  onClick={() => setShowFeedback(false)}
+                  className="px-4 py-2 rounded-xl text-white/30 text-xs hover:text-white/60 transition-colors"
+                >
+                  Keep this one
+                </button>
+              </div>
+            </div>
+          )}
+
+          {attemptsLeft === 0 && genStatus === "done" && (
+            <p className="text-xs text-white/20 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+              All 3 attempts used — download your best version above
+            </p>
           )}
         </div>
       )}
