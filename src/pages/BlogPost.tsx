@@ -186,7 +186,7 @@ const blogPosts: Record<string, {
   },
   "board-generation-launch": {
     title: "Introducing Board Generation: From Brief to Production in 30 Seconds",
-    description: "FrameIQ's new AI board generator creates full production boards with scenes, VO scripts, and editor notes from a single prompt.",
+    description: "AdBrief's new AI board generator creates full production boards with scenes, VO scripts, and editor notes from a single prompt.",
     category: "Product Updates",
     readTime: "4 min",
     date: "January 2026",
