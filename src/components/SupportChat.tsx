@@ -13,7 +13,7 @@ const INITIAL_MESSAGE: Message = {
   content: "Hi! I'm AdBrief Support. Ask me anything about the platform — analyses, boards, billing, or how to get started.",
 };
 
-export function SupportChat() {
+export default function SupportChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [newMessage, setNewMessage] = useState("");
