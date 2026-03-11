@@ -382,7 +382,7 @@ const blogPosts: Record<string, {
     category: "Creative Strategy",
     readTime: "5 min",
     date: "January 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["editor brief template", "creative briefing", "video editor brief", "ad production brief", "creative brief framework"],
     content: [
