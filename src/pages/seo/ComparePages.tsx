@@ -60,8 +60,8 @@ export function CompareDetail() {
     "@type": "Article",
     "headline": comp.headline,
     "description": comp.metaDescription,
-    "author": { "@type": "Organization", "name": "FrameIQ" },
-    "url": `https://www.frameiq.com/compare/${slug}`,
+    "author": { "@type": "Organization", "name": "AdBrief" },
+    "url": `https://www.adbrief.pro/compare/${slug}`,
   };
 
   return (
