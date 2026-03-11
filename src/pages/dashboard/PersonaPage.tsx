@@ -6,6 +6,8 @@ import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PersonaResult {
@@ -34,86 +36,16 @@ interface SavedPersona {
   created_at: string;
 }
 
-// ─── Steps ───────────────────────────────────────────────────────────────────
-const STEPS = [
-  {
-    id: "product",
-    q: "What are you advertising?",
-    sub: "Be specific — the more context, the better the persona",
-    type: "text",
-    placeholder: "e.g. Online sports betting app targeting casual football fans",
-  },
-  {
-    id: "gender",
-    q: "Primary gender target?",
-    sub: "",
-    type: "single",
-    options: [
-      { value: "male", label: "Mostly Male", emoji: "👨" },
-      { value: "female", label: "Mostly Female", emoji: "👩" },
-      { value: "both", label: "Both / Mixed", emoji: "👥" },
-    ],
-  },
-  {
-    id: "age",
-    q: "Age range?",
-    sub: "",
-    type: "range",
-  },
-  {
-    id: "income",
-    q: "Income level?",
-    sub: "",
-    type: "single",
-    options: [
-      { value: "low", label: "Low", emoji: "💵" },
-      { value: "mid", label: "Middle", emoji: "💰" },
-      { value: "high", label: "High", emoji: "💎" },
-      { value: "mixed", label: "Mixed / Broad", emoji: "🎯" },
-    ],
-  },
-  {
-    id: "market",
-    q: "Primary market?",
-    sub: "",
-    type: "single",
-    options: [
-      { value: "BR", label: "Brazil", emoji: "🇧🇷" },
-      { value: "US", label: "United States", emoji: "🇺🇸" },
-      { value: "MX", label: "Mexico", emoji: "🇲🇽" },
-      { value: "GLOBAL", label: "Global", emoji: "🌍" },
-    ],
-  },
-  {
-    id: "platform",
-    q: "Main ad platform?",
-    sub: "",
-    type: "single",
-    options: [
-      { value: "tiktok", label: "TikTok", emoji: "📱" },
-      { value: "meta", label: "Meta / IG", emoji: "📸" },
-      { value: "youtube", label: "YouTube", emoji: "▶️" },
-      { value: "google", label: "Google UAC", emoji: "🔍" },
-    ],
-  },
-  {
-    id: "pain",
-    q: "What's the core pain you solve?",
-    sub: "What keeps your audience up at night?",
-    type: "text",
-    placeholder: "e.g. They want to make easy money but don't trust betting apps",
-  },
-];
-
 // ─── Editable Detail Component ───────────────────────────────────────────
 function PersonaDetailEditable({
   result: initial, activeDetail, globalPersona, setGlobalPersona,
-  onCopy, copied, onNew, onBack, onSave,
+  onCopy, copied, onNew, onBack, onSave, dt,
 }: {
   result: PersonaResult; activeDetail: SavedPersona | null;
   globalPersona: any; setGlobalPersona: (p: any) => void;
   onCopy: () => void; copied: boolean; onNew: () => void; onBack: () => void;
   onSave: (updated: PersonaResult) => Promise<void>;
+  dt: (key: any) => string;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -150,7 +82,6 @@ function PersonaDetailEditable({
         value={(items || []).join("\n")}
         onChange={e => updateList(field, e.target.value)}
         rows={Math.max(2, (items || []).length)}
-        placeholder="One item per line"
         className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
       />
     ) : (
@@ -169,44 +100,44 @@ function PersonaDetailEditable({
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
-          <ChevronLeft className="h-4 w-4" /> All Personas
+          <ChevronLeft className="h-4 w-4" /> {dt("pe_all")}
         </button>
         <div className="flex items-center gap-2 flex-wrap">
           {activeDetail && globalPersona?.id === activeDetail.id ? (
             <button onClick={() => setGlobalPersona(null)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
-              <Check className="h-3.5 w-3.5" /> Active — deactivate
+              <Check className="h-3.5 w-3.5" /> {dt("pe_active_deactivate")}
             </button>
           ) : activeDetail ? (
             <button onClick={() => setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
-              <Users className="h-3.5 w-3.5" /> Use this persona
+              <Users className="h-3.5 w-3.5" /> {dt("pe_activate")}
             </button>
           ) : null}
 
           {!editing ? (
             <button onClick={() => setEditing(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs font-medium transition-all border border-white/[0.09]">
-              <Edit3 className="h-3.5 w-3.5" /> Edit
+              <Edit3 className="h-3.5 w-3.5" /> {dt("pe_edit")}
             </button>
           ) : (
             <>
               <button onClick={() => { setDraft(initial); setEditing(false); }}
-                className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">Cancel</button>
+                className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">{dt("pe_cancel")}</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-semibold hover:bg-green-500/30 transition-all">
-                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} {dt("pe_save_btn")}
               </button>
             </>
           )}
 
           <button onClick={onCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />} Copy
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />} {dt("pe_copy")}
           </button>
           <button onClick={onNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-            <RefreshCw className="h-3.5 w-3.5" /> New persona
+            <RefreshCw className="h-3.5 w-3.5" /> {dt("pe_new_persona")}
           </button>
         </div>
       </div>
@@ -234,10 +165,10 @@ function PersonaDetailEditable({
       {/* Grid */}
       <div className="grid sm:grid-cols-2 gap-4">
         {[
-          { title: "😤 Pain Points", items: draft.pains, color: "text-red-400", field: "pains" as keyof PersonaResult },
-          { title: "✨ Desires", items: draft.desires, color: "text-yellow-400", field: "desires" as keyof PersonaResult },
-          { title: "🚧 Objections", items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
-          { title: "⚡ Purchase Triggers", items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
+          { title: `😤 ${dt("pe_pain_points")}`, items: draft.pains, color: "text-red-400", field: "pains" as keyof PersonaResult },
+          { title: `✨ ${dt("pe_desires")}`, items: draft.desires, color: "text-yellow-400", field: "desires" as keyof PersonaResult },
+          { title: `🚧 ${dt("pe_objections")}`, items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
+          { title: `⚡ ${dt("pe_triggers")}`, items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
         ].map(({ title, items, color, field }, idx) => (
           <motion.div key={title} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + idx * 0.05 }}
@@ -251,31 +182,31 @@ function PersonaDetailEditable({
       {/* Ad strategy */}
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
-        <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Ad Strategy for {draft.name}</h3>
+        <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">{dt("pe_ad_strategy")} {draft.name}</h3>
 
         <div>
-          <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Hook Angles</p>
+          <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
           <EditableList field="hook_angles" items={draft.hook_angles} color="text-purple-400" />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Formats</p>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_formats")}</p>
             <EditableList field="best_formats" items={draft.best_formats} color="text-blue-300" />
           </div>
           <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Platforms</p>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
             <EditableList field="best_platforms" items={draft.best_platforms} color="text-purple-300" />
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
           <div>
-            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">Language Style</p>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_lang_style")}</p>
             <EditableText field="language_style" value={draft.language_style} className={editing ? "" : "text-sm text-white/60"} />
           </div>
           <div>
-            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">CTA Style</p>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
             <EditableText field="cta_style" value={draft.cta_style} className={editing ? "" : "text-sm text-white/60"} />
           </div>
         </div>
@@ -285,7 +216,7 @@ function PersonaDetailEditable({
       {(draft.media_habits?.length > 0 || editing) && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 Media Habits</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
           <EditableList field="media_habits" items={draft.media_habits} color="text-cyan-400" />
         </motion.div>
       )}
@@ -297,6 +228,8 @@ type View = "list" | "builder" | "detail";
 
 export default function PersonaPage() {
   const { user, selectedPersona: globalPersona, setSelectedPersona: setGlobalPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [view, setView] = useState<View>("list");
   const [saved, setSaved] = useState<SavedPersona[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
@@ -310,6 +243,54 @@ export default function PersonaPage() {
   const [copied, setCopied] = useState(false);
   const [ageMin, setAgeMin] = useState(18);
   const [ageMax, setAgeMax] = useState(35);
+
+  // ─── Steps (translated) ───
+  const STEPS = [
+    {
+      id: "product", q: dt("pe_q_product"), sub: dt("pe_q_product_sub"),
+      type: "text", placeholder: dt("pe_q_product_ph"),
+    },
+    {
+      id: "gender", q: dt("pe_q_gender"), sub: "", type: "single",
+      options: [
+        { value: "male", label: dt("pe_opt_male"), emoji: "👨" },
+        { value: "female", label: dt("pe_opt_female"), emoji: "👩" },
+        { value: "both", label: dt("pe_opt_both"), emoji: "👥" },
+      ],
+    },
+    { id: "age", q: dt("pe_q_age"), sub: "", type: "range" },
+    {
+      id: "income", q: dt("pe_q_income"), sub: "", type: "single",
+      options: [
+        { value: "low", label: dt("pe_opt_low"), emoji: "💵" },
+        { value: "mid", label: dt("pe_opt_mid"), emoji: "💰" },
+        { value: "high", label: dt("pe_opt_high"), emoji: "💎" },
+        { value: "mixed", label: dt("pe_opt_mixed"), emoji: "🎯" },
+      ],
+    },
+    {
+      id: "market", q: dt("pe_q_market"), sub: "", type: "single",
+      options: [
+        { value: "BR", label: "Brazil", emoji: "🇧🇷" },
+        { value: "US", label: "United States", emoji: "🇺🇸" },
+        { value: "MX", label: "Mexico", emoji: "🇲🇽" },
+        { value: "GLOBAL", label: "Global", emoji: "🌍" },
+      ],
+    },
+    {
+      id: "platform", q: dt("pe_q_platform"), sub: "", type: "single",
+      options: [
+        { value: "tiktok", label: "TikTok", emoji: "📱" },
+        { value: "meta", label: "Meta / IG", emoji: "📸" },
+        { value: "youtube", label: "YouTube", emoji: "▶️" },
+        { value: "google", label: "Google UAC", emoji: "🔍" },
+      ],
+    },
+    {
+      id: "pain", q: dt("pe_q_pain"), sub: dt("pe_q_pain_sub"),
+      type: "text", placeholder: dt("pe_q_pain_ph"),
+    },
+  ];
 
   // ── Fetch saved personas ──
   useEffect(() => {
@@ -390,9 +371,9 @@ export default function PersonaPage() {
       } catch {}
 
       setView("detail");
-      setActiveDetail(null); // show result view
+      setActiveDetail(null);
     } catch (err: any) {
-      toast.error(err?.message || "Persona generation failed");
+      toast.error(err?.message || dt("cm_error"));
     } finally {
       setLoading(false);
     }
@@ -406,7 +387,7 @@ export default function PersonaPage() {
       setActiveDetail(null);
       setView("list");
     }
-    toast.success("Persona deleted");
+    toast.success(dt("pe_deleted"));
   };
 
   const handleCopy = (persona: PersonaResult) => {
@@ -425,7 +406,7 @@ LANGUAGE: ${persona.language_style}
 CTA: ${persona.cta_style}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success("Copied");
+    toast.success(dt("pe_copied"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -451,9 +432,7 @@ CTA: ${persona.cta_style}`;
 
   const pct = Math.round(((step + 1) / STEPS.length) * 100);
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ── LOADING (generating) ──
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── LOADING ──
   if (loading)
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-8">
@@ -464,13 +443,11 @@ CTA: ${persona.cta_style}`;
             <Sparkles className="h-4 w-4 text-purple-400" />
           </div>
         </div>
-        <p className="text-white/40 text-sm">Building your persona...</p>
+        <p className="text-white/40 text-sm">{dt("pe_building")}</p>
       </div>
     );
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ── LIST VIEW: Saved Personas Gallery ──
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── LIST VIEW ──
   if (view === "list")
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
@@ -478,16 +455,16 @@ CTA: ${persona.cta_style}`;
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-400" />
-              Saved Personas
+              {dt("pe_saved")}
             </h1>
-            <p className="text-white/30 text-sm mt-1">Your AI audience profiles</p>
+            <p className="text-white/30 text-sm mt-1">{dt("pe_profiles_sub")}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={startNew}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-semibold hover:opacity-90 transition-all"
             >
-              <Plus className="h-4 w-4" /> New
+              <Plus className="h-4 w-4" /> {dt("pe_new")}
             </button>
             <button
               onClick={() => {
@@ -530,15 +507,15 @@ CTA: ${persona.cta_style}`;
             <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
               <Users className="h-8 w-8 text-purple-400/50" />
             </div>
-            <h3 className="text-white/50 font-medium mb-2">No personas yet</h3>
+            <h3 className="text-white/50 font-medium mb-2">{dt("pe_empty")}</h3>
             <p className="text-white/25 text-sm mb-6 max-w-xs">
-              Create AI-powered audience profiles to sharpen your ad targeting
+              {dt("pe_create_desc")}
             </p>
             <button
               onClick={startNew}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all"
             >
-              <Sparkles className="h-4 w-4" /> Create your first persona
+              <Sparkles className="h-4 w-4" /> {dt("pe_create_first_btn")}
             </button>
           </motion.div>
         ) : (
@@ -554,7 +531,6 @@ CTA: ${persona.cta_style}`;
                   onClick={() => openPersona(p)}
                   className="group relative flex flex-col items-center p-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.15] transition-all cursor-pointer"
                 >
-                  {/* Delete button */}
                   <button
                     onClick={(e) => deletePersona(p.id, e)}
                     className="absolute top-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all z-10"
@@ -562,51 +538,38 @@ CTA: ${persona.cta_style}`;
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
 
-                  {/* 3D Avatar */}
                   <div className="mb-4">
-                    <Persona3DAvatar
-                      emoji={p.result.avatar_emoji}
-                      name={p.result.name}
-                      gender={p.result.gender}
-                      size="md"
-                    />
+                    <Persona3DAvatar emoji={p.result.avatar_emoji} name={p.result.name} gender={p.result.gender} size="md" />
                   </div>
 
-                  {/* Info */}
                   <h3 className="text-white font-bold text-sm text-center">{p.result.name}</h3>
                   <p className="text-purple-300 text-xs text-center mt-0.5 line-clamp-1">{p.result.headline}</p>
                   <p className="text-white/25 text-[11px] mt-1">
                     {p.result.age} · {p.result.gender}
                   </p>
 
-                  {/* Platforms */}
                   <div className="flex flex-wrap justify-center gap-1 mt-3">
                     {p.result.best_platforms.slice(0, 3).map((pl) => (
-                      <span
-                        key={pl}
-                        className="px-2 py-0.5 rounded-full text-[10px] border border-purple-500/20 text-purple-300 bg-purple-500/5"
-                      >
+                      <span key={pl} className="px-2 py-0.5 rounded-full text-[10px] border border-purple-500/20 text-purple-300 bg-purple-500/5">
                         {pl}
                       </span>
                     ))}
                   </div>
 
-                  {/* Date */}
                   <p className="text-white/15 text-[10px] mt-3">
-                    {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {new Date(p.created_at).toLocaleDateString(language === "pt" ? "pt-BR" : language === "es" ? "es-ES" : language === "fr" ? "fr-FR" : language === "de" ? "de-DE" : language === "zh" ? "zh-CN" : language === "ar" ? "ar-SA" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
 
-                  {/* Activate button */}
                   {globalPersona?.id === p.id ? (
                     <div className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
-                      ✓ Active
+                      ✓ {dt("pe_active")}
                     </div>
                   ) : (
                     <button
                       onClick={(e) => { e.stopPropagation(); setGlobalPersona({ id: p.id, ...p.result } as any); }}
                       className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-all"
                       style={{ background: "rgba(167,139,250,0.12)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.25)" }}>
-                      Use persona
+                      {dt("pe_use")}
                     </button>
                   )}
                 </motion.div>
@@ -617,9 +580,7 @@ CTA: ${persona.cta_style}`;
       </div>
     );
 
-  // ══════════════════════════════════════════════════════════════════════════
   // ── DETAIL VIEW ──
-  // ══════════════════════════════════════════════════════════════════════════
   if (view === "detail" && result) {
     return <PersonaDetailEditable
       result={result}
@@ -630,6 +591,7 @@ CTA: ${persona.cta_style}`;
       copied={copied}
       onNew={startNew}
       onBack={backToList}
+      dt={dt}
       onSave={async (updated) => {
         if (activeDetail) {
           await supabase.from("personas" as never)
@@ -638,29 +600,25 @@ CTA: ${persona.cta_style}`;
           setSaved(prev => prev.map(p => p.id === activeDetail.id ? { ...p, result: updated } : p));
         }
         setResult(updated);
-        toast.success("Persona saved!");
+        toast.success(dt("pe_saved_msg"));
       }}
     />;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
   // ── BUILDER STEPS ──
-  // ══════════════════════════════════════════════════════════════════════════
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-2 mb-8">
         <button onClick={backToList} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors mr-2">
           <ChevronLeft className="h-4 w-4" />
         </button>
         <Users className="h-5 w-5 text-white/40" />
-        <h1 className="text-lg font-bold text-white">Persona Builder</h1>
+        <h1 className="text-lg font-bold text-white">{dt("pe_builder")}</h1>
         <span className="ml-auto text-xs font-mono text-white/20">
           {step + 1}/{STEPS.length}
         </span>
       </div>
 
-      {/* Progress */}
       <div className="h-1 bg-white/[0.05] rounded-full mb-8 overflow-hidden">
         <div
           className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
@@ -668,7 +626,6 @@ CTA: ${persona.cta_style}`;
         />
       </div>
 
-      {/* Question */}
       <h2 className="text-2xl font-bold text-white mb-2">{current.q}</h2>
       {current.sub && <p className="text-white/35 text-sm mb-6">{current.sub}</p>}
 
@@ -692,7 +649,7 @@ CTA: ${persona.cta_style}`;
           <div className="flex items-center justify-between">
             {step > 0 ? (
               <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
               </button>
             ) : (
               <span />
@@ -702,7 +659,7 @@ CTA: ${persona.cta_style}`;
               disabled={!canNext}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 disabled:opacity-30 transition-all"
             >
-              {step === STEPS.length - 1 ? "Generate persona" : "Continue"}
+              {step === STEPS.length - 1 ? dt("pe_generate_btn") : dt("pe_continue")}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -731,7 +688,7 @@ CTA: ${persona.cta_style}`;
           </div>
           {step > 0 && (
             <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/20 hover:text-white/40 transition-colors mt-2">
-              <ArrowLeft className="h-4 w-4" /> Back
+              <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
             </button>
           )}
         </div>
@@ -742,12 +699,12 @@ CTA: ${persona.cta_style}`;
         <div className="space-y-6">
           <div className="flex items-center justify-center gap-3">
             <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
-              <p className="text-xs text-white/30 mb-0.5">From</p>
+              <p className="text-xs text-white/30 mb-0.5">{dt("pe_from")}</p>
               <p className="text-2xl font-bold text-white">{ageMin}</p>
             </div>
             <div className="h-px w-8 bg-white/20" />
             <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
-              <p className="text-xs text-white/30 mb-0.5">To</p>
+              <p className="text-xs text-white/30 mb-0.5">{dt("pe_to")}</p>
               <p className="text-2xl font-bold text-white">{ageMax >= 55 ? "55+" : ageMax}</p>
             </div>
           </div>
@@ -763,26 +720,14 @@ CTA: ${persona.cta_style}`;
                 }}
               />
               <input
-                type="range"
-                min={18}
-                max={54}
-                value={ageMin}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (v < ageMax) setAgeMin(v);
-                }}
+                type="range" min={18} max={54} value={ageMin}
+                onChange={(e) => { const v = Number(e.target.value); if (v < ageMax) setAgeMin(v); }}
                 className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
                 style={{ zIndex: ageMin > 50 ? 5 : 3 }}
               />
               <input
-                type="range"
-                min={19}
-                max={55}
-                value={ageMax}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (v > ageMin) setAgeMax(v);
-                }}
+                type="range" min={19} max={55} value={ageMax}
+                onChange={(e) => { const v = Number(e.target.value); if (v > ageMin) setAgeMax(v); }}
                 className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
                 style={{ zIndex: 4 }}
               />
@@ -803,7 +748,7 @@ CTA: ${persona.cta_style}`;
           <div className="flex items-center justify-between">
             {step > 0 ? (
               <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
               </button>
             ) : (
               <span />
@@ -812,7 +757,7 @@ CTA: ${persona.cta_style}`;
               onClick={handleRangeNext}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all"
             >
-              {step === STEPS.length - 1 ? "Generate persona" : "Continue"}
+              {step === STEPS.length - 1 ? dt("pe_generate_btn") : dt("pe_continue")}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
