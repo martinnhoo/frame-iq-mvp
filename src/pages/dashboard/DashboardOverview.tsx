@@ -244,8 +244,8 @@ export default function DashboardOverview() {
               <Target className="h-5 w-5 text-purple-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white" style={syne}>Complete your profile</p>
-              <p className="text-xs text-white/40 mt-0.5">Create a persona so AI tools generate content tailored to your audience.</p>
+              <p className="text-sm font-bold text-white" style={syne}>{dt("ov_complete_profile")}</p>
+              <p className="text-xs text-white/40 mt-0.5">{dt("ov_complete_profile_desc")}</p>
             </div>
             <button onClick={() => navigate("/dashboard/persona")}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all hover:scale-105"
