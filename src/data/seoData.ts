@@ -396,7 +396,7 @@ export const SEO_LANDING_PAGES = [
     title: "Ecommerce Ad Examples",
     headline: "Top Ecommerce Ad Examples — Hook Scores & Breakdowns",
     subheadline: "The creative formulas that drive DTC revenue. Every ad analyzed for hook, narrative, and CTA.",
-    metaTitle: "Best Ecommerce Ad Examples (Analyzed) — FrameIQ",
+    metaTitle: "Best Ecommerce Ad Examples (Analyzed) — AdBrief",
     metaDescription: "Browse top ecommerce and DTC ad examples with AI analysis, hook scores, and creative breakdowns. See what DTC brands do differently.",
     keywords: ["ecommerce ad examples", "dtc ad examples", "ecommerce advertising examples", "shopify ad examples", "direct to consumer ads"],
     intro: "Ecommerce advertising lives and dies by the first 3 seconds. The best DTC brands have mastered a tight creative formula: product in frame fast, problem acknowledged, social proof layered in, CTA before the skip. Here's the library — all scored, all explained.",
