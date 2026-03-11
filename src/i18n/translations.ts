@@ -243,7 +243,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_title: "AI Video Generation",
     feature_ai_video_desc: "From concept board to MP4 with AI voiceover. No editors needed.",
     feature_api_title: "API Access",
-    feature_api_desc: "Integrate FrameIQ into your existing workflow with our REST API.",
+    feature_api_desc: "Integrate AdBrief into your existing workflow with our REST API.",
 
     pricing_label: "Pricing",
     pricing_title: "Simple, transparent pricing",
