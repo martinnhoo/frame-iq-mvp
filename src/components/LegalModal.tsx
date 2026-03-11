@@ -187,7 +187,7 @@ You agree to indemnify AdBrief against claims arising from your use of the platf
 ## 12. Termination
 
 Either party may terminate at any time. Upon termination:
-- Your access to FrameIQ will cease
+- Your access to AdBrief will cease
 - We will retain your data for 30 days, then delete it
 - Outstanding fees remain due
 
