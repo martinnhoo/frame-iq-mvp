@@ -462,7 +462,7 @@ const blogPosts: Record<string, {
     category: "AI & Automation",
     readTime: "6 min",
     date: "January 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["future of creative strategy", "AI creative strategy", "AI marketing teams", "creative automation future", "AI augmented marketing"],
     content: [
