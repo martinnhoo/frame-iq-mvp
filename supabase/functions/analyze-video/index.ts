@@ -22,20 +22,23 @@ Deno.serve(async (req) => {
     const user_id = formData.get('user_id') as string;
     const analysis_id = formData.get('analysis_id') as string;
     const title = formData.get('title') as string;
+    const transcribe_only = formData.get('transcribe_only') === 'true';
 
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-    if (!ANTHROPIC_API_KEY) {
-      // Update record to failed state
-      await supabase.from('analyses').update({
-        status: 'failed',
-        result: { error: 'API key not configured' }
-      }).eq('id', analysis_id);
+    // For transcribe_only mode, we only need OPENAI_API_KEY
+    if (!transcribe_only && !ANTHROPIC_API_KEY) {
+      if (analysis_id) {
+        await supabase.from('analyses').update({
+          status: 'failed',
+          result: { error: 'API key not configured' }
+        }).eq('id', analysis_id);
+      }
 
       return new Response(JSON.stringify({ 
         error: 'api_key_missing',
-        message: 'ANTHROPIC_API_KEY not configured in Supabase Secrets'
+        message: 'ANTHROPIC_API_KEY not configured'
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
