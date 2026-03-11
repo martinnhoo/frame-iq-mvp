@@ -408,15 +408,23 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] shrink-0">
           {/* Avatar orb */}
           <div className="relative shrink-0">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-pink-500/20 border border-white/[0.12] flex items-center justify-center text-base font-bold text-white shadow-lg">
-              {initials}
-            </div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="h-11 w-11 rounded-2xl object-cover border border-white/[0.12] shadow-lg" />
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-pink-500/20 border border-white/[0.12] flex items-center justify-center text-base font-bold text-white shadow-lg">
+                {initials}
+              </div>
+            )}
             <label
               className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors"
               title="Change avatar"
             >
-              <Camera className="h-2.5 w-2.5 text-white/40" />
-              <input type="file" accept="image/*" className="hidden" />
+              {uploadingAvatar ? (
+                <Loader2 className="h-2.5 w-2.5 text-white/40 animate-spin" />
+              ) : (
+                <Camera className="h-2.5 w-2.5 text-white/40" />
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
             </label>
           </div>
 
