@@ -97,8 +97,14 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     if (e.dataTransfer.files[0]) acceptFile(e.dataTransfer.files[0]);
   }, []);
 
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB — Whisper API limit
+
   const handleRun = async () => {
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Whisper accepts up to 25MB. Compress or trim your video first.`);
+      return;
+    }
     setTranscribing(true);
     setTranscript("");
     setTranslated("");
