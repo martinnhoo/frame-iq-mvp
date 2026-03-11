@@ -582,9 +582,9 @@ export default function IntelligencePage() {
       {/* Tab switcher */}
       <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.06)" }}>
         {([
-          { id: "creative", label: "Creative Intelligence", icon: Brain },
-          { id: "platform", label: "Platform Data", icon: BarChart3, badge: imports.length > 0 ? String(imports.length) : undefined },
-        ] as const).map(tab => (
+          { id: "creative" as const, label: "Creative Intelligence", icon: Brain, badge: undefined as string | undefined },
+          { id: "platform" as const, label: "Platform Data", icon: BarChart3, badge: imports.length > 0 ? String(imports.length) : undefined },
+        ]).map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={activeTab === tab.id
