@@ -310,10 +310,10 @@ export default function DashboardOverview() {
         {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>Tools</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>{dt("ov_tools")}</p>
             <button onClick={() => navigate("/dashboard/analyses/new")}
               className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition-colors" style={mono}>
-              <Plus className="h-3 w-3" /> New analysis
+              <Plus className="h-3 w-3" /> {dt("ov_new_analysis")}
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
