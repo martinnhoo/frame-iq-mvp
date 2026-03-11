@@ -60,7 +60,7 @@ const blogPosts: Record<string, {
     category: "Performance",
     readTime: "7 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["video ad hooks", "CTR optimization", "creative performance", "ad creative framework", "TikTok ads", "Meta ads"],
     content: [
