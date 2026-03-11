@@ -1,28 +1,28 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const cors = {
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    if (!ANTHROPIC_API_KEY) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
-        status: 503, headers: { ...cors, "Content-Type": "application/json" },
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "AI API key not configured" }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ── Parse request — supports both FormData (video file) and JSON (script text) ──
+    // ── Parse request — supports both FormData (video/audio file) and JSON (script text) ──
     let script = "";
     let hook = "";
     let cta = "";
@@ -39,7 +39,6 @@ Deno.serve(async (req) => {
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("multipart/form-data")) {
-      // Video file upload
       const formData = await req.formData();
       const videoFile = formData.get("video_file") as File | null;
       platform = (formData.get("platform") as string) || "tiktok";
@@ -53,8 +52,8 @@ Deno.serve(async (req) => {
       cta = (formData.get("cta") as string) || "";
 
       if (videoFile && OPENAI_API_KEY) {
-        // Transcribe with Whisper
-        video_filename = videoFile.name || "video.mp4";
+        video_filename = videoFile.name || "audio.wav";
+        console.log("Transcribing with Whisper:", video_filename, videoFile.size);
         const whisperForm = new FormData();
         whisperForm.append("file", videoFile, video_filename);
         whisperForm.append("model", "whisper-1");
@@ -69,21 +68,22 @@ Deno.serve(async (req) => {
         if (whisperRes.ok) {
           const whisperData = await whisperRes.json();
           script = whisperData.text || "";
-          // Try to get duration from Whisper
           if (whisperData.duration) duration = String(Math.round(whisperData.duration));
           transcribed_from_video = true;
+          console.log("Whisper OK, transcript length:", script.length, "duration:", duration);
         } else {
-          return new Response(JSON.stringify({ error: "Whisper transcription failed. Add OPENAI_API_KEY to Supabase secrets." }), {
-            status: 503, headers: { ...cors, "Content-Type": "application/json" },
+          const errText = await whisperRes.text();
+          console.error("Whisper error:", whisperRes.status, errText);
+          return new Response(JSON.stringify({ error: "Audio transcription failed: " + errText }), {
+            status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
       } else if (videoFile && !OPENAI_API_KEY) {
-        return new Response(JSON.stringify({ error: "OPENAI_API_KEY required for video transcription. Add it to Supabase secrets." }), {
-          status: 503, headers: { ...cors, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "OPENAI_API_KEY required for video transcription" }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     } else {
-      // JSON body — script text mode
       const body = await req.json();
       script = body.script || "";
       hook = body.hook || "";
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
     if (!script.trim()) {
       return new Response(JSON.stringify({ error: "No script or audio found to analyze" }), {
-        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -108,11 +108,11 @@ Deno.serve(async (req) => {
     if (user_id) {
       const { data: profile } = await supabase
         .from("user_ai_profile")
-        .select("creative_style, avg_hook_score, top_performing_hooks, best_platforms, ai_recommendations")
+        .select("avg_hook_score, top_performing_hooks, best_platforms, ai_recommendations")
         .eq("user_id", user_id)
         .maybeSingle();
       if (profile) {
-        userContext = `\nUSER CREATIVE PROFILE: Style=${profile.creative_style || "unknown"}, Avg hook score=${profile.avg_hook_score}/10, Best hook types=${(profile.top_performing_hooks || []).join(", ")}, Best platforms=${(profile.best_platforms || []).join(", ")}`;
+        userContext = `\nUSER CREATIVE PROFILE: Avg hook score=${profile.avg_hook_score}/10, Best hook types=${(profile.top_performing_hooks || []).join(", ")}, Best platforms=${(profile.best_platforms || []).join(", ")}`;
       }
     }
 
@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
       US: "State-by-state laws. Licensed states only. Problem gambling hotline required for some states.",
       GB: "UKGC licensed only. 'When the fun stops, stop' required. No celebrity appeal to minors.",
       AR: "Limited regulation — avoid absolute payout claims. Age 18+ required.",
+      CO: "Regulated market — Coljuegos approval. Responsible gaming messages required.",
       GLOBAL: "Apply most restrictive standard. Age 18+ universal.",
     };
 
@@ -210,50 +211,56 @@ Return ONLY valid JSON (no markdown, no backticks):
   "reading_time_seconds": <estimated VO seconds>
 }`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    console.log("Calling AI for pre-flight analysis...");
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 2500, messages: [{ role: "user", content: prompt }] }),
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+      }),
     });
 
-    if (!res.ok) throw new Error(`Claude API ${res.status}: ${await res.text()}`);
-
-    const claudeData = await res.json();
-    const raw = (claudeData.content?.[0]?.text || "").replace(/```json|```/g, "").trim();
-    const result = JSON.parse(raw);
-
-    // ── Save to preflight_checks ──
-    if (user_id) {
-      await supabase.from("preflight_checks").insert({
-        user_id,
-        script: script.substring(0, 2000),
-        platform,
-        market,
-        format,
-        product,
-        score: result.score,
-        verdict: result.verdict,
-        hook_score: result.estimated_hook_score,
-        result,
-        created_at: new Date().toISOString(),
-      }).select().single();
-
-      // Non-blocking profile update
-      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/update-ai-profile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}` },
-        body: JSON.stringify({ user_id, trigger: "preflight" }),
-      }).catch(() => {});
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      console.error("AI error:", aiRes.status, errText);
+      throw new Error(`AI analysis error: ${aiRes.status}`);
     }
 
-    return new Response(JSON.stringify({ ...result, transcribed_from_video, video_filename }), {
-      headers: { ...cors, "Content-Type": "application/json" },
+    const aiData = await aiRes.json();
+    const rawText = aiData.choices?.[0]?.message?.content || "{}";
+    const clean = rawText.replace(/```json|```/g, "").trim();
+    console.log("AI response length:", clean.length);
+    const result = JSON.parse(clean);
+
+    // ── Track usage (non-blocking) ──
+    if (user_id) {
+      const currentPeriod = new Date().toISOString().slice(0, 7);
+      const { data: currentUsage } = await supabase
+        .from("usage")
+        .select("preflights_count")
+        .eq("user_id", user_id)
+        .eq("period", currentPeriod)
+        .single();
+
+      if (currentUsage) {
+        await supabase.from("usage").update({
+          preflights_count: ((currentUsage as any).preflights_count || 0) + 1,
+        }).eq("user_id", user_id).eq("period", currentPeriod);
+      }
+    }
+
+    return new Response(JSON.stringify({ ...result, transcribed_from_video, video_filename, transcript: transcribed_from_video ? script : undefined }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (err) {
     console.error("run-preflight error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
