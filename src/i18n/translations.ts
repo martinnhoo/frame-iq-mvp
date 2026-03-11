@@ -858,7 +858,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "قانوني",
     footer_privacy: "سياسة الخصوصية",
     footer_terms: "شروط الخدمة",
-    footer_rights: "© 2026 FrameIQ. جميع الحقوق محفوظة.",
+    footer_rights: "© 2026 AdBrief. جميع الحقوق محفوظة.",
     footer_soc2: "متوافق مع SOC 2",
     footer_uptime: "99.9% وقت التشغيل",
     footer_book_demo: "احجز عرض تجريبي",
