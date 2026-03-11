@@ -1644,7 +1644,7 @@ const TemplatesPage = () => {
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search templates, formats, industries..."
+          placeholder={ot("tp_search_ph")}
           className="w-full pl-11 pr-4 py-3 rounded-2xl text-sm outline-none transition-colors"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#fff" }}
         />
