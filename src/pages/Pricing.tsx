@@ -114,7 +114,7 @@ const Pricing = () => {
         { text: "2 team seats", included: true },
       ],
       cta: "Start Studio",
-      ctaAction: () => handleUpgrade("Studio"),
+      ctaAction: () => handleUpgrade("studio"),
       highlighted: true,
       badge: "Most Popular",
     },
