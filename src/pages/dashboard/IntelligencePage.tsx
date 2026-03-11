@@ -46,6 +46,7 @@ const PLATFORM_META: Record<string, { label: string; emoji: string; color: strin
   meta:    { label: "Meta Ads",    emoji: "📘", color: "#60a5fa", accent: "rgba(96,165,250,0.15)" },
   google:  { label: "Google Ads",  emoji: "🔍", color: "#34d399", accent: "rgba(52,211,153,0.15)" },
   tiktok:  { label: "TikTok Ads",  emoji: "🎵", color: "#f472b6", accent: "rgba(244,114,182,0.15)" },
+  other:   { label: "Other",       emoji: "📊", color: "#a78bfa", accent: "rgba(167,139,250,0.15)" },
   unknown: { label: "Ads Data",    emoji: "📊", color: "#a78bfa", accent: "rgba(167,139,250,0.15)" },
 };
 
