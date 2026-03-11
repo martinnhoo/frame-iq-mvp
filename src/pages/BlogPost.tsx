@@ -202,7 +202,7 @@ const blogPosts: Record<string, {
       "### What's in a Board?",
       "Each generated board includes: scene-by-scene breakdown with timing and transitions, voiceover script with tone and delivery notes, visual direction for each scene (camera angles, compositions, references), editor notes with specific technical direction, and export options for Notion, Google Docs, and PDF.",
       "### How It Works",
-      "1. Enter a prompt describing your ad concept. Example: '30-second UGC-style TikTok ad for a skincare brand targeting women 25-34, featuring a before/after transformation.' 2. FrameIQ generates a complete board with 6-10 scenes, full VO script, and editor notes. 3. Review and edit — adjust scenes, swap references, modify the script. 4. Export and send to your editor. They can start immediately.",
+      "1. Enter a prompt describing your ad concept. Example: '30-second UGC-style TikTok ad for a skincare brand targeting women 25-34, featuring a before/after transformation.' 2. AdBrief generates a complete board with 6-10 scenes, full VO script, and editor notes. 3. Review and edit — adjust scenes, swap references, modify the script. 4. Export and send to your editor. They can start immediately.",
       "## Built on Real Creative Intelligence",
       "Board Generation isn't just GPT with a template. It's powered by AdBrief's analysis of millions of video ads, which means: scene structures follow patterns proven to convert, hooks are based on our CTR research, pacing matches platform best practices, and CTAs use patterns with highest conversion rates.",
       "## Early Results",
