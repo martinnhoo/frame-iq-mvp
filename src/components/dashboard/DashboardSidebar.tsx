@@ -1,7 +1,7 @@
 import {
   BarChart3, LayoutGrid, Home,
   Plus, Globe, Brain, Layers, Plane, Cpu,
-  Zap, Settings, ChevronRight, Target,
+  Zap, Settings, ChevronRight, Target, FileText, ClipboardList,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
