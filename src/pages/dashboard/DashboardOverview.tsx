@@ -380,6 +380,31 @@ export default function DashboardOverview() {
           </div>
         </div>
 
+        {/* ── Weekly Insight Card ───────────────────────────── */}
+        {weeklyDelta && (
+          <div className="flex items-center gap-4 p-4 rounded-2xl"
+            style={{ background: "#0f0f0f", border: `1px solid ${weeklyDelta.current > weeklyDelta.previous ? "rgba(52,211,153,0.15)" : weeklyDelta.current < weeklyDelta.previous ? "rgba(248,113,113,0.15)" : "rgba(255,255,255,0.07)"}` }}>
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: weeklyDelta.current >= weeklyDelta.previous ? "rgba(52,211,153,0.12)" : "rgba(248,113,113,0.12)" }}>
+              <span className="text-lg">{weeklyDelta.current > weeklyDelta.previous ? "📈" : weeklyDelta.current < weeklyDelta.previous ? "📉" : "➡️"}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white" style={syne}>
+                {dt("gm_weekly_insight")}: {weeklyDelta.current > weeklyDelta.previous ? dt("gm_score_up") : weeklyDelta.current < weeklyDelta.previous ? dt("gm_score_down") : dt("gm_score_stable")}
+              </p>
+              <p className="text-xs text-white/40 mt-0.5" style={mono}>
+                {weeklyDelta.current.toFixed(1)} → {weeklyDelta.previous.toFixed(1)} {dt("gm_vs_last_week")}
+                {weeklyDelta.current > weeklyDelta.previous && (
+                  <span style={{ color: "#34d399" }}> (+{(weeklyDelta.current - weeklyDelta.previous).toFixed(1)})</span>
+                )}
+                {weeklyDelta.current < weeklyDelta.previous && (
+                  <span style={{ color: "#f87171" }}> ({(weeklyDelta.current - weeklyDelta.previous).toFixed(1)})</span>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
