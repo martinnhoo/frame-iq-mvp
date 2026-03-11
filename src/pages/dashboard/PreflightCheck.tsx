@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import { toast } from "sonner";
 import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
