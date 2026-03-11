@@ -21,10 +21,8 @@ const CookieConsent = () => {
 
   const decline = () => {
     localStorage.setItem("adbrief-cookie-consent", "declined");
-    setVisible(false);
   };
-    setVisible(false);
-  };
+
 
   return (
     <AnimatePresence>

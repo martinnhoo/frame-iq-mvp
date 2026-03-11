@@ -59,7 +59,7 @@ const Blog = () => {
       description: p.description,
       url: `${baseUrl}/blog/${p.slug}`,
       datePublished: p.date,
-      author: { "@type": "Organization", name: "FrameIQ" },
+      author: { "@type": "Organization", name: "AdBrief" },
     })),
   };
 
