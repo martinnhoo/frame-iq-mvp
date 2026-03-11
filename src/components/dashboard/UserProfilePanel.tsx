@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import {
   X, LogOut, Save, Trash2, RefreshCw, Sparkles,
   Loader2, Check, User, Palette, CreditCard, Shield,
-  ChevronRight, Zap, Settings, Camera,
+  ChevronRight, Zap, Settings, Camera, ArrowLeft, Edit3,
 } from "lucide-react";
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
+import Persona3DAvatar from "./Persona3DAvatar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,12 +33,14 @@ interface PersonaRecord {
   bio: string;
   pains?: string[];
   desires?: string[];
+  triggers?: string[];
   hook_angles?: string[];
   best_formats?: string[];
   best_platforms?: string[];
   language_style?: string;
   cta_style?: string;
   avatar_emoji?: string;
+  [key: string]: unknown;
 }
 
 interface Props {
@@ -69,11 +72,10 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; gradient: string; desc: string; price: string }> = {
-  free:    { label: "Free",    gradient: "from-white/20 to-white/5",          desc: "3 analyses · 3 boards / mo",         price: "$0" },
-  creator: { label: "Creator", gradient: "from-blue-500/30 to-blue-900/10",   desc: "3 analyses · 1 board / mo",          price: "$9/mo" },
-  starter: { label: "Starter", gradient: "from-purple-500/30 to-purple-900/10",desc: "15 analyses · 10 boards / mo",      price: "$19/mo" },
-  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",   desc: "30 analyses · 30 boards · hooks & pre-flights", price: "$49/mo" },
-  scale:   { label: "Scale",   gradient: "from-yellow-500/30 to-yellow-900/10",desc: "500 analyses · unlimited pre-flight",price: "$499/mo" },
+  free:    { label: "Free",    gradient: "from-white/20 to-white/5",           desc: "3 analyses · 3 boards / mo",                     price: "$0" },
+  maker:   { label: "Maker",   gradient: "from-blue-500/30 to-blue-900/10",    desc: "10 analyses · 10 boards · 50 translations / mo", price: "$19/mo" },
+  pro:     { label: "Pro",     gradient: "from-purple-500/30 to-purple-900/10", desc: "30 analyses · 30 boards · unlimited hooks",      price: "$49/mo" },
+  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",    desc: "500 analyses · 300 boards · API access",          price: "$149/mo" },
 };
 
 const TABS = [
@@ -83,143 +85,150 @@ const TABS = [
   { id: "security",    label: "Security",    icon: Shield },
 ];
 
-// ── Persona Card ───────────────────────────────────────────────────────────────
+// ── Persona Detail View (Editable) ─────────────────────────────────────────────
 
-function PersonaCard({
+function PersonaDetailView({
   persona,
+  onBack,
+  onSave,
   onDelete,
   isDeleting,
+  userId,
 }: {
   persona: PersonaRecord;
+  onBack: () => void;
+  onSave: (updated: PersonaRecord) => void;
   onDelete: () => void;
   isDeleting: boolean;
+  userId: string;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0, gx: 50, gy: 50 });
-  const [hovering, setHovering] = useState(false);
-  const rafRef = useRef<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState(persona);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    const targetX = (ny - 0.5) * -18;
-    const targetY = (nx - 0.5) * 18;
-
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      setTilt({ x: targetX, y: targetY, gx: nx * 100, gy: ny * 100 });
-    });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setHovering(false);
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    setTilt({ x: 0, y: 0, gx: 50, gy: 50 });
-  }, []);
-
-  const initials = persona.name?.slice(0, 2).toUpperCase() || "??";
-  const platformColors: Record<string, string> = {
-    tiktok: "text-cyan-400 border-cyan-500/20 bg-cyan-500/10",
-    reels: "text-pink-400 border-pink-500/20 bg-pink-500/10",
-    youtube: "text-red-400 border-red-500/20 bg-red-500/10",
-    facebook: "text-blue-400 border-blue-500/20 bg-blue-500/10",
+  const handleSave = async () => {
+    setSaving(true);
+    const { id, created_at, ...resultData } = draft;
+    const { error } = await supabase
+      .from("personas" as never)
+      .update({ result: resultData } as never)
+      .eq("id" as never, id)
+      .eq("user_id" as never, userId);
+    if (!error) {
+      onSave(draft);
+      setEditing(false);
+      toast.success("Persona updated!");
+    } else {
+      toast.error("Failed to save");
+    }
+    setSaving(false);
   };
 
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        transform: `perspective(700px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(${hovering ? "8px" : "0"})`,
-        transition: hovering ? "transform 0.08s linear" : "transform 0.5s cubic-bezier(.23,1,.32,1)",
-        willChange: "transform",
-      }}
-      className="relative rounded-2xl border border-white/[0.09] bg-[#111] overflow-hidden"
-    >
-      {/* Shimmer glow follow cursor */}
-      <div
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-        style={{
-          opacity: hovering ? 1 : 0,
-          background: `radial-gradient(circle at ${tilt.gx}% ${tilt.gy}%, rgba(139,92,246,0.18) 0%, transparent 65%)`,
-        }}
-      />
+  const Field = ({ label, value, field }: { label: string; value: string; field: keyof PersonaRecord }) => (
+    <div className="space-y-1">
+      <label className="text-[9px] uppercase tracking-widest text-white/20">{label}</label>
+      {editing ? (
+        <input value={value} onChange={e => setDraft(d => ({ ...d, [field]: e.target.value }))}
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors" />
+      ) : (
+        <p className="text-xs text-white/60">{value || "—"}</p>
+      )}
+    </div>
+  );
 
-      {/* Floating emoji */}
-      <div
-        className="absolute top-3 right-12 text-4xl select-none pointer-events-none"
-        style={{
-          transform: hovering ? "translateY(-4px) scale(1.1)" : "translateY(0) scale(1)",
-          transition: "transform 0.4s cubic-bezier(.23,1,.32,1)",
-          filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.6))",
-        }}
-      >
-        {persona.avatar_emoji || "👤"}
+  const ListField = ({ label, values, field }: { label: string; values: string[]; field: keyof PersonaRecord }) => (
+    <div className="space-y-1.5">
+      <label className="text-[9px] uppercase tracking-widest text-white/20">{label}</label>
+      {editing ? (
+        <textarea
+          value={(values || []).join("\n")}
+          onChange={e => setDraft(d => ({ ...d, [field]: e.target.value.split("\n").filter(Boolean) }))}
+          rows={Math.max(2, (values || []).length)}
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none"
+          placeholder="One per line"
+        />
+      ) : (
+        <div className="space-y-1">
+          {(values || []).map((v, i) => (
+            <p key={i} className="text-[11px] text-white/50 flex gap-1.5">
+              <span className="text-purple-400/60 shrink-0">·</span>
+              <span>{v}</span>
+            </p>
+          ))}
+          {(!values || values.length === 0) && <p className="text-xs text-white/25">—</p>}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <button onClick={onBack} className="h-8 w-8 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-all">
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="flex-1" />
+        {!editing ? (
+          <button onClick={() => setEditing(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.09] text-white/50 text-xs font-medium hover:bg-white/[0.1] hover:text-white transition-all">
+            <Edit3 className="h-3 w-3" /> Edit
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => { setDraft(persona); setEditing(false); }}
+              className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">Cancel</button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium hover:bg-purple-500/30 transition-all">
+              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Save
+            </button>
+          </div>
+        )}
+        <button onClick={onDelete} disabled={isDeleting}
+          className="h-8 w-8 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
+          {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+        </button>
       </div>
 
-      {/* Delete button */}
-      <button
-        onClick={onDelete}
-        disabled={isDeleting}
-        className="absolute top-3 right-3 h-7 w-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all z-10"
-        title="Delete persona"
-      >
-        {isDeleting
-          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          : <Trash2 className="h-3.5 w-3.5" />}
-      </button>
+      {/* Avatar + Name */}
+      <div className="flex flex-col items-center gap-3 py-4">
+        <Persona3DAvatar emoji={draft.avatar_emoji || "👤"} name={draft.name} gender={draft.gender || ""} size="lg" />
+        {editing ? (
+          <input value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
+            className="text-center text-lg font-bold text-white bg-transparent border-b border-white/20 outline-none" />
+        ) : (
+          <p className="text-lg font-bold text-white">{draft.name}</p>
+        )}
+        <p className="text-xs text-purple-300/60 text-center">{editing
+          ? <input value={draft.headline} onChange={e => setDraft(d => ({ ...d, headline: e.target.value }))}
+              className="text-center text-xs text-purple-300/60 bg-transparent border-b border-white/10 outline-none w-full" />
+          : draft.headline}</p>
+      </div>
 
-      {/* Content */}
-      <div className="p-4 relative">
-        {/* Name + meta */}
-        <div className="pr-14">
-          <p className="text-base font-bold text-white leading-tight">{persona.name}</p>
-          <p className="text-xs text-purple-300/60 mt-0.5">{persona.headline}</p>
-          <p className="text-[11px] text-white/25 mt-1">{persona.age}{persona.gender ? ` · ${persona.gender}` : ""}</p>
+      <div className="space-y-4 px-1">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Age" value={draft.age} field="age" />
+          <Field label="Gender" value={draft.gender || ""} field="gender" />
         </div>
-
-        {/* Bio */}
-        {persona.bio && (
-          <p className="text-xs text-white/40 mt-3 leading-relaxed line-clamp-2">{persona.bio}</p>
-        )}
-
-        {/* Platforms */}
-        {persona.best_platforms && persona.best_platforms.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {persona.best_platforms.slice(0, 3).map((p) => (
-              <span
-                key={p}
-                className={`text-[10px] px-2 py-0.5 rounded-full border font-medium capitalize ${platformColors[p.toLowerCase()] || "text-white/40 border-white/10 bg-white/5"}`}
-              >
-                {p}
-              </span>
-            ))}
+        <Field label="Language style" value={draft.language_style || ""} field="language_style" />
+        <Field label="CTA style" value={draft.cta_style || ""} field="cta_style" />
+        {editing ? (
+          <div className="space-y-1">
+            <label className="text-[9px] uppercase tracking-widest text-white/20">Bio</label>
+            <textarea value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))}
+              rows={3} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none" />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <label className="text-[9px] uppercase tracking-widest text-white/20">Bio</label>
+            <p className="text-xs text-white/50 leading-relaxed">{draft.bio || "—"}</p>
           </div>
         )}
-
-        {/* Hook angles */}
-        {persona.hook_angles && persona.hook_angles.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/[0.06]">
-            <p className="text-[9px] uppercase tracking-wider text-white/20 mb-2">Hook angles</p>
-            <div className="space-y-1">
-              {persona.hook_angles.slice(0, 2).map((h, i) => (
-                <p key={i} className="text-[11px] text-white/40 flex gap-1.5">
-                  <span className="text-purple-400/60 shrink-0">·</span>
-                  <span className="line-clamp-1">{h}</span>
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Created */}
-        <p className="text-[10px] text-white/15 mt-3">
-          {new Date(persona.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-        </p>
+        <ListField label="Pains" values={draft.pains || []} field="pains" />
+        <ListField label="Desires" values={draft.desires || []} field="desires" />
+        <ListField label="Triggers" values={draft.triggers || []} field="triggers" />
+        <ListField label="Hook angles" values={draft.hook_angles || []} field="hook_angles" />
+        <ListField label="Best platforms" values={draft.best_platforms || []} field="best_platforms" />
+        <ListField label="Best formats" values={draft.best_formats || []} field="best_formats" />
       </div>
     </div>
   );
@@ -239,6 +248,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [personasLoading, setPersonasLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaRecord | null>(null);
 
   // Sync fields when panel opens
   useEffect(() => {
@@ -265,8 +275,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           rows.map((row) => ({
             id: row.id,
             created_at: row.created_at,
-            ...(row.result as Omit<PersonaRecord, "id" | "created_at">),
-          }))
+            ...(row.result as Record<string, unknown>),
+          } as PersonaRecord))
         );
       }
     } catch (e) {
@@ -524,18 +534,18 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               </div>
 
               {/* Upgrade options */}
-              {(profile?.plan === "free" || profile?.plan === "creator" || profile?.plan === "starter") && (
+              {(profile?.plan === "free" || profile?.plan === "maker") && (
                 <>
                   <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2">Upgrade to</p>
                   <div className="space-y-2">
-                    {(["creator", "starter", "studio", "scale"] as const)
+                    {(["maker", "pro", "studio"] as const)
                       .filter((k) => {
-                        const order = ["free", "creator", "starter", "studio", "scale"];
+                        const order = ["free", "maker", "pro", "studio"];
                         return order.indexOf(k) > order.indexOf(profile?.plan || "free");
                       })
                       .map((key) => {
                         const p = PLAN_INFO[key];
-                        const isPopular = key === "studio";
+                        const isPopular = key === "pro";
                         return (
                           <button
                             key={key}
@@ -561,7 +571,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         );
                     })}
                   </div>
-                  <p className="text-[11px] text-white/15 text-center pt-1">Payments via Paddle — coming soon</p>
+                  <p className="text-[11px] text-white/15 text-center pt-1">3-day free trial on all plans · Powered by Stripe</p>
                 </>
               )}
             </div>
@@ -651,15 +661,31 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     Generate one using the Persona Builder in the sidebar to see it here
                   </p>
                 </div>
+              ) : selectedPersona ? (
+                <PersonaDetailView
+                  persona={selectedPersona}
+                  onBack={() => setSelectedPersona(null)}
+                  onSave={(updated) => {
+                    setPersonas(prev => prev.map(p => p.id === updated.id ? updated : p));
+                    setSelectedPersona(updated);
+                  }}
+                  onDelete={() => { handleDelete(selectedPersona.id); setSelectedPersona(null); }}
+                  isDeleting={deletingId === selectedPersona.id}
+                  userId={user.id}
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
                   {personas.map((persona) => (
-                    <PersonaCard
-                      key={persona.id}
-                      persona={persona}
-                      onDelete={() => handleDelete(persona.id)}
-                      isDeleting={deletingId === persona.id}
-                    />
+                    <div key={persona.id} className="flex flex-col items-center gap-2 cursor-pointer group"
+                      onClick={() => setSelectedPersona(persona)}>
+                      <Persona3DAvatar
+                        emoji={persona.avatar_emoji || "👤"}
+                        name={persona.name}
+                        gender={persona.gender || ""}
+                        size="md"
+                      />
+                      <p className="text-xs text-white/50 group-hover:text-white transition-colors text-center truncate w-full">{persona.name}</p>
+                    </div>
                   ))}
                 </div>
               )}

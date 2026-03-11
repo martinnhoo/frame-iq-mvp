@@ -78,6 +78,7 @@ export default function DashboardLayout() {
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const [vikaPopup, setVikaPopup] = useState(false);
+  const [welcomeMsg, setWelcomeMsg] = useState<{ title: string; body: string } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -132,10 +133,24 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
-      // Vika welcome popup
-      if (session.user.email === "victoriafnogueira@hotmail.com" && !localStorage.getItem("vika_welcome_shown")) {
+      // Welcome popups for special accounts
+      const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
+        "victoriafnogueira@hotmail.com": {
+          key: "vika_welcome_shown",
+          title: "Bem-vinda, Vika! 💜",
+          body: "Sua conta está ativa com acesso vitalício gratuito. Todos os recursos do AdBrief são seus — sem limites, sem cobranças, para sempre.",
+        },
+        "isadoradblima@gmail.com": {
+          key: "isadora_welcome_shown",
+          title: "hehe, acesso vitalício pra você, Isadorinha 🎊",
+          body: "Sua conta agora tem acesso vitalício gratuito e ilimitado! Tudo liberado, pra sempre. Usa e abusa de todas as ferramentas — você merece! 💜✨",
+        },
+      };
+      const popup = session.user.email ? WELCOME_POPUPS[session.user.email] : null;
+      if (popup && !localStorage.getItem(popup.key)) {
+        setWelcomeMsg({ title: popup.title, body: popup.body });
         setVikaPopup(true);
-        localStorage.setItem("vika_welcome_shown", "1");
+        localStorage.setItem(popup.key, "1");
       }
       if (mounted) setLoading(false);
     };
@@ -274,21 +289,32 @@ export default function DashboardLayout() {
         </main>
       </div>
 
-      {/* Vika welcome popup */}
-      {vikaPopup && (
+      {/* Welcome popup */}
+      {vikaPopup && welcomeMsg && (
         <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
           <div className="relative w-full max-w-sm rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()}
             style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(167,139,250,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
-            <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }`}</style>
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, rgba(167,139,250,0.15), transparent 70%)" }} />
+            <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
+              @keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity:1; } 100% { transform: translateY(60px) rotate(360deg); opacity:0; } }
+              .confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation: confetti 1.5s ease-out forwards; }
+            `}</style>
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, rgba(167,139,250,0.2), transparent 70%)" }} />
+            {/* Confetti */}
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="confetti-piece pointer-events-none"
+                style={{
+                  left: `${10 + Math.random() * 80}%`, top: `${5 + Math.random() * 20}%`,
+                  background: ["#a78bfa","#f472b6","#fbbf24","#34d399","#60a5fa"][i % 5],
+                  animationDelay: `${i * 0.1}s`, transform: `rotate(${Math.random() * 360}deg)`,
+                }} />
+            ))}
             <div className="relative p-8 text-center space-y-4">
-              <div className="text-5xl">🎉</div>
+              <div className="text-6xl" style={{ animation: "modalIn 0.5s cubic-bezier(.23,1,.32,1) 0.2s both" }}>🎉</div>
               <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Bem-vinda, Vika! 💜
+                {welcomeMsg.title}
               </h2>
               <p className="text-sm text-white/50 leading-relaxed">
-                Sua conta está ativa com <span className="text-purple-400 font-semibold">acesso vitalício gratuito</span>. 
-                Todos os recursos do AdBrief são seus — sem limites, sem cobranças, para sempre.
+                {welcomeMsg.body}
               </p>
               <p className="text-xs text-white/30">
                 Aproveite cada ferramenta, crie sem medo, e brilhe! ✨

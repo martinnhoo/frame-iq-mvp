@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     const LIFETIME_ACCOUNTS: Record<string, string> = {
       "martinhovff@gmail.com": "studio",
       "victoriafnogueira@hotmail.com": "free",
+      "isadoradblima@gmail.com": "free",
     };
     if (user.email && LIFETIME_ACCOUNTS[user.email]) {
       const lifetimePlan = LIFETIME_ACCOUNTS[user.email];
