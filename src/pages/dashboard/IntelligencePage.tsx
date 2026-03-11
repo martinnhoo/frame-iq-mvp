@@ -477,7 +477,7 @@ export default function IntelligencePage() {
   const loadData = async () => {
     setLoading(true);
     const [{ data: an }, { data: pr }, { data: mem }, { data: imp }] = await Promise.all([
-      supabase.from("analyses").select("id, created_at, result, hook_strength, hook_score, status")
+      supabase.from("analyses").select("id, created_at, result, hook_strength, status")
         .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(200),
       supabase.from("user_ai_profile" as never).select("*" as never).eq("user_id" as never, user.id).maybeSingle(),
       supabase.from("creative_memory" as never).select("hook_type, hook_score, platform, notes, created_at" as never)
