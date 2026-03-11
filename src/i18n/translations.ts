@@ -231,7 +231,7 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_time: "Avg. Analysis Time",
 
     features_title: "Everything your creative team needs",
-    features_subtitle: "Every tool in FrameIQ feeds into a learning loop — the more you use it, the smarter your creative output gets.",
+    features_subtitle: "Every tool in AdBrief feeds into a learning loop — the more you use it, the smarter your creative output gets.",
     feature_video_title: "Video Analysis",
     feature_video_desc: "Upload any video. Frames, transcript, creative model and hook extracted in under 60 seconds.",
     feature_board_title: "Board Generation",
