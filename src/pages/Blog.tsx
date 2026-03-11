@@ -50,7 +50,7 @@ const Blog = () => {
     inLanguage: hrefLangCode,
     publisher: {
       "@type": "Organization",
-      name: "FrameIQ",
+      name: "AdBrief",
       url: baseUrl,
     },
     blogPost: posts.map((p) => ({
