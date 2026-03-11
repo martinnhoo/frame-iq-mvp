@@ -243,6 +243,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [lang, setLang] = useState("en");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [personas, setPersonas] = useState<PersonaRecord[]>([]);
   const [personasLoading, setPersonasLoading] = useState(false);
@@ -256,6 +258,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       setName(profile?.name || "");
       setMarket(profile?.preferred_market || "GLOBAL");
       setLang(profile?.preferred_language || "en");
+      setAvatarUrl(profile?.avatar_url || null);
       loadPersonas();
     }
   }, [open]);
@@ -324,6 +327,48 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     window.location.href = "/login";
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2MB");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar.${ext}`;
+
+      // Remove old avatar if exists
+      await supabase.storage.from("avatars").remove([path]);
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: newUrl })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(newUrl);
+      onProfileUpdate({ ...profile!, avatar_url: newUrl });
+      toast.success("Avatar updated!");
+    } catch (err: unknown) {
+      console.error("Avatar upload error:", err);
+      toast.error("Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const plan = PLAN_INFO[profile?.plan || "free"] || PLAN_INFO.free;
   const initials = profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "U";
 
@@ -363,15 +408,23 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] shrink-0">
           {/* Avatar orb */}
           <div className="relative shrink-0">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-pink-500/20 border border-white/[0.12] flex items-center justify-center text-base font-bold text-white shadow-lg">
-              {initials}
-            </div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="h-11 w-11 rounded-2xl object-cover border border-white/[0.12] shadow-lg" />
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-pink-500/20 border border-white/[0.12] flex items-center justify-center text-base font-bold text-white shadow-lg">
+                {initials}
+              </div>
+            )}
             <label
               className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors"
               title="Change avatar"
             >
-              <Camera className="h-2.5 w-2.5 text-white/40" />
-              <input type="file" accept="image/*" className="hidden" />
+              {uploadingAvatar ? (
+                <Loader2 className="h-2.5 w-2.5 text-white/40 animate-spin" />
+              ) : (
+                <Camera className="h-2.5 w-2.5 text-white/40" />
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
             </label>
           </div>
 
