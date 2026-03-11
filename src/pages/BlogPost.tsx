@@ -190,9 +190,9 @@ const blogPosts: Record<string, {
     category: "Product Updates",
     readTime: "4 min",
     date: "January 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Product",
-    keywords: ["AI production board", "creative brief generator", "ad production workflow", "FrameIQ board generation", "AI creative tool"],
+    keywords: ["AI production board", "creative brief generator", "ad production workflow", "AdBrief board generation", "AI creative tool"],
     content: [
       "## The Briefing Bottleneck",
       "We talked to 200+ creative strategists and performance marketers. The #1 bottleneck in their creative pipeline wasn't ideation, editing, or distribution — it was briefing.",
