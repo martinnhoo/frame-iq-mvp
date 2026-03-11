@@ -147,6 +147,31 @@ type TranslationKeys = {
   confirm_confirmed_title: string;
   confirm_confirmed_text: string;
 
+  // Forgot / Reset password
+  forgot_title: string;
+  forgot_subtitle: string;
+  forgot_send: string;
+  forgot_back: string;
+  forgot_check_title: string;
+  forgot_check_text: string;
+  forgot_check_retry: string;
+  reset_title: string;
+  reset_subtitle: string;
+  reset_new_pw: string;
+  reset_confirm_pw: string;
+  reset_submit: string;
+  reset_success_title: string;
+  reset_success_text: string;
+  reset_invalid_title: string;
+  reset_invalid_text: string;
+  reset_invalid_btn: string;
+  reset_no_match: string;
+  pw_strength: string;
+  pw_weak: string;
+  pw_fair: string;
+  pw_good: string;
+  pw_strong: string;
+
   // Powered by
   powered_by: string;
 };
