@@ -208,7 +208,7 @@ const Careers = () => {
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Send your resume and a brief intro to careers@frameiq.ai
+                      Send your resume and a brief intro to careers@adbrief.pro
                     </p>
                   </div>
                 </CardContent>
