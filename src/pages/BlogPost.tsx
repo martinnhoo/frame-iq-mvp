@@ -25,7 +25,7 @@ const blogPosts: Record<string, {
     category: "Creative Strategy",
     readTime: "5 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["competitor ad analysis", "creative strategy", "ad spy tool", "performance marketing", "video ad analysis"],
     content: [
