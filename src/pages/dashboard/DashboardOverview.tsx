@@ -554,12 +554,12 @@ export default function DashboardOverview() {
                 <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
                   style={{ background: "radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%)" }} />
                 <div className="relative">
-                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>Unlock full access ⚡</p>
-                  <p className="text-xs text-white/40 mb-3 leading-relaxed">More analyses, boards, and AI tools — from $9/mo.</p>
+                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>{dt("ov_unlock_full")}</p>
+                  <p className="text-xs text-white/40 mb-3 leading-relaxed">{dt("ov_unlock_desc")}</p>
                   <button onClick={() => navigate("/pricing")}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
                     style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                    See plans <ArrowRight className="h-3.5 w-3.5" />
+                    {dt("ov_see_plans")} <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
