@@ -148,7 +148,7 @@ const Pricing = () => {
     },
     {
       q: "Is there a free trial for paid plans?",
-      a: "Yes. Studio comes with a 14-day free trial. No credit card required. Scale plans include a personalized demo and trial period.",
+      a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
     },
     {
       q: "How does billing work?",
