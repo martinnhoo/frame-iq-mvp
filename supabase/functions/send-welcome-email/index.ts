@@ -55,7 +55,7 @@ function buildHtml(t: typeof templates['en'], firstName: string, appUrl: string)
       <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;">
         <!-- Logo -->
         <tr><td style="padding-bottom:32px;">
-          <span style="font-size:22px;font-weight:700;color:#fff;">Frame</span><span style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#c084fc,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">IQ</span>
+          <span style="font-size:22px;font-weight:700;color:#fff;">ad</span><span style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#c084fc,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">brief</span>
         </td></tr>
         <!-- Greeting -->
         <tr><td style="padding-bottom:20px;">
