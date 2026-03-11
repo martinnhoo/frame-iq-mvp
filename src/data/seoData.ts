@@ -1,5 +1,5 @@
 // ============================================================
-// FRAMEIQ — CENTRAL SEO DATA
+// ADBRIEF — CENTRAL SEO DATA
 // All programmatic SEO content lives here.
 // Add new entries to scale pages without touching components.
 // ============================================================
