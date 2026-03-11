@@ -12,9 +12,9 @@ const logStep = (step: string, details?: unknown) => {
 
 // Map Stripe product IDs to plan names
 const PRODUCT_TO_PLAN: Record<string, string> = {
-  "prod_U88gF48nQTStB2": "creator",
-  "prod_U88hsSpnApR9Gt": "studio",
-  "prod_U88hnL1CuEMnfo": "scale",
+  "prod_U88ul5IK0HHW19": "maker",
+  "prod_U88v5WVcy2NZV7": "pro",
+  "prod_U88wpX4Bphfifi": "studio",
 };
 
 Deno.serve(async (req) => {

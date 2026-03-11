@@ -30,12 +30,12 @@ Deno.serve(async (req) => {
     const { data: usage } = await supabaseClient
       .from('usage').select('*').eq('user_id', user_id).eq('period', currentPeriod).single();
 
-    // Limits per plan — no videos tier
+    // Limits per plan
     const limits = {
-      free:    { analyses: 3,   boards: 3,   translations: 10,   preflights: 2 },
-      creator: { analyses: 10,  boards: 10,  translations: 50,   preflights: 10 },
-      studio:  { analyses: 30,  boards: 30,  translations: 100,  preflights: 30 },
-      scale:   { analyses: 500, boards: 300, translations: 1000, preflights: 9999 },
+      free:   { analyses: 3,   boards: 3,   translations: 3,    preflights: 2 },
+      maker:  { analyses: 10,  boards: 10,  translations: 50,   preflights: 10 },
+      pro:    { analyses: 30,  boards: 30,  translations: 100,  preflights: 30 },
+      studio: { analyses: 500, boards: 300, translations: 1000, preflights: 9999 },
     };
 
     const planLimits = limits[plan as keyof typeof limits] || limits.free;

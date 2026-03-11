@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!['free', 'studio', 'scale'].includes(new_plan)) {
+    if (!['free', 'maker', 'pro', 'studio'].includes(new_plan)) {
       return new Response(
         JSON.stringify({ error: 'Invalid plan. Must be: free, studio, or scale' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
