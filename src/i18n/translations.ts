@@ -717,7 +717,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_book_demo: "Demo Buchen",
 
     auth_login_title: "Willkommen zurück",
-    auth_login_subtitle: "Melden Sie sich bei Ihrem FrameIQ-Konto an",
+    auth_login_subtitle: "Melden Sie sich bei Ihrem AdBrief-Konto an",
     auth_signup_title: "Konto erstellen",
     auth_signup_subtitle: "Beginnen Sie mit der Analyse von Videos und skalieren Sie Ihre Creatives",
     auth_email: "Geschäftliche E-Mail",
