@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 export interface ActivePersona {
   id: string;
@@ -63,6 +65,8 @@ export interface UsageDetails {
 
 export default function DashboardLayout() {
   const [user, setUser] = useState<User | null>(null);
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
@@ -168,11 +172,7 @@ export default function DashboardLayout() {
               }
             >
               <Users className="h-3.5 w-3.5" />
-              {selectedPersona ? (
-                <span>{selectedPersona.avatar_emoji} {selectedPersona.name}</span>
-              ) : (
-                <span>No persona selected</span>
-              )}
+                <span>{selectedPersona ? `${selectedPersona.avatar_emoji} ${selectedPersona.name}` : dt("cm_no_persona")}</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
             </button>
 
@@ -210,13 +210,13 @@ export default function DashboardLayout() {
                           <p className="text-xs font-semibold text-white truncate">{p.name}</p>
                           <p className="text-[10px] text-white/30 truncate">{p.headline}</p>
                         </div>
-                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-purple-400 shrink-0">Active</span>}
+                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-purple-400 shrink-0">{dt("pe_active")}</span>}
                       </button>
                     ))}
                     <div className="px-3 py-2 border-t border-white/[0.06]">
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
                         className="text-[10px] text-white/25 hover:text-white/50 transition-colors flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> Manage personas
+                        <Sparkles className="h-3 w-3" /> {dt("cm_manage_personas")}
                       </button>
                     </div>
                   </div>

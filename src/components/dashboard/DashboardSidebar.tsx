@@ -11,21 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { UserProfilePanel } from "./UserProfilePanel";
 import type { User as SupaUser } from "@supabase/supabase-js";
-
-const mainItems = [
-  { title: "Overview",  url: "/dashboard",          icon: Home,     end: true,  accent: "#e2e8f0" },
-  { title: "Analyses",  url: "/dashboard/analyses", icon: BarChart3,            accent: "#c084fc" },
-  { title: "Boards",    url: "/dashboard/boards",   icon: LayoutGrid,           accent: "#60a5fa" },
-];
-
-const toolItems = [
-  { title: "Hook Generator", url: "/dashboard/hooks",        icon: Cpu,    accent: "#fb923c", badge: "AI" },
-  { title: "Templates",      url: "/dashboard/templates",    icon: Layers, accent: "#f472b6" },
-  { title: "Translate",      url: "/dashboard/translate",    icon: Globe,  accent: "#10b981" },
-  { title: "Pre-flight",     url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24", badge: "AI" },
-  { title: "Intelligence",   url: "/dashboard/intelligence", icon: Brain,  accent: "#a78bfa", badge: "AI" },
-  { title: "Persona",        url: "/dashboard/persona",      icon: Target, accent: "#c084fc" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
@@ -53,6 +40,22 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const navigate = useNavigate();
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
+  const { language } = useLanguage();
+  const dt = useDashT(language);
+
+  const mainItems = [
+    { title: dt("nav_overview"),  url: "/dashboard",          icon: Home,     end: true,  accent: "#e2e8f0" },
+    { title: dt("nav_analyses"),  url: "/dashboard/analyses", icon: BarChart3,            accent: "#c084fc" },
+    { title: dt("nav_boards"),    url: "/dashboard/boards",   icon: LayoutGrid,           accent: "#60a5fa" },
+  ];
+  const toolItems = [
+    { title: dt("nav_hooks"),        url: "/dashboard/hooks",        icon: Cpu,    accent: "#fb923c", badge: "AI" },
+    { title: dt("nav_templates"),    url: "/dashboard/templates",    icon: Layers, accent: "#f472b6" },
+    { title: dt("nav_translate"),    url: "/dashboard/translate",    icon: Globe,  accent: "#10b981" },
+    { title: dt("nav_preflight"),    url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24", badge: "AI" },
+    { title: dt("nav_intelligence"), url: "/dashboard/intelligence", icon: Brain,  accent: "#a78bfa", badge: "AI" },
+    { title: dt("nav_persona"),      url: "/dashboard/persona",      icon: Target, accent: "#c084fc" },
+  ];
 
   const isActive = (url: string, end?: boolean) =>
     end ? location.pathname === url : location.pathname.startsWith(url);
@@ -135,12 +138,12 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
           <div className="space-y-0.5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-2"
-              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>Workspace</p>
+              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>{dt("nav_workspace")}</p>
             {mainItems.map(item => <NavItem key={item.url} item={item} />)}
           </div>
           <div className="space-y-0.5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-2"
-              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>Tools</p>
+              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>{dt("nav_tools")}</p>
             {toolItems.map(item => <NavItem key={item.url} item={item} />)}
           </div>
         </nav>
@@ -154,8 +157,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               style={{ background: "rgba(167,139,250,0.06)", borderColor: "rgba(167,139,250,0.15)", color: "rgba(255,255,255,0.5)" }}>
               <Zap className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
               <div className="flex-1">
-                <p className="text-xs font-semibold text-white" style={syne}>Upgrade plan</p>
-                <p className="text-[10px]" style={mono}>More analyses & tools</p>
+                <p className="text-xs font-semibold text-white" style={syne}>{dt("nav_upgrade")}</p>
+                <p className="text-[10px]" style={mono}>{dt("nav_upgrade_desc")}</p>
               </div>
               <ChevronRight className="h-3.5 w-3.5 opacity-30 group-hover:opacity-60 transition-opacity" />
             </NavLink>

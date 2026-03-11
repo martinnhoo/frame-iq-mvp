@@ -11,11 +11,18 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  // Always start with English — no localStorage, no auto-detect
-  const [language, setLanguageState] = useState<Language>("en");
+  // Persist language choice in localStorage
+  const [language, setLanguageState] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem("adbrief_language");
+      if (saved && ["en","pt","es","zh","fr","de","ar"].includes(saved)) return saved as Language;
+    } catch {}
+    return "en";
+  });
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
+    try { localStorage.setItem("adbrief_language", lang); } catch {}
   }, []);
 
   const t = useCallback(

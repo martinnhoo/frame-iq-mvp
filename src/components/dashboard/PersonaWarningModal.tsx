@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Users, X, Sparkles, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface Props {
   open: boolean;
@@ -11,6 +13,8 @@ interface Props {
 
 export function PersonaWarningModal({ open, onClose, onContinue, toolName }: Props) {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
 
   return (
     <AnimatePresence>
@@ -46,22 +50,21 @@ export function PersonaWarningModal({ open, onClose, onContinue, toolName }: Pro
                     <Users className="h-5 w-5 text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-purple-400/60 font-mono">No persona active</p>
-                    <h2 className="text-base font-bold text-white">You'll get generic results</h2>
+                    <p className="text-[10px] uppercase tracking-widest text-purple-400/60 font-mono">{dt("pw_title")}</p>
+                    <h2 className="text-base font-bold text-white">{dt("pw_desc").split(".")[0]}.</h2>
                   </div>
                 </div>
                 <p className="text-sm text-white/40 leading-relaxed">
-                  <span className="text-white/70 font-medium">{toolName}</span> works best when the AI knows who you're targeting.
-                  Without a persona, hooks and scripts are written for a generic audience — not your buyer.
+                  <span className="text-white/70 font-medium">{toolName}</span> {dt("pw_desc")}
                 </p>
               </div>
 
               {/* Benefits */}
               <div className="px-6 py-4 space-y-2.5">
                 {[
-                  { emoji: "🎯", text: "Hooks tuned to real pains and desires of your audience" },
-                  { emoji: "🧠", text: "Language style and tone matched to your buyer's profile" },
-                  { emoji: "⚡", text: "Higher predicted scores — AI has more context to work with" },
+                  { emoji: "🎯", text: dt("pw_benefit1") },
+                  { emoji: "🧠", text: dt("pw_benefit2") },
+                  { emoji: "⚡", text: dt("pw_benefit3") },
                 ].map(({ emoji, text }) => (
                   <div key={text} className="flex items-start gap-3">
                     <span className="text-base shrink-0">{emoji}</span>
@@ -76,12 +79,12 @@ export function PersonaWarningModal({ open, onClose, onContinue, toolName }: Pro
                   onClick={() => { onClose(); navigate("/dashboard/persona"); }}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm text-black transition-all hover:opacity-90"
                   style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
-                  <Sparkles className="h-4 w-4" /> Create / select a persona
+                  <Sparkles className="h-4 w-4" /> {dt("pw_cta")}
                 </button>
                 <button
                   onClick={onContinue}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm text-white/30 hover:text-white/50 transition-colors border border-white/[0.06]">
-                  Continue without persona <ArrowRight className="h-3.5 w-3.5" />
+                  {dt("pw_skip")} <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
