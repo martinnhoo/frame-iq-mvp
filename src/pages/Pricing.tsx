@@ -134,7 +134,7 @@ const Pricing = () => {
         { text: "API access + White Label", included: true },
       ],
       cta: "Book a demo",
-      ctaAction: () => handleUpgrade("Scale"),
+      ctaAction: () => handleUpgrade("scale"),
       highlighted: false,
     },
   ];
