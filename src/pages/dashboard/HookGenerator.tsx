@@ -4,6 +4,13 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
+import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
+
+const FUNNEL_STAGES = [
+  { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Awareness — cold audience, no brand knowledge", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Consideration — warm, evaluating options", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Conversion — hot, ready to decide", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+];
 
 interface Hook {
   hook: string;
@@ -56,6 +63,9 @@ export default function HookGenerator() {
   const [platform, setPlatform] = useState("TikTok");
   const [tone, setTone] = useState("Aggressive / Urgent");
   const [count, setCount] = useState(10);
+  const [funnelStage, setFunnelStage] = useState("tofu");
+  const [showPersonaWarning, setShowPersonaWarning] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [hooks, setHooks] = useState<Hook[]>([]);
@@ -66,12 +76,19 @@ export default function HookGenerator() {
 
   const generate = async () => {
     if (!product.trim()) { toast.error("Describe your product first"); return; }
+    // Warn if no persona selected
+    if (!selectedPersona && !pendingGenerate) {
+      setShowPersonaWarning(true);
+      return;
+    }
+    setPendingGenerate(false);
     setLoading(true);
     setHooks([]);
     setExpandedIdx(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
         body: { product, niche, market, platform, tone, user_id: user.id, count,
+          funnel_stage: funnelStage,
           persona_context: selectedPersona ? {
             name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
             pains: selectedPersona.pains, desires: selectedPersona.desires, triggers: selectedPersona.triggers,
@@ -120,6 +137,12 @@ export default function HookGenerator() {
 
   return (
     <div className="page-enter p-5 lg:p-6 max-w-5xl mx-auto space-y-6">
+      <PersonaWarningModal
+        open={showPersonaWarning}
+        onClose={() => setShowPersonaWarning(false)}
+        toolName="Hook Generator"
+        onContinue={() => { setShowPersonaWarning(false); setPendingGenerate(true); setTimeout(generate, 50); }}
+      />
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0">
@@ -191,6 +214,24 @@ export default function HookGenerator() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Funnel stage */}
+        <div>
+          <label className="block text-xs text-white/30 mb-2">Funnel stage</label>
+          <div className="grid grid-cols-3 gap-2">
+            {FUNNEL_STAGES.map(f => (
+              <button key={f.value} onClick={() => setFunnelStage(f.value)}
+                className="flex flex-col items-center p-3 rounded-xl border text-center transition-all"
+                style={funnelStage === f.value
+                  ? { background: f.bg, borderColor: f.border, color: f.color }
+                  : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" }}>
+                <span className="text-xs font-bold font-mono">{f.label}</span>
+                <span className="text-[10px] mt-0.5 opacity-70">{f.full}</span>
+                <span className="text-[9px] mt-1 opacity-40 leading-tight hidden sm:block">{f.desc}</span>
+              </button>
+            ))}
           </div>
         </div>
 

@@ -53,7 +53,14 @@ Deno.serve(async (req) => {
       title,
       context,
       persona_context,
+      funnel_stage = 'tofu',
     } = body;
+
+    const FUNNEL_CONTEXT = {
+      tofu: 'TOP OF FUNNEL (cold audience): Generate AWARENESS. Bold hook, no brand assumptions, interrupt scroll with a problem or insight.',
+      mofu: 'MIDDLE OF FUNNEL (warm audience): Drive CONSIDERATION. Differentiation, social proof, deeper benefits for someone evaluating options.',
+      bofu: 'BOTTOM OF FUNNEL (hot audience): Trigger CONVERSION. Urgency, specific offer, risk reversal, final push for someone ready to decide.',
+    };
 
     // Resolve user_id from body OR JWT
     let user_id = bodyUserId;
@@ -157,6 +164,9 @@ Use this context to make the board MORE relevant to what works for this specific
 Market: ${marketConfig.name} (${marketConfig.code}), Language: ${vo_language}
 Talent: ${has_talent ? `Yes — ${talent_name || 'unnamed creator'}` : 'Product-only, no talent'}
 ${aiContext}
+${funnel_stage ? `
+FUNNEL STAGE: ${(FUNNEL_CONTEXT as Record<string,string>)[funnel_stage] || FUNNEL_CONTEXT.tofu}
+` : ""}
 ${persona_context ? `\nTARGET AUDIENCE PERSONA — build the entire board FOR THIS SPECIFIC PERSON:\n- ${persona_context.name}, ${persona_context.age}, ${persona_context.gender}\n- Bio: ${persona_context.bio}\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Purchase triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- CTA style: ${persona_context.cta_style}\n- Best formats: ${persona_context.best_formats?.join(', ')}\n- Proven hook angles: ${persona_context.hook_angles?.join(' | ')}\nEvery scene, VO line, hook, and CTA must be written specifically for this person's psychology.\n` : ''}
 ${context ? `Additional context: ${context}` : ''}
 

@@ -13,6 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layers, Zap, TrendingUp } from "lucide-react";
+import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
+
+const FUNNEL_STAGES = [
+  { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+];
 
 const MARKETS = [
   { code: "ANY", flag: "🌍", name: "Global" },
@@ -83,6 +90,9 @@ const NewBoard = () => {
   const [fromTemplate, setFromTemplate] = useState<string | null>(null);
   const [hookPreview, setHookPreview] = useState<{ score: number; type: string; feedback: string } | null>(null);
   const [hookScoring, setHookScoring] = useState(false);
+  const [funnelStage, setFunnelStage] = useState("tofu");
+  const [showPersonaWarning, setShowPersonaWarning] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
   const hookDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Pre-fill from template if navigating from templates page
@@ -126,6 +136,13 @@ const NewBoard = () => {
       return;
     }
 
+    // Warn if no persona selected
+    if (!selectedPersona && !pendingGenerate) {
+      setShowPersonaWarning(true);
+      return;
+    }
+    setPendingGenerate(false);
+
     setGenerating(true);
     setProgress("Validating and analyzing your brief...");
 
@@ -154,6 +171,7 @@ const NewBoard = () => {
             product_only: productOnly,
             context: context.trim() || undefined,
             user_id: user.id,
+            funnel_stage: funnelStage,
             persona_context: selectedPersona ? {
               name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
               pains: selectedPersona.pains, desires: selectedPersona.desires, triggers: selectedPersona.triggers,
@@ -185,6 +203,12 @@ const NewBoard = () => {
 
   return (
     <div className="page-enter p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      <PersonaWarningModal
+        open={showPersonaWarning}
+        onClose={() => setShowPersonaWarning(false)}
+        toolName="Board Generator"
+        onContinue={() => { setShowPersonaWarning(false); setPendingGenerate(true); setTimeout(handleGenerate, 50); }}
+      />
       {/* Template banner */}
       {fromTemplate && (
         <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
@@ -484,6 +508,24 @@ const NewBoard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+
+      {/* Funnel stage */}
+      <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-5">
+        <label className="block text-xs text-white/30 mb-3">Funnel stage — who are you talking to?</label>
+        <div className="grid grid-cols-3 gap-2">
+          {FUNNEL_STAGES.map(f => (
+            <button key={f.value} onClick={() => setFunnelStage(f.value)}
+              className="flex flex-col items-center p-3 rounded-xl border text-center transition-all"
+              style={funnelStage === f.value
+                ? { background: f.bg, borderColor: f.border, color: f.color }
+                : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" }}>
+              <span className="text-xs font-bold font-mono">{f.label}</span>
+              <span className="text-[10px] mt-0.5 opacity-70">{f.full}</span>
+              <span className="text-[9px] mt-1 opacity-40 leading-tight">{f.desc}</span>
+            </button>
+          ))}
         </div>
       </div>
 

@@ -10,7 +10,13 @@ Deno.serve(async (req) => {
 
   try {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const { product, niche, market, platform, tone, user_id, count = 10, persona_context } = await req.json();
+    const { product, niche, market, platform, tone, user_id, count = 10, persona_context, funnel_stage = "tofu" } = await req.json();
+
+    const FUNNEL_CONTEXT: Record<string, string> = {
+      tofu: "TOP OF FUNNEL (cold audience) — hooks must generate AWARENESS. Interrupt the scroll, spark curiosity or emotion. No assumptions about brand knowledge. Lead with a problem, insight, or bold claim.",
+      mofu: "MIDDLE OF FUNNEL (warm audience) — hooks must drive CONSIDERATION. The person knows the category but is evaluating. Lead with differentiation, social proof, or deeper benefit.",
+      bofu: "BOTTOM OF FUNNEL (hot audience) — hooks must trigger CONVERSION. The person is ready to decide. Lead with urgency, specific offer, risk reversal, or final push.",
+    };
 
     if (!product) return new Response(JSON.stringify({ error: 'Missing product' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
@@ -63,6 +69,7 @@ Deno.serve(async (req) => {
           content: `You are a world-class performance marketing creative director specializing in high-converting ad hooks.
 ${userContext}
 ${persona_context ? `\nACTIVE AUDIENCE PERSONA — write every hook FOR THIS SPECIFIC PERSON:\n- Name: ${persona_context.name} (${persona_context.age}, ${persona_context.gender})\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- Best platforms: ${persona_context.best_platforms?.join(', ')}\n- Proven hook angles for this persona: ${persona_context.hook_angles?.join(' | ')}\nEvery hook must resonate specifically with this person's psychology, not a generic audience.\n` : ''}
+FUNNEL STAGE: ${FUNNEL_CONTEXT[funnel_stage] || FUNNEL_CONTEXT.tofu}
 Generate ${count} unique, high-converting hook variations for:
 - Product/Service: ${product}
 - Niche/Industry: ${niche || 'general'}
