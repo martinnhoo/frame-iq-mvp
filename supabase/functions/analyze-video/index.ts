@@ -8,6 +8,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  let analysisId: string | null = null;
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -20,7 +22,7 @@ Deno.serve(async (req) => {
     const market = (formData.get('market') as string) || 'GLOBAL';
     const campaign_goal = formData.get('campaign_goal') as string | null;
     const user_id = formData.get('user_id') as string;
-    const analysis_id = formData.get('analysis_id') as string;
+    analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
 
@@ -94,12 +96,18 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 2: Analyze with Lovable AI (or fallback to Anthropic) ────────
+    if (!analysisId) {
+      return new Response(JSON.stringify({
+        error: 'missing_analysis_id',
+        message: 'Missing analysis_id for analysis run'
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (!LOVABLE_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
-      if (analysis_id) {
+      if (analysisId) {
         await supabase.from('analyses').update({
           status: 'failed',
           result: { error: 'No AI API key configured' }
-        }).eq('id', analysis_id);
+        }).eq('id', analysisId);
       }
       return new Response(JSON.stringify({ 
         error: 'api_key_missing',
@@ -203,15 +211,18 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     console.log('Analysis complete in', processingTime, 'seconds');
 
     // ── Save result ──────────────────────────────────────────────────────
-    await supabase.from('analyses').update({
+    const { error: saveError } = await supabase.from('analyses').update({
       status: 'completed',
       result: analysis,
       hook_strength: analysis.hook_strength as string,
-      hook_score: analysis.hook_score as number,
       recommended_platforms: analysis.recommended_platforms as string[],
       improvement_suggestions: analysis.improvement_suggestions as string[],
       processing_time_seconds: processingTime,
-    }).eq('id', analysis_id);
+    }).eq('id', analysisId);
+
+    if (saveError) {
+      throw new Error(`Failed to save analysis: ${saveError.message}`);
+    }
 
     // Increment usage
     const currentPeriod = new Date().toISOString().slice(0, 7);
@@ -258,7 +269,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     }).catch(() => {});
 
     return new Response(JSON.stringify({ 
-      success: true, analysis_id, mock_mode: false,
+      success: true, analysis_id: analysisId, mock_mode: false,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
@@ -266,9 +277,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     
     // Try to update analysis status to failed
     try {
-      const formData = await req.clone().formData().catch(() => null);
-      const analysis_id = formData?.get('analysis_id') as string | null;
-      if (analysis_id) {
+      if (analysisId) {
         const supabase = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -276,7 +285,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
         await supabase.from('analyses').update({
           status: 'failed',
           result: { error: String(error) }
-        }).eq('id', analysis_id);
+        }).eq('id', analysisId);
       }
     } catch {}
 
