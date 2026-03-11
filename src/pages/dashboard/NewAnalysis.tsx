@@ -262,14 +262,14 @@ const NewAnalysis = () => {
                 {file ? (
                   <div className="flex items-center gap-4 p-5">
                     <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0"
-                      style={{ background: file.size > MAX_FILE_SIZE ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
-                      <Video className="h-6 w-6" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "#34d399" }} />
+                      style={{ background: needsExtraction(file) ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
+                      <Video className="h-6 w-6" style={{ color: needsExtraction(file) ? "#fbbf24" : "#34d399" }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-white text-sm truncate">{file.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "rgba(255,255,255,0.3)" }}>
+                      <p className="text-xs mt-0.5" style={{ color: needsExtraction(file) ? "#fbbf24" : "rgba(255,255,255,0.3)" }}>
                         {(file.size / (1024 * 1024)).toFixed(1)} MB
-                        {file.size > MAX_FILE_SIZE && " · ⚡ Audio will be extracted automatically"}
+                        {needsExtraction(file) && " · ⚡ Audio will be extracted automatically"}
                       </p>
                     </div>
                     <button
