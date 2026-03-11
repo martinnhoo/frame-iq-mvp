@@ -523,18 +523,18 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               </div>
 
               {/* Upgrade options */}
-              {(profile?.plan === "free" || profile?.plan === "creator" || profile?.plan === "starter") && (
+              {(profile?.plan === "free" || profile?.plan === "maker") && (
                 <>
                   <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2">Upgrade to</p>
                   <div className="space-y-2">
-                    {(["creator", "starter", "studio", "scale"] as const)
+                    {(["maker", "pro", "studio"] as const)
                       .filter((k) => {
-                        const order = ["free", "creator", "starter", "studio", "scale"];
+                        const order = ["free", "maker", "pro", "studio"];
                         return order.indexOf(k) > order.indexOf(profile?.plan || "free");
                       })
                       .map((key) => {
                         const p = PLAN_INFO[key];
-                        const isPopular = key === "studio";
+                        const isPopular = key === "pro";
                         return (
                           <button
                             key={key}
@@ -560,7 +560,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         );
                     })}
                   </div>
-                  <p className="text-[11px] text-white/15 text-center pt-1">Payments via Paddle — coming soon</p>
+                  <p className="text-[11px] text-white/15 text-center pt-1">3-day free trial on all plans · Powered by Stripe</p>
                 </>
               )}
             </div>

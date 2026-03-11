@@ -137,6 +137,11 @@ export default function DashboardLayout() {
         setVikaPopup(true);
         localStorage.setItem("vika_welcome_shown", "1");
       }
+      // Isadorinha welcome popup
+      if (session.user.email === "isadoradblima@gmail.com" && !localStorage.getItem("isadora_welcome_shown")) {
+        setVikaPopup(true); // reuse same state
+        localStorage.setItem("isadora_welcome_shown", "1");
+      }
       if (mounted) setLoading(false);
     };
     init();
