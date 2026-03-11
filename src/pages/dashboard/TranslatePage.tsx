@@ -328,10 +328,12 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           <p className="text-xs text-white/30 mb-2" style={mono}>TRANSLATE OUTPUT TO</p>
           <LangPill value={targetLang} onChange={setTargetLang} />
         </div>
-        <button onClick={handleRun} disabled={!file || transcribing}
+        <button onClick={handleRun} disabled={!file || transcribing || compressing}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-7 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
-          {transcribing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> : <><Wand2 className="h-4 w-4" /> Transcribe &amp; Translate</>}
+          {compressing ? <><Loader2 className="h-4 w-4 animate-spin" /> {compressProgress || "Compressing..."}</>
+           : transcribing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> 
+           : <><Wand2 className="h-4 w-4" /> Transcribe &amp; Translate</>}
         </button>
       </div>
 
