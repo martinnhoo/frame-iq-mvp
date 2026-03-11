@@ -144,7 +144,7 @@ const Contact = () => {
             {/* Email card */}
             <div className="max-w-lg mx-auto">
               <a 
-                href="mailto:support@frameiq.com"
+                href="mailto:support@adbrief.pro"
                 className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
                 style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
               >
@@ -156,7 +156,7 @@ const Contact = () => {
                 </div>
                 <div className="text-left">
                   <div className="text-sm text-secondary">Email</div>
-                  <div className="font-semibold">support@frameiq.com</div>
+                  <div className="font-semibold">support@adbrief.pro</div>
                 </div>
               </a>
             </div>
