@@ -82,7 +82,7 @@ You have the right to:
 
 ## 9. Children's Privacy
 
-FrameIQ is not intended for users under 18 years of age. We do not knowingly collect data from minors.
+AdBrief is not intended for users under 18 years of age. We do not knowingly collect data from minors. We do not knowingly collect data from minors.
 
 ## 10. Changes to This Policy
 
