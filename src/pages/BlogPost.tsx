@@ -147,7 +147,7 @@ const blogPosts: Record<string, {
       "Using the competitive insights, the team started generating AI production briefs. Each brief included a scene-by-scene breakdown with timing, voiceover scripts with tone notes, visual references pulled from top-performing ads, and editor notes with specific direction.",
       "The briefs were specific enough that their freelance editors could start working immediately, cutting the typical briefing + revision cycle from 3 days to 4 hours.",
       "### Phase 3: Scaled Variation Production (Month 2+)",
-      "With faster briefing and clearer direction, the team scaled from 5 to 50 ad variations per week. They used FrameIQ's AI to generate hook variations (5 hooks per concept), create voiceover variations (3 voice styles per script), and produce concept tests before committing to full production.",
+      "With faster briefing and clearer direction, the team scaled from 5 to 50 ad variations per week. They used AdBrief's AI to generate hook variations (5 hooks per concept), create voiceover variations (3 voice styles per script), and produce concept tests before committing to full production.",
       "## The Results",
       "After 3 months with FrameIQ: creative production costs dropped from $25K to $10K/month (60% reduction). Ad variations increased from 5 to 50 per week (10x). Average ROAS improved by 34% due to more testing. Creative strategist reclaimed 20 hours/week for actual strategy.",
       "## Key Takeaways for DTC Brands",
