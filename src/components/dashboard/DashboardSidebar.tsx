@@ -1,7 +1,7 @@
 import {
-  BarChart3, LayoutGrid, Video, Home,
-  Plus, Globe, Brain, Layers, Plane, Cpu, Search,
-  Zap, Settings, ChevronRight, Sparkles, Target,
+  BarChart3, LayoutGrid, Home,
+  Plus, Globe, Brain, Layers, Plane, Cpu,
+  Zap, Settings, ChevronRight, Target,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -16,15 +16,13 @@ const mainItems = [
   { title: "Overview",  url: "/dashboard",          icon: Home,     end: true,  accent: "#e2e8f0" },
   { title: "Analyses",  url: "/dashboard/analyses", icon: BarChart3,            accent: "#c084fc" },
   { title: "Boards",    url: "/dashboard/boards",   icon: LayoutGrid,           accent: "#60a5fa" },
-  { title: "Videos",    url: "/dashboard/videos",   icon: Video,                accent: "#34d399" },
 ];
 
 const toolItems = [
   { title: "Hook Generator", url: "/dashboard/hooks",        icon: Cpu,    accent: "#fb923c", badge: "AI" },
   { title: "Templates",      url: "/dashboard/templates",    icon: Layers, accent: "#f472b6" },
   { title: "Translate",      url: "/dashboard/translate",    icon: Globe,  accent: "#10b981" },
-  { title: "Pre-flight",     url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24" },
-  { title: "Competitor",     url: "/dashboard/competitor",   icon: Search, accent: "#22d3ee", badge: "AI" },
+  { title: "Pre-flight",     url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24", badge: "AI" },
   { title: "Intelligence",   url: "/dashboard/intelligence", icon: Brain,  accent: "#a78bfa", badge: "AI" },
   { title: "Persona",        url: "/dashboard/persona",      icon: Target, accent: "#c084fc" },
 ];
