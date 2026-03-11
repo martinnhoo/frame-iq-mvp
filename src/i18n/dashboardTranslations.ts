@@ -654,6 +654,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "创建首个画像", ov_clear_persona: "清除画像",
     bo_production_boards: "个制作板", bo_create_first: "创建首个制作板",
     bo_describe_concept: "描述您的广告概念，获取场景、脚本和制作备注",
+    gm_streak: "连续", gm_streak_days: "天", gm_mastery: "创意精通",
+    gm_level_observer: "观察者", gm_level_analyst: "分析师", gm_level_strategist: "策略师", gm_level_director: "创意总监",
+    gm_weekly_insight: "每周洞察", gm_score_up: "Hook评分上升", gm_score_down: "Hook评分下降", gm_score_stable: "评分稳定",
+    gm_vs_last_week: "对比上周", gm_first_today: "今天第一次登录，开始吧。",
+    gm_on_rhythm: "本周分析。你保持着节奏。", gm_power_user: "今日操作。超级用户模式。",
+    gm_comeback: "欢迎回来，继续上次的工作。",
   },
 
   fr: {
