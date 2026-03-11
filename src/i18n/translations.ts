@@ -175,7 +175,7 @@ export const translations: Record<Language, TranslationKeys> = {
     social_ads: "Ads analyzed", social_teams: "Performance teams", social_countries: "Countries", social_time: "Avg. analysis time",
     problem_label: "The cost of slow creative",
     problem_title: "Most teams waste 60% of their creative budget before a single ad goes live.",
-    problem_subtitle: "Weak hooks. Untested angles. Briefs that editors ignore. FrameIQ fixes every one of those — before you spend a dollar on production.",
+    problem_subtitle: "Weak hooks. Untested angles. Briefs that editors ignore. AdBrief fixes every one of those — before you spend a dollar on production.",
     stat1_label: "From upload to full creative brief",
     stat1_sub: "vs. 8 hours of manual analysis",
     stat2_label: "More ad variations per sprint",
