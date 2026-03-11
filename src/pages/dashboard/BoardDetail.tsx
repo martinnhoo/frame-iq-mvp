@@ -151,10 +151,10 @@ const BoardDetail = () => {
 
   const fullScript = scenes
     .map((s, i) =>
-      `SCENE ${i + 1} (${String(s.timestamp || "")})\n` +
+      `SCENE ${i + 1} (${String(s.timestamp || s.duration_seconds ? `${s.duration_seconds}s` : "")})\n` +
       `VISUAL: ${String(s.visual_description || "")}\n` +
-      (s.vo_script ? `VO: "${String(s.vo_script)}"\n` : "") +
-      (s.onscreen_text ? `TEXT: ${String(s.onscreen_text)}\n` : "")
+      (s.vo_script || s.dialogue_or_vo ? `VO: "${String(s.vo_script || s.dialogue_or_vo)}"\n` : "") +
+      (s.onscreen_text || s.on_screen_text ? `TEXT: ${String(s.onscreen_text || s.on_screen_text)}\n` : "")
     )
     .join("\n");
 
