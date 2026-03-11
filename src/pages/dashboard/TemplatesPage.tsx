@@ -1625,17 +1625,17 @@ const TemplatesPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
-            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> Ad Templates
+           <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
+            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> {ot("tp_title")}
           </h1>
           <p className="text-white/30 text-xs mt-1">
-            <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> proven formats · {Object.keys(CAT_META).length} industries ·{" "}
+            <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> {ot("tp_formats")} · {Object.keys(CAT_META).length} {ot("tp_industries")} ·{" "}
             <span style={{ color: "#34d399" }}>
-              <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 languages
+              <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 {ot("tp_languages")}
             </span>
           </p>
         </div>
-        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} shown</span>
+        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} {ot("tp_shown")}</span>
       </div>
 
       {/* Search */}
