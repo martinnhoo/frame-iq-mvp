@@ -1005,7 +1005,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "法律",
     footer_privacy: "隐私政策",
     footer_terms: "服务条款",
-    footer_rights: "© 2026 FrameIQ. 保留所有权利。",
+    footer_rights: "© 2026 AdBrief. 保留所有权利。",
     footer_soc2: "SOC 2合规",
     footer_uptime: "99.9%正常运行时间",
     footer_book_demo: "预约演示",
