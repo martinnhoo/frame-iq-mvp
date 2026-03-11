@@ -17,7 +17,7 @@ const featureMeta: Record<string, {
     icon: Video,
     title: "Video Analysis",
     headline: "Upload any ad. Get a full breakdown in 60 seconds.",
-    description: "FrameIQ's AI engine watches your video, extracts the hook, identifies the creative model, transcribes the audio, and generates a production-ready brief — all automatically.",
+    description: "AdBrief's AI engine watches your video, extracts the hook, identifies the creative model, transcribes the audio, and generates a production-ready brief — all automatically.",
     details: [
       "Automatic hook extraction from the first 3 seconds with emotional trigger classification",
       "Creative model identification: UGC, talking head, product demo, listicle, comparison, and 12 more",
