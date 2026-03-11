@@ -172,7 +172,7 @@ const Signup = () => {
                         ))}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Password strength: <span className="font-medium text-foreground">{strength.label}</span>
+                        {t("pw_strength")}: <span className="font-medium text-foreground">{strength.label}</span>
                       </p>
                     </div>
                   )}
