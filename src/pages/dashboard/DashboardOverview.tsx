@@ -46,6 +46,8 @@ const StatBar = ({ used, limit, accent }: { used: number; limit: number; accent:
 export default function DashboardOverview() {
   const { user, profile, usage, usageDetails, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
