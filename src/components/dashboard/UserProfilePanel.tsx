@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import {
   X, LogOut, Save, Trash2, RefreshCw, Sparkles,
   Loader2, Check, User, Palette, CreditCard, Shield,
-  ChevronRight, Zap, Settings, Camera,
+  ChevronRight, Zap, Settings, Camera, ArrowLeft, Edit3,
 } from "lucide-react";
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
+import Persona3DAvatar from "./Persona3DAvatar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
