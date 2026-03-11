@@ -180,7 +180,7 @@ const Signup = () => {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isFormDisabled || password.length < 8}>
                     {emailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create account
+                    {t("auth_create")}
                   </Button>
                 </motion.div>
               </form>
