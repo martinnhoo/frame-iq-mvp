@@ -30,15 +30,20 @@ Deno.serve(async (req) => {
     const { data: usage } = await supabaseClient
       .from('usage').select('*').eq('user_id', user_id).eq('period', currentPeriod).single();
 
-    // Limits per plan
-    const limits = {
-      free:   { analyses: 3,   boards: 3,   translations: 3,    preflights: 2 },
-      maker:  { analyses: 10,  boards: 10,  translations: 50,   preflights: 10 },
-      pro:    { analyses: 30,  boards: 30,  translations: 100,  preflights: 30 },
-      studio: { analyses: 500, boards: 300, translations: 1000, preflights: 9999 },
+    // Limits per plan — must match src/pages/Pricing.tsx
+    // -1 = unlimited
+    const limits: Record<string, { analyses: number; boards: number; translations: number; preflights: number }> = {
+      free:    { analyses: 3,   boards: 3,   translations: 3,   preflights: 3   },
+      maker:   { analyses: 20,  boards: 20,  translations: 100, preflights: 20  },
+      pro:     { analyses: 60,  boards: 60,  translations: -1,  preflights: 60  },
+      studio:  { analyses: -1,  boards: -1,  translations: -1,  preflights: -1  },
+      // legacy plan names — map to nearest equivalent
+      creator: { analyses: 20,  boards: 20,  translations: 100, preflights: 20  },
+      starter: { analyses: 60,  boards: 60,  translations: -1,  preflights: 60  },
+      scale:   { analyses: -1,  boards: -1,  translations: -1,  preflights: -1  },
     };
 
-    const planLimits = limits[plan as keyof typeof limits] || limits.free;
+    const planLimits = limits[plan] || limits.free;
 
     const analyses_used     = usage?.analyses_count     || 0;
     const boards_used       = usage?.boards_count       || 0;
@@ -48,19 +53,25 @@ Deno.serve(async (req) => {
     const now = new Date();
     const reset_date = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().split('T')[0];
 
-    const analyses_rem     = Math.max(0, planLimits.analyses     - analyses_used);
-    const boards_rem       = Math.max(0, planLimits.boards       - boards_used);
-    const translations_rem = Math.max(0, planLimits.translations - translations_used);
-    const preflights_rem   = Math.max(0, planLimits.preflights   - preflights_used);
+    // -1 means unlimited — remaining is also -1
+    const safeRem = (used: number, limit: number) => limit === -1 ? -1 : Math.max(0, limit - used);
 
-    const is_over_limit =
-      analyses_used >= planLimits.analyses ||
-      boards_used   >= planLimits.boards;
+    const analyses_rem     = safeRem(analyses_used,     planLimits.analyses);
+    const boards_rem       = safeRem(boards_used,       planLimits.boards);
+    const translations_rem = safeRem(translations_used, planLimits.translations);
+    const preflights_rem   = safeRem(preflights_used,   planLimits.preflights);
+
+    const isOver = (used: number, limit: number) => limit !== -1 && used >= limit;
+
+    const is_over_limit = isOver(analyses_used, planLimits.analyses) || isOver(boards_used, planLimits.boards);
+
+    const nearLimit = (used: number, limit: number) =>
+      limit !== -1 && (limit - used) / limit < 0.2;
 
     const show_warning =
-      (analyses_rem / planLimits.analyses)     < 0.2 ||
-      (boards_rem   / planLimits.boards)        < 0.2 ||
-      (translations_rem / planLimits.translations) < 0.2;
+      nearLimit(analyses_used, planLimits.analyses) ||
+      nearLimit(boards_used, planLimits.boards) ||
+      nearLimit(translations_used, planLimits.translations);
 
     return new Response(JSON.stringify({
       plan,
