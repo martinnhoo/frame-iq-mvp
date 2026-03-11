@@ -271,9 +271,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     
     // Try to update analysis status to failed
     try {
-      const formData = await req.clone().formData().catch(() => null);
-      const analysis_id = formData?.get('analysis_id') as string | null;
-      if (analysis_id) {
+      if (analysisId) {
         const supabase = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -281,7 +279,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
         await supabase.from('analyses').update({
           status: 'failed',
           result: { error: String(error) }
-        }).eq('id', analysis_id);
+        }).eq('id', analysisId);
       }
     } catch {}
 
