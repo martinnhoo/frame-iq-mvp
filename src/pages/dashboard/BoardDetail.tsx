@@ -223,13 +223,13 @@ const BoardDetail = () => {
           </div>
 
           {/* Overview */}
-          <Section id="overview" icon={Target} title="Campaign Overview" open={open.overview} onToggle={() => toggle("overview")}>
+           <Section id="overview" icon={Target} title="Campaign Overview" open={open.overview} onToggle={() => toggle("overview")}>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               {[
-                ["Market", `${String(meta.market_flag ?? "")} ${String(meta.market ?? "—")}`],
-                ["Platform", String(meta.platform ?? "—")],
-                ["Duration", `${String(meta.duration ?? "—")}s`],
-                ["Aspect Ratio", String(meta.aspect_ratio ?? "—")],
+                ["Market", `${String(overview.market_flag ?? overview.market_code ?? "")} ${String(overview.market ?? "—")}`],
+                ["Platform", String(overview.platform ?? "—")],
+                ["Duration", `${String(overview.duration_seconds ?? overview.duration ?? "—")}s`],
+                ["Aspect Ratio", String(overview.aspect_ratio ?? "—")],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-xl bg-white/[0.04] p-3">
                   <p className="text-xs text-white/30 mb-1">{label}</p>
