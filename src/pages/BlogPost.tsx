@@ -51,7 +51,7 @@ const blogPosts: Record<string, {
       "More importantly, the insights are objective and data-driven rather than based on one person's opinion about what 'looks good.'",
       "## Getting Started",
       "Whether you're a solo Creative Strategist or leading a 20-person performance marketing team, the shift to AI-powered competitor analysis is inevitable. The teams that adopt it first gain a compounding advantage: faster insights, more tests, better creative, higher ROAS.",
-      "Start analyzing competitor ads in seconds with FrameIQ's free plan — no credit card required.",
+      "Start analyzing competitor ads in seconds with AdBrief's free plan — no credit card required.",
     ],
   },
   "hook-framework-ctr": {
