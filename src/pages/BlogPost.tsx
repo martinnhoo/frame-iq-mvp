@@ -238,7 +238,7 @@ const blogPosts: Record<string, {
       "## Budget Allocation for Testing",
       "Allocate 20% of your total ad budget to testing. Split test budget equally across variations. Never judge a test with less than $50 per variation. Run tests for minimum 48 hours to account for time-of-day variance.",
       "## Using AI to Accelerate Testing",
-      "AI tools like FrameIQ can generate hook variations, script alternatives, and format suggestions — letting you set up tests in minutes instead of days. The faster you test, the faster you find winners.",
+      "AI tools like AdBrief can generate hook variations, script alternatives, and format suggestions — letting you set up tests in minutes instead of days. The faster you test, the faster you find winners.",
     ],
   },
   "creative-strategist-tech-stack": {
