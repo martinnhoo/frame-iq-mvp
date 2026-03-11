@@ -71,11 +71,44 @@ const BoardDetail = () => {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  // Extract character context for consistent image generation
+  const getCharacterContext = () => {
+    const c = board?.content as Record<string, unknown> | null;
+    if (!c) return undefined;
+    const char = (c.character as Record<string, unknown>) || {};
+    const prod = (c.production as Record<string, unknown>) || {};
+    // Only if talent is involved
+    if (!char.name && !char.type) return undefined;
+    return {
+      appearance: String(char.wardrobe_suggestion || char.role || ''),
+      clothing: String(char.wardrobe_suggestion || ''),
+      gender: String(char.gender || ''),
+      age: String(char.age || ''),
+      hair: String(char.hair || ''),
+      skin_tone: String(char.skin_tone || ''),
+    };
+  };
+
+  const getLocationContext = () => {
+    const c = board?.content as Record<string, unknown> | null;
+    if (!c) return undefined;
+    const prod = (c.production as Record<string, unknown>) || {};
+    return prod.location_detail || prod.location
+      ? `${String(prod.location || '')} — ${String(prod.location_detail || '')}`
+      : undefined;
+  };
+
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
       const { data, error } = await supabase.functions.invoke("generate-scene-image", {
-        body: { visual_description: visualDescription, scene_title: sceneTitle, scene_index: sceneIndex },
+        body: {
+          visual_description: visualDescription,
+          scene_title: sceneTitle,
+          scene_index: sceneIndex,
+          character_context: getCharacterContext(),
+          location_context: getLocationContext(),
+        },
       });
       if (error) throw error;
       if (data?.url) {
