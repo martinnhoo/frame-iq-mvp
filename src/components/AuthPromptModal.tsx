@@ -5,7 +5,7 @@ import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const AUTH_PROMPT_KEY = "frameiq_auth_prompt_dismissed";
+const AUTH_PROMPT_KEY = "adbrief_auth_prompt_dismissed";
 const TIMER_MS = 5 * 60 * 1000; // 5 minutes
 
 interface AuthPromptModalProps {
