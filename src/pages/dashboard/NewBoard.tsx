@@ -63,7 +63,7 @@ interface LocationState {
 }
 
 const NewBoard = () => {
-  const { user, refreshUsage } = useOutletContext<DashboardContext>();
+  const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
@@ -154,6 +154,13 @@ const NewBoard = () => {
             product_only: productOnly,
             context: context.trim() || undefined,
             user_id: user.id,
+            persona_context: selectedPersona ? {
+              name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
+              pains: selectedPersona.pains, desires: selectedPersona.desires, triggers: selectedPersona.triggers,
+              hook_angles: selectedPersona.hook_angles, language_style: selectedPersona.language_style,
+              cta_style: selectedPersona.cta_style, best_platforms: selectedPersona.best_platforms,
+              best_formats: selectedPersona.best_formats, bio: selectedPersona.bio,
+            } : null,
           }),
         },
       );

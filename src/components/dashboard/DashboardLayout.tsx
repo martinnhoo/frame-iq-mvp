@@ -1,10 +1,28 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Menu, AlertCircle } from "lucide-react";
+import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
+
+export interface ActivePersona {
+  id: string;
+  name: string;
+  headline: string;
+  avatar_emoji: string;
+  age: string;
+  gender: string;
+  best_platforms: string[];
+  best_formats: string[];
+  hook_angles: string[];
+  pains: string[];
+  desires: string[];
+  triggers: string[];
+  language_style: string;
+  cta_style: string;
+  bio: string;
+}
 
 export interface DashboardContext {
   user: User;
@@ -12,6 +30,8 @@ export interface DashboardContext {
   usage: Usage;
   usageDetails: UsageDetails | null;
   refreshUsage: () => Promise<void>;
+  selectedPersona: ActivePersona | null;
+  setSelectedPersona: (p: ActivePersona | null) => void;
 }
 
 export interface Profile {
@@ -48,7 +68,19 @@ export default function DashboardLayout() {
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
+    try { const s = localStorage.getItem("frameiq_active_persona"); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
+  const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
+  const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const setSelectedPersona = (p: ActivePersona | null) => {
+    setSelectedPersonaState(p);
+    if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
+    else localStorage.removeItem("frameiq_active_persona");
+  };
 
   const fetchUsage = async (userId: string) => {
     const currentPeriod = new Date().toISOString().slice(0, 7);
@@ -78,6 +110,9 @@ export default function DashboardLayout() {
         }
       }
       await fetchUsage(session.user.id);
+      // Load personas for picker
+      const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
+      if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
       if (mounted) setLoading(false);
     };
     init();
@@ -120,6 +155,86 @@ export default function DashboardLayout() {
             </div>
         </header>
 
+        {/* Persona context bar — always visible */}
+        <div className="sticky top-0 lg:top-0 z-20 px-4 py-2 flex items-center gap-3 border-b border-white/[0.04]"
+          style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)" }}>
+          <div className="relative">
+            <button
+              onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+              style={selectedPersona
+                ? { background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", color: "#a78bfa" }
+                : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }
+              }
+            >
+              <Users className="h-3.5 w-3.5" />
+              {selectedPersona ? (
+                <span>{selectedPersona.avatar_emoji} {selectedPersona.name}</span>
+              ) : (
+                <span>No persona selected</span>
+              )}
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </button>
+
+            {personaPickerOpen && (
+              <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl"
+                style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <div className="px-3 py-2.5 border-b border-white/[0.06]">
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">Active Persona</p>
+                  <p className="text-[11px] text-white/20 mt-0.5">AI uses this context in every tool</p>
+                </div>
+                {savedPersonas.length === 0 ? (
+                  <div className="p-4 text-center">
+                    <p className="text-xs text-white/30 mb-3">No personas yet</p>
+                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
+                      style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                      <Sparkles className="h-3 w-3" /> Create first persona
+                    </button>
+                  </div>
+                ) : (
+                  <div className="py-1 max-h-64 overflow-y-auto">
+                    {selectedPersona && (
+                      <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors text-xs text-white/30">
+                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
+                        Clear persona
+                      </button>
+                    )}
+                    {savedPersonas.map(p => (
+                      <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors"
+                        style={selectedPersona?.id === p.id ? { background: "rgba(167,139,250,0.08)" } : {}}>
+                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-base shrink-0" style={{ background: "rgba(167,139,250,0.1)" }}>{p.avatar_emoji}</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-white truncate">{p.name}</p>
+                          <p className="text-[10px] text-white/30 truncate">{p.headline}</p>
+                        </div>
+                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-purple-400 shrink-0">Active</span>}
+                      </button>
+                    ))}
+                    <div className="px-3 py-2 border-t border-white/[0.06]">
+                      <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                        className="text-[10px] text-white/25 hover:text-white/50 transition-colors flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> Manage personas
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {selectedPersona && (
+            <div className="flex items-center gap-2 text-[10px] text-white/20 font-mono overflow-hidden">
+              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age} · {selectedPersona.best_platforms.slice(0,2).join(", ")}</span>
+            </div>
+          )}
+
+          {/* Close picker on outside click */}
+          {personaPickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
+        </div>
+
         {/* Alerts */}
         {usageDetails?.show_warning && !usageDetails?.is_over_limit && (
           <div className="mx-4 mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
@@ -135,7 +250,7 @@ export default function DashboardLayout() {
         )}
 
         <main className="flex-1 overflow-auto bg-[#050505]">
-          <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id) } satisfies DashboardContext} />
+          <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
     </div>

@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
 
   try {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const { product, niche, market, platform, tone, user_id, count = 10 } = await req.json();
+    const { product, niche, market, platform, tone, user_id, count = 10, persona_context } = await req.json();
 
     if (!product) return new Response(JSON.stringify({ error: 'Missing product' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
           role: 'user',
           content: `You are a world-class performance marketing creative director specializing in high-converting ad hooks.
 ${userContext}
-
+${persona_context ? `\nACTIVE AUDIENCE PERSONA — write every hook FOR THIS SPECIFIC PERSON:\n- Name: ${persona_context.name} (${persona_context.age}, ${persona_context.gender})\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- Best platforms: ${persona_context.best_platforms?.join(', ')}\n- Proven hook angles for this persona: ${persona_context.hook_angles?.join(' | ')}\nEvery hook must resonate specifically with this person's psychology, not a generic audience.\n` : ''}
 Generate ${count} unique, high-converting hook variations for:
 - Product/Service: ${product}
 - Niche/Industry: ${niche || 'general'}

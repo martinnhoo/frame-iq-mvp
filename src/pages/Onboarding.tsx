@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Step = "name" | "language" | "source" | "feature" | "plan";
+type Step = "name" | "language" | "source" | "feature" | "persona" | "plan";
 
 interface OnboardingState {
   name: string;
@@ -56,7 +56,7 @@ const PLANS = [
   { key: "scale",   label: "Scale",   price: "$499", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "Unlimited pre-flights"],  highlight: false },
 ];
 
-const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "plan"];
+const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", "plan"];
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -272,7 +272,51 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* ── Step 5: Plans ── */}
+          {/* ── Step 5: Persona intro ── */}
+          {step === "persona" && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 5 of {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Meet your audience first</h1>
+                <p className="text-sm text-white/35 max-w-sm mx-auto leading-relaxed">The best ads are written for one specific person. AdBrief uses your audience persona to tailor every hook, board, and script — automatically.</p>
+              </div>
+
+              {/* Why persona matters */}
+              <div className="space-y-2">
+                {[
+                  { emoji: "🎯", title: "Hooks that actually convert", desc: "AI generates hooks based on your audience's real pains, desires, and triggers — not generic angles." },
+                  { emoji: "📋", title: "Boards written for your audience", desc: "Every scene, VO line, and CTA is crafted for the specific person you're targeting." },
+                  { emoji: "🔄", title: "Switch personas instantly", desc: "Run campaigns for multiple audiences. Switch context in one click from the top bar." },
+                ].map(({ emoji, title, desc }) => (
+                  <div key={title} className="flex items-start gap-4 px-4 py-4 rounded-2xl"
+                    style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.12)" }}>
+                    <span className="text-xl shrink-0">{emoji}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{title}</p>
+                      <p className="text-xs text-white/35 mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <button onClick={() => { finish(); setTimeout(() => window.location.href = "/dashboard/persona", 500); }}
+                  className="w-full py-3.5 rounded-2xl font-bold text-sm text-black transition-all"
+                  style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+                  Create my first persona →
+                </button>
+                <button onClick={goNext}
+                  className="w-full py-2.5 rounded-2xl text-sm text-white/30 hover:text-white/50 transition-colors border border-white/[0.06]">
+                  Skip for now — I'll do it later
+                </button>
+              </div>
+              <div className="flex items-center justify-start pt-1">
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 6: Plans ── */}
           {step === "plan" && (
             <div className="space-y-5">
               <div className="text-center space-y-2">

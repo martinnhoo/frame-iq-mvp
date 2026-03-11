@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
       user_id: bodyUserId,
       title,
       context,
+      persona_context,
     } = body;
 
     // Resolve user_id from body OR JWT
@@ -156,6 +157,7 @@ Use this context to make the board MORE relevant to what works for this specific
 Market: ${marketConfig.name} (${marketConfig.code}), Language: ${vo_language}
 Talent: ${has_talent ? `Yes — ${talent_name || 'unnamed creator'}` : 'Product-only, no talent'}
 ${aiContext}
+${persona_context ? `\nTARGET AUDIENCE PERSONA — build the entire board FOR THIS SPECIFIC PERSON:\n- ${persona_context.name}, ${persona_context.age}, ${persona_context.gender}\n- Bio: ${persona_context.bio}\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Purchase triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- CTA style: ${persona_context.cta_style}\n- Best formats: ${persona_context.best_formats?.join(', ')}\n- Proven hook angles: ${persona_context.hook_angles?.join(' | ')}\nEvery scene, VO line, hook, and CTA must be written specifically for this person's psychology.\n` : ''}
 ${context ? `Additional context: ${context}` : ''}
 
 Return ONLY valid JSON (no markdown) with this exact structure:

@@ -48,7 +48,7 @@ const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: strin
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 export default function HookGenerator() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
 
   const [product, setProduct] = useState("");
   const [niche, setNiche] = useState("");
@@ -71,7 +71,14 @@ export default function HookGenerator() {
     setExpandedIdx(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
-        body: { product, niche, market, platform, tone, user_id: user.id, count },
+        body: { product, niche, market, platform, tone, user_id: user.id, count,
+          persona_context: selectedPersona ? {
+            name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
+            pains: selectedPersona.pains, desires: selectedPersona.desires, triggers: selectedPersona.triggers,
+            hook_angles: selectedPersona.hook_angles, language_style: selectedPersona.language_style,
+            cta_style: selectedPersona.cta_style, best_platforms: selectedPersona.best_platforms,
+          } : null,
+        },
       });
       if (error) throw error;
       setHooks(data.hooks || []);
