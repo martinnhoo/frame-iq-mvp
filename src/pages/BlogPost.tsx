@@ -260,7 +260,7 @@ const blogPosts: Record<string, {
       "## Creative Production",
       "### 4. Figma — For storyboarding and visual concepting before production. Collaborate with designers and editors in real-time.",
       "### 5. CapCut — Quick video editing for UGC-style content. Native TikTok integration makes it ideal for social-first creative.",
-      "### 6. FrameIQ Board Generation — AI-generated production boards with scene breakdowns, VO scripts, and editor notes. Eliminates the briefing bottleneck.",
+      "### 6. AdBrief Board Generation — AI-generated production boards with scene breakdowns, VO scripts, and editor notes. Eliminates the briefing bottleneck.",
       "## Analytics & Performance",
       "### 7. Triple Whale / Northbeam — Attribution and creative analytics. Understand which creatives drive actual revenue, not just clicks.",
       "### 8. Motion (Creative Analytics) — Visual creative reporting that helps you spot winning patterns across your ad account.",
