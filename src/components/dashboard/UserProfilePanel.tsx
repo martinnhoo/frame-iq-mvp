@@ -33,12 +33,14 @@ interface PersonaRecord {
   bio: string;
   pains?: string[];
   desires?: string[];
+  triggers?: string[];
   hook_angles?: string[];
   best_formats?: string[];
   best_platforms?: string[];
   language_style?: string;
   cta_style?: string;
   avatar_emoji?: string;
+  [key: string]: unknown;
 }
 
 interface Props {
