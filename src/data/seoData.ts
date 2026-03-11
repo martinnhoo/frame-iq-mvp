@@ -217,7 +217,7 @@ export const SEO_GUIDES = [
     title: "How to Scale TikTok Ads Without Creative Fatigue",
     subtitle: "The scaling playbook for TikTok — how to increase spend while keeping ROAS stable.",
     readTime: 10,
-    metaTitle: "How to Scale TikTok Ads — Scaling Playbook | FrameIQ",
+    metaTitle: "How to Scale TikTok Ads — Scaling Playbook | AdBrief",
     metaDescription: "How to scale TikTok ads without creative fatigue. The complete scaling playbook with budget strategy and creative refresh cadence.",
     keywords: ["scale tiktok ads", "tiktok ads scaling", "tiktok ad creative fatigue", "how to scale tiktok advertising", "tiktok horizontal scaling"],
     intro: "Scaling TikTok ads is a creative problem, not a budget problem. You can't outspend creative fatigue. The brands that scale profitably do it with a constant pipeline of fresh creatives — not by increasing spend on one ad set. Here's the playbook.",
