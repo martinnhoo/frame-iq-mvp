@@ -95,7 +95,7 @@ const Pricing = () => {
         { text: "AI Intelligence", included: false },
       ],
       cta: "Start Creator",
-      ctaAction: () => handleUpgrade("Creator"),
+      ctaAction: () => handleUpgrade("creator"),
       highlighted: false,
     },
     {
