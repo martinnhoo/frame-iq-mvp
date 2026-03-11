@@ -83,10 +83,16 @@ Deno.serve(async (req) => {
     // If transcribe_only, return just the transcript
     if (transcribe_only) {
       if (!transcript || transcript.startsWith('[')) {
+        const reason = !OPENAI_API_KEY 
+          ? 'OPENAI_API_KEY not configured' 
+          : !videoFile 
+            ? 'No video file received' 
+            : `Whisper failed: ${transcript}`;
+        console.error('transcribe_only failed:', reason);
         return new Response(JSON.stringify({ 
           error: 'transcription_failed',
           transcript: '',
-          message: OPENAI_API_KEY ? 'Could not transcribe audio from this file' : 'OPENAI_API_KEY not configured — transcription unavailable'
+          message: reason
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ 
