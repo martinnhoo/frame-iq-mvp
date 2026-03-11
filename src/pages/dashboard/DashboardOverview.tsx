@@ -220,7 +220,7 @@ export default function DashboardOverview() {
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                let's ship.
+                {dt("ov_lets_ship")}
               </span>
             </h1>
           </div>
