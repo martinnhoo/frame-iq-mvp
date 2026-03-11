@@ -214,17 +214,25 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     }).eq('id', analysis_id);
 
     // Increment usage
+    const currentPeriod = new Date().toISOString().slice(0, 7);
     const { data: currentUsage } = await supabase
       .from('usage')
       .select('analyses_count')
       .eq('user_id', user_id)
+      .eq('period', currentPeriod)
       .single();
 
-    await supabase.from('usage').upsert({
-      user_id,
-      analyses_count: (currentUsage?.analyses_count || 0) + 1,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    if (currentUsage) {
+      await supabase.from('usage').update({
+        analyses_count: (currentUsage.analyses_count || 0) + 1,
+      }).eq('user_id', user_id).eq('period', currentPeriod);
+    } else {
+      await supabase.from('usage').insert({
+        user_id,
+        period: currentPeriod,
+        analyses_count: 1,
+      });
+    }
 
     // Save to creative_memory
     await supabase.from('creative_memory').insert({
