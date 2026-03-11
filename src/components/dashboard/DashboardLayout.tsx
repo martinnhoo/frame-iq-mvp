@@ -274,7 +274,7 @@ export default function DashboardLayout() {
         {usageDetails?.show_warning && !usageDetails?.is_over_limit && (
           <div className="mx-4 mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Running low on quota. Consider upgrading.
+            {dt("ov_low_quota")}
           </div>
         )}
         {usageDetails?.is_over_limit && (
