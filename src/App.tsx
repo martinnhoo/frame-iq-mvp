@@ -42,6 +42,8 @@ import PreflightCheck from "./pages/dashboard/PreflightCheck";
 import PersonaPage from "./pages/dashboard/PersonaPage";
 import HookGenerator from "./pages/dashboard/HookGenerator";
 import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
+import ScriptGenerator from "./pages/dashboard/ScriptGenerator";
+import BriefGenerator from "./pages/dashboard/BriefGenerator";
 import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
 import ToolPage from "@/pages/seo/ToolPage";
@@ -99,6 +101,8 @@ const App = () => (
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="hooks" element={<HookGenerator />} />
                 <Route path="competitor" element={<CompetitorDecoder />} />
+                <Route path="script" element={<ScriptGenerator />} />
+                <Route path="brief" element={<BriefGenerator />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />
               <Route path="/tools/:slug"   element={<ToolPage />} />
