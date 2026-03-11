@@ -122,11 +122,11 @@ const NewAnalysis = () => {
 
     let fileToSend = file;
 
-    // 2. Extract audio if file is too large
-    if (file && file.size > MAX_FILE_SIZE) {
+    // 2. Always extract audio from video files (converts MOV/AVI/etc → WAV for Whisper)
+    if (file && needsExtraction(file)) {
       try {
-        fileToSend = await extractAudio(file);
-        if (fileToSend.size > MAX_FILE_SIZE) {
+        fileToSend = await doExtractAudio(file);
+        if (fileToSend.size > MAX_WHISPER_SIZE) {
           toast.error(`Audio still too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
           setStep("error");
           await supabase.from("analyses").update({ status: "failed" }).eq("id", record.id);
