@@ -220,12 +220,12 @@ export default function DashboardLayout() {
                  </div>
                 {savedPersonas.length === 0 ? (
                   <div className="p-4 text-center">
-                    <p className="text-xs text-white/30 mb-3">No personas yet</p>
-                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
-                      style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
-                      <Sparkles className="h-3 w-3" /> Create first persona
-                    </button>
+                   <p className="text-xs text-white/30 mb-3">{dt("ov_no_personas_yet")}</p>
+                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
+                       style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                       <Sparkles className="h-3 w-3" /> {dt("ov_create_first_persona")}
+                     </button>
                   </div>
                 ) : (
                   <div className="py-1 max-h-64 overflow-y-auto">
