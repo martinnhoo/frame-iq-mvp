@@ -73,10 +73,10 @@ const Signup = () => {
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
     const levels = [
-      { label: "Weak", color: "bg-destructive" },
-      { label: "Fair", color: "bg-yellow-500" },
-      { label: "Good", color: "bg-blue-500" },
-      { label: "Strong", color: "bg-green-500" },
+      { label: t("pw_weak"), color: "bg-destructive" },
+      { label: t("pw_fair"), color: "bg-yellow-500" },
+      { label: t("pw_good"), color: "bg-blue-500" },
+      { label: t("pw_strong"), color: "bg-green-500" },
     ];
     return { score, ...levels[Math.min(score, levels.length) - 1] };
   };
