@@ -954,6 +954,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "إنشاء أول شخصية", ov_clear_persona: "مسح الشخصية",
     bo_production_boards: "لوحات إنتاج", bo_create_first: "إنشاء أول لوحة",
     bo_describe_concept: "صِف مفهوم إعلانك واحصل على مشاهد ونصوص وملاحظات إنتاج",
+    gm_streak: "تتابع", gm_streak_days: "أيام", gm_mastery: "إتقان إبداعي",
+    gm_level_observer: "مراقب", gm_level_analyst: "محلل", gm_level_strategist: "استراتيجي", gm_level_director: "مدير إبداعي",
+    gm_weekly_insight: "رؤية أسبوعية", gm_score_up: "ارتفع تقييم الخطاف", gm_score_down: "انخفض تقييم الخطاف", gm_score_stable: "تقييم مستقر",
+    gm_vs_last_week: "مقارنة بالأسبوع الماضي", gm_first_today: "أول جلسة اليوم. هيا بنا.",
+    gm_on_rhythm: "تحليل هذا الأسبوع. أنت في الإيقاع.", gm_power_user: "إجراءات اليوم. وضع المستخدم المتقدم.",
+    gm_comeback: "مرحبًا بعودتك. استمر من حيث توقفت.",
   },
 };
 
