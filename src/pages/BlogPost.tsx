@@ -638,7 +638,7 @@ const blogPosts: Record<string, {
       "## Sign 1: Your Monthly Ad Spend Is Under $50K",
       "At this budget level, you're likely running 3-5 campaigns with 10-20 ad variations. A Creative Strategist will be underutilized — and bored. AI tools can handle the competitive research, briefing, and variation generation your team needs at this scale. Save the hire for when your spend (and creative needs) justify it.",
       "## Sign 2: You Already Have Someone Who 'Gets' Ads",
-      "If your team has a performance marketer, media buyer, or founder who understands what makes ads work, they can use AI tools to formalize their intuition. FrameIQ turns their ad instincts into structured competitive intelligence and production briefs. A junior Creative Strategist would essentially be doing what AI can do — but slower and more expensively.",
+      "If your team has a performance marketer, media buyer, or founder who understands what makes ads work, they can use AI tools to formalize their intuition. AdBrief turns their ad instincts into structured competitive intelligence and production briefs. A junior Creative Strategist would essentially be doing what AI can do — but slower and more expensively.",
       "## Sign 3: Your Problem Is Volume, Not Strategy",
       "If you know what works but can't produce enough variations, that's a production problem, not a strategy problem. AI solves production bottlenecks directly: generate more briefs, more hooks, more variations — without adding headcount. Hiring a strategist to solve a volume problem is like hiring an architect when you need a construction crew.",
       "## Sign 4: You're Still Finding Product-Market Fit",
