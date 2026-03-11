@@ -595,7 +595,7 @@ const FeatureDetail = () => {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
                 </div>
                 <div className="flex-1 text-center mx-12" style={{ background: '#0a0a0a', borderRadius: '8px', padding: '6px 16px', fontSize: '12px', color: '#666', fontFamily: '"DM Mono", monospace', border: '1px solid #222' }}>
-                  <span style={{ color: '#4ade80' }}>🔒</span> app.frameiq.com
+                  <span style={{ color: '#4ade80' }}>🔒</span> app.adbrief.pro
                 </div>
                 <div className="w-16" />
               </div>
