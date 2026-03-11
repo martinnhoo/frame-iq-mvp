@@ -275,8 +275,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           rows.map((row) => ({
             id: row.id,
             created_at: row.created_at,
-            ...(row.result as Omit<PersonaRecord, "id" | "created_at">),
-          }))
+            ...(row.result as Record<string, unknown>),
+          } as PersonaRecord))
         );
       }
     } catch (e) {
