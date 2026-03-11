@@ -215,9 +215,9 @@ export default function DashboardLayout() {
               <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl"
                 style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <div className="px-3 py-2.5 border-b border-white/[0.06]">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">Active Persona</p>
-                  <p className="text-[11px] text-white/20 mt-0.5">AI uses this context in every tool</p>
-                </div>
+                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">{dt("ov_active_persona_label")}</p>
+                   <p className="text-[11px] text-white/20 mt-0.5">{dt("ov_set_persona")}</p>
+                 </div>
                 {savedPersonas.length === 0 ? (
                   <div className="p-4 text-center">
                     <p className="text-xs text-white/30 mb-3">No personas yet</p>
