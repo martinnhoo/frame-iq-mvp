@@ -1833,7 +1833,7 @@ const TemplatesPage = () => {
               onClick={() => navigate("/pricing")}
               className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
             >
-              Upgrade <ArrowRight className="h-3.5 w-3.5" />
+              {(language !== "en" ? getUpgradeCTA("upgrade", language) : null) || "Upgrade"} <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
