@@ -69,19 +69,45 @@ const LangPill = ({ value, onChange, exclude = [] }: { value: string; onChange: 
   );
 };
 
+// ─── Progress Steps ──────────────────────────────────────────────────────────
+type ProgressStep = "idle" | "extracting" | "uploading" | "transcribing" | "translating" | "done" | "error";
+const STEP_LABELS: Record<ProgressStep, string> = {
+  idle: "", extracting: "Extracting audio...", uploading: "Uploading...",
+  transcribing: "Transcribing with Whisper...", translating: "Translating...", done: "Done!", error: "Failed",
+};
+const STEP_ORDER: ProgressStep[] = ["extracting", "uploading", "transcribing", "translating", "done"];
+
+// ─── WAV encoder (16kHz mono — ideal for Whisper, tiny files) ────────────────
+function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, "WAVE");
+  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeStr(36, "data"); view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buffer], { type: "audio/wav" });
+}
+
 // ─── Mode A: Transcribe + Translate ──────────────────────────────────────────
 const TranscribeMode = ({ userId }: { userId: string }) => {
   const [drag, setDrag] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [targetLang, setTargetLang] = useState("en");
-  const [transcribing, setTranscribing] = useState(false);
-  const [compressing, setCompressing] = useState(false);
-  const [compressProgress, setCompressProgress] = useState("");
+  const [step, setStep] = useState<ProgressStep>("idle");
+  const [progress, setProgress] = useState(0); // 0-100
   const [transcript, setTranscript] = useState("");
   const [translated, setTranslated] = useState("");
   const [copiedT, setCopiedT] = useState(false);
   const [copiedTr, setCopiedTr] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isProcessing = step !== "idle" && step !== "done" && step !== "error";
 
   const acceptFile = (f: File) => {
     if (!f.type.startsWith("video/") && !f.type.startsWith("audio/")) {
@@ -91,6 +117,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     setFile(f);
     setTranscript("");
     setTranslated("");
+    setStep("idle");
+    setProgress(0);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -99,149 +127,147 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     if (e.dataTransfer.files[0]) acceptFile(e.dataTransfer.files[0]);
   }, []);
 
-  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB — Whisper API limit
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
-  /** Extract audio from video using browser APIs to reduce file size */
+  /** Extract audio using OfflineAudioContext → 16kHz mono WAV (fast, reliable) */
   const extractAudio = async (videoFile: File): Promise<File> => {
-    setCompressing(true);
-    setCompressProgress("Loading video...");
+    setStep("extracting");
+    setProgress(10);
 
+    // Decode audio from video file
+    const arrayBuffer = await videoFile.arrayBuffer();
+    setProgress(30);
+
+    const audioCtx = new AudioContext();
+    let audioBuffer: AudioBuffer;
+    try {
+      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    } catch {
+      await audioCtx.close();
+      throw new Error("Could not decode audio from this video");
+    }
+    await audioCtx.close();
+    setProgress(50);
+
+    // Resample to 16kHz mono using OfflineAudioContext
+    const TARGET_SR = 16000;
+    const duration = audioBuffer.duration;
+    const offlineCtx = new OfflineAudioContext(1, Math.ceil(duration * TARGET_SR), TARGET_SR);
+    const source = offlineCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineCtx.destination);
+    source.start(0);
+
+    const rendered = await offlineCtx.startRendering();
+    setProgress(80);
+
+    // Encode as WAV
+    const wavBlob = encodeWAV(rendered.getChannelData(0), TARGET_SR);
+    const wavFile = new File([wavBlob], "audio.wav", { type: "audio/wav" });
+    setProgress(90);
+
+    console.log(`Audio extracted: ${(wavFile.size / 1024 / 1024).toFixed(1)}MB from ${(videoFile.size / 1024 / 1024).toFixed(0)}MB video (${Math.round(duration)}s)`);
+    return wavFile;
+  };
+
+  /** Upload with real progress tracking via XMLHttpRequest */
+  const uploadWithProgress = (formData: FormData): Promise<any> => {
     return new Promise((resolve, reject) => {
-      const video = document.createElement("video");
-      video.muted = true;
-      video.playsInline = true;
-      const url = URL.createObjectURL(videoFile);
-      video.src = url;
+      const xhr = new XMLHttpRequest();
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      video.onloadedmetadata = () => {
-        setCompressProgress("Extracting audio...");
-        
-        // Create audio context and media element source
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaElementSource(video);
-        const dest = audioCtx.createMediaStreamDestination();
-        source.connect(dest);
-
-        // Use MediaRecorder to capture audio only
-        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : MediaRecorder.isTypeSupported("audio/webm")
-            ? "audio/webm"
-            : "audio/mp4";
-        
-        const recorder = new MediaRecorder(dest.stream, { mimeType, audioBitsPerSecond: 64000 });
-        const chunks: BlobPart[] = [];
-
-        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-
-        recorder.onstop = () => {
-          URL.revokeObjectURL(url);
-          audioCtx.close();
-          const blob = new Blob(chunks, { type: mimeType });
-          const ext = mimeType.includes("webm") ? "webm" : "mp4";
-          const audioFile = new File([blob], `audio.${ext}`, { type: mimeType });
-          setCompressing(false);
-          setCompressProgress("");
-          resolve(audioFile);
-        };
-
-        recorder.onerror = () => {
-          URL.revokeObjectURL(url);
-          audioCtx.close();
-          setCompressing(false);
-          reject(new Error("Audio extraction failed"));
-        };
-
-        const duration = video.duration;
-        let lastProgress = 0;
-
-        video.ontimeupdate = () => {
-          const pct = Math.min(99, Math.round((video.currentTime / duration) * 100));
-          if (pct > lastProgress) {
-            lastProgress = pct;
-            setCompressProgress(`Extracting audio... ${pct}%`);
-          }
-        };
-
-        recorder.start(1000);
-        video.playbackRate = 16; // Speed up extraction
-        video.play().catch(reject);
-
-        video.onended = () => { recorder.stop(); };
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setProgress(pct);
+        }
       };
 
-      video.onerror = () => {
-        URL.revokeObjectURL(url);
-        setCompressing(false);
-        reject(new Error("Could not load video"));
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          resolve(data);
+        } catch {
+          reject(new Error("Invalid response from server"));
+        }
       };
+
+      xhr.onerror = () => reject(new Error("Upload failed"));
+      xhr.ontimeout = () => reject(new Error("Upload timed out"));
+      xhr.timeout = 120000;
+
+      xhr.open("POST", `https://${projectId}.supabase.co/functions/v1/analyze-video`);
+      xhr.setRequestHeader("Authorization", `Bearer ${anonKey}`);
+      xhr.setRequestHeader("apikey", anonKey);
+      xhr.send(formData);
     });
   };
 
   const handleRun = async () => {
     if (!file) return;
 
-    let fileToSend = file;
-
-    // If file is too large and is a video, extract audio
-    if (file.size > MAX_FILE_SIZE && file.type.startsWith("video/")) {
-      try {
-        toast.info("File too large for Whisper. Extracting audio track...");
-        fileToSend = await extractAudio(file);
-        const newSizeMB = (fileToSend.size / 1024 / 1024).toFixed(1);
-        toast.success(`Audio extracted: ${newSizeMB}MB`);
-        
-        // If still too large after extraction
-        if (fileToSend.size > MAX_FILE_SIZE) {
-          toast.error(`Audio still too large (${newSizeMB}MB). Try a shorter video.`);
-          return;
-        }
-      } catch (err) {
-        console.error("Audio extraction error:", err);
-        toast.error("Could not extract audio. Try a smaller file or convert to MP3 first.");
-        return;
-      }
-    } else if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Max 25MB for audio files.`);
-      return;
-    }
-
-    setTranscribing(true);
     setTranscript("");
     setTranslated("");
+    setProgress(0);
+
+    let fileToSend = file;
+
+    // Extract audio if file is too large
+    if (file.size > MAX_FILE_SIZE) {
+      if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
+        toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Max 25MB.`);
+        return;
+      }
+      try {
+        fileToSend = await extractAudio(file);
+        if (fileToSend.size > MAX_FILE_SIZE) {
+          toast.error(`Audio still too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
+          setStep("error");
+          return;
+        }
+      } catch (err: any) {
+        console.error("Audio extraction error:", err);
+        toast.error(err.message || "Could not extract audio. Try converting to MP3 first.");
+        setStep("error");
+        return;
+      }
+    }
+
+    // Upload
+    setStep("uploading");
+    setProgress(0);
     try {
-      // Send actual file as FormData for Whisper transcription
       const formData = new FormData();
       formData.append("video_file", fileToSend);
       formData.append("user_id", userId || "");
       formData.append("transcribe_only", "true");
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/analyze-video`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${anonKey}`, apikey: anonKey },
-          body: formData,
-        }
-      );
-      const data = await res.json();
-      console.log('Transcription response:', data);
+      const data = await uploadWithProgress(formData);
+      console.log("Transcription response:", data);
+
       if (data?.error) {
         toast.error(data.message || "Transcription failed");
-        setTranscript("");
-        setTranscribing(false);
+        setStep("error");
         return;
       }
+
+      // Transcribing (server-side, already done at this point)
+      setStep("transcribing");
+      setProgress(100);
+
       const rawTranscript = data?.transcript || "";
       if (!rawTranscript) {
         toast.error("No transcript returned");
-        setTranscribing(false);
+        setStep("error");
         return;
       }
       setTranscript(rawTranscript);
-      if (targetLang !== "en" && !rawTranscript.includes("failed") && !rawTranscript.includes("error")) {
+
+      // Translate if needed
+      if (targetLang !== "en" && !rawTranscript.includes("failed")) {
+        setStep("translating");
+        setProgress(50);
         const lang = LANGUAGES.find(l => l.code === targetLang)!;
         const { data: tData } = await supabase.functions.invoke("translate-text", {
           body: {
@@ -253,15 +279,29 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           },
         });
         setTranslated(tData?.translated_text || "");
-      } else if (!rawTranscript.includes("failed") && !rawTranscript.includes("error")) {
+        setProgress(100);
+      } else if (!rawTranscript.includes("failed")) {
         setTranslated(rawTranscript);
       }
-    } catch {
-      toast.error("Transcription failed — try again");
-    } finally {
-      setTranscribing(false);
+
+      setStep("done");
+      setProgress(100);
+      toast.success("Transcription complete!");
+    } catch (err: any) {
+      console.error("Transcription error:", err);
+      toast.error(err.message || "Transcription failed — try again");
+      setStep("error");
     }
   };
+
+  // Calculate overall progress across all steps
+  const overallProgress = (() => {
+    const stepIdx = STEP_ORDER.indexOf(step);
+    if (stepIdx < 0) return 0;
+    const stepWeight = 100 / (STEP_ORDER.length - 1); // -1 because "done" is 100%
+    if (step === "done") return 100;
+    return Math.round(stepIdx * stepWeight + (progress / 100) * stepWeight);
+  })();
 
   const copy = async (text: string, which: "t" | "tr") => {
     await navigator.clipboard.writeText(text);
