@@ -11,13 +11,18 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Stripe product/price mapping
+const PLANS = {
+  creator: { product_id: "prod_U88gF48nQTStB2", price_id: "price_1T9sPXDr9So14XztRB4YmLHl" },
+  studio:  { product_id: "prod_U88hsSpnApR9Gt", price_id: "price_1T9sQ3Dr9So14XztEgFfLh6x" },
+  scale:   { product_id: "prod_U88hnL1CuEMnfo", price_id: "price_1T9sQTDr9So14Xzta4ARSzhl" },
+};
+
 const Pricing = () => {
   const navigate = useNavigate();
-  const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
 
-  const handleUpgrade = async (planName: string) => {
-    // Check if user is logged in
+  const handleUpgrade = async (planKey: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -25,29 +30,32 @@ const Pricing = () => {
       return;
     }
 
-    if (planName === "Scale") {
+    if (planKey === "scale") {
       navigate("/book-demo");
       return;
     }
 
-    // For Studio, try the upgrade flow
-    setUpgrading(true);
+    const plan = PLANS[planKey as keyof typeof PLANS];
+    if (!plan) return;
+
+    setUpgrading(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke('upgrade-plan', {
-        body: { user_id: session.user.id, new_plan: 'studio' }
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { price_id: plan.price_id }
       });
 
       if (error) throw error;
 
-      if (data?.mock_mode) {
-        setUpgradeModal("studio");
-      } else if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Could not create checkout session");
       }
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
+      console.error("Checkout error:", err);
     } finally {
-      setUpgrading(false);
+      setUpgrading(null);
     }
   };
 
