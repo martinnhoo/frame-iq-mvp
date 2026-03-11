@@ -144,11 +144,23 @@ Deno.serve(async (req) => {
     };
 
     const platformRule = platformRules[platform] || platformRules["tiktok"];
-    const marketRule = marketRules[market] || marketRules["GLOBAL"];
+    // Market rules only if user explicitly provided compliance notes
+    const marketRule = compliance_notes
+      ? `User-provided compliance notes: ${compliance_notes}`
+      : marketRules[market] || marketRules["GLOBAL"];
 
-    const prompt = `You are a senior performance creative director and compliance specialist. Do a complete pre-flight check on this ad script.
+    const prompt = `You are a friendly, experienced performance creative director reviewing an ad script before production. Your role is to help, not to block — think of yourself as a creative partner giving honest, constructive notes. Celebrate what works. Fix what doesn't.
 
-${transcribed_from_video ? `SOURCE: Transcribed from video file "${video_filename}" using Whisper AI. The transcript may be imperfect — account for this in your analysis.\n` : ""}
+TONE RULES (follow strictly):
+- Be encouraging, specific, and constructive. Never harsh or alarmist.
+- Only use BLOCKED for genuine hard violations (illegal claims, explicit content, hate speech). Everything else gets suggestions.
+- The default verdict is READY or REVIEW. BLOCKED is rare.
+- Compliance = only the selected platform's ad policies. Do NOT invent industry-specific regulations unless explicitly stated in user compliance notes.
+- For every weakness, give a concrete actionable fix written in the same language as the script.
+- Lead with strengths. Then suggest improvements.
+- Assume good faith — ambiguous content gets charitable interpretation + a friendly suggestion.
+
+${transcribed_from_video ? `SOURCE: Transcribed from video "${video_filename}" via Whisper AI. Minor inaccuracies possible — be lenient.\n` : ""}
 SCRIPT:
 \`\`\`
 ${script}
@@ -162,59 +174,70 @@ CONTEXT:
 - Duration: ${duration}s
 - Format: ${format}
 - Product: ${product || "not specified"}
-- Funnel Stage: ${funnel_stage.toUpperCase()} (${funnel_stage === "tofu" ? "Cold audience — awareness, pattern interrupt priority" : funnel_stage === "mofu" ? "Warm audience — consideration, proof and differentiation" : "Hot audience — conversion, urgency and CTA clarity"})
-- User compliance notes: ${compliance_notes || "none"}
-- Transcribed from video: ${transcribed_from_video}
-${persona_context ? `\nTARGET PERSONA: ${persona_context.name || ""} — Age ${persona_context.age_range || "unknown"}, ${persona_context.platforms?.join(", ") || "unknown platforms"}. Pain points: ${(persona_context.pain_points as string[] || []).join(", ")}. Interests: ${(persona_context.interests as string[] || []).join(", ")}. Apply persona lens to all assessments.` : ""}
+- Funnel Stage: ${funnel_stage.toUpperCase()} (${funnel_stage === "tofu" ? "Cold audience — hook and pattern interrupt are the priority" : funnel_stage === "mofu" ? "Warm audience — proof and trust signals matter most" : "Hot audience — offer clarity and CTA urgency are key"})
+${compliance_notes ? `- Compliance notes: ${compliance_notes}` : ""}
+${persona_context ? `\nTARGET PERSONA: ${persona_context.name || ""} — Age ${(persona_context as Record<string, unknown>).age_range || "unknown"}, platforms: ${((persona_context as Record<string, unknown>).platforms as string[] || []).join(", ")}. Pain points: ${((persona_context as Record<string, unknown>).pain_points as string[] || []).join(", ")}. Use this as the lens for hook and copy assessment.` : ""}
 
-PLATFORM RULES (${platform.toUpperCase()}): ${platformRule}
-MARKET RULES (${market}): ${marketRule}
+PLATFORM GUIDELINES (${platform.toUpperCase()} only):
+${platformRule}
+${compliance_notes ? `\nUSER COMPLIANCE CONTEXT:\n${marketRule}` : ""}
 ${userContext}
+
+SCORING:
+- 80-100: Ship it. Minor polish at most.
+- 60-79: Good bones, 1-2 things to fix before production.
+- 40-59: Strong concept, specific rewrite needed on key elements.
+- <40: Rethink the angle — but always give a constructive direction.
+
+VERDICT RULES:
+- READY: score ≥ 70, no hard platform violations
+- REVIEW: score 40-69 OR has fixable issues worth addressing
+- BLOCKED: ONLY for content violating platform terms so severely it would be rejected (explicit, hate, illegal). NOT for weak copy.
 
 Return ONLY valid JSON (no markdown, no backticks):
 {
-  "score": <0-100 overall readiness>,
+  "score": <0-100>,
   "verdict": "READY" | "REVIEW" | "BLOCKED",
-  "verdict_reason": "<one sentence>",
-  "transcription_note": ${transcribed_from_video ? '"Script was auto-transcribed from video audio via Whisper. Review for accuracy before finalizing."' : 'null'},
+  "verdict_reason": "<one sentence focusing on the main opportunity, not the problem>",
+  "transcription_note": ${transcribed_from_video ? '"Auto-transcribed — review for accuracy before finalizing."' : 'null'},
   "hook_analysis": {
     "text": "<extracted 0-3s hook>",
     "type": "<curiosity|social_proof|direct|pain|shock|question|stat>",
     "score": <1-10>,
-    "status": "STRONG|SOLID|REVIEW|WEAK|CRITICAL",
-    "detail": "<specific feedback>",
-    "rewrite": "<stronger hook if score < 7, else null>"
+    "status": "STRONG|SOLID|NEEDS_WORK",
+    "detail": "<specific friendly feedback — what works and why, or what to try>",
+    "rewrite": "<stronger hook in the same language as the script, if score < 7 — otherwise null>"
   },
   "structure": [
-    { "segment": "Hook (0-3s)",    "status": "STRONG|SOLID|REVIEW|WEAK|CRITICAL", "detail": "<assessment>" },
-    { "segment": "Build (3-15s)",  "status": "STRONG|SOLID|REVIEW|WEAK|CRITICAL", "detail": "<assessment>" },
-    { "segment": "Proof (15-25s)", "status": "STRONG|SOLID|REVIEW|WEAK|CRITICAL", "detail": "<assessment>" },
-    { "segment": "CTA (last 5s)",  "status": "STRONG|SOLID|REVIEW|WEAK|CRITICAL", "detail": "<CTA assessment>" }
+    { "segment": "Hook (0-3s)",    "status": "STRONG|SOLID|NEEDS_WORK", "detail": "<what works or a specific improvement>" },
+    { "segment": "Build (3-15s)",  "status": "STRONG|SOLID|NEEDS_WORK", "detail": "<assessment + suggestion if needed>" },
+    { "segment": "Proof (15-25s)", "status": "STRONG|SOLID|NEEDS_WORK", "detail": "<assessment + suggestion if needed>" },
+    { "segment": "CTA (last 5s)",  "status": "STRONG|SOLID|NEEDS_WORK", "detail": "<assessment + better alternative if needed>" }
   ],
   "compliance": [
-    { "rule": "<rule name>", "status": "CLEAR|REVIEW|BLOCKED", "detail": "<specific finding>" }
+    { "rule": "<platform policy area>", "status": "CLEAR|SUGGESTION|FLAG", "detail": "<friendly note — SUGGESTION for minor tweaks, FLAG only for real violations>" }
   ],
   "platform_fit": {
-    "primary": { "platform": "${platform}", "status": "OPTIMAL|GOOD|REVIEW|POOR", "detail": "<assessment>" },
+    "primary": { "platform": "${platform}", "status": "OPTIMAL|GOOD|NEEDS_WORK", "detail": "<what works for this platform + a tip>" },
     "crosspost": [
-      { "platform": "<name>", "status": "OPTIMAL|GOOD|REVIEW|POOR", "detail": "<note>" }
+      { "platform": "<platform>", "status": "OPTIMAL|GOOD|NEEDS_WORK", "detail": "<brief note>" }
     ]
   },
   "language_check": {
-    "status": "CLEAR|REVIEW|ERROR",
+    "status": "CLEAR|SUGGESTION",
     "issues": [
-      { "found": "<word/phrase>", "issue": "<problem>", "fix": "<replacement>" }
+      { "found": "<word/phrase>", "issue": "<why it could be better>", "fix": "<friendly alternative>" }
     ]
   },
   "cta_check": {
     "text": "<extracted CTA>",
-    "status": "STRONG|REVIEW|WEAK",
+    "status": "STRONG|SOLID|NEEDS_WORK",
     "platform_compliant": true,
     "detail": "<assessment>",
-    "suggestion": "<better CTA if needed, else null>"
+    "suggestion": "<stronger CTA if it could be better — otherwise null>"
   },
-  "top_fixes": ["<specific fix 1>", "<specific fix 2>", "<specific fix 3>"],
-  "strengths": ["<strength 1>", "<strength 2>"],
+  "top_fixes": ["<most impactful improvement #1 — specific and actionable>", "<improvement #2>", "<improvement #3>"],
+  "strengths": ["<genuine strength #1>", "<genuine strength #2>", "<genuine strength #3>"],
   "estimated_hook_score": <1-10>,
   "word_count": <number>,
   "reading_time_seconds": <estimated VO seconds>

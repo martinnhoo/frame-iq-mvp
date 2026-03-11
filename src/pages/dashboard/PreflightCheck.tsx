@@ -14,7 +14,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type StatusType = "STRONG" | "SOLID" | "OPTIMAL" | "GOOD" | "CLEAR" | "REVIEW" | "WEAK" | "ERROR" | "CRITICAL" | "BLOCKED" | "POOR";
+type StatusType = "STRONG" | "SOLID" | "OPTIMAL" | "GOOD" | "CLEAR" | "NEEDS_WORK" | "SUGGESTION" | "FLAG" | "REVIEW" | "WEAK" | "ERROR" | "CRITICAL" | "BLOCKED" | "POOR";
 type Verdict = "READY" | "REVIEW" | "BLOCKED";
 
 interface HookAnalysis {
@@ -22,7 +22,7 @@ interface HookAnalysis {
   status: StatusType; detail: string; rewrite: string | null;
 }
 interface StructureRow { segment: string; status: StatusType; detail: string; }
-interface ComplianceRow { rule: string; status: "CLEAR" | "REVIEW" | "BLOCKED"; detail: string; }
+interface ComplianceRow { rule: string; status: "CLEAR" | "SUGGESTION" | "FLAG" | "REVIEW" | "BLOCKED"; detail: string; }
 interface PlatformFitRow { platform: string; status: StatusType; detail: string; }
 interface LanguageIssue { found: string; issue: string; fix: string; }
 interface CTACheck { text: string; status: StatusType; platform_compliant: boolean; detail: string; suggestion: string | null; }
@@ -47,11 +47,11 @@ interface PreflightResult {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PLATFORMS = [
-  { value: "tiktok",        label: "TikTok",          emoji: "🎵" },
-  { value: "reels",         label: "Instagram Reels", emoji: "📸" },
-  { value: "facebook",      label: "Facebook",        emoji: "📘" },
-  { value: "youtube_shorts",label: "YouTube Shorts",  emoji: "▶️" },
-  { value: "google_uac",    label: "Google UAC",      emoji: "🔍" },
+  { value: "tiktok",         label: "TikTok",          emoji: "🎵" },
+  { value: "reels",          label: "Instagram Reels", emoji: "📸" },
+  { value: "facebook",       label: "Facebook",        emoji: "📘" },
+  { value: "youtube_shorts", label: "YouTube Shorts",  emoji: "▶️" },
+  { value: "google_uac",     label: "Google UAC",      emoji: "🔍" },
 ];
 
 const MARKETS = [
@@ -73,23 +73,27 @@ const FORMATS = [
 const DURATIONS = ["15", "30", "60", "90"];
 
 const STATUS_CFG: Record<string, { color: string; bg: string; border: string; icon: React.ReactNode }> = {
-  STRONG:  { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
-  SOLID:   { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
-  OPTIMAL: { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
-  GOOD:    { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
-  CLEAR:   { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
-  REVIEW:  { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
-  WEAK:    { color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
-  ERROR:   { color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
-  CRITICAL:{ color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
-  BLOCKED: { color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
-  POOR:    { color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
+  STRONG:     { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
+  SOLID:      { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
+  OPTIMAL:    { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
+  GOOD:       { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
+  CLEAR:      { color: "#34d399", bg: "rgba(52,211,153,0.1)",  border: "rgba(52,211,153,0.3)",  icon: <CheckCircle className="h-3 w-3" /> },
+  NEEDS_WORK: { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  SUGGESTION: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)",  border: "rgba(96,165,250,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  FLAG:       { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  // Legacy fallbacks (API may still return these occasionally)
+  REVIEW:     { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  WEAK:       { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  ERROR:      { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  CRITICAL:   { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
+  BLOCKED:    { color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)", icon: <XCircle className="h-3 w-3" /> },
+  POOR:       { color: "#fbbf24", bg: "rgba(251,191,36,0.1)",  border: "rgba(251,191,36,0.3)",  icon: <AlertTriangle className="h-3 w-3" /> },
 };
 
 const VERDICT_CFG = {
-  READY:   { color: "#34d399", bg: "rgba(52,211,153,0.12)",  border: "rgba(52,211,153,0.3)",  label: "READY TO POST" },
-  REVIEW:  { color: "#fbbf24", bg: "rgba(251,191,36,0.12)",  border: "rgba(251,191,36,0.3)",  label: "NEEDS REVIEW" },
-  BLOCKED: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.3)", label: "BLOCKED — FIX REQUIRED" },
+  READY:   { color: "#34d399", bg: "rgba(52,211,153,0.12)",  border: "rgba(52,211,153,0.3)",  label: "READY TO PRODUCE" },
+  REVIEW:  { color: "#fbbf24", bg: "rgba(251,191,36,0.12)",  border: "rgba(251,191,36,0.3)",  label: "REVIEW SUGGESTIONS" },
+  BLOCKED: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.3)", label: "NEEDS FIXING" },
 };
 
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
@@ -98,12 +102,21 @@ const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 } 
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
+const STATUS_LABELS: Record<string, string> = {
+  STRONG: "Strong", SOLID: "Solid", OPTIMAL: "Optimal", GOOD: "Good", CLEAR: "Clear",
+  NEEDS_WORK: "Suggestion", SUGGESTION: "Tip", FLAG: "Note",
+  // Legacy
+  REVIEW: "Suggestion", WEAK: "Suggestion", ERROR: "Note",
+  CRITICAL: "Suggestion", POOR: "Suggestion", BLOCKED: "Issue",
+};
+
 const StatusBadge = ({ status }: { status: string }) => {
-  const cfg = STATUS_CFG[status] || STATUS_CFG.REVIEW;
+  const cfg = STATUS_CFG[status] || STATUS_CFG.NEEDS_WORK;
+  const label = STATUS_LABELS[status] || status;
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border"
       style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, ...mono }}>
-      {cfg.icon}{status}
+      {cfg.icon}{label}
     </span>
   );
 };
@@ -540,9 +553,9 @@ export default function PreflightCheck() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-bold text-white" style={syne}>
-                    {result.verdict === "READY" ? "Cleared for post" :
-                     result.verdict === "BLOCKED" ? "Blocked — fix required" :
-                     "Needs review before posting"}
+                    {result.verdict === "READY" ? "Looking good — ready to produce" :
+                     result.verdict === "BLOCKED" ? "A few things to fix first" :
+                     "Almost there — check the suggestions below"}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold border"
                     style={{ color: verdictCfg!.color, background: verdictCfg!.bg, borderColor: verdictCfg!.border, ...mono }}>
@@ -597,7 +610,7 @@ export default function PreflightCheck() {
               {/* Top Fixes */}
               {result.top_fixes?.length > 0 && (
                 <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(251,191,36,0.15)" }}>
-                  <SectionHeader label="Top Fixes" icon={<Zap className="h-3.5 w-3.5" />} />
+                  <SectionHeader label="Top Suggestions" icon={<Zap className="h-3.5 w-3.5" />} />
                   <div className="p-4 space-y-2">
                     {result.top_fixes.map((fix, i) => (
                       <div key={i} className="flex items-start gap-2.5">
