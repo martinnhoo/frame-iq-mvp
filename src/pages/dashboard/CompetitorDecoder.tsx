@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Loader2, AlertTriangle, TrendingUp, Shield, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
