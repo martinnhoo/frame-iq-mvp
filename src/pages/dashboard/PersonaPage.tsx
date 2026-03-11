@@ -432,165 +432,28 @@ CTA: ${persona.cta_style}`;
   // ══════════════════════════════════════════════════════════════════════════
   // ── DETAIL VIEW ──
   // ══════════════════════════════════════════════════════════════════════════
-  if (view === "detail" && result)
-    return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button onClick={backToList} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
-            <ChevronLeft className="h-4 w-4" /> All Personas
-          </button>
-          <div className="flex items-center gap-2">
-            {/* Activate / Deactivate button */}
-            {activeDetail && globalPersona?.id === activeDetail.id ? (
-              <button onClick={() => setGlobalPersona(null)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
-                <Check className="h-3.5 w-3.5" /> Active — deactivate
-              </button>
-            ) : (
-              <button onClick={() => activeDetail && setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
-                <Users className="h-3.5 w-3.5" /> Use this persona
-              </button>
-            )}
-            <button onClick={() => handleCopy(result)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-              Copy
-            </button>
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-              <RefreshCw className="h-3.5 w-3.5" /> New persona
-            </button>
-          </div>
-        </div>
-
-        {/* Identity card with 3D avatar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6"
-        >
-          <div className="flex items-start gap-5">
-            <div className="shrink-0">
-              <Persona3DAvatar emoji={result.avatar_emoji} name={result.name} gender={result.gender} size="lg" />
-            </div>
-            <div className="pt-2">
-              <h2 className="text-2xl font-bold text-white">{result.name}</h2>
-              <p className="text-white/40 text-sm">{result.age} · {result.gender}</p>
-              <p className="text-purple-300 font-semibold mt-1">{result.headline}</p>
-              <p className="text-white/50 text-sm mt-3 leading-relaxed">{result.bio}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Grid */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { title: "😤 Pain Points", items: result.pains, color: "text-red-400" },
-            { title: "✨ Desires", items: result.desires, color: "text-yellow-400" },
-            { title: "🚧 Objections", items: result.objections, color: "text-orange-400" },
-            { title: "⚡ Purchase Triggers", items: result.triggers, color: "text-green-400" },
-          ].map(({ title, items, color }, idx) => (
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + idx * 0.05 }}
-              className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5"
-            >
-              <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
-              <ul className="space-y-2">
-                {items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-                    <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Ad strategy */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5"
-        >
-          <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Ad Strategy for {result.name}</h3>
-
-          <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Hook Angles</p>
-            <div className="space-y-2">
-              {result.hook_angles.map((h, i) => (
-                <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.04]">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm text-white/70">{h}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Formats</p>
-              <div className="flex flex-wrap gap-2">
-                {result.best_formats.map((f) => (
-                  <span key={f} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Platforms</p>
-              <div className="flex flex-wrap gap-2">
-                {result.best_platforms.map((p) => (
-                  <span key={p} className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 text-xs border border-purple-500/20">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
-            <div>
-              <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">Language Style</p>
-              <p className="text-sm text-white/60">{result.language_style}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">CTA Style</p>
-              <p className="text-sm text-white/60">{result.cta_style}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Media habits */}
-        {result.media_habits?.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5"
-          >
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 Media Habits</h3>
-            <ul className="space-y-2">
-              {result.media_habits.map((h, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-                  <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">•</span>
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-      </div>
-    );
+  if (view === "detail" && result) {
+    return <PersonaDetailEditable
+      result={result}
+      activeDetail={activeDetail}
+      globalPersona={globalPersona}
+      setGlobalPersona={setGlobalPersona}
+      onCopy={() => handleCopy(result)}
+      copied={copied}
+      onNew={startNew}
+      onBack={backToList}
+      onSave={async (updated) => {
+        if (activeDetail) {
+          await supabase.from("personas" as never)
+            .update({ result: updated } as never)
+            .eq("id" as never, activeDetail.id);
+          setSaved(prev => prev.map(p => p.id === activeDetail.id ? { ...p, result: updated } : p));
+        }
+        setResult(updated);
+        toast.success("Persona saved!");
+      }}
+    />;
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // ── BUILDER STEPS ──
