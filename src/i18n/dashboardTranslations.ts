@@ -225,6 +225,24 @@ export type DashT = {
   pw_cta: string;
   pw_skip: string;
 
+  // Gamification
+  gm_streak: string;
+  gm_streak_days: string;
+  gm_mastery: string;
+  gm_level_observer: string;
+  gm_level_analyst: string;
+  gm_level_strategist: string;
+  gm_level_director: string;
+  gm_weekly_insight: string;
+  gm_score_up: string;
+  gm_score_down: string;
+  gm_score_stable: string;
+  gm_vs_last_week: string;
+  gm_first_today: string;
+  gm_on_rhythm: string;
+  gm_power_user: string;
+  gm_comeback: string;
+
   // Common
   cm_save: string;
   cm_cancel: string;
