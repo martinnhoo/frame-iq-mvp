@@ -257,12 +257,12 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_cta_trial: "Start 14-day trial",
     pricing_cta_demo: "Book a demo",
 
-    cta_title: "Ready to 10x your creative output?",
-    cta_subtitle: "Join 147+ performance teams shipping more creative, faster.",
-    cta_primary: "Get started free",
+    cta_title: "Still guessing why your ads underperform?",
+    cta_subtitle: "Join 147+ teams that stopped guessing and started growing.",
+    cta_primary: "Analyze your first ad free",
     cta_secondary: "Book a demo",
 
-    footer_desc: "AI-powered creative intelligence for performance marketing teams.",
+    footer_desc: "The growth tool that tells you why ads fail — and how to fix them. Used by 147+ performance marketing teams.",
     footer_product: "Product",
     footer_company: "Company",
     footer_legal: "Legal",
