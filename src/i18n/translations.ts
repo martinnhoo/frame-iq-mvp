@@ -618,7 +618,7 @@ export const translations: Record<Language, TranslationKeys> = {
     social_ads: "Analysierte Anzeigen", social_teams: "Performance-Teams", social_countries: "Länder", social_time: "Durchschn. Analysezeit",
     problem_label: "Die Kosten langsamer Creatives",
     problem_title: "Die meisten Teams verschwenden 60% ihres Creative-Budgets, bevor eine einzige Anzeige live geht.",
-    problem_subtitle: "Schwache Hooks. Ungetestete Winkel. Briefs, die Editoren ignorieren. FrameIQ löst all das — bevor Sie einen Cent für die Produktion ausgeben.",
+    problem_subtitle: "Schwache Hooks. Ungetestete Winkel. Briefs, die Editoren ignorieren. AdBrief löst all das — bevor Sie einen Cent für die Produktion ausgeben.",
     stat1_label: "Vom Upload zum vollständigen Creative-Brief",
     stat1_sub: "vs. 8 Stunden manuelle Analyse",
     stat2_label: "Mehr Anzeigenvariationen pro Sprint",
