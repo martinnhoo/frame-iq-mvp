@@ -425,7 +425,7 @@ const blogPosts: Record<string, {
       "## Format Performance Data",
       "Based on our analysis of 15,000+ TikTok ads: UGC testimonial (highest CVR), product demo with creator narration (best for e-commerce), problem-solution (strongest for apps and SaaS), and 'day in my life' integration (lowest CPA for lifestyle brands).",
       "## Creative Production for TikTok",
-      "The biggest mistake: treating TikTok as 'just another placement.' TikTok creative needs its own strategy, its own briefs, and ideally its own creators. Use AI analysis to study what's winning on TikTok specifically, then generate TikTok-native briefs with FrameIQ.",
+      "The biggest mistake: treating TikTok as 'just another placement.' TikTok creative needs its own strategy, its own briefs, and ideally its own creators. Use AI analysis to study what's winning on TikTok specifically, then generate TikTok-native briefs with AdBrief.",
     ],
   },
   "scaling-dtc-creative": {
