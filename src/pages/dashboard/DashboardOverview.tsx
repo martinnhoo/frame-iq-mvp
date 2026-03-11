@@ -250,7 +250,7 @@ export default function DashboardOverview() {
             <button onClick={() => navigate("/dashboard/persona")}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all hover:scale-105"
               style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
-              <Sparkles className="h-3.5 w-3.5" /> Create Persona
+              <Sparkles className="h-3.5 w-3.5" /> {dt("ov_create_persona")}
             </button>
             <button onClick={() => { setDismissedBanner(true); localStorage.setItem("frameiq_dismiss_profile_banner", "1"); }}
               className="text-white/20 hover:text-white/50 transition-colors shrink-0 p-1">
