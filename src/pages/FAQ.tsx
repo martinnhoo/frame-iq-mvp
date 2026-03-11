@@ -152,7 +152,7 @@ const FAQ = () => {
           </Accordion>
 
           {filtered.length === 0 && (
-            <p className="text-center text-muted-foreground py-12">No results found. Try a different search or contact support@frameiq.com.</p>
+            <p className="text-center text-muted-foreground py-12">No results found. Try a different search or contact support@adbrief.pro.</p>
           )}
         </div>
       </section>

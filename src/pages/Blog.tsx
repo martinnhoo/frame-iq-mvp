@@ -66,7 +66,7 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>FrameIQ Blog — Creative Strategy, AI & Performance Marketing Insights</title>
+        <title>AdBrief Blog — Creative Strategy, AI & Performance Marketing Insights</title>
         <meta name="description" content="Expert insights on creative strategy, AI-powered ad production, performance marketing, and scaling ad creative for growth teams and Creative Strategists." />
         <meta name="keywords" content="creative strategy blog, AI ad production, performance marketing, ad creative, video ad analysis, creative strategist, DTC ads, TikTok ads, Meta ads" />
         <link rel="canonical" href={`${baseUrl}/blog`} />

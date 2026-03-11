@@ -166,7 +166,7 @@ const Contact = () => {
             >
               <h2 className="text-xl font-semibold mb-3">Enterprise & Custom Plans</h2>
               <p className="text-secondary text-sm leading-relaxed mb-6">
-                Need API access, custom integrations, or a dedicated CSM? Book a call with our team to discuss how FrameIQ can fit your workflow.
+                Need API access, custom integrations, or a dedicated CSM? Book a call with our team to discuss how AdBrief can fit your workflow.
               </p>
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"

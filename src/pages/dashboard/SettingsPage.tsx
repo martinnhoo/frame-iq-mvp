@@ -129,7 +129,7 @@ const SettingsPage = () => {
       <Card className="border-border bg-card">
         <CardHeader>
           <CardTitle className="text-base">API Integrations</CardTitle>
-          <CardDescription>AI services powering FrameIQ.</CardDescription>
+          <CardDescription>AI services powering AdBrief.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {[

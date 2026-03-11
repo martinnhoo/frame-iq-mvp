@@ -107,7 +107,7 @@ const VideosList = () => {
       if (data?.video_url) {
         const a = document.createElement("a");
         a.href = data.video_url;
-        a.download = "frameiq-video.mp4";
+        a.download = "adbrief-video.mp4";
         a.click();
         toast.success("Video ready — downloading...");
       }

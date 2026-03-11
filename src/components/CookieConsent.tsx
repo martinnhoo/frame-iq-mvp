@@ -7,7 +7,7 @@ const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("frameiq-cookie-consent");
+    const consent = localStorage.getItem("adbrief-cookie-consent");
     if (!consent) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
@@ -15,12 +15,14 @@ const CookieConsent = () => {
   }, []);
 
   const accept = () => {
-    localStorage.setItem("frameiq-cookie-consent", "accepted");
+    localStorage.setItem("adbrief-cookie-consent", "accepted");
     setVisible(false);
   };
 
   const decline = () => {
-    localStorage.setItem("frameiq-cookie-consent", "declined");
+    localStorage.setItem("adbrief-cookie-consent", "declined");
+    setVisible(false);
+  };
     setVisible(false);
   };
 

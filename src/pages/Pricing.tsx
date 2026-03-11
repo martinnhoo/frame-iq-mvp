@@ -349,7 +349,7 @@ const Pricing = () => {
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">
-              © 2026 FrameIQ, Inc. All rights reserved.
+              © 2026 AdBrief. All rights reserved.
               {" · "}
               <Link to="/" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               {" · "}
