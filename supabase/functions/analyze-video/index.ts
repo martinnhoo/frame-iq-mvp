@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
 
+    console.log('analyze-video called:', { 
+      hasFile: !!videoFile, 
+      fileSize: videoFile?.size, 
+      fileName: videoFile?.name,
+      transcribe_only, 
+      hasVideoUrl: !!videoUrl 
+    });
+
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
@@ -50,6 +58,7 @@ Deno.serve(async (req) => {
 
     if (videoFile && OPENAI_API_KEY) {
       try {
+        console.log('Whisper: starting transcription, file size:', videoFile.size, 'name:', videoFile.name);
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
         whisperForm.append('model', 'whisper-1');
@@ -65,6 +74,11 @@ Deno.serve(async (req) => {
           const whisperData = await whisperRes.json();
           transcript = whisperData.text || '';
           duration = Math.round(whisperData.duration || 30);
+          console.log('Whisper: success, transcript length:', transcript.length, 'duration:', duration);
+        } else {
+          const errText = await whisperRes.text();
+          console.error('Whisper API error:', whisperRes.status, errText);
+          transcript = '[Audio transcription failed — Whisper API error]';
         }
       } catch (e) {
         console.error('Whisper error:', e);
@@ -77,10 +91,16 @@ Deno.serve(async (req) => {
     // If transcribe_only, return just the transcript
     if (transcribe_only) {
       if (!transcript || transcript.startsWith('[')) {
+        const reason = !OPENAI_API_KEY 
+          ? 'OPENAI_API_KEY not configured' 
+          : !videoFile 
+            ? 'No video file received' 
+            : `Whisper failed: ${transcript}`;
+        console.error('transcribe_only failed:', reason);
         return new Response(JSON.stringify({ 
           error: 'transcription_failed',
           transcript: '',
-          message: OPENAI_API_KEY ? 'Could not transcribe audio from this file' : 'OPENAI_API_KEY not configured — transcription unavailable'
+          message: reason
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ 

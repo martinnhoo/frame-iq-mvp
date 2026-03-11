@@ -120,7 +120,19 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         }
       );
       const data = await res.json();
-      const rawTranscript = data?.transcript || data?.error || "Transcription failed — check API key";
+      console.log('Transcription response:', data);
+      if (data?.error) {
+        toast.error(data.message || "Transcription failed");
+        setTranscript("");
+        setTranscribing(false);
+        return;
+      }
+      const rawTranscript = data?.transcript || "";
+      if (!rawTranscript) {
+        toast.error("No transcript returned");
+        setTranscribing(false);
+        return;
+      }
       setTranscript(rawTranscript);
       if (targetLang !== "en" && !rawTranscript.includes("failed") && !rawTranscript.includes("error")) {
         const lang = LANGUAGES.find(l => l.code === targetLang)!;
