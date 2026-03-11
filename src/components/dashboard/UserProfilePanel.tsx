@@ -248,6 +248,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [personasLoading, setPersonasLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaRecord | null>(null);
 
   // Sync fields when panel opens
   useEffect(() => {
