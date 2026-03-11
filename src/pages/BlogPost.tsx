@@ -677,7 +677,7 @@ const BlogPost = () => {
   const { language } = useLanguage();
   const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
   const hrefLangCode = langMap[language] || "en";
-  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.frameiq.com";
+  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.adbrief.pro";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
