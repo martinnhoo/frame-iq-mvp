@@ -550,7 +550,7 @@ const Index = () => {
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' 
                           : 'bg-card text-foreground hover:bg-muted border border-border'
                       }`}
-                      onClick={() => plan.name === "Scale" ? navigate("/book-demo") : navigate("/signup")}
+                      onClick={() => navigate(plan.name === "Free" ? "/signup" : "/pricing")}
                     >
                       {plan.cta}
                     </Button>
