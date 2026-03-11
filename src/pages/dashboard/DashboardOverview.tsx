@@ -468,11 +468,11 @@ export default function DashboardOverview() {
                 {recentActivity.length === 0 ? (
                   <div className="flex flex-col items-center text-center py-8 gap-3">
                     <span className="text-3xl">📂</span>
-                    <p className="text-sm text-white/30">No work yet</p>
+                    <p className="text-sm text-white/30">{dt("ov_no_work")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
                       style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
-                      <Plus className="h-3 w-3" /> Get started
+                      <Plus className="h-3 w-3" /> {dt("ov_get_started")}
                     </button>
                   </div>
                 ) : recentActivity.map(item => (
