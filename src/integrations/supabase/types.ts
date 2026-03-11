@@ -410,6 +410,7 @@ export type Database = {
           created_at: string
           id: string
           period: string
+          preflights_count: number
           translations_count: number | null
           user_id: string
           videos_count: number
@@ -420,6 +421,7 @@ export type Database = {
           created_at?: string
           id?: string
           period: string
+          preflights_count?: number
           translations_count?: number | null
           user_id: string
           videos_count?: number
@@ -430,6 +432,7 @@ export type Database = {
           created_at?: string
           id?: string
           period?: string
+          preflights_count?: number
           translations_count?: number | null
           user_id?: string
           videos_count?: number

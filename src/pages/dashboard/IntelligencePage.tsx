@@ -93,7 +93,7 @@ export default function IntelligencePage() {
     const [{ data: analysesData }, { data: profileData }, { data: memData }] = await Promise.all([
       supabase
         .from("analyses")
-        .select("id, created_at, result, hook_strength, hook_score, status")
+        .select("id, created_at, result, hook_strength, status")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("created_at", { ascending: false })

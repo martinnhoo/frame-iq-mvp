@@ -1,0 +1,1 @@
+ALTER TABLE public.usage ADD COLUMN IF NOT EXISTS preflights_count integer NOT NULL DEFAULT 0;
