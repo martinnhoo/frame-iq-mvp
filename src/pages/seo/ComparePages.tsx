@@ -129,7 +129,7 @@ export function CompareDetail() {
           ))}
         </div>
 
-        <SeoCTA headline={`Try FrameIQ free`} sub={`See why teams choose FrameIQ over ${comp.competitorName} for AI creative analysis.`} />
+        <SeoCTA headline={`Try AdBrief free`} sub={`See why teams choose AdBrief over ${comp.competitorName} for AI creative analysis.`} />
       </div>
     </SeoLayout>
   );

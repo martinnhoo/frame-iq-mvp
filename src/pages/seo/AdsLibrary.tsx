@@ -105,7 +105,7 @@ export function AdsLibraryLanding() {
     ?? SEO_LANDING_PAGES.find(p => slug?.includes(p.filterPlatform ?? "") || slug?.includes(p.filterIndustry ?? ""));
 
   if (!page) return (
-    <SeoLayout title="Ad Examples — FrameIQ" description="Browse top ad examples with hook scores and AI analysis." canonical={`/${slug}`}>
+    <SeoLayout title="Ad Examples — AdBrief" description="Browse top ad examples with hook scores and AI analysis." canonical={`/${slug}`}>
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "64px 24px 0" }}>
         <AdsLibraryGrid title="Ad Examples" />
         <SeoCTA />
