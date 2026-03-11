@@ -137,9 +137,12 @@ const BoardDetail = () => {
   );
 
   const content = board.content as Record<string, unknown> | null;
-  const meta = (content?.meta as Record<string, unknown>) || {};
+  // Support both Claude response structure (overview/hook) and mock structure (meta/strategy)
+  const overview = (content?.overview as Record<string, unknown>) || (content?.meta as Record<string, unknown>) || {};
   const audience = (content?.audience as Record<string, unknown>) || {};
+  const hook = (content?.hook as Record<string, unknown>) || {};
   const strategy = (content?.strategy as Record<string, unknown>) || {};
+  const character = (content?.character as Record<string, unknown>) || {};
   const scenes = ((content?.scenes || []) as Record<string, unknown>[]);
   const production = (content?.production as Record<string, unknown>) || {};
 
