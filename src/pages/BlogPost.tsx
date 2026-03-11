@@ -565,7 +565,7 @@ const blogPosts: Record<string, {
       "Marcus ran performance marketing for a mid-size DTC supplement brand. His agency was charging $12K/month for creative production — and delivering 15-20 ad variations. Turnaround was 2-3 weeks per batch. Revision rounds were endless.",
       "After 8 months of frustration, he fired the agency and went solo with AI tools. Here's what happened.",
       "## Month 1: Setting Up the AI Stack",
-      "Marcus spent the first week setting up his workflow: FrameIQ for competitive analysis and production briefs ($99/month), AI video generation tools ($149/month), AI voiceover platform ($29/month), and CapCut for final edits and polish ($0). Total: $277/month vs. $12,000/month for the agency.",
+      "Marcus spent the first week setting up his workflow: AdBrief for competitive analysis and production briefs ($99/month), AI video generation tools ($149/month), AI voiceover platform ($29/month), and CapCut for final edits and polish ($0). Total: $277/month vs. $12,000/month for the agency.",
       "## The Daily Workflow",
       "### Monday: Research Day (2 hours)",
       "Marcus uploads 20-30 competitor ads into FrameIQ every Monday. The AI extracts hooks, identifies creative models, and generates a competitive intelligence report. He reviews the report, picks 3-5 concepts to explore, and moves on. This replaced a weekly 1-hour strategy call with the agency that produced vague 'inspiration decks.'",
