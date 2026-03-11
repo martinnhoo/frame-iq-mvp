@@ -373,7 +373,7 @@ const blogPosts: Record<string, {
       "## CTA Optimization",
       "Soft CTAs ('Learn more') drive more clicks but lower intent. Hard CTAs ('Buy now') drive fewer clicks but higher conversion. Test both — the right CTA depends on your funnel.",
       "## Using AI for Meta Creative",
-      "AI tools help you produce the volume Meta's algorithm demands. Analyze winning Meta ads with FrameIQ, extract the patterns, generate briefs, and ship creative faster than your competitors.",
+      "AI tools help you produce the volume Meta's algorithm demands. Analyze winning Meta ads with AdBrief, extract the patterns, generate briefs, and ship creative faster than your competitors.",
     ],
   },
   "editor-briefing-framework": {
