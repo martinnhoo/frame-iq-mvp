@@ -165,7 +165,7 @@ const blogPosts: Record<string, {
     keywords: ["UGC ads", "studio ads", "ad creative format", "UGC vs professional ads", "TikTok UGC", "Meta ads format"],
     content: [
       "## The UGC vs. Studio Debate",
-      "Ask any performance marketer whether UGC or studio content converts better, and you'll get a strong opinion. But opinions aren't data. We used FrameIQ's AI analysis engine to study 50,000 ads across Meta, TikTok, and YouTube to answer this question definitively.",
+      "Ask any performance marketer whether UGC or studio content converts better, and you'll get a strong opinion. But opinions aren't data. We used AdBrief's AI analysis engine to study 50,000 ads across Meta, TikTok, and YouTube to answer this question definitively.",
       "Spoiler: the answer is 'it depends' — but the data tells us exactly what it depends on.",
       "## The Data: Overall Performance",
       "Across all platforms and verticals: UGC ads have 23% higher CTR on average. Studio ads have 18% higher conversion rate on average. Hybrid formats (UGC-style with studio production quality) outperform both by 31%.",
