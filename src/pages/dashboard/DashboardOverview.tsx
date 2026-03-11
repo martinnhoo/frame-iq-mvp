@@ -188,13 +188,13 @@ export default function DashboardOverview() {
   const hasData = insights.totalAnalyzed > 0;
 
   const tools = [
-    { title: "Analyze",     desc: "Hook score in 60s",        icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
-    { title: "Board",       desc: "Production brief",          icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
-    { title: "Hooks",       desc: "10 angles in 30s",          icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
-    { title: "Translate",   desc: "Any market",                icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
-    { title: "Templates",   desc: "183 formats",               icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
-    { title: "Pre-flight",  desc: "Before going live",         icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
-    { title: "Persona",     desc: "Define audience",           icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
+    { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
+    { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
+    { title: dt("ov_hooks"),     desc: dt("ov_hooks_desc"),     icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
+    { title: dt("nav_translate"),desc: dt("ov_translate_desc"), icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
+    { title: dt("ov_templates"), desc: dt("ov_templates_desc"), icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
+    { title: dt("nav_preflight"),desc: dt("ov_preflight_desc"), icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
+    { title: dt("nav_persona"),  desc: dt("ov_persona_desc"),   icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
   ];
 
   const usageBlocks = [
