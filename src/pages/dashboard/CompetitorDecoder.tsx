@@ -60,8 +60,11 @@ export default function CompetitorDecoder() {
     setLoading(true);
     setResult(null);
     try {
+      const personaCtx = selectedPersona
+        ? `Name: ${selectedPersona.name}. ${selectedPersona.headline}. Pains: ${selectedPersona.pains?.join(", ")}. Desires: ${selectedPersona.desires?.join(", ")}. Best platforms: ${selectedPersona.best_platforms?.join(", ")}. Hook angles: ${selectedPersona.hook_angles?.join(", ")}. Language: ${selectedPersona.language_style}`
+        : undefined;
       const { data, error } = await supabase.functions.invoke("decode-competitor", {
-        body: { ad_text: adText.trim(), industry, market },
+        body: { ad_text: adText.trim(), industry, market, context: context.trim() || undefined, persona_context: personaCtx },
       });
       if (error) throw error;
       setResult(data);
