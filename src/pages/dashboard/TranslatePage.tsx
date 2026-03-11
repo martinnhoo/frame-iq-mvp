@@ -602,8 +602,9 @@ const AdaptMode = ({ userId }: { userId: string }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TranslatePage = () => {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const [mode, setMode] = useState<"transcribe" | "adapt">("transcribe");
+  const [showPersonaWarning, setShowPersonaWarning] = useState(!selectedPersona);
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-5">
