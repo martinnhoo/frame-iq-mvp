@@ -174,7 +174,7 @@ export const SEO_GUIDES = [
     title: "TikTok Ad Structure: The Hook → Story → CTA Framework",
     subtitle: "How to structure a TikTok ad that converts — from the first frame to the call to action.",
     readTime: 7,
-    metaTitle: "TikTok Ad Structure Guide — Hook → Story → CTA | FrameIQ",
+    metaTitle: "TikTok Ad Structure Guide — Hook → Story → CTA | AdBrief",
     metaDescription: "How to structure a TikTok ad that converts. The proven Hook → Story → CTA framework with real examples and scene breakdown.",
     keywords: ["tiktok ad structure", "tiktok ad framework", "how to structure a tiktok ad", "tiktok video ad structure", "tiktok ad template"],
     intro: "Every high-performing TikTok ad follows the same 3-part structure. It doesn't matter if it's a 15-second product clip or a 60-second UGC testimonial — the skeleton is always the same: Hook stops the scroll, Story builds desire, CTA drives action. Here's how to execute each part.",
