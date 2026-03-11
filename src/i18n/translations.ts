@@ -980,7 +980,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_title: "AI视频生成",
     feature_ai_video_desc: "从概念看板到带AI配音的MP4。无需编辑人员。",
     feature_api_title: "API访问",
-    feature_api_desc: "通过REST API将FrameIQ集成到您现有的工作流程中。",
+    feature_api_desc: "通过REST API将AdBrief集成到您现有的工作流程中。",
 
     pricing_label: "价格",
     pricing_title: "简单透明的定价",
