@@ -368,7 +368,7 @@ export const SEO_LANDING_PAGES = [
     title: "UGC Ad Examples",
     headline: "The Best UGC Ad Examples — What Makes Them Work",
     subheadline: "User-generated content ads outperform polished creative by 4x on average. Here's why.",
-    metaTitle: "Best UGC Ad Examples (Analyzed) — FrameIQ",
+    metaTitle: "Best UGC Ad Examples (Analyzed) — AdBrief",
     metaDescription: "Browse the best UGC ad examples with hook scores and creative analysis. See exactly why UGC ads convert — and how to produce them.",
     keywords: ["ugc ad examples", "ugc advertising examples", "user generated content ads", "ugc creative examples", "ugc tiktok ads"],
     intro: "UGC ads consistently outperform studio-produced creative on TikTok, Reels, and Facebook. The reason is trust — audiences recognize authentic content and respond differently to it. This library collects the highest-scoring UGC ads across platforms, with full creative analysis.",
