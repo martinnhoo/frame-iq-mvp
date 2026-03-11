@@ -281,7 +281,7 @@ const BoardDetail = () => {
                   <p className="text-white font-medium capitalize">{value}</p>
                 </div>
               ))}
-              {strategy.key_message && (
+              {(hook.hook_line || hook.visual_hook || strategy.key_message) && (
                 <div className="rounded-xl bg-white/[0.04] p-3 sm:col-span-2">
                   <p className="text-xs text-white/30 mb-1">Key Message</p>
                   <p className="text-white/70 italic">"{String(strategy.key_message)}"</p>
