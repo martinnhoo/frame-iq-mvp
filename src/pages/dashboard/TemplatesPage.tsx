@@ -1731,7 +1731,7 @@ const TemplatesPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
                     >
-                      {loading === template.id ? "Loading..." : <><span>Use template</span><ArrowRight className="h-3.5 w-3.5" /></>}
+                      {loading === template.id ? "Loading..." : <><span>{ot("tp_use")}</span><ArrowRight className="h-3.5 w-3.5" /></>}
                     </button>
                     <button
                       onClick={() => setTranslateModal(template)}
