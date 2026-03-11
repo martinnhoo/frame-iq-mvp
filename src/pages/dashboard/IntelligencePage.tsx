@@ -465,7 +465,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function IntelligencePage() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const [analyses, setAnalyses] = useState<AnalysisRow[]>([]);
   const [imports, setImports] = useState<AdsImport[]>([]);
   const [memoryData, setMemoryData] = useState<Array<{ hook_type: string; hook_score: number; platform: string; notes: string; created_at: string }>>([]);
