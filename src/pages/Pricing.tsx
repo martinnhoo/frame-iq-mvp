@@ -351,9 +351,11 @@ const Pricing = () => {
             <p className="pt-2">
               © 2026 AdBrief. All rights reserved.
               {" · "}
-              <Link to="/" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               {" · "}
-              <Link to="/" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              {" · "}
+              <Link to="/refund" className="hover:text-foreground transition-colors">Refund Policy</Link>
             </p>
           </div>
         </div>
