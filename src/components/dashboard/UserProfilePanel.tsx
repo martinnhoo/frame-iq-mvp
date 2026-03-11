@@ -661,15 +661,31 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     Generate one using the Persona Builder in the sidebar to see it here
                   </p>
                 </div>
+              ) : selectedPersona ? (
+                <PersonaDetailView
+                  persona={selectedPersona}
+                  onBack={() => setSelectedPersona(null)}
+                  onSave={(updated) => {
+                    setPersonas(prev => prev.map(p => p.id === updated.id ? updated : p));
+                    setSelectedPersona(updated);
+                  }}
+                  onDelete={() => { handleDelete(selectedPersona.id); setSelectedPersona(null); }}
+                  isDeleting={deletingId === selectedPersona.id}
+                  userId={user.id}
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
                   {personas.map((persona) => (
-                    <PersonaCard
-                      key={persona.id}
-                      persona={persona}
-                      onDelete={() => handleDelete(persona.id)}
-                      isDeleting={deletingId === persona.id}
-                    />
+                    <div key={persona.id} className="flex flex-col items-center gap-2 cursor-pointer group"
+                      onClick={() => setSelectedPersona(persona)}>
+                      <Persona3DAvatar
+                        emoji={persona.avatar_emoji || "👤"}
+                        name={persona.name}
+                        gender={persona.gender || ""}
+                        size="md"
+                      />
+                      <p className="text-xs text-white/50 group-hover:text-white transition-colors text-center truncate w-full">{persona.name}</p>
+                    </div>
                   ))}
                 </div>
               )}
