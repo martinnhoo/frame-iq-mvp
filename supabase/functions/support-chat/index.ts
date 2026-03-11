@@ -42,7 +42,7 @@ Use this to give more personalized, relevant answers.`
     // Mock mode if no API key
     if (!apiKey) {
       return new Response(JSON.stringify({
-        reply: "Support AI is not yet connected. For help, email team@frameiq.com and we'll get back to you shortly."
+        reply: "Support AI is not yet connected. For help, email team@adbrief.pro and we'll get back to you shortly."
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
