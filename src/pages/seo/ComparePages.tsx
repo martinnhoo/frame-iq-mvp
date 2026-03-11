@@ -102,7 +102,7 @@ export function CompareDetail() {
         {/* Pros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
           <div style={{ borderRadius: 16, padding: 20, background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 14 }}>FrameIQ strengths</p>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 14 }}>AdBrief strengths</p>
             {comp.frameiqPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                 <span style={{ color: "#34d399", flexShrink: 0 }}>✓</span>{p}
