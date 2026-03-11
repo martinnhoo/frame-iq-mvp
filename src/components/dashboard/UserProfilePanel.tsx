@@ -72,7 +72,7 @@ const PLAN_INFO: Record<string, { label: string; gradient: string; desc: string;
   free:    { label: "Free",    gradient: "from-white/20 to-white/5",          desc: "3 analyses · 3 boards / mo",         price: "$0" },
   creator: { label: "Creator", gradient: "from-blue-500/30 to-blue-900/10",   desc: "3 analyses · 1 board / mo",          price: "$9/mo" },
   starter: { label: "Starter", gradient: "from-purple-500/30 to-purple-900/10",desc: "15 analyses · 10 boards / mo",      price: "$19/mo" },
-  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",   desc: "30 analyses · 30 boards · 5 videos", price: "$49/mo" },
+  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",   desc: "30 analyses · 30 boards · hooks & pre-flights", price: "$49/mo" },
   scale:   { label: "Scale",   gradient: "from-yellow-500/30 to-yellow-900/10",desc: "500 analyses · unlimited pre-flight",price: "$499/mo" },
 };
 

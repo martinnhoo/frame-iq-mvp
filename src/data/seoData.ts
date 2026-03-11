@@ -247,7 +247,7 @@ export const SEO_COMPARISONS = [
     keywords: ["frameiq vs adspy", "adspy alternative", "adspy competitor", "best ad intelligence tool 2025"],
     summary: "AdSpy is a massive Facebook and Instagram ad database — great for spying on what competitors are running. FrameIQ is an AI-powered creative analyzer that scores your own ads, generates scripts, and decodes competitor frameworks. They do fundamentally different jobs. If you want to browse what others are running: AdSpy. If you want to understand why ads work and make better ones: FrameIQ.",
     verdict: "FrameIQ wins for creative teams who want to improve performance. AdSpy wins for teams who need a competitor ad database at scale.",
-    frameiqPros: ["AI hook scoring (0–10) on any video", "Full creative analysis in 60 seconds", "Script and brief generator built-in", "Competitor pattern decoder included", "Translation and transcription tools", "Free plan — no credit card required"],
+    frameiqPros: ["AI hook scoring (0–10) on any video", "Full creative analysis in 60 seconds", "Script and brief generator built-in", "Pre-flight check — catch errors before launch", "Translation and transcription tools", "Free plan — no credit card required"],
     competitorPros: ["Massive Facebook/Instagram ad database", "Long historical ad data", "Country, language, and engagement filters"],
     frameiqCons: ["No competitor ad database (browse function)", "Focused on video creative — less for static ads"],
     competitorCons: ["$149/mo minimum — expensive entry point", "No AI analysis — only shows the ads", "No script generation or production tools"],

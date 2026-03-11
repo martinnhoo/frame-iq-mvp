@@ -3,9 +3,9 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  BarChart3, LayoutGrid, Video, Plus, ArrowRight,
+  BarChart3, LayoutGrid, Plus, ArrowRight,
   TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
-  ChevronRight, Sparkles, Plane, Wand2, Search, Layers,
+  ChevronRight, Sparkles, Plane, Wand2, Layers,
 } from "lucide-react";
 
 interface InsightsData {
@@ -52,11 +52,11 @@ export default function DashboardOverview() {
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
 
   const planLimits = {
-    free:    { analyses: 3,   boards: 3,   videos: 0 },
-    creator: { analyses: 3,   boards: 1,   videos: 0 },
-    starter: { analyses: 15,  boards: 10,  videos: 0 },
-    studio:  { analyses: 30,  boards: 30,  videos: 5 },
-    scale:   { analyses: 500, boards: 300, videos: 300 },
+    free:    { analyses: 3,   boards: 3,   preflights: 2 },
+    creator: { analyses: 10,  boards: 10,  preflights: 10 },
+    starter: { analyses: 15,  boards: 10,  preflights: 15 },
+    studio:  { analyses: 30,  boards: 30,  preflights: 30 },
+    scale:   { analyses: 500, boards: 300, preflights: 9999 },
   };
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
 
@@ -148,7 +148,7 @@ export default function DashboardOverview() {
 
   const usedAnalyses = usageDetails?.analyses.used ?? usage.analyses_count;
   const usedBoards = usageDetails?.boards.used ?? usage.boards_count;
-  const usedVideos = usageDetails?.videos.used ?? usage.videos_count;
+  const usedPreflights = usageDetails?.preflights?.used ?? 0;
 
   const firstName = profile?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();
@@ -162,14 +162,13 @@ export default function DashboardOverview() {
     { title: "Translate",   desc: "Any market",                icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
     { title: "Templates",   desc: "183 formats",               icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
     { title: "Pre-flight",  desc: "Before going live",         icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
-    { title: "Competitor",  desc: "Decode any ad",             icon: Search,    url: "/dashboard/competitor",   accent: "#22d3ee", badge: "AI" },
     { title: "Persona",     desc: "Define audience",           icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
   ];
 
   const usageBlocks = [
     { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
     { label: "Boards",   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
-    { label: "Videos",   used: usedVideos,   limit: limits.videos,   url: "/dashboard/videos",       accent: "#34d399", icon: Video },
+    { label: "Pre-flights", used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
   ];
 
   return (
@@ -466,7 +465,14 @@ export default function DashboardOverview() {
               </div>
               <div className="p-5">
                 {!hasData ? (
-                  <p className="text-xs text-white/25 text-center py-3 leading-relaxed">Analyze videos to see<br />performance metrics</p>
+                  <div className="py-4 space-y-3">
+                    <p className="text-xs text-white/25 text-center leading-relaxed">Run your first analysis to unlock<br />AI performance insights</p>
+                    <button onClick={() => navigate("/dashboard/analyses/new")}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                      <Plus className="h-3.5 w-3.5" /> New Analysis
+                    </button>
+                  </div>
                 ) : (
                   <div className="space-y-3.5">
                     {[

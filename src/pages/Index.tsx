@@ -28,7 +28,7 @@ const Index = () => {
   ];
 
   const stats = [
-    { value: "2.4M+", label: t("stats_videos") },
+    { value: "40K+", label: t("stats_videos") },
     { value: "147", label: t("stats_teams") },
     { value: "12", label: t("stats_countries") },
     { value: "< 60s", label: t("stats_time") },

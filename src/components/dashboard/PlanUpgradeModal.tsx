@@ -34,7 +34,7 @@ const PLANS = [
     border: "border-pink-500/20 hover:border-pink-500/40",
     accent: "text-pink-400",
     badge: "Best value",
-    features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "30 pre-flights/mo", "AI learning profile", "All features"],
+    features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights/mo", "AI learning profile", "Brand Kit"],
   },
   {
     id: "scale",
@@ -45,7 +45,7 @@ const PLANS = [
     border: "border-yellow-500/20 hover:border-yellow-500/40",
     accent: "text-yellow-400",
     badge: "Teams",
-    features: ["500 analyses/mo", "300 boards/mo", "10 videos/day", "Unlimited pre-flights", "API access", "Priority support"],
+    features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "Unlimited pre-flights", "API access", "Priority support"],
   },
 ];
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Play, Trash2, Shuffle, ChevronUp, Zap, Image, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Trash2, Shuffle, ChevronUp, Zap, Image, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface BoardData {
@@ -236,13 +236,7 @@ const BoardDetail = () => {
               <Download className="h-3 w-3" />
               Download .txt
             </button>
-            <button
-              onClick={() => navigate("/dashboard/videos", { state: { boardId: board.id, scenes, production } })}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all"
-            >
-              <Play className="h-3 w-3" />
-              Generate video from this board
-            </button>
+
           </div>
 
           {/* Overview */}

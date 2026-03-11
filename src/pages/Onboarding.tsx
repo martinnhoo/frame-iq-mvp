@@ -52,8 +52,8 @@ const FEATURES = [
 
 const PLANS = [
   { key: "creator", label: "Creator", price: "$9",   period: "/mo", features: ["3 analyses/mo", "1 board/mo", "10 pre-flights"],                               highlight: false },
-  { key: "studio",  label: "Studio",  price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "30 pre-flights"],             highlight: true,  badge: "Most popular" },
-  { key: "scale",   label: "Scale",   price: "$499", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "10 videos/day", "Unlimited pre-flights"],  highlight: false },
+  { key: "studio",  label: "Studio",  price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights"],             highlight: true,  badge: "Most popular" },
+  { key: "scale",   label: "Scale",   price: "$499", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "Unlimited pre-flights"],  highlight: false },
 ];
 
 const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "plan"];

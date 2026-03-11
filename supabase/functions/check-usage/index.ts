@@ -6,9 +6,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabaseClient = createClient(
@@ -17,120 +15,68 @@ Deno.serve(async (req) => {
     );
 
     const { user_id } = await req.json();
-
     if (!user_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required field: user_id' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Missing user_id' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Get user profile
     const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('plan')
-      .eq('id', user_id)
-      .single();
+      .from('profiles').select('plan').eq('id', user_id).single();
 
     const plan = profile?.plan || 'free';
 
-    // Get current usage
     const currentPeriod = new Date().toISOString().slice(0, 7);
     const { data: usage } = await supabaseClient
-      .from('usage')
-      .select('*')
-      .eq('user_id', user_id)
-      .eq('period', currentPeriod)
-      .single();
+      .from('usage').select('*').eq('user_id', user_id).eq('period', currentPeriod).single();
 
-    // Define limits per plan
+    // Limits per plan — no videos tier
     const limits = {
-      free: {
-        analyses: 3,
-        boards: 3,
-        videos: 0,
-        translations: 10
-      },
-      studio: {
-        analyses: 30,
-        boards: 30,
-        videos: 5,
-        translations: 100
-      },
-      scale: {
-        analyses: 500,
-        boards: 300,
-        videos: 300,
-        translations: 1000
-      }
+      free:    { analyses: 3,   boards: 3,   translations: 10,   preflights: 2 },
+      creator: { analyses: 10,  boards: 10,  translations: 50,   preflights: 10 },
+      studio:  { analyses: 30,  boards: 30,  translations: 100,  preflights: 30 },
+      scale:   { analyses: 500, boards: 300, translations: 1000, preflights: 9999 },
     };
 
     const planLimits = limits[plan as keyof typeof limits] || limits.free;
 
-    const analyses_used = usage?.analyses_count || 0;
-    const boards_used = usage?.boards_count || 0;
-    const videos_used = usage?.videos_count || 0;
+    const analyses_used     = usage?.analyses_count     || 0;
+    const boards_used       = usage?.boards_count       || 0;
     const translations_used = usage?.translations_count || 0;
+    const preflights_used   = usage?.preflights_count   || 0;
 
-    // Calculate reset date (first day of next month)
     const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const reset_date = nextMonth.toISOString().split('T')[0];
+    const reset_date = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().split('T')[0];
 
-    // Check if over limit
-    const is_over_limit = 
+    const analyses_rem     = Math.max(0, planLimits.analyses     - analyses_used);
+    const boards_rem       = Math.max(0, planLimits.boards       - boards_used);
+    const translations_rem = Math.max(0, planLimits.translations - translations_used);
+    const preflights_rem   = Math.max(0, planLimits.preflights   - preflights_used);
+
+    const is_over_limit =
       analyses_used >= planLimits.analyses ||
-      boards_used >= planLimits.boards ||
-      videos_used >= planLimits.videos ||
-      translations_used >= planLimits.translations;
+      boards_used   >= planLimits.boards;
 
-    // Check if any limit is below 20%
-    const analyses_remaining_pct = ((planLimits.analyses - analyses_used) / planLimits.analyses) * 100;
-    const boards_remaining_pct = ((planLimits.boards - boards_used) / planLimits.boards) * 100;
-    const videos_remaining_pct = planLimits.videos > 0 ? ((planLimits.videos - videos_used) / planLimits.videos) * 100 : 100;
-    const translations_remaining_pct = ((planLimits.translations - translations_used) / planLimits.translations) * 100;
+    const show_warning =
+      (analyses_rem / planLimits.analyses)     < 0.2 ||
+      (boards_rem   / planLimits.boards)        < 0.2 ||
+      (translations_rem / planLimits.translations) < 0.2;
 
-    const show_warning = 
-      analyses_remaining_pct < 20 ||
-      boards_remaining_pct < 20 ||
-      (planLimits.videos > 0 && videos_remaining_pct < 20) ||
-      translations_remaining_pct < 20;
-
-    return new Response(
-      JSON.stringify({
-        plan,
-        analyses: {
-          used: analyses_used,
-          limit: planLimits.analyses,
-          remaining: Math.max(0, planLimits.analyses - analyses_used)
-        },
-        boards: {
-          used: boards_used,
-          limit: planLimits.boards,
-          remaining: Math.max(0, planLimits.boards - boards_used)
-        },
-        videos: {
-          used: videos_used,
-          limit: planLimits.videos,
-          remaining: Math.max(0, planLimits.videos - videos_used)
-        },
-        translations: {
-          used: translations_used,
-          limit: planLimits.translations,
-          remaining: Math.max(0, planLimits.translations - translations_used)
-        },
-        reset_date,
-        is_over_limit,
-        show_warning
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({
+      plan,
+      analyses:     { used: analyses_used,     limit: planLimits.analyses,     remaining: analyses_rem },
+      boards:       { used: boards_used,        limit: planLimits.boards,        remaining: boards_rem },
+      translations: { used: translations_used,  limit: planLimits.translations,  remaining: translations_rem },
+      preflights:   { used: preflights_used,    limit: planLimits.preflights,    remaining: preflights_rem },
+      reset_date,
+      is_over_limit,
+      show_warning,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    console.error('Error in check-usage:', error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('check-usage error:', error);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

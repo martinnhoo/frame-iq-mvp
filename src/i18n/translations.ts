@@ -236,7 +236,7 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_free_note: "Also available: Free plan — 3 analyses, 3 boards, no credit card.",
     pricing_see_all: "See all plans and full feature comparison →",
 
-    stats_videos: "Scripts Analyzed",
+    stats_videos: "Ads Analyzed",
     stats_teams: "Enterprise Teams",
     stats_countries: "Countries",
     stats_time: "Avg. Analysis Time",
@@ -393,7 +393,7 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_free_note: "También disponible: Plan gratuito — 3 análisis, 3 boards, sin tarjeta.",
     pricing_see_all: "Ver todos los planes y comparación completa →",
 
-    stats_videos: "Videos Analizados",
+    stats_videos: "Ads Analizados",
     stats_teams: "Equipos Enterprise",
     stats_countries: "Países",
     stats_time: "Tiempo Promedio",
@@ -550,7 +550,7 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_free_note: "Aussi disponible : Plan gratuit — 3 analyses, 3 boards, sans carte.",
     pricing_see_all: "Voir tous les plans et la comparaison complète →",
 
-    stats_videos: "Vidéos Analysées",
+    stats_videos: "Ads Analysés",
     stats_teams: "Équipes Enterprise",
     stats_countries: "Pays",
     stats_time: "Temps Moyen d'Analyse",

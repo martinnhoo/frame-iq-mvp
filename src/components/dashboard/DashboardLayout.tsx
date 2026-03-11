@@ -29,14 +29,12 @@ export interface Profile {
 export interface Usage {
   analyses_count: number;
   boards_count: number;
-  videos_count: number;
 }
 
 export interface UsageDetails {
   plan: string;
   analyses: { used: number; limit: number; remaining: number };
   boards: { used: number; limit: number; remaining: number };
-  videos: { used: number; limit: number; remaining: number };
   translations: { used: number; limit: number; remaining: number };
   reset_date: string;
   is_over_limit: boolean;
@@ -46,7 +44,7 @@ export interface UsageDetails {
 export default function DashboardLayout() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0, videos_count: 0 });
+  const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,7 +53,7 @@ export default function DashboardLayout() {
   const fetchUsage = async (userId: string) => {
     const currentPeriod = new Date().toISOString().slice(0, 7);
     const { data } = await supabase.from("usage").select("*").eq("user_id", userId).eq("period", currentPeriod).single();
-    if (data) setUsage({ analyses_count: data.analyses_count, boards_count: data.boards_count, videos_count: data.videos_count });
+    if (data) setUsage({ analyses_count: data.analyses_count, boards_count: data.boards_count });
     try {
       const { data: d } = await supabase.functions.invoke("check-usage", { body: { user_id: userId } });
       if (d) setUsageDetails(d);

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface Hook {
@@ -62,6 +62,7 @@ export default function HookGenerator() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [mockMode, setMockMode] = useState(false);
+  const [feedback, setFeedback] = useState<Record<number, "up" | "down">>({});
 
   const generate = async () => {
     if (!product.trim()) { toast.error("Describe your product first"); return; }
@@ -88,6 +89,22 @@ export default function HookGenerator() {
     setCopiedIdx(idx);
     toast.success("Hook copied!");
     setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const sendFeedback = async (hook: Hook, idx: number, vote: "up" | "down") => {
+    if (feedback[idx]) return; // already voted
+    setFeedback(prev => ({ ...prev, [idx]: vote }));
+    toast.success(vote === "up" ? "Got it — more like this 👍" : "Noted — fewer of this type 👎");
+    // Save to creative_memory so update-ai-profile can learn from it
+    if (user?.id) {
+      await supabase.from("creative_memory" as never).insert({
+        user_id: user.id,
+        hook_type: hook.hook_type,
+        platform: platform.toLowerCase().replace(" ", "_"),
+        hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
+        notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
+      });
+    }
   };
 
   const avgScore = hooks.length ? hooks.reduce((a, h) => a + h.predicted_score, 0) / hooks.length : 0;
@@ -245,6 +262,31 @@ export default function HookGenerator() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      {/* Feedback */}
+                      <button
+                        onClick={() => sendFeedback(hook, idx, "up")}
+                        disabled={!!feedback[idx]}
+                        title="More like this"
+                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${
+                          feedback[idx] === "up"
+                            ? "bg-green-500/20 border-green-500/40 text-green-400"
+                            : "bg-white/[0.05] border-white/[0.07] text-white/20 hover:text-green-400 hover:border-green-400/30"
+                        }`}
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => sendFeedback(hook, idx, "down")}
+                        disabled={!!feedback[idx]}
+                        title="Fewer of this type"
+                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${
+                          feedback[idx] === "down"
+                            ? "bg-red-500/20 border-red-500/40 text-red-400"
+                            : "bg-white/[0.05] border-white/[0.07] text-white/20 hover:text-red-400 hover:border-red-400/30"
+                        }`}
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </button>
                       <button
                         onClick={() => copy(hook, idx)}
                         className="h-8 w-8 rounded-xl bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.1] transition-all"

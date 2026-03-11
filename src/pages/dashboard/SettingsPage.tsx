@@ -109,7 +109,7 @@ const SettingsPage = () => {
                 {profile?.plan === "free"
                   ? "3 analyses, 3 boards per month. No video generation."
                   : profile?.plan === "studio"
-                  ? "30 analyses, 30 boards, 5 videos per month."
+                  ? "30 analyses, 30 boards, unlimited hooks & pre-flights per month."
                   : "500 analyses, 300 boards, 50 videos per month."}
               </p>
             </div>

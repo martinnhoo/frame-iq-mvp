@@ -1806,7 +1806,7 @@ const TemplatesPage = () => {
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
             <div className="min-w-0">
               <p className="text-sm font-bold text-white">Unlock all {TEMPLATES.length} templates ⚡</p>
-              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · 5 videos/mo</p>
+              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · unlimited hooks</p>
             </div>
             <button
               onClick={() => navigate("/pricing")}
