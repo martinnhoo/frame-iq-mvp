@@ -142,7 +142,7 @@ const Signup = () => {
               {/* Email form */}
               <form onSubmit={handleEmailSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-foreground text-sm">Full name</Label>
+                  <Label htmlFor="name" className="text-foreground text-sm">{t("auth_name")}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required className="h-12 bg-muted/50 border-border/50 pl-10" disabled={isFormDisabled} />
