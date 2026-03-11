@@ -47,7 +47,7 @@ const questions = [
   {
     id: "creative_volume",
     title: "How many ad creatives do you produce per month?",
-    subtitle: "We'll show you how FrameIQ can multiply your output",
+    subtitle: "We'll show you how AdBrief can multiply your output",
     type: "radio" as const,
     options: [
       { value: "1-10", label: "1–10 creatives", description: "Low volume" },

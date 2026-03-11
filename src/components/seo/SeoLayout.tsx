@@ -151,7 +151,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
 
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                © {new Date().getFullYear()} FrameIQ. All rights reserved.
+                © {new Date().getFullYear()} AdBrief. All rights reserved.
               </p>
               <div style={{ display: "flex", gap: 20 }}>
                 {[["Privacy", "/privacy"], ["Terms", "/terms"]].map(([l, h]) => (
