@@ -232,8 +232,8 @@ export default function DashboardLayout() {
                     {selectedPersona && (
                       <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors text-xs text-white/30">
-                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
-                        Clear persona
+                         <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
+                         {dt("ov_clear_persona")}
                       </button>
                     )}
                     {savedPersonas.map(p => (
