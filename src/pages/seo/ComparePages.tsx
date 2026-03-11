@@ -28,7 +28,7 @@ export function CompareIndex() {
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
               <div>
                 <p style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>AdBrief vs {c.competitorName}</p>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{c.adBriefPrice ?? c.frameiqPrice} · vs {c.competitorPrice}</p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{c.frameiqPrice} · vs {c.competitorPrice}</p>
               </div>
               <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 18 }}>→</span>
             </div>
