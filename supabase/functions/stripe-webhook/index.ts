@@ -111,6 +111,32 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string;
+        logStep("Invoice paid", { customerId, invoiceId: invoice.id });
+
+        // Confirm plan is synced on every successful payment (renewals included)
+        const subId = invoice.subscription as string;
+        if (subId) {
+          const sub = await stripe.subscriptions.retrieve(subId);
+          const productId = sub.items.data[0]?.price?.product as string;
+          const plan = PRODUCT_TO_PLAN[productId] || "maker";
+
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("stripe_customer_id", customerId)
+            .limit(1);
+
+          if (profiles && profiles.length > 0) {
+            await supabase.from("profiles").update({ plan }).eq("id", profiles[0].id);
+            logStep("Plan confirmed after invoice.paid", { userId: profiles[0].id, plan });
+          }
+        }
+        break;
+      }
+
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         logStep("Payment failed", { customerId: invoice.customer, invoiceId: invoice.id });
