@@ -280,7 +280,7 @@ export default function DashboardLayout() {
         {usageDetails?.is_over_limit && (
           <div className="mx-4 mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Monthly limit reached. Upgrade to continue.
+            {dt("ov_limit_reached")}
           </div>
         )}
 
