@@ -149,7 +149,7 @@ const blogPosts: Record<string, {
       "### Phase 3: Scaled Variation Production (Month 2+)",
       "With faster briefing and clearer direction, the team scaled from 5 to 50 ad variations per week. They used AdBrief's AI to generate hook variations (5 hooks per concept), create voiceover variations (3 voice styles per script), and produce concept tests before committing to full production.",
       "## The Results",
-      "After 3 months with FrameIQ: creative production costs dropped from $25K to $10K/month (60% reduction). Ad variations increased from 5 to 50 per week (10x). Average ROAS improved by 34% due to more testing. Creative strategist reclaimed 20 hours/week for actual strategy.",
+      "After 3 months with AdBrief: creative production costs dropped from $25K to $10K/month (60% reduction). Ad variations increased from 5 to 50 per week (10x). Average ROAS improved by 34% due to more testing. Creative strategist reclaimed 20 hours/week for actual strategy.",
       "## Key Takeaways for DTC Brands",
       "1. Start with analysis, not generation. The biggest ROI comes from better competitive intelligence. 2. Use AI briefs to eliminate the briefing bottleneck. Your editors are only as good as the briefs they receive. 3. Volume is a strategy. More variations = more data = better creative decisions. 4. Don't replace your team — accelerate them. AI handles the repetitive work so humans can do what they're best at.",
     ],
