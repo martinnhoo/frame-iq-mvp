@@ -522,7 +522,7 @@ const blogPosts: Record<string, {
     category: "AI & Automation",
     readTime: "10 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["AI replace creative team", "AI ad production", "AI marketing team", "creative automation test", "AI vs human creative"],
     content: [
