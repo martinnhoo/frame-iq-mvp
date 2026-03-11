@@ -1,3 +1,4 @@
+// Language context provider – single source of truth for i18n
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { Language, translations } from "./translations";
 
