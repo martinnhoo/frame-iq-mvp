@@ -1672,7 +1672,7 @@ const TemplatesPage = () => {
               : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.07)" }}
           >
             <span>{cat.emoji}</span>
-            {cat.label}
+            {(language !== "en" ? getCategoryLabel(cat.value, language) : null) || cat.label}
             {catCounts[cat.value] !== undefined && (
               <span style={{ opacity: 0.5, ...mono, fontSize: 10 }}>
                 {catCounts[cat.value]}
