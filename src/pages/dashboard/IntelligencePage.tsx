@@ -144,9 +144,14 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
       if (file.name.match(/\.xlsx?$/i)) {
         const XLSX = await import("xlsx");
         const buffer = await file.arrayBuffer();
-        const wb = XLSX.read(buffer, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        text = XLSX.utils.sheet_to_csv(ws);
+        const data = new Uint8Array(buffer);
+        const wb = XLSX.read(data, { type: "array", codepage: 65001 });
+        const sheetName = wb.SheetNames[0];
+        if (!sheetName || !wb.Sheets[sheetName]) throw new Error("No readable sheet found in the file.");
+        const ws = wb.Sheets[sheetName];
+        text = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
+        if (!text || text.trim().length < 10) throw new Error("The spreadsheet appears to be empty.");
+        console.log(`[XLSX] Sheet "${sheetName}" → ${text.length} chars, first 200: ${text.slice(0, 200)}`);
       } else {
         text = await file.text();
       }
