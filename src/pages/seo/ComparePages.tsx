@@ -35,7 +35,7 @@ export function CompareIndex() {
           ))}
         </div>
 
-        <SeoCTA headline="See FrameIQ in action" sub="Free plan available. No credit card required." primaryLabel="Try for free" />
+        <SeoCTA headline="See AdBrief in action" sub="Free plan available. No credit card required." primaryLabel="Try for free" />
       </div>
     </SeoLayout>
   );
