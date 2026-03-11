@@ -351,7 +351,7 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All plans are billed monthly. Studio plan includes a 14-day free trial.
+              Prices shown in USD. All plans are billed monthly. All paid plans include a 3-day free trial.
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">

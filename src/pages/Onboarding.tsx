@@ -405,6 +405,7 @@ export default function Onboarding() {
                 <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 6 {ot("of")} {STEP_ORDER.length}</p>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("plan_title")}</h1>
                 <p className="text-sm text-white/35">{ot("plan_sub")}</p>
+                <p className="text-xs text-white/20 mt-1">🎉 {ot("plan_trial_note")}</p>
               </div>
               <div className="space-y-2.5">
                 {PLANS.map(plan => (
@@ -416,10 +417,11 @@ export default function Onboarding() {
                         {ot("plan_most_popular")}
                       </span>
                     )}
-                    <div className="flex items-center justify-between mb-2 pr-20">
+                    <div className="flex items-center justify-between mb-1 pr-20">
                       <p className="font-bold text-white" style={syne}>{plan.label}</p>
                       <div><span className="text-lg font-bold text-white" style={syne}>{plan.price}</span><span className="text-xs text-white/30">{plan.period}</span></div>
                     </div>
+                    <p className="text-[10px] text-white/25 mb-2">{ot("plan_trial_badge")}</p>
                     <ul className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
                       {plan.features.map(f => (
                         <li key={f} className="text-xs text-white/40 flex items-center gap-1">
@@ -427,7 +429,7 @@ export default function Onboarding() {
                         </li>
                       ))}
                     </ul>
-                    <button onClick={finish} disabled={saving}
+                    <button onClick={() => handlePlanCheckout(plan.key)} disabled={saving}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                       style={{ background: plan.highlight ? "linear-gradient(135deg,#7c3aed,#ec4899)" : "rgba(255,255,255,0.08)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.55)", ...syne }}>
                       {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> {ot("plan_setting_up")}</> : <><Zap className="h-3.5 w-3.5" /> {ot("plan_get")} {plan.label}</>}
