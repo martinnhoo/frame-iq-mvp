@@ -198,9 +198,9 @@ export default function DashboardOverview() {
   ];
 
   const usageBlocks = [
-    { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
-    { label: "Boards",   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
-    { label: "Pre-flights", used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
+    { label: dt("ov_analyses"), used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
+    { label: dt("ov_boards"),   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
+    { label: dt("ov_preflights"), used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
   ];
 
   return (
