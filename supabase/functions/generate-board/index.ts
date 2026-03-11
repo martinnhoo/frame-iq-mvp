@@ -175,10 +175,13 @@ Return ONLY valid JSON (no markdown) with this exact structure:
   "overview": {"campaign_title":"string","market":"string","market_code":"string","platform":"string","duration_seconds":${duration},"aspect_ratio":"${aspect_ratio}","vo_language":"${vo_language}","scene_count":${scene_count}},
   "audience": {"age_range":"string","gender_skew":"string","income_level":"string","pain_points":["array"],"desires":["array"],"hook_insight":"string"},
   "hook": {"type":"curiosity|social_proof|pattern_interrupt|direct_offer|emotional|question|statement","hook_line":"exact first words spoken","visual_hook":"what viewer sees in first 3s","hook_score_prediction":5},
-  "scenes": [{"scene_number":1,"duration_seconds":5,"title":"Scene title","visual_description":"what to film","dialogue_or_vo":"exact words","on_screen_text":"text overlay","transition":"cut|fade|swipe","notes":"director note"}],
-  "production": {"location":"home|studio|outdoor|product-only","props":["array"],"lighting":"ring-light|natural|studio","editing_style":"string","music_bpm":"number range","aspect_ratio":"${aspect_ratio}","resolution":"string","fps":30,"export_format":"MP4","editor_briefing":"string"},
+  "character": ${has_talent ? '{"name":"string","type":"real_person|ugc_creator","role":"string","gender":"string","age":"string","hair":"string","skin_tone":"string","wardrobe_suggestion":"exact outfit description for all scenes","setting_suggestion":"string","tone":"string","dos":["array"],"donts":["array"]}' : 'null'},
+  "scenes": [{"scene_number":1,"duration_seconds":5,"title":"Scene title","visual_description":"what to film — include character physical details if talent is present","dialogue_or_vo":"exact words","on_screen_text":"text overlay","transition":"cut|fade|swipe","notes":"director note"}],
+  "production": {"location":"home|studio|outdoor|product-only","location_detail":"specific description of the location/set","props":["array"],"lighting":"ring-light|natural|studio","editing_style":"string","music_bpm":"number range","aspect_ratio":"${aspect_ratio}","resolution":"string","fps":30,"export_format":"MP4","editor_briefing":"string"},
   "compliance": {"platform_safe":true,"overall_risk":"low|medium|high","issues":[],"suggestions":["array"],"disclaimer_needed":false,"disclaimer_text":null}
-}`;
+}
+
+IMPORTANT: If talent is involved, every scene's visual_description MUST reference the SAME character with CONSISTENT appearance (same clothes, hair, setting). Describe the character's physical appearance in detail in the character object.`;
 
       const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -299,8 +302,7 @@ Return ONLY valid JSON (no markdown) with this exact structure:
         user_id,
         title: (board.overview as Record<string, unknown>)?.campaign_title as string || prompt.substring(0, 100),
         prompt,
-        market: marketConfig.code,
-        market_flag,
+        market_flag: `${marketConfig.flag} ${marketConfig.code}`,
         platform,
         duration_seconds: duration,
         scene_count,

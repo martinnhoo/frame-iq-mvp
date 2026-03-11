@@ -1,16 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import Stripe from "npm:stripe@14";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// ── Stripe Price IDs — set these as Supabase secrets ─────────────────────────
-// STRIPE_PRICE_MAKER, STRIPE_PRICE_PRO, STRIPE_PRICE_STUDIO
-// ─────────────────────────────────────────────────────────────────────────────
-
-const VALID_PLANS = ['free', 'maker', 'pro', 'studio'];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -32,124 +25,87 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!VALID_PLANS.includes(new_plan)) {
+    if (!['free', 'studio', 'scale'].includes(new_plan)) {
       return new Response(
-        JSON.stringify({ error: `Invalid plan. Must be one of: ${VALID_PLANS.join(', ')}` }),
+        JSON.stringify({ error: 'Invalid plan. Must be: free, studio, or scale' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // TODO: Uncomment when STRIPE_SECRET_KEY is available:
+    /*
     const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-    const APP_URL = Deno.env.get('APP_URL') || 'https://www.adbrief.pro';
-
-    const PRICE_IDS: Record<string, string | undefined> = {
-      maker:  Deno.env.get('STRIPE_PRICE_MAKER'),
-      pro:    Deno.env.get('STRIPE_PRICE_PRO'),
-      studio: Deno.env.get('STRIPE_PRICE_STUDIO'),
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
+    
+    const PRICE_IDS = {
+      studio: 'price_studio_monthly_id',
+      scale: 'price_scale_monthly_id'
     };
-
-    // ── Get profile ───────────────────────────────────────────────────────────
+    
+    // Get or create Stripe customer
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('stripe_customer_id, email, name, plan')
+      .select('stripe_customer_id, email')
       .eq('id', user_id)
       .single();
-
-    // ── Downgrade to free: cancel subscription ────────────────────────────────
-    if (new_plan === 'free') {
-      if (STRIPE_SECRET_KEY && profile?.stripe_customer_id) {
-        const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
-        const subs = await stripe.subscriptions.list({
-          customer: profile.stripe_customer_id,
-          status: 'active',
-        });
-        for (const sub of subs.data) {
-          await stripe.subscriptions.cancel(sub.id);
-        }
-      }
-      await supabaseClient
-        .from('profiles')
-        .update({ plan: 'free', plan_started_at: new Date().toISOString() })
-        .eq('id', user_id);
-      return new Response(
-        JSON.stringify({ success: true, new_plan: 'free' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const priceId = PRICE_IDS[new_plan];
-
-    // ── No Stripe key: mock mode ──────────────────────────────────────────────
-    if (!STRIPE_SECRET_KEY || !priceId) {
-      await supabaseClient
-        .from('profiles')
-        .update({ plan: new_plan, plan_started_at: new Date().toISOString() })
-        .eq('id', user_id);
-      return new Response(
-        JSON.stringify({ success: true, mock_mode: true, new_plan }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // ── Stripe checkout ───────────────────────────────────────────────────────
-    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' });
-
+    
     let customerId = profile?.stripe_customer_id;
+    
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: profile?.email ?? undefined,
-        name: profile?.name ?? undefined,
-        metadata: { user_id, plan: new_plan },
+        email: profile?.email,
+        metadata: { user_id }
       });
       customerId = customer.id;
+      
       await supabaseClient
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user_id);
     }
-
-    // Check for existing active subscription to upgrade/downgrade
-    const subs = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active',
-      limit: 1,
-    });
-
-    if (subs.data.length > 0) {
-      // Upgrade/downgrade existing subscription
-      const sub = subs.data[0];
-      await stripe.subscriptions.update(sub.id, {
-        items: [{ id: sub.items.data[0].id, price: priceId }],
-        proration_behavior: 'always_invoice',
-        metadata: { adbrief_plan: new_plan },
-      });
-      await supabaseClient
-        .from('profiles')
-        .update({ plan: new_plan, plan_started_at: new Date().toISOString() })
-        .eq('id', user_id);
-      return new Response(
-        JSON.stringify({ success: true, upgraded: true, new_plan }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // New subscription via checkout
+    
+    // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ 
+        price: PRICE_IDS[new_plan as keyof typeof PRICE_IDS], 
+        quantity: 1 
+      }],
       mode: 'subscription',
-      allow_promotion_codes: true,
-      subscription_data: {
-        metadata: { user_id, adbrief_plan: new_plan },
-      },
-      success_url: `${APP_URL}/dashboard?upgraded=${new_plan}`,
-      cancel_url: `${APP_URL}/pricing`,
-      metadata: { user_id, adbrief_plan: new_plan },
+      success_url: `${Deno.env.get('APP_URL')}/dashboard?upgraded=true`,
+      cancel_url: `${Deno.env.get('APP_URL')}/pricing`
     });
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        checkout_url: session.url
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+    */
+
+    // MOCK: For now, just update the plan directly
+    const { error: updateError } = await supabaseClient
+      .from('profiles')
+      .update({ 
+        plan: new_plan,
+        plan_started_at: new Date().toISOString()
+      })
+      .eq('id', user_id);
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return new Response(
-      JSON.stringify({ success: true, checkout_url: session.url, new_plan }),
+      JSON.stringify({ 
+        success: true,
+        mock_mode: true,
+        message: `Plan updated to ${new_plan}. Payment integration coming soon. You'll be notified when Studio and Scale plans launch with full payment processing.`,
+        new_plan
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

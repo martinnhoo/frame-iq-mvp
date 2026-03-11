@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { visual_description, scene_title, scene_index } = await req.json();
+    const { visual_description, scene_title, scene_index, character_context, location_context } = await req.json();
 
     if (!visual_description) {
       return new Response(JSON.stringify({ error: "Missing visual_description" }), {
@@ -22,10 +22,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Build character consistency block
+    const charBlock = character_context
+      ? `\nCHARACTER CONSISTENCY (CRITICAL — same person in ALL scenes):
+- Appearance: ${character_context.appearance || 'not specified'}
+- Clothing: ${character_context.clothing || 'not specified'}
+- Gender/Age: ${character_context.gender || 'not specified'}, ${character_context.age || 'not specified'}
+- Hair: ${character_context.hair || 'not specified'}
+- Skin tone: ${character_context.skin_tone || 'not specified'}
+You MUST depict the EXACT SAME person with the EXACT SAME clothes, hairstyle, and features in every scene.`
+      : '';
+
+    const locationBlock = location_context
+      ? `\nLOCATION CONSISTENCY: ${location_context}`
+      : '';
+
     const prompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
 
 Scene: "${scene_title || `Scene ${(scene_index ?? 0) + 1}`}"
 Visual direction: ${visual_description}
+${charBlock}
+${locationBlock}
 
 Requirements:
 - Square 1:1 composition

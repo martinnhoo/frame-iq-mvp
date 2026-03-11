@@ -71,11 +71,44 @@ const BoardDetail = () => {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  // Extract character context for consistent image generation
+  const getCharacterContext = () => {
+    const c = board?.content as Record<string, unknown> | null;
+    if (!c) return undefined;
+    const char = (c.character as Record<string, unknown>) || {};
+    const prod = (c.production as Record<string, unknown>) || {};
+    // Only if talent is involved
+    if (!char.name && !char.type) return undefined;
+    return {
+      appearance: String(char.wardrobe_suggestion || char.role || ''),
+      clothing: String(char.wardrobe_suggestion || ''),
+      gender: String(char.gender || ''),
+      age: String(char.age || ''),
+      hair: String(char.hair || ''),
+      skin_tone: String(char.skin_tone || ''),
+    };
+  };
+
+  const getLocationContext = () => {
+    const c = board?.content as Record<string, unknown> | null;
+    if (!c) return undefined;
+    const prod = (c.production as Record<string, unknown>) || {};
+    return prod.location_detail || prod.location
+      ? `${String(prod.location || '')} — ${String(prod.location_detail || '')}`
+      : undefined;
+  };
+
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
       const { data, error } = await supabase.functions.invoke("generate-scene-image", {
-        body: { visual_description: visualDescription, scene_title: sceneTitle, scene_index: sceneIndex },
+        body: {
+          visual_description: visualDescription,
+          scene_title: sceneTitle,
+          scene_index: sceneIndex,
+          character_context: getCharacterContext(),
+          location_context: getLocationContext(),
+        },
       });
       if (error) throw error;
       if (data?.url) {
@@ -137,9 +170,12 @@ const BoardDetail = () => {
   );
 
   const content = board.content as Record<string, unknown> | null;
-  const meta = (content?.meta as Record<string, unknown>) || {};
+  // Support both Claude response structure (overview/hook) and mock structure (meta/strategy)
+  const overview = (content?.overview as Record<string, unknown>) || (content?.meta as Record<string, unknown>) || {};
   const audience = (content?.audience as Record<string, unknown>) || {};
+  const hook = (content?.hook as Record<string, unknown>) || {};
   const strategy = (content?.strategy as Record<string, unknown>) || {};
+  const character = (content?.character as Record<string, unknown>) || {};
   const scenes = ((content?.scenes || []) as Record<string, unknown>[]);
   const production = (content?.production as Record<string, unknown>) || {};
 
@@ -148,10 +184,10 @@ const BoardDetail = () => {
 
   const fullScript = scenes
     .map((s, i) =>
-      `SCENE ${i + 1} (${String(s.timestamp || "")})\n` +
+      `SCENE ${i + 1} (${String(s.timestamp || s.duration_seconds ? `${s.duration_seconds}s` : "")})\n` +
       `VISUAL: ${String(s.visual_description || "")}\n` +
-      (s.vo_script ? `VO: "${String(s.vo_script)}"\n` : "") +
-      (s.onscreen_text ? `TEXT: ${String(s.onscreen_text)}\n` : "")
+      (s.vo_script || s.dialogue_or_vo ? `VO: "${String(s.vo_script || s.dialogue_or_vo)}"\n` : "") +
+      (s.onscreen_text || s.on_screen_text ? `TEXT: ${String(s.onscreen_text || s.on_screen_text)}\n` : "")
     )
     .join("\n");
 
@@ -220,13 +256,13 @@ const BoardDetail = () => {
           </div>
 
           {/* Overview */}
-          <Section id="overview" icon={Target} title="Campaign Overview" open={open.overview} onToggle={() => toggle("overview")}>
+           <Section id="overview" icon={Target} title="Campaign Overview" open={open.overview} onToggle={() => toggle("overview")}>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
               {[
-                ["Market", `${String(meta.market_flag ?? "")} ${String(meta.market ?? "—")}`],
-                ["Platform", String(meta.platform ?? "—")],
-                ["Duration", `${String(meta.duration ?? "—")}s`],
-                ["Aspect Ratio", String(meta.aspect_ratio ?? "—")],
+                ["Market", `${String(overview.market_flag ?? overview.market_code ?? "")} ${String(overview.market ?? "—")}`],
+                ["Platform", String(overview.platform ?? "—")],
+                ["Duration", `${String(overview.duration_seconds ?? overview.duration ?? "—")}s`],
+                ["Aspect Ratio", String(overview.aspect_ratio ?? "—")],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-xl bg-white/[0.04] p-3">
                   <p className="text-xs text-white/30 mb-1">{label}</p>
@@ -268,8 +304,8 @@ const BoardDetail = () => {
           <Section id="strategy" icon={Target} title="Creative Strategy" open={open.strategy} onToggle={() => toggle("strategy")}>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
               {[
-                ["Hook Type", String(strategy.hook_type || "—")],
-                ["Narrative Arc", String(strategy.narrative_arc || "—")],
+                ["Hook Type", String(hook.type || strategy.hook_type || "—")],
+                ["Hook Line", String(hook.hook_line || strategy.narrative_arc || "—")],
                 ["Pacing", String(strategy.pacing || "—")],
                 ["CTA", String(strategy.cta_type || "—")],
               ].map(([label, value]) => (
@@ -278,10 +314,10 @@ const BoardDetail = () => {
                   <p className="text-white font-medium capitalize">{value}</p>
                 </div>
               ))}
-              {strategy.key_message && (
+              {(hook.hook_line || hook.visual_hook || strategy.key_message) && (
                 <div className="rounded-xl bg-white/[0.04] p-3 sm:col-span-2">
-                  <p className="text-xs text-white/30 mb-1">Key Message</p>
-                  <p className="text-white/70 italic">"{String(strategy.key_message)}"</p>
+                  <p className="text-xs text-white/30 mb-1">{hook.visual_hook ? "Visual Hook" : "Key Message"}</p>
+                  <p className="text-white/70 italic">"{String(hook.visual_hook || strategy.key_message)}"</p>
                 </div>
               )}
             </div>
@@ -364,16 +400,16 @@ const BoardDetail = () => {
                       </div>
                     </div>
                     <p className="text-sm text-white/80 mb-2">{String(scene.visual_description || "")}</p>
-                    {scene.vo_script && (
+                    {(scene.vo_script || scene.dialogue_or_vo) && (
                       <div className="rounded-lg bg-white/[0.06] border border-white/[0.06] px-3 py-2 mt-2">
                         <p className="text-xs text-white/30 mb-1">Voice Over</p>
-                        <p className="text-sm text-white/70 italic">"{String(scene.vo_script)}"</p>
+                        <p className="text-sm text-white/70 italic">"{String(scene.vo_script || scene.dialogue_or_vo)}"</p>
                       </div>
                     )}
-                    {scene.onscreen_text && (
+                    {(scene.onscreen_text || scene.on_screen_text) && (
                       <div className="mt-2 rounded-lg bg-white/[0.06] px-3 py-2">
                         <p className="text-xs text-white/30 mb-1">On-screen Text</p>
-                        <p className="text-sm text-white font-mono">{String(scene.onscreen_text)}</p>
+                        <p className="text-sm text-white font-mono">{String(scene.onscreen_text || scene.on_screen_text)}</p>
                       </div>
                     )}
                   </div>

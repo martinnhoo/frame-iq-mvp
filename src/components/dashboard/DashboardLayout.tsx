@@ -114,6 +114,13 @@ export default function DashboardLayout() {
         }
       }
       await fetchUsage(session.user.id);
+      // Sync subscription status from Stripe
+      try {
+        const { data: subData } = await supabase.functions.invoke("check-subscription");
+        if (subData?.plan && profileData && subData.plan !== profileData.plan) {
+          setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
+        }
+      } catch {}
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);

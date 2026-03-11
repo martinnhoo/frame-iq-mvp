@@ -69,14 +69,11 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; gradient: string; desc: string; price: string }> = {
-  free:    { label: "Free",   gradient: "from-white/20 to-white/5",           desc: "3 analyses · 3 boards / mo",                   price: "$0" },
-  maker:   { label: "Maker",  gradient: "from-blue-500/30 to-blue-900/10",    desc: "20 analyses · 20 boards · unlimited hooks",     price: "$19/mo" },
-  pro:     { label: "Pro",    gradient: "from-purple-500/30 to-purple-900/10",desc: "60 analyses · 60 boards · AI learning",         price: "$49/mo" },
-  studio:  { label: "Studio", gradient: "from-pink-500/30 to-pink-900/10",    desc: "Unlimited everything · API access",             price: "$149/mo" },
-  // legacy
-  creator: { label: "Maker",  gradient: "from-blue-500/30 to-blue-900/10",    desc: "20 analyses · 20 boards / mo",                  price: "$19/mo" },
-  starter: { label: "Pro",    gradient: "from-purple-500/30 to-purple-900/10",desc: "60 analyses · 60 boards / mo",                  price: "$49/mo" },
-  scale:   { label: "Studio", gradient: "from-pink-500/30 to-pink-900/10",    desc: "Unlimited everything",                          price: "$149/mo" },
+  free:    { label: "Free",    gradient: "from-white/20 to-white/5",          desc: "3 analyses · 3 boards / mo",         price: "$0" },
+  creator: { label: "Creator", gradient: "from-blue-500/30 to-blue-900/10",   desc: "3 analyses · 1 board / mo",          price: "$9/mo" },
+  starter: { label: "Starter", gradient: "from-purple-500/30 to-purple-900/10",desc: "15 analyses · 10 boards / mo",      price: "$19/mo" },
+  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",   desc: "30 analyses · 30 boards · hooks & pre-flights", price: "$49/mo" },
+  scale:   { label: "Scale",   gradient: "from-yellow-500/30 to-yellow-900/10",desc: "500 analyses · unlimited pre-flight",price: "$499/mo" },
 };
 
 const TABS = [
@@ -527,19 +524,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               </div>
 
               {/* Upgrade options */}
-              {(profile?.plan === "free" || profile?.plan === "maker" || profile?.plan === "pro" ||
-                profile?.plan === "creator" || profile?.plan === "starter") && (
+              {(profile?.plan === "free" || profile?.plan === "creator" || profile?.plan === "starter") && (
                 <>
                   <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2">Upgrade to</p>
                   <div className="space-y-2">
-                    {(["maker", "pro", "studio"] as const)
+                    {(["creator", "starter", "studio", "scale"] as const)
                       .filter((k) => {
-                        const order = ["free", "maker", "pro", "studio"];
-                        const currentNorm = profile?.plan === "creator" ? "maker"
-                          : profile?.plan === "starter" ? "pro"
-                          : profile?.plan === "scale" ? "studio"
-                          : profile?.plan || "free";
-                        return order.indexOf(k) > order.indexOf(currentNorm);
+                        const order = ["free", "creator", "starter", "studio", "scale"];
+                        return order.indexOf(k) > order.indexOf(profile?.plan || "free");
                       })
                       .map((key) => {
                         const p = PLAN_INFO[key];

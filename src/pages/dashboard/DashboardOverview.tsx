@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, LayoutGrid, Plus, ArrowRight,
   TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
-  ChevronRight, Sparkles, Plane, Wand2, Layers,
+  ChevronRight, Sparkles, Plane, Wand2, Layers, X,
 } from "lucide-react";
 
 interface InsightsData {
@@ -42,8 +42,9 @@ const StatBar = ({ used, limit, accent }: { used: number; limit: number; accent:
 };
 
 export default function DashboardOverview() {
-  const { user, profile, usage, usageDetails } = useOutletContext<DashboardContext>();
+  const { user, profile, usage, usageDetails, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
@@ -53,10 +54,8 @@ export default function DashboardOverview() {
 
   const planLimits = {
     free:    { analyses: 3,   boards: 3,   preflights: 2 },
-    creator: { analyses: 20,  boards: 20,  preflights: 20 },
-    maker:   { analyses: 20,  boards: 20,  preflights: 20 },
-    starter: { analyses: 60,  boards: 60,  preflights: 60 },
-    pro:     { analyses: 60,  boards: 60,  preflights: 60 },
+    creator: { analyses: 10,  boards: 10,  preflights: 10 },
+    starter: { analyses: 15,  boards: 10,  preflights: 15 },
     studio:  { analyses: 30,  boards: 30,  preflights: 30 },
     scale:   { analyses: 500, boards: 300, preflights: 9999 },
   };
@@ -223,7 +222,7 @@ export default function DashboardOverview() {
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
-            {(!profile?.plan || profile.plan === "free" || profile.plan === "maker") && (
+            {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
               <button onClick={() => navigate("/pricing")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
                 style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
@@ -232,6 +231,30 @@ export default function DashboardOverview() {
             )}
           </div>
         </div>
+
+        {/* Complete profile banner for users without persona */}
+        {!selectedPersona && !dismissedBanner && (
+          <div className="rounded-2xl p-4 flex items-center gap-4"
+            style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.05))", border: "1px solid rgba(167,139,250,0.2)" }}>
+            <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.25)" }}>
+              <Target className="h-5 w-5 text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white" style={syne}>Complete your profile</p>
+              <p className="text-xs text-white/40 mt-0.5">Create a persona so AI tools generate content tailored to your audience.</p>
+            </div>
+            <button onClick={() => navigate("/dashboard/persona")}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+              <Sparkles className="h-3.5 w-3.5" /> Create Persona
+            </button>
+            <button onClick={() => { setDismissedBanner(true); localStorage.setItem("frameiq_dismiss_profile_banner", "1"); }}
+              className="text-white/20 hover:text-white/50 transition-colors shrink-0 p-1">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* ── TOP ROW: Usage + Performance ──────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">

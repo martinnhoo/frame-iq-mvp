@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
+import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
@@ -601,11 +602,18 @@ const AdaptMode = ({ userId }: { userId: string }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TranslatePage = () => {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const [mode, setMode] = useState<"transcribe" | "adapt">("transcribe");
+  const [showPersonaWarning, setShowPersonaWarning] = useState(!selectedPersona);
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-5">
+      <PersonaWarningModal
+        open={showPersonaWarning && !selectedPersona}
+        onClose={() => setShowPersonaWarning(false)}
+        onContinue={() => setShowPersonaWarning(false)}
+        toolName="Translate & Transcribe"
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"

@@ -39,13 +39,85 @@ Deno.serve(async (req) => {
 
     const startTime = Date.now();
 
-    // ── Step 1: Transcribe audio ──────────────────────────────────────────
+    // ── Step 1: Transcribe audio via Lovable AI (Gemini) ─────────────────
     let transcript = '';
     let duration = 30;
 
-    if (videoFile && OPENAI_API_KEY) {
+    if (videoFile && LOVABLE_API_KEY) {
       try {
-        console.log('Whisper: starting transcription, file size:', videoFile.size, 'name:', videoFile.name);
+        console.log('Transcription: starting with Lovable AI, file size:', videoFile.size, 'name:', videoFile.name);
+        
+        // Convert file to base64 for Gemini
+        const arrayBuffer = await videoFile.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < uint8.length; i++) {
+          binary += String.fromCharCode(uint8[i]);
+        }
+        const base64Audio = btoa(binary);
+        
+        // Determine MIME type
+        const mimeType = videoFile.type || (videoFile.name?.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg');
+        
+        const transcribeRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Transcribe this audio file. Return ONLY a JSON object with two fields: {"text": "<full transcription>", "duration_seconds": <estimated duration in seconds>}. No markdown, no explanation. If the audio is in a non-English language, transcribe in the original language.'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:${mimeType};base64,${base64Audio}`
+                  }
+                }
+              ]
+            }],
+          }),
+        });
+
+        if (transcribeRes.ok) {
+          const transcribeData = await transcribeRes.json();
+          const rawText = transcribeData.choices?.[0]?.message?.content || '';
+          const clean = rawText.replace(/```json|```/g, '').trim();
+          console.log('Transcription raw response:', clean.slice(0, 200));
+          try {
+            const parsed = JSON.parse(clean);
+            transcript = parsed.text || clean;
+            duration = Math.round(parsed.duration_seconds || 30);
+          } catch {
+            // If not JSON, use the raw text as transcript
+            transcript = clean;
+          }
+          console.log('Transcription: success, length:', transcript.length, 'duration:', duration);
+        } else {
+          const errText = await transcribeRes.text();
+          console.error('Transcription API error:', transcribeRes.status, errText);
+          if (transcribeRes.status === 429) {
+            transcript = '[Rate limited — please try again in a moment]';
+          } else if (transcribeRes.status === 402) {
+            transcript = '[AI credits exhausted — please add credits]';
+          } else {
+            transcript = '[Audio transcription failed — AI error]';
+          }
+        }
+      } catch (e) {
+        console.error('Transcription error:', e);
+        transcript = '[Audio transcription failed — analyzing visual context only]';
+      }
+    } else if (videoFile && OPENAI_API_KEY) {
+      // Fallback to Whisper if no LOVABLE_API_KEY
+      try {
+        console.log('Whisper fallback: starting transcription, file size:', videoFile.size);
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
         whisperForm.append('model', 'whisper-1');
@@ -61,7 +133,6 @@ Deno.serve(async (req) => {
           const whisperData = await whisperRes.json();
           transcript = whisperData.text || '';
           duration = Math.round(whisperData.duration || 30);
-          console.log('Whisper: success, transcript length:', transcript.length, 'duration:', duration);
         } else {
           const errText = await whisperRes.text();
           console.error('Whisper API error:', whisperRes.status, errText);
@@ -259,7 +330,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     // Save to creative_memory
     await supabase.from('creative_memory').insert({
       user_id,
-      analysis_id,
+      analysis_id: analysisId,
       hook_type: analysis.hook_type as string,
       creative_model: analysis.creative_model as string,
       platform: (analysis.recommended_platforms as string[])?.[0] || null,
