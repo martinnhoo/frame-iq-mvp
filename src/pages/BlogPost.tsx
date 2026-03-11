@@ -318,7 +318,7 @@ const blogPosts: Record<string, {
       "## How AI Changes the Equation",
       "AI creative tools solve three critical fintech challenges: speed (from concept to compliant brief in minutes), consistency (AI-generated briefs include compliance requirements by default), and volume (generate 10 variations of a compliant concept instead of starting from scratch each time).",
       "## Case Study: Neobank App Install Campaign",
-      "A leading neobank used FrameIQ to analyze 200 competitor ads across 5 markets, identifying the top-performing hooks and creative models. They then used Board Generation to create 40 production briefs in a single afternoon.",
+      "A leading neobank used AdBrief to analyze 200 competitor ads across 5 markets, identifying the top-performing hooks and creative models. They then used Board Generation to create 40 production briefs in a single afternoon.",
       "Results: 4x increase in creative volume, 32% reduction in CPA, 60% faster time-to-market for new creative concepts.",
       "## Compliance-Safe Creative Patterns",
       "The most effective fintech ad formats balance trust-building with performance. Top patterns include: app demo with real UI (builds trust), savings calculator with personalized numbers (drives action), and before/after financial dashboard (shows transformation without making promises).",
