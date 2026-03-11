@@ -9,7 +9,7 @@ const m = { fontFamily: "'DM Mono', monospace" };
 export function CompareIndex() {
   const navigate = useNavigate();
   return (
-    <SeoLayout title="FrameIQ vs AdSpy, BigSpy, Minea & More — FrameIQ" description="Honest, feature-by-feature comparisons of FrameIQ against other ad intelligence tools." canonical="/compare">
+    <SeoLayout title="AdBrief vs AdSpy, BigSpy, Minea & More — AdBrief" description="Honest, feature-by-feature comparisons of AdBrief against other ad intelligence tools." canonical="/compare">
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ marginBottom: 52 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
