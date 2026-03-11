@@ -500,7 +500,7 @@ const blogPosts: Record<string, {
       "## The 4-Week AI Creative Strategy Test",
       "Before hiring, run this test with your existing team using AI tools. It costs under $200/month and takes 4 weeks.",
       "### Week 1: AI Competitive Intelligence",
-      "Instead of hiring someone to scroll through Meta Ads Library for hours, use FrameIQ to analyze 20-30 competitor ads. The AI extracts hooks, identifies creative models, transcribes scripts, and spots patterns — in minutes, not days. Assign one team member 30 minutes per day to this. By Friday, you'll have more competitive intelligence than most Creative Strategists gather in their first month.",
+      "Instead of hiring someone to scroll through Meta Ads Library for hours, use AdBrief to analyze 20-30 competitor ads. The AI extracts hooks, identifies creative models, transcribes scripts, and spots patterns — in minutes, not days. Assign one team member 30 minutes per day to this. By Friday, you'll have more competitive intelligence than most Creative Strategists gather in their first month.",
       "### Week 2: AI-Generated Production Briefs",
       "Take the insights from Week 1 and feed them into an AI brief generator. FrameIQ's Board Generation creates scene-by-scene production boards with VO scripts, editor notes, and visual references — from a single prompt. Test this with your existing editor or freelancer. If they can execute from AI briefs without endless revisions, you've eliminated the biggest bottleneck.",
       "### Week 3: Volume Testing",
