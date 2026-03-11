@@ -46,8 +46,8 @@ const faqItems = [
     a: "Yes. All data is encrypted at rest and in transit. We never use your uploaded content or analysis results to train our AI models. Your competitive insights stay completely private.",
   },
   {
-    q: "Can I integrate FrameIQ with my existing tools?",
-    a: "Scale and Enterprise plans include API access. You can integrate FrameIQ with Notion, Slack, Google Sheets, and your internal tools via our REST API and webhooks.",
+    q: "Can I integrate AdBrief with my existing tools?",
+    a: "Scale and Enterprise plans include API access. You can integrate AdBrief with Notion, Slack, Google Sheets, and your internal tools via our REST API and webhooks.",
   },
   {
     q: "Do you offer a free trial?",
