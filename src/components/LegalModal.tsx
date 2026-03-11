@@ -117,7 +117,7 @@ AdBrief is an AI-powered creative intelligence platform that provides:
 
 ## 3. Account Registration
 
-You must create an account to use FrameIQ. You are responsible for:
+You must create an account to use AdBrief. You are responsible for:
 - Providing accurate account information
 - Maintaining the security of your credentials
 - All activity under your account
