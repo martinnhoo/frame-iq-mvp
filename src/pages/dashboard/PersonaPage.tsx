@@ -108,11 +108,11 @@ const STEPS = [
 type View = "list" | "builder" | "detail";
 
 export default function PersonaPage() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona: globalPersona, setSelectedPersona: setGlobalPersona } = useOutletContext<DashboardContext>();
   const [view, setView] = useState<View>("list");
   const [saved, setSaved] = useState<SavedPersona[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
-  const [selectedPersona, setSelectedPersona] = useState<SavedPersona | null>(null);
+  const [activeDetail, setActiveDetail] = useState<SavedPersona | null>(null);
 
   // Builder state
   const [step, setStep] = useState(0);
@@ -202,7 +202,7 @@ export default function PersonaPage() {
       } catch {}
 
       setView("detail");
-      setSelectedPersona(null); // show result view
+      setActiveDetail(null); // show result view
     } catch (err: any) {
       toast.error(err?.message || "Persona generation failed");
     } finally {
@@ -214,8 +214,8 @@ export default function PersonaPage() {
     e.stopPropagation();
     await supabase.from("personas").delete().eq("id", id);
     setSaved((prev) => prev.filter((p) => p.id !== id));
-    if (selectedPersona?.id === id) {
-      setSelectedPersona(null);
+    if (activeDetail?.id === id) {
+      setActiveDetail(null);
       setView("list");
     }
     toast.success("Persona deleted");
@@ -242,7 +242,7 @@ CTA: ${persona.cta_style}`;
   };
 
   const openPersona = (p: SavedPersona) => {
-    setSelectedPersona(p);
+    setActiveDetail(p);
     setResult(p.result);
     setView("detail");
   };
@@ -251,14 +251,14 @@ CTA: ${persona.cta_style}`;
     setStep(0);
     setAnswers({});
     setResult(null);
-    setSelectedPersona(null);
+    setActiveDetail(null);
     setView("builder");
   };
 
   const backToList = () => {
     setView("list");
     setResult(null);
-    setSelectedPersona(null);
+    setActiveDetail(null);
   };
 
   const pct = Math.round(((step + 1) / STEPS.length) * 100);
@@ -407,6 +407,20 @@ CTA: ${persona.cta_style}`;
                   <p className="text-white/15 text-[10px] mt-3">
                     {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
+
+                  {/* Activate button */}
+                  {globalPersona?.id === p.id ? (
+                    <div className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
+                      ✓ Active
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setGlobalPersona({ id: p.id, ...p.result } as any); }}
+                      className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-all"
+                      style={{ background: "rgba(167,139,250,0.12)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.25)" }}>
+                      Use persona
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -427,6 +441,20 @@ CTA: ${persona.cta_style}`;
             <ChevronLeft className="h-4 w-4" /> All Personas
           </button>
           <div className="flex items-center gap-2">
+            {/* Activate / Deactivate button */}
+            {activeDetail && globalPersona?.id === activeDetail.id ? (
+              <button onClick={() => setGlobalPersona(null)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
+                <Check className="h-3.5 w-3.5" /> Active — deactivate
+              </button>
+            ) : (
+              <button onClick={() => activeDetail && setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
+                <Users className="h-3.5 w-3.5" /> Use this persona
+              </button>
+            )}
             <button onClick={() => handleCopy(result)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
               {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
               Copy
