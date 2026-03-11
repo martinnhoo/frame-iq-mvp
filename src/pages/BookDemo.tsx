@@ -35,7 +35,7 @@ const questions = [
   {
     id: "monthly_ad_spend",
     title: "What's your monthly ad spend?",
-    subtitle: "Helps us estimate your potential ROI with FrameIQ",
+    subtitle: "Helps us estimate your potential ROI with AdBrief",
     type: "radio" as const,
     options: [
       { value: "under-5k", label: "Under $5K", description: "Just getting started" },
