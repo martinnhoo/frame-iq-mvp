@@ -59,6 +59,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { title: dt("nav_preflight"),    url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24", badge: "AI" },
     { title: dt("nav_intelligence"), url: "/dashboard/intelligence", icon: Brain,  accent: "#a78bfa", badge: "AI" },
     { title: dt("nav_persona"),      url: "/dashboard/persona",      icon: Target, accent: "#c084fc" },
+    { title: "Script Generator",    url: "/dashboard/script",       icon: FileText,     accent: "#a78bfa", badge: "AI" },
+    { title: "Brief Generator",     url: "/dashboard/brief",        icon: ClipboardList, accent: "#60a5fa", badge: "AI" },
   ];
 
   const isActive = (url: string, end?: boolean) =>
