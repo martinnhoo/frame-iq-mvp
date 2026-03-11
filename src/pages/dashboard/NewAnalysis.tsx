@@ -4,10 +4,11 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video } from "lucide-react";
+import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 
 type ProgressStep = "idle" | "extracting" | "uploading" | "transcribing" | "analyzing" | "done" | "error";
 const STEP_LABELS: Record<ProgressStep, string> = {
-  idle: "", extracting: "Extracting audio...", uploading: "Uploading video...",
+  idle: "", extracting: "Compressing & extracting audio...", uploading: "Uploading...",
   transcribing: "Transcribing with Whisper...", analyzing: "AI analyzing creative...",
   done: "Done!", error: "Failed",
 };
@@ -23,25 +24,6 @@ const MARKETS = [
   { code: "ES", flag: "🇪🇸", name: "Spain" },
   { code: "AR", flag: "🇦🇷", name: "Argentina" },
 ];
-
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
-
-// ─── WAV encoder (16kHz mono) ────────────────────────────────────────────────
-function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-  writeStr(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, "WAVE");
-  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-  writeStr(36, "data"); view.setUint32(40, samples.length * 2, true);
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-  return new Blob([buffer], { type: "audio/wav" });
-}
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
@@ -79,35 +61,13 @@ const NewAnalysis = () => {
     }
   };
 
-  /** Extract audio using OfflineAudioContext → 16kHz mono WAV */
-  const extractAudio = async (videoFile: File): Promise<File> => {
+  /** Extract audio using shared utility */
+  const doExtractAudio = async (videoFile: File): Promise<File> => {
     setStep("extracting");
     setProgress(10);
-    const arrayBuffer = await videoFile.arrayBuffer();
-    setProgress(30);
-    const audioCtx = new AudioContext();
-    let audioBuffer: AudioBuffer;
-    try {
-      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    } catch {
-      await audioCtx.close();
-      throw new Error("Could not decode audio from this video");
-    }
-    await audioCtx.close();
-    setProgress(50);
-    const TARGET_SR = 16000;
-    const dur = audioBuffer.duration;
-    const offlineCtx = new OfflineAudioContext(1, Math.ceil(dur * TARGET_SR), TARGET_SR);
-    const source = offlineCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineCtx.destination);
-    source.start(0);
-    const rendered = await offlineCtx.startRendering();
-    setProgress(80);
-    const wavBlob = encodeWAV(rendered.getChannelData(0), TARGET_SR);
-    const wavFile = new File([wavBlob], "audio.wav", { type: "audio/wav" });
-    setProgress(95);
-    console.log(`Audio extracted: ${(wavFile.size / 1024 / 1024).toFixed(1)}MB from ${(videoFile.size / 1024 / 1024).toFixed(0)}MB video (${Math.round(dur)}s)`);
+    const wavFile = await extractAudioFromFile(videoFile, (p) => {
+      setProgress(p.percent);
+    });
     return wavFile;
   };
 
@@ -162,11 +122,11 @@ const NewAnalysis = () => {
 
     let fileToSend = file;
 
-    // 2. Extract audio if file is too large
-    if (file && file.size > MAX_FILE_SIZE) {
+    // 2. Always extract audio from video files (converts MOV/AVI/etc → WAV for Whisper)
+    if (file && needsExtraction(file)) {
       try {
-        fileToSend = await extractAudio(file);
-        if (fileToSend.size > MAX_FILE_SIZE) {
+        fileToSend = await doExtractAudio(file);
+        if (fileToSend.size > MAX_WHISPER_SIZE) {
           toast.error(`Audio still too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
           setStep("error");
           await supabase.from("analyses").update({ status: "failed" }).eq("id", record.id);
@@ -302,14 +262,14 @@ const NewAnalysis = () => {
                 {file ? (
                   <div className="flex items-center gap-4 p-5">
                     <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0"
-                      style={{ background: file.size > MAX_FILE_SIZE ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
-                      <Video className="h-6 w-6" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "#34d399" }} />
+                      style={{ background: needsExtraction(file) ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
+                      <Video className="h-6 w-6" style={{ color: needsExtraction(file) ? "#fbbf24" : "#34d399" }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-white text-sm truncate">{file.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "rgba(255,255,255,0.3)" }}>
+                      <p className="text-xs mt-0.5" style={{ color: needsExtraction(file) ? "#fbbf24" : "rgba(255,255,255,0.3)" }}>
                         {(file.size / (1024 * 1024)).toFixed(1)} MB
-                        {file.size > MAX_FILE_SIZE && " · ⚡ Audio will be extracted automatically"}
+                        {needsExtraction(file) && " · ⚡ Audio will be extracted automatically"}
                       </p>
                     </div>
                     <button

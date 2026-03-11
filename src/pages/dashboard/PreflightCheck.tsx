@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import { toast } from "sonner";
 import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
@@ -222,9 +223,26 @@ export default function PreflightCheck() {
       let data: PreflightResult & { transcribed_from_video?: boolean; video_filename?: string; transcription_note?: string | null };
 
       if (inputMode === "video" && videoFile) {
+        // Extract audio client-side first (converts MOV/AVI/etc → WAV)
+        let fileToSend: File = videoFile;
+        if (needsExtraction(videoFile)) {
+          try {
+            fileToSend = await extractAudioFromFile(videoFile);
+            if (fileToSend.size > MAX_WHISPER_SIZE) {
+              toast.error(`Audio too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
+              setLoading(false);
+              return;
+            }
+          } catch (err: any) {
+            toast.error(err.message || "Could not extract audio");
+            setLoading(false);
+            return;
+          }
+        }
+
         // FormData mode for video upload
         const formData = new FormData();
-        formData.append("video_file", videoFile);
+        formData.append("video_file", fileToSend);
         formData.append("platform", platform);
         formData.append("market", market);
         formData.append("duration", duration);

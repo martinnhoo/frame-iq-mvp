@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
@@ -77,22 +78,7 @@ const STEP_LABELS: Record<ProgressStep, string> = {
 };
 const STEP_ORDER: ProgressStep[] = ["extracting", "uploading", "transcribing", "translating", "done"];
 
-// ─── WAV encoder (16kHz mono — ideal for Whisper, tiny files) ────────────────
-function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-  writeStr(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, "WAVE");
-  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-  writeStr(36, "data"); view.setUint32(40, samples.length * 2, true);
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-  return new Blob([buffer], { type: "audio/wav" });
-}
+// encodeWAV and extractAudio are now in @/lib/audioExtractor
 
 // ─── Mode A: Transcribe + Translate ──────────────────────────────────────────
 const TranscribeMode = ({ userId }: { userId: string }) => {
@@ -127,46 +113,13 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     if (e.dataTransfer.files[0]) acceptFile(e.dataTransfer.files[0]);
   }, []);
 
-  const MAX_FILE_SIZE = 25 * 1024 * 1024;
-
-  /** Extract audio using OfflineAudioContext → 16kHz mono WAV (fast, reliable) */
-  const extractAudio = async (videoFile: File): Promise<File> => {
+  /** Extract audio using shared utility */
+  const doExtractAudio = async (videoFile: File): Promise<File> => {
     setStep("extracting");
     setProgress(10);
-
-    // Decode audio from video file
-    const arrayBuffer = await videoFile.arrayBuffer();
-    setProgress(30);
-
-    const audioCtx = new AudioContext();
-    let audioBuffer: AudioBuffer;
-    try {
-      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    } catch {
-      await audioCtx.close();
-      throw new Error("Could not decode audio from this video");
-    }
-    await audioCtx.close();
-    setProgress(50);
-
-    // Resample to 16kHz mono using OfflineAudioContext
-    const TARGET_SR = 16000;
-    const duration = audioBuffer.duration;
-    const offlineCtx = new OfflineAudioContext(1, Math.ceil(duration * TARGET_SR), TARGET_SR);
-    const source = offlineCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineCtx.destination);
-    source.start(0);
-
-    const rendered = await offlineCtx.startRendering();
-    setProgress(80);
-
-    // Encode as WAV
-    const wavBlob = encodeWAV(rendered.getChannelData(0), TARGET_SR);
-    const wavFile = new File([wavBlob], "audio.wav", { type: "audio/wav" });
-    setProgress(90);
-
-    console.log(`Audio extracted: ${(wavFile.size / 1024 / 1024).toFixed(1)}MB from ${(videoFile.size / 1024 / 1024).toFixed(0)}MB video (${Math.round(duration)}s)`);
+    const wavFile = await extractAudioFromFile(videoFile, (p) => {
+      setProgress(p.percent);
+    });
     return wavFile;
   };
 
@@ -213,15 +166,11 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
     let fileToSend = file;
 
-    // Extract audio if file is too large
-    if (file.size > MAX_FILE_SIZE) {
-      if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
-        toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Max 25MB.`);
-        return;
-      }
+    // Always extract audio from video files (converts any format to WAV for Whisper)
+    if (needsExtraction(file)) {
       try {
-        fileToSend = await extractAudio(file);
-        if (fileToSend.size > MAX_FILE_SIZE) {
+        fileToSend = await doExtractAudio(file);
+        if (fileToSend.size > MAX_WHISPER_SIZE) {
           toast.error(`Audio still too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
           setStep("error");
           return;
@@ -338,15 +287,15 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           onChange={e => e.target.files?.[0] && acceptFile(e.target.files[0])} />
         {file ? (
           <div className="flex items-center gap-4 p-5">
-            <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: file.size > MAX_FILE_SIZE ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
-              <Video className="h-6 w-6" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "#34d399" }} />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: needsExtraction(file) ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
+              <Video className="h-6 w-6" style={{ color: needsExtraction(file) ? "#fbbf24" : "#34d399" }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white font-semibold text-sm truncate">{file.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "rgba(255,255,255,0.4)" }}>
+              <p className="text-xs mt-0.5" style={{ color: needsExtraction(file) ? "#fbbf24" : "rgba(255,255,255,0.4)" }}>
                 {(file.size / 1024 / 1024).toFixed(1)} MB
-                {file.size > MAX_FILE_SIZE
-                  ? " · ⚡ Audio will be extracted automatically (max 25MB)"
+                {needsExtraction(file)
+                  ? " · ⚡ Audio will be extracted automatically"
                   : " · Click to replace"}
               </p>
             </div>
