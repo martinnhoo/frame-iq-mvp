@@ -140,7 +140,16 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
     if (!file) return;
     setParsing(true);
     try {
-      const text = await file.text();
+      let text: string;
+      if (file.name.match(/\.xlsx?$/i)) {
+        const XLSX = await import("xlsx");
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        text = XLSX.utils.sheet_to_csv(ws);
+      } else {
+        text = await file.text();
+      }
       const { data, error } = await supabase.functions.invoke("parse-ads-data", {
         body: {
           user_id: userId, platform, csv_data: text, filename: file.name,
