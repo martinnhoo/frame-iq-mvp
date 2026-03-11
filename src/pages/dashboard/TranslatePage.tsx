@@ -113,46 +113,13 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     if (e.dataTransfer.files[0]) acceptFile(e.dataTransfer.files[0]);
   }, []);
 
-  const MAX_FILE_SIZE = 25 * 1024 * 1024;
-
-  /** Extract audio using OfflineAudioContext → 16kHz mono WAV (fast, reliable) */
-  const extractAudio = async (videoFile: File): Promise<File> => {
+  /** Extract audio using shared utility */
+  const doExtractAudio = async (videoFile: File): Promise<File> => {
     setStep("extracting");
     setProgress(10);
-
-    // Decode audio from video file
-    const arrayBuffer = await videoFile.arrayBuffer();
-    setProgress(30);
-
-    const audioCtx = new AudioContext();
-    let audioBuffer: AudioBuffer;
-    try {
-      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    } catch {
-      await audioCtx.close();
-      throw new Error("Could not decode audio from this video");
-    }
-    await audioCtx.close();
-    setProgress(50);
-
-    // Resample to 16kHz mono using OfflineAudioContext
-    const TARGET_SR = 16000;
-    const duration = audioBuffer.duration;
-    const offlineCtx = new OfflineAudioContext(1, Math.ceil(duration * TARGET_SR), TARGET_SR);
-    const source = offlineCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineCtx.destination);
-    source.start(0);
-
-    const rendered = await offlineCtx.startRendering();
-    setProgress(80);
-
-    // Encode as WAV
-    const wavBlob = encodeWAV(rendered.getChannelData(0), TARGET_SR);
-    const wavFile = new File([wavBlob], "audio.wav", { type: "audio/wav" });
-    setProgress(90);
-
-    console.log(`Audio extracted: ${(wavFile.size / 1024 / 1024).toFixed(1)}MB from ${(videoFile.size / 1024 / 1024).toFixed(0)}MB video (${Math.round(duration)}s)`);
+    const wavFile = await extractAudioFromFile(videoFile, (p) => {
+      setProgress(p.percent);
+    });
     return wavFile;
   };
 
@@ -199,15 +166,11 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
     let fileToSend = file;
 
-    // Extract audio if file is too large
-    if (file.size > MAX_FILE_SIZE) {
-      if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
-        toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Max 25MB.`);
-        return;
-      }
+    // Always extract audio from video files (converts any format to WAV for Whisper)
+    if (needsExtraction(file)) {
       try {
-        fileToSend = await extractAudio(file);
-        if (fileToSend.size > MAX_FILE_SIZE) {
+        fileToSend = await doExtractAudio(file);
+        if (fileToSend.size > MAX_WHISPER_SIZE) {
           toast.error(`Audio still too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
           setStep("error");
           return;
