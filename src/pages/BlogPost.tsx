@@ -210,7 +210,7 @@ const blogPosts: Record<string, {
       "## Pricing",
       "Board Generation is included in all paid plans: Studio (30 boards/month), Scale (300 boards/month), and Enterprise (unlimited). Free plan users get 3 boards/month to try it out.",
       "## Try It Today",
-      "Board Generation is live for all FrameIQ users. Log in to your dashboard or start a free account to generate your first board in 30 seconds.",
+      "Board Generation is live for all AdBrief users. Log in to your dashboard or start a free account to generate your first board in 30 seconds.",
     ],
   },
   "ab-testing-ad-creative": {
