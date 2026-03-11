@@ -9,25 +9,25 @@ type Lang = 'en' | 'pt' | 'es' | 'hi';
 
 const templates: Record<Lang, { subject: string; greeting: string; ready: string; cta: string }> = {
   en: {
-    subject: "You're in — FrameIQ",
+    subject: "You're in — AdBrief",
     greeting: "Hey",
     ready: "Your account is ready.\n\nDrop a video. See what converts.",
     cta: "Start analyzing",
   },
   pt: {
-    subject: "Você está dentro — FrameIQ",
+    subject: "Você está dentro — AdBrief",
     greeting: "Oi",
     ready: "Sua conta está pronta.\n\nSuba um vídeo. Veja o que converte.",
     cta: "Começar a analisar",
   },
   es: {
-    subject: "Ya estás dentro — FrameIQ",
+    subject: "Ya estás dentro — AdBrief",
     greeting: "Hola",
     ready: "Tu cuenta está lista.\n\nSube un video. Ve qué convierte.",
     cta: "Empezar a analizar",
   },
   hi: {
-    subject: "आप अंदर हैं — FrameIQ",
+    subject: "आप अंदर हैं — AdBrief",
     greeting: "नमस्ते",
     ready: "आपका अकाउंट तैयार है।\n\nएक वीडियो अपलोड करें। देखें क्या कन्वर्ट होता है।",
     cta: "विश्लेषण शुरू करें",
