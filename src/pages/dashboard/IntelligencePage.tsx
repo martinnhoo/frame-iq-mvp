@@ -86,13 +86,14 @@ export default function IntelligencePage() {
   }, [user.id]);
 
   const [rebuilding, setRebuilding] = useState(false);
+  const [memoryData, setMemoryData] = useState<Array<{ hook_type: string; hook_score: number; platform: string; creative_model: string; notes: string; created_at: string }>>([]);
 
   const loadData = async () => {
     setLoading(true);
-    const [{ data: analysesData }, { data: profileData }] = await Promise.all([
+    const [{ data: analysesData }, { data: profileData }, { data: memData }] = await Promise.all([
       supabase
         .from("analyses")
-        .select("id, created_at, result, hook_strength, status")
+        .select("id, created_at, result, hook_strength, hook_score, status")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("created_at", { ascending: false })
@@ -102,9 +103,16 @@ export default function IntelligencePage() {
         .select("*" as never)
         .eq("user_id" as never, user.id)
         .maybeSingle(),
+      supabase
+        .from("creative_memory" as never)
+        .select("hook_type, hook_score, platform, creative_model, notes, created_at" as never)
+        .eq("user_id" as never, user.id)
+        .order("created_at" as never, { ascending: false })
+        .limit(200),
     ]);
     if (analysesData) setAnalyses(analysesData as AnalysisRow[]);
     if (profileData) setAiProfile(profileData as Record<string, unknown>);
+    if (memData) setMemoryData(memData as typeof memoryData);
     setLoading(false);
   };
 
@@ -202,7 +210,7 @@ export default function IntelligencePage() {
     );
   }
 
-  if (analyses.length === 0) {
+  if (analyses.length === 0 && memoryData.length === 0) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex items-center gap-2 mb-6">
@@ -211,8 +219,8 @@ export default function IntelligencePage() {
         </div>
         <div className="rounded-2xl border border-dashed border-white/[0.08] py-20 text-center">
           <p className="text-4xl mb-4">🧠</p>
-          <p className="text-white/40 text-sm font-medium mb-2">No data yet</p>
-          <p className="text-white/20 text-xs">Run your first analysis to start building creative intelligence</p>
+          <p className="text-white/40 text-sm font-medium mb-2">No signals yet</p>
+          <p className="text-white/20 text-xs">Generate hooks or run an analysis to start building creative intelligence</p>
         </div>
       </div>
     );
@@ -359,6 +367,49 @@ export default function IntelligencePage() {
                   </div>
                   <p className="text-[10px] text-white/25 truncate">{stat.description}</p>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Creative Memory — signals from hooks feedback */}
+      {memoryData.length > 0 && (
+        <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-yellow-400" />
+              <p className="text-sm font-semibold text-white">Creative Memory</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">{memoryData.length} signals</span>
+            </div>
+            <p className="text-[10px] text-white/20">Built from your hook feedback and analyses</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            {(() => {
+              const byType: Record<string, { count: number; totalScore: number }> = {};
+              memoryData.forEach(m => {
+                const t = m.hook_type || "general";
+                if (!byType[t]) byType[t] = { count: 0, totalScore: 0 };
+                byType[t].count++;
+                byType[t].totalScore += m.hook_score || 0;
+              });
+              return Object.entries(byType).sort((a, b) => b[1].count - a[1].count).slice(0, 4).map(([type, stat]) => (
+                <div key={type} className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider truncate">{type}</p>
+                  <p className="text-lg font-bold text-white font-mono">{(stat.totalScore / stat.count).toFixed(1)}</p>
+                  <p className="text-[10px] text-white/20">avg · {stat.count} samples</p>
+                </div>
+              ));
+            })()}
+          </div>
+          <div className="space-y-1.5">
+            {memoryData.filter(m => m.notes).slice(0, 5).map((m, i) => (
+              <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white/[0.02]">
+                <span className={`text-xs font-mono shrink-0 ${(m.hook_score || 0) >= 7 ? "text-green-400" : (m.hook_score || 0) >= 5 ? "text-yellow-400" : "text-red-400"}`}>
+                  {(m.hook_score || 0).toFixed(1)}
+                </span>
+                <p className="text-xs text-white/35 truncate">{m.notes}</p>
+                <span className="text-[10px] text-white/15 shrink-0 ml-auto">{m.platform || "—"}</span>
               </div>
             ))}
           </div>

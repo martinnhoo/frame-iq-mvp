@@ -128,6 +128,10 @@ export default function HookGenerator() {
         hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
         notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
       } as any);
+      // Trigger AI profile update non-blocking
+      supabase.functions.invoke("update-ai-profile", {
+        body: { user_id: user.id, trigger: "hook_feedback", vote, hook_type: hook.hook_type, platform, predicted_score: hook.predicted_score }
+      }).catch(() => {});
     }
   };
 

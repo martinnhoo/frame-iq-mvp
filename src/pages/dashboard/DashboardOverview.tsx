@@ -86,10 +86,38 @@ export default function DashboardOverview() {
 
   useEffect(() => {
     const run = async () => {
-      const { data } = await supabase.from("analyses").select("result, created_at, title")
-        .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(30);
-      if (!data?.length) return;
+      const [{ data }, { data: memData }] = await Promise.all([
+        supabase.from("analyses").select("result, created_at, title")
+          .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(30),
+        supabase.from("creative_memory" as never).select("hook_type, hook_score, platform, notes, created_at" as never)
+          .eq("user_id" as never, user.id).order("created_at" as never, { ascending: false }).limit(50),
+      ]);
       const feed: IntelItem[] = [];
+
+      // Signals from creative_memory (hook feedback)
+      const mem = (memData || []) as Array<{ hook_type: string; hook_score: number; platform: string; notes: string; created_at: string }>;
+      if (mem.length > 0) {
+        const likedHooks = mem.filter(m => m.notes?.includes("liked"));
+        const dislikedHooks = mem.filter(m => m.notes?.includes("disliked"));
+        if (likedHooks.length > 0) {
+          const topType = likedHooks.reduce<Record<string, number>>((acc, m) => { acc[m.hook_type] = (acc[m.hook_type] || 0) + 1; return acc; }, {});
+          const best = Object.entries(topType).sort((a, b) => b[1] - a[1])[0];
+          if (best) feed.push({ id: "mem_liked", icon: "👍", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: `You prefer ${best[0]} hooks`, body: `Liked ${best[1]} of this type. AI will generate more for your campaigns.`, url: "/dashboard/hooks", tag: "Learned" });
+        }
+        if (dislikedHooks.length >= 2) {
+          const topBad = dislikedHooks.reduce<Record<string, number>>((acc, m) => { acc[m.hook_type] = (acc[m.hook_type] || 0) + 1; return acc; }, {});
+          const worst = Object.entries(topBad).sort((a, b) => b[1] - a[1])[0];
+          if (worst) feed.push({ id: "mem_disliked", icon: "📉", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `Avoid ${worst[0]} hooks`, body: `Flagged ${worst[1]}× as low quality. AI is deprioritizing this angle.`, url: "/dashboard/hooks", tag: "Learned" });
+        }
+        const avgMemScore = mem.filter(m => m.hook_score).reduce((a, m) => a + m.hook_score, 0) / mem.filter(m => m.hook_score).length;
+        if (avgMemScore > 0) feed.push({ id: "mem_avg", icon: "🎯", color: "#a78bfa", borderColor: "rgba(167,139,250,0.2)", title: `Hook quality: ${avgMemScore.toFixed(1)}/10 avg`, body: `Based on ${mem.length} signals in your creative memory. Keep rating to improve AI accuracy.`, url: "/dashboard/intelligence", tag: "Signal" });
+      }
+
+      if (!data?.length) {
+        if (feed.length === 0) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Score hooks before spending", body: "Hook Generator predicts performance in 30s — before committing to production.", url: "/dashboard/hooks", tag: "Tip" });
+        setIntelFeed(feed.slice(0, 4));
+        return;
+      }
       const recent = data.slice(0, 5);
       const recentScores = recent.map(a => (a.result as Record<string, unknown>)?.hook_score as number || 0).filter(Boolean);
       const avgRecent = recentScores.length ? recentScores.reduce((a, b) => a + b, 0) / recentScores.length : 0;
