@@ -75,6 +75,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
   const [file, setFile] = useState<File | null>(null);
   const [targetLang, setTargetLang] = useState("en");
   const [transcribing, setTranscribing] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressProgress, setCompressProgress] = useState("");
   const [transcript, setTranscript] = useState("");
   const [translated, setTranslated] = useState("");
   const [copiedT, setCopiedT] = useState(false);
@@ -99,12 +101,111 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB — Whisper API limit
 
+  /** Extract audio from video using browser APIs to reduce file size */
+  const extractAudio = async (videoFile: File): Promise<File> => {
+    setCompressing(true);
+    setCompressProgress("Loading video...");
+
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.muted = true;
+      video.playsInline = true;
+      const url = URL.createObjectURL(videoFile);
+      video.src = url;
+
+      video.onloadedmetadata = () => {
+        setCompressProgress("Extracting audio...");
+        
+        // Create audio context and media element source
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(video);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+
+        // Use MediaRecorder to capture audio only
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : MediaRecorder.isTypeSupported("audio/webm")
+            ? "audio/webm"
+            : "audio/mp4";
+        
+        const recorder = new MediaRecorder(dest.stream, { mimeType, audioBitsPerSecond: 64000 });
+        const chunks: BlobPart[] = [];
+
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+        recorder.onstop = () => {
+          URL.revokeObjectURL(url);
+          audioCtx.close();
+          const blob = new Blob(chunks, { type: mimeType });
+          const ext = mimeType.includes("webm") ? "webm" : "mp4";
+          const audioFile = new File([blob], `audio.${ext}`, { type: mimeType });
+          setCompressing(false);
+          setCompressProgress("");
+          resolve(audioFile);
+        };
+
+        recorder.onerror = () => {
+          URL.revokeObjectURL(url);
+          audioCtx.close();
+          setCompressing(false);
+          reject(new Error("Audio extraction failed"));
+        };
+
+        const duration = video.duration;
+        let lastProgress = 0;
+
+        video.ontimeupdate = () => {
+          const pct = Math.min(99, Math.round((video.currentTime / duration) * 100));
+          if (pct > lastProgress) {
+            lastProgress = pct;
+            setCompressProgress(`Extracting audio... ${pct}%`);
+          }
+        };
+
+        recorder.start(1000);
+        video.playbackRate = 16; // Speed up extraction
+        video.play().catch(reject);
+
+        video.onended = () => { recorder.stop(); };
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        setCompressing(false);
+        reject(new Error("Could not load video"));
+      };
+    });
+  };
+
   const handleRun = async () => {
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Whisper accepts up to 25MB. Compress or trim your video first.`);
+
+    let fileToSend = file;
+
+    // If file is too large and is a video, extract audio
+    if (file.size > MAX_FILE_SIZE && file.type.startsWith("video/")) {
+      try {
+        toast.info("File too large for Whisper. Extracting audio track...");
+        fileToSend = await extractAudio(file);
+        const newSizeMB = (fileToSend.size / 1024 / 1024).toFixed(1);
+        toast.success(`Audio extracted: ${newSizeMB}MB`);
+        
+        // If still too large after extraction
+        if (fileToSend.size > MAX_FILE_SIZE) {
+          toast.error(`Audio still too large (${newSizeMB}MB). Try a shorter video.`);
+          return;
+        }
+      } catch (err) {
+        console.error("Audio extraction error:", err);
+        toast.error("Could not extract audio. Try a smaller file or convert to MP3 first.");
+        return;
+      }
+    } else if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Max 25MB for audio files.`);
       return;
     }
+
     setTranscribing(true);
     setTranscript("");
     setTranslated("");
