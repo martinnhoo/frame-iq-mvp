@@ -288,12 +288,17 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           onChange={e => e.target.files?.[0] && acceptFile(e.target.files[0])} />
         {file ? (
           <div className="flex items-center gap-4 p-5">
-            <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "rgba(52,211,153,0.15)" }}>
-              <Video className="h-6 w-6" style={{ color: "#34d399" }} />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: file.size > MAX_FILE_SIZE ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.15)" }}>
+              <Video className="h-6 w-6" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "#34d399" }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white font-semibold text-sm truncate">{file.name}</p>
-              <p className="text-white/40 text-xs mt-0.5">{(file.size / 1024 / 1024).toFixed(1)} MB · Click to replace</p>
+              <p className="text-xs mt-0.5" style={{ color: file.size > MAX_FILE_SIZE ? "#fbbf24" : "rgba(255,255,255,0.4)" }}>
+                {(file.size / 1024 / 1024).toFixed(1)} MB
+                {file.size > MAX_FILE_SIZE
+                  ? " · ⚡ Audio will be extracted automatically (max 25MB)"
+                  : " · Click to replace"}
+              </p>
             </div>
             <button onClick={e => { e.stopPropagation(); setFile(null); setTranscript(""); setTranslated(""); }}
               className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all">
