@@ -1059,7 +1059,7 @@ export const translations: Record<Language, TranslationKeys> = {
     social_ads: "Anúncios analisados", social_teams: "Times de performance", social_countries: "Países", social_time: "Tempo médio de análise",
     problem_label: "O custo do criativo lento",
     problem_title: "A maioria dos times desperdiça 60% do orçamento criativo antes de um único anúncio ir ao ar.",
-    problem_subtitle: "Hooks fracos. Ângulos não testados. Briefs que os editores ignoram. O FrameIQ resolve todos — antes de você gastar um real na produção.",
+    problem_subtitle: "Hooks fracos. Ângulos não testados. Briefs que os editores ignoram. O AdBrief resolve todos — antes de você gastar um real na produção.",
     stat1_label: "Do upload ao brief criativo completo",
     stat1_sub: "vs. 8 horas de análise manual",
     stat2_label: "Mais variações de anúncios por sprint",
