@@ -132,6 +132,11 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
+      // Vika welcome popup
+      if (session.user.email === "victoriafnogueira@hotmail.com" && !localStorage.getItem("vika_welcome_shown")) {
+        setVikaPopup(true);
+        localStorage.setItem("vika_welcome_shown", "1");
+      }
       if (mounted) setLoading(false);
     };
     init();
