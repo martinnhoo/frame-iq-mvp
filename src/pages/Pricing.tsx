@@ -6,18 +6,23 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Stripe product/price mapping
+const PLANS = {
+  creator: { product_id: "prod_U88gF48nQTStB2", price_id: "price_1T9sPXDr9So14XztRB4YmLHl" },
+  studio:  { product_id: "prod_U88hsSpnApR9Gt", price_id: "price_1T9sQ3Dr9So14XztEgFfLh6x" },
+  scale:   { product_id: "prod_U88hnL1CuEMnfo", price_id: "price_1T9sQTDr9So14Xzta4ARSzhl" },
+};
+
 const Pricing = () => {
   const navigate = useNavigate();
-  const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
 
-  const handleUpgrade = async (planName: string) => {
-    // Check if user is logged in
+  const handleUpgrade = async (planKey: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -25,29 +30,32 @@ const Pricing = () => {
       return;
     }
 
-    if (planName === "Scale") {
+    if (planKey === "scale") {
       navigate("/book-demo");
       return;
     }
 
-    // For Studio, try the upgrade flow
-    setUpgrading(true);
+    const plan = PLANS[planKey as keyof typeof PLANS];
+    if (!plan) return;
+
+    setUpgrading(planKey);
     try {
-      const { data, error } = await supabase.functions.invoke('upgrade-plan', {
-        body: { user_id: session.user.id, new_plan: 'studio' }
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { price_id: plan.price_id }
       });
 
       if (error) throw error;
 
-      if (data?.mock_mode) {
-        setUpgradeModal("studio");
-      } else if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Could not create checkout session");
       }
     } catch (err) {
       toast.error("Something went wrong. Please try again.");
+      console.error("Checkout error:", err);
     } finally {
-      setUpgrading(false);
+      setUpgrading(null);
     }
   };
 
@@ -87,7 +95,7 @@ const Pricing = () => {
         { text: "AI Intelligence", included: false },
       ],
       cta: "Start Creator",
-      ctaAction: () => handleUpgrade("Creator"),
+      ctaAction: () => handleUpgrade("creator"),
       highlighted: false,
     },
     {
@@ -106,7 +114,7 @@ const Pricing = () => {
         { text: "2 team seats", included: true },
       ],
       cta: "Start Studio",
-      ctaAction: () => handleUpgrade("Studio"),
+      ctaAction: () => handleUpgrade("studio"),
       highlighted: true,
       badge: "Most Popular",
     },
@@ -126,7 +134,7 @@ const Pricing = () => {
         { text: "API access + White Label", included: true },
       ],
       cta: "Book a demo",
-      ctaAction: () => handleUpgrade("Scale"),
+      ctaAction: () => handleUpgrade("scale"),
       highlighted: false,
     },
   ];
@@ -249,9 +257,9 @@ const Pricing = () => {
                           : "bg-card text-foreground hover:bg-muted border border-border"
                       }`}
                       onClick={plan.ctaAction}
-                      disabled={upgrading}
+                      disabled={upgrading !== null}
                     >
-                      {upgrading && plan.name === "Studio" && (
+                      {upgrading === plan.name.toLowerCase() && (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       )}
                       {plan.cta}
@@ -361,36 +369,6 @@ const Pricing = () => {
         </div>
       </footer>
 
-      {/* Upgrade Modal */}
-      <Dialog open={upgradeModal !== null} onOpenChange={() => setUpgradeModal(null)}>
-        <DialogContent className="bg-card border-border max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Payment coming soon</DialogTitle>
-            <DialogDescription className="text-muted-foreground pt-2 leading-relaxed">
-              The Studio plan is currently in preview. You'll be notified when full payment processing launches.
-              In the meantime, your plan has been updated to Studio with all features unlocked.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
-              onClick={() => {
-                setUpgradeModal(null);
-                navigate("/dashboard");
-              }}
-            >
-              Go to Dashboard
-            </Button>
-            <Button
-              variant="outline"
-              className="border-border"
-              onClick={() => setUpgradeModal(null)}
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
