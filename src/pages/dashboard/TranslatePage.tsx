@@ -212,7 +212,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     try {
       // Send actual file as FormData for Whisper transcription
       const formData = new FormData();
-      formData.append("video_file", file);
+      formData.append("video_file", fileToSend);
       formData.append("user_id", userId || "");
       formData.append("transcribe_only", "true");
 
