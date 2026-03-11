@@ -275,6 +275,11 @@ export default function DashboardOverview() {
                 {dt("ov_lets_ship")}
               </span>
             </h1>
+            {microText && (
+              <p className="text-[11px] text-white/25 mt-1.5 tracking-wide" style={mono}>
+                {microText}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
