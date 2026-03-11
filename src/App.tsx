@@ -15,6 +15,9 @@ import BookDemo from "./pages/BookDemo";
 import FAQ from "./pages/FAQ";
 import FeatureDetail from "./pages/FeatureDetail";
 import Pricing from "./pages/Pricing";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Refund from "./pages/Refund";
 import Careers from "./pages/Careers";
 import NotFound from "./pages/NotFound";
 import ConfirmEmail from "./pages/ConfirmEmail";
@@ -69,6 +72,9 @@ const App = () => (
               <Route path="/book-demo" element={<BookDemo />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/refund" element={<Refund />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/features/:slug" element={<FeatureDetail />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
