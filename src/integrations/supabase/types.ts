@@ -283,6 +283,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_ai_action_at: string | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_data: Json | null
@@ -297,6 +298,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          last_ai_action_at?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_data?: Json | null
@@ -311,6 +313,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          last_ai_action_at?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_data?: Json | null
