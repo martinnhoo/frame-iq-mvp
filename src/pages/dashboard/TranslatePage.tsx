@@ -362,23 +362,54 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         )}
       </div>
 
+      {/* Progress bar */}
+      {isProcessing && (
+        <div className="rounded-2xl p-5 space-y-4" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
+              <span className="text-sm font-semibold text-white" style={syne}>{STEP_LABELS[step]}</span>
+            </div>
+            <span className="text-xs font-mono text-white/30">{overallProgress}%</span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div className="h-full rounded-full transition-all duration-500" style={{
+              width: `${overallProgress}%`,
+              background: "linear-gradient(90deg, #a78bfa, #f472b6)",
+            }} />
+          </div>
+          <div className="flex gap-1">
+            {STEP_ORDER.slice(0, -1).map((s, i) => {
+              const stepIdx = STEP_ORDER.indexOf(step);
+              const done = stepIdx > i;
+              const active = stepIdx === i;
+              return (
+                <div key={s} className="flex items-center gap-1.5 text-xs" style={{ color: done ? "#34d399" : active ? "#a78bfa" : "rgba(255,255,255,0.15)" }}>
+                  {done ? <Check className="h-3 w-3" /> : active ? <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" /> : <div className="h-1.5 w-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }} />}
+                  <span>{s === "extracting" ? "Extract" : s === "uploading" ? "Upload" : s === "transcribing" ? "Transcribe" : "Translate"}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Language + Run button */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <div>
           <p className="text-xs text-white/30 mb-2" style={mono}>TRANSLATE OUTPUT TO</p>
           <LangPill value={targetLang} onChange={setTargetLang} />
         </div>
-        <button onClick={handleRun} disabled={!file || transcribing || compressing}
+        <button onClick={handleRun} disabled={!file || isProcessing}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-7 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
-          {compressing ? <><Loader2 className="h-4 w-4 animate-spin" /> {compressProgress || "Compressing..."}</>
-           : transcribing ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</> 
+          {isProcessing ? <><Loader2 className="h-4 w-4 animate-spin" /> {STEP_LABELS[step]}</>
            : <><Wand2 className="h-4 w-4" /> Transcribe &amp; Translate</>}
         </button>
       </div>
 
       {/* Dual output */}
-      {(transcript || transcribing) && (
+      {(transcript || step === "done") && (
         <div className="grid md:grid-cols-2 gap-4">
           <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -395,9 +426,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               )}
             </div>
             <div className="p-4 min-h-[140px]">
-              {transcribing && !transcript
-                ? <div className="flex items-center gap-2 text-white/30 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Transcribing...</div>
-                : <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{transcript}</p>}
+              <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{transcript || "..."}</p>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(52,211,153,0.2)", background: "#0c0c0c" }}>
@@ -417,17 +446,13 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               )}
             </div>
             <div className="p-4 min-h-[140px]">
-              {transcribing && !translated
-                ? <div className="flex items-center gap-2 text-white/30 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Translating...</div>
-                : translated
-                  ? <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{translated}</p>
-                  : <p className="text-white/20 text-sm italic">Translation appears here</p>}
+              {translated
+                ? <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{translated}</p>
+                : <p className="text-white/20 text-sm italic">Translation appears here</p>}
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
 };
 
 // ─── Mode B: Script Adapt ─────────────────────────────────────────────────────
