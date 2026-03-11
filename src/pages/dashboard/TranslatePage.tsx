@@ -264,15 +264,15 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       }
       setTranscript(rawTranscript);
 
-      // Translate if needed
-      if (targetLang !== "en" && !rawTranscript.includes("failed")) {
+      // Always translate (auto-detect source language)
+      if (!rawTranscript.includes("failed")) {
         setStep("translating");
         setProgress(50);
         const lang = LANGUAGES.find(l => l.code === targetLang)!;
         const { data: tData } = await supabase.functions.invoke("translate-text", {
           body: {
             source_text: rawTranscript,
-            from_language: "en", from_language_name: "English",
+            from_language: "auto", from_language_name: "Auto-detect",
             to_language: targetLang, to_language_name: lang.name,
             context: "Video transcript — preserve natural speech patterns",
             tone: "Conversational", user_id: userId,
@@ -280,8 +280,6 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         });
         setTranslated(tData?.translated_text || "");
         setProgress(100);
-      } else if (!rawTranscript.includes("failed")) {
-        setTranslated(rawTranscript);
       }
 
       setStep("done");
