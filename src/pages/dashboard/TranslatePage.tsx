@@ -269,16 +269,28 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         setStep("translating");
         setProgress(50);
         const lang = LANGUAGES.find(l => l.code === targetLang)!;
-        const { data: tData } = await supabase.functions.invoke("translate-text", {
-          body: {
-            source_text: rawTranscript,
-            from_language: "auto", from_language_name: "Auto-detect",
-            to_language: targetLang, to_language_name: lang.name,
-            context: "Video transcript — preserve natural speech patterns",
-            tone: "Conversational", user_id: userId,
-          },
-        });
-        setTranslated(tData?.translated_text || "");
+        try {
+          console.log("Starting translation to", targetLang);
+          const { data: tData, error: tError } = await supabase.functions.invoke("translate-text", {
+            body: {
+              source_text: rawTranscript,
+              from_language: "auto", from_language_name: "Auto-detect",
+              to_language: targetLang, to_language_name: lang.name,
+              context: "Video transcript — preserve natural speech patterns",
+              tone: "Conversational", user_id: userId,
+            },
+          });
+          console.log("Translation response:", tData, "error:", tError);
+          if (tError) {
+            console.error("Translation error:", tError);
+            toast.error("Translation failed — transcript is still available");
+          } else {
+            setTranslated(tData?.translated_text || rawTranscript);
+          }
+        } catch (translateErr) {
+          console.error("Translation exception:", translateErr);
+          toast.error("Translation failed — transcript is still available");
+        }
         setProgress(100);
       }
 
