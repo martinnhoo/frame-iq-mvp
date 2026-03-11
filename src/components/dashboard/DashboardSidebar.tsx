@@ -65,6 +65,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     end ? location.pathname === url : location.pathname.startsWith(url);
 
   const plan = profile?.plan || "free";
+  const isLifetime = LIFETIME_EMAILS.includes(user?.email || "");
   const pm = planMeta[plan] || planMeta.free;
   const initials =
     profile?.name?.charAt(0)?.toUpperCase() ||
