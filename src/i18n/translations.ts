@@ -1141,12 +1141,12 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_cta_trial: "Teste de 14 dias",
     pricing_cta_demo: "Agende uma demo",
 
-    cta_title: "Pronto para multiplicar sua produção criativa por 10?",
-    cta_subtitle: "Junte-se a mais de 147 equipes de performance que produzem mais criativos, mais rápido.",
-    cta_primary: "Comece grátis",
+    cta_title: "Ainda adivinhando por que seus anúncios não performam?",
+    cta_subtitle: "Junte-se a 147+ times que pararam de adivinhar e começaram a crescer.",
+    cta_primary: "Analise seu primeiro anúncio grátis",
     cta_secondary: "Agende uma demo",
 
-    footer_desc: "Inteligência criativa alimentada por IA para equipes de performance marketing.",
+    footer_desc: "A ferramenta de crescimento que te diz por que anúncios falham — e como corrigir. Usada por 147+ times de performance marketing.",
     footer_product: "Produto",
     footer_company: "Empresa",
     footer_legal: "Legal",
