@@ -256,7 +256,7 @@ const blogPosts: Record<string, {
       "## Research & Competitive Intelligence",
       "### 1. Meta Ads Library — Free competitive research across Facebook and Instagram. Essential for monitoring competitor ad strategies and creative trends.",
       "### 2. TikTok Creative Center — Official TikTok resource for trending content, top ads, and creative insights. Filter by industry, objective, and region.",
-      "### 3. FrameIQ — AI-powered video ad analysis. Upload any ad and get hook extraction, creative model identification, transcription, and production-ready briefs in 60 seconds.",
+      "### 3. AdBrief — AI-powered video ad analysis. Upload any ad and get hook extraction, creative model identification, transcription, and production-ready briefs in 60 seconds.",
       "## Creative Production",
       "### 4. Figma — For storyboarding and visual concepting before production. Collaborate with designers and editors in real-time.",
       "### 5. CapCut — Quick video editing for UGC-style content. Native TikTok integration makes it ideal for social-first creative.",
