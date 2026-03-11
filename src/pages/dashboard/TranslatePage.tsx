@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
+import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
