@@ -142,7 +142,7 @@ const blogPosts: Record<string, {
       "## The Solution",
       "The brand adopted AdBrief to automate three key parts of their creative workflow: competitive analysis, production briefing, and creative variation generation.",
       "### Phase 1: AI-Powered Competitive Research (Week 1-2)",
-      "The team set up a weekly routine: every Monday, they uploaded the top 20 competitor ads from Meta Ads Library and TikTok Creative Center into FrameIQ. The AI extracted hooks, creative models, and transcripts — a process that previously took 8 hours now took 45 minutes.",
+      "The team set up a weekly routine: every Monday, they uploaded the top 20 competitor ads from Meta Ads Library and TikTok Creative Center into AdBrief. The AI extracted hooks, creative models, and transcripts — a process that previously took 8 hours now took 45 minutes.",
       "### Phase 2: Automated Production Briefs (Week 3-4)",
       "Using the competitive insights, the team started generating AI production briefs. Each brief included a scene-by-scene breakdown with timing, voiceover scripts with tone notes, visual references pulled from top-performing ads, and editor notes with specific direction.",
       "The briefs were specific enough that their freelance editors could start working immediately, cutting the typical briefing + revision cycle from 3 days to 4 hours.",
