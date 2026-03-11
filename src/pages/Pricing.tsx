@@ -148,7 +148,7 @@ const Pricing = () => {
     },
     {
       q: "Is there a free trial for paid plans?",
-      a: "Yes. Studio comes with a 14-day free trial. No credit card required. Scale plans include a personalized demo and trial period.",
+      a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
     },
     {
       q: "How does billing work?",
@@ -351,7 +351,7 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All plans are billed monthly. Studio plan includes a 14-day free trial.
+              Prices shown in USD. All plans are billed monthly. All paid plans include a 3-day free trial.
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">

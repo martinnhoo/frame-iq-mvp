@@ -42,11 +42,15 @@ Deno.serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Lifetime premium accounts — never downgrade
-    const LIFETIME_EMAILS = ["martinhovff@gmail.com"];
-    if (LIFETIME_EMAILS.includes(user.email!)) {
-      logStep("Lifetime premium account detected", { email: user.email });
-      return new Response(JSON.stringify({ subscribed: true, plan: "studio", lifetime: true }), {
+    // Lifetime accounts — never downgrade
+    const LIFETIME_ACCOUNTS: Record<string, string> = {
+      "martinhovff@gmail.com": "studio",
+      "victoriafnogueira@hotmail.com": "free",
+    };
+    if (user.email && LIFETIME_ACCOUNTS[user.email]) {
+      const lifetimePlan = LIFETIME_ACCOUNTS[user.email];
+      logStep("Lifetime account detected", { email: user.email, plan: lifetimePlan });
+      return new Response(JSON.stringify({ subscribed: lifetimePlan !== "free", plan: lifetimePlan, lifetime: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

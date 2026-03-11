@@ -63,10 +63,16 @@ const FEATURES_STATIC = [
   { value: "intelligence", url: "/dashboard/intelligence", emoji: "🧠", accent: "#c084fc", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)" },
 ];
 
+const PLAN_PRICES: Record<string, string> = {
+  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
+  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
+  studio: "price_1T9seMDr9So14Xzt0vEJNQIX",
+};
+
 const PLANS = [
-  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations"],                              highlight: false },
-  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights"],    highlight: true },
-  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access"],           highlight: false },
+  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator"],                              highlight: false, desc_key: "plan_desc_maker" },
+  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights", "AI Intelligence"],    highlight: true, desc_key: "plan_desc_pro" },
+  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access", "10 team seats"],           highlight: false, desc_key: "plan_desc_studio" },
 ];
 
 const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", "plan"];
@@ -97,26 +103,55 @@ export default function Onboarding() {
   const goNext = () => { const i = STEP_ORDER.indexOf(step); if (i < STEP_ORDER.length - 1) setStep(STEP_ORDER[i + 1]); };
   const goBack = () => { const i = STEP_ORDER.indexOf(step); if (i > 0) setStep(STEP_ORDER[i - 1]); };
 
+  const saveOnboarding = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return null; }
+    await supabase.from("profiles").update({
+      name: state.name || undefined,
+      preferred_language: state.language || undefined,
+      onboarding_completed: true,
+      onboarding_data: {
+        source: state.source, sourceOther: state.sourceOther,
+        feature: state.feature, marketingEmails: state.marketingEmails,
+        completedAt: new Date().toISOString(),
+      },
+    } as never).eq("id", session.user.id);
+    return session;
+  };
+
   const finish = async () => {
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/login"); return; }
+      const session = await saveOnboarding();
+      if (!session) return;
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
-      await supabase.from("profiles").update({
-        name: state.name || undefined,
-        preferred_language: state.language || undefined,
-        onboarding_completed: true,
-        onboarding_data: {
-          source: state.source, sourceOther: state.sourceOther,
-          feature: state.feature, marketingEmails: state.marketingEmails,
-          completedAt: new Date().toISOString(),
-        },
-      } as never).eq("id", session.user.id);
       toast.success("Welcome to AdBrief 🚀");
       navigate(feat?.url || "/dashboard");
     } catch {
       toast.error(ot("skip_setup"));
+      navigate("/dashboard");
+    } finally { setSaving(false); }
+  };
+
+  const handlePlanCheckout = async (planKey: string) => {
+    setSaving(true);
+    try {
+      const session = await saveOnboarding();
+      if (!session) return;
+      const priceId = PLAN_PRICES[planKey];
+      if (!priceId) { finish(); return; }
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { price_id: priceId }
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Could not start checkout");
+        navigate("/dashboard");
+      }
+    } catch {
+      toast.error("Something went wrong");
       navigate("/dashboard");
     } finally { setSaving(false); }
   };
@@ -370,6 +405,7 @@ export default function Onboarding() {
                 <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 6 {ot("of")} {STEP_ORDER.length}</p>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("plan_title")}</h1>
                 <p className="text-sm text-white/35">{ot("plan_sub")}</p>
+                <p className="text-xs text-white/20 mt-1">🎉 {ot("plan_trial_note")}</p>
               </div>
               <div className="space-y-2.5">
                 {PLANS.map(plan => (
@@ -381,10 +417,11 @@ export default function Onboarding() {
                         {ot("plan_most_popular")}
                       </span>
                     )}
-                    <div className="flex items-center justify-between mb-2 pr-20">
+                    <div className="flex items-center justify-between mb-1 pr-20">
                       <p className="font-bold text-white" style={syne}>{plan.label}</p>
                       <div><span className="text-lg font-bold text-white" style={syne}>{plan.price}</span><span className="text-xs text-white/30">{plan.period}</span></div>
                     </div>
+                    <p className="text-[10px] text-white/25 mb-2">{ot("plan_trial_badge")}</p>
                     <ul className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
                       {plan.features.map(f => (
                         <li key={f} className="text-xs text-white/40 flex items-center gap-1">
@@ -392,7 +429,7 @@ export default function Onboarding() {
                         </li>
                       ))}
                     </ul>
-                    <button onClick={finish} disabled={saving}
+                    <button onClick={() => handlePlanCheckout(plan.key)} disabled={saving}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                       style={{ background: plan.highlight ? "linear-gradient(135deg,#7c3aed,#ec4899)" : "rgba(255,255,255,0.08)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.55)", ...syne }}>
                       {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> {ot("plan_setting_up")}</> : <><Zap className="h-3.5 w-3.5" /> {ot("plan_get")} {plan.label}</>}

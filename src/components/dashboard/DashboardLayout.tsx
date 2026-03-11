@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles } from "lucide-react";
+import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -77,6 +77,7 @@ export default function DashboardLayout() {
   });
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
+  const [vikaPopup, setVikaPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -131,6 +132,11 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
+      // Vika welcome popup
+      if (session.user.email === "victoriafnogueira@hotmail.com" && !localStorage.getItem("vika_welcome_shown")) {
+        setVikaPopup(true);
+        localStorage.setItem("vika_welcome_shown", "1");
+      }
       if (mounted) setLoading(false);
     };
     init();
@@ -267,6 +273,36 @@ export default function DashboardLayout() {
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
+
+      {/* Vika welcome popup */}
+      {vikaPopup && (
+        <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
+          <div className="relative w-full max-w-sm rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()}
+            style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(167,139,250,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
+            <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }`}</style>
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, rgba(167,139,250,0.15), transparent 70%)" }} />
+            <div className="relative p-8 text-center space-y-4">
+              <div className="text-5xl">🎉</div>
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Bem-vinda, Vika! 💜
+              </h2>
+              <p className="text-sm text-white/50 leading-relaxed">
+                Sua conta está ativa com <span className="text-purple-400 font-semibold">acesso vitalício gratuito</span>. 
+                Todos os recursos do AdBrief são seus — sem limites, sem cobranças, para sempre.
+              </p>
+              <p className="text-xs text-white/30">
+                Aproveite cada ferramenta, crie sem medo, e brilhe! ✨
+              </p>
+              <button onClick={() => setVikaPopup(false)}
+                className="mt-2 px-6 py-2.5 rounded-xl text-sm font-bold text-black transition-all hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+                <PartyPopper className="inline h-4 w-4 mr-1.5 -mt-0.5" />
+                Vamos lá!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
