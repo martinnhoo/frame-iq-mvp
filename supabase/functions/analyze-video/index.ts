@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
 
     if (videoFile && OPENAI_API_KEY) {
       try {
+        console.log('Whisper: starting transcription, file size:', videoFile.size, 'name:', videoFile.name);
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
         whisperForm.append('model', 'whisper-1');
@@ -65,6 +66,11 @@ Deno.serve(async (req) => {
           const whisperData = await whisperRes.json();
           transcript = whisperData.text || '';
           duration = Math.round(whisperData.duration || 30);
+          console.log('Whisper: success, transcript length:', transcript.length, 'duration:', duration);
+        } else {
+          const errText = await whisperRes.text();
+          console.error('Whisper API error:', whisperRes.status, errText);
+          transcript = '[Audio transcription failed — Whisper API error]';
         }
       } catch (e) {
         console.error('Whisper error:', e);
