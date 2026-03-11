@@ -45,7 +45,7 @@ const featureMeta: Record<string, {
     icon: Globe,
     title: "Auto Translation",
     headline: "Any language in. English out. Instantly.",
-    description: "Upload ads in any language — Portuguese, Spanish, Japanese, Arabic — and FrameIQ automatically transcribes and translates everything to English so your global team stays aligned.",
+    description: "Upload ads in any language — Portuguese, Spanish, Japanese, Arabic — and AdBrief automatically transcribes and translates everything to English so your global team stays aligned.",
     details: [
       "Support for 40+ languages with native speaker-level accuracy",
       "Context-aware translation that preserves marketing intent, not just words",
