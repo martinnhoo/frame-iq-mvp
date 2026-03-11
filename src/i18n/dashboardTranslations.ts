@@ -452,6 +452,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Criar primeira persona", ov_clear_persona: "Limpar persona",
     bo_production_boards: "boards de produção", bo_create_first: "Criar primeiro board",
     bo_describe_concept: "Descreva o conceito do seu anúncio e receba cenas, scripts e notas de produção",
+    gm_streak: "Sequência", gm_streak_days: "dias", gm_mastery: "Maestria Criativa",
+    gm_level_observer: "Observador", gm_level_analyst: "Analista", gm_level_strategist: "Estrategista", gm_level_director: "Diretor Criativo",
+    gm_weekly_insight: "Insight Semanal", gm_score_up: "Score do hook subiu", gm_score_down: "Score do hook caiu", gm_score_stable: "Score estável",
+    gm_vs_last_week: "vs semana passada", gm_first_today: "Primeira sessão de hoje. Vamos lá.",
+    gm_on_rhythm: "análise esta semana. Você está no ritmo.", gm_power_user: "ações hoje. Modo power user.",
+    gm_comeback: "Bem-vindo de volta. Continue de onde parou.",
   },
 
   es: {
