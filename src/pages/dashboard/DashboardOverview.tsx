@@ -367,13 +367,13 @@ export default function DashboardOverview() {
                   <Brain className="h-4 w-4" style={{ color: "#a78bfa" }} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white" style={syne}>Intelligence feed</p>
-                  <p className="text-[10px] text-white/25">AI-powered creative signals</p>
+                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_intel_feed")}</p>
+                  <p className="text-[10px] text-white/25">{dt("ov_intel_signals")}</p>
                 </div>
               </div>
               <button onClick={() => navigate("/dashboard/intelligence")}
                 className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
-                All <ArrowRight className="h-3 w-3" />
+                {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
               </button>
             </div>
 
