@@ -71,7 +71,7 @@ function buildHtml(t: typeof templates['en'], firstName: string, appUrl: string)
         </td></tr>
         <!-- Divider -->
         <tr><td style="border-top:1px solid #222;padding-top:20px;">
-          <p style="margin:0;color:#555;font-size:12px;">— FrameIQ</p>
+          <p style="margin:0;color:#555;font-size:12px;">— AdBrief</p>
         </td></tr>
       </table>
     </td></tr>
