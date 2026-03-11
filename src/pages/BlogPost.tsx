@@ -279,7 +279,7 @@ const blogPosts: Record<string, {
     category: "iGaming",
     readTime: "9 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["iGaming ads", "betting ad creative", "iGaming marketing", "sports betting ads", "casino ad creative", "regulated market advertising"],
     content: [
