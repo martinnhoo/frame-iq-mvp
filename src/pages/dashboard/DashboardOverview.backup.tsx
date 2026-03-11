@@ -54,7 +54,7 @@ const DashboardOverview = () => {
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
   const usedAnalyses = usageDetails?.analyses.used ?? usage.analyses_count;
   const usedBoards   = usageDetails?.boards.used   ?? usage.boards_count;
-  const usedVideos   = usageDetails?.videos.used   ?? usage.videos_count;
+  const usedVideos   = (usageDetails as any)?.videos?.used ?? 0;
 
   useEffect(() => {
     const run = async () => {

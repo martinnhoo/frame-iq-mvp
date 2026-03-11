@@ -97,13 +97,13 @@ export default function HookGenerator() {
     toast.success(vote === "up" ? "Got it — more like this 👍" : "Noted — fewer of this type 👎");
     // Save to creative_memory so update-ai-profile can learn from it
     if (user?.id) {
-      await supabase.from("creative_memory" as never).insert({
+      await supabase.from("creative_memory").insert({
         user_id: user.id,
         hook_type: hook.hook_type,
         platform: platform.toLowerCase().replace(" ", "_"),
         hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
         notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
-      });
+      } as any);
     }
   };
 

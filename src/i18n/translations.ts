@@ -75,18 +75,7 @@ type TranslationKeys = {
   stats_countries: string;
   stats_time: string;
 
-  // How it works
-  how_label: string;
-  how_title: string;
-  how_step1_title: string;
-  how_step1_desc: string;
-  how_step2_title: string;
-  how_step2_desc: string;
-  how_step3_title: string;
-  how_step3_desc: string;
-
-  // Features
-  features_label: string;
+  // Features (additional)
   features_title: string;
   features_subtitle: string;
   feature_video_title: string;
