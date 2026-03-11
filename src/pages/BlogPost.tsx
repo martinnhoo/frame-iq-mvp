@@ -568,7 +568,7 @@ const blogPosts: Record<string, {
       "Marcus spent the first week setting up his workflow: AdBrief for competitive analysis and production briefs ($99/month), AI video generation tools ($149/month), AI voiceover platform ($29/month), and CapCut for final edits and polish ($0). Total: $277/month vs. $12,000/month for the agency.",
       "## The Daily Workflow",
       "### Monday: Research Day (2 hours)",
-      "Marcus uploads 20-30 competitor ads into FrameIQ every Monday. The AI extracts hooks, identifies creative models, and generates a competitive intelligence report. He reviews the report, picks 3-5 concepts to explore, and moves on. This replaced a weekly 1-hour strategy call with the agency that produced vague 'inspiration decks.'",
+      "Marcus uploads 20-30 competitor ads into AdBrief every Monday. The AI extracts hooks, identifies creative models, and generates a competitive intelligence report. He reviews the report, picks 3-5 concepts to explore, and moves on. This replaced a weekly 1-hour strategy call with the agency that produced vague 'inspiration decks.'",
       "### Tuesday-Wednesday: Brief & Production (3 hours/day)",
       "Using FrameIQ's Board Generation, Marcus creates 10 production briefs per day from the competitive insights. Each brief includes scene-by-scene breakdowns, VO scripts, and visual direction. He feeds these into AI video generation and voiceover tools. By Wednesday evening, he has 30-40 raw ad variations.",
       "### Thursday: Edit & Polish (4 hours)",
