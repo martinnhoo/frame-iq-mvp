@@ -184,7 +184,7 @@ export default function DashboardOverview() {
 
   const firstName = profile?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
   const tools = [
