@@ -35,7 +35,7 @@ const blogPosts: Record<string, {
       "## The 3-Layer Competitor Ad Analysis Framework",
       "### Layer 1: Hook Extraction (First 3 Seconds)",
       "The hook is everything in paid social. Research shows that 65% of viewers who watch the first 3 seconds will watch at least 10 more. Yet most teams analyze hooks manually — watching each ad, taking notes, trying to categorize patterns.",
-      "With AI-powered tools like FrameIQ, you can upload or paste a competitor ad URL and instantly extract the hook text, visual pattern, and emotional trigger. The AI classifies hooks into categories: curiosity gap, social proof, pattern interrupt, direct benefit, and controversy.",
+      "With AI-powered tools like AdBrief, you can upload or paste a competitor ad URL and instantly extract the hook text, visual pattern, and emotional trigger. The AI classifies hooks into categories: curiosity gap, social proof, pattern interrupt, direct benefit, and controversy.",
       "### Layer 2: Creative Model Identification",
       "Every high-performing ad follows a creative model — a structural pattern that determines how the message is delivered. The most common models include UGC testimonial, product demonstration, problem-agitation-solution, listicle, and comparison.",
       "AI analysis identifies these models automatically, so instead of watching 50 ads to spot patterns, you get a structured breakdown of what formats your competitors are betting on.",
