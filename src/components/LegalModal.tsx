@@ -103,7 +103,7 @@ These Terms of Service ("Terms") govern your access to and use of AdBrief's plat
 
 ## 1. Acceptance of Terms
 
-By accessing or using FrameIQ, you agree to be bound by these Terms. If you are using FrameIQ on behalf of a company, you represent that you have authority to bind that company to these Terms.
+By accessing or using AdBrief, you agree to be bound by these Terms. If you are using AdBrief on behalf of a company, you represent that you have authority to bind that company to these Terms. you represent that you have authority to bind that company to these Terms.
 
 ## 2. Description of Service
 
