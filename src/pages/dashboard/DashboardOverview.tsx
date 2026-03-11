@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, LayoutGrid, Plus, ArrowRight,
   TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
-  ChevronRight, Sparkles, Plane, Wand2, Layers,
+  ChevronRight, Sparkles, Plane, Wand2, Layers, X,
 } from "lucide-react";
 
 interface InsightsData {
