@@ -410,7 +410,7 @@ export const SEO_LANDING_PAGES = [
     title: "Best Ad Hooks",
     headline: "50 Best Ad Hooks — Scored & Categorized",
     subheadline: "The opening lines that stop the scroll. Organized by type, platform, and predicted performance.",
-    metaTitle: "Best Ad Hooks (Scored & Categorized) — FrameIQ",
+    metaTitle: "Best Ad Hooks (Scored & Categorized) — AdBrief",
     metaDescription: "Browse 50+ high-performing ad hooks with hook scores and analysis. Organized by hook type, platform, and industry.",
     keywords: ["best ad hooks", "tiktok ad hooks", "facebook ad hooks", "high converting ad hooks", "ad hook examples", "viral ad hooks"],
     intro: "The hook is the single most important variable in any video ad. A 9.0-scoring hook on a mediocre ad will outperform a polished 30-second spot with a weak opener. This database collects the highest-performing hooks across platforms — curiosity gaps, social proof, pattern interrupts, and more.",
