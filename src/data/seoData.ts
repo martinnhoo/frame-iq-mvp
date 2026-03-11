@@ -195,7 +195,7 @@ export const SEO_GUIDES = [
     title: "TikTok Ad Testing: How to Find Your Winning Creative Fast",
     subtitle: "A systematic approach to creative testing on TikTok — without burning budget.",
     readTime: 9,
-    metaTitle: "TikTok Ad Testing Guide — Find Winning Creatives Fast | FrameIQ",
+    metaTitle: "TikTok Ad Testing Guide — Find Winning Creatives Fast | AdBrief",
     metaDescription: "How to test TikTok ads and find winning creatives without wasting budget. Systematic creative testing playbook with framework.",
     keywords: ["tiktok ad testing", "tiktok creative testing", "how to test tiktok ads", "tiktok a/b testing ads", "creative testing framework"],
     intro: "Most media buyers test ads the wrong way: too many variables, too little budget per test, and they kill creatives too early. Here's the systematic approach that finds winners in 5–7 days without overspending.",
