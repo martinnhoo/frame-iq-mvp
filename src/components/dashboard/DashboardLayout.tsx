@@ -133,15 +133,24 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
-      // Vika welcome popup
-      if (session.user.email === "victoriafnogueira@hotmail.com" && !localStorage.getItem("vika_welcome_shown")) {
+      // Welcome popups for special accounts
+      const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
+        "victoriafnogueira@hotmail.com": {
+          key: "vika_welcome_shown",
+          title: "Bem-vinda, Vika! 💜",
+          body: "Sua conta está ativa com acesso vitalício gratuito. Todos os recursos do AdBrief são seus — sem limites, sem cobranças, para sempre.",
+        },
+        "isadoradblima@gmail.com": {
+          key: "isadora_welcome_shown",
+          title: "hehe, acesso vitalício pra você, Isadorinha 🎊",
+          body: "Sua conta agora tem acesso vitalício gratuito e ilimitado! Tudo liberado, pra sempre. Usa e abusa de todas as ferramentas — você merece! 💜✨",
+        },
+      };
+      const popup = session.user.email ? WELCOME_POPUPS[session.user.email] : null;
+      if (popup && !localStorage.getItem(popup.key)) {
+        setWelcomeMsg({ title: popup.title, body: popup.body });
         setVikaPopup(true);
-        localStorage.setItem("vika_welcome_shown", "1");
-      }
-      // Isadorinha welcome popup
-      if (session.user.email === "isadoradblima@gmail.com" && !localStorage.getItem("isadora_welcome_shown")) {
-        setVikaPopup(true); // reuse same state
-        localStorage.setItem("isadora_welcome_shown", "1");
+        localStorage.setItem(popup.key, "1");
       }
       if (mounted) setLoading(false);
     };
