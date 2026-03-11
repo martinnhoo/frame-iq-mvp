@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon, Globe, X, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useObT } from "@/i18n/onboardingTranslations";
+import { getTemplateTranslation, getCategoryLabel, getUpgradeCTA } from "@/i18n/templateTranslations";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
