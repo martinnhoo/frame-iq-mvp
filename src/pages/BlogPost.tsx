@@ -591,7 +591,7 @@ const blogPosts: Record<string, {
     category: "Performance",
     readTime: "6 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["creative strategist salary", "creative strategist cost", "AI tools ROI", "marketing hiring cost", "creative strategy budget"],
     content: [
