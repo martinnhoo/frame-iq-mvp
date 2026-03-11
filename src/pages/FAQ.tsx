@@ -111,7 +111,7 @@ const FAQ = () => {
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">Support</span>
             <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-4">Frequently Asked Questions</h1>
             <p className="text-secondary text-lg max-w-xl mx-auto">
-              Everything you need to know about FrameIQ. Can't find what you're looking for? Contact us at support@frameiq.com.
+              Everything you need to know about AdBrief. Can't find what you're looking for? Contact us at support@adbrief.pro.
             </p>
           </motion.div>
         </div>
