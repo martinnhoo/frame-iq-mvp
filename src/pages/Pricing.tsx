@@ -369,36 +369,6 @@ const Pricing = () => {
         </div>
       </footer>
 
-      {/* Upgrade Modal */}
-      <Dialog open={upgradeModal !== null} onOpenChange={() => setUpgradeModal(null)}>
-        <DialogContent className="bg-card border-border max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Payment coming soon</DialogTitle>
-            <DialogDescription className="text-muted-foreground pt-2 leading-relaxed">
-              The Studio plan is currently in preview. You'll be notified when full payment processing launches.
-              In the meantime, your plan has been updated to Studio with all features unlocked.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
-              onClick={() => {
-                setUpgradeModal(null);
-                navigate("/dashboard");
-              }}
-            >
-              Go to Dashboard
-            </Button>
-            <Button
-              variant="outline"
-              className="border-border"
-              onClick={() => setUpgradeModal(null)}
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
