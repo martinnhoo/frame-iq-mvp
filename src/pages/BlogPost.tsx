@@ -123,7 +123,7 @@ const blogPosts: Record<string, {
       "Teams fully leveraging AI creative tools report: 60-80% reduction in time from concept to live ad, 3-5x increase in creative volume, 40% reduction in creative production costs, and 25% improvement in average ad performance (due to more testing).",
       "## Getting Started",
       "You don't need to overhaul your entire workflow at once. Start with AI analysis (the lowest effort, highest impact step), then gradually layer in AI briefs, voiceover, and video generation as your team gets comfortable.",
-      "FrameIQ offers all five AI capabilities in a single platform — from analysis to video generation. Start with a free account and see the difference in your first week.",
+      "AdBrief offers all five AI capabilities in a single platform — from analysis to video generation. Start with a free account and see the difference in your first week.",
     ],
   },
   "dtc-brand-case-study": {
