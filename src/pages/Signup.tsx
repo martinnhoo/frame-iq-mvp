@@ -187,9 +187,9 @@ const Signup = () => {
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-center text-xs text-muted-foreground leading-relaxed">
                 By signing up, you agree to our{" "}
-                <Link to="/" className="text-primary hover:underline">Terms of Service</Link>
+                <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
                 {" "}and{" "}
-                <Link to="/" className="text-primary hover:underline">Privacy Policy</Link>.
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
               </motion.div>
 
               <p className="text-center text-sm text-muted-foreground">
