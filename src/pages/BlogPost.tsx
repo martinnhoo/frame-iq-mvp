@@ -399,7 +399,7 @@ const blogPosts: Record<string, {
       "### 4. Technical Specs",
       "Include: aspect ratios needed (9:16, 1:1, 16:9), export format and resolution, text safe zones for each platform, and maximum file size.",
       "## AI-Generated Briefs",
-      "FrameIQ's Board Generation creates briefs at this level of specificity automatically. Describe your concept in plain text, and get a scene-by-scene breakdown with VO, editor notes, and visual direction in 30 seconds.",
+      "AdBrief's Board Generation creates briefs at this level of specificity automatically. Describe your concept in plain text, and get a scene-by-scene breakdown with VO, editor notes, and visual direction in 30 seconds.",
       "## The Result",
       "Teams using specific briefs (whether manual or AI-generated) report 60% fewer revision rounds, 70% faster turnaround, and significantly happier editors.",
     ],
