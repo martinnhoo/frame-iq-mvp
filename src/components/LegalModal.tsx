@@ -53,7 +53,7 @@ Your uploaded content is encrypted at rest (AES-256) and in transit (TLS 1.3). W
 - Analysis results: Retained while your account is active
 - Generated boards: Retained while your account is active
 
-You can request deletion of your data at any time by contacting support@frameiq.com.
+You can request deletion of your data at any time by contacting support@adbrief.pro.
 
 ## 5. Your Content & AI Training
 
