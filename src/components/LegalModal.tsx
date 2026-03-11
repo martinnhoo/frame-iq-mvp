@@ -182,7 +182,7 @@ Our total liability shall not exceed the amount you paid us in the 12 months pre
 
 ## 11. Indemnification
 
-You agree to indemnify FrameIQ against claims arising from your use of the platform, your content, or your violation of these Terms.
+You agree to indemnify AdBrief against claims arising from your use of the platform, your content, or your violation of these Terms. arising from your use of the platform, your content, or your violation of these Terms.
 
 ## 12. Termination
 
