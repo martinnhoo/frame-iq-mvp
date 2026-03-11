@@ -75,18 +75,7 @@ type TranslationKeys = {
   stats_countries: string;
   stats_time: string;
 
-  // How it works
-  how_label: string;
-  how_title: string;
-  how_step1_title: string;
-  how_step1_desc: string;
-  how_step2_title: string;
-  how_step2_desc: string;
-  how_step3_title: string;
-  how_step3_desc: string;
-
-  // Features
-  features_label: string;
+  // Features (additional)
   features_title: string;
   features_subtitle: string;
   feature_video_title: string;
@@ -241,16 +230,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Countries",
     stats_time: "Avg. Analysis Time",
 
-    how_label: "How it works",
-    how_title: "From upload to execution\nin under 3 minutes",
-    how_step1_title: "Upload or paste link",
-    how_step1_desc: "Sube tu ad, pega un script, o arrastra un video de referencia",
-    how_step2_title: "AI extracts insights",
-    how_step2_desc: "Hook, creative model, transcript, key frames — all in 60s",
-    how_step3_title: "Generate your board",
-    how_step3_desc: "Get a production-ready brief your team can execute today",
-
-    features_label: "Features",
     features_title: "Everything your creative team needs",
     features_subtitle: "Every tool in FrameIQ feeds into a learning loop — the more you use it, the smarter your creative output gets.",
     feature_video_title: "Video Analysis",
@@ -398,16 +377,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Países",
     stats_time: "Tiempo Promedio",
 
-    how_label: "Cómo funciona",
-    how_title: "De la subida a la ejecución\nen menos de 3 minutos",
-    how_step1_title: "Sube o pega el enlace",
-    how_step1_desc: "Arrastra cualquier anuncio, video de la competencia o archivo de referencia",
-    how_step2_title: "La IA extrae insights",
-    how_step2_desc: "Hook, modelo creativo, transcripción, frames clave — todo en 60s",
-    how_step3_title: "Genera tu board",
-    how_step3_desc: "Obtén un brief listo para producción que tu equipo puede ejecutar hoy",
-
-    features_label: "Funciones",
     features_title: "Todo lo que tu equipo creativo necesita",
     features_subtitle: "Deja de perder horas descifrando anuncios de la competencia. Deja que la IA lo haga en segundos.",
     feature_video_title: "Análisis de Video",
@@ -555,16 +524,7 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Pays",
     stats_time: "Temps Moyen d'Analyse",
 
-    how_label: "Comment ça marche",
-    how_title: "De l'upload à l'exécution\nen moins de 3 minutes",
-    how_step1_title: "Uploadez ou collez un lien",
-    how_step1_desc: "Déposez n'importe quelle pub, vidéo concurrente ou fichier de référence",
-    how_step2_title: "L'IA extrait les insights",
-    how_step2_desc: "Hook, modèle créatif, transcription, frames clés — le tout en 60s",
-    how_step3_title: "Générez votre board",
-    how_step3_desc: "Obtenez un brief prêt à produire que votre équipe peut exécuter aujourd'hui",
 
-    features_label: "Fonctionnalités",
     features_title: "Tout ce dont votre équipe créative a besoin",
     features_subtitle: "Arrêtez de perdre des heures à analyser les pubs concurrentes. Laissez l'IA le faire en secondes.",
     feature_video_title: "Analyse Vidéo",
@@ -579,6 +539,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_desc: "Du concept au MP4 avec voix off IA. Pas besoin d'éditeurs.",
     feature_api_title: "Accès API",
     feature_api_desc: "Intégrez FrameIQ à votre workflow existant avec notre API REST.",
+
 
     pricing_label: "Tarifs",
     pricing_title: "Des tarifs simples et transparents",
@@ -712,16 +673,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Länder",
     stats_time: "Durchschn. Analysezeit",
 
-    how_label: "So funktioniert's",
-    how_title: "Vom Upload zur Umsetzung\nin unter 3 Minuten",
-    how_step1_title: "Hochladen oder Link einfügen",
-    how_step1_desc: "Laden Sie jede Anzeige, jedes Wettbewerber-Video oder jede Referenzdatei hoch",
-    how_step2_title: "KI extrahiert Insights",
-    how_step2_desc: "Hook, Kreativmodell, Transkript, Schlüsselframes — alles in 60s",
-    how_step3_title: "Board generieren",
-    how_step3_desc: "Erhalten Sie ein produktionsreifes Brief, das Ihr Team heute umsetzen kann",
-
-    features_label: "Funktionen",
     features_title: "Alles was Ihr Kreativteam braucht",
     features_subtitle: "Hören Sie auf, stundenlang Wettbewerber-Anzeigen zu analysieren. Lassen Sie KI es in Sekunden erledigen.",
     feature_video_title: "Video-Analyse",
@@ -869,16 +820,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "دول",
     stats_time: "متوسط وقت التحليل",
 
-    how_label: "كيف يعمل",
-    how_title: "من الرفع إلى التنفيذ\nفي أقل من 3 دقائق",
-    how_step1_title: "ارفع أو الصق الرابط",
-    how_step1_desc: "اسحب أي إعلان أو فيديو منافس أو ملف مرجعي",
-    how_step2_title: "الذكاء الاصطناعي يستخرج الرؤى",
-    how_step2_desc: "الخطاف، النموذج الإبداعي، النص، الإطارات الرئيسية — كل شيء في 60 ثانية",
-    how_step3_title: "أنشئ لوحتك",
-    how_step3_desc: "احصل على ملخص جاهز للإنتاج يمكن لفريقك تنفيذه اليوم",
-
-    features_label: "الميزات",
     features_title: "كل ما يحتاجه فريقك الإبداعي",
     features_subtitle: "توقف عن إضاعة الساعات في تحليل إعلانات المنافسين. دع الذكاء الاصطناعي يفعل ذلك في ثوانٍ.",
     feature_video_title: "تحليل الفيديو",
@@ -1026,16 +967,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "国家",
     stats_time: "平均分析时间",
 
-    how_label: "工作原理",
-    how_title: "从上传到执行\n不到3分钟",
-    how_step1_title: "上传或粘贴链接",
-    how_step1_desc: "拖放任何广告、竞品视频或参考文件",
-    how_step2_title: "AI提取洞察",
-    how_step2_desc: "钩子、创意模型、转录、关键帧——全部60秒完成",
-    how_step3_title: "生成你的看板",
-    how_step3_desc: "获取一份你的团队今天就能执行的制作简报",
-
-    features_label: "功能",
     features_title: "您的创意团队所需的一切",
     features_subtitle: "不再浪费数小时逆向工程竞争对手广告。让AI在几秒钟内完成。",
     feature_video_title: "视频分析",
@@ -1183,16 +1114,6 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Países",
     stats_time: "Tempo Médio de Análise",
 
-    how_label: "Como funciona",
-    how_title: "Do upload à execução\nem menos de 3 minutos",
-    how_step1_title: "Envie ou cole o link",
-    how_step1_desc: "Arraste qualquer anúncio, vídeo de concorrente ou arquivo de referência",
-    how_step2_title: "A IA extrai insights",
-    how_step2_desc: "Hook, modelo criativo, transcrição, frames-chave — tudo em 60s",
-    how_step3_title: "Gere seu board",
-    how_step3_desc: "Receba um briefing pronto para produção que sua equipe pode executar hoje",
-
-    features_label: "Funcionalidades",
     features_title: "Tudo que sua equipe criativa precisa",
     features_subtitle: "Pare de perder horas decifrando anúncios da concorrência. Deixe a IA fazer em segundos.",
     feature_video_title: "Análise de Vídeo",

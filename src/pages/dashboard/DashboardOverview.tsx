@@ -148,7 +148,7 @@ export default function DashboardOverview() {
 
   const usedAnalyses = usageDetails?.analyses.used ?? usage.analyses_count;
   const usedBoards = usageDetails?.boards.used ?? usage.boards_count;
-  const usedPreflights = usageDetails?.preflights?.used ?? 0;
+  const usedPreflights = (usageDetails as any)?.preflights?.used ?? 0;
 
   const firstName = profile?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();

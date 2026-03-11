@@ -113,6 +113,33 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_trackers: {
+        Row: {
+          created_at: string
+          id: string
+          market: string
+          name: string
+          platform: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market?: string
+          name: string
+          platform?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market?: string
+          name?: string
+          platform?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       creative_memory: {
         Row: {
           analysis_id: string | null
