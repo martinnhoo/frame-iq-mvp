@@ -44,7 +44,7 @@ const Blog = () => {
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "FrameIQ Blog",
+    name: "AdBrief Blog",
     description: "Expert insights on creative strategy, AI-powered ad production, and performance marketing.",
     url: `${baseUrl}/blog`,
     inLanguage: hrefLangCode,
