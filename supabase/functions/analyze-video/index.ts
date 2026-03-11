@@ -74,6 +74,22 @@ Deno.serve(async (req) => {
       transcript = `[Video from URL: ${videoUrl} — analyzing from URL context]`;
     }
 
+    // If transcribe_only, return just the transcript
+    if (transcribe_only) {
+      if (!transcript || transcript.startsWith('[')) {
+        return new Response(JSON.stringify({ 
+          error: 'transcription_failed',
+          transcript: '',
+          message: OPENAI_API_KEY ? 'Could not transcribe audio from this file' : 'OPENAI_API_KEY not configured — transcription unavailable'
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ 
+        success: true,
+        transcript,
+        duration,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Step 2 — Analyze with Claude
     const prompt = `You are a world-class creative intelligence analyst for performance marketing.
 
