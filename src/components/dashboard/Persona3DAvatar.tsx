@@ -9,235 +9,291 @@ interface Persona3DAvatarProps {
   onClick?: () => void;
 }
 
-// Random but consistent selections based on name hash
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000;
+function seeded(seed: number, offset: number) {
+  const x = Math.sin(seed + offset * 127.1) * 43758.5453;
   return x - Math.floor(x);
 }
 
-const BODY_COLORS = [
-  "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
-  "#DDA0DD", "#FF8C69", "#87CEEB", "#98D8C8", "#F7DC6F",
-  "#BB8FCE", "#F1948A", "#82E0AA", "#AED6F1", "#F0B27A",
+// Fun, non-realistic skin tones
+const SKIN_COLORS = [
+  "#FFDC7A", // yellow
+  "#FFB3C6", // pink
+  "#A0E8AF", // mint green
+  "#B8A9FF", // lavender
+  "#FFD4A3", // peach
+  "#87CEEB", // sky blue
+  "#F9C8FF", // soft magenta
+  "#C4F5D4", // pastel green
+  "#FFE066", // gold
+  "#E8C4FF", // lilac
 ];
 
-const ACCESSORIES = ["none", "hat", "bow", "antenna", "crown", "headband"];
-const EYE_STYLES = ["dots", "big", "sleepy", "wink", "stars"];
-const MOUTH_STYLES = ["smile", "open", "cat", "tongue", "o"];
-const BODY_SHAPES = ["round", "bean", "square", "blob"];
+const HAIR_COLORS = [
+  "#2D1B69", "#FF6B6B", "#333", "#8B4513", "#FF8C00",
+  "#1E90FF", "#FF69B4", "#6B4226", "#E0E0E0", "#4ECDC4",
+];
+
+const TOP_COLORS = [
+  "#6C5CE7", "#00B894", "#E17055", "#0984E3", "#FDCB6E",
+  "#E84393", "#00CEC9", "#D63031", "#636E72", "#A29BFE",
+  "#FF7675", "#55EFC4", "#FAB1A0", "#74B9FF", "#FFEAA7",
+];
+
+const HAIR_STYLES = ["short", "curly", "long", "spiky", "bun", "mohawk", "side", "none"];
+const ACCESSORY_TYPES = ["none", "glasses", "earring", "headphones", "beanie", "bowtie"];
 
 export default function Persona3DAvatar({ emoji, name, gender, size = "md", onClick }: Persona3DAvatarProps) {
   const [hovered, setHovered] = useState(false);
 
-  const dims = size === "sm" ? 64 : size === "md" ? 90 : 120;
+  const dims = size === "sm" ? 64 : size === "md" ? 96 : 128;
+  const hash = name.split("").reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
+  const r = (o: number) => seeded(hash, o);
 
-  const traits = useMemo(() => {
-    const hash = name.split("").reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
-    const r = (offset: number) => seededRandom(hash + offset);
+  const traits = useMemo(() => ({
+    skin: SKIN_COLORS[Math.floor(r(1) * SKIN_COLORS.length)],
+    hair: HAIR_COLORS[Math.floor(r(2) * HAIR_COLORS.length)],
+    top: TOP_COLORS[Math.floor(r(3) * TOP_COLORS.length)],
+    hairStyle: HAIR_STYLES[Math.floor(r(4) * HAIR_STYLES.length)],
+    accessory: ACCESSORY_TYPES[Math.floor(r(5) * ACCESSORY_TYPES.length)],
+    eyeType: Math.floor(r(6) * 4), // 0-3
+    mouthType: Math.floor(r(7) * 4),
+    noseType: Math.floor(r(8) * 3),
+    topStyle: Math.floor(r(9) * 3), // tshirt, collar, vneck
+    skinDarker: "",
+  }), [name]);
 
-    return {
-      bodyColor: BODY_COLORS[Math.floor(r(1) * BODY_COLORS.length)],
-      bodyColor2: BODY_COLORS[Math.floor(r(2) * BODY_COLORS.length)],
-      accessory: ACCESSORIES[Math.floor(r(3) * ACCESSORIES.length)],
-      eyes: EYE_STYLES[Math.floor(r(4) * EYE_STYLES.length)],
-      mouth: MOUTH_STYLES[Math.floor(r(5) * MOUTH_STYLES.length)],
-      bodyShape: BODY_SHAPES[Math.floor(r(6) * BODY_SHAPES.length)],
-      cheekColor: `${BODY_COLORS[Math.floor(r(7) * BODY_COLORS.length)]}55`,
-      hasBlush: r(8) > 0.4,
-      armStyle: Math.floor(r(9) * 3),
-      legStyle: Math.floor(r(10) * 3),
-    };
-  }, [name]);
+  // Slightly darker skin for shading
+  const skinDarker = useMemo(() => {
+    const hex = traits.skin;
+    const num = parseInt(hex.slice(1), 16);
+    const r2 = Math.max(0, ((num >> 16) & 255) - 25);
+    const g = Math.max(0, ((num >> 8) & 255) - 25);
+    const b = Math.max(0, (num & 255) - 25);
+    return `rgb(${r2}, ${g}, ${b})`;
+  }, [traits.skin]);
 
-  const bodyRadius = traits.bodyShape === "round" ? "50%" :
-    traits.bodyShape === "bean" ? "50% 50% 45% 45%" :
-    traits.bodyShape === "square" ? "28%" : "60% 40% 50% 50%";
+  const vb = "0 0 100 120";
 
-  const renderEyes = () => {
-    const s = dims * 0.08;
-    switch (traits.eyes) {
-      case "big":
+  const renderHair = () => {
+    const hc = traits.hair;
+    switch (traits.hairStyle) {
+      case "short":
         return (
-          <>
-            <circle cx="38%" cy="38%" r={s * 1.4} fill="white" />
-            <circle cx="38%" cy="38%" r={s * 0.8} fill="#333" />
-            <circle cx="36%" cy="36%" r={s * 0.3} fill="white" />
-            <circle cx="62%" cy="38%" r={s * 1.4} fill="white" />
-            <circle cx="62%" cy="38%" r={s * 0.8} fill="#333" />
-            <circle cx="60%" cy="36%" r={s * 0.3} fill="white" />
-          </>
+          <path d="M30 38 Q30 18 50 15 Q70 18 70 38 Q65 28 50 26 Q35 28 30 38Z" fill={hc} />
         );
-      case "sleepy":
+      case "curly":
         return (
-          <>
-            <line x1="30%" y1="40%" x2="46%" y2="38%" stroke="#333" strokeWidth={2.5} strokeLinecap="round" />
-            <line x1="54%" y1="38%" x2="70%" y2="40%" stroke="#333" strokeWidth={2.5} strokeLinecap="round" />
-          </>
-        );
-      case "wink":
-        return (
-          <>
-            <circle cx="38%" cy="38%" r={s} fill="#333" />
-            <path d="M 54,38 Q 60,32 66,38" fill="none" stroke="#333" strokeWidth={2.5} strokeLinecap="round"
-              style={{ transform: `scale(${dims / 90})`, transformOrigin: "60% 38%" }} />
-          </>
-        );
-      case "stars":
-        return (
-          <>
-            <text x="35%" y="42%" fontSize={s * 2.2} textAnchor="middle">⭐</text>
-            <text x="65%" y="42%" fontSize={s * 2.2} textAnchor="middle">⭐</text>
-          </>
-        );
-      default: // dots
-        return (
-          <>
-            <circle cx="38%" cy="40%" r={s} fill="#333" />
-            <circle cx="62%" cy="40%" r={s} fill="#333" />
-          </>
-        );
-    }
-  };
-
-  const renderMouth = () => {
-    const scale = dims / 90;
-    switch (traits.mouth) {
-      case "open":
-        return <ellipse cx="50%" cy="60%" rx={dims * 0.08} ry={dims * 0.06} fill="#333" />;
-      case "cat":
-        return (
-          <path d={`M ${35 * scale},${54 * scale} Q ${45 * scale},${62 * scale} ${45 * scale},${54 * scale} M ${45 * scale},${54 * scale} Q ${45 * scale},${62 * scale} ${55 * scale},${54 * scale}`}
-            fill="none" stroke="#333" strokeWidth={2} strokeLinecap="round" />
-        );
-      case "tongue":
-        return (
-          <>
-            <path d={`M ${35 * scale},${54 * scale} Q ${45 * scale},${62 * scale} ${55 * scale},${54 * scale}`}
-              fill="none" stroke="#333" strokeWidth={2} strokeLinecap="round" />
-            <ellipse cx="50%" cy={58 * scale} rx={dims * 0.04} ry={dims * 0.035} fill="#FF6B6B" />
-          </>
-        );
-      case "o":
-        return <circle cx="50%" cy="58%" r={dims * 0.04} fill="#333" />;
-      default: // smile
-        return (
-          <path d={`M ${35 * scale},${52 * scale} Q ${45 * scale},${62 * scale} ${55 * scale},${52 * scale}`}
-            fill="none" stroke="#333" strokeWidth={2} strokeLinecap="round" />
-        );
-    }
-  };
-
-  const renderAccessory = () => {
-    const scale = dims / 90;
-    switch (traits.accessory) {
-      case "hat":
-        return (
-          <g>
-            <rect x={25 * scale} y={2 * scale} width={40 * scale} height={18 * scale} rx={4 * scale} fill={traits.bodyColor2} />
-            <rect x={18 * scale} y={16 * scale} width={54 * scale} height={6 * scale} rx={3 * scale} fill={traits.bodyColor2} />
+          <g fill={hc}>
+            <circle cx="32" cy="28" r="8" />
+            <circle cx="45" cy="22" r="9" />
+            <circle cx="58" cy="22" r="9" />
+            <circle cx="68" cy="28" r="8" />
+            <circle cx="38" cy="18" r="7" />
+            <circle cx="55" cy="16" r="7" />
           </g>
         );
-      case "bow":
+      case "long":
         return (
-          <g>
-            <polygon points={`${45 * scale},${12 * scale} ${30 * scale},${4 * scale} ${30 * scale},${20 * scale}`} fill={traits.bodyColor2} />
-            <polygon points={`${45 * scale},${12 * scale} ${60 * scale},${4 * scale} ${60 * scale},${20 * scale}`} fill={traits.bodyColor2} />
-            <circle cx={45 * scale} cy={12 * scale} r={4 * scale} fill={traits.bodyColor2} />
+          <g fill={hc}>
+            <path d="M28 38 Q28 14 50 12 Q72 14 72 38 Q68 26 50 24 Q32 26 28 38Z" />
+            <path d="M28 38 Q24 50 26 68 Q28 58 32 48 Q30 42 28 38Z" />
+            <path d="M72 38 Q76 50 74 68 Q72 58 68 48 Q70 42 72 38Z" />
           </g>
         );
-      case "antenna":
+      case "spiky":
         return (
-          <g>
-            <line x1={45 * scale} y1={18 * scale} x2={45 * scale} y2={2 * scale} stroke={traits.bodyColor2} strokeWidth={2.5} />
-            <circle cx={45 * scale} cy={1 * scale} r={4 * scale} fill={traits.bodyColor2} />
+          <g fill={hc}>
+            <polygon points="35,32 38,10 42,30" />
+            <polygon points="43,30 47,6 51,28" />
+            <polygon points="52,28 56,8 60,30" />
+            <polygon points="61,30 64,14 67,34" />
+            <polygon points="30,36 32,20 36,34" />
           </g>
         );
-      case "crown":
+      case "bun":
         return (
-          <g>
-            <polygon
-              points={`${24 * scale},${20 * scale} ${28 * scale},${6 * scale} ${36 * scale},${14 * scale} ${45 * scale},${2 * scale} ${54 * scale},${14 * scale} ${62 * scale},${6 * scale} ${66 * scale},${20 * scale}`}
-              fill="#FFEAA7" stroke="#F39C12" strokeWidth={1.5}
-            />
+          <g fill={hc}>
+            <path d="M32 38 Q32 22 50 18 Q68 22 68 38 Q64 28 50 26 Q36 28 32 38Z" />
+            <circle cx="50" cy="14" r="10" />
           </g>
         );
-      case "headband":
+      case "mohawk":
         return (
-          <rect x={20 * scale} y={14 * scale} width={50 * scale} height={5 * scale} rx={2.5 * scale} fill={traits.bodyColor2} />
+          <g fill={hc}>
+            <path d="M44 34 Q44 6 50 2 Q56 6 56 34 Q54 26 50 24 Q46 26 44 34Z" />
+          </g>
+        );
+      case "side":
+        return (
+          <g fill={hc}>
+            <path d="M28 38 Q28 16 50 14 Q72 16 72 34 Q66 24 50 22 Q34 24 28 38Z" />
+            <path d="M28 38 Q22 34 24 24 Q26 18 34 16 Q28 22 28 38Z" />
+          </g>
         );
       default:
         return null;
     }
   };
 
-  const renderArms = () => {
-    const scale = dims / 90;
-    const armColor = traits.bodyColor;
-    switch (traits.armStyle) {
-      case 0: // Waving
+  const renderEyes = () => {
+    switch (traits.eyeType) {
+      case 0: // Round
         return (
-          <>
-            <motion.line x1={8 * scale} y1={50 * scale} x2={-4 * scale} y2={32 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round"
-              animate={hovered ? { x2: -8 * scale, y2: 26 * scale } : {}} />
-            <line x1={82 * scale} y1={50 * scale} x2={94 * scale} y2={60 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </>
+          <g>
+            <circle cx="40" cy="42" r="3.5" fill="white" />
+            <circle cx="60" cy="42" r="3.5" fill="white" />
+            <circle cx="40.5" cy="42.5" r="2" fill="#333" />
+            <circle cx="60.5" cy="42.5" r="2" fill="#333" />
+            <circle cx="39.5" cy="41" r="0.8" fill="white" />
+            <circle cx="59.5" cy="41" r="0.8" fill="white" />
+          </g>
         );
-      case 1: // Both down
+      case 1: // Dots
         return (
-          <>
-            <line x1={10 * scale} y1={48 * scale} x2={-2 * scale} y2={64 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round" />
-            <line x1={80 * scale} y1={48 * scale} x2={92 * scale} y2={64 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </>
+          <g>
+            <circle cx="40" cy="42" r="2.2" fill="#333" />
+            <circle cx="60" cy="42" r="2.2" fill="#333" />
+          </g>
         );
-      default: // T-pose
+      case 2: // Sleepy
         return (
-          <>
-            <line x1={8 * scale} y1={45 * scale} x2={-6 * scale} y2={45 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round" />
-            <line x1={82 * scale} y1={45 * scale} x2={96 * scale} y2={45 * scale}
-              stroke={armColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </>
+          <g>
+            <path d="M36 42 Q40 40 44 42" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+            <path d="M56 42 Q60 40 64 42" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+          </g>
+        );
+      default: // Big cute
+        return (
+          <g>
+            <ellipse cx="40" cy="42" rx="4.5" ry="5" fill="white" />
+            <ellipse cx="60" cy="42" rx="4.5" ry="5" fill="white" />
+            <circle cx="41" cy="43" r="2.8" fill="#333" />
+            <circle cx="61" cy="43" r="2.8" fill="#333" />
+            <circle cx="39.5" cy="40.5" r="1.2" fill="white" />
+            <circle cx="59.5" cy="40.5" r="1.2" fill="white" />
+          </g>
         );
     }
   };
 
-  const renderLegs = () => {
-    const scale = dims / 90;
-    const legColor = traits.bodyColor;
-    switch (traits.legStyle) {
-      case 0: // Standing
+  const renderNose = () => {
+    switch (traits.noseType) {
+      case 0:
+        return <circle cx="50" cy="49" r="1.5" fill={skinDarker} />;
+      case 1:
+        return <path d="M48 48 L50 51 L52 48" fill="none" stroke={skinDarker} strokeWidth="1.5" strokeLinecap="round" />;
+      default:
+        return <ellipse cx="50" cy="49" rx="2" ry="1" fill={skinDarker} />;
+    }
+  };
+
+  const renderMouth = () => {
+    switch (traits.mouthType) {
+      case 0: // Smile
+        return <path d="M43 55 Q50 62 57 55" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" />;
+      case 1: // Open smile
         return (
-          <>
-            <line x1={36 * scale} y1={78 * scale} x2={32 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-            <line x1={54 * scale} y1={78 * scale} x2={58 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </>
+          <g>
+            <path d="M42 54 Q50 64 58 54" fill="#333" />
+            <path d="M44 54 Q50 58 56 54" fill="white" />
+          </g>
         );
-      case 1: // Together
+      case 2: // Small
+        return <path d="M46 55 Q50 59 54 55" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />;
+      default: // Cat mouth
         return (
-          <>
-            <line x1={40 * scale} y1={78 * scale} x2={40 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-            <line x1={50 * scale} y1={78 * scale} x2={50 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </>
-        );
-      default: // Dancing
-        return (
-          <motion.g animate={hovered ? { rotate: [0, -5, 5, 0] } : {}} transition={{ duration: 0.6, repeat: Infinity }}>
-            <line x1={36 * scale} y1={78 * scale} x2={28 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-            <line x1={54 * scale} y1={78 * scale} x2={62 * scale} y2={92 * scale}
-              stroke={legColor} strokeWidth={4 * scale} strokeLinecap="round" />
-          </motion.g>
+          <g>
+            <path d="M43 55 Q47 58 50 55" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M50 55 Q53 58 57 55" fill="none" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+          </g>
         );
     }
   };
+
+  const renderTop = () => {
+    const tc = traits.top;
+    switch (traits.topStyle) {
+      case 0: // T-shirt
+        return (
+          <g>
+            <path d="M30 72 Q30 68 36 66 L44 70 L56 70 L64 66 Q70 68 70 72 L72 100 L28 100 Z" fill={tc} />
+            <path d="M44 70 Q50 74 56 70" fill="none" stroke={`${tc}dd`} strokeWidth="1" />
+          </g>
+        );
+      case 1: // Collar shirt
+        return (
+          <g>
+            <path d="M30 72 Q30 68 36 66 L44 70 L56 70 L64 66 Q70 68 70 72 L72 100 L28 100 Z" fill={tc} />
+            <path d="M44 70 L47 78 L50 72 L53 78 L56 70" fill="white" stroke="white" strokeWidth="0.5" />
+            <line x1="50" y1="72" x2="50" y2="100" stroke="rgba(0,0,0,0.08)" strokeWidth="0.8" />
+          </g>
+        );
+      default: // V-neck
+        return (
+          <g>
+            <path d="M30 72 Q30 68 36 66 L44 70 L56 70 L64 66 Q70 68 70 72 L72 100 L28 100 Z" fill={tc} />
+            <path d="M44 70 L50 82 L56 70" fill={traits.skin} />
+          </g>
+        );
+    }
+  };
+
+  const renderAccessory = () => {
+    switch (traits.accessory) {
+      case "glasses":
+        return (
+          <g fill="none" stroke="#333" strokeWidth="1.8">
+            <circle cx="40" cy="42" r="6" />
+            <circle cx="60" cy="42" r="6" />
+            <line x1="46" y1="42" x2="54" y2="42" />
+            <line x1="34" y1="42" x2="28" y2="40" />
+            <line x1="66" y1="42" x2="72" y2="40" />
+          </g>
+        );
+      case "earring":
+        return (
+          <g>
+            <circle cx="28" cy="50" r="2" fill="#FFD700" />
+            <circle cx="28" cy="50" r="1" fill="#FFA500" />
+          </g>
+        );
+      case "headphones":
+        return (
+          <g>
+            <path d="M26 40 Q26 18 50 16 Q74 18 74 40" fill="none" stroke="#555" strokeWidth="3" />
+            <rect x="22" y="36" width="6" height="10" rx="3" fill="#555" />
+            <rect x="72" y="36" width="6" height="10" rx="3" fill="#555" />
+          </g>
+        );
+      case "beanie":
+        return (
+          <g>
+            <path d="M28 36 Q28 14 50 12 Q72 14 72 36 L70 38 L30 38 Z"
+              fill={traits.top} opacity="0.9" />
+            <rect x="28" y="34" width="44" height="5" rx="2" fill={traits.top} />
+            <circle cx="50" cy="12" r="3" fill={traits.top} />
+          </g>
+        );
+      case "bowtie":
+        return (
+          <g>
+            <polygon points="44,70 38,66 38,74" fill="#E84393" />
+            <polygon points="56,70 62,66 62,74" fill="#E84393" />
+            <circle cx="50" cy="70" r="2.5" fill="#C73078" />
+          </g>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Blush cheeks
+  const renderBlush = () => (
+    <g opacity="0.35">
+      <ellipse cx="34" cy="52" rx="4" ry="2.5" fill="#FF8A8A" />
+      <ellipse cx="66" cy="52" rx="4" ry="2.5" fill="#FF8A8A" />
+    </g>
+  );
 
   return (
     <motion.div
@@ -245,52 +301,78 @@ export default function Persona3DAvatar({ emoji, name, gender, size = "md", onCl
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       className="relative cursor-pointer select-none"
-      style={{ width: dims, height: dims + dims * 0.15 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.92, rotate: -3 }}
+      style={{ width: dims, height: dims + 8 }}
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.94, rotate: -2 }}
     >
-      {/* Floating animation wrapper */}
+      {/* Float animation */}
       <motion.div
-        className="absolute inset-0"
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        className="w-full h-full"
+        animate={{ y: [0, -4, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
-        <svg width={dims} height={dims + dims * 0.12} viewBox={`-10 -5 ${dims + 20} ${dims + 15}`} overflow="visible">
-          {/* Arms (behind body) */}
-          {renderArms()}
+        {/* Glow on hover */}
+        <motion.div
+          className="absolute inset-0 rounded-full blur-2xl"
+          style={{ background: `radial-gradient(circle, ${traits.skin}66, transparent)` }}
+          animate={{ opacity: hovered ? 0.6 : 0, scale: hovered ? 1.4 : 1 }}
+          transition={{ duration: 0.3 }}
+        />
 
-          {/* Body */}
-          <rect
-            x={dims * 0.1} y={dims * 0.15}
-            width={dims * 0.8} height={dims * 0.7}
-            rx={bodyRadius === "50%" ? dims * 0.4 : bodyRadius === "28%" ? dims * 0.22 : dims * 0.3}
-            fill={traits.bodyColor}
-            style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.15))" }}
-          />
+        <svg
+          width={dims}
+          height={dims}
+          viewBox={vb}
+          style={{ overflow: "visible", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.2))" }}
+        >
+          {/* Body / Top */}
+          {renderTop()}
 
-          {/* Belly spot */}
-          <ellipse cx="50%" cy="55%" rx={dims * 0.15} ry={dims * 0.12}
-            fill="white" opacity={0.15} />
+          {/* Neck */}
+          <rect x="44" y="62" width="12" height="10" rx="4" fill={traits.skin} />
+
+          {/* Head */}
+          <ellipse cx="50" cy="40" rx="22" ry="24" fill={traits.skin} />
+
+          {/* Head shadow */}
+          <ellipse cx="50" cy="42" rx="20" ry="22" fill={skinDarker} opacity="0.1" />
+
+          {/* Hair (behind for some styles) */}
+          {renderHair()}
 
           {/* Eyes */}
           {renderEyes()}
 
-          {/* Blush */}
-          {traits.hasBlush && (
-            <>
-              <ellipse cx="28%" cy="48%" rx={dims * 0.06} ry={dims * 0.035} fill={traits.cheekColor} />
-              <ellipse cx="72%" cy="48%" rx={dims * 0.06} ry={dims * 0.035} fill={traits.cheekColor} />
-            </>
-          )}
+          {/* Eyebrows */}
+          <motion.g animate={hovered ? { y: -1.5 } : { y: 0 }} transition={{ type: "spring", stiffness: 400 }}>
+            <line x1="36" y1="36" x2="44" y2="35" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="56" y1="35" x2="64" y2="36" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+          </motion.g>
+
+          {/* Nose */}
+          {renderNose()}
 
           {/* Mouth */}
-          {renderMouth()}
+          <motion.g animate={hovered ? { scaleX: 1.15, scaleY: 1.1 } : { scaleX: 1, scaleY: 1 }}
+            style={{ transformOrigin: "50px 56px" }} transition={{ type: "spring", stiffness: 300 }}>
+            {renderMouth()}
+          </motion.g>
+
+          {/* Blush */}
+          {renderBlush()}
 
           {/* Accessory */}
           {renderAccessory()}
 
-          {/* Legs */}
-          {renderLegs()}
+          {/* Arms */}
+          <motion.g animate={hovered ? { rotate: -8 } : { rotate: 0 }} style={{ transformOrigin: "30px 76px" }}
+            transition={{ type: "spring", stiffness: 200 }}>
+            <path d="M30 76 Q22 82 18 94" fill="none" stroke={traits.skin} strokeWidth="6" strokeLinecap="round" />
+          </motion.g>
+          <motion.g animate={hovered ? { rotate: 8 } : { rotate: 0 }} style={{ transformOrigin: "70px 76px" }}
+            transition={{ type: "spring", stiffness: 200 }}>
+            <path d="M70 76 Q78 82 82 94" fill="none" stroke={traits.skin} strokeWidth="6" strokeLinecap="round" />
+          </motion.g>
         </svg>
       </motion.div>
 
@@ -298,13 +380,13 @@ export default function Persona3DAvatar({ emoji, name, gender, size = "md", onCl
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 rounded-full"
         style={{
-          bottom: -2,
-          width: dims * 0.5,
+          bottom: -4,
+          width: dims * 0.45,
           height: 5,
-          background: "radial-gradient(ellipse, rgba(0,0,0,0.15), transparent)",
+          background: "radial-gradient(ellipse, rgba(0,0,0,0.18), transparent)",
           filter: "blur(2px)",
         }}
-        animate={{ width: hovered ? dims * 0.6 : dims * 0.4, opacity: hovered ? 0.3 : 0.2 }}
+        animate={{ width: hovered ? dims * 0.55 : dims * 0.4, opacity: hovered ? 0.35 : 0.2 }}
       />
     </motion.div>
   );
