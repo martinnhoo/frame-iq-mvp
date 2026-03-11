@@ -297,10 +297,10 @@ export default function DashboardOverview() {
                 </span>
                 {hasData && insights.avgHookScore && <span className="text-xs text-white/25">/ 10</span>}
               </div>
-              <p className="text-[11px] text-white/35">Avg hook score</p>
+              <p className="text-[11px] text-white/35">{dt("ov_avg_hook_score")}</p>
               {hasData && (
                 <p className="text-[10px] mt-0.5" style={{ color: "#34d399", ...mono }}>
-                  {insights.totalAnalyzed} analyzed
+                  {insights.totalAnalyzed} {dt("ov_analyzed")}
                 </p>
               )}
             </div>
