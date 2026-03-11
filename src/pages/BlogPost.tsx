@@ -620,7 +620,7 @@ const blogPosts: Record<string, {
       "Your ad spend exceeds $500K/month — the strategic decisions at this scale require dedicated human attention. You need brand building — AI handles performance creative, but brand strategy needs human vision. Your team lacks marketing fundamentals — AI amplifies expertise, it doesn't create it from scratch. You're in a highly regulated industry — compliance decisions need human judgment.",
       "## The Smart Play: AI First, Hire Later",
       "Start with AI tools. Use them for 3-6 months. If you hit a ceiling — you're spending $300K+/month, need brand-level strategy, or your AI outputs need too much human polishing — that's when you hire a Creative Strategist. And when you do, they'll be 5x more effective because the AI handles the grunt work.",
-      "Calculate your potential savings: try FrameIQ free for 14 days and compare the output to your current creative production.",
+      "Calculate your potential savings: try AdBrief free for 14 days and compare the output to your current creative production.",
     ],
   },
   "signs-you-dont-need-creative-strategist": {
