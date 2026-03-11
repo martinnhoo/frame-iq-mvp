@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ads_data_imports: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          date_range: string | null
+          filename: string | null
+          id: string
+          platform: string
+          result: Json | null
+          total_ads: number | null
+          total_spend: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          date_range?: string | null
+          filename?: string | null
+          id?: string
+          platform?: string
+          result?: Json | null
+          total_ads?: number | null
+          total_spend?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          date_range?: string | null
+          filename?: string | null
+          id?: string
+          platform?: string
+          result?: Json | null
+          total_ads?: number | null
+          total_spend?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_daily_usage: {
         Row: {
           id: string
@@ -292,6 +331,7 @@ export type Database = {
           preferred_language: string | null
           preferred_market: string | null
           stripe_customer_id: string | null
+          usage_alert_flags: Json | null
         }
         Insert: {
           avatar_url?: string | null
@@ -307,6 +347,7 @@ export type Database = {
           preferred_language?: string | null
           preferred_market?: string | null
           stripe_customer_id?: string | null
+          usage_alert_flags?: Json | null
         }
         Update: {
           avatar_url?: string | null
@@ -322,6 +363,7 @@ export type Database = {
           preferred_language?: string | null
           preferred_market?: string | null
           stripe_customer_id?: string | null
+          usage_alert_flags?: Json | null
         }
         Relationships: []
       }
@@ -411,6 +453,7 @@ export type Database = {
           analyses_count: number
           boards_count: number
           created_at: string
+          hooks_count: number | null
           id: string
           period: string
           preflights_count: number
@@ -422,6 +465,7 @@ export type Database = {
           analyses_count?: number
           boards_count?: number
           created_at?: string
+          hooks_count?: number | null
           id?: string
           period: string
           preflights_count?: number
@@ -433,6 +477,7 @@ export type Database = {
           analyses_count?: number
           boards_count?: number
           created_at?: string
+          hooks_count?: number | null
           id?: string
           period?: string
           preflights_count?: number
