@@ -204,7 +204,7 @@ const blogPosts: Record<string, {
       "### How It Works",
       "1. Enter a prompt describing your ad concept. Example: '30-second UGC-style TikTok ad for a skincare brand targeting women 25-34, featuring a before/after transformation.' 2. FrameIQ generates a complete board with 6-10 scenes, full VO script, and editor notes. 3. Review and edit — adjust scenes, swap references, modify the script. 4. Export and send to your editor. They can start immediately.",
       "## Built on Real Creative Intelligence",
-      "Board Generation isn't just GPT with a template. It's powered by FrameIQ's analysis of millions of video ads, which means: scene structures follow patterns proven to convert, hooks are based on our CTR research, pacing matches platform best practices, and CTAs use patterns with highest conversion rates.",
+      "Board Generation isn't just GPT with a template. It's powered by AdBrief's analysis of millions of video ads, which means: scene structures follow patterns proven to convert, hooks are based on our CTR research, pacing matches platform best practices, and CTAs use patterns with highest conversion rates.",
       "## Early Results",
       "Beta testers reported: 85% reduction in briefing time, 3x increase in concepts tested per week, 40% fewer revision rounds with editors, and editors preferred AI-generated briefs over manual ones (clearer, more specific).",
       "## Pricing",
