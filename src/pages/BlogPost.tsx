@@ -582,7 +582,7 @@ const blogPosts: Record<string, {
       "## Key Takeaways",
       "1. Agencies sell time, AI sells output. You're paying for deliverables, not hours. 2. The 80/20 rule applies: AI handles 80% of the volume, humans handle the 20% that matters most. 3. Speed compounds. More variations → more data → better decisions → higher ROAS. 4. It's not for everyone. Marcus is tech-savvy and understands performance marketing deeply. Complete beginners might still need agency support.",
       "## Your Turn",
-      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with FrameIQ's free plan and see how much competitive intelligence you can gather in 30 minutes.",
+      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with AdBrief's free plan and see how much competitive intelligence you can gather in 30 minutes.",
     ],
   },
   "cost-creative-strategist-vs-ai": {
