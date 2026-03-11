@@ -187,6 +187,58 @@ export default function DashboardOverview() {
   const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
+  // ── Micro-celebration: contextual subtext ──
+  const [microText, setMicroText] = useState("");
+  useEffect(() => {
+    const calcMicro = async () => {
+      // Check today's activity
+      const today = new Date().toISOString().split("T")[0];
+      const { data: todayUsage } = await supabase
+        .from("ai_daily_usage")
+        .select("request_count")
+        .eq("user_id", user.id)
+        .eq("usage_date", today)
+        .maybeSingle();
+
+      // Check this week's analyses
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const { count: weekAnalyses } = await supabase
+        .from("analyses")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("created_at", weekAgo);
+
+      const todayCount = todayUsage?.request_count || 0;
+      const weekCount = weekAnalyses || 0;
+
+      if (todayCount >= 10) {
+        setMicroText(`${todayCount} ${dt("gm_power_user")}`);
+      } else if (weekCount >= 3) {
+        setMicroText(`${weekCount}ª ${dt("gm_on_rhythm")}`);
+      } else if (todayCount === 0) {
+        // Check if returning after absence
+        const { data: lastUsage } = await supabase
+          .from("ai_daily_usage")
+          .select("usage_date")
+          .eq("user_id", user.id)
+          .order("usage_date", { ascending: false })
+          .limit(1);
+        const lastDate = lastUsage?.[0]?.usage_date;
+        if (lastDate) {
+          const daysSince = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000);
+          if (daysSince > 3) {
+            setMicroText(dt("gm_comeback"));
+          } else {
+            setMicroText(dt("gm_first_today"));
+          }
+        } else {
+          setMicroText(dt("gm_first_today"));
+        }
+      }
+    };
+    calcMicro();
+  }, [user.id, dt]);
+
   const tools = [
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
