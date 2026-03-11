@@ -185,7 +185,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
         <div>
           <p className="text-[10px] text-white/30 mb-2 uppercase tracking-wider" style={mono}>Select platform</p>
           <div className="flex gap-2">
-            {(["meta", "google", "tiktok"] as const).map(p => {
+            {(["meta", "google", "tiktok", "other"] as const).map(p => {
               const m = PLATFORM_META[p];
               return (
                 <button key={p} onClick={() => setPlatform(p)}
