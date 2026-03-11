@@ -367,10 +367,10 @@ const BoardDetail = () => {
                       </div>
                     </div>
                     <p className="text-sm text-white/80 mb-2">{String(scene.visual_description || "")}</p>
-                    {scene.vo_script && (
+                    {(scene.vo_script || scene.dialogue_or_vo) && (
                       <div className="rounded-lg bg-white/[0.06] border border-white/[0.06] px-3 py-2 mt-2">
                         <p className="text-xs text-white/30 mb-1">Voice Over</p>
-                        <p className="text-sm text-white/70 italic">"{String(scene.vo_script)}"</p>
+                        <p className="text-sm text-white/70 italic">"{String(scene.vo_script || scene.dialogue_or_vo)}"</p>
                       </div>
                     )}
                     {scene.onscreen_text && (
