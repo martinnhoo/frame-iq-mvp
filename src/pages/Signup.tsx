@@ -156,7 +156,7 @@ const Signup = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+                  <Label htmlFor="password" className="text-foreground text-sm">{t("auth_password")}</Label>
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="h-12 bg-muted/50 border-border/50 pr-12" disabled={isFormDisabled} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
