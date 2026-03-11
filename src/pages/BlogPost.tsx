@@ -332,7 +332,7 @@ const blogPosts: Record<string, {
     category: "AI & Automation",
     readTime: "6 min",
     date: "February 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["AI voiceover", "AI voice for ads", "text to speech ads", "AI narration", "ad voiceover tools"],
     content: [
