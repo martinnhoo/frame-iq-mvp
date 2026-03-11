@@ -198,7 +198,7 @@ const blogPosts: Record<string, {
       "We talked to 200+ creative strategists and performance marketers. The #1 bottleneck in their creative pipeline wasn't ideation, editing, or distribution — it was briefing.",
       "Writing a production brief that's specific enough for an editor to execute without endless revisions takes 30-60 minutes per concept. When you're testing 20+ concepts per week, that's 10+ hours just on briefs.",
       "## Introducing AI Board Generation",
-      "Today, we're launching Board Generation — a new FrameIQ feature that creates complete production boards from a single text prompt in under 30 seconds.",
+      "Today, we're launching Board Generation — a new AdBrief feature that creates complete production boards from a single text prompt in under 30 seconds.",
       "### What's in a Board?",
       "Each generated board includes: scene-by-scene breakdown with timing and transitions, voiceover script with tone and delivery notes, visual direction for each scene (camera angles, compositions, references), editor notes with specific technical direction, and export options for Notion, Google Docs, and PDF.",
       "### How It Works",
