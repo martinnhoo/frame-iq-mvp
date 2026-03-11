@@ -127,7 +127,7 @@ const blogPosts: Record<string, {
     ],
   },
   "dtc-brand-case-study": {
-    title: "How a DTC Brand Cut Creative Costs by 60% with FrameIQ",
+    title: "How a DTC Brand Cut Creative Costs by 60% with AdBrief",
     description: "A step-by-step breakdown of how a beauty brand scaled from 5 to 50 ad variations per week using AI-powered creative analysis and production.",
     category: "Case Study",
     readTime: "8 min",
