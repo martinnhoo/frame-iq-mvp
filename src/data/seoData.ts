@@ -149,8 +149,8 @@ export const SEO_GUIDES = [
     title: "TikTok Ad Hooks: 15 Proven Formulas That Stop the Scroll",
     subtitle: "The exact hook structures that generate 8+ hook scores on TikTok — with examples.",
     readTime: 8,
-    metaTitle: "Best TikTok Ad Hooks — 15 Proven Formulas | FrameIQ",
-    metaDescription: "15 TikTok ad hook formulas that stop the scroll. With examples, hook scores, and breakdowns. Free guide by FrameIQ.",
+    metaTitle: "Best TikTok Ad Hooks — 15 Proven Formulas | AdBrief",
+    metaDescription: "15 TikTok ad hook formulas that stop the scroll. With examples, hook scores, and breakdowns. Free guide by AdBrief.",
     keywords: ["tiktok ad hooks", "tiktok hook formulas", "best tiktok hooks", "tiktok ad opening lines", "high converting tiktok hooks"],
     intro: "The hook is the only thing that matters in the first 3 seconds of a TikTok ad. A 9.0-scoring hook on a mediocre ad outperforms a polished 30-second spot with a weak opener. Here are 15 hook formulas that consistently score 8+ — with real examples and what makes them work.",
     sections: [
