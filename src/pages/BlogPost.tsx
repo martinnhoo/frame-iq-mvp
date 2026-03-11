@@ -160,7 +160,7 @@ const blogPosts: Record<string, {
     category: "Creative Strategy",
     readTime: "6 min",
     date: "February 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["UGC ads", "studio ads", "ad creative format", "UGC vs professional ads", "TikTok UGC", "Meta ads format"],
     content: [
