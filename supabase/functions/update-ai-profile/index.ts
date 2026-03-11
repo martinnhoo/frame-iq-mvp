@@ -76,18 +76,16 @@ Deno.serve(async (req) => {
     let aiRecommendations: string[] = (currentProfile as Record<string, unknown> | null)?.ai_recommendations as string[] || [];
     let creativeStyle = (currentProfile as Record<string, unknown> | null)?.creative_style as string | null || null;
 
-    if (ANTHROPIC_API_KEY && (analyses?.length || 0) >= 3) {
+    if (LOVABLE_API_KEY && (analyses?.length || 0) >= 3) {
       try {
-        const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'x-api-key': ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 600,
+            model: 'google/gemini-2.5-flash-lite',
             messages: [{
               role: 'user',
               content: `You are a creative intelligence analyst. Analyze this performance marketer's creative patterns.
@@ -106,16 +104,16 @@ Return ONLY valid JSON (no markdown):
             }]
           })
         });
-        if (claudeRes.ok) {
-          const d = await claudeRes.json();
-          const text = (d.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+        if (aiRes.ok) {
+          const d = await aiRes.json();
+          const text = (d.choices?.[0]?.message?.content || '').replace(/```json|```/g, '').trim();
           const parsed = JSON.parse(text);
           aiSummary = parsed.summary;
           aiRecommendations = parsed.recommendations || [];
           if (parsed.creative_style) creativeStyle = parsed.creative_style;
         }
       } catch (e) {
-        console.error('Claude haiku error:', e);
+        console.error('Lovable AI error:', e);
       }
     }
 

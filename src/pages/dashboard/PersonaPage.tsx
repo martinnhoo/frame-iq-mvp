@@ -142,51 +142,14 @@ export default function PersonaPage() {
   const generatePersona = async (finalAnswers: Record<string, string>) => {
     setLoading(true);
     try {
-      const prompt = `You are an expert performance marketing strategist. Create a highly detailed buyer persona for paid advertising.
-
-INPUT:
-- Product/offer: ${finalAnswers.product}
-- Gender: ${finalAnswers.gender}
-- Age: ${finalAnswers.age}
-- Income: ${finalAnswers.income}
-- Market/Country: ${finalAnswers.market}
-- Main platform: ${finalAnswers.platform}
-- Core pain: ${finalAnswers.pain}
-
-Return ONLY a valid JSON object with these exact keys:
-{
-  "name": "fictional first name that fits the demographic",
-  "age": "specific age",
-  "gender": "gender",
-  "headline": "one-line persona description (e.g. The Weekend Warrior Bettor)",
-  "bio": "2-3 sentence vivid description of their daily life and mindset",
-  "pains": ["3-4 specific pain points"],
-  "desires": ["3-4 deep desires and aspirations"],
-  "objections": ["3 common objections to buying"],
-  "triggers": ["3-4 emotional/rational purchase triggers"],
-  "media_habits": ["3-4 specific media consumption habits"],
-  "best_platforms": ["2-3 best platforms to reach them"],
-  "best_formats": ["3-4 best ad formats for this persona"],
-  "hook_angles": ["4-5 specific hook angles that work for this persona"],
-  "language_style": "description of how they speak and what resonates (slang, formality, etc)",
-  "cta_style": "what kind of CTA works best and why",
-  "avatar_emoji": "one emoji that represents them"
-}`;
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
+      const { data, error } = await supabase.functions.invoke("generate-persona", {
+        body: { answers: finalAnswers },
       });
 
-      const data = await response.json();
-      const text = data.content?.[0]?.text || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed: PersonaResult = JSON.parse(clean);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const parsed: PersonaResult = data.persona;
       setResult(parsed);
 
       // Save to Supabase
@@ -198,8 +161,8 @@ Return ONLY a valid JSON object with these exact keys:
         } as never);
       } catch { /* table may not exist yet */ }
 
-    } catch {
-      toast.error("Generation failed — add ANTHROPIC_API_KEY to Supabase Secrets");
+    } catch (err: any) {
+      toast.error(err?.message || "Persona generation failed");
     } finally {
       setLoading(false);
     }
