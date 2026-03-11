@@ -59,14 +59,14 @@ const BoardsList = () => {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Boards</h1>
-          <p className="text-white/30 text-sm mt-0.5">{boards.length} production board{boards.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-xl font-bold text-white">{dt("bo_title")}</h1>
+          <p className="text-white/30 text-sm mt-0.5">{boards.length} {dt("bo_production_boards")}</p>
         </div>
         <button
           onClick={() => navigate("/dashboard/boards/new")}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
         >
-          <Plus className="h-4 w-4" /> New Board
+          <Plus className="h-4 w-4" /> {dt("bo_new")}
         </button>
       </div>
 
