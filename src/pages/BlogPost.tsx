@@ -605,7 +605,7 @@ const blogPosts: Record<string, {
       "### True First-Year Cost: $150K-$175K",
       "## Full Cost Breakdown: AI Creative Tools",
       "### Direct Costs (Monthly)",
-      "FrameIQ (analysis + briefs + boards): $99-299/month. AI video generation: $50-150/month. AI voiceover: $20-50/month. Total: $170-500/month ($2K-6K/year).",
+      "AdBrief (analysis + briefs + boards): $99-299/month. AI video generation: $50-150/month. AI voiceover: $20-50/month. Total: $170-500/month ($2K-6K/year).",
       "### Indirect Costs",
       "Learning curve: 1-2 weeks (vs. 2-3 months for a hire). Human oversight: 5-10 hours/week from an existing team member. No recruiting, no benefits, no management overhead.",
       "### True First-Year Cost: $3K-$8K",
