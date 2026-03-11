@@ -144,7 +144,7 @@ const Contact = () => {
             {/* Email card */}
             <div className="max-w-lg mx-auto">
               <a 
-                href="mailto:support@frameiq.com"
+                href="mailto:support@adbrief.pro"
                 className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
                 style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
               >
@@ -156,7 +156,7 @@ const Contact = () => {
                 </div>
                 <div className="text-left">
                   <div className="text-sm text-secondary">Email</div>
-                  <div className="font-semibold">support@frameiq.com</div>
+                  <div className="font-semibold">support@adbrief.pro</div>
                 </div>
               </a>
             </div>
@@ -166,7 +166,7 @@ const Contact = () => {
             >
               <h2 className="text-xl font-semibold mb-3">Enterprise & Custom Plans</h2>
               <p className="text-secondary text-sm leading-relaxed mb-6">
-                Need API access, custom integrations, or a dedicated CSM? Book a call with our team to discuss how FrameIQ can fit your workflow.
+                Need API access, custom integrations, or a dedicated CSM? Book a call with our team to discuss how AdBrief can fit your workflow.
               </p>
               <Button 
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"

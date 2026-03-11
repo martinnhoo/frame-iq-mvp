@@ -600,7 +600,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm font-medium hover:bg-red-500/10 hover:border-red-500/30 active:scale-[.98] transition-all"
               >
                 <LogOut className="h-4 w-4" />
-                Sign out of FrameIQ
+                Sign out of AdBrief
               </button>
 
               <p className="text-[11px] text-white/15 text-center">

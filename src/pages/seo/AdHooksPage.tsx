@@ -61,8 +61,8 @@ export default function AdHooksPage() {
 
   return (
     <SeoLayout
-      title="Best Ad Hooks — Scored & Categorized | FrameIQ"
-      description="Browse 50+ high-performing ad hooks organized by type. Hook scores, examples, and why they work. Free by FrameIQ."
+      title="Best Ad Hooks — Scored & Categorized | AdBrief"
+      description="Browse 50+ high-performing ad hooks organized by type. Hook scores, examples, and why they work. Free by AdBrief."
       canonical="/best-ad-hooks"
     >
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "64px 24px 0" }}>

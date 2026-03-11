@@ -81,7 +81,7 @@ const Careers = () => {
               <span className="gradient-text">creative intelligence</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              FrameIQ is a fast-growing AI startup reimagining how performance marketing teams create, analyze, and scale ad creative. Join us and help shape the next generation of creative tools.
+              AdBrief is a fast-growing AI startup reimagining how performance marketing teams create, analyze, and scale ad creative. Join us and help shape the next generation of creative tools.
             </p>
           </motion.div>
         </div>
@@ -90,7 +90,7 @@ const Careers = () => {
       {/* Why FrameIQ */}
       <section className="py-12 px-6 border-t border-border/30">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold mb-8 text-center">Why FrameIQ?</h2>
+          <h2 className="text-2xl font-bold mb-8 text-center">Why AdBrief?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
@@ -202,13 +202,13 @@ const Careers = () => {
                   <div className="pt-4 border-t border-border">
                     <Button
                       className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
-                      onClick={() => window.location.href = "mailto:careers@frameiq.ai?subject=Application: " + job.title}
+                      onClick={() => window.location.href = "mailto:careers@adbrief.pro?subject=Application: " + job.title}
                     >
                       Apply Now
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Send your resume and a brief intro to careers@frameiq.ai
+                      Send your resume and a brief intro to careers@adbrief.pro
                     </p>
                   </div>
                 </CardContent>
@@ -222,7 +222,7 @@ const Careers = () => {
       <footer className="border-t border-border/50 py-8 px-6">
         <div className="container mx-auto max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 FrameIQ. All rights reserved.
+            © 2026 AdBrief. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>

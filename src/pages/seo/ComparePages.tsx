@@ -9,12 +9,12 @@ const m = { fontFamily: "'DM Mono', monospace" };
 export function CompareIndex() {
   const navigate = useNavigate();
   return (
-    <SeoLayout title="FrameIQ vs AdSpy, BigSpy, Minea & More — FrameIQ" description="Honest, feature-by-feature comparisons of FrameIQ against other ad intelligence tools." canonical="/compare">
+    <SeoLayout title="AdBrief vs AdSpy, BigSpy, Minea & More — AdBrief" description="Honest, feature-by-feature comparisons of AdBrief against other ad intelligence tools." canonical="/compare">
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ marginBottom: 52 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
           <h1 style={{ ...j, fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
-            How FrameIQ compares<br />
+            How AdBrief compares<br />
             <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>to other ad tools</span>
           </h1>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, lineHeight: 1.6 }}>Honest, feature-by-feature comparisons. No fluff.</p>
@@ -27,7 +27,7 @@ export function CompareIndex() {
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
               <div>
-                <p style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>FrameIQ vs {c.competitorName}</p>
+                <p style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>AdBrief vs {c.competitorName}</p>
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{c.frameiqPrice} · vs {c.competitorPrice}</p>
               </div>
               <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 18 }}>→</span>
@@ -35,7 +35,7 @@ export function CompareIndex() {
           ))}
         </div>
 
-        <SeoCTA headline="See FrameIQ in action" sub="Free plan available. No credit card required." primaryLabel="Try for free" />
+        <SeoCTA headline="See AdBrief in action" sub="Free plan available. No credit card required." primaryLabel="Try for free" />
       </div>
     </SeoLayout>
   );
@@ -47,7 +47,7 @@ export function CompareDetail() {
   const comp = SEO_COMPARISONS.find(c => c.slug === slug);
 
   if (!comp) return (
-    <SeoLayout title="Comparison Not Found — FrameIQ" description="" noIndex>
+    <SeoLayout title="Comparison Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)" }}>Not found.</p>
         <button onClick={() => navigate("/compare")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← All comparisons</button>
@@ -60,8 +60,8 @@ export function CompareDetail() {
     "@type": "Article",
     "headline": comp.headline,
     "description": comp.metaDescription,
-    "author": { "@type": "Organization", "name": "FrameIQ" },
-    "url": `https://www.frameiq.com/compare/${slug}`,
+    "author": { "@type": "Organization", "name": "AdBrief" },
+    "url": `https://www.adbrief.pro/compare/${slug}`,
   };
 
   return (
@@ -87,7 +87,7 @@ export function CompareDetail() {
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(255,255,255,0.04)", padding: "12px 20px" }}>
             <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>Feature</span>
-            <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", textAlign: "center" }}>FrameIQ</span>
+            <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", textAlign: "center" }}>AdBrief</span>
             <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>{comp.competitorName}</span>
           </div>
           {comp.featureTable.map((row, i) => (
@@ -102,7 +102,7 @@ export function CompareDetail() {
         {/* Pros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
           <div style={{ borderRadius: 16, padding: 20, background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 14 }}>FrameIQ strengths</p>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 14 }}>AdBrief strengths</p>
             {comp.frameiqPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                 <span style={{ color: "#34d399", flexShrink: 0 }}>✓</span>{p}
@@ -129,7 +129,7 @@ export function CompareDetail() {
           ))}
         </div>
 
-        <SeoCTA headline={`Try FrameIQ free`} sub={`See why teams choose FrameIQ over ${comp.competitorName} for AI creative analysis.`} />
+        <SeoCTA headline={`Try AdBrief free`} sub={`See why teams choose AdBrief over ${comp.competitorName} for AI creative analysis.`} />
       </div>
     </SeoLayout>
   );

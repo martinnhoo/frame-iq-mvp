@@ -16,7 +16,7 @@ const Blog = () => {
     { category: "Creative Strategy", title: "How to Analyze Competitor Ads Without Wasting Hours", description: "Learn the methodology Creative Strategists use to extract actionable insights from video ads in minutes, not days.", readTime: "5 min", date: "Mar 2026", slug: "analyze-competitor-ads" },
     { category: "Performance", title: "The Hook Framework That Increases CTR by 47%", description: "Discover the opening patterns that convert best, based on AI analysis of 10,000+ video ads across 12 markets.", readTime: "7 min", date: "Mar 2026", slug: "hook-framework-ctr" },
     { category: "AI & Automation", title: "AI in Creative Production: The Complete 2026 Guide", description: "How performance teams are saving budget and testing faster without depending on agencies or freelancers.", readTime: "10 min", date: "Mar 2026", slug: "ai-creative-production-guide" },
-    { category: "Case Study", title: "How a DTC Brand Cut Creative Costs by 60% with FrameIQ", description: "A step-by-step breakdown of how a beauty brand scaled from 5 to 50 ad variations per week using AI analysis.", readTime: "8 min", date: "Feb 2026", slug: "dtc-brand-case-study" },
+    { category: "Case Study", title: "How a DTC Brand Cut Creative Costs by 60% with AdBrief", description: "A step-by-step breakdown of how a beauty brand scaled from 5 to 50 ad variations per week using AI analysis.", readTime: "8 min", date: "Feb 2026", slug: "dtc-brand-case-study" },
     { category: "Creative Strategy", title: "UGC vs. Studio Ads: What Actually Converts in 2026", description: "We analyzed 50,000 ads across Meta, TikTok, and YouTube. Here's what the data says about creative formats.", readTime: "6 min", date: "Feb 2026", slug: "ugc-vs-studio-ads" },
     { category: "Product Updates", title: "Introducing Board Generation: From Brief to Production in 30s", description: "Our new AI board generator creates full production boards with scenes, VO scripts, and editor notes from a single prompt.", readTime: "4 min", date: "Jan 2026", slug: "board-generation-launch" },
     { category: "Performance", title: "How to Structure A/B Tests for Ad Creative in 2026", description: "The complete framework for testing hooks, formats, CTAs, and audiences systematically — with real data from 500+ tests.", readTime: "8 min", date: "Mar 2026", slug: "ab-testing-ad-creative" },
@@ -38,19 +38,19 @@ const Blog = () => {
 
   const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
   const hrefLangCode = langMap[language] || "en";
-  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.frameiq.com";
+  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.adbrief.pro";
 
   // JSON-LD structured data for blog listing
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "FrameIQ Blog",
+    name: "AdBrief Blog",
     description: "Expert insights on creative strategy, AI-powered ad production, and performance marketing.",
     url: `${baseUrl}/blog`,
     inLanguage: hrefLangCode,
     publisher: {
       "@type": "Organization",
-      name: "FrameIQ",
+      name: "AdBrief",
       url: baseUrl,
     },
     blogPost: posts.map((p) => ({
@@ -59,14 +59,14 @@ const Blog = () => {
       description: p.description,
       url: `${baseUrl}/blog/${p.slug}`,
       datePublished: p.date,
-      author: { "@type": "Organization", name: "FrameIQ" },
+      author: { "@type": "Organization", name: "AdBrief" },
     })),
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>FrameIQ Blog — Creative Strategy, AI & Performance Marketing Insights</title>
+        <title>AdBrief Blog — Creative Strategy, AI & Performance Marketing Insights</title>
         <meta name="description" content="Expert insights on creative strategy, AI-powered ad production, performance marketing, and scaling ad creative for growth teams and Creative Strategists." />
         <meta name="keywords" content="creative strategy blog, AI ad production, performance marketing, ad creative, video ad analysis, creative strategist, DTC ads, TikTok ads, Meta ads" />
         <link rel="canonical" href={`${baseUrl}/blog`} />

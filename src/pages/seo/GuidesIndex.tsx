@@ -16,7 +16,7 @@ export default function GuidesIndex() {
   }
 
   return (
-    <SeoLayout title="Advertising Guides — FrameIQ" description="Free guides on TikTok ads, ad hooks, creative testing, and scaling. Written for performance marketers and media buyers." canonical="/guides">
+    <SeoLayout title="Advertising Guides — AdBrief" description="Free guides on TikTok ads, ad hooks, creative testing, and scaling. Written for performance marketers and media buyers." canonical="/guides">
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ marginBottom: 52 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Guides</p>

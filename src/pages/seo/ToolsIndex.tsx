@@ -10,7 +10,7 @@ const typeColor: Record<string, string> = { generator: "#fb923c", analyzer: "#22
 export default function ToolsIndex() {
   const navigate = useNavigate();
   return (
-    <SeoLayout title="Free Ad Creative Tools — FrameIQ" description="Free AI tools for performance marketers: hook generator, creative analyzer, script generator, competitor decoder, CTR estimator." canonical="/tools">
+    <SeoLayout title="Free Ad Creative Tools — AdBrief" description="Free AI tools for performance marketers: hook generator, creative analyzer, script generator, competitor decoder, CTR estimator." canonical="/tools">
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Free Tools</p>
