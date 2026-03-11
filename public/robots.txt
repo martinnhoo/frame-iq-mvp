@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.frameiq.com/sitemap.xml
+Sitemap: https://www.adbrief.pro/sitemap.xml

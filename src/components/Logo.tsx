@@ -1,4 +1,4 @@
-// Shared FrameIQ logo — Syne font for brand identity
+// Shared AdBrief logo — Syne font for brand identity
 interface LogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -11,7 +11,7 @@ export const Logo = ({ size = "md", className = "" }: LogoProps) => {
       className={`flex items-center ${textSize} ${className}`}
       style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}
     >
-      <span className="text-white font-semibold tracking-tight">Frame</span>
+      <span className="text-white font-semibold tracking-tight">ad</span>
       <span
         className="font-extrabold"
         style={{
@@ -21,7 +21,7 @@ export const Logo = ({ size = "md", className = "" }: LogoProps) => {
           backgroundClip: "text",
         }}
       >
-        IQ
+        brief
       </span>
     </span>
   );
@@ -34,7 +34,7 @@ export const LogoLight = ({ size = "md", className = "" }: LogoProps) => {
       className={`flex items-center ${textSize} ${className}`}
       style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}
     >
-      <span className="text-white font-semibold">Frame</span>
+      <span className="text-white font-semibold">ad</span>
       <span
         className="font-extrabold"
         style={{
@@ -44,7 +44,7 @@ export const LogoLight = ({ size = "md", className = "" }: LogoProps) => {
           backgroundClip: "text",
         }}
       >
-        IQ
+        brief
       </span>
     </span>
   );
