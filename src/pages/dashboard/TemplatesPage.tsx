@@ -1557,6 +1557,8 @@ const getCatAccent = (cat: string): string => {
 const TemplatesPage = () => {
   const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const ot = useObT(language);
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [activeDuration, setActiveDuration] = useState<Duration>("all");
   const [search, setSearch] = useState("");
