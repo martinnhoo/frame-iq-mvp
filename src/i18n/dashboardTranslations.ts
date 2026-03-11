@@ -205,6 +205,57 @@ export type DashT = {
   pe_active: string;
   pe_deactivate: string;
   pe_delete: string;
+  // Persona Builder
+  pe_saved: string;
+  pe_profiles_sub: string;
+  pe_builder: string;
+  pe_building: string;
+  pe_create_desc: string;
+  pe_create_first_btn: string;
+  pe_all: string;
+  pe_use: string;
+  pe_active_deactivate: string;
+  pe_continue: string;
+  pe_generate_btn: string;
+  pe_back: string;
+  pe_copy: string;
+  pe_new_persona: string;
+  pe_from: string;
+  pe_to: string;
+  pe_edit: string;
+  pe_cancel: string;
+  pe_save_btn: string;
+  pe_copied: string;
+  pe_saved_msg: string;
+  pe_deleted: string;
+  pe_q_product: string;
+  pe_q_product_sub: string;
+  pe_q_product_ph: string;
+  pe_q_gender: string;
+  pe_q_age: string;
+  pe_q_income: string;
+  pe_q_market: string;
+  pe_q_platform: string;
+  pe_q_pain: string;
+  pe_q_pain_sub: string;
+  pe_q_pain_ph: string;
+  pe_opt_male: string;
+  pe_opt_female: string;
+  pe_opt_both: string;
+  pe_opt_low: string;
+  pe_opt_mid: string;
+  pe_opt_high: string;
+  pe_opt_mixed: string;
+  pe_desires: string;
+  pe_objections: string;
+  pe_triggers: string;
+  pe_ad_strategy: string;
+  pe_hook_angles: string;
+  pe_best_formats: string;
+  pe_best_platforms: string;
+  pe_lang_style: string;
+  pe_cta_style: string;
+  pe_media_habits: string;
 
   // Translate
   tr_title: string;
@@ -298,6 +349,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "Pain points", pe_interests: "Interests", pe_income: "Income level",
     pe_generate: "Generate with AI", pe_save: "Save persona", pe_activate: "Use this persona",
     pe_active: "Active", pe_deactivate: "Deactivate", pe_delete: "Delete",
+    pe_saved: "Saved Personas", pe_profiles_sub: "Your AI audience profiles",
+    pe_builder: "Persona Builder", pe_building: "Building your persona...",
+    pe_create_desc: "Create AI-powered audience profiles to sharpen your ad targeting",
+    pe_create_first_btn: "Create your first persona",
+    pe_all: "All Personas", pe_use: "Use persona", pe_active_deactivate: "Active — deactivate",
+    pe_continue: "Continue", pe_generate_btn: "Generate persona", pe_back: "Back",
+    pe_copy: "Copy", pe_new_persona: "New persona", pe_from: "From", pe_to: "To",
+    pe_edit: "Edit", pe_cancel: "Cancel", pe_save_btn: "Save",
+    pe_copied: "Copied", pe_saved_msg: "Persona saved!", pe_deleted: "Persona deleted",
+    pe_q_product: "What are you advertising?",
+    pe_q_product_sub: "Be specific — the more context, the better the persona",
+    pe_q_product_ph: "e.g. Online sports betting app targeting casual football fans",
+    pe_q_gender: "Primary gender target?",
+    pe_q_age: "Age range?", pe_q_income: "Income level?",
+    pe_q_market: "Primary market?", pe_q_platform: "Main ad platform?",
+    pe_q_pain: "What's the core pain you solve?",
+    pe_q_pain_sub: "What keeps your audience up at night?",
+    pe_q_pain_ph: "e.g. They want to make easy money but don't trust betting apps",
+    pe_opt_male: "Mostly Male", pe_opt_female: "Mostly Female", pe_opt_both: "Both / Mixed",
+    pe_opt_low: "Low", pe_opt_mid: "Middle", pe_opt_high: "High", pe_opt_mixed: "Mixed / Broad",
+    pe_desires: "Desires", pe_objections: "Objections", pe_triggers: "Purchase Triggers",
+    pe_ad_strategy: "Ad Strategy for", pe_hook_angles: "Hook Angles",
+    pe_best_formats: "Best Formats", pe_best_platforms: "Best Platforms",
+    pe_lang_style: "Language Style", pe_cta_style: "CTA Style",
+    pe_media_habits: "Media Habits",
     tr_title: "Translate", tr_subtitle: "Adapt your ad script to any market",
     tr_source: "Source language", tr_target: "Target language", tr_translate: "Translate",
     tr_translating: "Translating...", tr_copy: "Copy", tr_result: "Translation",
@@ -392,6 +468,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "Pontos de dor", pe_interests: "Interesses", pe_income: "Renda",
     pe_generate: "Gerar com IA", pe_save: "Salvar persona", pe_activate: "Usar esta persona",
     pe_active: "Ativa", pe_deactivate: "Desativar", pe_delete: "Excluir",
+    pe_saved: "Personas Salvas", pe_profiles_sub: "Seus perfis de audiência com IA",
+    pe_builder: "Construtor de Persona", pe_building: "Criando sua persona...",
+    pe_create_desc: "Crie perfis de audiência com IA para afiar sua segmentação de anúncios",
+    pe_create_first_btn: "Crie sua primeira persona",
+    pe_all: "Todas as Personas", pe_use: "Usar persona", pe_active_deactivate: "Ativa — desativar",
+    pe_continue: "Continuar", pe_generate_btn: "Gerar persona", pe_back: "Voltar",
+    pe_copy: "Copiar", pe_new_persona: "Nova persona", pe_from: "De", pe_to: "Até",
+    pe_edit: "Editar", pe_cancel: "Cancelar", pe_save_btn: "Salvar",
+    pe_copied: "Copiado", pe_saved_msg: "Persona salva!", pe_deleted: "Persona excluída",
+    pe_q_product: "O que você está anunciando?",
+    pe_q_product_sub: "Seja específico — quanto mais contexto, melhor a persona",
+    pe_q_product_ph: "ex: App de apostas esportivas online para fãs casuais de futebol",
+    pe_q_gender: "Gênero principal do público?",
+    pe_q_age: "Faixa etária?", pe_q_income: "Nível de renda?",
+    pe_q_market: "Mercado principal?", pe_q_platform: "Plataforma principal de ads?",
+    pe_q_pain: "Qual é a dor principal que você resolve?",
+    pe_q_pain_sub: "O que tira o sono do seu público?",
+    pe_q_pain_ph: "ex: Querem ganhar dinheiro fácil mas não confiam em apps de apostas",
+    pe_opt_male: "Maioria Masculino", pe_opt_female: "Maioria Feminino", pe_opt_both: "Ambos / Misto",
+    pe_opt_low: "Baixa", pe_opt_mid: "Média", pe_opt_high: "Alta", pe_opt_mixed: "Mista / Ampla",
+    pe_desires: "Desejos", pe_objections: "Objeções", pe_triggers: "Gatilhos de Compra",
+    pe_ad_strategy: "Estratégia de Ads para", pe_hook_angles: "Ângulos de Hook",
+    pe_best_formats: "Melhores Formatos", pe_best_platforms: "Melhores Plataformas",
+    pe_lang_style: "Estilo de Linguagem", pe_cta_style: "Estilo de CTA",
+    pe_media_habits: "Hábitos de Mídia",
     tr_title: "Traduzir", tr_subtitle: "Adapte seu script para qualquer mercado",
     tr_source: "Idioma de origem", tr_target: "Idioma alvo", tr_translate: "Traduzir",
     tr_translating: "Traduzindo...", tr_copy: "Copiar", tr_result: "Tradução",
@@ -487,6 +588,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "Puntos de dolor", pe_interests: "Intereses", pe_income: "Nivel de ingresos",
     pe_generate: "Generar con IA", pe_save: "Guardar persona", pe_activate: "Usar esta persona",
     pe_active: "Activa", pe_deactivate: "Desactivar", pe_delete: "Eliminar",
+    pe_saved: "Personas Guardadas", pe_profiles_sub: "Tus perfiles de audiencia con IA",
+    pe_builder: "Constructor de Persona", pe_building: "Creando tu persona...",
+    pe_create_desc: "Crea perfiles de audiencia con IA para mejorar tu segmentación",
+    pe_create_first_btn: "Crea tu primera persona",
+    pe_all: "Todas las Personas", pe_use: "Usar persona", pe_active_deactivate: "Activa — desactivar",
+    pe_continue: "Continuar", pe_generate_btn: "Generar persona", pe_back: "Volver",
+    pe_copy: "Copiar", pe_new_persona: "Nueva persona", pe_from: "Desde", pe_to: "Hasta",
+    pe_edit: "Editar", pe_cancel: "Cancelar", pe_save_btn: "Guardar",
+    pe_copied: "Copiado", pe_saved_msg: "¡Persona guardada!", pe_deleted: "Persona eliminada",
+    pe_q_product: "¿Qué estás anunciando?",
+    pe_q_product_sub: "Sé específico — más contexto = mejor persona",
+    pe_q_product_ph: "ej: App de apuestas deportivas para fans casuales de fútbol",
+    pe_q_gender: "¿Género principal del público?",
+    pe_q_age: "¿Rango de edad?", pe_q_income: "¿Nivel de ingresos?",
+    pe_q_market: "¿Mercado principal?", pe_q_platform: "¿Plataforma principal de ads?",
+    pe_q_pain: "¿Cuál es el dolor principal que resuelves?",
+    pe_q_pain_sub: "¿Qué le quita el sueño a tu audiencia?",
+    pe_q_pain_ph: "ej: Quieren ganar dinero fácil pero no confían en apps de apuestas",
+    pe_opt_male: "Mayoría Masculino", pe_opt_female: "Mayoría Femenino", pe_opt_both: "Ambos / Mixto",
+    pe_opt_low: "Bajo", pe_opt_mid: "Medio", pe_opt_high: "Alto", pe_opt_mixed: "Mixto / Amplio",
+    pe_desires: "Deseos", pe_objections: "Objeciones", pe_triggers: "Gatillos de Compra",
+    pe_ad_strategy: "Estrategia de Ads para", pe_hook_angles: "Ángulos de Hook",
+    pe_best_formats: "Mejores Formatos", pe_best_platforms: "Mejores Plataformas",
+    pe_lang_style: "Estilo de Lenguaje", pe_cta_style: "Estilo de CTA",
+    pe_media_habits: "Hábitos de Medios",
     tr_title: "Traducir", tr_subtitle: "Adapta tu guión a cualquier mercado",
     tr_source: "Idioma de origen", tr_target: "Idioma destino", tr_translate: "Traducir",
     tr_translating: "Traduciendo...", tr_copy: "Copiar", tr_result: "Traducción",
@@ -582,6 +708,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "痛点", pe_interests: "兴趣", pe_income: "收入水平",
     pe_generate: "AI生成", pe_save: "保存画像", pe_activate: "使用此画像",
     pe_active: "已激活", pe_deactivate: "停用", pe_delete: "删除",
+    pe_saved: "已保存画像", pe_profiles_sub: "您的AI受众画像",
+    pe_builder: "画像构建器", pe_building: "正在创建您的画像...",
+    pe_create_desc: "创建AI受众画像以优化广告投放",
+    pe_create_first_btn: "创建您的第一个画像",
+    pe_all: "所有画像", pe_use: "使用画像", pe_active_deactivate: "已激活 — 取消",
+    pe_continue: "继续", pe_generate_btn: "生成画像", pe_back: "返回",
+    pe_copy: "复制", pe_new_persona: "新画像", pe_from: "从", pe_to: "到",
+    pe_edit: "编辑", pe_cancel: "取消", pe_save_btn: "保存",
+    pe_copied: "已复制", pe_saved_msg: "画像已保存！", pe_deleted: "画像已删除",
+    pe_q_product: "您在推广什么？",
+    pe_q_product_sub: "越具体越好 — 更多背景信息能生成更好的画像",
+    pe_q_product_ph: "例：面向休闲足球迷的在线体育博彩应用",
+    pe_q_gender: "主要目标性别？",
+    pe_q_age: "年龄范围？", pe_q_income: "收入水平？",
+    pe_q_market: "主要市场？", pe_q_platform: "主要广告平台？",
+    pe_q_pain: "您解决的核心痛点是什么？",
+    pe_q_pain_sub: "什么让您的受众夜不能寐？",
+    pe_q_pain_ph: "例：想轻松赚钱但不信任博彩应用",
+    pe_opt_male: "主要男性", pe_opt_female: "主要女性", pe_opt_both: "两者/混合",
+    pe_opt_low: "低", pe_opt_mid: "中等", pe_opt_high: "高", pe_opt_mixed: "混合/广泛",
+    pe_desires: "欲望", pe_objections: "异议", pe_triggers: "购买触发点",
+    pe_ad_strategy: "广告策略 —", pe_hook_angles: "钩子角度",
+    pe_best_formats: "最佳格式", pe_best_platforms: "最佳平台",
+    pe_lang_style: "语言风格", pe_cta_style: "CTA风格",
+    pe_media_habits: "媒体习惯",
     tr_title: "翻译", tr_subtitle: "将您的广告脚本适配到任何市场",
     tr_source: "源语言", tr_target: "目标语言", tr_translate: "翻译",
     tr_translating: "翻译中...", tr_copy: "复制", tr_result: "翻译结果",
@@ -676,6 +827,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "Points de douleur", pe_interests: "Intérêts", pe_income: "Revenu",
     pe_generate: "Générer avec IA", pe_save: "Enregistrer", pe_activate: "Utiliser cette persona",
     pe_active: "Active", pe_deactivate: "Désactiver", pe_delete: "Supprimer",
+    pe_saved: "Personas sauvegardées", pe_profiles_sub: "Vos profils d'audience IA",
+    pe_builder: "Constructeur de Persona", pe_building: "Création de votre persona...",
+    pe_create_desc: "Créez des profils d'audience IA pour affiner votre ciblage publicitaire",
+    pe_create_first_btn: "Créez votre première persona",
+    pe_all: "Toutes les Personas", pe_use: "Utiliser persona", pe_active_deactivate: "Active — désactiver",
+    pe_continue: "Continuer", pe_generate_btn: "Générer persona", pe_back: "Retour",
+    pe_copy: "Copier", pe_new_persona: "Nouvelle persona", pe_from: "De", pe_to: "À",
+    pe_edit: "Modifier", pe_cancel: "Annuler", pe_save_btn: "Enregistrer",
+    pe_copied: "Copié", pe_saved_msg: "Persona enregistrée !", pe_deleted: "Persona supprimée",
+    pe_q_product: "Que faites-vous la promotion ?",
+    pe_q_product_sub: "Soyez précis — plus de contexte = meilleure persona",
+    pe_q_product_ph: "ex : Application de paris sportifs pour fans de foot",
+    pe_q_gender: "Genre cible principal ?",
+    pe_q_age: "Tranche d'âge ?", pe_q_income: "Niveau de revenu ?",
+    pe_q_market: "Marché principal ?", pe_q_platform: "Plateforme publicitaire principale ?",
+    pe_q_pain: "Quelle est la douleur principale que vous résolvez ?",
+    pe_q_pain_sub: "Qu'est-ce qui empêche votre audience de dormir ?",
+    pe_q_pain_ph: "ex : Veulent gagner de l'argent facilement mais ne font pas confiance aux apps",
+    pe_opt_male: "Majorité Masculine", pe_opt_female: "Majorité Féminine", pe_opt_both: "Les deux / Mixte",
+    pe_opt_low: "Faible", pe_opt_mid: "Moyen", pe_opt_high: "Élevé", pe_opt_mixed: "Mixte / Large",
+    pe_desires: "Désirs", pe_objections: "Objections", pe_triggers: "Déclencheurs d'achat",
+    pe_ad_strategy: "Stratégie publicitaire pour", pe_hook_angles: "Angles de hook",
+    pe_best_formats: "Meilleurs formats", pe_best_platforms: "Meilleures plateformes",
+    pe_lang_style: "Style de langage", pe_cta_style: "Style de CTA",
+    pe_media_habits: "Habitudes médias",
     tr_title: "Traduire", tr_subtitle: "Adaptez votre script à n'importe quel marché",
     tr_source: "Langue source", tr_target: "Langue cible", tr_translate: "Traduire",
     tr_translating: "Traduction...", tr_copy: "Copier", tr_result: "Traduction",
@@ -770,6 +946,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "Schmerzpunkte", pe_interests: "Interessen", pe_income: "Einkommensniveau",
     pe_generate: "Mit KI generieren", pe_save: "Persona speichern", pe_activate: "Diese Persona verwenden",
     pe_active: "Aktiv", pe_deactivate: "Deaktivieren", pe_delete: "Löschen",
+    pe_saved: "Gespeicherte Personas", pe_profiles_sub: "Ihre KI-Zielgruppenprofile",
+    pe_builder: "Persona-Builder", pe_building: "Persona wird erstellt...",
+    pe_create_desc: "Erstellen Sie KI-Zielgruppenprofile für besseres Targeting",
+    pe_create_first_btn: "Erste Persona erstellen",
+    pe_all: "Alle Personas", pe_use: "Persona verwenden", pe_active_deactivate: "Aktiv — deaktivieren",
+    pe_continue: "Weiter", pe_generate_btn: "Persona generieren", pe_back: "Zurück",
+    pe_copy: "Kopieren", pe_new_persona: "Neue Persona", pe_from: "Von", pe_to: "Bis",
+    pe_edit: "Bearbeiten", pe_cancel: "Abbrechen", pe_save_btn: "Speichern",
+    pe_copied: "Kopiert", pe_saved_msg: "Persona gespeichert!", pe_deleted: "Persona gelöscht",
+    pe_q_product: "Was bewerben Sie?",
+    pe_q_product_sub: "Seien Sie spezifisch — mehr Kontext = bessere Persona",
+    pe_q_product_ph: "z.B. Online-Sportwetten-App für Fußballfans",
+    pe_q_gender: "Primäres Zielgeschlecht?",
+    pe_q_age: "Altersbereich?", pe_q_income: "Einkommensniveau?",
+    pe_q_market: "Primärer Markt?", pe_q_platform: "Haupt-Werbeplattform?",
+    pe_q_pain: "Was ist der Kernschmerz, den Sie lösen?",
+    pe_q_pain_sub: "Was hält Ihre Zielgruppe nachts wach?",
+    pe_q_pain_ph: "z.B. Wollen leicht Geld verdienen, vertrauen aber Wett-Apps nicht",
+    pe_opt_male: "Überwiegend Männlich", pe_opt_female: "Überwiegend Weiblich", pe_opt_both: "Beide / Gemischt",
+    pe_opt_low: "Niedrig", pe_opt_mid: "Mittel", pe_opt_high: "Hoch", pe_opt_mixed: "Gemischt / Breit",
+    pe_desires: "Wünsche", pe_objections: "Einwände", pe_triggers: "Kaufauslöser",
+    pe_ad_strategy: "Anzeigenstrategie für", pe_hook_angles: "Hook-Winkel",
+    pe_best_formats: "Beste Formate", pe_best_platforms: "Beste Plattformen",
+    pe_lang_style: "Sprachstil", pe_cta_style: "CTA-Stil",
+    pe_media_habits: "Mediengewohnheiten",
     tr_title: "Übersetzen", tr_subtitle: "Skript für jeden Markt anpassen",
     tr_source: "Quellsprache", tr_target: "Zielsprache", tr_translate: "Übersetzen",
     tr_translating: "Übersetze...", tr_copy: "Kopieren", tr_result: "Übersetzung",
@@ -864,6 +1065,31 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_pain_points: "نقاط الألم", pe_interests: "الاهتمامات", pe_income: "مستوى الدخل",
     pe_generate: "توليد بالذكاء الاصطناعي", pe_save: "حفظ الشخصية", pe_activate: "استخدام هذه الشخصية",
     pe_active: "نشطة", pe_deactivate: "إلغاء التفعيل", pe_delete: "حذف",
+    pe_saved: "الشخصيات المحفوظة", pe_profiles_sub: "ملفات جمهورك بالذكاء الاصطناعي",
+    pe_builder: "منشئ الشخصيات", pe_building: "جاري إنشاء شخصيتك...",
+    pe_create_desc: "أنشئ ملفات جمهور بالذكاء الاصطناعي لتحسين استهداف إعلاناتك",
+    pe_create_first_btn: "أنشئ شخصيتك الأولى",
+    pe_all: "جميع الشخصيات", pe_use: "استخدام الشخصية", pe_active_deactivate: "نشطة — إلغاء",
+    pe_continue: "متابعة", pe_generate_btn: "توليد شخصية", pe_back: "رجوع",
+    pe_copy: "نسخ", pe_new_persona: "شخصية جديدة", pe_from: "من", pe_to: "إلى",
+    pe_edit: "تعديل", pe_cancel: "إلغاء", pe_save_btn: "حفظ",
+    pe_copied: "تم النسخ", pe_saved_msg: "تم حفظ الشخصية!", pe_deleted: "تم حذف الشخصية",
+    pe_q_product: "ما الذي تعلن عنه؟",
+    pe_q_product_sub: "كن محدداً — المزيد من السياق = شخصية أفضل",
+    pe_q_product_ph: "مثال: تطبيق مراهنات رياضية لمشجعي كرة القدم",
+    pe_q_gender: "الجنس المستهدف الرئيسي؟",
+    pe_q_age: "الفئة العمرية؟", pe_q_income: "مستوى الدخل؟",
+    pe_q_market: "السوق الرئيسي؟", pe_q_platform: "منصة الإعلانات الرئيسية؟",
+    pe_q_pain: "ما هو الألم الأساسي الذي تحله؟",
+    pe_q_pain_sub: "ما الذي يقلق جمهورك؟",
+    pe_q_pain_ph: "مثال: يريدون كسب المال بسهولة لكن لا يثقون بتطبيقات المراهنات",
+    pe_opt_male: "أغلبية ذكور", pe_opt_female: "أغلبية إناث", pe_opt_both: "كلاهما / مختلط",
+    pe_opt_low: "منخفض", pe_opt_mid: "متوسط", pe_opt_high: "مرتفع", pe_opt_mixed: "مختلط / واسع",
+    pe_desires: "الرغبات", pe_objections: "الاعتراضات", pe_triggers: "محفزات الشراء",
+    pe_ad_strategy: "استراتيجية الإعلان لـ", pe_hook_angles: "زوايا الخطاف",
+    pe_best_formats: "أفضل الصيغ", pe_best_platforms: "أفضل المنصات",
+    pe_lang_style: "أسلوب اللغة", pe_cta_style: "أسلوب CTA",
+    pe_media_habits: "عادات الوسائط",
     tr_title: "ترجمة", tr_subtitle: "تكيّف نصك مع أي سوق",
     tr_source: "لغة المصدر", tr_target: "اللغة الهدف", tr_translate: "ترجمة",
     tr_translating: "جاري الترجمة...", tr_copy: "نسخ", tr_result: "الترجمة",
