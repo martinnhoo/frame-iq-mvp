@@ -682,7 +682,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>{post.title} | FrameIQ Blog</title>
+        <title>{post.title} | AdBrief Blog</title>
         <meta name="description" content={post.description} />
         <meta name="keywords" content={post.keywords.join(", ")} />
         <meta property="og:title" content={post.title} />
