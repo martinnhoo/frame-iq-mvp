@@ -52,7 +52,7 @@ const featureMeta: Record<string, {
       "Automatic detection of slang, idioms, and cultural references",
       "Side-by-side original and translated transcripts",
       "Translation of on-screen text and overlay copy",
-      "Perfect for monitoring competitor ads across international markets",
+      "Perfect for multi-market teams running BR, MX, IN and other markets simultaneously",
     ],
   },
   "creative-intelligence": {
@@ -69,18 +69,18 @@ const featureMeta: Record<string, {
       "Weekly trend reports on emerging creative patterns by vertical",
     ],
   },
-  "ai-video-generation": {
+  "pre-flight-check": {
     icon: Sparkles,
-    title: "AI Video Generation",
-    headline: "From board to MP4. No editors needed.",
-    description: "Turn any production board into a fully rendered video with AI voiceover, transitions, and visual effects. Test concepts before committing to full production.",
+    title: "Pre-flight Check",
+    headline: "Catch errors before they cost you.",
+    description: "AI reads your script before it goes to the editor — checks hook strength, compliance rules, CTA effectiveness, and platform fit. Market-specific rules built in for BR, MX, IN, US, GB and more.",
     details: [
-      "Generate videos from any FrameIQ production board",
-      "AI voiceover with 20+ voice styles and multilingual support",
-      "Automatic scene transitions matched to platform best practices",
-      "B-roll generation for product shots and lifestyle scenes",
-      "Export in 9:16, 16:9, 1:1, and 4:5 aspect ratios",
-      "Perfect for rapid concept testing before full production investment",
+      "Full script analysis: hook score, structure, CTA, and narrative flow",
+      "Compliance rules per market — BR ('autorizado' not 'legalizado'), GB (UKGC), IN (skill game), US (state laws)",
+      "Platform-specific checks: TikTok, Reels, Facebook, YouTube Shorts, Google UAC",
+      "Language review — catches wrong words, banned phrases, and tone mismatches",
+      "AI-suggested hook rewrite if score < 7",
+      "Cross-platform fit check: primary platform + crosspost recommendations",
     ],
   },
   "api-access": {
@@ -91,7 +91,7 @@ const featureMeta: Record<string, {
     details: [
       "RESTful API with comprehensive documentation and SDKs",
       "Webhook support for real-time analysis completion notifications",
-      "Batch processing: analyze up to 100 videos per API call",
+      "Batch processing: analyze up to 100 scripts and videos per API call",
       "Integration templates for Notion, Slack, Google Sheets, and Zapier",
       "Rate limits scaled to your plan (up to 10K requests/day on Enterprise)",
       "99.9% uptime SLA with dedicated support for API customers",
@@ -495,7 +495,7 @@ const demoComponents: Record<string, () => JSX.Element> = {
   "board-generation": BoardGenerationDemo,
   "auto-translation": AutoTranslationDemo,
   "creative-intelligence": CreativeIntelligenceDemo,
-  "ai-video-generation": AIVideoGenerationDemo,
+  "pre-flight-check": VideoAnalysisDemo,
   "api-access": APIAccessDemo,
 };
 

@@ -45,7 +45,7 @@ const Index = () => {
       name: "Creator",
       price: "$9",
       period: t("pricing_mo"),
-      features: ["3 analyses/mo", "1 board/mo", "10 scripts/mo", "10 translations", "Pre-flight checks"],
+      features: ["3 analyses/mo", "1 board/mo", "10 scripts/mo", "10 translations", "Pre-flight & AI check"],
       cta: "Get started",
       highlighted: false
     },
@@ -53,7 +53,7 @@ const Index = () => {
       name: "Studio",
       price: "$49",
       period: t("pricing_mo"),
-      features: ["30 analyses/mo", "30 boards/mo", "5 videos/mo", "Brand Kit", "Competitor Tracker", "2 seats"],
+      features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "Brand Kit", "AI Intelligence", "2 seats"],
       cta: "Start Studio",
       highlighted: true,
       badge: t("pricing_most_popular")
@@ -62,7 +62,7 @@ const Index = () => {
       name: "Scale",
       price: "$499",
       period: t("pricing_mo"),
-      features: ["500 analyses/mo", "300 boards/mo", "10 videos/day", "Meta Ads Connect", "10 seats", "API + White Label"],
+      features: ["500 analyses/mo", "300 boards/mo", "Unlimited hooks & scripts", "Meta Ads Connect", "10 seats", "API + White Label"],
       cta: t("pricing_cta_demo"),
       highlighted: false
     }

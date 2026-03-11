@@ -11,14 +11,14 @@ import { Logo } from "@/components/Logo";
 const faqItems = [
   {
     q: "What file formats does FrameIQ support?",
-    a: "FrameIQ supports MP4, MOV, AVI, and WebM for video analysis. You can also paste links from YouTube, TikTok, Meta Ads Library, and most ad spy tools.",
+    a: "FrameIQ supports MP4, MOV, AVI, and WebM for video analysis. You can also upload scripts for Pre-flight checks and AI analysis.",
   },
   {
     q: "How does the AI video analysis work?",
     a: "When you upload a video, our AI extracts the hook (first 3 seconds), transcribes the full audio, identifies the creative model (UGC, talking head, product demo, etc.), and generates a production-ready brief — all in under 60 seconds.",
   },
   {
-    q: "Can I analyze competitor ads from the Meta Ads Library?",
+    q: "Can I analyze my own ads and scripts?",
     a: "Yes! Just paste the ad URL and FrameIQ will download, analyze, and extract the creative structure, hook, CTA pattern, and more. Works with Meta, TikTok Creative Center, and YouTube ads.",
   },
   {

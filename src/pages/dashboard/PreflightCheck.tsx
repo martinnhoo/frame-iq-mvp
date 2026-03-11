@@ -7,7 +7,7 @@ import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
   ChevronDown, Clock, BarChart2, Zap, Shield, MessageSquare,
   RefreshCw, Copy, Check, ArrowRight, TrendingUp, AlertCircle,
-  Sparkles,
+  Sparkles, Upload, FileVideo, FileText, X,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -192,32 +192,82 @@ export default function PreflightCheck() {
   const [product, setProduct] = useState("");
   const [complianceNotes, setComplianceNotes] = useState("");
 
+  // Input mode — "script" or "video"
+  const [inputMode, setInputMode] = useState<"script" | "video">("script");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PreflightResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const wordCount = script.trim().split(/\s+/).filter(Boolean).length;
-  const estimatedSeconds = Math.round(wordCount / 2.5); // ~150 wpm for ads
+  const estimatedSeconds = Math.round(wordCount / 2.5);
+
+  const handleVideoDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith("video/")) { setVideoFile(f); }
+    else toast.error("Please drop a video file (MP4, MOV, AVI, WebM)");
+  };
 
   const run = async () => {
-    if (!script.trim()) { toast.error("Paste your script first"); return; }
+    if (inputMode === "script" && !script.trim()) { toast.error("Paste your script first"); return; }
+    if (inputMode === "video" && !videoFile) { toast.error("Drop a video file first"); return; }
+
     setLoading(true);
     setResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("run-preflight", {
-        body: { user_id: user?.id, script, hook, cta, platform, market, duration, format, product, compliance_notes: complianceNotes },
-      });
+      let data: PreflightResult & { transcribed_from_video?: boolean; video_filename?: string; transcription_note?: string | null };
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (inputMode === "video" && videoFile) {
+        // FormData mode for video upload
+        const formData = new FormData();
+        formData.append("video_file", videoFile);
+        formData.append("platform", platform);
+        formData.append("market", market);
+        formData.append("duration", duration);
+        formData.append("format", format);
+        formData.append("product", product);
+        formData.append("compliance_notes", complianceNotes);
+        formData.append("hook", hook);
+        formData.append("cta", cta);
+        if (user?.id) formData.append("user_id", user.id);
+
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-preflight`,
+          { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error || "Request failed");
+        }
+        data = await res.json();
+      } else {
+        // JSON mode for script text
+        const { data: d, error } = await supabase.functions.invoke("run-preflight", {
+          body: { user_id: user?.id, script, hook, cta, platform, market, duration, format, product, compliance_notes: complianceNotes },
+        });
+        if (error) throw error;
+        if (d?.error) throw new Error(d.error);
+        data = d;
+      }
 
       setResult(data);
+      // If video was transcribed, populate the script field
+      if (data.transcribed_from_video && (data as { transcript?: string }).transcript) {
+        setScript((data as { transcript?: string }).transcript || "");
+      }
       toast.success("Pre-flight complete");
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("not configured")) {
-        toast.error("Add ANTHROPIC_API_KEY to Supabase secrets to run Pre-flight.");
+      if (msg.includes("not configured") || msg.includes("API_KEY")) {
+        toast.error("Add ANTHROPIC_API_KEY (and OPENAI_API_KEY for video) to Supabase secrets.");
       } else {
         toast.error("Pre-flight failed — " + msg);
       }
@@ -260,25 +310,88 @@ export default function PreflightCheck() {
         {/* ── Input panel ── */}
         <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
 
-          {/* Script */}
-          <div className="p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Script *</label>
-              <span className="text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
-                {wordCount}w · ~{estimatedSeconds}s
-              </span>
-            </div>
-            <textarea
-              value={script}
-              onChange={e => setScript(e.target.value)}
-              placeholder={"VO: Você sabia que...\n[ON SCREEN: 3x mais rápido]\nVO: Jogue agora e ganhe..."}
-              rows={7}
-              className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-colors leading-relaxed"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
-              onFocus={e => { (e.currentTarget as HTMLTextAreaElement).style.borderColor = "rgba(251,191,36,0.3)"; }}
-              onBlur={e => { (e.currentTarget as HTMLTextAreaElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
-            />
+          {/* Mode toggle */}
+          <div className="flex items-center gap-1 p-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+            {[
+              { mode: "script" as const, label: "Script", icon: <FileText className="h-3.5 w-3.5" /> },
+              { mode: "video" as const,  label: "Video",  icon: <FileVideo className="h-3.5 w-3.5" /> },
+            ].map(({ mode, label, icon }) => (
+              <button key={mode} onClick={() => setInputMode(mode)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={inputMode === mode
+                  ? { background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }
+                  : { background: "transparent", color: "rgba(255,255,255,0.3)", border: "1px solid transparent" }}>
+                {icon}{label}
+              </button>
+            ))}
+            <span className="ml-2 text-[10px] text-white/20" style={mono}>
+              {inputMode === "video" ? "Whisper transcribes audio → Claude analyzes" : "Paste script → Claude analyzes"}
+            </span>
           </div>
+
+          {inputMode === "script" ? (
+            /* Script mode */
+            <div className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Script *</label>
+                <span className="text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
+                  {wordCount}w · ~{estimatedSeconds}s
+                </span>
+              </div>
+              <textarea
+                value={script}
+                onChange={e => setScript(e.target.value)}
+                placeholder={"VO: Você sabia que...\n[ON SCREEN: 3x mais rápido]\nVO: Jogue agora e ganhe..."}
+                rows={7}
+                className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-colors leading-relaxed"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
+                onFocus={e => { (e.currentTarget as HTMLTextAreaElement).style.borderColor = "rgba(251,191,36,0.3)"; }}
+                onBlur={e => { (e.currentTarget as HTMLTextAreaElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+              />
+            </div>
+          ) : (
+            /* Video mode */
+            <div className="p-4">
+              {videoFile ? (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                  style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)" }}>
+                  <FileVideo className="h-5 w-5 shrink-0" style={{ color: "#34d399" }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate" style={mono}>{videoFile.name}</p>
+                    <p className="text-[10px] text-white/30" style={mono}>{(videoFile.size / 1024 / 1024).toFixed(1)} MB · Audio will be transcribed with Whisper</p>
+                  </div>
+                  <button onClick={() => setVideoFile(null)} className="h-6 w-6 rounded-lg flex items-center justify-center text-white/30 hover:text-white transition-colors">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleVideoDrop}
+                  onClick={() => document.getElementById("pf-video-input")?.click()}
+                  className="flex flex-col items-center justify-center py-10 rounded-xl cursor-pointer transition-all"
+                  style={{
+                    border: `2px dashed ${dragOver ? "rgba(251,191,36,0.5)" : "rgba(255,255,255,0.1)"}`,
+                    background: dragOver ? "rgba(251,191,36,0.04)" : "rgba(255,255,255,0.02)",
+                  }}>
+                  <input id="pf-video-input" type="file" accept="video/*" className="hidden"
+                    onChange={e => e.target.files?.[0] && setVideoFile(e.target.files[0])} />
+                  <Upload className="h-7 w-7 mb-3" style={{ color: "rgba(255,255,255,0.2)" }} />
+                  <p className="text-sm font-medium text-white/60">Drop your video here</p>
+                  <p className="text-[11px] text-white/25 mt-1" style={mono}>MP4, MOV, AVI, WebM · Audio extracted + analyzed</p>
+                  <div className="flex items-center gap-2 mt-3 text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
+                    <span className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)" }}>Whisper AI</span>
+                    <span>→</span>
+                    <span className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)" }}>Claude Analysis</span>
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-white/20 mt-2 text-center" style={mono}>
+                Requires OPENAI_API_KEY for Whisper transcription
+              </p>
+            </div>
+          )}
 
           {/* Hook + CTA row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
@@ -348,11 +461,11 @@ export default function PreflightCheck() {
 
           {/* Run button */}
           <div className="px-4 pb-4">
-            <button onClick={run} disabled={loading || !script.trim()}
+            <button onClick={run} disabled={loading || (inputMode === "script" ? !script.trim() : !videoFile)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
               style={{ ...syne, background: "linear-gradient(135deg, #fbbf24, #f59e0b)", color: "#000" }}>
               {loading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing script...</>
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> {inputMode === "video" ? "Transcribing + analyzing..." : "Analyzing script..."}</>
                 : <><Plane className="h-4 w-4" /> Run Pre-flight Check</>}
             </button>
           </div>
@@ -394,6 +507,17 @@ export default function PreflightCheck() {
                 <RefreshCw className="h-3.5 w-3.5" />
               </button>
             </div>
+
+          {/* Transcription note if from video */}
+            {(result as PreflightResult & { transcription_note?: string | null }).transcription_note && (
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
+                style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                <FileVideo className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#fbbf24" }} />
+                <p className="text-xs" style={{ ...mono, color: "rgba(251,191,36,0.8)" }}>
+                  {(result as PreflightResult & { transcription_note?: string | null }).transcription_note}
+                </p>
+              </div>
+            )}
 
             {/* Strengths + Top Fixes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

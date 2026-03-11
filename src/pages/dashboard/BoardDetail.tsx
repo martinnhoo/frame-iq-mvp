@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Play, Trash2, Shuffle, ChevronUp, Zap } from "lucide-react";
+import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Play, Trash2, Shuffle, ChevronUp, Zap, Image, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface BoardData {
@@ -48,6 +48,8 @@ const BoardDetail = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [abLoading, setAbLoading] = useState(false);
   const [abVariants, setAbVariants] = useState<Array<{angle:string;hook:string;script_rewrite:string;predicted_score:number;hook_type:string;key_change:string}>>([]);
+  const [sceneImages, setSceneImages] = useState<Record<number, string>>({});
+  const [generatingImages, setGeneratingImages] = useState<Record<number, boolean>>({});
   const [abExpanded, setAbExpanded] = useState<number|null>(null);
   const [abCopied, setAbCopied] = useState<number|null>(null);
 
@@ -67,6 +69,60 @@ const BoardDetail = () => {
     setCopied(key);
     toast.success("Copied");
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
+    setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      
+      const prompt = `Ad production storyboard frame. Scene: "${sceneTitle || `Scene ${sceneIndex + 1}`}". Visual: ${visualDescription}. Style: clean, professional ad production reference, cinematic lighting, 9:16 vertical format for mobile video ad. No text overlays. Photorealistic.`;
+      
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // We proxy through our edge fn to keep API key server-side
+        },
+        body: JSON.stringify({ prompt, n: 1, size: "1024x1792", model: "dall-e-3" }),
+      });
+      
+      // If direct call fails (no key on client), use edge function
+      if (!res.ok) throw new Error("Use edge function");
+      
+      const data = await res.json();
+      const imageUrl = data.data?.[0]?.url;
+      if (imageUrl) setSceneImages(prev => ({ ...prev, [sceneIndex]: imageUrl }));
+    } catch {
+      // Fallback: call via Supabase edge function
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-scene-image", {
+          body: { visual_description: visualDescription, scene_title: sceneTitle, scene_index: sceneIndex },
+        });
+        if (error) throw error;
+        if (data?.url) setSceneImages(prev => ({ ...prev, [sceneIndex]: data.url }));
+        else throw new Error(data?.error || "No image returned");
+      } catch (err2) {
+        toast.error("Image generation requires OPENAI_API_KEY in Supabase secrets");
+      }
+    } finally {
+      setGeneratingImages(prev => ({ ...prev, [sceneIndex]: false }));
+    }
+  };
+
+  const generateAllImages = async (scenes: Record<string, unknown>[]) => {
+    toast.info(`Generating ${scenes.length} reference images...`);
+    for (let i = 0; i < scenes.length; i++) {
+      await generateSceneImage(
+        i,
+        String(scenes[i].visual_description || ""),
+        String(scenes[i].title || scenes[i].scene_title || `Scene ${i + 1}`)
+      );
+      // Small delay between requests
+      if (i < scenes.length - 1) await new Promise(r => setTimeout(r, 500));
+    }
+    toast.success("All reference images generated");
   };
 
   const generateAB = async () => {
@@ -258,45 +314,95 @@ const BoardDetail = () => {
           </Section>
 
           {/* Scenes — main event */}
-          <Section id="scenes" icon={Film} title={`Scenes (${scenes.length})`} open={open.scenes} onToggle={() => toggle("scenes")}>
+          <Section id="scenes" icon={Film} title={`Scenes (${scenes.length})`} open={open.scenes} onToggle={() => toggle("scenes")}
+            badge={
+              <button
+                onClick={e => { e.stopPropagation(); generateAllImages(scenes); }}
+                disabled={Object.values(generatingImages).some(Boolean)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all mr-2"
+                style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)" }}
+                title="Generate AI reference images for all scenes"
+              >
+                {Object.values(generatingImages).some(Boolean)
+                  ? <><Loader2 className="h-3 w-3 animate-spin" />Generating...</>
+                  : <><Sparkles className="h-3 w-3" />Generate Images</>}
+              </button>
+            }
+          >
             <div className="space-y-3">
               {scenes.map((scene, i) => (
                 <div
                   key={i}
-                  className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4"
+                  className="rounded-xl bg-white/[0.04] border border-white/[0.06] overflow-hidden"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-white text-xs font-bold font-mono">
-                        {String(scene.scene_number ?? i + 1).padStart(2, "0")}
-                      </span>
-                      {scene.timestamp && (
-                        <span className="text-xs text-white/30 font-mono">{String(scene.timestamp)}</span>
-                      )}
+                  {/* Scene image */}
+                  {sceneImages[i] ? (
+                    <div className="relative">
+                      <img src={sceneImages[i]} alt={`Scene ${i + 1}`}
+                        className="w-full h-48 object-cover" />
+                      <button onClick={() => setSceneImages(prev => { const n = {...prev}; delete n[i]; return n; })}
+                        className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center"
+                        style={{ background: "rgba(0,0,0,0.7)" }}>
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                      <div className="absolute bottom-2 left-2">
+                        <span className="text-[9px] px-2 py-0.5 rounded"
+                          style={{ background: "rgba(0,0,0,0.7)", color: "rgba(255,255,255,0.6)" }}>
+                          AI Reference · Scene {i + 1}
+                        </span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => copyText(
-                        `Scene ${i + 1}: ${String(scene.visual_description || "")}\n${scene.vo_script ? `VO: "${String(scene.vo_script)}"` : ""}`,
-                        `scene-${i}`
-                      )}
-                      className="text-white/20 hover:text-white/60 transition-colors"
-                    >
-                      {copied === `scene-${i}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
+                  ) : null}
+
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md bg-white/10 text-white text-xs font-bold font-mono">
+                          {String(scene.scene_number ?? i + 1).padStart(2, "0")}
+                        </span>
+                        {scene.timestamp && (
+                          <span className="text-xs text-white/30 font-mono">{String(scene.timestamp)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!sceneImages[i] && (
+                          <button
+                            onClick={() => generateSceneImage(i, String(scene.visual_description || ""), String(scene.title || scene.scene_title || ""))}
+                            disabled={generatingImages[i]}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition-all"
+                            style={{ background: "rgba(167,139,250,0.08)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.15)" }}
+                            title="Generate AI reference image for this scene"
+                          >
+                            {generatingImages[i]
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : <><Image className="h-3 w-3" /><span>Image</span></>}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => copyText(
+                            `Scene ${i + 1}: ${String(scene.visual_description || "")}\n${scene.vo_script ? `VO: "${String(scene.vo_script)}"` : ""}`,
+                            `scene-${i}`
+                          )}
+                          className="text-white/20 hover:text-white/60 transition-colors"
+                        >
+                          {copied === `scene-${i}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-white/80 mb-2">{String(scene.visual_description || "")}</p>
+                    {scene.vo_script && (
+                      <div className="rounded-lg bg-white/[0.06] border border-white/[0.06] px-3 py-2 mt-2">
+                        <p className="text-xs text-white/30 mb-1">Voice Over</p>
+                        <p className="text-sm text-white/70 italic">"{String(scene.vo_script)}"</p>
+                      </div>
+                    )}
+                    {scene.onscreen_text && (
+                      <div className="mt-2 rounded-lg bg-white/[0.06] px-3 py-2">
+                        <p className="text-xs text-white/30 mb-1">On-screen Text</p>
+                        <p className="text-sm text-white font-mono">{String(scene.onscreen_text)}</p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-white/80 mb-2">{String(scene.visual_description || "")}</p>
-                  {scene.vo_script && (
-                    <div className="rounded-lg bg-white/[0.06] border border-white/[0.06] px-3 py-2 mt-2">
-                      <p className="text-xs text-white/30 mb-1">Voice Over</p>
-                      <p className="text-sm text-white/70 italic">"{String(scene.vo_script)}"</p>
-                    </div>
-                  )}
-                  {scene.onscreen_text && (
-                    <div className="mt-2 rounded-lg bg-white/[0.06] px-3 py-2">
-                      <p className="text-xs text-white/30 mb-1">On-screen Text</p>
-                      <p className="text-sm text-white font-mono">{String(scene.onscreen_text)}</p>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
