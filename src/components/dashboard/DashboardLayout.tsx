@@ -164,7 +164,7 @@ export default function DashboardLayout() {
       <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-white/30" />
-          <p className="text-xs text-white/20 font-mono">Loading workspace...</p>
+          <p className="text-xs text-white/20 font-mono">{dt("ov_loading")}</p>
         </div>
       </div>
     );
