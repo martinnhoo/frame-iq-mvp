@@ -26,6 +26,18 @@ serve(async (req) => {
 
   try {
     const { messages, user_id, user_context } = await req.json();
+
+    // Rate limit check
+    if (user_id) {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+      const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user_id).single();
+      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", { p_user_id: user_id, p_plan: profile?.plan || "free" });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(JSON.stringify({ reply: "You've reached your daily request limit. Please try again tomorrow or upgrade your plan for higher limits." }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     
     // Build personalized system prompt with user context
     const personalizedSystem = user_context

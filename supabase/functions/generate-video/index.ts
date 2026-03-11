@@ -56,6 +56,17 @@ Deno.serve(async (req) => {
     const limits = { free: 0, studio: 5, scale: 300 }; // Scale gets 10/day = ~300/month
     const usageCount = usage?.videos_count || 0;
 
+    // Daily AI rate limit
+    {
+      const { data: rateCheck } = await supabaseClient.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: plan });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(
+          JSON.stringify({ error: rateCheck.message, daily_limit: true }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     if (usageCount >= limits[plan as keyof typeof limits]) {
       return new Response(
         JSON.stringify({ 
