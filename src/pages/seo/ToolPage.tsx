@@ -13,7 +13,7 @@ export default function ToolPage() {
   const tool = SEO_TOOLS.find(t => t.slug === slug);
 
   if (!tool) return (
-    <SeoLayout title="Tool Not Found — FrameIQ" description="" noIndex>
+    <SeoLayout title="Tool Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>Tool not found.</p>
         <button onClick={() => navigate("/tools")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer" }}>← Back to Tools</button>
