@@ -346,8 +346,8 @@ const blogPosts: Record<string, {
       "## When to Use AI vs. Human Voiceover",
       "Use AI for: A/B test variations (generate 5 voice styles per script), initial concept testing before full production, multilingual localization (same voice in 10+ languages), and high-volume creative where speed matters more than perfection.",
       "Use human talent for: Hero creative and brand campaigns, celebrity or influencer-specific voices, emotional storytelling that requires nuance, and markets where AI voice is detectable (some audiences are more sensitive).",
-      "## FrameIQ's Built-in AI Voice",
-      "FrameIQ includes AI voiceover generation directly in the video creation pipeline. Generate a board, add a voice, and export a complete video — all without leaving the platform.",
+      "## AdBrief's Built-in AI Voice",
+      "AdBrief includes AI voiceover generation directly in the video creation pipeline. Generate a board, add a voice, and export a complete video — all without leaving the platform.",
     ],
   },
   "meta-ads-best-practices": {
