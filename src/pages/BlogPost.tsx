@@ -308,7 +308,7 @@ const blogPosts: Record<string, {
     category: "Fintech",
     readTime: "7 min",
     date: "February 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["fintech advertising", "fintech ad creative", "AI fintech marketing", "financial services ads", "fintech growth marketing"],
     content: [
