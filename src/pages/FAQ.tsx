@@ -31,7 +31,7 @@ const faqItems = [
   },
   {
     q: "How does the AI learn my creative style?",
-    a: "Every analysis, board, hook generation, and pre-flight check updates your AI profile. Over time, FrameIQ learns your best-performing hook types, your market patterns, and your creative style — and uses that context to generate better outputs for you.",
+    a: "Every analysis, board, hook generation, and pre-flight check updates your AI profile. Over time, AdBrief learns your best-performing hook types, your market patterns, and your creative style — and uses that context to generate better outputs for you.",
   },
   {
     q: "How many team seats are included in each plan?",
