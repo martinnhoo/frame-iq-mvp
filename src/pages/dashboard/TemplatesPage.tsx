@@ -1692,7 +1692,7 @@ const TemplatesPage = () => {
       {paginated.length === 0 ? (
         <div className="text-center py-16 text-white/20">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="font-medium">No templates match your filters</p>
+          <p className="font-medium">{ot("tp_no_match")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
