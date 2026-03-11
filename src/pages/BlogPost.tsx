@@ -557,7 +557,7 @@ const blogPosts: Record<string, {
     category: "Case Study",
     readTime: "7 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["replace creative agency", "solo marketer AI", "AI ad production workflow", "creative agency alternative", "performance marketing solo"],
     content: [
