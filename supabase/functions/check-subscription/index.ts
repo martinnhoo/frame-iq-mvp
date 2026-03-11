@@ -42,6 +42,15 @@ Deno.serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Lifetime premium accounts — never downgrade
+    const LIFETIME_EMAILS = ["martinhovff@gmail.com"];
+    if (LIFETIME_EMAILS.includes(user.email!)) {
+      logStep("Lifetime premium account detected", { email: user.email });
+      return new Response(JSON.stringify({ subscribed: true, plan: "studio", lifetime: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
