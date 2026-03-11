@@ -453,6 +453,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           </div>
         </div>
       )}
+    </div>
+  );
 };
 
 // ─── Mode B: Script Adapt ─────────────────────────────────────────────────────
