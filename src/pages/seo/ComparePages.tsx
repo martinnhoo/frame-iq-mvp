@@ -55,8 +55,17 @@ export function CompareDetail() {
     </SeoLayout>
   );
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": comp.headline,
+    "description": comp.metaDescription,
+    "author": { "@type": "Organization", "name": "FrameIQ" },
+    "url": `https://www.frameiq.com/compare/${slug}`,
+  };
+
   return (
-    <SeoLayout title={comp.metaTitle} description={comp.metaDescription} canonical={`/compare/${slug}`}>
+    <SeoLayout title={comp.metaTitle} description={comp.metaDescription} canonical={`/compare/${slug}`} jsonLd={jsonLd}>
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "64px 24px 0" }}>
 
         {/* Breadcrumb */}

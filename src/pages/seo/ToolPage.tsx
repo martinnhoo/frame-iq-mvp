@@ -23,8 +23,19 @@ export default function ToolPage() {
 
   const accent = typeColor[tool.type] ?? "#a78bfa";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": tool.name,
+    "description": tool.description,
+    "applicationCategory": "BusinessApplication",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "operatingSystem": "Web",
+    "url": `https://www.frameiq.com/tools/${slug}`,
+  };
+
   return (
-    <SeoLayout title={tool.metaTitle} description={tool.metaDescription} canonical={`/tools/${slug}`}>
+    <SeoLayout title={tool.metaTitle} description={tool.metaDescription} canonical={`/tools/${slug}`} jsonLd={jsonLd}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "64px 24px 0" }}>
 
         {/* Breadcrumb */}

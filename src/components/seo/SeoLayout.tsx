@@ -9,6 +9,7 @@ interface SeoLayoutProps {
   ogImage?: string;
   children: React.ReactNode;
   noIndex?: boolean;
+  jsonLd?: object;
 }
 
 const NAV_LINKS = [
@@ -53,7 +54,7 @@ const FOOTER_LINKS = {
   ],
 };
 
-export function SeoLayout({ title, description, canonical, ogImage, children, noIndex }: SeoLayoutProps) {
+export function SeoLayout({ title, description, canonical, ogImage, children, noIndex, jsonLd }: SeoLayoutProps) {
   const navigate = useNavigate();
   const base = "https://www.frameiq.com";
   const canonicalUrl = canonical ? `${base}${canonical}` : undefined;
@@ -65,6 +66,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
         <meta name="description" content={description} />
         {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
         {noIndex && <meta name="robots" content="noindex,nofollow" />}
+        {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
 
         {/* Open Graph */}
         <meta property="og:title"       content={title} />

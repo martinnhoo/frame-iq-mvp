@@ -92,7 +92,11 @@ export function AdsLibraryIndex() {
 }
 
 export function AdsLibraryLanding() {
-  const { slug } = useParams<{ slug: string }>();
+  // Hardcoded routes (/tiktok-ad-examples etc) have no :slug param —
+  // derive slug from the current pathname instead
+  const { slug: paramSlug } = useParams<{ slug: string }>();
+  const { pathname } = { pathname: typeof window !== 'undefined' ? window.location.pathname : '' };
+  const slug = paramSlug ?? pathname.replace(/^\//, '');
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 

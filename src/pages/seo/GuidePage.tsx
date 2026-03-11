@@ -22,8 +22,19 @@ export default function GuidePage() {
 
   const related = SEO_GUIDES.filter(g => guide.relatedSlugs.includes(g.slug));
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": guide.title,
+    "description": guide.metaDescription,
+    "author": { "@type": "Organization", "name": "FrameIQ" },
+    "publisher": { "@type": "Organization", "name": "FrameIQ", "url": "https://www.frameiq.com" },
+    "url": `https://www.frameiq.com/guides/${slug}`,
+    "timeRequired": `PT${guide.readTime}M`,
+  };
+
   return (
-    <SeoLayout title={guide.metaTitle} description={guide.metaDescription} canonical={`/guides/${slug}`}>
+    <SeoLayout title={guide.metaTitle} description={guide.metaDescription} canonical={`/guides/${slug}`} jsonLd={jsonLd}>
       <div style={{ maxWidth: 740, margin: "0 auto", padding: "64px 24px 0" }}>
 
         {/* Breadcrumb */}
