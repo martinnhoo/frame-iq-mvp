@@ -423,7 +423,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* What FrameIQ does — clear SaaS value prop */}
+      {/* What AdBrief does — clear SaaS value prop */}
       {/* Social proof — numbers */}
       <section className="py-10 px-6 border-b border-border/30">
         <div className="container mx-auto max-w-4xl">

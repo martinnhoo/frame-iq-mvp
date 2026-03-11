@@ -12,7 +12,7 @@ export default function GuidePage() {
   const guide = SEO_GUIDES.find(g => g.slug === slug);
 
   if (!guide) return (
-    <SeoLayout title="Guide Not Found — FrameIQ" description="" noIndex>
+    <SeoLayout title="Guide Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>Guide not found.</p>
         <button onClick={() => navigate("/guides")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer" }}>← All guides</button>
@@ -27,9 +27,9 @@ export default function GuidePage() {
     "@type": "Article",
     "headline": guide.title,
     "description": guide.metaDescription,
-    "author": { "@type": "Organization", "name": "FrameIQ" },
-    "publisher": { "@type": "Organization", "name": "FrameIQ", "url": "https://www.frameiq.com" },
-    "url": `https://www.frameiq.com/guides/${slug}`,
+    "author": { "@type": "Organization", "name": "AdBrief" },
+    "publisher": { "@type": "Organization", "name": "AdBrief", "url": "https://www.adbrief.pro" },
+    "url": `https://www.adbrief.pro/guides/${slug}`,
     "timeRequired": `PT${guide.readTime}M`,
   };
 

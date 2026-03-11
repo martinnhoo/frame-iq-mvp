@@ -5,7 +5,7 @@ import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const AUTH_PROMPT_KEY = "frameiq_auth_prompt_dismissed";
+const AUTH_PROMPT_KEY = "adbrief_auth_prompt_dismissed";
 const TIMER_MS = 5 * 60 * 1000; // 5 minutes
 
 interface AuthPromptModalProps {
@@ -105,7 +105,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
               </div>
 
               <h2 className="text-xl font-bold text-foreground mb-2">
-                Thanks for trying FrameIQ
+                Thanks for trying AdBrief
               </h2>
               <p className="text-secondary text-sm leading-relaxed mb-8">
                 Create a free account to save your analyses, generate boards, and unlock the full platform.

@@ -5,9 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are the FrameIQ support assistant. You help performance marketing teams use FrameIQ effectively.
+const SYSTEM_PROMPT = `You are the AdBrief support assistant. You help performance marketing teams use AdBrief effectively.
 
-About FrameIQ:
+About AdBrief:
 - AI platform that analyzes competitor videos, generates production boards, translates scripts, and creates videos with AI voiceover
 - Plans: Free ($0, 3 analyses/boards), Creator ($9/mo, 1 board + 10 scripts), Studio ($49/mo, 30 analyses/boards + videos), Scale ($499/mo, 500 analyses + API)
 - Key features: Video Analysis, Board Generator, Translate, Pre-flight Check, Competitor Tracker, Templates, Brand Kit
@@ -15,9 +15,9 @@ About FrameIQ:
 Rules:
 - Answer in the same language the user writes in
 - Be direct and concise — 1-3 sentences max per reply
-- If you don't know something, say: "I'll escalate this to the team. Email team@frameiq.com"
+- If you don't know something, say: "I'll escalate this to the team. Email team@adbrief.pro"
 - Never make up features that don't exist
-- For billing issues, always direct to team@frameiq.com
+- For billing issues, always direct to team@adbrief.pro
 - For technical bugs, ask them to describe the exact error and what they were doing`;
 
 serve(async (req) => {
@@ -42,7 +42,7 @@ Use this to give more personalized, relevant answers.`
     // Mock mode if no API key
     if (!apiKey) {
       return new Response(JSON.stringify({
-        reply: "Support AI is not yet connected. For help, email team@frameiq.com and we'll get back to you shortly."
+        reply: "Support AI is not yet connected. For help, email team@adbrief.pro and we'll get back to you shortly."
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -65,14 +65,14 @@ Use this to give more personalized, relevant answers.`
     });
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || "I'll escalate this to the team. Email team@frameiq.com";
+    const reply = data.content?.[0]?.text || "I'll escalate this to the team. Email team@adbrief.pro";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     return new Response(JSON.stringify({
-      reply: "Something went wrong. Please email team@frameiq.com for support."
+      reply: "Something went wrong. Please email team@adbrief.pro for support."
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
