@@ -127,8 +127,8 @@ export const SEO_GUIDES = [
     title: "TikTok Ads: The Complete Guide for 2025",
     subtitle: "Everything you need to know about TikTok advertising — from hook strategy to scaling.",
     readTime: 12,
-    metaTitle: "TikTok Ads Guide 2025 — Complete Strategy | FrameIQ",
-    metaDescription: "The complete guide to TikTok advertising in 2025. Hook strategy, creative formats, scaling playbook. Free guide by FrameIQ.",
+    metaTitle: "TikTok Ads Guide 2025 — Complete Strategy | AdBrief",
+    metaDescription: "The complete guide to TikTok advertising in 2025. Hook strategy, creative formats, scaling playbook. Free guide by AdBrief.",
     keywords: ["tiktok ads guide", "tiktok advertising guide", "how to advertise on tiktok", "tiktok ads strategy 2025"],
     intro: "TikTok is now the highest-reach platform for paid social under 35. But most brands are still producing ads that feel like TV commercials — polished, slow, and ignored. This guide covers what actually works in 2025: how to write hooks that score 8+, what creative formats outperform, and how to scale without creative fatigue.",
     sections: [
