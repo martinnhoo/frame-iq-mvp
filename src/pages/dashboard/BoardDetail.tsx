@@ -311,9 +311,9 @@ const BoardDetail = () => {
                 >
                   {/* Scene image */}
                   {sceneImages[i] ? (
-                    <div className="relative">
+                    <div className="relative aspect-square">
                       <img src={sceneImages[i]} alt={`Scene ${i + 1}`}
-                        className="w-full h-48 object-cover" />
+                        className="w-full h-full object-cover" />
                       <button onClick={() => setSceneImages(prev => { const n = {...prev}; delete n[i]; return n; })}
                         className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center"
                         style={{ background: "rgba(0,0,0,0.7)" }}>
