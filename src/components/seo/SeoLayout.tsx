@@ -48,15 +48,15 @@ const FOOTER_LINKS = {
     { label: "Creative Testing",    href: "/guides/tiktok-ad-testing-guide" },
   ],
   Compare: [
-    { label: "vs AdSpy",   href: "/compare/frameiq-vs-adspy" },
-    { label: "vs BigSpy",  href: "/compare/frameiq-vs-bigspy" },
-    { label: "vs Minea",   href: "/compare/frameiq-vs-minea" },
+    { label: "vs AdSpy",   href: "/compare/adbrief-vs-adspy" },
+    { label: "vs BigSpy",  href: "/compare/adbrief-vs-bigspy" },
+    { label: "vs Minea",   href: "/compare/adbrief-vs-minea" },
   ],
 };
 
 export function SeoLayout({ title, description, canonical, ogImage, children, noIndex, jsonLd }: SeoLayoutProps) {
   const navigate = useNavigate();
-  const base = "https://www.frameiq.com";
+  const base = "https://www.adbrief.pro";
   const canonicalUrl = canonical ? `${base}${canonical}` : undefined;
 
   return (
@@ -151,7 +151,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
 
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-                © {new Date().getFullYear()} FrameIQ. All rights reserved.
+                © {new Date().getFullYear()} AdBrief. All rights reserved.
               </p>
               <div style={{ display: "flex", gap: 20 }}>
                 {[["Privacy", "/privacy"], ["Terms", "/terms"]].map(([l, h]) => (

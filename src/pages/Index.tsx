@@ -278,7 +278,7 @@ const Index = () => {
                   {["#ff5f57","#febc2e","#28c840"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}} />)}
                 </div>
                 <div className="flex-1 mx-8 py-1.5 px-4 rounded-lg text-center text-[11px] text-white/25" style={{background:"#111",border:"1px solid rgba(255,255,255,0.05)",fontFamily:"'DM Mono',monospace"}}>
-                  <span style={{color:"#4ade80"}}>🔒</span> app.frameiq.com/dashboard/analyses/ugc-br-0312
+                  <span style={{color:"#4ade80"}}>🔒</span> app.adbrief.pro/dashboard/analyses/ugc-br-0312
                 </div>
                 <div className="w-16" />
               </div>

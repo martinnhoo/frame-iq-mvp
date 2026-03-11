@@ -9,25 +9,25 @@ type Lang = 'en' | 'pt' | 'es' | 'hi';
 
 const templates: Record<Lang, { subject: string; greeting: string; ready: string; cta: string }> = {
   en: {
-    subject: "You're in — FrameIQ",
+    subject: "You're in — AdBrief",
     greeting: "Hey",
     ready: "Your account is ready.\n\nDrop a video. See what converts.",
     cta: "Start analyzing",
   },
   pt: {
-    subject: "Você está dentro — FrameIQ",
+    subject: "Você está dentro — AdBrief",
     greeting: "Oi",
     ready: "Sua conta está pronta.\n\nSuba um vídeo. Veja o que converte.",
     cta: "Começar a analisar",
   },
   es: {
-    subject: "Ya estás dentro — FrameIQ",
+    subject: "Ya estás dentro — AdBrief",
     greeting: "Hola",
     ready: "Tu cuenta está lista.\n\nSube un video. Ve qué convierte.",
     cta: "Empezar a analizar",
   },
   hi: {
-    subject: "आप अंदर हैं — FrameIQ",
+    subject: "आप अंदर हैं — AdBrief",
     greeting: "नमस्ते",
     ready: "आपका अकाउंट तैयार है।\n\nएक वीडियो अपलोड करें। देखें क्या कन्वर्ट होता है।",
     cta: "विश्लेषण शुरू करें",
@@ -55,7 +55,7 @@ function buildHtml(t: typeof templates['en'], firstName: string, appUrl: string)
       <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;">
         <!-- Logo -->
         <tr><td style="padding-bottom:32px;">
-          <span style="font-size:22px;font-weight:700;color:#fff;">Frame</span><span style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#c084fc,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">IQ</span>
+          <span style="font-size:22px;font-weight:700;color:#fff;">ad</span><span style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#c084fc,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">brief</span>
         </td></tr>
         <!-- Greeting -->
         <tr><td style="padding-bottom:20px;">
@@ -71,7 +71,7 @@ function buildHtml(t: typeof templates['en'], firstName: string, appUrl: string)
         </td></tr>
         <!-- Divider -->
         <tr><td style="border-top:1px solid #222;padding-top:20px;">
-          <p style="margin:0;color:#555;font-size:12px;">— FrameIQ</p>
+          <p style="margin:0;color:#555;font-size:12px;">— AdBrief</p>
         </td></tr>
       </table>
     </td></tr>
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const lang = detectLang(language);
     const t = templates[lang];
     const name = first_name || 'there';
-    const appUrl = Deno.env.get('APP_URL') || 'https://frame-iq-mvp.lovable.app';
+    const appUrl = Deno.env.get('APP_URL') || 'https://adbrief.pro';
 
     const html = buildHtml(t, name, appUrl);
 
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'FrameIQ <hello@frameiq.com>',
+        from: 'AdBrief <hello@adbrief.pro>',
         to: [email],
         subject: t.subject,
         html: html,

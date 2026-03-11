@@ -35,7 +35,7 @@ const questions = [
   {
     id: "monthly_ad_spend",
     title: "What's your monthly ad spend?",
-    subtitle: "Helps us estimate your potential ROI with FrameIQ",
+    subtitle: "Helps us estimate your potential ROI with AdBrief",
     type: "radio" as const,
     options: [
       { value: "under-5k", label: "Under $5K", description: "Just getting started" },
@@ -47,7 +47,7 @@ const questions = [
   {
     id: "creative_volume",
     title: "How many ad creatives do you produce per month?",
-    subtitle: "We'll show you how FrameIQ can multiply your output",
+    subtitle: "We'll show you how AdBrief can multiply your output",
     type: "radio" as const,
     options: [
       { value: "1-10", label: "1–10 creatives", description: "Low volume" },

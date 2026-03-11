@@ -10,119 +10,137 @@ interface Message {
 
 const INITIAL_MESSAGE: Message = {
   role: "assistant",
-  content: "Hi! I'm FrameIQ Support. Ask me anything about the platform — analyses, boards, billing, or how to get started.",
+  content: "Hi! I'm AdBrief Support. Ask me anything about the platform — analyses, boards, billing, or how to get started.",
 };
 
 export default function SupportChat() {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [userContext, setUserContext] = useState<Record<string, unknown> | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Load user AI profile for context
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        supabase.from("user_ai_profile" as never).select("top_performing_models, best_platforms, avg_hook_score" as never)
-          .eq("user_id" as never, data.user.id).maybeSingle()
-          .then(({ data: profile }: { data: unknown }) => { if (profile) setUserContext(profile as Record<string, unknown>); });
-      }
-    });
-  }, []);
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Message = { role: "user", content: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+  };
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === "") return;
+
+    const userMessage: Message = { role: "user", content: newMessage };
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setNewMessage("");
+    setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("support-chat", {
-        body: { messages: [...messages, userMsg], user_context: userContext },
+      const { data, error } = await supabase.functions.invoke("ask-adbrief-support", {
+        body: { message: newMessage },
       });
 
-      if (error) throw error;
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data?.reply || "I'll escalate this to the team. Please email team@frameiq.com for urgent issues." },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Something went wrong. Please email team@frameiq.com and we'll get back to you shortly." },
+      if (error) {
+        console.error("Supabase function error:", error);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            role: "assistant",
+            content: "Sorry, I encountered an error. Please try again later.",
+          },
+        ]);
+      } else {
+        const botMessage: Message = { role: "assistant", content: data.response };
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
+      }
+    } catch (err) {
+      console.error("Error calling Supabase function:", err);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again later.",
+        },
       ]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      {/* Toggle button */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full bg-foreground text-background flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity"
-      >
-        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
-      </button>
-
-      {/* Chat window */}
-      {open && (
-        <div className="fixed bottom-22 right-6 z-50 w-80 rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
-          style={{ bottom: "5rem" }}>
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-            <span className="text-sm font-medium text-foreground">FrameIQ Support</span>
-            <span className="ml-auto text-xs text-muted-foreground">AI · 24/7</span>
+    <div className="fixed bottom-6 right-6 z-50">
+      {isOpen ? (
+        <div className="w-96 rounded-lg shadow-lg overflow-hidden flex flex-col bg-white border border-gray-200">
+          <div className="bg-muted p-4 flex items-center justify-between border-b border-gray-200">
+            <span className="font-semibold text-sm">AdBrief Support</span>
+            <Button variant="ghost" size="icon" onClick={toggleChat}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-80">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
-                  m.role === "user"
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-foreground"
-                }`}>
-                  {m.content}
+          <div className="p-4 h-80 overflow-y-auto flex-grow flex-shrink" ref={chatContainerRef}>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`mb-2 ${message.role === "user" ? "text-right" : "text-left"}`}
+              >
+                <div
+                  className={`inline-block p-2 rounded-lg text-sm ${
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-none"
+                      : "bg-gray-100 text-gray-800 rounded-bl-none"
+                  }`}
+                >
+                  {message.content}
                 </div>
               </div>
             ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-muted px-3 py-2 rounded-xl">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            {isLoading && (
+              <div className="text-left mb-2">
+                <div className="inline-block p-2 rounded-lg text-sm bg-gray-100 text-gray-800 rounded-bl-none">
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               </div>
             )}
-            <div ref={bottomRef} />
           </div>
-
-          {/* Input */}
-          <div className="px-3 py-3 border-t border-border flex gap-2">
-            <input
-              className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50"
-              placeholder="Ask anything..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-            />
-            <Button size="icon" className="h-9 w-9 shrink-0" onClick={send} disabled={loading || !input.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex rounded-md shadow-sm">
+              <textarea
+                value={newMessage}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                rows={1}
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 px-3 resize-none"
+                placeholder="Ask me anything..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="ml-2 shrink-0"
+                onClick={handleSendMessage}
+                disabled={isLoading}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
+      ) : (
+        <Button onClick={toggleChat} className="rounded-full">
+          <MessageCircle className="h-4 w-4 mr-2" /> Support
+        </Button>
       )}
-    </>
+    </div>
   );
 }

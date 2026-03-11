@@ -17,7 +17,7 @@ const featureMeta: Record<string, {
     icon: Video,
     title: "Video Analysis",
     headline: "Upload any ad. Get a full breakdown in 60 seconds.",
-    description: "FrameIQ's AI engine watches your video, extracts the hook, identifies the creative model, transcribes the audio, and generates a production-ready brief — all automatically.",
+    description: "AdBrief's AI engine watches your video, extracts the hook, identifies the creative model, transcribes the audio, and generates a production-ready brief — all automatically.",
     details: [
       "Automatic hook extraction from the first 3 seconds with emotional trigger classification",
       "Creative model identification: UGC, talking head, product demo, listicle, comparison, and 12 more",
@@ -31,7 +31,7 @@ const featureMeta: Record<string, {
     icon: FileText,
     title: "Board Generation",
     headline: "From prompt to production board in 30 seconds.",
-    description: "Describe your ad concept in plain text. FrameIQ generates a complete production board with scene breakdowns, voiceover scripts, editor notes, and visual direction.",
+    description: "Describe your ad concept in plain text. AdBrief generates a complete production board with scene breakdowns, voiceover scripts, editor notes, and visual direction.",
     details: [
       "Scene-by-scene breakdown with timing, transitions, and visual direction",
       "Full voiceover script with tone, pacing, and delivery notes",
@@ -45,7 +45,7 @@ const featureMeta: Record<string, {
     icon: Globe,
     title: "Auto Translation",
     headline: "Any language in. English out. Instantly.",
-    description: "Upload ads in any language — Portuguese, Spanish, Japanese, Arabic — and FrameIQ automatically transcribes and translates everything to English so your global team stays aligned.",
+    description: "Upload ads in any language — Portuguese, Spanish, Japanese, Arabic — and AdBrief automatically transcribes and translates everything to English so your global team stays aligned.",
     details: [
       "Support for 40+ languages with native speaker-level accuracy",
       "Context-aware translation that preserves marketing intent, not just words",
@@ -59,7 +59,7 @@ const featureMeta: Record<string, {
     icon: Brain,
     title: "Creative Intelligence",
     headline: "Classify every ad. Decode every pattern.",
-    description: "FrameIQ automatically classifies ads by creative format, extracts hooks, identifies CTAs, and maps the entire creative structure so you can replicate what works.",
+    description: "AdBrief automatically classifies ads by creative format, extracts hooks, identifies CTAs, and maps the entire creative structure so you can replicate what works.",
     details: [
       "15+ creative model classifications (UGC, talking head, product demo, comparison, etc.)",
       "Hook pattern taxonomy: curiosity gap, pattern interrupt, direct benefit, social proof",
@@ -86,8 +86,8 @@ const featureMeta: Record<string, {
   "api-access": {
     icon: Zap,
     title: "API Access",
-    headline: "Plug FrameIQ into your stack.",
-    description: "REST API with full access to video analysis, board generation, and creative intelligence. Build FrameIQ into your internal tools, dashboards, and automation workflows.",
+    headline: "Plug AdBrief into your stack.",
+    description: "REST API with full access to video analysis, board generation, and creative intelligence. Build AdBrief into your internal tools, dashboards, and automation workflows.",
     details: [
       "RESTful API with comprehensive documentation and SDKs",
       "Webhook support for real-time analysis completion notifications",
@@ -595,7 +595,7 @@ const FeatureDetail = () => {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
                 </div>
                 <div className="flex-1 text-center mx-12" style={{ background: '#0a0a0a', borderRadius: '8px', padding: '6px 16px', fontSize: '12px', color: '#666', fontFamily: '"DM Mono", monospace', border: '1px solid #222' }}>
-                  <span style={{ color: '#4ade80' }}>🔒</span> app.frameiq.com
+                  <span style={{ color: '#4ade80' }}>🔒</span> app.adbrief.pro
                 </div>
                 <div className="w-16" />
               </div>
