@@ -4,10 +4,11 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video } from "lucide-react";
+import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 
 type ProgressStep = "idle" | "extracting" | "uploading" | "transcribing" | "analyzing" | "done" | "error";
 const STEP_LABELS: Record<ProgressStep, string> = {
-  idle: "", extracting: "Extracting audio...", uploading: "Uploading video...",
+  idle: "", extracting: "Compressing & extracting audio...", uploading: "Uploading...",
   transcribing: "Transcribing with Whisper...", analyzing: "AI analyzing creative...",
   done: "Done!", error: "Failed",
 };
@@ -23,25 +24,6 @@ const MARKETS = [
   { code: "ES", flag: "🇪🇸", name: "Spain" },
   { code: "AR", flag: "🇦🇷", name: "Argentina" },
 ];
-
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
-
-// ─── WAV encoder (16kHz mono) ────────────────────────────────────────────────
-function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-  writeStr(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, "WAVE");
-  writeStr(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
-  writeStr(36, "data"); view.setUint32(40, samples.length * 2, true);
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-  return new Blob([buffer], { type: "audio/wav" });
-}
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
