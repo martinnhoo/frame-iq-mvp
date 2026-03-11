@@ -47,7 +47,7 @@ export function CompareDetail() {
   const comp = SEO_COMPARISONS.find(c => c.slug === slug);
 
   if (!comp) return (
-    <SeoLayout title="Comparison Not Found — FrameIQ" description="" noIndex>
+    <SeoLayout title="Comparison Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)" }}>Not found.</p>
         <button onClick={() => navigate("/compare")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← All comparisons</button>
