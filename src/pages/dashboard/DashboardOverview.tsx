@@ -53,8 +53,10 @@ export default function DashboardOverview() {
 
   const planLimits = {
     free:    { analyses: 3,   boards: 3,   preflights: 2 },
-    creator: { analyses: 10,  boards: 10,  preflights: 10 },
-    starter: { analyses: 15,  boards: 10,  preflights: 15 },
+    creator: { analyses: 20,  boards: 20,  preflights: 20 },
+    maker:   { analyses: 20,  boards: 20,  preflights: 20 },
+    starter: { analyses: 60,  boards: 60,  preflights: 60 },
+    pro:     { analyses: 60,  boards: 60,  preflights: 60 },
     studio:  { analyses: 30,  boards: 30,  preflights: 30 },
     scale:   { analyses: 500, boards: 300, preflights: 9999 },
   };
@@ -221,7 +223,7 @@ export default function DashboardOverview() {
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
-            {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
+            {(!profile?.plan || profile.plan === "free" || profile.plan === "maker") && (
               <button onClick={() => navigate("/pricing")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
                 style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>

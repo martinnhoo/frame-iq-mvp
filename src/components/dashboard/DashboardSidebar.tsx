@@ -30,10 +30,13 @@ const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 const planMeta: Record<string, { color: string; bg: string; label: string }> = {
   free:    { color: "#ffffff40", bg: "rgba(255,255,255,0.05)", label: "Free" },
-  creator: { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Creator" },
-  starter: { color: "#34d399",   bg: "rgba(52,211,153,0.1)",   label: "Starter" },
-  studio:  { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Studio" },
-  scale:   { color: "#fbbf24",   bg: "rgba(251,191,36,0.1)",   label: "Scale" },
+  maker:   { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Maker" },
+  pro:     { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Pro" },
+  studio:  { color: "#f472b6",   bg: "rgba(244,114,182,0.1)",  label: "Studio" },
+  // legacy
+  creator: { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Maker" },
+  starter: { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Pro" },
+  scale:   { color: "#fbbf24",   bg: "rgba(251,191,36,0.1)",   label: "Studio" },
 };
 
 export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose }: SidebarProps) {
@@ -151,7 +154,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         {/* Footer */}
         <div className="p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {/* Upgrade */}
-          {(plan === "free" || plan === "creator") && (
+          {(plan === "free" || plan === "maker") && (
             <NavLink to="/pricing" onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all group"
               style={{ background: "rgba(167,139,250,0.06)", borderColor: "rgba(167,139,250,0.15)", color: "rgba(255,255,255,0.5)" }}>
@@ -187,7 +190,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
                   style={{ ...mono, color: pm.color, background: pm.bg }}>{pm.label}</span>
-                {(plan === "free" || plan === "creator" || plan === "starter") && (
+                {(plan === "free" || plan === "maker" || plan === "pro" || plan === "creator" || plan === "starter") && (
                   <button
                     onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
                     className="text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all hover:opacity-90"

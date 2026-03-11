@@ -1,396 +1,365 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
+import { Check, Zap, Infinity, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const Pricing = () => {
+// ── Plan data ─────────────────────────────────────────────────────────────────
+
+const TIERS = [
+  {
+    id: "free",
+    name: "Free",
+    price: 0,
+    desc: "Test the product. No credit card.",
+    color: "#ffffff30",
+    gradient: null,
+    features: [
+      "3 video analyses / month",
+      "3 production boards / month",
+      "5 translations / month",
+      "3 pre-flight checks",
+      "All templates",
+      "24h cooldown between AI actions",
+    ],
+    missing: ["Hook Generator", "AI learning profile", "Persona intelligence"],
+    cta: "Start free",
+    ctaPlan: null,
+  },
+  {
+    id: "maker",
+    name: "Maker",
+    price: 19,
+    desc: "For solo creators and freelancers.",
+    color: "#60a5fa",
+    gradient: null,
+    features: [
+      "20 video analyses / month",
+      "20 production boards / month",
+      "100 translations / month",
+      "20 pre-flight checks",
+      "Hook Generator — unlimited",
+      "All templates",
+      "No cooldown",
+    ],
+    missing: ["AI learning profile", "Persona intelligence"],
+    cta: "Start Maker",
+    ctaPlan: "maker",
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: 49,
+    desc: "For performance teams shipping weekly.",
+    color: "#a78bfa",
+    gradient: null,
+    badge: "Most popular",
+    features: [
+      "60 video analyses / month",
+      "60 production boards / month",
+      "Unlimited translations",
+      "60 pre-flight checks",
+      "Hook Generator — unlimited",
+      "AI learning profile",
+      "Persona intelligence",
+      "All templates",
+    ],
+    missing: [],
+    cta: "Start Pro",
+    ctaPlan: "pro",
+  },
+];
+
+const STUDIO = {
+  id: "studio",
+  name: "Studio",
+  price: 149,
+  desc: "For teams that produce every day.",
+  features: [
+    "Unlimited video analyses",
+    "Unlimited production boards",
+    "Unlimited translations",
+    "Unlimited pre-flight checks",
+    "Unlimited hooks & scripts",
+    "AI learning profile",
+    "Full persona intelligence",
+    "Priority processing",
+    "API access",
+    "Priority support",
+  ],
+  ctaPlan: "studio",
+};
+
+const FAQ = [
+  {
+    q: "What counts as an 'analysis'?",
+    a: "Each video you upload and run through the AI analysis counts as one. Viewing or re-reading past analyses is free and doesn't count.",
+  },
+  {
+    q: "What's the 24h cooldown on Free?",
+    a: "On the Free plan, after each AI action (analysis, board, pre-flight) there's a 24-hour wait before the next one. This is how we keep Free sustainable. Upgrade to Maker or above and it disappears entirely.",
+  },
+  {
+    q: "Can I switch plans at any time?",
+    a: "Yes. Upgrades take effect immediately. Downgrades take effect at the end of your billing cycle.",
+  },
+  {
+    q: "What happens to my data if I downgrade?",
+    a: "All your analyses, boards, and personas stay in your account. You just lose access to features above your new plan limit.",
+  },
+  {
+    q: "Is there a trial for paid plans?",
+    a: "We don't offer trials, but the Free plan is genuinely functional — run 3 analyses and 3 boards before you decide.",
+  },
+];
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+
+export default function Pricing() {
   const navigate = useNavigate();
-  const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const handleUpgrade = async (planName: string) => {
-    // Check if user is logged in
+  const handleUpgrade = async (planId: string | null) => {
+    if (!planId) { navigate("/signup"); return; }
+
     const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      navigate("/signup");
-      return;
-    }
+    if (!session) { navigate("/signup"); return; }
 
-    if (planName === "Scale") {
-      navigate("/book-demo");
-      return;
-    }
-
-    // For Studio, try the upgrade flow
-    setUpgrading(true);
+    setUpgrading(planId);
     try {
-      const { data, error } = await supabase.functions.invoke('upgrade-plan', {
-        body: { user_id: session.user.id, new_plan: 'studio' }
+      const { data, error } = await supabase.functions.invoke("upgrade-plan", {
+        body: { user_id: session.user.id, new_plan: planId },
       });
-
       if (error) throw error;
-
-      if (data?.mock_mode) {
-        setUpgradeModal("studio");
-      } else if (data?.checkout_url) {
+      if (data?.checkout_url) {
         window.location.href = data.checkout_url;
+      } else if (data?.mock_mode) {
+        toast.success(`Plan updated to ${planId}. Payment integration activating soon.`);
+        navigate("/dashboard");
+      } else if (data?.upgraded) {
+        toast.success("Plan upgraded successfully!");
+        navigate("/dashboard?upgraded=" + planId);
       }
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
-      setUpgrading(false);
+      setUpgrading(null);
     }
   };
 
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "/mo",
-      description: "Try before you commit. No credit card.",
-      features: [
-        { text: "3 video analyses", included: true },
-        { text: "3 board generations", included: true },
-        { text: "3 translations", included: true },
-        { text: "2 pre-flight checks", included: true },
-        { text: "Templates access", included: true },
-        { text: "Hook Generator", included: false },
-        { text: "Brand Kit", included: false },
-        { text: "AI Intelligence", included: false },
-      ],
-      cta: "Get started free",
-      ctaAction: () => navigate("/signup"),
-      highlighted: false,
-    },
-    {
-      name: "Creator",
-      price: "$9",
-      period: "/mo",
-      description: "For creators and influencers growing their content.",
-      features: [
-        { text: "3 video analyses", included: true },
-        { text: "1 board per month", included: true },
-        { text: "10 scripts per month", included: true },
-        { text: "10 translations per month", included: true },
-        { text: "5 pre-flight checks", included: true },
-        { text: "Templates access", included: true },
-        { text: "Hook Benchmark", included: true },
-        { text: "AI Intelligence", included: false },
-      ],
-      cta: "Start Creator",
-      ctaAction: () => handleUpgrade("Creator"),
-      highlighted: false,
-    },
-    {
-      name: "Studio",
-      price: "$49",
-      period: "/mo",
-      description: "For performance teams running ads at scale.",
-      features: [
-        { text: "30 video analyses", included: true },
-        { text: "30 board generations", included: true },
-        { text: "100 translations", included: true },
-        { text: "30 pre-flight checks", included: true },
-        { text: "Unlimited hooks & translations", included: true },
-        { text: "Brand Kit", included: true },
-        { text: "AI Intelligence + learning", included: true },
-        { text: "2 team seats", included: true },
-      ],
-      cta: "Start Studio",
-      ctaAction: () => handleUpgrade("Studio"),
-      highlighted: true,
-      badge: "Most Popular",
-    },
-    {
-      name: "Scale",
-      price: "$499",
-      period: "/mo",
-      description: "For agencies and enterprise teams.",
-      features: [
-        { text: "500 video analyses", included: true },
-        { text: "300 board generations", included: true },
-        { text: "Unlimited translations", included: true },
-        { text: "Unlimited pre-flight checks", included: true },
-        { text: "Unlimited pre-flights & scripts", included: true },
-        { text: "Meta Ads Connect", included: true },
-        { text: "10 team seats", included: true },
-        { text: "API access + White Label", included: true },
-      ],
-      cta: "Book a demo",
-      ctaAction: () => handleUpgrade("Scale"),
-      highlighted: false,
-    },
-  ];
-
-  const faqs = [
-    {
-      q: "Can I cancel anytime?",
-      a: "Yes. All plans are month-to-month with no long-term contracts. You can cancel or downgrade anytime from your account settings.",
-    },
-    {
-      q: "What happens when I exceed my plan limits?",
-      a: "You'll receive a notification when approaching your limits. You can upgrade at any time. We never cut access mid-project.",
-    },
-    {
-      q: "Is there a free trial for paid plans?",
-      a: "Yes. Studio comes with a 14-day free trial. No credit card required. Scale plans include a personalized demo and trial period.",
-    },
-    {
-      q: "How does billing work?",
-      a: "We bill monthly via credit card (Visa, Mastercard, Amex). For annual billing or custom invoicing, contact our sales team.",
-    },
-    {
-      q: "Do you offer refunds?",
-      a: "We offer a 30-day money-back guarantee on your first payment for Studio plans.",
-    },
-    {
-      q: "Is my data secure?",
-      a: "Yes. AdBrief uses 256-bit encryption at rest and in transit. We never share or sell your data.",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-white" style={{ background: "#050505" }}>
+
       {/* Nav */}
-      <nav className="border-b border-border/50 bg-background/60 backdrop-blur-xl">
-        <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <Link to="/">
-            <Logo size="lg" />
+      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+        <Link to="/"><Logo /></Link>
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          <Link to="/dashboard"
+            className="text-sm text-white/40 hover:text-white transition-colors px-3 py-1.5 rounded-lg border border-white/[0.08] hover:border-white/20">
+            Dashboard
           </Link>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Button variant="ghost" className="text-muted-foreground" onClick={() => navigate("/login")}>
-              Sign in
-            </Button>
-          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto max-w-5xl text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Simple, transparent pricing
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Start free. Scale when you're ready. No hidden fees, no surprises.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <div className="max-w-6xl mx-auto px-6 pt-16 pb-32">
 
-      {/* Plans */}
-      <section className="pb-20 px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Card
-                  className={`relative h-full flex flex-col transition-all duration-300 ${
-                    plan.highlighted
-                      ? "border-purple-500/50 shadow-xl shadow-purple-500/15 md:scale-105 bg-card"
-                      : "border-border bg-card hover:-translate-y-1"
-                  }`}
-                  style={plan.highlighted ? {
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.04))',
-                  } : {}}
-                >
-                  {plan.badge && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
-                        {plan.badge}
-                      </Badge>
-                    </div>
+        {/* Header */}
+        <div className="text-center mb-16">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] mb-4"
+            style={{ color: "#a78bfa", ...mono }}>Pricing</p>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4" style={syne}>
+            Pay for output,<br />not for access.
+          </h1>
+          <p className="text-white/40 text-lg max-w-xl mx-auto">
+            No seat fees. No hidden costs. Every plan includes the full product —
+            the difference is how much you can produce per month.
+          </p>
+        </div>
+
+        {/* ── 3 regular tiers ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {TIERS.map((tier, i) => (
+            <motion.div
+              key={tier.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="relative rounded-2xl p-6 flex flex-col"
+              style={{
+                background: "#0a0a0d",
+                border: `1px solid ${tier.id === "pro" ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.06)"}`,
+              }}>
+
+              {/* Badge */}
+              {tier.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold"
+                    style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa", ...mono }}>
+                    {tier.badge}
+                  </span>
+                </div>
+              )}
+
+              {/* Plan name + price */}
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-widest mb-2"
+                  style={{ color: tier.color, ...mono }}>{tier.name}</p>
+                <div className="flex items-end gap-1 mb-1">
+                  <span className="text-4xl font-black text-white" style={syne}>
+                    {tier.price === 0 ? "Free" : `$${tier.price}`}
+                  </span>
+                  {tier.price > 0 && (
+                    <span className="text-white/30 text-sm mb-1.5" style={mono}>/mo</span>
                   )}
-                  <CardHeader className="text-center pb-4 pt-8">
-                    <CardTitle className="text-lg text-muted-foreground font-normal mb-2">
-                      {plan.name}
-                    </CardTitle>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-5xl font-bold text-foreground">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.period}</span>
+                </div>
+                <p className="text-white/35 text-sm">{tier.desc}</p>
+              </div>
+
+              {/* Features */}
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {tier.features.map(f => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/60">
+                    <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: tier.color }} />
+                    {f}
+                  </li>
+                ))}
+                {tier.missing.map(f => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/20 line-through">
+                    <span className="h-3.5 w-3.5 shrink-0 mt-0.5 text-center" style={{ color: "rgba(255,255,255,0.15)" }}>—</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleUpgrade(tier.ctaPlan)}
+                disabled={upgrading === tier.id}
+                className="w-full py-3 rounded-xl text-sm font-bold transition-all"
+                style={tier.id === "pro"
+                  ? { background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }
+                  : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
+                {upgrading === tier.id ? "Redirecting..." : tier.cta}
+              </button>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ── Studio — full-width dominant card ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32 }}
+          className="relative rounded-3xl overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #0e0814 0%, #0a0a14 50%, #0d080f 100%)",
+            border: "1px solid rgba(167,139,250,0.25)",
+          }}>
+
+          {/* Glow blobs */}
+          <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 pointer-events-none"
+            style={{ background: "radial-gradient(circle, #a78bfa 0%, transparent 70%)", transform: "translate(-30%, -30%)" }} />
+          <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-15 pointer-events-none"
+            style={{ background: "radial-gradient(circle, #f472b6 0%, transparent 70%)", transform: "translate(30%, 30%)" }} />
+
+          <div className="relative p-8 md:p-10">
+            <div className="flex flex-col md:flex-row md:items-center gap-8">
+
+              {/* Left: name + price + desc */}
+              <div className="md:w-72 shrink-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <Infinity className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                  <span className="text-xs font-bold uppercase tracking-[0.2em]"
+                    style={{ color: "#a78bfa", ...mono }}>Studio</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.2), rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c084fc", ...mono }}>
+                    UNLIMITED
+                  </span>
+                </div>
+                <div className="flex items-end gap-1.5 mb-3">
+                  <span className="text-6xl font-black text-white" style={syne}>$149</span>
+                  <span className="text-white/30 mb-2" style={mono}>/mo</span>
+                </div>
+                <p className="text-white/40 text-sm leading-relaxed mb-6">{STUDIO.desc}</p>
+                <button
+                  onClick={() => handleUpgrade(STUDIO.ctaPlan)}
+                  disabled={upgrading === STUDIO.id}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl font-bold text-sm text-black transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+                  {upgrading === STUDIO.id
+                    ? "Redirecting..."
+                    : <><Zap className="h-4 w-4" /> Start Studio — unlimited everything</>}
+                </button>
+              </div>
+
+              {/* Right: features grid */}
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {STUDIO.features.map(f => (
+                  <div key={f} className="flex items-center gap-2.5 text-sm text-white/70">
+                    <div className="h-5 w-5 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                      <Check className="h-3 w-3" style={{ color: "#a78bfa" }} />
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <ul className="space-y-3 flex-1">
-                      {plan.features.map((feature, j) => (
-                        <li key={j} className="flex items-start gap-3 text-sm">
-                          {feature.included ? (
-                            <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                          ) : (
-                            <X className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
-                          )}
-                          <span className={feature.included ? "text-muted-foreground" : "text-muted-foreground/40"}>
-                            {feature.text}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Button
-                      className={`w-full mt-6 ${
-                        plan.highlighted
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
-                          : "bg-card text-foreground hover:bg-muted border border-border"
-                      }`}
-                      onClick={plan.ctaAction}
-                      disabled={upgrading}
-                    >
-                      {upgrading && plan.name === "Studio" && (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      )}
-                      {plan.cta}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </motion.div>
 
-      {/* Trust badges */}
-      <section className="py-12 px-6 border-t border-border/30">
-        <div className="container mx-auto max-w-3xl">
-          <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              256-bit Encryption
-            </span>
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              GDPR Ready
-            </span>
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              99.9% Uptime SLA
-            </span>
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              30-day money-back
-            </span>
-          </div>
-        </div>
-      </section>
+        {/* Comparison note */}
+        <p className="text-center text-white/20 text-xs mt-6" style={mono}>
+          All plans include: Hook Generator access · Templates · Persona creator · Intelligence feed · 
+          Translation tool · Dashboard analytics
+        </p>
 
-      {/* FAQ */}
-      <section className="py-16 px-6 border-t border-border/30">
-        <div className="container mx-auto max-w-3xl">
-          <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
-          <div className="space-y-6">
-            {faqs.map((faq, i) => (
-              <div key={i} className="border-b border-border/30 pb-6 last:border-0">
-                <h3 className="font-semibold text-foreground flex items-start gap-2 mb-2">
-                  <HelpCircle className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                  {faq.q}
-                </h3>
-                <p className="text-sm text-muted-foreground pl-6 leading-relaxed">{faq.a}</p>
+        {/* ── FAQ ── */}
+        <div className="mt-24 max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-white mb-8 text-center" style={syne}>
+            Questions
+          </h2>
+          <div className="space-y-2">
+            {FAQ.map((item, i) => (
+              <div key={i}
+                className="rounded-2xl overflow-hidden"
+                style={{ border: "1px solid rgba(255,255,255,0.06)", background: "#0a0a0d" }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left">
+                  <span className="text-sm font-semibold text-white/80">{item.q}</span>
+                  {openFaq === i
+                    ? <ChevronUp className="h-4 w-4 text-white/30 shrink-0" />
+                    : <ChevronDown className="h-4 w-4 text-white/30 shrink-0" />}
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-4">
+                    <p className="text-sm text-white/40 leading-relaxed">{item.a}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* CTA */}
-      <section className="py-16 px-6">
-        <div className="container mx-auto max-w-3xl text-center">
-          <div
-            className="p-10 rounded-2xl"
-            style={{
-              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1))",
-              border: "1px solid rgba(139, 92, 246, 0.2)",
-            }}
-          >
-            <h2 className="text-2xl font-bold mb-3">Still have questions?</h2>
-            <p className="text-muted-foreground mb-6">
-              Talk to our team. We'll help you find the right plan for your needs.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
-                onClick={() => navigate("/book-demo")}
-              >
-                Book a demo
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-              <Button
-                variant="outline"
-                className="border-border"
-                onClick={() => navigate("/contact")}
-              >
-                Contact sales
-              </Button>
-            </div>
-          </div>
+        {/* Bottom CTA */}
+        <div className="mt-20 text-center">
+          <p className="text-white/25 text-sm mb-2">Still not sure?</p>
+          <Link to="/signup"
+            className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm">
+            Start free — no credit card needed <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
-            <p>
-              Prices shown in USD. All plans are billed monthly. Studio plan includes a 14-day free trial.
-              You may cancel at any time before the trial expires.
-            </p>
-            <p className="pt-2">
-              © 2026 AdBrief. All rights reserved.
-              {" · "}
-              <Link to="/" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-              {" · "}
-              <Link to="/" className="hover:text-foreground transition-colors">Terms of Service</Link>
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Upgrade Modal */}
-      <Dialog open={upgradeModal !== null} onOpenChange={() => setUpgradeModal(null)}>
-        <DialogContent className="bg-card border-border max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Payment coming soon</DialogTitle>
-            <DialogDescription className="text-muted-foreground pt-2 leading-relaxed">
-              The Studio plan is currently in preview. You'll be notified when full payment processing launches.
-              In the meantime, your plan has been updated to Studio with all features unlocked.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 pt-2">
-            <Button
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
-              onClick={() => {
-                setUpgradeModal(null);
-                navigate("/dashboard");
-              }}
-            >
-              Go to Dashboard
-            </Button>
-            <Button
-              variant="outline"
-              className="border-border"
-              onClick={() => setUpgradeModal(null)}
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   );
-};
-
-export default Pricing;
+}
