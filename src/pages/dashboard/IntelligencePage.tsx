@@ -728,6 +728,19 @@ export default function IntelligencePage() {
       {activeTab === "platform" && (
         <div className="space-y-4">
 
+          {/* Active persona indicator */}
+          {selectedPersona && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
+              <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>
+                <p className="text-[10px] text-white/25 truncate">{selectedPersona.headline}</p>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 font-bold" style={mono}>ACTIVE</span>
+            </div>
+          )}
+
           {/* Upload panel — always visible */}
           <AdsUploadPanel userId={user.id} onImported={loadData} personaContext={
             selectedPersona ? `Active Persona: ${selectedPersona.name} — ${selectedPersona.headline}. Pains: ${selectedPersona.pains?.join(", ")}. Desires: ${selectedPersona.desires?.join(", ")}. Best platforms: ${selectedPersona.best_platforms?.join(", ")}. Hook angles: ${selectedPersona.hook_angles?.join(", ")}. Language style: ${selectedPersona.language_style}` : undefined
