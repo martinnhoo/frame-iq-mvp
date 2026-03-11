@@ -252,6 +252,21 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
           </div>
         )}
 
+        {/* Context field (optional) */}
+        <div>
+          <p className="text-[10px] text-white/30 mb-2 uppercase tracking-wider" style={mono}>
+            Context <span className="normal-case text-white/15 font-sans">(optional — helps AI give better suggestions)</span>
+          </p>
+          <textarea
+            value={context}
+            onChange={e => setContext(e.target.value)}
+            placeholder="E.g.: We're testing UGC vs. studio creatives for our skincare brand targeting women 25-40 in Brazil. Main goal is reducing CPA below R$30..."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-colors resize-none"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}
+          />
+        </div>
+
         {/* Analyze button */}
         <button
           onClick={parseFile}
