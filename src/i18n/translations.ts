@@ -833,7 +833,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_title: "إنشاء فيديو بالذكاء الاصطناعي",
     feature_ai_video_desc: "من لوحة المفهوم إلى MP4 مع تعليق صوتي بالذكاء الاصطناعي. لا حاجة لمحررين.",
     feature_api_title: "الوصول إلى API",
-    feature_api_desc: "ادمج FrameIQ في سير عملك الحالي مع API REST.",
+    feature_api_desc: "ادمج AdBrief في سير عملك الحالي مع API REST.",
 
     pricing_label: "الأسعار",
     pricing_title: "أسعار بسيطة وشفافة",
