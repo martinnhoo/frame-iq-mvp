@@ -1,18 +1,19 @@
 import {
   BarChart3, LayoutGrid, Home,
   Plus, Globe, Brain, Layers, Plane, Cpu,
-  Zap, Settings, ChevronRight, Target,
+  Zap, Settings, ChevronRight, Target, Flame,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { UserProfilePanel } from "./UserProfilePanel";
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
