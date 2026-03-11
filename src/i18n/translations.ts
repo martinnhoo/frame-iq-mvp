@@ -912,7 +912,7 @@ export const translations: Record<Language, TranslationKeys> = {
     social_ads: "已分析广告", social_teams: "性能营销团队", social_countries: "国家", social_time: "平均分析时间",
     problem_label: "慢速创意的代价",
     problem_title: "大多数团队在单个广告上线之前就浪费了60%的创意预算。",
-    problem_subtitle: "弱钩子。未经测试的角度。编辑们忽视的简报。FrameIQ在你花一分钱制作之前解决所有这些问题。",
+    problem_subtitle: "弱钩子。未经测试的角度。编辑们忽视的简报。AdBrief在你花一分钱制作之前解决所有这些问题。",
     stat1_label: "从上传到完整创意简报",
     stat1_sub: "相比8小时手动分析",
     stat2_label: "每个冲刺更多广告变体",
