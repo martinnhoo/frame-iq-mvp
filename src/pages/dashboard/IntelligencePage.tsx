@@ -113,12 +113,13 @@ const KpiCard = ({ label, value, icon: Icon, color }: { label: string; value: st
 
 // ── Upload Panel ──────────────────────────────────────────────────────────────
 
-function AdsUploadPanel({ userId, onImported }: { userId: string; onImported: () => void }) {
-  const [platform, setPlatform] = useState<"meta"|"google"|"tiktok">("meta");
+function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string; onImported: () => void; personaContext?: string }) {
+  const [platform, setPlatform] = useState<"meta"|"google"|"tiktok"|"other">("meta");
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [context, setContext] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((f: File) => {
@@ -141,12 +142,17 @@ function AdsUploadPanel({ userId, onImported }: { userId: string; onImported: ()
     try {
       const text = await file.text();
       const { data, error } = await supabase.functions.invoke("parse-ads-data", {
-        body: { user_id: userId, platform, csv_data: text, filename: file.name },
+        body: {
+          user_id: userId, platform, csv_data: text, filename: file.name,
+          context: context.trim() || undefined,
+          persona_context: personaContext || undefined,
+        },
       });
       if (error) throw new Error(error.message);
       if (data?.result?.error) throw new Error("AI could not parse this file format.");
       toast.success("Data imported and analyzed successfully!");
       setFile(null);
+      setContext("");
       onImported();
     } catch (err) {
       toast.error((err as Error).message || "Something went wrong.");
