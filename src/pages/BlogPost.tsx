@@ -513,7 +513,7 @@ const blogPosts: Record<string, {
       "The smartest teams in 2026 aren't choosing between AI and humans — they're using AI to make their eventual Creative Strategist hire 5x more effective. When you do hire, they'll spend zero time on repetitive research and briefing, and 100% on strategy, ideation, and creative direction.",
       "## The Bottom Line",
       "A 4-week AI test costs $200. A bad hire costs $30K+ in salary, severance, and lost time. Try the AI workflows first. If they solve 80% of your creative strategy needs, you just saved your company $90K/year. If they don't, you'll have a much clearer job description for the Creative Strategist you actually need.",
-      "Start your AI creative strategy test today with FrameIQ — free for 14 days, no card required.",
+      "Start your AI creative strategy test today with AdBrief — free for 14 days, no card required.",
     ],
   },
   "ai-replace-full-creative-team": {
