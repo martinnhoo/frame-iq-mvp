@@ -14,7 +14,7 @@ export function CompareIndex() {
         <div style={{ marginBottom: 52 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
           <h1 style={{ ...j, fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
-            How FrameIQ compares<br />
+            How AdBrief compares<br />
             <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>to other ad tools</span>
           </h1>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, lineHeight: 1.6 }}>Honest, feature-by-feature comparisons. No fluff.</p>
