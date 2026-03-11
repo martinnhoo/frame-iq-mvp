@@ -81,7 +81,7 @@ const Careers = () => {
               <span className="gradient-text">creative intelligence</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              FrameIQ is a fast-growing AI startup reimagining how performance marketing teams create, analyze, and scale ad creative. Join us and help shape the next generation of creative tools.
+              AdBrief is a fast-growing AI startup reimagining how performance marketing teams create, analyze, and scale ad creative. Join us and help shape the next generation of creative tools.
             </p>
           </motion.div>
         </div>
