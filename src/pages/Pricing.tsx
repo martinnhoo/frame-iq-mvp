@@ -154,7 +154,7 @@ const Pricing = () => {
     },
     {
       q: "Is my data secure?",
-      a: "Yes. FrameIQ uses 256-bit encryption at rest and in transit. We never share or sell your data.",
+      a: "Yes. AdBrief uses 256-bit encryption at rest and in transit. We never share or sell your data.",
     },
   ];
 
