@@ -103,12 +103,26 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
     setTranscript("");
     setTranslated("");
     try {
-      const { data } = await supabase.functions.invoke("analyze-video", {
-        body: { transcribe_only: true, user_id: userId, file_name: file.name },
-      });
-      const rawTranscript = data?.transcript || "Transcript not available — check API key";
+      // Send actual file as FormData for Whisper transcription
+      const formData = new FormData();
+      formData.append("video_file", file);
+      formData.append("user_id", userId || "");
+      formData.append("transcribe_only", "true");
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/analyze-video`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${anonKey}`, apikey: anonKey },
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      const rawTranscript = data?.transcript || data?.error || "Transcription failed — check API key";
       setTranscript(rawTranscript);
-      if (targetLang !== "en" && !rawTranscript.includes("not available")) {
+      if (targetLang !== "en" && !rawTranscript.includes("failed") && !rawTranscript.includes("error")) {
         const lang = LANGUAGES.find(l => l.code === targetLang)!;
         const { data: tData } = await supabase.functions.invoke("translate-text", {
           body: {
@@ -120,11 +134,11 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           },
         });
         setTranslated(tData?.translated_text || "");
-      } else {
+      } else if (!rawTranscript.includes("failed") && !rawTranscript.includes("error")) {
         setTranslated(rawTranscript);
       }
     } catch {
-      toast.error("Transcription failed — check API key");
+      toast.error("Transcription failed — try again");
     } finally {
       setTranscribing(false);
     }
