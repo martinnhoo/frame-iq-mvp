@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 import { ArrowRight, Check, Loader2, ChevronRight, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useObT } from "@/i18n/onboardingTranslations";
+import type { Language } from "@/i18n/translations";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,30 +33,40 @@ const LANGUAGES = [
   { value: "de", label: "Deutsch",   flag: "🇩🇪" },
 ];
 
-const SOURCES = [
-  { value: "twitter",    label: "Twitter / X",      emoji: "𝕏" },
-  { value: "youtube",    label: "YouTube",           emoji: "▶️" },
-  { value: "tiktok",     label: "TikTok",            emoji: "🎵" },
-  { value: "friend",     label: "Friend / Colleague",emoji: "👋" },
-  { value: "linkedin",   label: "LinkedIn",          emoji: "💼" },
-  { value: "google",     label: "Google Search",     emoji: "🔍" },
-  { value: "newsletter", label: "Newsletter",        emoji: "📧" },
-  { value: "other",      label: "Other",             emoji: "✨" },
+const SOURCES_STATIC = [
+  { value: "twitter",    emoji: "𝕏" },
+  { value: "youtube",    emoji: "▶️" },
+  { value: "tiktok",     emoji: "🎵" },
+  { value: "friend",     emoji: "👋" },
+  { value: "linkedin",   emoji: "💼" },
+  { value: "google",     emoji: "🔍" },
+  { value: "newsletter", emoji: "📧" },
+  { value: "other",      emoji: "✨" },
 ];
 
-const FEATURES = [
-  { value: "analyze",      url: "/dashboard/analyses/new", emoji: "🔍", label: "Analyze competitor ads",          desc: "Upload a video and get AI hook scores, transcripts, and creative insights", accent: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
-  { value: "board",        url: "/dashboard/boards/new",   emoji: "🎬", label: "Generate a production board",     desc: "Turn a brief into a full scene-by-scene board with VO scripts and editor notes", accent: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "templates",    url: "/dashboard/templates",    emoji: "📋", label: "Browse 183 ad templates",         desc: "Start from proven formats — UGC, testimonial, promo, tutorial, and 17 more", accent: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.2)" },
-  { value: "translate",    url: "/dashboard/translate",    emoji: "🌍", label: "Translate & localize scripts",    desc: "Adapt your ad scripts for any market with AI-powered cultural localization", accent: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
-  { value: "preflight",    url: "/dashboard/preflight",    emoji: "✅", label: "Pre-flight check my creative",    desc: "Review your ad against platform policies before spending a single dollar", accent: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.2)" },
-  { value: "intelligence", url: "/dashboard/intelligence", emoji: "🧠", label: "Explore creative intelligence",   desc: "See what patterns actually work — backed by your own performance data", accent: "#c084fc", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)" },
+// Source labels that don't need translation (brand names)
+const SOURCE_LABELS: Record<string, string> = {
+  twitter: "Twitter / X",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+  google: "Google Search",
+  newsletter: "Newsletter",
+};
+
+const FEATURES_STATIC = [
+  { value: "analyze",      url: "/dashboard/analyses/new", emoji: "🔍", accent: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "board",        url: "/dashboard/boards/new",   emoji: "🎬", accent: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "templates",    url: "/dashboard/templates",    emoji: "📋", accent: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.2)" },
+  { value: "translate",    url: "/dashboard/translate",    emoji: "🌍", accent: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+  { value: "preflight",    url: "/dashboard/preflight",    emoji: "✅", accent: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.2)" },
+  { value: "intelligence", url: "/dashboard/intelligence", emoji: "🧠", accent: "#c084fc", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)" },
 ];
 
 const PLANS = [
-  { key: "creator", label: "Creator", price: "$9",   period: "/mo", features: ["3 analyses/mo", "1 board/mo", "10 pre-flights"],                               highlight: false },
-  { key: "studio",  label: "Studio",  price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights"],             highlight: true,  badge: "Most popular" },
-  { key: "scale",   label: "Scale",   price: "$499", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "Unlimited pre-flights"],  highlight: false },
+  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations"],                              highlight: false },
+  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights"],    highlight: true },
+  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access"],           highlight: false },
 ];
 
 const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", "plan"];
@@ -62,6 +75,7 @@ const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", 
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { language: globalLang, setLanguage: setGlobalLanguage } = useLanguage();
   const [step, setStep] = useState<Step>("name");
   const [saving, setSaving] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -69,6 +83,10 @@ export default function Onboarding() {
     name: "", acceptedTerms: false, marketingEmails: false,
     language: "", source: "", sourceOther: "", feature: "",
   });
+
+  // Use the selected onboarding language or fall back to global
+  const activeLang = state.language || globalLang || "en";
+  const ot = useObT(activeLang);
 
   useEffect(() => { if (step === "name") nameRef.current?.focus(); }, [step]);
 
@@ -84,7 +102,7 @@ export default function Onboarding() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/login"); return; }
-      const feat = FEATURES.find(f => f.value === state.feature);
+      const feat = FEATURES_STATIC.find(f => f.value === state.feature);
       await supabase.from("profiles").update({
         name: state.name || undefined,
         preferred_language: state.language || undefined,
@@ -98,7 +116,7 @@ export default function Onboarding() {
       toast.success("Welcome to AdBrief 🚀");
       navigate(feat?.url || "/dashboard");
     } catch {
-      toast.error("Something went wrong. Continuing anyway.");
+      toast.error(ot("skip_setup"));
       navigate("/dashboard");
     } finally { setSaving(false); }
   };
@@ -111,6 +129,26 @@ export default function Onboarding() {
     navigate("/dashboard");
   };
 
+  // Get translated source label
+  const getSourceLabel = (value: string) => {
+    if (value === "friend") return ot("src_friend");
+    if (value === "other") return ot("src_other");
+    return SOURCE_LABELS[value] || value;
+  };
+
+  // Get translated feature label + description
+  const getFeatureLabel = (value: string) => {
+    const map: Record<string, { label: string; desc: string }> = {
+      analyze:      { label: ot("feat_analyze"),      desc: ot("feat_analyze_d") },
+      board:        { label: ot("feat_board"),         desc: ot("feat_board_d") },
+      templates:    { label: ot("feat_templates"),     desc: ot("feat_templates_d") },
+      translate:    { label: ot("feat_translate"),     desc: ot("feat_translate_d") },
+      preflight:    { label: ot("feat_preflight"),     desc: ot("feat_preflight_d") },
+      intelligence: { label: ot("feat_intelligence"),  desc: ot("feat_intelligence_d") },
+    };
+    return map[value] || { label: value, desc: "" };
+  };
+
   const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
   const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
@@ -120,7 +158,7 @@ export default function Onboarding() {
       <div className="flex items-center justify-between px-6 py-5">
         <Logo size="md" />
         <button onClick={skip} className="text-[11px] text-white/15 hover:text-white/35 transition-colors" style={mono}>
-          skip setup
+          {ot("skip_setup")}
         </button>
       </div>
 
@@ -137,15 +175,15 @@ export default function Onboarding() {
           {step === "name" && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 1 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Let's get you set up</h1>
-                <p className="text-sm text-white/35">Takes less than 2 minutes. You can skip any step.</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 1 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("setup_title")}</h1>
+                <p className="text-sm text-white/35">{ot("setup_sub")}</p>
               </div>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-white/30 mb-2">Your name <span className="text-white/15">(optional)</span></label>
+                  <label className="block text-xs text-white/30 mb-2">{ot("name_label")} <span className="text-white/15">({ot("name_opt")})</span></label>
                   <input ref={nameRef} type="text" value={state.name} onChange={e => set("name", e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && goNext()} placeholder="e.g. Alex"
+                    onKeyDown={e => e.key === "Enter" && goNext()} placeholder={ot("name_ph")}
                     className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/20 transition-colors" />
                 </div>
                 {/* Terms */}
@@ -154,7 +192,7 @@ export default function Onboarding() {
                     {state.acceptedTerms && <Check className="h-3 w-3 text-black" />}
                   </div>
                   <span className="text-xs text-white/40 leading-relaxed">
-                    I agree to the <a href="/terms" target="_blank" className="text-white/60 underline underline-offset-2 hover:text-white" onClick={e => e.stopPropagation()}>Terms</a> and <a href="/privacy" target="_blank" className="text-white/60 underline underline-offset-2 hover:text-white" onClick={e => e.stopPropagation()}>Privacy Policy</a>
+                    {ot("terms_agree")} <a href="/terms" target="_blank" className="text-white/60 underline underline-offset-2 hover:text-white" onClick={e => e.stopPropagation()}>{ot("terms")}</a> {ot("and")} <a href="/privacy" target="_blank" className="text-white/60 underline underline-offset-2 hover:text-white" onClick={e => e.stopPropagation()}>{ot("privacy")}</a>
                   </span>
                 </label>
                 {/* Marketing */}
@@ -163,14 +201,14 @@ export default function Onboarding() {
                     {state.marketingEmails && <Check className="h-3 w-3 text-black" />}
                   </div>
                   <span className="text-xs text-white/40 leading-relaxed">
-                    Send me product updates, tips, and creative strategy content <span className="text-white/20">(optional)</span>
+                    {ot("marketing")} <span className="text-white/20">({ot("name_opt")})</span>
                   </span>
                 </label>
               </div>
               <button onClick={goNext} disabled={!state.acceptedTerms}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
                 style={syne}>
-                Continue <ArrowRight className="h-4 w-4" />
+                {ot("continue")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}
@@ -179,15 +217,23 @@ export default function Onboarding() {
           {step === "language" && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 2 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Preferred language?</h1>
-                <p className="text-sm text-white/35">For AI outputs — scripts, voiceovers, analysis reports</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 2 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("lang_title")}</h1>
+                <p className="text-sm text-white/35">{ot("lang_sub")}</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {LANGUAGES.map(lang => {
                   const active = state.language === lang.value;
                   return (
-                    <button key={lang.value} onClick={() => { set("language", lang.value); setTimeout(goNext, 220); }}
+                    <button key={lang.value} onClick={() => {
+                      set("language", lang.value);
+                      // Sync with global language context immediately
+                      const supportedLangs = ["en", "pt", "es", "fr", "de", "zh", "ar"];
+                      if (supportedLangs.includes(lang.value)) {
+                        setGlobalLanguage(lang.value as Language);
+                      }
+                      setTimeout(goNext, 220);
+                    }}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all duration-150"
                       style={{ borderColor: active ? "rgba(167,139,250,0.5)" : "rgba(255,255,255,0.07)", background: active ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.02)" }}>
                       <span className="text-xl">{lang.flag}</span>
@@ -198,8 +244,8 @@ export default function Onboarding() {
                 })}
               </div>
               <div className="flex items-center justify-between">
-                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
-                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">Skip <ChevronRight className="h-4 w-4" /></button>
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
+                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">{ot("skip")} <ChevronRight className="h-4 w-4" /></button>
               </div>
             </div>
           )}
@@ -208,31 +254,31 @@ export default function Onboarding() {
           {step === "source" && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 3 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>How did you find us?</h1>
-                <p className="text-sm text-white/35">Helps us focus our energy in the right places</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 3 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("source_title")}</h1>
+                <p className="text-sm text-white/35">{ot("source_sub")}</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {SOURCES.map(src => {
+                {SOURCES_STATIC.map(src => {
                   const active = state.source === src.value;
                   return (
                     <button key={src.value} onClick={() => { set("source", src.value); if (src.value !== "other") setTimeout(goNext, 220); }}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all duration-150"
                       style={{ borderColor: active ? "rgba(244,114,182,0.45)" : "rgba(255,255,255,0.07)", background: active ? "rgba(244,114,182,0.08)" : "rgba(255,255,255,0.02)" }}>
                       <span className="text-base w-5 text-center">{src.emoji}</span>
-                      <span className={`text-sm font-medium ${active ? "text-white" : "text-white/50"}`}>{src.label}</span>
+                      <span className={`text-sm font-medium ${active ? "text-white" : "text-white/50"}`}>{getSourceLabel(src.value)}</span>
                     </button>
                   );
                 })}
               </div>
               {state.source === "other" && (
                 <input autoFocus type="text" value={state.sourceOther} onChange={e => set("sourceOther", e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && goNext()} placeholder="Tell us more..."
+                  onKeyDown={e => e.key === "Enter" && goNext()} placeholder={ot("source_other_ph")}
                   className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/25 transition-colors" />
               )}
               <div className="flex items-center justify-between">
-                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
-                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">Skip <ChevronRight className="h-4 w-4" /></button>
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
+                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">{ot("skip")} <ChevronRight className="h-4 w-4" /></button>
               </div>
             </div>
           )}
@@ -241,13 +287,14 @@ export default function Onboarding() {
           {step === "feature" && (
             <div className="space-y-5">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 4 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Where do you want to start?</h1>
-                <p className="text-sm text-white/35">We'll take you straight there after setup</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 4 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("feat_title")}</h1>
+                <p className="text-sm text-white/35">{ot("feat_sub")}</p>
               </div>
               <div className="space-y-2">
-                {FEATURES.map(feat => {
+                {FEATURES_STATIC.map(feat => {
                   const active = state.feature === feat.value;
+                  const { label, desc } = getFeatureLabel(feat.value);
                   return (
                     <button key={feat.value} onClick={() => { set("feature", feat.value); setTimeout(goNext, 240); }}
                       className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl border text-left transition-all duration-150 group"
@@ -257,8 +304,8 @@ export default function Onboarding() {
                         {feat.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold leading-tight ${active ? "text-white" : "text-white/70"}`} style={syne}>{feat.label}</p>
-                        <p className="text-xs text-white/30 mt-0.5 leading-relaxed line-clamp-2">{feat.desc}</p>
+                        <p className={`text-sm font-semibold leading-tight ${active ? "text-white" : "text-white/70"}`} style={syne}>{label}</p>
+                        <p className="text-xs text-white/30 mt-0.5 leading-relaxed line-clamp-2">{desc}</p>
                       </div>
                       {active && <Check className="h-4 w-4 shrink-0" style={{ color: feat.accent }} />}
                     </button>
@@ -266,8 +313,8 @@ export default function Onboarding() {
                 })}
               </div>
               <div className="flex items-center justify-between pt-1">
-                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
-                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">Skip <ChevronRight className="h-4 w-4" /></button>
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
+                <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">{ot("skip")} <ChevronRight className="h-4 w-4" /></button>
               </div>
             </div>
           )}
@@ -276,17 +323,17 @@ export default function Onboarding() {
           {step === "persona" && (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 5 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Meet your audience first</h1>
-                <p className="text-sm text-white/35 max-w-sm mx-auto leading-relaxed">The best ads are written for one specific person. AdBrief uses your audience persona to tailor every hook, board, and script — automatically.</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 5 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("persona_title")}</h1>
+                <p className="text-sm text-white/35 max-w-sm mx-auto leading-relaxed">{ot("persona_sub")}</p>
               </div>
 
               {/* Why persona matters */}
               <div className="space-y-2">
                 {[
-                  { emoji: "🎯", title: "Hooks that actually convert", desc: "AI generates hooks based on your audience's real pains, desires, and triggers — not generic angles." },
-                  { emoji: "📋", title: "Boards written for your audience", desc: "Every scene, VO line, and CTA is crafted for the specific person you're targeting." },
-                  { emoji: "🔄", title: "Switch personas instantly", desc: "Run campaigns for multiple audiences. Switch context in one click from the top bar." },
+                  { emoji: "🎯", title: ot("persona_b1_t"), desc: ot("persona_b1_d") },
+                  { emoji: "📋", title: ot("persona_b2_t"), desc: ot("persona_b2_d") },
+                  { emoji: "🔄", title: ot("persona_b3_t"), desc: ot("persona_b3_d") },
                 ].map(({ emoji, title, desc }) => (
                   <div key={title} className="flex items-start gap-4 px-4 py-4 rounded-2xl"
                     style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.12)" }}>
@@ -303,15 +350,15 @@ export default function Onboarding() {
                 <button onClick={() => { finish(); setTimeout(() => window.location.href = "/dashboard/persona", 500); }}
                   className="w-full py-3.5 rounded-2xl font-bold text-sm text-black transition-all"
                   style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
-                  Create my first persona →
+                  {ot("persona_cta")}
                 </button>
                 <button onClick={goNext}
                   className="w-full py-2.5 rounded-2xl text-sm text-white/30 hover:text-white/50 transition-colors border border-white/[0.06]">
-                  Skip for now — I'll do it later
+                  {ot("persona_skip")}
                 </button>
               </div>
               <div className="flex items-center justify-start pt-1">
-                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
               </div>
             </div>
           )}
@@ -320,18 +367,18 @@ export default function Onboarding() {
           {step === "plan" && (
             <div className="space-y-5">
               <div className="text-center space-y-2">
-                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>Step 5 of {STEP_ORDER.length}</p>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>Pick your plan</h1>
-                <p className="text-sm text-white/35">You're on Free. Upgrade whenever you're ready.</p>
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>{ot("step_of")} 6 {ot("of")} {STEP_ORDER.length}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>{ot("plan_title")}</h1>
+                <p className="text-sm text-white/35">{ot("plan_sub")}</p>
               </div>
               <div className="space-y-2.5">
                 {PLANS.map(plan => (
                   <div key={plan.key} className="relative rounded-2xl border p-4"
                     style={{ borderColor: plan.highlight ? "rgba(167,139,250,0.35)" : "rgba(255,255,255,0.07)", background: plan.highlight ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.02)" }}>
-                    {plan.badge && (
+                    {plan.highlight && (
                       <span className="absolute top-3.5 right-3.5 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide"
                         style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", ...mono }}>
-                        {plan.badge}
+                        {ot("plan_most_popular")}
                       </span>
                     )}
                     <div className="flex items-center justify-between mb-2 pr-20">
@@ -348,15 +395,15 @@ export default function Onboarding() {
                     <button onClick={finish} disabled={saving}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                       style={{ background: plan.highlight ? "linear-gradient(135deg,#7c3aed,#ec4899)" : "rgba(255,255,255,0.08)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.55)", ...syne }}>
-                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Setting up...</> : <><Zap className="h-3.5 w-3.5" /> Get {plan.label}</>}
+                      {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> {ot("plan_setting_up")}</> : <><Zap className="h-3.5 w-3.5" /> {ot("plan_get")} {plan.label}</>}
                     </button>
                   </div>
                 ))}
               </div>
               <div className="flex items-center justify-between">
-                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">← Back</button>
+                <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
                 <button onClick={finish} disabled={saving} className="text-xs text-white/15 hover:text-white/30 transition-colors">
-                  {saving ? "Loading..." : "Continue with Free →"}
+                  {saving ? ot("plan_setting_up") : ot("plan_free")}
                 </button>
               </div>
             </div>
