@@ -7,6 +7,8 @@ import {
   TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
   ChevronRight, Sparkles, Plane, Wand2, Layers, X,
 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface InsightsData {
   avgHookScore: number | null;
@@ -44,6 +46,8 @@ const StatBar = ({ used, limit, accent }: { used: number; limit: number; accent:
 export default function DashboardOverview() {
   const { user, profile, usage, usageDetails, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
@@ -180,23 +184,23 @@ export default function DashboardOverview() {
 
   const firstName = profile?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
   const tools = [
-    { title: "Analyze",     desc: "Hook score in 60s",        icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
-    { title: "Board",       desc: "Production brief",          icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
-    { title: "Hooks",       desc: "10 angles in 30s",          icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
-    { title: "Translate",   desc: "Any market",                icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
-    { title: "Templates",   desc: "183 formats",               icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
-    { title: "Pre-flight",  desc: "Before going live",         icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
-    { title: "Persona",     desc: "Define audience",           icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
+    { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
+    { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
+    { title: dt("ov_hooks"),     desc: dt("ov_hooks_desc"),     icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
+    { title: dt("nav_translate"),desc: dt("ov_translate_desc"), icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
+    { title: dt("ov_templates"), desc: dt("ov_templates_desc"), icon: Layers,    url: "/dashboard/templates",    accent: "#f472b6" },
+    { title: dt("nav_preflight"),desc: dt("ov_preflight_desc"), icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
+    { title: dt("nav_persona"),  desc: dt("ov_persona_desc"),   icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
   ];
 
   const usageBlocks = [
-    { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
-    { label: "Boards",   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
-    { label: "Pre-flights", used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
+    { label: dt("ov_analyses"), used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
+    { label: dt("ov_boards"),   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
+    { label: dt("ov_preflights"), used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
   ];
 
   return (
@@ -216,7 +220,7 @@ export default function DashboardOverview() {
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                let's ship.
+                {dt("ov_lets_ship")}
               </span>
             </h1>
           </div>
@@ -240,13 +244,13 @@ export default function DashboardOverview() {
               <Target className="h-5 w-5 text-purple-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white" style={syne}>Complete your profile</p>
-              <p className="text-xs text-white/40 mt-0.5">Create a persona so AI tools generate content tailored to your audience.</p>
+              <p className="text-sm font-bold text-white" style={syne}>{dt("ov_complete_profile")}</p>
+              <p className="text-xs text-white/40 mt-0.5">{dt("ov_complete_profile_desc")}</p>
             </div>
             <button onClick={() => navigate("/dashboard/persona")}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all hover:scale-105"
               style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
-              <Sparkles className="h-3.5 w-3.5" /> Create Persona
+              <Sparkles className="h-3.5 w-3.5" /> {dt("ov_create_persona")}
             </button>
             <button onClick={() => { setDismissedBanner(true); localStorage.setItem("frameiq_dismiss_profile_banner", "1"); }}
               className="text-white/20 hover:text-white/50 transition-colors shrink-0 p-1">
@@ -293,10 +297,10 @@ export default function DashboardOverview() {
                 </span>
                 {hasData && insights.avgHookScore && <span className="text-xs text-white/25">/ 10</span>}
               </div>
-              <p className="text-[11px] text-white/35">Avg hook score</p>
+              <p className="text-[11px] text-white/35">{dt("ov_avg_hook_score")}</p>
               {hasData && (
                 <p className="text-[10px] mt-0.5" style={{ color: "#34d399", ...mono }}>
-                  {insights.totalAnalyzed} analyzed
+                  {insights.totalAnalyzed} {dt("ov_analyzed")}
                 </p>
               )}
             </div>
@@ -306,10 +310,10 @@ export default function DashboardOverview() {
         {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>Tools</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>{dt("ov_tools")}</p>
             <button onClick={() => navigate("/dashboard/analyses/new")}
               className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition-colors" style={mono}>
-              <Plus className="h-3 w-3" /> New analysis
+              <Plus className="h-3 w-3" /> {dt("ov_new_analysis")}
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -363,13 +367,13 @@ export default function DashboardOverview() {
                   <Brain className="h-4 w-4" style={{ color: "#a78bfa" }} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white" style={syne}>Intelligence feed</p>
-                  <p className="text-[10px] text-white/25">AI-powered creative signals</p>
+                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_intel_feed")}</p>
+                  <p className="text-[10px] text-white/25">{dt("ov_intel_signals")}</p>
                 </div>
               </div>
               <button onClick={() => navigate("/dashboard/intelligence")}
                 className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
-                All <ArrowRight className="h-3 w-3" />
+                {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
               </button>
             </div>
 
@@ -379,13 +383,13 @@ export default function DashboardOverview() {
                   <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl"
                     style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.12)" }}>🧠</div>
                   <div>
-                    <p className="text-sm font-bold text-white mb-1" style={syne}>No signals yet</p>
-                    <p className="text-xs text-white/30 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
+                    <p className="text-sm font-bold text-white mb-1" style={syne}>{dt("ov_no_signals")}</p>
+                    <p className="text-xs text-white/30 leading-relaxed">{dt("ov_no_signals_desc")}</p>
                   </div>
                   <button onClick={() => navigate("/dashboard/analyses/new")}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
                     style={{ ...syne, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
-                    <Plus className="h-3.5 w-3.5" /> Start analyzing
+                    <Plus className="h-3.5 w-3.5" /> {dt("ov_start_analyzing")}
                   </button>
                 </div>
               ) : (
@@ -417,7 +421,7 @@ export default function DashboardOverview() {
               {trendData.length >= 4 && (
                 <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>Hook score trend</span>
+                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>{dt("ov_hook_trend")}</span>
                     <span className="text-[10px]" style={{ color: "#34d399", ...mono }}>
                       latest: {trendData[trendData.length - 1]?.score.toFixed(1)}/10
                     </span>
@@ -451,24 +455,24 @@ export default function DashboardOverview() {
                     <Clock className="h-4 w-4 text-white/35" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white" style={syne}>Recent work</p>
-                    <p className="text-[10px] text-white/25">Latest activity</p>
+                    <p className="text-sm font-bold text-white" style={syne}>{dt("ov_recent_work")}</p>
+                    <p className="text-[10px] text-white/25">{dt("ov_latest_activity")}</p>
                   </div>
                 </div>
                 <button onClick={() => navigate("/dashboard/analyses")}
                   className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
-                  All <ArrowRight className="h-3 w-3" />
+                  {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
               <div className="p-2">
                 {recentActivity.length === 0 ? (
                   <div className="flex flex-col items-center text-center py-8 gap-3">
                     <span className="text-3xl">📂</span>
-                    <p className="text-sm text-white/30">No work yet</p>
+                    <p className="text-sm text-white/30">{dt("ov_no_work")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
                       style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
-                      <Plus className="h-3 w-3" /> Get started
+                      <Plus className="h-3 w-3" /> {dt("ov_get_started")}
                     </button>
                   </div>
                 ) : recentActivity.map(item => (
@@ -503,7 +507,7 @@ export default function DashboardOverview() {
                   <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
                     <TrendingUp className="h-4 w-4" style={{ color: "#34d399" }} />
                   </div>
-                  <p className="text-sm font-bold text-white" style={syne}>Performance</p>
+                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_performance")}</p>
                 </div>
                 <div className="flex items-center gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
                   {(["7d", "30d", "all"] as const).map(f => (
@@ -518,20 +522,20 @@ export default function DashboardOverview() {
               <div className="p-5">
                 {!hasData ? (
                   <div className="py-4 space-y-3">
-                    <p className="text-xs text-white/25 text-center leading-relaxed">Run your first analysis to unlock<br />AI performance insights</p>
+                    <p className="text-xs text-white/25 text-center leading-relaxed">{dt("ov_run_first")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                      <Plus className="h-3.5 w-3.5" /> New Analysis
+                      <Plus className="h-3.5 w-3.5" /> {dt("an_new")}
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3.5">
                     {[
-                      { label: "Avg hook score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
-                      { label: "Top model",       value: insights.bestModel || "—",       accent: "#f472b6" },
-                      { label: "Top market",      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
-                      { label: "Total analyzed",  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
+                      { label: dt("ov_avg_hook_score"), value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
+                      { label: dt("ov_top_model"),       value: insights.bestModel || "—",       accent: "#f472b6" },
+                      { label: dt("ov_top_market"),      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
+                      { label: dt("ov_total_analyzed"),  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
                     ].map(s => (
                       <div key={s.label} className="flex items-center justify-between gap-2">
                         <span className="text-xs text-white/35">{s.label}</span>
@@ -550,12 +554,12 @@ export default function DashboardOverview() {
                 <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
                   style={{ background: "radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%)" }} />
                 <div className="relative">
-                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>Unlock full access ⚡</p>
-                  <p className="text-xs text-white/40 mb-3 leading-relaxed">More analyses, boards, and AI tools — from $9/mo.</p>
+                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>{dt("ov_unlock_full")}</p>
+                  <p className="text-xs text-white/40 mb-3 leading-relaxed">{dt("ov_unlock_desc")}</p>
                   <button onClick={() => navigate("/pricing")}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
                     style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                    See plans <ArrowRight className="h-3.5 w-3.5" />
+                    {dt("ov_see_plans")} <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>

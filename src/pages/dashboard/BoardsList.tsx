@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutGrid, Plus, Trash2, Loader2, Clock, CheckCircle, Film, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface Board {
   id: string;
@@ -18,6 +20,8 @@ interface Board {
 const BoardsList = () => {
   const { user } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -55,14 +59,14 @@ const BoardsList = () => {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Boards</h1>
-          <p className="text-white/30 text-sm mt-0.5">{boards.length} production board{boards.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-xl font-bold text-white">{dt("bo_title")}</h1>
+          <p className="text-white/30 text-sm mt-0.5">{boards.length} {dt("bo_production_boards")}</p>
         </div>
         <button
           onClick={() => navigate("/dashboard/boards/new")}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
         >
-          <Plus className="h-4 w-4" /> New Board
+          <Plus className="h-4 w-4" /> {dt("bo_new")}
         </button>
       </div>
 
@@ -72,14 +76,14 @@ const BoardsList = () => {
             <LayoutGrid className="h-6 w-6 text-white/20" />
           </div>
           <div>
-            <p className="text-white/50 font-medium">No boards yet</p>
-            <p className="text-white/25 text-sm mt-1 max-w-xs">Describe your ad concept and get scenes, scripts, and production notes</p>
+            <p className="text-white/50 font-medium">{dt("bo_empty")}</p>
+            <p className="text-white/25 text-sm mt-1 max-w-xs">{dt("bo_describe_concept")}</p>
           </div>
           <button
             onClick={() => navigate("/dashboard/boards/new")}
             className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/50 hover:text-white hover:border-white/20 text-sm transition-all"
           >
-            Create first board
+            {dt("bo_create_first")}
           </button>
         </div>
       ) : (

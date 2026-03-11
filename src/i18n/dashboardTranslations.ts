@@ -43,6 +43,47 @@ export type DashT = {
   ov_used: string;
   ov_remaining: string;
   ov_reset: string;
+  ov_lets_ship: string;
+  ov_complete_profile: string;
+  ov_complete_profile_desc: string;
+  ov_create_persona: string;
+  ov_tools: string;
+  ov_analyze: string;
+  ov_analyze_desc: string;
+  ov_board: string;
+  ov_board_desc: string;
+  ov_hooks: string;
+  ov_hooks_desc: string;
+  ov_translate_desc: string;
+  ov_templates: string;
+  ov_templates_desc: string;
+  ov_preflight_desc: string;
+  ov_persona_desc: string;
+  ov_intel_signals: string;
+  ov_no_signals_desc: string;
+  ov_start_analyzing: string;
+  ov_recent_work: string;
+  ov_latest_activity: string;
+  ov_no_work: string;
+  ov_get_started: string;
+  ov_performance: string;
+  ov_avg_hook_score: string;
+  ov_top_model: string;
+  ov_top_market: string;
+  ov_total_analyzed: string;
+  ov_analyzed: string;
+  ov_run_first: string;
+  ov_unlock_full: string;
+  ov_unlock_desc: string;
+  ov_see_plans: string;
+  ov_hook_trend: string;
+  ov_loading: string;
+  ov_low_quota: string;
+  ov_limit_reached: string;
+  ov_active_persona_label: string;
+  ov_no_personas_yet: string;
+  ov_create_first_persona: string;
+  ov_clear_persona: string;
 
   // Analyses
   an_title: string;
@@ -89,6 +130,9 @@ export type DashT = {
   bo_vo_script: string;
   bo_on_screen: string;
   bo_editor_notes: string;
+  bo_production_boards: string;
+  bo_create_first: string;
+  bo_describe_concept: string;
 
   // Hook Generator
   hg_title: string;
@@ -267,6 +311,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Done", cm_ago: "ago", cm_today: "Today", cm_yesterday: "Yesterday",
     cm_no_persona: "No persona selected", cm_active_persona: "Active persona",
     cm_manage_personas: "Manage personas", cm_clear: "Clear",
+    ov_lets_ship: "let's ship.", ov_complete_profile: "Complete your profile",
+    ov_complete_profile_desc: "Create a persona so AI tools generate content tailored to your audience.",
+    ov_create_persona: "Create Persona", ov_tools: "Tools",
+    ov_analyze: "Analyze", ov_analyze_desc: "Hook score in 60s",
+    ov_board: "Board", ov_board_desc: "Production brief",
+    ov_hooks: "Hooks", ov_hooks_desc: "10 angles in 30s",
+    ov_translate_desc: "Any market", ov_templates: "Templates", ov_templates_desc: "183 formats",
+    ov_preflight_desc: "Before going live", ov_persona_desc: "Define audience",
+    ov_intel_signals: "AI-powered creative signals", ov_no_signals_desc: "Analyze a few videos to unlock AI-powered creative insights",
+    ov_start_analyzing: "Start analyzing", ov_recent_work: "Recent work", ov_latest_activity: "Latest activity",
+    ov_no_work: "No work yet", ov_get_started: "Get started", ov_performance: "Performance",
+    ov_avg_hook_score: "Avg hook score", ov_top_model: "Top model", ov_top_market: "Top market",
+    ov_total_analyzed: "Total analyzed", ov_analyzed: "analyzed",
+    ov_run_first: "Run your first analysis to unlock AI performance insights",
+    ov_unlock_full: "Unlock full access ⚡", ov_unlock_desc: "More analyses, boards, and AI tools — from $9/mo.",
+    ov_see_plans: "See plans", ov_hook_trend: "Hook score trend",
+    ov_loading: "Loading workspace...", ov_low_quota: "Running low on quota. Consider upgrading.",
+    ov_limit_reached: "Monthly limit reached. Upgrade to continue.",
+    ov_active_persona_label: "Active Persona", ov_no_personas_yet: "No personas yet",
+    ov_create_first_persona: "Create first persona", ov_clear_persona: "Clear persona",
+    bo_production_boards: "production boards", bo_create_first: "Create first board",
+    bo_describe_concept: "Describe your ad concept and get scenes, scripts, and production notes",
   },
 
   pt: {
@@ -340,6 +406,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Pronto", cm_ago: "atrás", cm_today: "Hoje", cm_yesterday: "Ontem",
     cm_no_persona: "Nenhuma persona selecionada", cm_active_persona: "Persona ativa",
     cm_manage_personas: "Gerenciar personas", cm_clear: "Limpar",
+    ov_lets_ship: "vamos criar.", ov_complete_profile: "Complete seu perfil",
+    ov_complete_profile_desc: "Crie uma persona para que as ferramentas de IA gerem conteúdo para o seu público.",
+    ov_create_persona: "Criar Persona", ov_tools: "Ferramentas",
+    ov_analyze: "Analisar", ov_analyze_desc: "Score do hook em 60s",
+    ov_board: "Board", ov_board_desc: "Brief de produção",
+    ov_hooks: "Hooks", ov_hooks_desc: "10 ângulos em 30s",
+    ov_translate_desc: "Qualquer mercado", ov_templates: "Templates", ov_templates_desc: "183 formatos",
+    ov_preflight_desc: "Antes de publicar", ov_persona_desc: "Defina audiência",
+    ov_intel_signals: "Sinais criativos com IA", ov_no_signals_desc: "Analise alguns vídeos para liberar insights criativos com IA",
+    ov_start_analyzing: "Começar a analisar", ov_recent_work: "Trabalho recente", ov_latest_activity: "Atividade recente",
+    ov_no_work: "Nenhum trabalho ainda", ov_get_started: "Começar", ov_performance: "Performance",
+    ov_avg_hook_score: "Score médio de hook", ov_top_model: "Melhor modelo", ov_top_market: "Melhor mercado",
+    ov_total_analyzed: "Total analisado", ov_analyzed: "analisados",
+    ov_run_first: "Rode sua primeira análise para liberar insights de performance com IA",
+    ov_unlock_full: "Desbloqueie acesso total ⚡", ov_unlock_desc: "Mais análises, boards e ferramentas de IA — a partir de $9/mês.",
+    ov_see_plans: "Ver planos", ov_hook_trend: "Tendência do score de hook",
+    ov_loading: "Carregando workspace...", ov_low_quota: "Cota quase esgotada. Considere fazer upgrade.",
+    ov_limit_reached: "Limite mensal atingido. Faça upgrade para continuar.",
+    ov_active_persona_label: "Persona Ativa", ov_no_personas_yet: "Nenhuma persona ainda",
+    ov_create_first_persona: "Criar primeira persona", ov_clear_persona: "Limpar persona",
+    bo_production_boards: "boards de produção", bo_create_first: "Criar primeiro board",
+    bo_describe_concept: "Descreva o conceito do seu anúncio e receba cenas, scripts e notas de produção",
   },
 
   es: {
@@ -413,6 +501,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Listo", cm_ago: "atrás", cm_today: "Hoy", cm_yesterday: "Ayer",
     cm_no_persona: "Sin persona seleccionada", cm_active_persona: "Persona activa",
     cm_manage_personas: "Gestionar personas", cm_clear: "Limpiar",
+    ov_lets_ship: "a crear.", ov_complete_profile: "Completa tu perfil",
+    ov_complete_profile_desc: "Crea una persona para que las herramientas de IA generen contenido para tu audiencia.",
+    ov_create_persona: "Crear Persona", ov_tools: "Herramientas",
+    ov_analyze: "Analizar", ov_analyze_desc: "Score del hook en 60s",
+    ov_board: "Board", ov_board_desc: "Brief de producción",
+    ov_hooks: "Hooks", ov_hooks_desc: "10 ángulos en 30s",
+    ov_translate_desc: "Cualquier mercado", ov_templates: "Plantillas", ov_templates_desc: "183 formatos",
+    ov_preflight_desc: "Antes de publicar", ov_persona_desc: "Define audiencia",
+    ov_intel_signals: "Señales creativas con IA", ov_no_signals_desc: "Analiza algunos videos para desbloquear insights creativos",
+    ov_start_analyzing: "Empezar a analizar", ov_recent_work: "Trabajo reciente", ov_latest_activity: "Actividad reciente",
+    ov_no_work: "Sin trabajos aún", ov_get_started: "Empezar", ov_performance: "Rendimiento",
+    ov_avg_hook_score: "Score promedio", ov_top_model: "Mejor modelo", ov_top_market: "Mejor mercado",
+    ov_total_analyzed: "Total analizado", ov_analyzed: "analizados",
+    ov_run_first: "Ejecuta tu primer análisis para desbloquear insights de rendimiento",
+    ov_unlock_full: "Desbloquea acceso total ⚡", ov_unlock_desc: "Más análisis, boards y herramientas IA — desde $9/mes.",
+    ov_see_plans: "Ver planes", ov_hook_trend: "Tendencia del score",
+    ov_loading: "Cargando workspace...", ov_low_quota: "Cuota casi agotada. Considera mejorar tu plan.",
+    ov_limit_reached: "Límite mensual alcanzado. Mejora tu plan para continuar.",
+    ov_active_persona_label: "Persona Activa", ov_no_personas_yet: "Sin personas aún",
+    ov_create_first_persona: "Crear primera persona", ov_clear_persona: "Limpiar persona",
+    bo_production_boards: "boards de producción", bo_create_first: "Crear primer board",
+    bo_describe_concept: "Describe el concepto de tu anuncio y obtén escenas, guiones y notas de producción",
   },
 
   zh: {
@@ -486,6 +596,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "完成", cm_ago: "前", cm_today: "今天", cm_yesterday: "昨天",
     cm_no_persona: "未选择画像", cm_active_persona: "已激活画像",
     cm_manage_personas: "管理画像", cm_clear: "清除",
+    ov_lets_ship: "开始创作。", ov_complete_profile: "完善您的资料",
+    ov_complete_profile_desc: "创建用户画像，让AI工具生成针对您受众的内容。",
+    ov_create_persona: "创建画像", ov_tools: "工具",
+    ov_analyze: "分析", ov_analyze_desc: "60秒获得评分",
+    ov_board: "制作板", ov_board_desc: "制作简报",
+    ov_hooks: "钩子", ov_hooks_desc: "30秒10个角度",
+    ov_translate_desc: "任何市场", ov_templates: "模板", ov_templates_desc: "183种格式",
+    ov_preflight_desc: "发布前检查", ov_persona_desc: "定义受众",
+    ov_intel_signals: "AI创意信号", ov_no_signals_desc: "分析几个视频以解锁AI创意洞察",
+    ov_start_analyzing: "开始分析", ov_recent_work: "近期工作", ov_latest_activity: "最新活动",
+    ov_no_work: "暂无工作", ov_get_started: "开始", ov_performance: "表现",
+    ov_avg_hook_score: "平均钩子评分", ov_top_model: "最佳模型", ov_top_market: "最佳市场",
+    ov_total_analyzed: "总分析数", ov_analyzed: "已分析",
+    ov_run_first: "运行首次分析以解锁AI性能洞察",
+    ov_unlock_full: "解锁完整访问 ⚡", ov_unlock_desc: "更多分析、制作板和AI工具 — $9/月起。",
+    ov_see_plans: "查看方案", ov_hook_trend: "钩子评分趋势",
+    ov_loading: "加载工作区...", ov_low_quota: "配额即将用完，考虑升级。",
+    ov_limit_reached: "月度限额已达。升级以继续。",
+    ov_active_persona_label: "已激活画像", ov_no_personas_yet: "暂无画像",
+    ov_create_first_persona: "创建首个画像", ov_clear_persona: "清除画像",
+    bo_production_boards: "个制作板", bo_create_first: "创建首个制作板",
+    bo_describe_concept: "描述您的广告概念，获取场景、脚本和制作备注",
   },
 
   fr: {
@@ -558,6 +690,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Fait", cm_ago: "il y a", cm_today: "Aujourd'hui", cm_yesterday: "Hier",
     cm_no_persona: "Aucune persona sélectionnée", cm_active_persona: "Persona active",
     cm_manage_personas: "Gérer les personas", cm_clear: "Effacer",
+    ov_lets_ship: "on crée.", ov_complete_profile: "Complétez votre profil",
+    ov_complete_profile_desc: "Créez une persona pour que les outils IA génèrent du contenu adapté à votre audience.",
+    ov_create_persona: "Créer Persona", ov_tools: "Outils",
+    ov_analyze: "Analyser", ov_analyze_desc: "Score du hook en 60s",
+    ov_board: "Board", ov_board_desc: "Brief de production",
+    ov_hooks: "Hooks", ov_hooks_desc: "10 angles en 30s",
+    ov_translate_desc: "N'importe quel marché", ov_templates: "Modèles", ov_templates_desc: "183 formats",
+    ov_preflight_desc: "Avant publication", ov_persona_desc: "Définir l'audience",
+    ov_intel_signals: "Signaux créatifs IA", ov_no_signals_desc: "Analysez quelques vidéos pour débloquer des insights créatifs",
+    ov_start_analyzing: "Commencer l'analyse", ov_recent_work: "Travail récent", ov_latest_activity: "Dernière activité",
+    ov_no_work: "Aucun travail", ov_get_started: "Commencer", ov_performance: "Performance",
+    ov_avg_hook_score: "Score moyen du hook", ov_top_model: "Meilleur modèle", ov_top_market: "Meilleur marché",
+    ov_total_analyzed: "Total analysé", ov_analyzed: "analysés",
+    ov_run_first: "Lancez votre première analyse pour débloquer les insights de performance IA",
+    ov_unlock_full: "Accès complet ⚡", ov_unlock_desc: "Plus d'analyses, boards et outils IA — dès 9$/mois.",
+    ov_see_plans: "Voir les plans", ov_hook_trend: "Tendance du score",
+    ov_loading: "Chargement...", ov_low_quota: "Quota presque épuisé. Envisagez une mise à niveau.",
+    ov_limit_reached: "Limite mensuelle atteinte. Mettez à niveau pour continuer.",
+    ov_active_persona_label: "Persona Active", ov_no_personas_yet: "Aucune persona",
+    ov_create_first_persona: "Créer première persona", ov_clear_persona: "Effacer persona",
+    bo_production_boards: "boards de production", bo_create_first: "Créer premier board",
+    bo_describe_concept: "Décrivez votre concept publicitaire et obtenez scènes, scripts et notes de production",
   },
 
   de: {
@@ -630,6 +784,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Fertig", cm_ago: "vor", cm_today: "Heute", cm_yesterday: "Gestern",
     cm_no_persona: "Keine Persona ausgewählt", cm_active_persona: "Aktive Persona",
     cm_manage_personas: "Personas verwalten", cm_clear: "Löschen",
+    ov_lets_ship: "los geht's.", ov_complete_profile: "Profil vervollständigen",
+    ov_complete_profile_desc: "Erstellen Sie eine Persona, damit KI-Tools Inhalte für Ihre Zielgruppe generieren.",
+    ov_create_persona: "Persona erstellen", ov_tools: "Tools",
+    ov_analyze: "Analysieren", ov_analyze_desc: "Hook-Score in 60s",
+    ov_board: "Board", ov_board_desc: "Produktions-Brief",
+    ov_hooks: "Hooks", ov_hooks_desc: "10 Winkel in 30s",
+    ov_translate_desc: "Jeder Markt", ov_templates: "Vorlagen", ov_templates_desc: "183 Formate",
+    ov_preflight_desc: "Vor der Veröffentlichung", ov_persona_desc: "Zielgruppe definieren",
+    ov_intel_signals: "KI-gestützte kreative Signale", ov_no_signals_desc: "Analysieren Sie Videos für KI-Kreativ-Insights",
+    ov_start_analyzing: "Analyse starten", ov_recent_work: "Letzte Arbeiten", ov_latest_activity: "Neueste Aktivität",
+    ov_no_work: "Noch keine Arbeiten", ov_get_started: "Starten", ov_performance: "Leistung",
+    ov_avg_hook_score: "Ø Hook-Score", ov_top_model: "Top-Modell", ov_top_market: "Top-Markt",
+    ov_total_analyzed: "Gesamt analysiert", ov_analyzed: "analysiert",
+    ov_run_first: "Starten Sie Ihre erste Analyse für KI-Performance-Insights",
+    ov_unlock_full: "Vollzugang freischalten ⚡", ov_unlock_desc: "Mehr Analysen, Boards und KI-Tools — ab $9/Monat.",
+    ov_see_plans: "Pläne ansehen", ov_hook_trend: "Hook-Score-Trend",
+    ov_loading: "Workspace wird geladen...", ov_low_quota: "Kontingent fast erschöpft. Erwägen Sie ein Upgrade.",
+    ov_limit_reached: "Monatslimit erreicht. Upgraden Sie, um fortzufahren.",
+    ov_active_persona_label: "Aktive Persona", ov_no_personas_yet: "Noch keine Personas",
+    ov_create_first_persona: "Erste Persona erstellen", ov_clear_persona: "Persona löschen",
+    bo_production_boards: "Produktions-Boards", bo_create_first: "Erstes Board erstellen",
+    bo_describe_concept: "Beschreiben Sie Ihr Anzeigenkonzept und erhalten Sie Szenen, Skripte und Produktionsnotizen",
   },
 
   ar: {
@@ -702,6 +878,28 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "تم", cm_ago: "منذ", cm_today: "اليوم", cm_yesterday: "أمس",
     cm_no_persona: "لا شخصية محددة", cm_active_persona: "الشخصية النشطة",
     cm_manage_personas: "إدارة الشخصيات", cm_clear: "مسح",
+    ov_lets_ship: "لنبدأ.", ov_complete_profile: "أكمل ملفك الشخصي",
+    ov_complete_profile_desc: "أنشئ شخصية لتوليد محتوى مخصص لجمهورك.",
+    ov_create_persona: "إنشاء شخصية", ov_tools: "الأدوات",
+    ov_analyze: "تحليل", ov_analyze_desc: "نقاط الخطاف في 60 ثانية",
+    ov_board: "لوحة", ov_board_desc: "ملخص إنتاج",
+    ov_hooks: "خطافات", ov_hooks_desc: "10 زوايا في 30 ثانية",
+    ov_translate_desc: "أي سوق", ov_templates: "القوالب", ov_templates_desc: "183 تنسيقاً",
+    ov_preflight_desc: "قبل النشر", ov_persona_desc: "حدد الجمهور",
+    ov_intel_signals: "إشارات إبداعية بالذكاء الاصطناعي", ov_no_signals_desc: "حلل بعض الفيديوهات لفتح رؤى إبداعية",
+    ov_start_analyzing: "ابدأ التحليل", ov_recent_work: "العمل الأخير", ov_latest_activity: "أحدث نشاط",
+    ov_no_work: "لا عمل بعد", ov_get_started: "ابدأ", ov_performance: "الأداء",
+    ov_avg_hook_score: "متوسط نقاط الخطاف", ov_top_model: "أفضل نموذج", ov_top_market: "أفضل سوق",
+    ov_total_analyzed: "إجمالي التحليلات", ov_analyzed: "تم تحليلها",
+    ov_run_first: "شغّل أول تحليل لفتح رؤى الأداء",
+    ov_unlock_full: "فتح الوصول الكامل ⚡", ov_unlock_desc: "المزيد من التحليلات واللوحات وأدوات الذكاء الاصطناعي — من $9/شهرياً.",
+    ov_see_plans: "عرض الخطط", ov_hook_trend: "اتجاه نقاط الخطاف",
+    ov_loading: "جاري تحميل المساحة...", ov_low_quota: "الحصة على وشك النفاد. فكر بالترقية.",
+    ov_limit_reached: "تم بلوغ الحد الشهري. قم بالترقية للمتابعة.",
+    ov_active_persona_label: "الشخصية النشطة", ov_no_personas_yet: "لا شخصيات بعد",
+    ov_create_first_persona: "إنشاء أول شخصية", ov_clear_persona: "مسح الشخصية",
+    bo_production_boards: "لوحات إنتاج", bo_create_first: "إنشاء أول لوحة",
+    bo_describe_concept: "صِف مفهوم إعلانك واحصل على مشاهد ونصوص وملاحظات إنتاج",
   },
 };
 

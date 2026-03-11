@@ -164,7 +164,7 @@ export default function DashboardLayout() {
       <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-white/30" />
-          <p className="text-xs text-white/20 font-mono">Loading workspace...</p>
+          <p className="text-xs text-white/20 font-mono">{dt("ov_loading")}</p>
         </div>
       </div>
     );
@@ -215,25 +215,25 @@ export default function DashboardLayout() {
               <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl"
                 style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <div className="px-3 py-2.5 border-b border-white/[0.06]">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">Active Persona</p>
-                  <p className="text-[11px] text-white/20 mt-0.5">AI uses this context in every tool</p>
-                </div>
+                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">{dt("ov_active_persona_label")}</p>
+                   <p className="text-[11px] text-white/20 mt-0.5">{dt("ov_set_persona")}</p>
+                 </div>
                 {savedPersonas.length === 0 ? (
                   <div className="p-4 text-center">
-                    <p className="text-xs text-white/30 mb-3">No personas yet</p>
-                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
-                      style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
-                      <Sparkles className="h-3 w-3" /> Create first persona
-                    </button>
+                   <p className="text-xs text-white/30 mb-3">{dt("ov_no_personas_yet")}</p>
+                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
+                       style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                       <Sparkles className="h-3 w-3" /> {dt("ov_create_first_persona")}
+                     </button>
                   </div>
                 ) : (
                   <div className="py-1 max-h-64 overflow-y-auto">
                     {selectedPersona && (
                       <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors text-xs text-white/30">
-                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
-                        Clear persona
+                         <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
+                         {dt("ov_clear_persona")}
                       </button>
                     )}
                     {savedPersonas.map(p => (
@@ -274,13 +274,13 @@ export default function DashboardLayout() {
         {usageDetails?.show_warning && !usageDetails?.is_over_limit && (
           <div className="mx-4 mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Running low on quota. Consider upgrading.
+            {dt("ov_low_quota")}
           </div>
         )}
         {usageDetails?.is_over_limit && (
           <div className="mx-4 mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Monthly limit reached. Upgrade to continue.
+            {dt("ov_limit_reached")}
           </div>
         )}
 
