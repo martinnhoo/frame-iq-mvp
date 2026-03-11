@@ -38,8 +38,8 @@ const faqItems = [
     a: "The Free and Creator plans include 1 seat. Studio includes 2 seats. Scale includes up to 10 seats. Enterprise plans can accommodate unlimited seats — contact us for details.",
   },
   {
-    q: "Does FrameIQ replace my creative agency?",
-    a: "FrameIQ doesn't replace your creative team — it makes them faster. Your strategists spend less time on research and briefing, and more time on high-level creative decisions.",
+    q: "Does AdBrief replace my creative agency?",
+    a: "AdBrief doesn't replace your creative team — it makes them faster. Your strategists spend less time on research and briefing, and more time on high-level creative decisions.",
   },
   {
     q: "Is my data secure?",
