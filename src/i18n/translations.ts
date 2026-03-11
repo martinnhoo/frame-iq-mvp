@@ -538,7 +538,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_title: "Génération Vidéo IA",
     feature_ai_video_desc: "Du concept au MP4 avec voix off IA. Pas besoin d'éditeurs.",
     feature_api_title: "Accès API",
-    feature_api_desc: "Intégrez FrameIQ à votre workflow existant avec notre API REST.",
+    feature_api_desc: "Intégrez AdBrief à votre workflow existant avec notre API REST.",
 
 
     pricing_label: "Tarifs",
