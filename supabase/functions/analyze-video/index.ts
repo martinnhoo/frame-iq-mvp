@@ -259,7 +259,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     // Save to creative_memory
     await supabase.from('creative_memory').insert({
       user_id,
-      analysis_id,
+      analysis_id: analysisId,
       hook_type: analysis.hook_type as string,
       creative_model: analysis.creative_model as string,
       platform: (analysis.recommended_platforms as string[])?.[0] || null,
