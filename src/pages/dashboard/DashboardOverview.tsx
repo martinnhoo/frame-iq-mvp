@@ -421,7 +421,7 @@ export default function DashboardOverview() {
               {trendData.length >= 4 && (
                 <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>Hook score trend</span>
+                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>{dt("ov_hook_trend")}</span>
                     <span className="text-[10px]" style={{ color: "#34d399", ...mono }}>
                       latest: {trendData[trendData.length - 1]?.score.toFixed(1)}/10
                     </span>
