@@ -204,6 +204,33 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           </div>
         </nav>
 
+        {/* ── Gamification: Streak + Mastery ── */}
+        <div className="px-3 py-2 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+          {/* Streak */}
+          {streak > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: streak >= 7 ? "rgba(251,191,36,0.08)" : "rgba(255,255,255,0.03)" }}>
+              <Flame className="h-3.5 w-3.5" style={{ color: streak >= 7 ? "#fbbf24" : streak >= 3 ? "#fb923c" : "#ffffff30" }} />
+              <span className="text-[12px] font-bold" style={{ ...mono, color: streak >= 7 ? "#fbbf24" : streak >= 3 ? "#fb923c" : "rgba(255,255,255,0.4)" }}>
+                {streak}
+              </span>
+              <span className="text-[10px] text-white/20">{dt("gm_streak_days")}</span>
+            </div>
+          )}
+
+          {/* Creative Mastery */}
+          <div className="px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] uppercase tracking-[0.15em] text-white/15 font-bold" style={syne}>{dt("gm_mastery")}</span>
+              <span className="text-[10px] font-bold" style={{ ...mono, color: mastery.color }}>{mastery.level}</span>
+            </div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <div className="h-full rounded-full transition-all duration-1000"
+                style={{ width: `${mastery.pct}%`, background: `linear-gradient(90deg, ${mastery.color}60, ${mastery.color})` }} />
+            </div>
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="shrink-0 p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {/* Upgrade */}
