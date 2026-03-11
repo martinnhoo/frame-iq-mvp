@@ -485,7 +485,7 @@ export default function IntelligencePage() {
       supabase.from("ads_data_imports" as never).select("*" as never)
         .eq("user_id" as never, user.id).order("created_at" as never, { ascending: false }),
     ]);
-    if (an) setAnalyses(an as AnalysisRow[]);
+    if (an) setAnalyses(an as unknown as AnalysisRow[]);
     if (pr) setAiProfile(pr as Record<string, unknown>);
     if (mem) setMemoryData(mem as typeof memoryData);
     if (imp) setImports(imp as AdsImport[]);
