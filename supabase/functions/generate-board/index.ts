@@ -104,6 +104,17 @@ Deno.serve(async (req) => {
     const usageCount = (usage?.boards_count as number) || 0;
     const planLimit = limits[plan] ?? 3;
 
+    // Daily AI rate limit check
+    {
+      const { data: rateCheck } = await supabaseClient.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: plan });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(
+          JSON.stringify({ error: rateCheck.message, daily_limit: true }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     if (usageCount >= planLimit) {
       return new Response(
         JSON.stringify({ error: 'limit_reached', plan, message: `You've reached your ${plan} plan limit of ${planLimit} boards this month.` }),

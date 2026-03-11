@@ -36,9 +36,19 @@ Deno.serve(async (req) => {
     if (user_id) {
       const period = new Date().toISOString().slice(0, 7);
       const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
+      const plan = profile?.plan || 'free';
+
+      // Daily AI rate limit
+      const { data: rateCheck } = await supabase.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: plan });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
+          status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Monthly translation limit
       const { data: usage } = await supabase.from('usage').select('translations_count').eq('user_id', user_id).eq('period', period).maybeSingle();
       const limits: Record<string, number> = { free: 10, creator: 10, starter: 50, studio: 200, scale: 2000 };
-      const plan = profile?.plan || 'free';
       const count = usage?.translations_count || 0;
       if (count >= (limits[plan] ?? 10)) {
         return new Response(JSON.stringify({ error: 'limit_reached', plan }), {

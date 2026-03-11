@@ -143,7 +143,7 @@ export default function PersonaPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-persona", {
-        body: { answers: finalAnswers },
+        body: { answers: finalAnswers, user_id: user.id },
       });
 
       if (error) throw error;

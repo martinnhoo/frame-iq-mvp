@@ -95,6 +95,17 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // ── Rate limit check ──
+    if (user_id) {
+      const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user_id).single();
+      const { data: rateCheck } = await supabase.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: profile?.plan || 'free' });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // ── Step 2: Analyze with Lovable AI (or fallback to Anthropic) ────────
     if (!analysisId) {
       return new Response(JSON.stringify({

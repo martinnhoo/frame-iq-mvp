@@ -211,6 +211,17 @@ Return ONLY valid JSON (no markdown, no backticks):
   "reading_time_seconds": <estimated VO seconds>
 }`;
 
+    // Rate limit check
+    if (user_id) {
+      const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user_id).single();
+      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", { p_user_id: user_id, p_plan: profile?.plan || "free" });
+      if (rateCheck && !rateCheck.allowed) {
+        return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     console.log("Calling AI for pre-flight analysis...");
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

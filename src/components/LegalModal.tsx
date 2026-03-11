@@ -138,11 +138,26 @@ Each plan includes specific limits for analyses, boards, video generation, and t
 
 You agree NOT to:
 - Upload content that violates intellectual property rights
-- Use FrameIQ for illegal purposes or to analyze illegal content
+- Use AdBrief for illegal purposes or to analyze illegal content
 - Attempt to reverse-engineer our AI models or algorithms
 - Share account credentials or exceed your plan's seat limit
 - Use automated tools to scrape or overload our systems
 - Upload content that is harmful, abusive, or violates others' privacy
+
+## 5.1 Fair Usage & Daily Rate Limits
+
+To ensure a fair and stable experience for all users, AdBrief applies daily AI request limits based on your plan:
+
+- **Free**: Up to 50 AI requests per day
+- **Creator**: Up to 150 AI requests per day
+- **Studio**: Up to 500 AI requests per day
+- **Scale**: Up to 2,000 AI requests per day
+
+An "AI request" includes any action that triggers AI processing, such as video analysis, board generation, hook generation, translation, pre-flight check, persona generation, or support chat messages.
+
+Daily limits reset at midnight UTC. If you reach your daily limit, you can continue the next day or upgrade your plan for higher limits. We reserve the right to adjust these limits with 30 days' notice to maintain service quality for all users.
+
+Abuse of the platform through excessive automated requests, API scraping, or intentional circumvention of rate limits may result in temporary or permanent account suspension.
 
 ## 6. Intellectual Property
 
