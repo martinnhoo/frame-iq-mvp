@@ -247,7 +247,7 @@ const blogPosts: Record<string, {
     category: "Creative Strategy",
     readTime: "6 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["creative strategist tools", "ad tech stack", "creative strategy tools", "performance marketing tools", "ad spy tools"],
     content: [
