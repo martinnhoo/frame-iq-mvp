@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const lang = detectLang(language);
     const t = templates[lang];
     const name = first_name || 'there';
-    const appUrl = Deno.env.get('APP_URL') || 'https://frame-iq-mvp.lovable.app';
+    const appUrl = Deno.env.get('APP_URL') || 'https://adbrief.pro';
 
     const html = buildHtml(t, name, appUrl);
 
