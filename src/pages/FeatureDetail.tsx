@@ -31,7 +31,7 @@ const featureMeta: Record<string, {
     icon: FileText,
     title: "Board Generation",
     headline: "From prompt to production board in 30 seconds.",
-    description: "Describe your ad concept in plain text. FrameIQ generates a complete production board with scene breakdowns, voiceover scripts, editor notes, and visual direction.",
+    description: "Describe your ad concept in plain text. AdBrief generates a complete production board with scene breakdowns, voiceover scripts, editor notes, and visual direction.",
     details: [
       "Scene-by-scene breakdown with timing, transitions, and visual direction",
       "Full voiceover script with tone, pacing, and delivery notes",
