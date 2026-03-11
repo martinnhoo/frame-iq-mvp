@@ -729,7 +729,9 @@ export default function IntelligencePage() {
         <div className="space-y-4">
 
           {/* Upload panel — always visible */}
-          <AdsUploadPanel userId={user.id} onImported={loadData} />
+          <AdsUploadPanel userId={user.id} onImported={loadData} personaContext={
+            selectedPersona ? `Active Persona: ${selectedPersona.name} — ${selectedPersona.headline}. Pains: ${selectedPersona.pains?.join(", ")}. Desires: ${selectedPersona.desires?.join(", ")}. Best platforms: ${selectedPersona.best_platforms?.join(", ")}. Hook angles: ${selectedPersona.hook_angles?.join(", ")}. Language style: ${selectedPersona.language_style}` : undefined
+          } />
 
           {/* Imports list */}
           {imports.length > 0 ? (
