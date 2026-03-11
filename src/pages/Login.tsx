@@ -142,7 +142,7 @@ const Login = () => {
               {/* Email form */}
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground text-sm">Email</Label>
+                  <Label htmlFor="email" className="text-foreground text-sm">{t("auth_email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
