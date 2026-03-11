@@ -205,15 +205,18 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     console.log('Analysis complete in', processingTime, 'seconds');
 
     // ── Save result ──────────────────────────────────────────────────────
-    await supabase.from('analyses').update({
+    const { error: saveError } = await supabase.from('analyses').update({
       status: 'completed',
       result: analysis,
       hook_strength: analysis.hook_strength as string,
-      hook_score: analysis.hook_score as number,
       recommended_platforms: analysis.recommended_platforms as string[],
       improvement_suggestions: analysis.improvement_suggestions as string[],
       processing_time_seconds: processingTime,
-    }).eq('id', analysis_id);
+    }).eq('id', analysisId);
+
+    if (saveError) {
+      throw new Error(`Failed to save analysis: ${saveError.message}`);
+    }
 
     // Increment usage
     const currentPeriod = new Date().toISOString().slice(0, 7);
