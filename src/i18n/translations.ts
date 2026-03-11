@@ -421,7 +421,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_book_demo: "Reservar Demo",
 
     auth_login_title: "Bienvenido de vuelta",
-    auth_login_subtitle: "Inicia sesión en tu cuenta de FrameIQ",
+    auth_login_subtitle: "Inicia sesión en tu cuenta de AdBrief",
     auth_signup_title: "Crea tu cuenta",
     auth_signup_subtitle: "Empieza a analizar videos y escalar tus creativos",
     auth_email: "Email corporativo",
