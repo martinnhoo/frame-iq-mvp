@@ -290,7 +290,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
 
 function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
-  const r = imp.result as ParsedAds;
+  const r = imp.result as unknown as ParsedAds;
   const pm = PLATFORM_META[imp.platform] || PLATFORM_META.unknown;
 
   return (
