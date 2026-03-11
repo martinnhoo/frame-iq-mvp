@@ -342,7 +342,7 @@ export const SEO_LANDING_PAGES = [
     title: "TikTok Ad Examples",
     headline: "The Best TikTok Ad Examples — Analyzed",
     subheadline: "Every ad scored for hook strength, creative model, and platform fit. Updated weekly.",
-    metaTitle: "Best TikTok Ad Examples (Analyzed) — FrameIQ",
+    metaTitle: "Best TikTok Ad Examples (Analyzed) — AdBrief",
     metaDescription: "Browse the best TikTok ad examples with hook scores, creative breakdowns, and AI analysis. See exactly why top ads work.",
     keywords: ["tiktok ad examples", "best tiktok ads", "tiktok ad examples 2025", "tiktok advertising examples", "tiktok video ad examples"],
     intro: "TikTok has become the most powerful platform for direct response advertising. But what separates a 9.1-scoring viral ad from a 4.2 that bleeds spend? In this library, every ad is scored for hook strength, creative model, and platform fit — so you can learn from what actually works.",
