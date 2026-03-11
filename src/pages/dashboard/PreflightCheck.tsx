@@ -4,6 +4,7 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import { toast } from "sonner";
+import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
   ChevronDown, Clock, BarChart2, Zap, Shield, MessageSquare,
@@ -181,7 +182,7 @@ const Select = ({ value, onChange, options }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function PreflightCheck() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
 
   const [script, setScript] = useState("");
   const [hook, setHook] = useState("");
@@ -192,6 +193,9 @@ export default function PreflightCheck() {
   const [format, setFormat] = useState("UGC");
   const [product, setProduct] = useState("");
   const [complianceNotes, setComplianceNotes] = useState("");
+  const [funnelStage, setFunnelStage] = useState("tofu");
+  const [showPersonaWarning, setShowPersonaWarning] = useState(false);
+  const [pendingRun, setPendingRun] = useState(false);
 
   // Input mode — "script" or "video"
   const [inputMode, setInputMode] = useState<"script" | "video">("script");
@@ -216,6 +220,13 @@ export default function PreflightCheck() {
   const run = async () => {
     if (inputMode === "script" && !script.trim()) { toast.error("Paste your script first"); return; }
     if (inputMode === "video" && !videoFile) { toast.error("Drop a video file first"); return; }
+
+    // Warn if no persona selected
+    if (!selectedPersona && !pendingRun) {
+      setShowPersonaWarning(true);
+      return;
+    }
+    setPendingRun(false);
 
     setLoading(true);
     setResult(null);
@@ -251,6 +262,8 @@ export default function PreflightCheck() {
         formData.append("compliance_notes", complianceNotes);
         formData.append("hook", hook);
         formData.append("cta", cta);
+        formData.append("funnel_stage", funnelStage);
+        if (selectedPersona) formData.append("persona_context", JSON.stringify(selectedPersona));
         if (user?.id) formData.append("user_id", user.id);
 
         const { data: session } = await supabase.auth.getSession();
@@ -268,7 +281,7 @@ export default function PreflightCheck() {
       } else {
         // JSON mode for script text
         const { data: d, error } = await supabase.functions.invoke("run-preflight", {
-          body: { user_id: user?.id, script, hook, cta, platform, market, duration, format, product, compliance_notes: complianceNotes },
+          body: { user_id: user?.id, script, hook, cta, platform, market, duration, format, product, compliance_notes: complianceNotes, funnel_stage: funnelStage, persona_context: selectedPersona || undefined },
         });
         if (error) throw error;
         if (d?.error) throw new Error(d.error);
@@ -298,6 +311,12 @@ export default function PreflightCheck() {
 
   return (
     <div className="min-h-screen" style={{ background: "#050508" }}>
+      <PersonaWarningModal
+        open={showPersonaWarning}
+        onClose={() => setShowPersonaWarning(false)}
+        toolName="Pre-flight Check"
+        onContinue={() => { setShowPersonaWarning(false); setPendingRun(true); setTimeout(run, 50); }}
+      />
       <div className="max-w-4xl mx-auto p-3 sm:p-4 lg:p-6 space-y-4">
 
         {/* ── Header ── */}
@@ -474,6 +493,27 @@ export default function PreflightCheck() {
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
               />
+            </div>
+          </div>
+
+          {/* Funnel Stage */}
+          <div className="px-4 pb-2">
+            <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2">Funnel Stage</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { id: "tofu", label: "ToFu", desc: "Awareness", color: "#60a5fa" },
+                { id: "mofu", label: "MoFu", desc: "Consideration", color: "#a78bfa" },
+                { id: "bofu", label: "BoFu", desc: "Conversion", color: "#34d399" },
+              ].map(f => (
+                <button key={f.id} onClick={() => setFunnelStage(f.id)}
+                  className="py-2 rounded-lg text-xs font-medium border transition-all"
+                  style={funnelStage === f.id
+                    ? { background: `${f.color}18`, borderColor: `${f.color}40`, color: f.color }
+                    : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}>
+                  <span className="font-bold">{f.label}</span>
+                  <span className="opacity-60 ml-1 text-[10px]">{f.desc}</span>
+                </button>
+              ))}
             </div>
           </div>
 

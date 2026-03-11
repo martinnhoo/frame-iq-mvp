@@ -33,6 +33,8 @@ Deno.serve(async (req) => {
     let product = "";
     let compliance_notes = "";
     let user_id = "";
+    let funnel_stage = "tofu";
+    let persona_context: Record<string, unknown> | null = null;
     let transcribed_from_video = false;
     let video_filename = "";
 
@@ -48,6 +50,9 @@ Deno.serve(async (req) => {
       product = (formData.get("product") as string) || "";
       compliance_notes = (formData.get("compliance_notes") as string) || "";
       user_id = (formData.get("user_id") as string) || "";
+      funnel_stage = (formData.get("funnel_stage") as string) || "tofu";
+      const pcStr = formData.get("persona_context") as string | null;
+      if (pcStr) { try { persona_context = JSON.parse(pcStr); } catch {} }
       hook = (formData.get("hook") as string) || "";
       cta = (formData.get("cta") as string) || "";
 
@@ -95,6 +100,8 @@ Deno.serve(async (req) => {
       product = body.product || "";
       compliance_notes = body.compliance_notes || "";
       user_id = body.user_id || "";
+      funnel_stage = body.funnel_stage || "tofu";
+      persona_context = body.persona_context || null;
     }
 
     if (!script.trim()) {
@@ -155,8 +162,10 @@ CONTEXT:
 - Duration: ${duration}s
 - Format: ${format}
 - Product: ${product || "not specified"}
+- Funnel Stage: ${funnel_stage.toUpperCase()} (${funnel_stage === "tofu" ? "Cold audience — awareness, pattern interrupt priority" : funnel_stage === "mofu" ? "Warm audience — consideration, proof and differentiation" : "Hot audience — conversion, urgency and CTA clarity"})
 - User compliance notes: ${compliance_notes || "none"}
 - Transcribed from video: ${transcribed_from_video}
+${persona_context ? `\nTARGET PERSONA: ${persona_context.name || ""} — Age ${persona_context.age_range || "unknown"}, ${persona_context.platforms?.join(", ") || "unknown platforms"}. Pain points: ${(persona_context.pain_points as string[] || []).join(", ")}. Interests: ${(persona_context.interests as string[] || []).join(", ")}. Apply persona lens to all assessments.` : ""}
 
 PLATFORM RULES (${platform.toUpperCase()}): ${platformRule}
 MARKET RULES (${market}): ${marketRule}
@@ -261,6 +270,12 @@ Return ONLY valid JSON (no markdown, no backticks):
         await supabase.from("usage").update({
           preflights_count: ((currentUsage as any).preflights_count || 0) + 1,
         }).eq("user_id", user_id).eq("period", currentPeriod);
+      } else {
+        await supabase.from("usage").insert({
+          user_id,
+          period: currentPeriod,
+          preflights_count: 1,
+        });
       }
     }
 
