@@ -86,8 +86,8 @@ const featureMeta: Record<string, {
   "api-access": {
     icon: Zap,
     title: "API Access",
-    headline: "Plug FrameIQ into your stack.",
-    description: "REST API with full access to video analysis, board generation, and creative intelligence. Build FrameIQ into your internal tools, dashboards, and automation workflows.",
+    headline: "Plug AdBrief into your stack.",
+    description: "REST API with full access to video analysis, board generation, and creative intelligence. Build AdBrief into your internal tools, dashboards, and automation workflows.",
     details: [
       "RESTful API with comprehensive documentation and SDKs",
       "Webhook support for real-time analysis completion notifications",
