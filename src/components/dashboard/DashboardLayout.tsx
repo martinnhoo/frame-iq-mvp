@@ -105,6 +105,13 @@ export default function DashboardLayout() {
       setUser(session.user);
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       if (profileData && mounted) {
+        // Test account: reset onboarding every login
+        const TEST_EMAIL = "testadbrief@yopmail.com";
+        if (session.user.email === TEST_EMAIL && profileData.onboarding_completed) {
+          await supabase.from("profiles").update({ onboarding_completed: false, onboarding_data: null }).eq("id", session.user.id);
+          profileData.onboarding_completed = false;
+        }
+
         setProfile(profileData);
 
         // New user — redirect to onboarding
