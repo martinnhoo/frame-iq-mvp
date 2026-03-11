@@ -13,7 +13,7 @@ const privacyContent = `
 
 **Last updated: March 9, 2026**
 
-FrameIQ ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+AdBrief ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
 
 ## 1. Information We Collect
 
