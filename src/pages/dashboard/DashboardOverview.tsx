@@ -532,10 +532,10 @@ export default function DashboardOverview() {
                 ) : (
                   <div className="space-y-3.5">
                     {[
-                      { label: "Avg hook score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
-                      { label: "Top model",       value: insights.bestModel || "—",       accent: "#f472b6" },
-                      { label: "Top market",      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
-                      { label: "Total analyzed",  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
+                      { label: dt("ov_avg_hook_score"), value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
+                      { label: dt("ov_top_model"),       value: insights.bestModel || "—",       accent: "#f472b6" },
+                      { label: dt("ov_top_market"),      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
+                      { label: dt("ov_total_analyzed"),  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
                     ].map(s => (
                       <div key={s.label} className="flex items-center justify-between gap-2">
                         <span className="text-xs text-white/35">{s.label}</span>
