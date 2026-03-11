@@ -548,7 +548,7 @@ const blogPosts: Record<string, {
       "## The Optimal Setup for 2026",
       "Based on our experiment, here's the ideal creative team structure: 1 Creative Strategist/Director who reviews AI outputs and provides creative direction, 1 Editor who polishes AI-generated content and creates hero creative, and AI tools handling research, briefing, first drafts, and variation generation. This 2-person + AI team outperforms a traditional 5-person team in both volume and quality.",
       "## Try It Yourself",
-      "You don't need to go fully AI-only. Start by automating the repetitive parts (research, briefing, variations) and keep humans in the creative driver's seat. FrameIQ gives you the full AI creative stack in one platform.",
+      "You don't need to go fully AI-only. Start by automating the repetitive parts (research, briefing, variations) and keep humans in the creative driver's seat. AdBrief gives you the full AI creative stack in one platform.",
     ],
   },
   "solo-marketer-replaces-agency": {
