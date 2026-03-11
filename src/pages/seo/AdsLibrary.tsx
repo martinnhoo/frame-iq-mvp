@@ -30,7 +30,7 @@ export function AdsLibraryIndex() {
   const pages = SEO_LANDING_PAGES;
 
   return (
-    <SeoLayout title="Ad Creative Library — FrameIQ" description="Browse top-performing ad creatives analyzed by AI. Hook scores, creative breakdowns, and frameworks for every ad." canonical="/ads-library">
+    <SeoLayout title="Ad Creative Library — AdBrief" description="Browse top-performing ad creatives analyzed by AI. Hook scores, creative breakdowns, and frameworks for every ad." canonical="/ads-library">
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Ads Library</p>
