@@ -68,7 +68,7 @@ export default function CompetitorDecoder() {
       });
       if (error) throw error;
       setResult(data);
-      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY for real AI decoding");
+      if (data.mock_mode) toast.info("AI is running in demo mode");
     } catch {
       toast.error("Decoding failed");
     } finally {
