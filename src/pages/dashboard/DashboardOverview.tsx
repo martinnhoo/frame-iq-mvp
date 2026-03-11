@@ -507,7 +507,7 @@ export default function DashboardOverview() {
                   <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
                     <TrendingUp className="h-4 w-4" style={{ color: "#34d399" }} />
                   </div>
-                  <p className="text-sm font-bold text-white" style={syne}>Performance</p>
+                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_performance")}</p>
                 </div>
                 <div className="flex items-center gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
                   {(["7d", "30d", "all"] as const).map(f => (
