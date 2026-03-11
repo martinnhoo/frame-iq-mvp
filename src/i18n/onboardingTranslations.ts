@@ -72,6 +72,8 @@ const OB = {
   plan_get:         t("Get", "Obter", "Obtener", "Obtenir", "Holen", "获取", "احصل على"),
   plan_setting_up:  t("Setting up...", "Configurando...", "Configurando...", "Configuration...", "Wird eingerichtet...", "设置中...", "جاري الإعداد..."),
   plan_most_popular:t("Most popular", "Mais popular", "Más popular", "Le plus populaire", "Beliebteste", "最受欢迎", "الأكثر شعبية"),
+  plan_trial_note:  t("All paid plans include a 3-day free trial", "Todos os planos pagos incluem 3 dias de teste grátis", "Todos los planes incluyen 3 días de prueba gratis", "Tous les plans incluent 3 jours d'essai gratuit", "Alle Pläne enthalten 3 Tage kostenlose Testversion", "所有付费计划包含3天免费试用", "جميع الخطط المدفوعة تشمل 3 أيام تجربة مجانية"),
+  plan_trial_badge: t("3-day free trial · cancel anytime", "3 dias grátis · cancele quando quiser", "3 días gratis · cancela cuando quieras", "3 jours gratuits · annulez quand vous voulez", "3 Tage gratis · jederzeit kündbar", "3天免费试用·随时取消", "3 أيام مجانية · إلغاء في أي وقت"),
 
   // Templates chrome (used in TemplatesPage too)
   tp_title:         t("Ad Templates", "Templates de Anúncios", "Plantillas de Anuncios", "Modèles de Pub", "Anzeigenvorlagen", "广告模板", "قوالب الإعلانات"),

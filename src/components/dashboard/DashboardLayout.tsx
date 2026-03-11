@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles } from "lucide-react";
+import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
