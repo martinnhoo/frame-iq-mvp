@@ -155,9 +155,9 @@ const Login = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+                    <Label htmlFor="password" className="text-foreground text-sm">{t("auth_password")}</Label>
                     <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                      Forgot password?
+                      {t("auth_forgot")}
                     </Link>
                   </div>
                   <div className="relative">
