@@ -92,9 +92,9 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-3xl border border-white/[0.1] bg-[#0a0a0a] shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/[0.1] bg-[#0a0a0a] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
@@ -113,7 +113,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
 
         <div className="p-6 space-y-5">
           {/* Target market */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Target market</p>
               <div className="relative">
@@ -1617,7 +1617,7 @@ const TemplatesPage = () => {
           userId={user.id}
         />
       )}
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-4 flex-1">
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto space-y-3 sm:space-y-4 flex-1">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -1647,12 +1647,12 @@ const TemplatesPage = () => {
       </div>
 
       {/* Category pills — horizontal scroll */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-3 sm:mx-0 px-3 sm:px-0">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
             onClick={() => { setActiveCategory(cat.value); setPage(1); }}
-            className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-xl text-xs font-semibold border transition-all shrink-0"
+            className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all shrink-0 min-h-[36px]"
             style={activeCategory === cat.value
               ? { background: "#fff", color: "#000", borderColor: "#fff" }
               : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.07)" }}
@@ -1674,7 +1674,7 @@ const TemplatesPage = () => {
           <button
             key={d}
             onClick={() => { setActiveDuration(d); setPage(1); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all min-h-[36px]"
             style={activeDuration === d
               ? { background: "rgba(167,139,250,0.15)", borderColor: "rgba(167,139,250,0.4)", color: "#a78bfa" }
               : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}
@@ -1691,16 +1691,16 @@ const TemplatesPage = () => {
           <p className="font-medium">No templates match your filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
           {paginated.map((template) => {
             const meta = CAT_META[template.category];
             return (
               <div key={template.id}
-                className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:scale-[1.01]"
+                className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200 active:scale-[0.99] hover:scale-[1.01]"
                 style={{ background: "#111", border: "1px solid rgba(255,255,255,0.07)" }}>
                 {/* Color accent top bar */}
                 <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${getCatAccent(template.category)}, transparent)` }} />
-                <div className="p-4 flex flex-col flex-1">
+                <div className="p-4 sm:p-4 flex flex-col flex-1">
                   {/* Category + Duration */}
                   <div className="flex items-center justify-between mb-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
@@ -1711,7 +1711,7 @@ const TemplatesPage = () => {
                     </span>
                   </div>
                   {/* Name + desc */}
-                  <h3 className="font-bold text-white text-sm mb-1.5 leading-snug" style={syne}>
+                  <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
                     {template.name}
                   </h3>
                   <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
@@ -1722,7 +1722,7 @@ const TemplatesPage = () => {
                     <button
                       onClick={() => handleUse(template)}
                       disabled={loading === template.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all min-h-[44px]"
                       style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
@@ -1733,7 +1733,7 @@ const TemplatesPage = () => {
                       onClick={() => setTranslateModal(template)}
                       disabled={loading === template.id}
                       title="Translate to your market"
-                      className="flex items-center justify-center h-9 w-9 rounded-xl transition-all"
+                      className="flex items-center justify-center h-11 w-11 rounded-xl transition-all"
                       style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.18)", color: "#34d399" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(52,211,153,0.18)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(52,211,153,0.08)"; }}
@@ -1759,7 +1759,7 @@ const TemplatesPage = () => {
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+          {Array.from({ length: Math.min(totalPages, typeof window !== "undefined" && window.innerWidth < 640 ? 3 : 5) }, (_, i) => {
             let p: number;
             if (totalPages <= 7) {
               p = i + 1;
@@ -1800,7 +1800,7 @@ const TemplatesPage = () => {
 
     {/* Sticky upgrade CTA */}
     {profile?.plan === "free" && (
-      <div className="sticky bottom-0 z-20 px-5 pb-4 pt-2 pointer-events-none">
+      <div className="sticky bottom-0 z-20 px-3 sm:px-5 pb-3 sm:pb-4 pt-2 pointer-events-none">
         <div className="pointer-events-auto relative rounded-2xl border border-white/[0.12] overflow-hidden backdrop-blur-xl bg-[#0a0a0a]/80 shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
