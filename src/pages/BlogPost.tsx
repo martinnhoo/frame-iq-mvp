@@ -570,7 +570,7 @@ const blogPosts: Record<string, {
       "### Monday: Research Day (2 hours)",
       "Marcus uploads 20-30 competitor ads into AdBrief every Monday. The AI extracts hooks, identifies creative models, and generates a competitive intelligence report. He reviews the report, picks 3-5 concepts to explore, and moves on. This replaced a weekly 1-hour strategy call with the agency that produced vague 'inspiration decks.'",
       "### Tuesday-Wednesday: Brief & Production (3 hours/day)",
-      "Using FrameIQ's Board Generation, Marcus creates 10 production briefs per day from the competitive insights. Each brief includes scene-by-scene breakdowns, VO scripts, and visual direction. He feeds these into AI video generation and voiceover tools. By Wednesday evening, he has 30-40 raw ad variations.",
+      "Using AdBrief's Board Generation, Marcus creates 10 production briefs per day from the competitive insights. Each brief includes scene-by-scene breakdowns, VO scripts, and visual direction. He feeds these into AI video generation and voiceover tools. By Wednesday evening, he has 30-40 raw ad variations.",
       "### Thursday: Edit & Polish (4 hours)",
       "Marcus reviews all AI-generated videos in CapCut. He discards ~30% (obvious AI issues), polishes ~50% (minor tweaks), and marks ~20% as 'hero potential' for more careful editing. This is the one step where human judgment is irreplaceable.",
       "### Friday: Launch & Analyze (2 hours)",
