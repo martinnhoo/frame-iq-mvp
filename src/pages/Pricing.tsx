@@ -13,9 +13,9 @@ import { toast } from "sonner";
 
 // Stripe product/price mapping
 const PLANS = {
-  creator: { product_id: "prod_U88gF48nQTStB2", price_id: "price_1T9sPXDr9So14XztRB4YmLHl" },
-  studio:  { product_id: "prod_U88hsSpnApR9Gt", price_id: "price_1T9sQ3Dr9So14XztEgFfLh6x" },
-  scale:   { product_id: "prod_U88hnL1CuEMnfo", price_id: "price_1T9sQTDr9So14Xzta4ARSzhl" },
+  maker:  { product_id: "prod_U88ul5IK0HHW19", price_id: "price_1T9sd1Dr9So14XztT3Mqddch" },
+  pro:    { product_id: "prod_U88v5WVcy2NZV7", price_id: "price_1T9sdfDr9So14XztPR3tI14Y" },
+  studio: { product_id: "prod_U88wpX4Bphfifi", price_id: "price_1T9seMDr9So14Xzt0vEJNQIX" },
 };
 
 const Pricing = () => {
