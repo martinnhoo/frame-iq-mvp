@@ -135,14 +135,14 @@ const Login = () => {
               {/* Divider */}
               <div className="relative flex items-center">
                 <div className="flex-grow border-t border-border/50" />
-                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">or</span>
+                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">{t("auth_or_email")}</span>
                 <div className="flex-grow border-t border-border/50" />
               </div>
 
               {/* Email form */}
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground text-sm">Email</Label>
+                  <Label htmlFor="email" className="text-foreground text-sm">{t("auth_email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -155,9 +155,9 @@ const Login = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+                    <Label htmlFor="password" className="text-foreground text-sm">{t("auth_password")}</Label>
                     <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                      Forgot password?
+                      {t("auth_forgot")}
                     </Link>
                   </div>
                   <div className="relative">
@@ -175,7 +175,7 @@ const Login = () => {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isFormDisabled}>
                     {emailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign in
+                    {t("auth_signin")}
                   </Button>
                 </motion.div>
               </form>

@@ -147,6 +147,31 @@ type TranslationKeys = {
   confirm_confirmed_title: string;
   confirm_confirmed_text: string;
 
+  // Forgot / Reset password
+  forgot_title: string;
+  forgot_subtitle: string;
+  forgot_send: string;
+  forgot_back: string;
+  forgot_check_title: string;
+  forgot_check_text: string;
+  forgot_check_retry: string;
+  reset_title: string;
+  reset_subtitle: string;
+  reset_new_pw: string;
+  reset_confirm_pw: string;
+  reset_submit: string;
+  reset_success_title: string;
+  reset_success_text: string;
+  reset_invalid_title: string;
+  reset_invalid_text: string;
+  reset_invalid_btn: string;
+  reset_no_match: string;
+  pw_strength: string;
+  pw_weak: string;
+  pw_fair: string;
+  pw_good: string;
+  pw_strong: string;
+
   // Powered by
   powered_by: string;
 };
@@ -296,6 +321,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_confirmed_title: "Email confirmed!",
     confirm_confirmed_text: "Your account is verified. Redirecting to dashboard...",
 
+    forgot_title: "Reset your password",
+    forgot_subtitle: "Enter your email and we'll send you a link to reset your password.",
+    forgot_send: "Send reset link",
+    forgot_back: "Back to login",
+    forgot_check_title: "Check your email",
+    forgot_check_text: "We sent a password reset link to",
+    forgot_check_retry: "Didn't receive it? Check your spam folder or",
+    reset_title: "Set new password",
+    reset_subtitle: "Choose a strong password to protect your account.",
+    reset_new_pw: "New password",
+    reset_confirm_pw: "Confirm password",
+    reset_submit: "Update password",
+    reset_success_title: "Password updated!",
+    reset_success_text: "Your password has been changed successfully. Redirecting to dashboard...",
+    reset_invalid_title: "Invalid or expired link",
+    reset_invalid_text: "This password reset link is invalid or has expired. Please request a new one.",
+    reset_invalid_btn: "Request new link",
+    reset_no_match: "Passwords don't match",
+    pw_strength: "Password strength",
+    pw_weak: "Weak",
+    pw_fair: "Fair",
+    pw_good: "Good",
+    pw_strong: "Strong",
+
     powered_by: "Powered by",
   },
 
@@ -442,6 +491,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Volver al login",
     confirm_confirmed_title: "¡Email confirmado!",
     confirm_confirmed_text: "Tu cuenta está verificada. Redirigiendo al dashboard...",
+
+    forgot_title: "Recuperar contraseña",
+    forgot_subtitle: "Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.",
+    forgot_send: "Enviar enlace",
+    forgot_back: "Volver al login",
+    forgot_check_title: "Revisa tu email",
+    forgot_check_text: "Enviamos un enlace de recuperación a",
+    forgot_check_retry: "¿No lo recibiste? Revisa tu spam o",
+    reset_title: "Nueva contraseña",
+    reset_subtitle: "Elige una contraseña segura para proteger tu cuenta.",
+    reset_new_pw: "Nueva contraseña",
+    reset_confirm_pw: "Confirmar contraseña",
+    reset_submit: "Actualizar contraseña",
+    reset_success_title: "¡Contraseña actualizada!",
+    reset_success_text: "Tu contraseña fue cambiada. Redirigiendo al dashboard...",
+    reset_invalid_title: "Enlace inválido o expirado",
+    reset_invalid_text: "Este enlace ha expirado. Por favor solicita uno nuevo.",
+    reset_invalid_btn: "Solicitar nuevo enlace",
+    reset_no_match: "Las contraseñas no coinciden",
+    pw_strength: "Seguridad",
+    pw_weak: "Débil",
+    pw_fair: "Regular",
+    pw_good: "Buena",
+    pw_strong: "Fuerte",
 
     powered_by: "Potenciado por",
   },
@@ -592,6 +665,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_confirmed_title: "Email confirmé !",
     confirm_confirmed_text: "Votre compte est vérifié. Redirection vers le tableau de bord...",
 
+    forgot_title: "Réinitialiser le mot de passe",
+    forgot_subtitle: "Entrez votre email et nous vous enverrons un lien de réinitialisation.",
+    forgot_send: "Envoyer le lien",
+    forgot_back: "Retour à la connexion",
+    forgot_check_title: "Vérifiez votre email",
+    forgot_check_text: "Nous avons envoyé un lien de réinitialisation à",
+    forgot_check_retry: "Pas reçu ? Vérifiez vos spams ou",
+    reset_title: "Nouveau mot de passe",
+    reset_subtitle: "Choisissez un mot de passe fort pour protéger votre compte.",
+    reset_new_pw: "Nouveau mot de passe",
+    reset_confirm_pw: "Confirmer le mot de passe",
+    reset_submit: "Mettre à jour",
+    reset_success_title: "Mot de passe mis à jour !",
+    reset_success_text: "Votre mot de passe a été changé. Redirection...",
+    reset_invalid_title: "Lien invalide ou expiré",
+    reset_invalid_text: "Ce lien est invalide ou a expiré. Veuillez en demander un nouveau.",
+    reset_invalid_btn: "Demander un nouveau lien",
+    reset_no_match: "Les mots de passe ne correspondent pas",
+    pw_strength: "Force du mot de passe",
+    pw_weak: "Faible",
+    pw_fair: "Moyen",
+    pw_good: "Bon",
+    pw_strong: "Fort",
+
     powered_by: "Propulsé par",
   },
 
@@ -738,6 +835,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Zurück zur Anmeldung",
     confirm_confirmed_title: "E-Mail bestätigt!",
     confirm_confirmed_text: "Ihr Konto ist verifiziert. Weiterleitung zum Dashboard...",
+
+    forgot_title: "Passwort zurücksetzen",
+    forgot_subtitle: "Geben Sie Ihre E-Mail ein und wir senden Ihnen einen Link.",
+    forgot_send: "Link senden",
+    forgot_back: "Zurück zur Anmeldung",
+    forgot_check_title: "Prüfen Sie Ihre E-Mail",
+    forgot_check_text: "Wir haben einen Link gesendet an",
+    forgot_check_retry: "Nicht erhalten? Prüfen Sie Ihren Spam oder",
+    reset_title: "Neues Passwort",
+    reset_subtitle: "Wählen Sie ein sicheres Passwort.",
+    reset_new_pw: "Neues Passwort",
+    reset_confirm_pw: "Passwort bestätigen",
+    reset_submit: "Passwort aktualisieren",
+    reset_success_title: "Passwort aktualisiert!",
+    reset_success_text: "Ihr Passwort wurde geändert. Weiterleitung...",
+    reset_invalid_title: "Ungültiger oder abgelaufener Link",
+    reset_invalid_text: "Dieser Link ist ungültig oder abgelaufen.",
+    reset_invalid_btn: "Neuen Link anfordern",
+    reset_no_match: "Passwörter stimmen nicht überein",
+    pw_strength: "Passwortstärke",
+    pw_weak: "Schwach",
+    pw_fair: "Mittel",
+    pw_good: "Gut",
+    pw_strong: "Stark",
 
     powered_by: "Unterstützt von",
   },
@@ -886,6 +1007,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_confirmed_title: "تم تأكيد البريد الإلكتروني!",
     confirm_confirmed_text: "حسابك تم التحقق منه. جاري التوجيه إلى لوحة التحكم...",
 
+    forgot_title: "إعادة تعيين كلمة المرور",
+    forgot_subtitle: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+    forgot_send: "إرسال الرابط",
+    forgot_back: "العودة لتسجيل الدخول",
+    forgot_check_title: "تحقق من بريدك",
+    forgot_check_text: "أرسلنا رابط إعادة التعيين إلى",
+    forgot_check_retry: "لم تستلمه؟ تحقق من البريد العشوائي أو",
+    reset_title: "كلمة مرور جديدة",
+    reset_subtitle: "اختر كلمة مرور قوية لحماية حسابك.",
+    reset_new_pw: "كلمة المرور الجديدة",
+    reset_confirm_pw: "تأكيد كلمة المرور",
+    reset_submit: "تحديث كلمة المرور",
+    reset_success_title: "تم تحديث كلمة المرور!",
+    reset_success_text: "تم تغيير كلمة المرور بنجاح. جاري التوجيه...",
+    reset_invalid_title: "رابط غير صالح أو منتهي",
+    reset_invalid_text: "هذا الرابط غير صالح أو انتهت صلاحيته.",
+    reset_invalid_btn: "طلب رابط جديد",
+    reset_no_match: "كلمتا المرور غير متطابقتين",
+    pw_strength: "قوة كلمة المرور",
+    pw_weak: "ضعيفة",
+    pw_fair: "مقبولة",
+    pw_good: "جيدة",
+    pw_strong: "قوية",
+
     powered_by: "مدعوم من",
   },
 
@@ -1033,6 +1178,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_confirmed_title: "邮箱已确认！",
     confirm_confirmed_text: "您的账户已验证。正在跳转到控制面板...",
 
+    forgot_title: "重置密码",
+    forgot_subtitle: "输入您的邮箱，我们将发送重置链接。",
+    forgot_send: "发送链接",
+    forgot_back: "返回登录",
+    forgot_check_title: "检查您的邮箱",
+    forgot_check_text: "我们已发送重置链接至",
+    forgot_check_retry: "没收到？检查垃圾邮件或",
+    reset_title: "设置新密码",
+    reset_subtitle: "选择一个强密码来保护您的账户。",
+    reset_new_pw: "新密码",
+    reset_confirm_pw: "确认密码",
+    reset_submit: "更新密码",
+    reset_success_title: "密码已更新！",
+    reset_success_text: "您的密码已更改。正在跳转...",
+    reset_invalid_title: "链接无效或已过期",
+    reset_invalid_text: "此链接无效或已过期。请重新申请。",
+    reset_invalid_btn: "申请新链接",
+    reset_no_match: "两次密码不一致",
+    pw_strength: "密码强度",
+    pw_weak: "弱",
+    pw_fair: "一般",
+    pw_good: "好",
+    pw_strong: "强",
+
     powered_by: "技术支持",
   },
 
@@ -1179,6 +1348,30 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Voltar ao login",
     confirm_confirmed_title: "Email confirmado!",
     confirm_confirmed_text: "Sua conta foi verificada. Redirecionando para o dashboard...",
+
+    forgot_title: "Recuperar senha",
+    forgot_subtitle: "Digite seu email e enviaremos um link para redefinir sua senha.",
+    forgot_send: "Enviar link",
+    forgot_back: "Voltar ao login",
+    forgot_check_title: "Verifique seu email",
+    forgot_check_text: "Enviamos um link de redefinição para",
+    forgot_check_retry: "Não recebeu? Verifique o spam ou",
+    reset_title: "Nova senha",
+    reset_subtitle: "Escolha uma senha forte para proteger sua conta.",
+    reset_new_pw: "Nova senha",
+    reset_confirm_pw: "Confirmar senha",
+    reset_submit: "Atualizar senha",
+    reset_success_title: "Senha atualizada!",
+    reset_success_text: "Sua senha foi alterada. Redirecionando para o dashboard...",
+    reset_invalid_title: "Link inválido ou expirado",
+    reset_invalid_text: "Este link é inválido ou expirou. Solicite um novo.",
+    reset_invalid_btn: "Solicitar novo link",
+    reset_no_match: "As senhas não coincidem",
+    pw_strength: "Força da senha",
+    pw_weak: "Fraca",
+    pw_fair: "Regular",
+    pw_good: "Boa",
+    pw_strong: "Forte",
 
     powered_by: "Desenvolvido por",
   },

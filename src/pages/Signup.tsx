@@ -73,10 +73,10 @@ const Signup = () => {
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
     const levels = [
-      { label: "Weak", color: "bg-destructive" },
-      { label: "Fair", color: "bg-yellow-500" },
-      { label: "Good", color: "bg-blue-500" },
-      { label: "Strong", color: "bg-green-500" },
+      { label: t("pw_weak"), color: "bg-destructive" },
+      { label: t("pw_fair"), color: "bg-yellow-500" },
+      { label: t("pw_good"), color: "bg-blue-500" },
+      { label: t("pw_strong"), color: "bg-green-500" },
     ];
     return { score, ...levels[Math.min(score, levels.length) - 1] };
   };
@@ -135,28 +135,28 @@ const Signup = () => {
               {/* Divider */}
               <div className="relative flex items-center">
                 <div className="flex-grow border-t border-border/50" />
-                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">or</span>
+                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">{t("auth_or_email")}</span>
                 <div className="flex-grow border-t border-border/50" />
               </div>
 
               {/* Email form */}
               <form onSubmit={handleEmailSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-foreground text-sm">Full name</Label>
+                  <Label htmlFor="name" className="text-foreground text-sm">{t("auth_name")}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required className="h-12 bg-muted/50 border-border/50 pl-10" disabled={isFormDisabled} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground text-sm">Email</Label>
+                  <Label htmlFor="email" className="text-foreground text-sm">{t("auth_email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 bg-muted/50 border-border/50 pl-10" disabled={isFormDisabled} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+                  <Label htmlFor="password" className="text-foreground text-sm">{t("auth_password")}</Label>
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="h-12 bg-muted/50 border-border/50 pr-12" disabled={isFormDisabled} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
@@ -172,7 +172,7 @@ const Signup = () => {
                         ))}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Password strength: <span className="font-medium text-foreground">{strength.label}</span>
+                        {t("pw_strength")}: <span className="font-medium text-foreground">{strength.label}</span>
                       </p>
                     </div>
                   )}
@@ -180,16 +180,16 @@ const Signup = () => {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isFormDisabled || password.length < 8}>
                     {emailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create account
+                    {t("auth_create")}
                   </Button>
                 </motion.div>
               </form>
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-center text-xs text-muted-foreground leading-relaxed">
                 By signing up, you agree to our{" "}
-                <Link to="/" className="text-primary hover:underline">Terms of Service</Link>
+                <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
                 {" "}and{" "}
-                <Link to="/" className="text-primary hover:underline">Privacy Policy</Link>.
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
               </motion.div>
 
               <p className="text-center text-sm text-muted-foreground">
