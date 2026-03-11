@@ -55,7 +55,7 @@ const faqItems = [
   },
   {
     q: "What languages does Auto Translation support?",
-    a: "FrameIQ supports 40+ languages including Portuguese (BR), Spanish (MX), English, Hindi, French, German, Japanese, Korean, Arabic, and more. All translations are context-aware and preserve marketing intent — not just literal word replacements.",
+    a: "AdBrief supports 40+ languages including Portuguese (BR), Spanish (MX), English, Hindi, French, German, Japanese, Korean, Arabic, and more. All translations are context-aware and preserve marketing intent — not just literal word replacements.",
   },
 ];
 
