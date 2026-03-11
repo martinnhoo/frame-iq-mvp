@@ -222,7 +222,7 @@ const Careers = () => {
       <footer className="border-t border-border/50 py-8 px-6">
         <div className="container mx-auto max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2026 FrameIQ. All rights reserved.
+            © 2026 AdBrief. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
