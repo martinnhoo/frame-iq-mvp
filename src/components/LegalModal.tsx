@@ -107,7 +107,7 @@ By accessing or using AdBrief, you agree to be bound by these Terms. If you are 
 
 ## 2. Description of Service
 
-FrameIQ is an AI-powered creative intelligence platform that provides:
+AdBrief is an AI-powered creative intelligence platform that provides:
 - Video ad analysis and insight extraction
 - AI-generated production boards and creative briefs
 - Auto-translation of video content
