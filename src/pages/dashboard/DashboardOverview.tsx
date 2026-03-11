@@ -7,6 +7,8 @@ import {
   TrendingUp, Clock, Zap, Target, Brain, Cpu, Languages,
   ChevronRight, Sparkles, Plane, Wand2, Layers, X,
 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface InsightsData {
   avgHookScore: number | null;
