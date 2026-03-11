@@ -189,9 +189,21 @@ export default function DashboardLayout() {
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="flex items-center gap-1.5">
-              <Logo size="sm" />
-            </div>
+          <div className="flex items-center gap-1.5 flex-1">
+            <Logo size="sm" />
+          </div>
+          {/* Mobile profile shortcut */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ring-1 ring-white/10 overflow-hidden"
+            style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.4),rgba(236,72,153,0.4))" }}
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-white">{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>
+            )}
+          </button>
         </header>
 
         {/* Persona context bar — always visible */}
