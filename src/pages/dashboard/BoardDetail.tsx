@@ -271,8 +271,8 @@ const BoardDetail = () => {
           <Section id="strategy" icon={Target} title="Creative Strategy" open={open.strategy} onToggle={() => toggle("strategy")}>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
               {[
-                ["Hook Type", String(strategy.hook_type || "—")],
-                ["Narrative Arc", String(strategy.narrative_arc || "—")],
+                ["Hook Type", String(hook.type || strategy.hook_type || "—")],
+                ["Hook Line", String(hook.hook_line || strategy.narrative_arc || "—")],
                 ["Pacing", String(strategy.pacing || "—")],
                 ["CTA", String(strategy.cta_type || "—")],
               ].map(([label, value]) => (
