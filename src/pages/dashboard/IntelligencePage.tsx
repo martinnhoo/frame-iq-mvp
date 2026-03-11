@@ -636,8 +636,10 @@ export default function IntelligencePage() {
                               <p className="text-sm font-bold" style={{ color: meta.color }}>{stat.model}</p>
                               <div className="flex items-center gap-2">
                                 {stat.avgScore > 0 && (
-                                  <span className="text-xs font-bold" style={mono}
-                                    style2={{ color: stat.avgScore >= 8 ? "#34d399" : stat.avgScore >= 6 ? "#fbbf24" : "#ffffff50" }}>
+                                  <span className="text-xs font-bold" style={{
+                                    ...mono,
+                                    color: stat.avgScore >= 8 ? "#34d399" : stat.avgScore >= 6 ? "#fbbf24" : "#ffffff50"
+                                  }}>
                                     {stat.avgScore}/10
                                   </span>
                                 )}
