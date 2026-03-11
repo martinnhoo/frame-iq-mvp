@@ -96,6 +96,12 @@ Deno.serve(async (req) => {
     }
 
     // ── Step 2: Analyze with Lovable AI (or fallback to Anthropic) ────────
+    if (!analysisId) {
+      return new Response(JSON.stringify({
+        error: 'missing_analysis_id',
+        message: 'Missing analysis_id for analysis run'
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     if (!LOVABLE_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
       if (analysisId) {
         await supabase.from('analyses').update({
