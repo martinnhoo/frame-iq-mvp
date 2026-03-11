@@ -14,7 +14,7 @@ const faqItems = [
     a: "AdBrief is a creative intelligence platform for performance marketers. You can analyze video ads (hook score, creative model, transcript), generate production boards, create 10+ hook variations in seconds, run Pre-flight checks on scripts before sending to editors, and translate/localize ad copy for any market.",
   },
   {
-    q: "What file formats does FrameIQ support?",
+    q: "What file formats does AdBrief support?",
     a: "For video analysis: MP4, MOV, AVI, and WebM. For Pre-flight: paste any script as text, or drop a video file and we'll transcribe it with AI before running the check.",
   },
   {
