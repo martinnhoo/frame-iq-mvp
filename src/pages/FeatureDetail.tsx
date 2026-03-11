@@ -59,7 +59,7 @@ const featureMeta: Record<string, {
     icon: Brain,
     title: "Creative Intelligence",
     headline: "Classify every ad. Decode every pattern.",
-    description: "FrameIQ automatically classifies ads by creative format, extracts hooks, identifies CTAs, and maps the entire creative structure so you can replicate what works.",
+    description: "AdBrief automatically classifies ads by creative format, extracts hooks, identifies CTAs, and maps the entire creative structure so you can replicate what works.",
     details: [
       "15+ creative model classifications (UGC, talking head, product demo, comparison, etc.)",
       "Hook pattern taxonomy: curiosity gap, pattern interrupt, direct benefit, social proof",
