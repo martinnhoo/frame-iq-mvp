@@ -225,6 +225,24 @@ export type DashT = {
   pw_cta: string;
   pw_skip: string;
 
+  // Gamification
+  gm_streak: string;
+  gm_streak_days: string;
+  gm_mastery: string;
+  gm_level_observer: string;
+  gm_level_analyst: string;
+  gm_level_strategist: string;
+  gm_level_director: string;
+  gm_weekly_insight: string;
+  gm_score_up: string;
+  gm_score_down: string;
+  gm_score_stable: string;
+  gm_vs_last_week: string;
+  gm_first_today: string;
+  gm_on_rhythm: string;
+  gm_power_user: string;
+  gm_comeback: string;
+
   // Common
   cm_save: string;
   cm_cancel: string;
@@ -333,6 +351,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Create first persona", ov_clear_persona: "Clear persona",
     bo_production_boards: "production boards", bo_create_first: "Create first board",
     bo_describe_concept: "Describe your ad concept and get scenes, scripts, and production notes",
+    gm_streak: "Streak", gm_streak_days: "days", gm_mastery: "Creative Mastery",
+    gm_level_observer: "Observer", gm_level_analyst: "Analyst", gm_level_strategist: "Strategist", gm_level_director: "Creative Director",
+    gm_weekly_insight: "Weekly Insight", gm_score_up: "Hook score up", gm_score_down: "Hook score dropped", gm_score_stable: "Score stable",
+    gm_vs_last_week: "vs last week", gm_first_today: "First session today. Let's go.",
+    gm_on_rhythm: "analysis this week. You're in the rhythm.", gm_power_user: "actions today. Power user mode.",
+    gm_comeback: "Welcome back. Pick up where you left off.",
   },
 
   pt: {
@@ -428,6 +452,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Criar primeira persona", ov_clear_persona: "Limpar persona",
     bo_production_boards: "boards de produção", bo_create_first: "Criar primeiro board",
     bo_describe_concept: "Descreva o conceito do seu anúncio e receba cenas, scripts e notas de produção",
+    gm_streak: "Sequência", gm_streak_days: "dias", gm_mastery: "Maestria Criativa",
+    gm_level_observer: "Observador", gm_level_analyst: "Analista", gm_level_strategist: "Estrategista", gm_level_director: "Diretor Criativo",
+    gm_weekly_insight: "Insight Semanal", gm_score_up: "Score do hook subiu", gm_score_down: "Score do hook caiu", gm_score_stable: "Score estável",
+    gm_vs_last_week: "vs semana passada", gm_first_today: "Primeira sessão de hoje. Vamos lá.",
+    gm_on_rhythm: "análise esta semana. Você está no ritmo.", gm_power_user: "ações hoje. Modo power user.",
+    gm_comeback: "Bem-vindo de volta. Continue de onde parou.",
   },
 
   es: {
@@ -523,6 +553,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Crear primera persona", ov_clear_persona: "Limpiar persona",
     bo_production_boards: "boards de producción", bo_create_first: "Crear primer board",
     bo_describe_concept: "Describe el concepto de tu anuncio y obtén escenas, guiones y notas de producción",
+    gm_streak: "Racha", gm_streak_days: "días", gm_mastery: "Maestría Creativa",
+    gm_level_observer: "Observador", gm_level_analyst: "Analista", gm_level_strategist: "Estratega", gm_level_director: "Director Creativo",
+    gm_weekly_insight: "Insight Semanal", gm_score_up: "Score del hook subió", gm_score_down: "Score del hook bajó", gm_score_stable: "Score estable",
+    gm_vs_last_week: "vs semana pasada", gm_first_today: "Primera sesión de hoy. ¡Vamos!",
+    gm_on_rhythm: "análisis esta semana. Estás en ritmo.", gm_power_user: "acciones hoy. Modo power user.",
+    gm_comeback: "Bienvenido de vuelta. Continúa donde lo dejaste.",
   },
 
   zh: {
@@ -618,6 +654,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "创建首个画像", ov_clear_persona: "清除画像",
     bo_production_boards: "个制作板", bo_create_first: "创建首个制作板",
     bo_describe_concept: "描述您的广告概念，获取场景、脚本和制作备注",
+    gm_streak: "连续", gm_streak_days: "天", gm_mastery: "创意精通",
+    gm_level_observer: "观察者", gm_level_analyst: "分析师", gm_level_strategist: "策略师", gm_level_director: "创意总监",
+    gm_weekly_insight: "每周洞察", gm_score_up: "Hook评分上升", gm_score_down: "Hook评分下降", gm_score_stable: "评分稳定",
+    gm_vs_last_week: "对比上周", gm_first_today: "今天第一次登录，开始吧。",
+    gm_on_rhythm: "本周分析。你保持着节奏。", gm_power_user: "今日操作。超级用户模式。",
+    gm_comeback: "欢迎回来，继续上次的工作。",
   },
 
   fr: {
@@ -712,6 +754,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Créer première persona", ov_clear_persona: "Effacer persona",
     bo_production_boards: "boards de production", bo_create_first: "Créer premier board",
     bo_describe_concept: "Décrivez votre concept publicitaire et obtenez scènes, scripts et notes de production",
+    gm_streak: "Série", gm_streak_days: "jours", gm_mastery: "Maîtrise Créative",
+    gm_level_observer: "Observateur", gm_level_analyst: "Analyste", gm_level_strategist: "Stratège", gm_level_director: "Directeur Créatif",
+    gm_weekly_insight: "Insight Hebdo", gm_score_up: "Score du hook en hausse", gm_score_down: "Score du hook en baisse", gm_score_stable: "Score stable",
+    gm_vs_last_week: "vs semaine dernière", gm_first_today: "Première session aujourd'hui. C'est parti.",
+    gm_on_rhythm: "analyse cette semaine. Vous êtes dans le rythme.", gm_power_user: "actions aujourd'hui. Mode power user.",
+    gm_comeback: "Content de vous revoir. Reprenez là où vous en étiez.",
   },
 
   de: {
@@ -806,6 +854,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Erste Persona erstellen", ov_clear_persona: "Persona löschen",
     bo_production_boards: "Produktions-Boards", bo_create_first: "Erstes Board erstellen",
     bo_describe_concept: "Beschreiben Sie Ihr Anzeigenkonzept und erhalten Sie Szenen, Skripte und Produktionsnotizen",
+    gm_streak: "Serie", gm_streak_days: "Tage", gm_mastery: "Kreative Meisterschaft",
+    gm_level_observer: "Beobachter", gm_level_analyst: "Analyst", gm_level_strategist: "Stratege", gm_level_director: "Kreativdirektor",
+    gm_weekly_insight: "Wochen-Insight", gm_score_up: "Hook-Score gestiegen", gm_score_down: "Hook-Score gesunken", gm_score_stable: "Score stabil",
+    gm_vs_last_week: "vs letzte Woche", gm_first_today: "Erste Sitzung heute. Los geht's.",
+    gm_on_rhythm: "Analyse diese Woche. Sie sind im Rhythmus.", gm_power_user: "Aktionen heute. Power-User-Modus.",
+    gm_comeback: "Willkommen zurück. Machen Sie weiter, wo Sie aufgehört haben.",
   },
 
   ar: {
@@ -900,6 +954,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "إنشاء أول شخصية", ov_clear_persona: "مسح الشخصية",
     bo_production_boards: "لوحات إنتاج", bo_create_first: "إنشاء أول لوحة",
     bo_describe_concept: "صِف مفهوم إعلانك واحصل على مشاهد ونصوص وملاحظات إنتاج",
+    gm_streak: "تتابع", gm_streak_days: "أيام", gm_mastery: "إتقان إبداعي",
+    gm_level_observer: "مراقب", gm_level_analyst: "محلل", gm_level_strategist: "استراتيجي", gm_level_director: "مدير إبداعي",
+    gm_weekly_insight: "رؤية أسبوعية", gm_score_up: "ارتفع تقييم الخطاف", gm_score_down: "انخفض تقييم الخطاف", gm_score_stable: "تقييم مستقر",
+    gm_vs_last_week: "مقارنة بالأسبوع الماضي", gm_first_today: "أول جلسة اليوم. هيا بنا.",
+    gm_on_rhythm: "تحليل هذا الأسبوع. أنت في الإيقاع.", gm_power_user: "إجراءات اليوم. وضع المستخدم المتقدم.",
+    gm_comeback: "مرحبًا بعودتك. استمر من حيث توقفت.",
   },
 };
 
