@@ -63,10 +63,16 @@ const FEATURES_STATIC = [
   { value: "intelligence", url: "/dashboard/intelligence", emoji: "🧠", accent: "#c084fc", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)" },
 ];
 
+const PLAN_PRICES: Record<string, string> = {
+  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
+  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
+  studio: "price_1T9seMDr9So14Xzt0vEJNQIX",
+};
+
 const PLANS = [
-  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations"],                              highlight: false },
-  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights"],    highlight: true },
-  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access"],           highlight: false },
+  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator"],                              highlight: false, desc_key: "plan_desc_maker" },
+  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights", "AI Intelligence"],    highlight: true, desc_key: "plan_desc_pro" },
+  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access", "10 team seats"],           highlight: false, desc_key: "plan_desc_studio" },
 ];
 
 const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", "plan"];
