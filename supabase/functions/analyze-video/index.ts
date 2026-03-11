@@ -8,6 +8,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  let analysisId: string | null = null;
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -20,7 +22,7 @@ Deno.serve(async (req) => {
     const market = (formData.get('market') as string) || 'GLOBAL';
     const campaign_goal = formData.get('campaign_goal') as string | null;
     const user_id = formData.get('user_id') as string;
-    const analysis_id = formData.get('analysis_id') as string;
+    analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
 
