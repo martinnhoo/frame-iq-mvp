@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon, Globe, X, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useObT } from "@/i18n/onboardingTranslations";
+import { getTemplateTranslation, getCategoryLabel, getUpgradeCTA } from "@/i18n/templateTranslations";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
@@ -1538,6 +1539,15 @@ const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
   ...Object.entries(CAT_META).map(([k, v]) => ({ value: k as Category, label: v.label, emoji: v.emoji })),
 ];
 
+// Helper to get translated template name/desc
+const useTranslatedTemplate = (template: Template, lang: string) => {
+  const tt = lang !== "en" ? getTemplateTranslation(template.id, lang) : null;
+  return {
+    name: tt?.name || template.name,
+    description: tt?.desc || template.description,
+  };
+};
+
 const PER_PAGE = 24;
 
 const getCatAccent = (cat: string): string => {
@@ -1573,11 +1583,14 @@ const TemplatesPage = () => {
       if (activeDuration !== "all" && String(t.duration) !== activeDuration) return false;
       if (search) {
         const q = search.toLowerCase();
-        if (!t.name.toLowerCase().includes(q) && !t.description.toLowerCase().includes(q) && !t.category.includes(q)) return false;
+        const tt = language !== "en" ? getTemplateTranslation(t.id, language) : null;
+        const name = (tt?.name || t.name).toLowerCase();
+        const desc = (tt?.desc || t.description).toLowerCase();
+        if (!name.includes(q) && !desc.includes(q) && !t.category.includes(q)) return false;
       }
       return true;
     });
-  }, [activeCategory, activeDuration, search]);
+  }, [activeCategory, activeDuration, search, language]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -1662,7 +1675,7 @@ const TemplatesPage = () => {
               : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.07)" }}
           >
             <span>{cat.emoji}</span>
-            {cat.label}
+            {(language !== "en" ? getCategoryLabel(cat.value, language) : null) || cat.label}
             {catCounts[cat.value] !== undefined && (
               <span style={{ opacity: 0.5, ...mono, fontSize: 10 }}>
                 {catCounts[cat.value]}
@@ -1708,19 +1721,26 @@ const TemplatesPage = () => {
                   {/* Category + Duration */}
                   <div className="flex items-center justify-between mb-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
-                      {meta?.emoji} {meta?.label || template.category}
+                      {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
                     </span>
                     <span className="flex items-center gap-1 text-[10px] text-white/25" style={mono}>
                       <Clock className="h-3 w-3" />{template.duration}s
                     </span>
                   </div>
                   {/* Name + desc */}
-                  <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
-                    {template.name}
-                  </h3>
-                  <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
-                    {template.description}
-                  </p>
+                  {(() => {
+                    const tt = language !== "en" ? getTemplateTranslation(template.id, language) : null;
+                    return (
+                      <>
+                        <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
+                          {tt?.name || template.name}
+                        </h3>
+                        <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
+                          {tt?.desc || template.description}
+                        </p>
+                      </>
+                    );
+                  })()}
                   {/* Actions */}
                   <div className="flex gap-2 mt-auto">
                     <button
@@ -1809,14 +1829,14 @@ const TemplatesPage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white">Unlock all {TEMPLATES.length} templates ⚡</p>
-              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · unlimited hooks</p>
+              <p className="text-sm font-bold text-white">{(language !== "en" ? getUpgradeCTA("unlock", language) : null) || "Unlock all"} {TEMPLATES.length} {(language !== "en" ? getUpgradeCTA("templates", language) : null) || "templates"} ⚡</p>
+              <p className="text-xs text-white/35">{(language !== "en" ? getUpgradeCTA("plan_desc", language) : null) || "Studio plan · 30 analyses · 30 boards · unlimited hooks"}</p>
             </div>
             <button
               onClick={() => navigate("/pricing")}
               className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
             >
-              Upgrade <ArrowRight className="h-3.5 w-3.5" />
+              {(language !== "en" ? getUpgradeCTA("upgrade", language) : null) || "Upgrade"} <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
