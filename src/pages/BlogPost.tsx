@@ -140,7 +140,7 @@ const blogPosts: Record<string, {
       "A fast-growing DTC beauty brand was spending $25K/month on creative production — split between a creative agency ($15K) and freelance editors ($10K). Despite the investment, they were only producing 5-8 ad variations per week, far below the volume needed to maintain Meta and TikTok ad performance.",
       "Their creative strategist was spending 60% of their time on competitive research and briefing, leaving little time for actual strategy.",
       "## The Solution",
-      "The brand adopted FrameIQ to automate three key parts of their creative workflow: competitive analysis, production briefing, and creative variation generation.",
+      "The brand adopted AdBrief to automate three key parts of their creative workflow: competitive analysis, production briefing, and creative variation generation.",
       "### Phase 1: AI-Powered Competitive Research (Week 1-2)",
       "The team set up a weekly routine: every Monday, they uploaded the top 20 competitor ads from Meta Ads Library and TikTok Creative Center into FrameIQ. The AI extracted hooks, creative models, and transcripts — a process that previously took 8 hours now took 45 minutes.",
       "### Phase 2: Automated Production Briefs (Week 3-4)",
