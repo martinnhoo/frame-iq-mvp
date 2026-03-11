@@ -1718,19 +1718,26 @@ const TemplatesPage = () => {
                   {/* Category + Duration */}
                   <div className="flex items-center justify-between mb-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
-                      {meta?.emoji} {meta?.label || template.category}
+                      {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
                     </span>
                     <span className="flex items-center gap-1 text-[10px] text-white/25" style={mono}>
                       <Clock className="h-3 w-3" />{template.duration}s
                     </span>
                   </div>
                   {/* Name + desc */}
-                  <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
-                    {template.name}
-                  </h3>
-                  <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
-                    {template.description}
-                  </p>
+                  {(() => {
+                    const tt = language !== "en" ? getTemplateTranslation(template.id, language) : null;
+                    return (
+                      <>
+                        <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
+                          {tt?.name || template.name}
+                        </h3>
+                        <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
+                          {tt?.desc || template.description}
+                        </p>
+                      </>
+                    );
+                  })()}
                   {/* Actions */}
                   <div className="flex gap-2 mt-auto">
                     <button
