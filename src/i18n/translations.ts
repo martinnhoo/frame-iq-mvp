@@ -415,7 +415,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Legal",
     footer_privacy: "Política de Privacidad",
     footer_terms: "Términos de Servicio",
-    footer_rights: "© 2026 FrameIQ. Todos los derechos reservados.",
+    footer_rights: "© 2026 AdBrief. Todos los derechos reservados.",
     footer_soc2: "Cumple SOC 2",
     footer_uptime: "99.9% Uptime",
     footer_book_demo: "Reservar Demo",
