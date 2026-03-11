@@ -1539,6 +1539,15 @@ const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
   ...Object.entries(CAT_META).map(([k, v]) => ({ value: k as Category, label: v.label, emoji: v.emoji })),
 ];
 
+// Helper to get translated template name/desc
+const useTranslatedTemplate = (template: Template, lang: string) => {
+  const tt = lang !== "en" ? getTemplateTranslation(template.id, lang) : null;
+  return {
+    name: tt?.name || template.name,
+    description: tt?.desc || template.description,
+  };
+};
+
 const PER_PAGE = 24;
 
 const getCatAccent = (cat: string): string => {
