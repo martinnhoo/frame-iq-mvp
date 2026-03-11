@@ -206,7 +206,7 @@ We may update these Terms with 30 days' notice. Continued use after changes cons
 ## 16. Contact
 
 For questions about these Terms:
-**Email:** support@frameiq.com
+**Email:** support@adbrief.pro
 `;
 
 const LegalModal = ({ type, onClose }: LegalModalProps) => {
