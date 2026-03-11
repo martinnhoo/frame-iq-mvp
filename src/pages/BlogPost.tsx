@@ -97,7 +97,7 @@ const blogPosts: Record<string, {
     category: "AI & Automation",
     readTime: "10 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["AI creative production", "AI ad generation", "creative automation", "performance creative", "AI marketing tools 2026"],
     content: [
