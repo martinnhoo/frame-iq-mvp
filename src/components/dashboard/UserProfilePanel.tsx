@@ -243,6 +243,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [lang, setLang] = useState("en");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [personas, setPersonas] = useState<PersonaRecord[]>([]);
   const [personasLoading, setPersonasLoading] = useState(false);
