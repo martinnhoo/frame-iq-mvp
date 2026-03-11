@@ -42,28 +42,36 @@ const Index = () => {
 
   const plans = [
     {
-      name: "Creator",
-      price: "$9",
+      name: "Free",
+      price: "$0",
       period: t("pricing_mo"),
-      features: ["3 analyses/mo", "1 board/mo", "10 scripts/mo", "10 translations", "Pre-flight & AI check"],
-      cta: "Get started",
+      features: ["3 analyses/mo", "3 boards/mo", "3 translations", "2 pre-flight checks", "Templates access"],
+      cta: t("pricing_cta_free") || "Get started free",
       highlighted: false
     },
     {
-      name: "Studio",
+      name: "Maker",
+      price: "$19",
+      period: t("pricing_mo"),
+      features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator", "Hook Benchmark"],
+      cta: "Start Maker",
+      highlighted: false
+    },
+    {
+      name: "Pro",
       price: "$49",
       period: t("pricing_mo"),
-      features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "Brand Kit", "AI Intelligence", "2 seats"],
-      cta: "Start Studio",
+      features: ["30 analyses/mo", "30 boards/mo", "100 translations", "Unlimited hooks", "AI Intelligence", "2 seats"],
+      cta: "Start Pro",
       highlighted: true,
       badge: t("pricing_most_popular")
     },
     {
-      name: "Scale",
-      price: "$499",
+      name: "Studio",
+      price: "$149",
       period: t("pricing_mo"),
-      features: ["500 analyses/mo", "300 boards/mo", "Unlimited hooks & scripts", "Meta Ads Connect", "10 seats", "API + White Label"],
-      cta: t("pricing_cta_demo"),
+      features: ["500 analyses/mo", "300 boards/mo", "Unlimited translations", "Meta Ads Connect", "10 seats", "API access"],
+      cta: "Start Studio",
       highlighted: false
     }
   ];
