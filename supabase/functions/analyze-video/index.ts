@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
 
+    console.log('analyze-video called:', { 
+      hasFile: !!videoFile, 
+      fileSize: videoFile?.size, 
+      fileName: videoFile?.name,
+      transcribe_only, 
+      hasVideoUrl: !!videoUrl 
+    });
+
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
