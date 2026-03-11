@@ -410,7 +410,7 @@ const blogPosts: Record<string, {
     category: "TikTok",
     readTime: "7 min",
     date: "January 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["TikTok ads", "TikTok ad creative", "TikTok marketing 2026", "TikTok hooks", "TikTok advertising strategy"],
     content: [
