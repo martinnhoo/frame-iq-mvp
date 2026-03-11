@@ -76,14 +76,14 @@ const BoardsList = () => {
             <LayoutGrid className="h-6 w-6 text-white/20" />
           </div>
           <div>
-            <p className="text-white/50 font-medium">No boards yet</p>
-            <p className="text-white/25 text-sm mt-1 max-w-xs">Describe your ad concept and get scenes, scripts, and production notes</p>
+            <p className="text-white/50 font-medium">{dt("bo_empty")}</p>
+            <p className="text-white/25 text-sm mt-1 max-w-xs">{dt("bo_describe_concept")}</p>
           </div>
           <button
             onClick={() => navigate("/dashboard/boards/new")}
             className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/50 hover:text-white hover:border-white/20 text-sm transition-all"
           >
-            Create first board
+            {dt("bo_create_first")}
           </button>
         </div>
       ) : (
