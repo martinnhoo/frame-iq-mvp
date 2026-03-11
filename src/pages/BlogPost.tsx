@@ -132,7 +132,7 @@ const blogPosts: Record<string, {
     category: "Case Study",
     readTime: "8 min",
     date: "February 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["DTC creative strategy", "ad creative cost reduction", "AI case study", "beauty brand ads", "creative scaling"],
     content: [
