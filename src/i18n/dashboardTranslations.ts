@@ -43,6 +43,47 @@ export type DashT = {
   ov_used: string;
   ov_remaining: string;
   ov_reset: string;
+  ov_lets_ship: string;
+  ov_complete_profile: string;
+  ov_complete_profile_desc: string;
+  ov_create_persona: string;
+  ov_tools: string;
+  ov_analyze: string;
+  ov_analyze_desc: string;
+  ov_board: string;
+  ov_board_desc: string;
+  ov_hooks: string;
+  ov_hooks_desc: string;
+  ov_translate_desc: string;
+  ov_templates: string;
+  ov_templates_desc: string;
+  ov_preflight_desc: string;
+  ov_persona_desc: string;
+  ov_intel_signals: string;
+  ov_no_signals_desc: string;
+  ov_start_analyzing: string;
+  ov_recent_work: string;
+  ov_latest_activity: string;
+  ov_no_work: string;
+  ov_get_started: string;
+  ov_performance: string;
+  ov_avg_hook_score: string;
+  ov_top_model: string;
+  ov_top_market: string;
+  ov_total_analyzed: string;
+  ov_analyzed: string;
+  ov_run_first: string;
+  ov_unlock_full: string;
+  ov_unlock_desc: string;
+  ov_see_plans: string;
+  ov_hook_trend: string;
+  ov_loading: string;
+  ov_low_quota: string;
+  ov_limit_reached: string;
+  ov_active_persona_label: string;
+  ov_no_personas_yet: string;
+  ov_create_first_persona: string;
+  ov_clear_persona: string;
 
   // Analyses
   an_title: string;
@@ -89,6 +130,9 @@ export type DashT = {
   bo_vo_script: string;
   bo_on_screen: string;
   bo_editor_notes: string;
+  bo_production_boards: string;
+  bo_create_first: string;
+  bo_describe_concept: string;
 
   // Hook Generator
   hg_title: string;
