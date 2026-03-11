@@ -97,11 +97,11 @@ Deno.serve(async (req) => {
 
     // ── Step 2: Analyze with Lovable AI (or fallback to Anthropic) ────────
     if (!LOVABLE_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
-      if (analysis_id) {
+      if (analysisId) {
         await supabase.from('analyses').update({
           status: 'failed',
           result: { error: 'No AI API key configured' }
-        }).eq('id', analysis_id);
+        }).eq('id', analysisId);
       }
       return new Response(JSON.stringify({ 
         error: 'api_key_missing',
