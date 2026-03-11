@@ -383,13 +383,13 @@ export default function DashboardOverview() {
                   <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl"
                     style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.12)" }}>🧠</div>
                   <div>
-                    <p className="text-sm font-bold text-white mb-1" style={syne}>No signals yet</p>
-                    <p className="text-xs text-white/30 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
+                    <p className="text-sm font-bold text-white mb-1" style={syne}>{dt("ov_no_signals")}</p>
+                    <p className="text-xs text-white/30 leading-relaxed">{dt("ov_no_signals_desc")}</p>
                   </div>
                   <button onClick={() => navigate("/dashboard/analyses/new")}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
                     style={{ ...syne, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
-                    <Plus className="h-3.5 w-3.5" /> Start analyzing
+                    <Plus className="h-3.5 w-3.5" /> {dt("ov_start_analyzing")}
                   </button>
                 </div>
               ) : (
