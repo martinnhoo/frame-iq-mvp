@@ -524,16 +524,7 @@ export const translations: Record<Language, TranslationKeys> = {
     stats_countries: "Pays",
     stats_time: "Temps Moyen d'Analyse",
 
-    how_label: "Comment ça marche",
-    how_title: "De l'upload à l'exécution\nen moins de 3 minutes",
-    how_step1_title: "Uploadez ou collez un lien",
-    how_step1_desc: "Déposez n'importe quelle pub, vidéo concurrente ou fichier de référence",
-    how_step2_title: "L'IA extrait les insights",
-    how_step2_desc: "Hook, modèle créatif, transcription, frames clés — le tout en 60s",
-    how_step3_title: "Générez votre board",
-    how_step3_desc: "Obtenez un brief prêt à produire que votre équipe peut exécuter aujourd'hui",
 
-    features_label: "Fonctionnalités",
     features_title: "Tout ce dont votre équipe créative a besoin",
     features_subtitle: "Arrêtez de perdre des heures à analyser les pubs concurrentes. Laissez l'IA le faire en secondes.",
     feature_video_title: "Analyse Vidéo",
@@ -548,6 +539,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_ai_video_desc: "Du concept au MP4 avec voix off IA. Pas besoin d'éditeurs.",
     feature_api_title: "Accès API",
     feature_api_desc: "Intégrez FrameIQ à votre workflow existant avec notre API REST.",
+
 
     pricing_label: "Tarifs",
     pricing_title: "Des tarifs simples et transparents",
