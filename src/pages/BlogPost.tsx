@@ -530,7 +530,7 @@ const blogPosts: Record<string, {
       "We asked a simple question: What happens if you run a real ad campaign using ONLY AI tools? No human editors, no designers, no Creative Strategist reviewing the work. Just AI from research to live ad.",
       "We ran this experiment for 30 days with a real DTC e-commerce brand (with their permission), spending $15K in ad budget across Meta and TikTok.",
       "## The AI-Only Stack",
-      "Here's what we used: FrameIQ for competitive analysis and brief generation, AI video generation for creating the actual ad videos, AI voiceover for narration, AI copywriting for ad copy and headlines, and automated A/B testing for optimization.",
+      "Here's what we used: AdBrief for competitive analysis and brief generation, AI video generation for creating the actual ad videos, AI voiceover for narration, AI copywriting for ad copy and headlines, and automated A/B testing for optimization.",
       "Total monthly cost of AI tools: $347. A comparable human team would cost $15K-25K/month.",
       "## Week 1: Research & Strategy",
       "The AI analyzed 100 competitor ads and identified the top-performing hooks, creative models, and formats in the brand's niche. This took 2 hours of human oversight (reviewing AI outputs and selecting which directions to pursue). A human strategist would typically spend 15-20 hours on this.",
