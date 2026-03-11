@@ -522,11 +522,11 @@ export default function DashboardOverview() {
               <div className="p-5">
                 {!hasData ? (
                   <div className="py-4 space-y-3">
-                    <p className="text-xs text-white/25 text-center leading-relaxed">Run your first analysis to unlock<br />AI performance insights</p>
+                    <p className="text-xs text-white/25 text-center leading-relaxed">{dt("ov_run_first")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                      <Plus className="h-3.5 w-3.5" /> New Analysis
+                      <Plus className="h-3.5 w-3.5" /> {dt("an_new")}
                     </button>
                   </div>
                 ) : (
