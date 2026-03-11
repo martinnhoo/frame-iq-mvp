@@ -219,7 +219,7 @@ const blogPosts: Record<string, {
     category: "Performance",
     readTime: "8 min",
     date: "March 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["A/B testing ads", "ad creative testing", "creative testing framework", "performance marketing testing", "ad variation testing"],
     content: [
