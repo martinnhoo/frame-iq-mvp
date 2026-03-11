@@ -55,7 +55,6 @@ export default function DashboardOverview() {
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
   const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
-  const [weeklyDelta, setWeeklyDelta] = useState<{ current: number; previous: number } | null>(null);
 
   const planLimits = {
     free:   { analyses: 3,   boards: 3,   preflights: 2 },
@@ -85,21 +84,6 @@ export default function DashboardOverview() {
         const mk = r.market as string; if (mk) markets[mk] = (markets[mk] || 0) + 1;
       });
       setInsights({ avgHookScore: count > 0 ? total / count : null, bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null, mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null, totalAnalyzed: data.length });
-
-      // Weekly delta for insight card
-      const now = Date.now();
-      const thisWeek = data.filter(a => new Date(a.created_at).getTime() > now - 7 * 86400000);
-      const lastWeek = data.filter(a => {
-        const t = new Date(a.created_at).getTime();
-        return t > now - 14 * 86400000 && t <= now - 7 * 86400000;
-      });
-      const avgThis = thisWeek.reduce((s, a) => s + ((a.result as Record<string, unknown>)?.hook_score as number || 0), 0) / (thisWeek.length || 1);
-      const avgLast = lastWeek.reduce((s, a) => s + ((a.result as Record<string, unknown>)?.hook_score as number || 0), 0) / (lastWeek.length || 1);
-      if (thisWeek.length > 0 && lastWeek.length > 0) {
-        setWeeklyDelta({ current: avgThis, previous: avgLast });
-      } else {
-        setWeeklyDelta(null);
-      }
     };
     run();
   }, [user.id, dateFilter]);
@@ -203,58 +187,6 @@ export default function DashboardOverview() {
   const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
-  // ── Micro-celebration: contextual subtext ──
-  const [microText, setMicroText] = useState("");
-  useEffect(() => {
-    const calcMicro = async () => {
-      // Check today's activity
-      const today = new Date().toISOString().split("T")[0];
-      const { data: todayUsage } = await supabase
-        .from("ai_daily_usage")
-        .select("request_count")
-        .eq("user_id", user.id)
-        .eq("usage_date", today)
-        .maybeSingle();
-
-      // Check this week's analyses
-      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { count: weekAnalyses } = await supabase
-        .from("analyses")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", weekAgo);
-
-      const todayCount = todayUsage?.request_count || 0;
-      const weekCount = weekAnalyses || 0;
-
-      if (todayCount >= 10) {
-        setMicroText(`${todayCount} ${dt("gm_power_user")}`);
-      } else if (weekCount >= 3) {
-        setMicroText(`${weekCount}ª ${dt("gm_on_rhythm")}`);
-      } else if (todayCount === 0) {
-        // Check if returning after absence
-        const { data: lastUsage } = await supabase
-          .from("ai_daily_usage")
-          .select("usage_date")
-          .eq("user_id", user.id)
-          .order("usage_date", { ascending: false })
-          .limit(1);
-        const lastDate = lastUsage?.[0]?.usage_date;
-        if (lastDate) {
-          const daysSince = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000);
-          if (daysSince > 3) {
-            setMicroText(dt("gm_comeback"));
-          } else {
-            setMicroText(dt("gm_first_today"));
-          }
-        } else {
-          setMicroText(dt("gm_first_today"));
-        }
-      }
-    };
-    calcMicro();
-  }, [user.id, dt]);
-
   const tools = [
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
@@ -291,11 +223,6 @@ export default function DashboardOverview() {
                 {dt("ov_lets_ship")}
               </span>
             </h1>
-            {microText && (
-              <p className="text-[11px] text-white/25 mt-1.5 tracking-wide" style={mono}>
-                {microText}
-              </p>
-            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
@@ -379,31 +306,6 @@ export default function DashboardOverview() {
             </div>
           </div>
         </div>
-
-        {/* ── Weekly Insight Card ───────────────────────────── */}
-        {weeklyDelta && (
-          <div className="flex items-center gap-4 p-4 rounded-2xl"
-            style={{ background: "#0f0f0f", border: `1px solid ${weeklyDelta.current > weeklyDelta.previous ? "rgba(52,211,153,0.15)" : weeklyDelta.current < weeklyDelta.previous ? "rgba(248,113,113,0.15)" : "rgba(255,255,255,0.07)"}` }}>
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: weeklyDelta.current >= weeklyDelta.previous ? "rgba(52,211,153,0.12)" : "rgba(248,113,113,0.12)" }}>
-              <span className="text-lg">{weeklyDelta.current > weeklyDelta.previous ? "📈" : weeklyDelta.current < weeklyDelta.previous ? "📉" : "➡️"}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white" style={syne}>
-                {dt("gm_weekly_insight")}: {weeklyDelta.current > weeklyDelta.previous ? dt("gm_score_up") : weeklyDelta.current < weeklyDelta.previous ? dt("gm_score_down") : dt("gm_score_stable")}
-              </p>
-              <p className="text-xs text-white/40 mt-0.5" style={mono}>
-                {weeklyDelta.current.toFixed(1)} → {weeklyDelta.previous.toFixed(1)} {dt("gm_vs_last_week")}
-                {weeklyDelta.current > weeklyDelta.previous && (
-                  <span style={{ color: "#34d399" }}> (+{(weeklyDelta.current - weeklyDelta.previous).toFixed(1)})</span>
-                )}
-                {weeklyDelta.current < weeklyDelta.previous && (
-                  <span style={{ color: "#f87171" }}> ({(weeklyDelta.current - weeklyDelta.previous).toFixed(1)})</span>
-                )}
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>

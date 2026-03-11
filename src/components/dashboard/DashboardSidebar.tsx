@@ -1,19 +1,18 @@
 import {
   BarChart3, LayoutGrid, Home,
   Plus, Globe, Brain, Layers, Plane, Cpu,
-  Zap, Settings, ChevronRight, Target, Flame,
+  Zap, Settings, ChevronRight, Target,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { UserProfilePanel } from "./UserProfilePanel";
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
@@ -47,56 +46,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const [profileOpen, setProfileOpen] = useState(false);
   const { language } = useLanguage();
   const dt = useDashT(language);
-
-  // ── Streak & Mastery ───────────────────────────────
-  const [streak, setStreak] = useState(0);
-  const [totalActions, setTotalActions] = useState(0);
-
-  useEffect(() => {
-    if (!user) return;
-    // Calculate streak from daily usage patterns
-    const calcStreak = async () => {
-      const { data } = await supabase
-        .from("ai_daily_usage")
-        .select("usage_date")
-        .eq("user_id", user.id)
-        .order("usage_date", { ascending: false })
-        .limit(60);
-      if (!data?.length) { setStreak(0); return; }
-      const dates = data.map(d => d.usage_date);
-      const today = new Date().toISOString().split("T")[0];
-      let s = 0;
-      let checkDate = new Date(today);
-      // If today is not in the list, check yesterday as starting point
-      if (!dates.includes(today)) {
-        checkDate.setDate(checkDate.getDate() - 1);
-        if (!dates.includes(checkDate.toISOString().split("T")[0])) { setStreak(0); return; }
-      }
-      while (dates.includes(checkDate.toISOString().split("T")[0])) {
-        s++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      }
-      setStreak(s);
-    };
-    // Get total actions for mastery level
-    const calcMastery = async () => {
-      const [{ count: analyses }, { count: boards }, { count: hooks }] = await Promise.all([
-        supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("boards").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("translations").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      ]);
-      setTotalActions((analyses || 0) + (boards || 0) + (hooks || 0));
-    };
-    calcStreak();
-    calcMastery();
-  }, [user]);
-
-  const mastery = useMemo(() => {
-    if (totalActions >= 100) return { level: dt("gm_level_director"), pct: 100, color: "#fbbf24" };
-    if (totalActions >= 40) return { level: dt("gm_level_strategist"), pct: Math.min(100, (totalActions / 100) * 100), color: "#a78bfa" };
-    if (totalActions >= 10) return { level: dt("gm_level_analyst"), pct: Math.min(100, (totalActions / 40) * 100), color: "#60a5fa" };
-    return { level: dt("gm_level_observer"), pct: Math.min(100, (totalActions / 10) * 100), color: "#34d399" };
-  }, [totalActions, dt]);
 
   const mainItems = [
     { title: dt("nav_overview"),  url: "/dashboard",          icon: Home,     end: true,  accent: "#e2e8f0" },
@@ -203,33 +152,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             {toolItems.map(item => <NavItem key={item.url} item={item} />)}
           </div>
         </nav>
-
-        {/* ── Gamification: Streak + Mastery ── */}
-        <div className="px-3 py-2 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          {/* Streak */}
-          {streak > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ background: streak >= 7 ? "rgba(251,191,36,0.08)" : "rgba(255,255,255,0.03)" }}>
-              <Flame className="h-3.5 w-3.5" style={{ color: streak >= 7 ? "#fbbf24" : streak >= 3 ? "#fb923c" : "#ffffff30" }} />
-              <span className="text-[12px] font-bold" style={{ ...mono, color: streak >= 7 ? "#fbbf24" : streak >= 3 ? "#fb923c" : "rgba(255,255,255,0.4)" }}>
-                {streak}
-              </span>
-              <span className="text-[10px] text-white/20">{dt("gm_streak_days")}</span>
-            </div>
-          )}
-
-          {/* Creative Mastery */}
-          <div className="px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] uppercase tracking-[0.15em] text-white/15 font-bold" style={syne}>{dt("gm_mastery")}</span>
-              <span className="text-[10px] font-bold" style={{ ...mono, color: mastery.color }}>{mastery.level}</span>
-            </div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
-              <div className="h-full rounded-full transition-all duration-1000"
-                style={{ width: `${mastery.pct}%`, background: `linear-gradient(90deg, ${mastery.color}60, ${mastery.color})` }} />
-            </div>
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="shrink-0 p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>

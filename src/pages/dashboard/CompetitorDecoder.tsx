@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Loader2, AlertTriangle, TrendingUp, Shield, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -43,9 +45,11 @@ const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function CompetitorDecoder() {
+  const { selectedPersona } = useOutletContext<DashboardContext>();
   const [adText, setAdText] = useState("");
   const [industry, setIndustry] = useState("iGaming / Betting");
   const [market, setMarket] = useState("BR");
+  const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DecodeResult | null>(null);
   const [copiedCounter, setCopiedCounter] = useState(false);
@@ -56,12 +60,15 @@ export default function CompetitorDecoder() {
     setLoading(true);
     setResult(null);
     try {
+      const personaCtx = selectedPersona
+        ? `Name: ${selectedPersona.name}. ${selectedPersona.headline}. Pains: ${selectedPersona.pains?.join(", ")}. Desires: ${selectedPersona.desires?.join(", ")}. Best platforms: ${selectedPersona.best_platforms?.join(", ")}. Hook angles: ${selectedPersona.hook_angles?.join(", ")}. Language: ${selectedPersona.language_style}`
+        : undefined;
       const { data, error } = await supabase.functions.invoke("decode-competitor", {
-        body: { ad_text: adText.trim(), industry, market },
+        body: { ad_text: adText.trim(), industry, market, context: context.trim() || undefined, persona_context: personaCtx },
       });
       if (error) throw error;
       setResult(data);
-      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY for real AI decoding");
+      if (data.mock_mode) toast.info("AI is running in demo mode");
     } catch {
       toast.error("Decoding failed");
     } finally {
@@ -168,6 +175,32 @@ export default function CompetitorDecoder() {
             </select>
           </div>
         </div>
+
+        {/* Context (optional) */}
+        <div>
+          <label className="block text-xs text-white/30 mb-2">Context <span className="text-white/15">(optional — helps AI give better counter-strategies)</span></label>
+          <textarea
+            value={context}
+            onChange={e => setContext(e.target.value)}
+            placeholder="E.g.: We sell a competing betting app in Brazil. Our USP is instant withdrawals. We want to understand how to beat their hook..."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-colors resize-none"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#fff" }}
+          />
+        </div>
+
+        {/* Active persona indicator */}
+        {selectedPersona && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
+            <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>
+              <p className="text-[10px] text-white/25 truncate">{selectedPersona.headline}</p>
+            </div>
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 font-bold" style={mono}>ACTIVE</span>
+          </div>
+        )}
 
         <button onClick={decode} disabled={loading || adText.trim().length < 20}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
