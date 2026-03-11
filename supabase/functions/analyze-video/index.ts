@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 Deno.serve(async (req) => {
@@ -32,27 +32,12 @@ Deno.serve(async (req) => {
       hasVideoUrl: !!videoUrl 
     });
 
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-
-    // For transcribe_only mode, we only need OPENAI_API_KEY
-    if (!transcribe_only && !ANTHROPIC_API_KEY) {
-      if (analysis_id) {
-        await supabase.from('analyses').update({
-          status: 'failed',
-          result: { error: 'API key not configured' }
-        }).eq('id', analysis_id);
-      }
-
-      return new Response(JSON.stringify({ 
-        error: 'api_key_missing',
-        message: 'ANTHROPIC_API_KEY not configured'
-      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     const startTime = Date.now();
 
-    // Step 1 — Transcribe audio if file provided
+    // ── Step 1: Transcribe audio ──────────────────────────────────────────
     let transcript = '';
     let duration = 30;
 
@@ -88,7 +73,7 @@ Deno.serve(async (req) => {
       transcript = `[Video from URL: ${videoUrl} — analyzing from URL context]`;
     }
 
-    // If transcribe_only, return just the transcript
+    // ── Transcribe-only mode ──────────────────────────────────────────────
     if (transcribe_only) {
       if (!transcript || transcript.startsWith('[')) {
         const reason = !OPENAI_API_KEY 
@@ -104,13 +89,24 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ 
-        success: true,
-        transcript,
-        duration,
+        success: true, transcript, duration,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Step 2 — Analyze with Claude
+    // ── Step 2: Analyze with Lovable AI (or fallback to Anthropic) ────────
+    if (!LOVABLE_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
+      if (analysis_id) {
+        await supabase.from('analyses').update({
+          status: 'failed',
+          result: { error: 'No AI API key configured' }
+        }).eq('id', analysis_id);
+      }
+      return new Response(JSON.stringify({ 
+        error: 'api_key_missing',
+        message: 'No AI API key configured'
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const prompt = `You are a world-class creative intelligence analyst for performance marketing.
 
 Analyze this video ad and return ONLY valid JSON (no markdown, no explanation) with this exact structure:
@@ -139,40 +135,81 @@ Campaign goal: ${campaign_goal || 'conversions'}
 Transcript: ${transcript || '[No transcript available]'}
 ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
+    let analysis: Record<string, unknown>;
 
-    if (!claudeRes.ok) {
-      const err = await claudeRes.text();
-      throw new Error(`Claude API error: ${claudeRes.status} ${err}`);
+    if (LOVABLE_API_KEY) {
+      // Use Lovable AI Gateway
+      console.log('Using Lovable AI for analysis...');
+      const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+
+      if (!aiRes.ok) {
+        const errText = await aiRes.text();
+        console.error('Lovable AI error:', aiRes.status, errText);
+        
+        if (aiRes.status === 429) {
+          throw new Error('Rate limit exceeded — please try again in a moment');
+        }
+        if (aiRes.status === 402) {
+          throw new Error('AI credits exhausted — please add credits');
+        }
+        throw new Error(`AI analysis error: ${aiRes.status}`);
+      }
+
+      const aiData = await aiRes.json();
+      const rawText = aiData.choices?.[0]?.message?.content || '{}';
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      console.log('AI response length:', clean.length);
+      analysis = JSON.parse(clean);
+    } else {
+      // Fallback to Anthropic
+      const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+      console.log('Using Anthropic for analysis...');
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+
+      if (!claudeRes.ok) {
+        const err = await claudeRes.text();
+        throw new Error(`Claude API error: ${claudeRes.status} ${err}`);
+      }
+
+      const claudeData = await claudeRes.json();
+      const rawText = claudeData.content?.[0]?.text || '{}';
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      analysis = JSON.parse(clean);
     }
 
-    const claudeData = await claudeRes.json();
-    const rawText = claudeData.content?.[0]?.text || '{}';
-    const clean = rawText.replace(/```json|```/g, '').trim();
-    const analysis = JSON.parse(clean);
-
     const processingTime = Math.round((Date.now() - startTime) / 1000);
+    console.log('Analysis complete in', processingTime, 'seconds');
 
-    // Save result
+    // ── Save result ──────────────────────────────────────────────────────
     await supabase.from('analyses').update({
       status: 'completed',
       result: analysis,
-      hook_strength: analysis.hook_strength,
-      hook_score: analysis.hook_score,
-      recommended_platforms: analysis.recommended_platforms,
-      improvement_suggestions: analysis.improvement_suggestions,
+      hook_strength: analysis.hook_strength as string,
+      hook_score: analysis.hook_score as number,
+      recommended_platforms: analysis.recommended_platforms as string[],
+      improvement_suggestions: analysis.improvement_suggestions as string[],
       processing_time_seconds: processingTime,
     }).eq('id', analysis_id);
 
@@ -189,15 +226,15 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
 
-    // Save to creative_memory for AI learning
+    // Save to creative_memory
     await supabase.from('creative_memory').insert({
       user_id,
       analysis_id,
-      hook_type: analysis.hook_type,
-      creative_model: analysis.creative_model,
-      platform: analysis.recommended_platforms?.[0] || null,
-      market: analysis.market_guess || market,
-      hook_score: analysis.hook_score,
+      hook_type: analysis.hook_type as string,
+      creative_model: analysis.creative_model as string,
+      platform: (analysis.recommended_platforms as string[])?.[0] || null,
+      market: (analysis.market_guess as string) || market,
+      hook_score: analysis.hook_score as number,
     });
 
     // Trigger AI profile update (non-blocking)
@@ -213,13 +250,28 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     }).catch(() => {});
 
     return new Response(JSON.stringify({ 
-      success: true, 
-      analysis_id,
-      mock_mode: false,
+      success: true, analysis_id, mock_mode: false,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error('analyze-video error:', error);
+    
+    // Try to update analysis status to failed
+    try {
+      const formData = await req.clone().formData().catch(() => null);
+      const analysis_id = formData?.get('analysis_id') as string | null;
+      if (analysis_id) {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        await supabase.from('analyses').update({
+          status: 'failed',
+          result: { error: String(error) }
+        }).eq('id', analysis_id);
+      }
+    } catch {}
+
     return new Response(JSON.stringify({ error: String(error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
