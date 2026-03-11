@@ -95,7 +95,7 @@ export default function Onboarding() {
           completedAt: new Date().toISOString(),
         },
       } as never).eq("id", session.user.id);
-      toast.success("Welcome to FrameIQ 🚀");
+      toast.success("Welcome to AdBrief 🚀");
       navigate(feat?.url || "/dashboard");
     } catch {
       toast.error("Something went wrong. Continuing anyway.");

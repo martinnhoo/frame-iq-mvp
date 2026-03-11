@@ -31,7 +31,7 @@ export default function ToolPage() {
     "applicationCategory": "BusinessApplication",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "operatingSystem": "Web",
-    "url": `https://www.frameiq.com/tools/${slug}`,
+    "url": `https://www.adbrief.pro/tools/${slug}`,
   };
 
   return (

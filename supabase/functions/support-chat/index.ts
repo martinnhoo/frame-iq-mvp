@@ -72,7 +72,7 @@ Use this to give more personalized, relevant answers.`
     });
   } catch (err) {
     return new Response(JSON.stringify({
-      reply: "Something went wrong. Please email team@frameiq.com for support."
+      reply: "Something went wrong. Please email team@adbrief.pro for support."
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

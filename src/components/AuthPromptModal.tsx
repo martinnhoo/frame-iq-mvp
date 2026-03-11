@@ -105,7 +105,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
               </div>
 
               <h2 className="text-xl font-bold text-foreground mb-2">
-                Thanks for trying FrameIQ
+                Thanks for trying AdBrief
               </h2>
               <p className="text-secondary text-sm leading-relaxed mb-8">
                 Create a free account to save your analyses, generate boards, and unlock the full platform.

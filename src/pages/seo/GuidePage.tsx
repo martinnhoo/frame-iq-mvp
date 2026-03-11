@@ -27,9 +27,9 @@ export default function GuidePage() {
     "@type": "Article",
     "headline": guide.title,
     "description": guide.metaDescription,
-    "author": { "@type": "Organization", "name": "FrameIQ" },
-    "publisher": { "@type": "Organization", "name": "FrameIQ", "url": "https://www.frameiq.com" },
-    "url": `https://www.frameiq.com/guides/${slug}`,
+    "author": { "@type": "Organization", "name": "AdBrief" },
+    "publisher": { "@type": "Organization", "name": "AdBrief", "url": "https://www.adbrief.pro" },
+    "url": `https://www.adbrief.pro/guides/${slug}`,
     "timeRequired": `PT${guide.readTime}M`,
   };
 
