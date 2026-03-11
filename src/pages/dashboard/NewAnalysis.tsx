@@ -408,7 +408,7 @@ const NewAnalysis = () => {
           </div>
           <p className="text-xs text-white/20 text-center font-mono">{overallProgress}%</p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
