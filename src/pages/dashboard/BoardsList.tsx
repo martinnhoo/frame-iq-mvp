@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutGrid, Plus, Trash2, Loader2, Clock, CheckCircle, Film, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 interface Board {
   id: string;
