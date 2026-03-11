@@ -1583,11 +1583,14 @@ const TemplatesPage = () => {
       if (activeDuration !== "all" && String(t.duration) !== activeDuration) return false;
       if (search) {
         const q = search.toLowerCase();
-        if (!t.name.toLowerCase().includes(q) && !t.description.toLowerCase().includes(q) && !t.category.includes(q)) return false;
+        const tt = language !== "en" ? getTemplateTranslation(t.id, language) : null;
+        const name = (tt?.name || t.name).toLowerCase();
+        const desc = (tt?.desc || t.description).toLowerCase();
+        if (!name.includes(q) && !desc.includes(q) && !t.category.includes(q)) return false;
       }
       return true;
     });
-  }, [activeCategory, activeDuration, search]);
+  }, [activeCategory, activeDuration, search, language]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
