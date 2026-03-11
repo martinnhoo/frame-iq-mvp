@@ -45,9 +45,11 @@ const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function CompetitorDecoder() {
+  const { selectedPersona } = useOutletContext<DashboardContext>();
   const [adText, setAdText] = useState("");
   const [industry, setIndustry] = useState("iGaming / Betting");
   const [market, setMarket] = useState("BR");
+  const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DecodeResult | null>(null);
   const [copiedCounter, setCopiedCounter] = useState(false);
