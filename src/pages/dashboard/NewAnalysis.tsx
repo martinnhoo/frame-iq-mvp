@@ -61,35 +61,13 @@ const NewAnalysis = () => {
     }
   };
 
-  /** Extract audio using OfflineAudioContext → 16kHz mono WAV */
-  const extractAudio = async (videoFile: File): Promise<File> => {
+  /** Extract audio using shared utility */
+  const doExtractAudio = async (videoFile: File): Promise<File> => {
     setStep("extracting");
     setProgress(10);
-    const arrayBuffer = await videoFile.arrayBuffer();
-    setProgress(30);
-    const audioCtx = new AudioContext();
-    let audioBuffer: AudioBuffer;
-    try {
-      audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    } catch {
-      await audioCtx.close();
-      throw new Error("Could not decode audio from this video");
-    }
-    await audioCtx.close();
-    setProgress(50);
-    const TARGET_SR = 16000;
-    const dur = audioBuffer.duration;
-    const offlineCtx = new OfflineAudioContext(1, Math.ceil(dur * TARGET_SR), TARGET_SR);
-    const source = offlineCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineCtx.destination);
-    source.start(0);
-    const rendered = await offlineCtx.startRendering();
-    setProgress(80);
-    const wavBlob = encodeWAV(rendered.getChannelData(0), TARGET_SR);
-    const wavFile = new File([wavBlob], "audio.wav", { type: "audio/wav" });
-    setProgress(95);
-    console.log(`Audio extracted: ${(wavFile.size / 1024 / 1024).toFixed(1)}MB from ${(videoFile.size / 1024 / 1024).toFixed(0)}MB video (${Math.round(dur)}s)`);
+    const wavFile = await extractAudioFromFile(videoFile, (p) => {
+      setProgress(p.percent);
+    });
     return wavFile;
   };
 
