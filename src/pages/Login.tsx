@@ -175,7 +175,7 @@ const Login = () => {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isFormDisabled}>
                     {emailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign in
+                    {t("auth_signin")}
                   </Button>
                 </motion.div>
               </form>
