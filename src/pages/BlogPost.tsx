@@ -434,7 +434,7 @@ const blogPosts: Record<string, {
     category: "E-commerce",
     readTime: "9 min",
     date: "January 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["DTC advertising", "scaling ad creative", "e-commerce ads", "creative production workflow", "ad creative at scale"],
     content: [
