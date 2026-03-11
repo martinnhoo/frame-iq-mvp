@@ -190,15 +190,24 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
                 {profile?.name || user?.email?.split("@")[0] || "Account"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
-                  style={{ ...mono, color: pm.color, background: pm.bg }}>{pm.label}</span>
-                {(plan === "free" || plan === "creator" || plan === "starter") && (
-                  <button
-                    onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
-                    className="text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                    Upgrade
-                  </button>
+                {isLifetime ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold"
+                    style={{ ...mono, background: "linear-gradient(135deg, rgba(250,204,21,0.2), rgba(251,146,60,0.2))", color: "#fbbf24", border: "1px solid rgba(250,204,21,0.25)" }}>
+                    ∞ Lifetime
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
+                      style={{ ...mono, color: pm.color, background: pm.bg }}>{pm.label}</span>
+                    {(plan === "free" || plan === "creator" || plan === "starter") && (
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
+                        className="text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                        Upgrade
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
