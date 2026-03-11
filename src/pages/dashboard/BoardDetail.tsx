@@ -74,38 +74,18 @@ const BoardDetail = () => {
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      
-      const prompt = `Ad production storyboard frame. Scene: "${sceneTitle || `Scene ${sceneIndex + 1}`}". Visual: ${visualDescription}. Style: clean, professional ad production reference, cinematic lighting, 9:16 vertical format for mobile video ad. No text overlays. Photorealistic.`;
-      
-      const res = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // We proxy through our edge fn to keep API key server-side
-        },
-        body: JSON.stringify({ prompt, n: 1, size: "1024x1792", model: "dall-e-3" }),
+      const { data, error } = await supabase.functions.invoke("generate-scene-image", {
+        body: { visual_description: visualDescription, scene_title: sceneTitle, scene_index: sceneIndex },
       });
-      
-      // If direct call fails (no key on client), use edge function
-      if (!res.ok) throw new Error("Use edge function");
-      
-      const data = await res.json();
-      const imageUrl = data.data?.[0]?.url;
-      if (imageUrl) setSceneImages(prev => ({ ...prev, [sceneIndex]: imageUrl }));
-    } catch {
-      // Fallback: call via Supabase edge function
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-scene-image", {
-          body: { visual_description: visualDescription, scene_title: sceneTitle, scene_index: sceneIndex },
-        });
-        if (error) throw error;
-        if (data?.url) setSceneImages(prev => ({ ...prev, [sceneIndex]: data.url }));
-        else throw new Error(data?.error || "No image returned");
-      } catch (err2) {
-        toast.error("Image generation requires OPENAI_API_KEY in Supabase secrets");
+      if (error) throw error;
+      if (data?.url) {
+        setSceneImages(prev => ({ ...prev, [sceneIndex]: data.url }));
+      } else {
+        throw new Error(data?.error || "No image returned");
       }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      toast.error(msg.includes("Rate") ? msg : "Failed to generate image");
     } finally {
       setGeneratingImages(prev => ({ ...prev, [sceneIndex]: false }));
     }
@@ -331,9 +311,9 @@ const BoardDetail = () => {
                 >
                   {/* Scene image */}
                   {sceneImages[i] ? (
-                    <div className="relative">
+                    <div className="relative aspect-square">
                       <img src={sceneImages[i]} alt={`Scene ${i + 1}`}
-                        className="w-full h-48 object-cover" />
+                        className="w-full h-full object-cover" />
                       <button onClick={() => setSceneImages(prev => { const n = {...prev}; delete n[i]; return n; })}
                         className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center"
                         style={{ background: "rgba(0,0,0,0.7)" }}>
