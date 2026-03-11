@@ -54,6 +54,7 @@ const PLATFORM_INSTRUCTIONS: Record<string, string> = {
   meta:   "Ads Manager → Reports → Export (CSV). Include: Ad Name, Amount Spent, Impressions, Clicks, CTR, CPC, CPM, Results, Cost per Result, ROAS, Video Hook Rate, Video Watches at 25%.",
   google: "Google Ads → Reports → Predefined reports → Ad performance. Export CSV with: Campaign, Ad group, Ad, Impressions, Clicks, CTR, Avg CPC, Cost, Conversions, Conv. rate, ROAS.",
   tiktok: "TikTok Ads Manager → Reporting → Custom Report → Ad level. Include: Ad Name, Spend, Impressions, Clicks, CTR, CPC, CPM, Conversions, CPA, Video play actions, 2-second video views.",
+  other:  "Export your ad performance data as CSV from any platform. Include columns like: Ad Name, Spend, Impressions, Clicks, CTR, CPC, Conversions, CPA, ROAS. The AI will auto-detect the format.",
 };
 
 const MODEL_LABELS: Record<string, { emoji: string; color: string }> = {
