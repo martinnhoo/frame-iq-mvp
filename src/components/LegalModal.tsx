@@ -126,7 +126,7 @@ You must create an account to use AdBrief. You are responsible for:
 ## 4. Subscription Plans & Billing
 
 ### 4.1 Plans
-FrameIQ offers Free, Studio, and Scale plans with varying usage limits. Plan features and pricing are as described on our pricing page. with varying usage limits. Plan features and pricing are as described on our pricing page.
+AdBrief offers Free, Studio, and Scale plans with varying usage limits. Plan features and pricing are as described on our pricing page.
 
 ### 4.2 Billing
 Paid subscriptions are billed monthly or annually. All fees are non-refundable except as required by law. We may change pricing with 30 days' notice.
