@@ -87,7 +87,7 @@ export function CompareDetail() {
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(255,255,255,0.04)", padding: "12px 20px" }}>
             <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>Feature</span>
-            <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", textAlign: "center" }}>FrameIQ</span>
+            <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", textAlign: "center" }}>AdBrief</span>
             <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>{comp.competitorName}</span>
           </div>
           {comp.featureTable.map((row, i) => (
