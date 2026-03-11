@@ -1826,8 +1826,8 @@ const TemplatesPage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white">Unlock all {TEMPLATES.length} templates ⚡</p>
-              <p className="text-xs text-white/35">Studio plan · 30 analyses · 30 boards · unlimited hooks</p>
+              <p className="text-sm font-bold text-white">{(language !== "en" ? getUpgradeCTA("unlock", language) : null) || "Unlock all"} {TEMPLATES.length} {(language !== "en" ? getUpgradeCTA("templates", language) : null) || "templates"} ⚡</p>
+              <p className="text-xs text-white/35">{(language !== "en" ? getUpgradeCTA("plan_desc", language) : null) || "Studio plan · 30 analyses · 30 boards · unlimited hooks"}</p>
             </div>
             <button
               onClick={() => navigate("/pricing")}
