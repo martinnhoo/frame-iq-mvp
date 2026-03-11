@@ -355,7 +355,7 @@ export const SEO_LANDING_PAGES = [
     title: "Facebook Ad Examples",
     headline: "High-Performing Facebook Ad Examples — With Analysis",
     subheadline: "Real ads, real breakdowns. Understand the creative structure behind every top Facebook ad.",
-    metaTitle: "Best Facebook Ad Examples (Analyzed) — FrameIQ",
+    metaTitle: "Best Facebook Ad Examples (Analyzed) — AdBrief",
     metaDescription: "Browse top-performing Facebook ad examples with AI analysis, hook scores, and creative breakdowns. See what makes Facebook ads convert.",
     keywords: ["facebook ad examples", "best facebook ads", "facebook advertising examples", "facebook video ad examples", "facebook ad creative examples"],
     intro: "Facebook remains the highest-volume platform for paid social. The best Facebook ads share a common pattern: a scroll-stopping hook in the first 3 seconds, a clear problem-solution arc, and a CTA that feels inevitable. Here's the library — all scored, all analyzed.",
