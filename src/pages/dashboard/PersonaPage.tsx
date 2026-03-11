@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft } from "lucide-react";
+import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
@@ -104,6 +104,194 @@ const STEPS = [
     placeholder: "e.g. They want to make easy money but don't trust betting apps",
   },
 ];
+
+// ─── Editable Detail Component ───────────────────────────────────────────
+function PersonaDetailEditable({
+  result: initial, activeDetail, globalPersona, setGlobalPersona,
+  onCopy, copied, onNew, onBack, onSave,
+}: {
+  result: PersonaResult; activeDetail: SavedPersona | null;
+  globalPersona: any; setGlobalPersona: (p: any) => void;
+  onCopy: () => void; copied: boolean; onNew: () => void; onBack: () => void;
+  onSave: (updated: PersonaResult) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState<PersonaResult>(initial);
+
+  useEffect(() => { setDraft(initial); }, [initial]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(draft);
+    setEditing(false);
+    setSaving(false);
+  };
+
+  const updateField = (field: keyof PersonaResult, value: string) =>
+    setDraft(d => ({ ...d, [field]: value }));
+  const updateList = (field: keyof PersonaResult, value: string) =>
+    setDraft(d => ({ ...d, [field]: value.split("\n").filter(Boolean) }));
+
+  const EditableText = ({ field, value, className = "", rows }: { field: keyof PersonaResult; value: string; className?: string; rows?: number }) =>
+    editing ? (
+      rows ? (
+        <textarea value={value} onChange={e => updateField(field, e.target.value)} rows={rows}
+          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
+      ) : (
+        <input value={value} onChange={e => updateField(field, e.target.value)}
+          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
+      )
+    ) : <span className={className}>{value || "—"}</span>;
+
+  const EditableList = ({ field, items, color }: { field: keyof PersonaResult; items: string[]; color: string }) =>
+    editing ? (
+      <textarea
+        value={(items || []).join("\n")}
+        onChange={e => updateList(field, e.target.value)}
+        rows={Math.max(2, (items || []).length)}
+        placeholder="One item per line"
+        className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
+      />
+    ) : (
+      <ul className="space-y-2">
+        {(items || []).map((item, i) => (
+          <li key={i} className="flex items-start gap-2 text-sm text-white/60">
+            <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    );
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
+          <ChevronLeft className="h-4 w-4" /> All Personas
+        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {activeDetail && globalPersona?.id === activeDetail.id ? (
+            <button onClick={() => setGlobalPersona(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
+              <Check className="h-3.5 w-3.5" /> Active — deactivate
+            </button>
+          ) : activeDetail ? (
+            <button onClick={() => setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
+              <Users className="h-3.5 w-3.5" /> Use this persona
+            </button>
+          ) : null}
+
+          {!editing ? (
+            <button onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs font-medium transition-all border border-white/[0.09]">
+              <Edit3 className="h-3.5 w-3.5" /> Edit
+            </button>
+          ) : (
+            <>
+              <button onClick={() => { setDraft(initial); setEditing(false); }}
+                className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">Cancel</button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-semibold hover:bg-green-500/30 transition-all">
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save
+              </button>
+            </>
+          )}
+
+          <button onClick={onCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />} Copy
+          </button>
+          <button onClick={onNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
+            <RefreshCw className="h-3.5 w-3.5" /> New persona
+          </button>
+        </div>
+      </div>
+
+      {/* Identity card */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6">
+        <div className="flex items-start gap-5">
+          <div className="shrink-0">
+            <Persona3DAvatar emoji={draft.avatar_emoji} name={draft.name} gender={draft.gender} size="lg" />
+          </div>
+          <div className="pt-2 flex-1 space-y-2">
+            <EditableText field="name" value={draft.name} className={editing ? "" : "text-2xl font-bold text-white block"} />
+            <div className="flex items-center gap-3">
+              <EditableText field="age" value={draft.age} className={editing ? "!w-20" : "text-white/40 text-sm"} />
+              {!editing && <span className="text-white/20">·</span>}
+              <EditableText field="gender" value={draft.gender} className={editing ? "!w-28" : "text-white/40 text-sm"} />
+            </div>
+            <EditableText field="headline" value={draft.headline} className={editing ? "" : "text-purple-300 font-semibold block"} />
+            <EditableText field="bio" value={draft.bio} rows={3} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Grid */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {[
+          { title: "😤 Pain Points", items: draft.pains, color: "text-red-400", field: "pains" as keyof PersonaResult },
+          { title: "✨ Desires", items: draft.desires, color: "text-yellow-400", field: "desires" as keyof PersonaResult },
+          { title: "🚧 Objections", items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
+          { title: "⚡ Purchase Triggers", items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
+        ].map(({ title, items, color, field }, idx) => (
+          <motion.div key={title} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + idx * 0.05 }}
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+            <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
+            <EditableList field={field} items={items} color={color} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Ad strategy */}
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
+        <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Ad Strategy for {draft.name}</h3>
+
+        <div>
+          <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Hook Angles</p>
+          <EditableList field="hook_angles" items={draft.hook_angles} color="text-purple-400" />
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Formats</p>
+            <EditableList field="best_formats" items={draft.best_formats} color="text-blue-300" />
+          </div>
+          <div>
+            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Platforms</p>
+            <EditableList field="best_platforms" items={draft.best_platforms} color="text-purple-300" />
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+          <div>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">Language Style</p>
+            <EditableText field="language_style" value={draft.language_style} className={editing ? "" : "text-sm text-white/60"} />
+          </div>
+          <div>
+            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">CTA Style</p>
+            <EditableText field="cta_style" value={draft.cta_style} className={editing ? "" : "text-sm text-white/60"} />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Media habits */}
+      {(draft.media_habits?.length > 0 || editing) && (
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+          className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 Media Habits</h3>
+          <EditableList field="media_habits" items={draft.media_habits} color="text-cyan-400" />
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
 type View = "list" | "builder" | "detail";
 
@@ -432,165 +620,28 @@ CTA: ${persona.cta_style}`;
   // ══════════════════════════════════════════════════════════════════════════
   // ── DETAIL VIEW ──
   // ══════════════════════════════════════════════════════════════════════════
-  if (view === "detail" && result)
-    return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button onClick={backToList} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
-            <ChevronLeft className="h-4 w-4" /> All Personas
-          </button>
-          <div className="flex items-center gap-2">
-            {/* Activate / Deactivate button */}
-            {activeDetail && globalPersona?.id === activeDetail.id ? (
-              <button onClick={() => setGlobalPersona(null)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
-                <Check className="h-3.5 w-3.5" /> Active — deactivate
-              </button>
-            ) : (
-              <button onClick={() => activeDetail && setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
-                <Users className="h-3.5 w-3.5" /> Use this persona
-              </button>
-            )}
-            <button onClick={() => handleCopy(result)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-              Copy
-            </button>
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white text-xs transition-all">
-              <RefreshCw className="h-3.5 w-3.5" /> New persona
-            </button>
-          </div>
-        </div>
-
-        {/* Identity card with 3D avatar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6"
-        >
-          <div className="flex items-start gap-5">
-            <div className="shrink-0">
-              <Persona3DAvatar emoji={result.avatar_emoji} name={result.name} gender={result.gender} size="lg" />
-            </div>
-            <div className="pt-2">
-              <h2 className="text-2xl font-bold text-white">{result.name}</h2>
-              <p className="text-white/40 text-sm">{result.age} · {result.gender}</p>
-              <p className="text-purple-300 font-semibold mt-1">{result.headline}</p>
-              <p className="text-white/50 text-sm mt-3 leading-relaxed">{result.bio}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Grid */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { title: "😤 Pain Points", items: result.pains, color: "text-red-400" },
-            { title: "✨ Desires", items: result.desires, color: "text-yellow-400" },
-            { title: "🚧 Objections", items: result.objections, color: "text-orange-400" },
-            { title: "⚡ Purchase Triggers", items: result.triggers, color: "text-green-400" },
-          ].map(({ title, items, color }, idx) => (
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + idx * 0.05 }}
-              className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5"
-            >
-              <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
-              <ul className="space-y-2">
-                {items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-                    <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Ad strategy */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5"
-        >
-          <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Ad Strategy for {result.name}</h3>
-
-          <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Hook Angles</p>
-            <div className="space-y-2">
-              {result.hook_angles.map((h, i) => (
-                <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.04]">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm text-white/70">{h}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Formats</p>
-              <div className="flex flex-wrap gap-2">
-                {result.best_formats.map((f) => (
-                  <span key={f} className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">Best Platforms</p>
-              <div className="flex flex-wrap gap-2">
-                {result.best_platforms.map((p) => (
-                  <span key={p} className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 text-xs border border-purple-500/20">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
-            <div>
-              <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">Language Style</p>
-              <p className="text-sm text-white/60">{result.language_style}</p>
-            </div>
-            <div>
-              <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">CTA Style</p>
-              <p className="text-sm text-white/60">{result.cta_style}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Media habits */}
-        {result.media_habits?.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5"
-          >
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 Media Habits</h3>
-            <ul className="space-y-2">
-              {result.media_habits.map((h, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-                  <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">•</span>
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-      </div>
-    );
+  if (view === "detail" && result) {
+    return <PersonaDetailEditable
+      result={result}
+      activeDetail={activeDetail}
+      globalPersona={globalPersona}
+      setGlobalPersona={setGlobalPersona}
+      onCopy={() => handleCopy(result)}
+      copied={copied}
+      onNew={startNew}
+      onBack={backToList}
+      onSave={async (updated) => {
+        if (activeDetail) {
+          await supabase.from("personas" as never)
+            .update({ result: updated } as never)
+            .eq("id" as never, activeDetail.id);
+          setSaved(prev => prev.map(p => p.id === activeDetail.id ? { ...p, result: updated } : p));
+        }
+        setResult(updated);
+        toast.success("Persona saved!");
+      }}
+    />;
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // ── BUILDER STEPS ──

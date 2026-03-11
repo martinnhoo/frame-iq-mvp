@@ -28,9 +28,13 @@ interface SidebarProps {
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
+const LIFETIME_EMAILS = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
+
 const planMeta: Record<string, { color: string; bg: string; label: string }> = {
   free:    { color: "#ffffff40", bg: "rgba(255,255,255,0.05)", label: "Free" },
+  maker:   { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Maker" },
   creator: { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Creator" },
+  pro:     { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Pro" },
   starter: { color: "#34d399",   bg: "rgba(52,211,153,0.1)",   label: "Starter" },
   studio:  { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Studio" },
   scale:   { color: "#fbbf24",   bg: "rgba(251,191,36,0.1)",   label: "Scale" },
@@ -61,6 +65,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     end ? location.pathname === url : location.pathname.startsWith(url);
 
   const plan = profile?.plan || "free";
+  const isLifetime = LIFETIME_EMAILS.includes(user?.email || "");
   const pm = planMeta[plan] || planMeta.free;
   const initials =
     profile?.name?.charAt(0)?.toUpperCase() ||
@@ -185,15 +190,24 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
                 {profile?.name || user?.email?.split("@")[0] || "Account"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
-                  style={{ ...mono, color: pm.color, background: pm.bg }}>{pm.label}</span>
-                {(plan === "free" || plan === "creator" || plan === "starter") && (
-                  <button
-                    onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
-                    className="text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
-                    Upgrade
-                  </button>
+                {isLifetime ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-md font-bold"
+                    style={{ ...mono, background: "linear-gradient(135deg, rgba(250,204,21,0.2), rgba(251,146,60,0.2))", color: "#fbbf24", border: "1px solid rgba(250,204,21,0.25)" }}>
+                    ∞ Lifetime
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
+                      style={{ ...mono, color: pm.color, background: pm.bg }}>{pm.label}</span>
+                    {(plan === "free" || plan === "creator" || plan === "starter") && (
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
+                        className="text-[9px] px-1.5 py-0.5 rounded-md font-bold transition-all hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                        Upgrade
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
