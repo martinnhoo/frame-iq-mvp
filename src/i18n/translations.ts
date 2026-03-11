@@ -1011,7 +1011,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_book_demo: "预约演示",
 
     auth_login_title: "欢迎回来",
-    auth_login_subtitle: "登录您的FrameIQ账户",
+    auth_login_subtitle: "登录您的AdBrief账户",
     auth_signup_title: "创建账户",
     auth_signup_subtitle: "开始分析视频并扩展您的创意",
     auth_email: "工作邮箱",
