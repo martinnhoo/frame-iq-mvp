@@ -28,9 +28,13 @@ interface SidebarProps {
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
+const LIFETIME_EMAILS = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
+
 const planMeta: Record<string, { color: string; bg: string; label: string }> = {
   free:    { color: "#ffffff40", bg: "rgba(255,255,255,0.05)", label: "Free" },
+  maker:   { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Maker" },
   creator: { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Creator" },
+  pro:     { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Pro" },
   starter: { color: "#34d399",   bg: "rgba(52,211,153,0.1)",   label: "Starter" },
   studio:  { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Studio" },
   scale:   { color: "#fbbf24",   bg: "rgba(251,191,36,0.1)",   label: "Scale" },
