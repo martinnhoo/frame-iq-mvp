@@ -77,6 +77,7 @@ export default function DashboardLayout() {
   });
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
+  const [vikaPopup, setVikaPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
