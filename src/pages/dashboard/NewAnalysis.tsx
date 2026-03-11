@@ -349,7 +349,7 @@ const NewAnalysis = () => {
             Start Analysis
           </button>
         </div>
-      ) : (
+      ) : step !== "idle" ? (
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 space-y-6">
           <div className="text-center">
             {step === "done" ? (
