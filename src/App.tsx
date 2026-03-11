@@ -101,6 +101,8 @@ const App = () => (
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="hooks" element={<HookGenerator />} />
                 <Route path="competitor" element={<CompetitorDecoder />} />
+                <Route path="script" element={<ScriptGenerator />} />
+                <Route path="brief" element={<BriefGenerator />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />
               <Route path="/tools/:slug"   element={<ToolPage />} />
