@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as ChevronRightIcon, Globe, X, ChevronDown, Loader2, Sparkles } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useObT } from "@/i18n/onboardingTranslations";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
@@ -1555,6 +1557,8 @@ const getCatAccent = (cat: string): string => {
 const TemplatesPage = () => {
   const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const ot = useObT(language);
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [activeDuration, setActiveDuration] = useState<Duration>("all");
   const [search, setSearch] = useState("");
@@ -1621,17 +1625,17 @@ const TemplatesPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
-            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> Ad Templates
+           <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
+            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> {ot("tp_title")}
           </h1>
           <p className="text-white/30 text-xs mt-1">
-            <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> proven formats · {Object.keys(CAT_META).length} industries ·{" "}
+            <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> {ot("tp_formats")} · {Object.keys(CAT_META).length} {ot("tp_industries")} ·{" "}
             <span style={{ color: "#34d399" }}>
-              <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 languages
+              <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 {ot("tp_languages")}
             </span>
           </p>
         </div>
-        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} shown</span>
+        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} {ot("tp_shown")}</span>
       </div>
 
       {/* Search */}
@@ -1640,7 +1644,7 @@ const TemplatesPage = () => {
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search templates, formats, industries..."
+          placeholder={ot("tp_search_ph")}
           className="w-full pl-11 pr-4 py-3 rounded-2xl text-sm outline-none transition-colors"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#fff" }}
         />
@@ -1670,7 +1674,7 @@ const TemplatesPage = () => {
 
       {/* Duration filter */}
       <div className="flex gap-2">
-        {([["all", "Any"], ["15", "15s"], ["30", "30s"], ["60", "60s"]] as [Duration, string][]).map(([d, label]) => (
+        {([["all", ot("tp_any")], ["15", "15s"], ["30", "30s"], ["60", "60s"]] as [Duration, string][]).map(([d, label]) => (
           <button
             key={d}
             onClick={() => { setActiveDuration(d); setPage(1); }}
@@ -1688,7 +1692,7 @@ const TemplatesPage = () => {
       {paginated.length === 0 ? (
         <div className="text-center py-16 text-white/20">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="font-medium">No templates match your filters</p>
+          <p className="font-medium">{ot("tp_no_match")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
@@ -1727,7 +1731,7 @@ const TemplatesPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
                     >
-                      {loading === template.id ? "Loading..." : <><span>Use template</span><ArrowRight className="h-3.5 w-3.5" /></>}
+                      {loading === template.id ? "Loading..." : <><span>{ot("tp_use")}</span><ArrowRight className="h-3.5 w-3.5" /></>}
                     </button>
                     <button
                       onClick={() => setTranslateModal(template)}
