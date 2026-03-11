@@ -65,7 +65,7 @@ Use this to give more personalized, relevant answers.`
     });
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text || "I'll escalate this to the team. Email team@frameiq.com";
+    const reply = data.content?.[0]?.text || "I'll escalate this to the team. Email team@adbrief.pro";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
