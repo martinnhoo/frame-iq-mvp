@@ -55,6 +55,7 @@ export default function DashboardOverview() {
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
   const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
+  const [weeklyDelta, setWeeklyDelta] = useState<{ current: number; previous: number } | null>(null);
 
   const planLimits = {
     free:   { analyses: 3,   boards: 3,   preflights: 2 },
