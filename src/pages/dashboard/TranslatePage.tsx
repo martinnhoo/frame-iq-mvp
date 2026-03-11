@@ -608,6 +608,12 @@ const TranslatePage = () => {
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-5">
+      <PersonaWarningModal
+        open={showPersonaWarning && !selectedPersona}
+        onClose={() => setShowPersonaWarning(false)}
+        onContinue={() => setShowPersonaWarning(false)}
+        toolName="Translate & Transcribe"
+      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
