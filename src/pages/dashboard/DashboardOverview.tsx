@@ -85,6 +85,21 @@ export default function DashboardOverview() {
         const mk = r.market as string; if (mk) markets[mk] = (markets[mk] || 0) + 1;
       });
       setInsights({ avgHookScore: count > 0 ? total / count : null, bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null, mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null, totalAnalyzed: data.length });
+
+      // Weekly delta for insight card
+      const now = Date.now();
+      const thisWeek = data.filter(a => new Date(a.created_at).getTime() > now - 7 * 86400000);
+      const lastWeek = data.filter(a => {
+        const t = new Date(a.created_at).getTime();
+        return t > now - 14 * 86400000 && t <= now - 7 * 86400000;
+      });
+      const avgThis = thisWeek.reduce((s, a) => s + ((a.result as Record<string, unknown>)?.hook_score as number || 0), 0) / (thisWeek.length || 1);
+      const avgLast = lastWeek.reduce((s, a) => s + ((a.result as Record<string, unknown>)?.hook_score as number || 0), 0) / (lastWeek.length || 1);
+      if (thisWeek.length > 0 && lastWeek.length > 0) {
+        setWeeklyDelta({ current: avgThis, previous: avgLast });
+      } else {
+        setWeeklyDelta(null);
+      }
     };
     run();
   }, [user.id, dateFilter]);
