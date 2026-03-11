@@ -99,7 +99,7 @@ const termsContent = `
 
 **Last updated: March 9, 2026**
 
-These Terms of Service ("Terms") govern your access to and use of FrameIQ's platform, products, and services.
+These Terms of Service ("Terms") govern your access to and use of AdBrief's platform, products, and services.
 
 ## 1. Acceptance of Terms
 
