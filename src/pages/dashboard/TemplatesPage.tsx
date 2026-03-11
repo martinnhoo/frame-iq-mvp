@@ -1674,7 +1674,7 @@ const TemplatesPage = () => {
 
       {/* Duration filter */}
       <div className="flex gap-2">
-        {([["all", "Any"], ["15", "15s"], ["30", "30s"], ["60", "60s"]] as [Duration, string][]).map(([d, label]) => (
+        {([["all", ot("tp_any")], ["15", "15s"], ["30", "30s"], ["60", "60s"]] as [Duration, string][]).map(([d, label]) => (
           <button
             key={d}
             onClick={() => { setActiveDuration(d); setPage(1); }}
