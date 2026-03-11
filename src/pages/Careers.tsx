@@ -90,7 +90,7 @@ const Careers = () => {
       {/* Why FrameIQ */}
       <section className="py-12 px-6 border-t border-border/30">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold mb-8 text-center">Why FrameIQ?</h2>
+          <h2 className="text-2xl font-bold mb-8 text-center">Why AdBrief?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
