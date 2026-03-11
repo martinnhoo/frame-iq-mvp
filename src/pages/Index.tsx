@@ -215,9 +215,9 @@ const Index = () => {
           >
             <span className="text-sm text-muted-foreground">Free to start</span>
             <span className="text-muted-foreground/30">·</span>
-            <span className="text-sm text-muted-foreground">Plans from <span className="text-foreground font-semibold">$19/mo</span></span>
+            <span className="text-sm text-muted-foreground">Results in <span className="text-foreground font-semibold">60 seconds</span></span>
             <span className="text-muted-foreground/30">·</span>
-            <a href="#pricing" className="text-sm text-primary hover:underline">See pricing →</a>
+            <a href="#pricing" className="text-sm text-primary hover:underline">See plans →</a>
           </motion.div>
           
           <motion.div 
