@@ -263,7 +263,7 @@ ${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
     }).catch(() => {});
 
     return new Response(JSON.stringify({ 
-      success: true, analysis_id, mock_mode: false,
+      success: true, analysis_id: analysisId, mock_mode: false,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
