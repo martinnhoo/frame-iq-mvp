@@ -103,26 +103,55 @@ export default function Onboarding() {
   const goNext = () => { const i = STEP_ORDER.indexOf(step); if (i < STEP_ORDER.length - 1) setStep(STEP_ORDER[i + 1]); };
   const goBack = () => { const i = STEP_ORDER.indexOf(step); if (i > 0) setStep(STEP_ORDER[i - 1]); };
 
+  const saveOnboarding = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate("/login"); return null; }
+    await supabase.from("profiles").update({
+      name: state.name || undefined,
+      preferred_language: state.language || undefined,
+      onboarding_completed: true,
+      onboarding_data: {
+        source: state.source, sourceOther: state.sourceOther,
+        feature: state.feature, marketingEmails: state.marketingEmails,
+        completedAt: new Date().toISOString(),
+      },
+    } as never).eq("id", session.user.id);
+    return session;
+  };
+
   const finish = async () => {
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/login"); return; }
+      const session = await saveOnboarding();
+      if (!session) return;
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
-      await supabase.from("profiles").update({
-        name: state.name || undefined,
-        preferred_language: state.language || undefined,
-        onboarding_completed: true,
-        onboarding_data: {
-          source: state.source, sourceOther: state.sourceOther,
-          feature: state.feature, marketingEmails: state.marketingEmails,
-          completedAt: new Date().toISOString(),
-        },
-      } as never).eq("id", session.user.id);
       toast.success("Welcome to AdBrief 🚀");
       navigate(feat?.url || "/dashboard");
     } catch {
       toast.error(ot("skip_setup"));
+      navigate("/dashboard");
+    } finally { setSaving(false); }
+  };
+
+  const handlePlanCheckout = async (planKey: string) => {
+    setSaving(true);
+    try {
+      const session = await saveOnboarding();
+      if (!session) return;
+      const priceId = PLAN_PRICES[planKey];
+      if (!priceId) { finish(); return; }
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { price_id: priceId }
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Could not start checkout");
+        navigate("/dashboard");
+      }
+    } catch {
+      toast.error("Something went wrong");
       navigate("/dashboard");
     } finally { setSaving(false); }
   };
