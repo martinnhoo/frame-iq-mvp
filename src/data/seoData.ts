@@ -237,16 +237,16 @@ export const SEO_GUIDES = [
 // ── COMPARISONS ──────────────────────────────────────────────
 export const SEO_COMPARISONS = [
   {
-    slug: "frameiq-vs-adspy",
+    slug: "adbrief-vs-adspy",
     competitorName: "AdSpy",
     frameiqPrice: "From $19/mo",
     competitorPrice: "$149/mo",
-    headline: "FrameIQ vs AdSpy — Which Ad Intelligence Tool Is Right for You?",
-    metaTitle: "FrameIQ vs AdSpy — Full Comparison 2025 | FrameIQ",
-    metaDescription: "FrameIQ vs AdSpy: full comparison of features, pricing, and use cases. Which ad intelligence tool is right for your team?",
-    keywords: ["frameiq vs adspy", "adspy alternative", "adspy competitor", "best ad intelligence tool 2025"],
-    summary: "AdSpy is a massive Facebook and Instagram ad database — great for spying on what competitors are running. FrameIQ is an AI-powered creative analyzer that scores your own ads, generates scripts, and decodes competitor frameworks. They do fundamentally different jobs. If you want to browse what others are running: AdSpy. If you want to understand why ads work and make better ones: FrameIQ.",
-    verdict: "FrameIQ wins for creative teams who want to improve performance. AdSpy wins for teams who need a competitor ad database at scale.",
+    headline: "AdBrief vs AdSpy — Which Ad Intelligence Tool Is Right for You?",
+    metaTitle: "AdBrief vs AdSpy — Full Comparison 2025 | AdBrief",
+    metaDescription: "AdBrief vs AdSpy: full comparison of features, pricing, and use cases. Which ad intelligence tool is right for your team?",
+    keywords: ["adbrief vs adspy", "adspy alternative", "adspy competitor", "best ad intelligence tool 2025"],
+    summary: "AdSpy is a massive Facebook and Instagram ad database — great for spying on what competitors are running. AdBrief is an AI-powered creative analyzer that scores your own ads, generates scripts, and decodes competitor frameworks. They do fundamentally different jobs. If you want to browse what others are running: AdSpy. If you want to understand why ads work and make better ones: AdBrief.",
+    verdict: "AdBrief wins for creative teams who want to improve performance. AdSpy wins for teams who need a competitor ad database at scale.",
     frameiqPros: ["AI hook scoring (0–10) on any video", "Full creative analysis in 60 seconds", "Script and brief generator built-in", "Pre-flight check — catch errors before launch", "Translation and transcription tools", "Free plan — no credit card required"],
     competitorPros: ["Massive Facebook/Instagram ad database", "Long historical ad data", "Country, language, and engagement filters"],
     frameiqCons: ["No competitor ad database (browse function)", "Focused on video creative — less for static ads"],
