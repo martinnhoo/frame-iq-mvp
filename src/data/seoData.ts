@@ -382,7 +382,7 @@ export const SEO_LANDING_PAGES = [
     title: "iGaming Ad Examples",
     headline: "Top iGaming & Betting Ad Examples — Creative Breakdown",
     subheadline: "The highest-performing casino and sports betting ads — analyzed for hook, creative model, and market fit.",
-    metaTitle: "Best iGaming Ad Examples (Analyzed) — FrameIQ",
+    metaTitle: "Best iGaming Ad Examples (Analyzed) — AdBrief",
     metaDescription: "Browse top iGaming and betting ad examples with hook scores and creative analysis. Brazil, Mexico, India markets covered.",
     keywords: ["igaming ad examples", "betting ad examples", "casino ad examples", "sports betting advertising", "gambling ad examples"],
     intro: "iGaming advertising requires a specific creative playbook: urgency, social proof, and a hook that stands out in a saturated feed. This library focuses on high-performing creatives from BR, MX, and IN markets — the three highest-growth regulated markets right now.",
