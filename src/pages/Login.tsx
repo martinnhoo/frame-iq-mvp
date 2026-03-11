@@ -135,7 +135,7 @@ const Login = () => {
               {/* Divider */}
               <div className="relative flex items-center">
                 <div className="flex-grow border-t border-border/50" />
-                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">or</span>
+                <span className="mx-4 text-xs text-muted-foreground uppercase tracking-wider">{t("auth_or_email")}</span>
                 <div className="flex-grow border-t border-border/50" />
               </div>
 
