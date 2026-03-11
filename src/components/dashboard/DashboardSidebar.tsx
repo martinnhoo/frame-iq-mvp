@@ -154,7 +154,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         </nav>
 
         {/* Footer */}
-        <div className="p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="shrink-0 p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           {/* Upgrade */}
           {(plan === "free" || plan === "creator") && (
             <NavLink to="/pricing" onClick={onClose}
