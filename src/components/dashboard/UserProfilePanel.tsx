@@ -258,6 +258,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       setName(profile?.name || "");
       setMarket(profile?.preferred_market || "GLOBAL");
       setLang(profile?.preferred_language || "en");
+      setAvatarUrl(profile?.avatar_url || null);
       loadPersonas();
     }
   }, [open]);
