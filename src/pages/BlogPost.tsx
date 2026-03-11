@@ -356,7 +356,7 @@ const blogPosts: Record<string, {
     category: "Performance",
     readTime: "8 min",
     date: "February 2026",
-    author: "FrameIQ Team",
+    author: "AdBrief Team",
     authorRole: "Creative Intelligence",
     keywords: ["Meta ads", "Facebook ads creative", "Instagram ads", "Meta advertising 2026", "Facebook ad best practices", "ROAS optimization"],
     content: [
