@@ -91,8 +91,8 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 ## 11. Contact Us
 
 For privacy-related inquiries:
-**Email:** support@frameiq.com
-`;
+**Email:** support@adbrief.pro
+\`;
 
 const termsContent = `
 # Terms of Service
