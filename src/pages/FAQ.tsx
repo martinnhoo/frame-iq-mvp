@@ -10,8 +10,8 @@ import { Logo } from "@/components/Logo";
 
 const faqItems = [
   {
-    q: "What can I do with FrameIQ?",
-    a: "FrameIQ is a creative intelligence platform for performance marketers. You can analyze video ads (hook score, creative model, transcript), generate production boards, create 10+ hook variations in seconds, run Pre-flight checks on scripts before sending to editors, and translate/localize ad copy for any market.",
+    q: "What can I do with AdBrief?",
+    a: "AdBrief is a creative intelligence platform for performance marketers. You can analyze video ads (hook score, creative model, transcript), generate production boards, create 10+ hook variations in seconds, run Pre-flight checks on scripts before sending to editors, and translate/localize ad copy for any market.",
   },
   {
     q: "What file formats does FrameIQ support?",
