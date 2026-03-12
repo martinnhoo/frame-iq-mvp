@@ -87,7 +87,7 @@ export default function Persona3DAvatar({ emoji, name, gender, seed, size = "md"
   const [hovered, setHovered] = useState(false);
 
   const dims = size === "sm" ? 64 : size === "md" ? 96 : 128;
-  const seedStr = seed || name;
+  const seedStr = String(seed ?? name ?? "persona");
   const hash = seedStr.split("").reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
   const r = (o: number) => seeded(hash, o);
 
