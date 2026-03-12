@@ -980,7 +980,7 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head of Marketing · Mumbai · SaaS", lp_testimonial3_metric: "In 3 Märkten ausgerollt",
     lp_plan_free_features: "3 Video-Analysen/Monat|3 Production Boards/Monat|3 Übersetzungen/Monat|3 Pre-Flight-Checks/Monat|Template-Zugang|✗ Hook-Generator|✗ KI-Intelligenz",
     lp_plan_maker_features: "20 Video-Analysen/Monat|20 Production Boards/Monat|100 Übersetzungen/Monat|20 Pre-Flight-Checks/Monat|Hook-Generator — unbegrenzt|Template-Zugang|Kein Cooldown|✗ KI-Intelligenz",
-    lp_plan_pro_features: "30 Analysen/Monat|30 Boards/Monat|100 Übersetzungen|Unbegrenzte Hooks|KI-Intelligenz|2 Plätze",
+    lp_plan_pro_features: "60 Video-Analysen/Monat|60 Production Boards/Monat|Unbegrenzte Übersetzungen|60 Pre-Flight-Checks/Monat|Hook-Generator — unbegrenzt|KI-Intelligenz + Lernprofil|Persona-Intelligenz",
     lp_plan_studio_features: "Unbegrenzte Video-Analysen|Unbegrenzte Production Boards|Unbegrenzte Übersetzungen|Unbegrenzte Pre-Flight-Checks|Unbegrenzte Hooks & Scripts|KI-Intelligenz + Lernprofil|Persona-Intelligenz|API-Zugang",
     lp_start_maker: "Maker starten", lp_start_pro: "Pro starten", lp_start_studio: "Studio starten",
   },
