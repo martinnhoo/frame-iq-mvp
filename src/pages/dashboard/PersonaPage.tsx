@@ -335,8 +335,8 @@ function PersonaDetailEditable({
           onClick={() => kitRef.current?.click()}
           className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 py-8 px-4 text-center"
           style={{
-            borderColor: brandKit.logo_url ? "rgba(52,211,153,0.35)" : "rgba(139,92,246,0.25)",
-            background: brandKit.logo_url ? "rgba(52,211,153,0.04)" : "rgba(139,92,246,0.03)",
+            borderColor: brandKit.logo_data_url ? "rgba(52,211,153,0.35)" : "rgba(139,92,246,0.25)",
+            background: brandKit.logo_data_url ? "rgba(52,211,153,0.04)" : "rgba(139,92,246,0.03)",
           }}>
 
           {kitUploading ? (
