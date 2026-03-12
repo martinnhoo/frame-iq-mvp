@@ -584,9 +584,9 @@ const Index = () => {
         <div className="container mx-auto max-w-3xl">
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { q: "Is it really free?", a: "Yes. 3 analyses, 3 boards, 2 pre-flight checks — no credit card. Ever.", icon: "✅" },
-              { q: "What formats work?", a: "TikTok, Reels, YouTube Shorts, Facebook — any MP4 or MOV up to 500MB.", icon: "🎬" },
-              { q: "How fast is it?", a: "First hook score and diagnosis in under 60 seconds. Production board in 90s.", icon: "⚡" },
+              { q: t("lp_objection_q1"), a: t("lp_objection_a1"), icon: "✅" },
+              { q: t("lp_objection_q2"), a: t("lp_objection_a2"), icon: "🎬" },
+              { q: t("lp_objection_q3"), a: t("lp_objection_a3"), icon: "⚡" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
                 className="p-4 rounded-2xl"
