@@ -155,7 +155,7 @@ const NewAnalysis = () => {
       const formData = new FormData();
       if (fileToSend) formData.append("video_file", fileToSend);
       if (videoUrl) formData.append("video_url", videoUrl);
-      formData.append("market", language);
+      formData.append("market", market);
       formData.append("user_id", user.id);
       formData.append("analysis_id", record.id);
       formData.append("title", title || file?.name || "Untitled");
