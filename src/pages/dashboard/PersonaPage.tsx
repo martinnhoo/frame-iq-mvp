@@ -427,7 +427,7 @@ function PersonaDetailEditable({
 
         {(brandKit.primary_color || brandKit.logo_data_url) && (
           <p className="text-[10px] text-purple-400/60 text-center pt-1">
-            ✨ O board generator vai usar essas cores e logo nos próximos boards desta persona
+            {dt("pe_brand_note")}
           </p>
         )}
       </motion.div>
