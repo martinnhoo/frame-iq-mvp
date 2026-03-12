@@ -103,8 +103,12 @@ const BoardDetail = () => {
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
-      // Extract brand kit logo from board content if available
-      const brandLogo = ((board?.content as Record<string, unknown>)?.brand_kit as Record<string, unknown>)?.logo_data_url as string | undefined;
+      // Try board content first, then active persona's brand kit
+      const boardBrandLogo = ((board?.content as Record<string, unknown>)?.brand_kit as Record<string, unknown>)?.logo_data_url as string | undefined;
+      const personaBrandLogo = (selectedPersona as any)?.brand_kit?.logo_data_url as string | undefined;
+      const brandLogo = boardBrandLogo || personaBrandLogo;
+
+      console.log("[BoardDetail] Brand logo source:", boardBrandLogo ? "board" : personaBrandLogo ? "persona" : "none", "length:", brandLogo?.length || 0);
 
       const { data, error } = await supabase.functions.invoke("generate-scene-image", {
         body: {
