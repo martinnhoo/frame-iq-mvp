@@ -74,7 +74,14 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
-    try { const s = localStorage.getItem("frameiq_active_persona"); return s ? JSON.parse(s) : null; } catch { return null; }
+    try {
+      const s = localStorage.getItem("frameiq_active_persona");
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      // Validate essential fields exist
+      if (!parsed || !parsed.id || !parsed.name) return null;
+      return parsed;
+    } catch { return null; }
   });
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
