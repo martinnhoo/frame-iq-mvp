@@ -47,7 +47,7 @@ const Index = () => {
       name: "Free",
       price: "$0",
       period: t("pricing_mo"),
-      features: ["3 analyses/mo", "3 boards/mo", "3 translations", "2 pre-flight checks", "Templates access"],
+      features: t("lp_plan_free_features").split("|"),
       cta: t("pricing_cta_free") || "Get started free",
       highlighted: false
     },
@@ -55,16 +55,16 @@ const Index = () => {
       name: "Maker",
       price: "$19",
       period: t("pricing_mo"),
-      features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator", "Hook Benchmark"],
-      cta: "Start Maker",
+      features: t("lp_plan_maker_features").split("|"),
+      cta: t("lp_start_maker"),
       highlighted: false
     },
     {
       name: "Pro",
       price: "$49",
       period: t("pricing_mo"),
-      features: ["30 analyses/mo", "30 boards/mo", "100 translations", "Unlimited hooks", "AI Intelligence", "2 seats"],
-      cta: "Start Pro",
+      features: t("lp_plan_pro_features").split("|"),
+      cta: t("lp_start_pro"),
       highlighted: true,
       badge: t("pricing_most_popular")
     },
@@ -72,8 +72,8 @@ const Index = () => {
       name: "Studio",
       price: "$149",
       period: t("pricing_mo"),
-      features: ["500 analyses/mo", "300 boards/mo", "Unlimited translations", "Meta Ads Connect", "10 seats", "API access"],
-      cta: "Start Studio",
+      features: t("lp_plan_studio_features").split("|"),
+      cta: t("lp_start_studio"),
       highlighted: false
     }
   ];
@@ -218,7 +218,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.25 }}
             className="flex flex-col items-center gap-3 mt-8 font-body"
           >
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">Powered by</span>
+            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">{t("powered_by")}</span>
             <div className="flex items-center gap-6">
               {/* OpenAI */}
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -244,11 +244,11 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.28 }}
             className="flex items-center justify-center gap-6 mt-5 font-body"
           >
-            <span className="text-sm text-muted-foreground">Free to start</span>
+            <span className="text-sm text-muted-foreground">{t("lp_free_to_start")}</span>
             <span className="text-muted-foreground/30">·</span>
-            <span className="text-sm text-muted-foreground">Results in <span className="text-foreground font-semibold">60 seconds</span></span>
+            <span className="text-sm text-muted-foreground">{t("hero_check_2")}</span>
             <span className="text-muted-foreground/30">·</span>
-            <a href="#pricing" className="text-sm text-primary hover:underline">See plans →</a>
+            <a href="#pricing" className="text-sm text-primary hover:underline">{t("lp_see_plans")}</a>
           </motion.div>
           
           <motion.div 
@@ -262,7 +262,7 @@ const Index = () => {
               onClick={() => navigate("/signup")}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Score my first ad — free
+                 {t("lp_score_cta")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </span>
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -276,7 +276,7 @@ const Index = () => {
               }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors fill-current opacity-60" />
-              See a real result
+              {t("hero_cta_secondary")}
             </Button>
           </motion.div>
 
@@ -288,17 +288,17 @@ const Index = () => {
           >
             <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              No credit card required
+             {t("hero_check_1")}
             </span>
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              First result in under 60 seconds
+              {t("hero_check_2")}
             </span>
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs font-medium" style={{color:"rgba(167,139,250,0.8)"}}>
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-              147 teams analyzing ads right now · 23 in the last hour
+              {t("lp_live_teams")}
             </span>
           </motion.div>
           
@@ -476,10 +476,10 @@ const Index = () => {
           {/* Numbers row */}
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 mb-10">
             {[
-              { value: "2.4M+",  label: "Ads analyzed" },
-              { value: "147",    label: "Performance teams" },
-              { value: "12",     label: "Countries" },
-              { value: "< 60s",  label: "To first insight" },
+              { value: "2.4M+",  label: t("social_ads") },
+              { value: "147",    label: t("social_teams") },
+              { value: "12",     label: t("social_countries") },
+              { value: "< 60s",  label: t("social_time") },
             ].map((s) => (
               <div key={s.value} className="text-center">
                 <div className="text-2xl font-bold font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.value}</div>
@@ -492,28 +492,25 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               {
-                quote: "I run paid social for three DTC brands across EU. AdBrief is now part of my pre-launch checklist — hook score flagged a weak open on a €4k shoot. We recut before it went live.",
-                name: "Mathieu D.",
-                role: "Performance Analyst · Paris · E-commerce",
-                metric: "Caught a bad hook before a €4k shoot",
-                avatar: "MD",
-                color: "#a78bfa",
+                quote: t("lp_testimonial1_quote"),
+                name: t("lp_testimonial1_name"),
+                role: t("lp_testimonial1_role"),
+                metric: t("lp_testimonial1_metric"),
+                avatar: "MD", color: "#a78bfa",
               },
               {
-                quote: "As a creative strategist I was spending too much time writing briefs from scratch. The production board gives me a solid starting point every time. My editors actually prefer it.",
-                name: "Camila S.",
-                role: "Creative Strategist · São Paulo · iGaming",
-                metric: "Editors adopted it in week one",
-                avatar: "CS",
-                color: "#f472b6",
+                quote: t("lp_testimonial2_quote"),
+                name: t("lp_testimonial2_name"),
+                role: t("lp_testimonial2_role"),
+                metric: t("lp_testimonial2_metric"),
+                avatar: "CS", color: "#f472b6",
               },
               {
-                quote: "We were scaling to 3 new markets and couldn't afford to guess on creative. AdBrief gave our team a shared language for what 'good' looks like — that alone was worth it.",
-                name: "Rohan M.",
-                role: "Head of Marketing · Mumbai · SaaS",
-                metric: "Rolled out across 3 markets",
-                avatar: "RM",
-                color: "#34d399",
+                quote: t("lp_testimonial3_quote"),
+                name: t("lp_testimonial3_name"),
+                role: t("lp_testimonial3_role"),
+                metric: t("lp_testimonial3_metric"),
+                avatar: "RM", color: "#34d399",
               },
             ].map((t, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
@@ -587,9 +584,9 @@ const Index = () => {
         <div className="container mx-auto max-w-3xl">
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { q: "Is it really free?", a: "Yes. 3 analyses, 3 boards, 2 pre-flight checks — no credit card. Ever.", icon: "✅" },
-              { q: "What formats work?", a: "TikTok, Reels, YouTube Shorts, Facebook — any MP4 or MOV up to 500MB.", icon: "🎬" },
-              { q: "How fast is it?", a: "First hook score and diagnosis in under 60 seconds. Production board in 90s.", icon: "⚡" },
+              { q: t("lp_objection_q1"), a: t("lp_objection_a1"), icon: "✅" },
+              { q: t("lp_objection_q2"), a: t("lp_objection_a2"), icon: "🎬" },
+              { q: t("lp_objection_q3"), a: t("lp_objection_a3"), icon: "⚡" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
                 className="p-4 rounded-2xl"
@@ -614,7 +611,7 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
-              Pricing
+               {t("pricing_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
               Simple, transparent pricing
@@ -767,14 +764,14 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              Stop guessing
+              {t("lp_stop_guessing")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
-              Every day you guess,<br/>
-              <span className="text-muted-foreground/50">your competitors don't.</span>
+              {t("lp_every_day1")}<br/>
+              <span className="text-muted-foreground/50">{t("lp_every_day2")}</span>
             </h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto font-body text-base">
-              Real problems AdBrief solves — before they cost you budget.
+              {t("lp_real_problems")}
             </p>
           </div>
 
@@ -793,7 +790,7 @@ const Index = () => {
                 <div className="p-5 md:p-6 flex gap-4" style={{background:"rgba(239,68,68,0.03)"}}>
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/50 font-display">Before</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/50 font-display">{t("before_label")}</span>
                       <span className="h-px flex-1 bg-red-400/10" />
                     </div>
                     <p className="text-sm text-muted-foreground/60 leading-relaxed font-body">{item.before}</p>
@@ -807,7 +804,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.8}}>After · {item.tag}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.8}}>{t("after_label")} · {item.tag}</span>
                       <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
                     </div>
                     <p className="text-sm leading-relaxed font-body text-white/70">{item.after}</p>
@@ -820,12 +817,12 @@ const Index = () => {
           {/* Inline CTA inside Before/After section */}
           <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
             className="mt-10 text-center">
-            <p className="text-sm text-muted-foreground/50 mb-4 font-body">Ready to stop guessing?</p>
+            <p className="text-sm text-muted-foreground/50 mb-4 font-body">{t("lp_ready_stop")}</p>
             <Button
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold h-auto border-0 rounded-xl px-8 py-3.5 shadow-lg shadow-purple-500/20 font-body"
               onClick={() => navigate("/signup")}
             >
-              Score my first ad — free
+              {t("lp_score_cta")}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
@@ -841,28 +838,28 @@ const Index = () => {
             <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% -20%,rgba(167,139,250,0.18),transparent 60%)"}} />
             <div className="relative z-10">
               <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-5 font-display">
-                ⚡ Launch day special — free plan always included
+               {t("lp_launch_special")}
               </p>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
-                Find out why your ads<br />
+                {t("cta_title1")}<br />
                 <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-                  underperform. Free.
+                  {t("cta_title2")}
                 </span>
               </h2>
               <p className="text-white/50 text-base mb-8 max-w-lg mx-auto font-body leading-relaxed">
-                Upload any video. Get a clear diagnosis with specific fixes in under 60 seconds. No credit card. No setup.
+                {t("cta_desc")}
               </p>
 
               {/* Trust signals row */}
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 font-body">
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> Free plan included
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check1")}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> No credit card
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check2")}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> Real results in 60s
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check3")}
                 </span>
               </div>
 
@@ -872,7 +869,7 @@ const Index = () => {
                   onClick={() => navigate("/signup")}
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    Analyze your first ad — free
+                    {t("cta_primary_btn")}
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </span>
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -881,13 +878,13 @@ const Index = () => {
                   className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 border-white/10 font-body"
                   onClick={() => navigate("/book-demo")}
                 >
-                  Book a 15-min demo
+                  {t("cta_secondary_btn")}
                 </Button>
               </div>
 
               {/* Live social proof under CTA */}
               <p className="mt-6 text-[11px] text-white/25 font-body">
-                Joined by <span className="text-white/50 font-semibold">147 performance teams</span> across 12 countries
+                {t("lp_joined_by")}
               </p>
             </div>
           </motion.div>
@@ -923,7 +920,7 @@ const Index = () => {
                 <li><Link to="/blog" className="hover:text-foreground transition-colors">{t("nav_blog")}</Link></li>
                 <li><Link to="/faq" className="hover:text-foreground transition-colors">{t("nav_faq")}</Link></li>
                 <li><Link to="/contact" className="hover:text-foreground transition-colors">{t("nav_contact")}</Link></li>
-                <li><Link to="/careers" className="hover:text-foreground transition-colors">Careers</Link></li>
+                <li><Link to="/careers" className="hover:text-foreground transition-colors">{t("footer_careers")}</Link></li>
               </ul>
             </div>
             
@@ -965,9 +962,9 @@ const Index = () => {
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-base h-auto rounded-xl py-4 shadow-lg shadow-purple-500/30 font-body"
           onClick={() => navigate("/signup")}
         >
-          Score my first ad — free →
+          {t("lp_score_cta")} →
         </Button>
-        <p className="text-center text-[10px] text-white/25 mt-2 font-body">No credit card · Free plan · Results in 60s</p>
+        <p className="text-center text-[10px] text-white/25 mt-2 font-body">{t("lp_mobile_sub")}</p>
       </div>
     </div>
   );

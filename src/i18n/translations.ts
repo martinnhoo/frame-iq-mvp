@@ -174,6 +174,33 @@ type TranslationKeys = {
 
   // Powered by
   powered_by: string;
+
+  // Landing page extras
+  lp_free_to_start: string;
+  lp_see_plans: string;
+  lp_score_cta: string;
+  lp_live_teams: string;
+  lp_objection_q1: string; lp_objection_a1: string;
+  lp_objection_q2: string; lp_objection_a2: string;
+  lp_objection_q3: string; lp_objection_a3: string;
+  lp_stop_guessing: string;
+  lp_every_day1: string; lp_every_day2: string;
+  lp_real_problems: string;
+  lp_ready_stop: string;
+  lp_launch_special: string;
+  lp_joined_by: string;
+  lp_mobile_sub: string;
+  footer_careers: string;
+  lp_testimonial1_quote: string; lp_testimonial1_name: string; lp_testimonial1_role: string; lp_testimonial1_metric: string;
+  lp_testimonial2_quote: string; lp_testimonial2_name: string; lp_testimonial2_role: string; lp_testimonial2_metric: string;
+  lp_testimonial3_quote: string; lp_testimonial3_name: string; lp_testimonial3_role: string; lp_testimonial3_metric: string;
+  lp_plan_free_features: string;
+  lp_plan_maker_features: string;
+  lp_plan_pro_features: string;
+  lp_plan_studio_features: string;
+  lp_start_maker: string;
+  lp_start_pro: string;
+  lp_start_studio: string;
 };
 
 export const translations: Record<Language, TranslationKeys> = {
@@ -346,6 +373,35 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "Strong",
 
     powered_by: "Powered by",
+
+    lp_free_to_start: "Free to start",
+    lp_see_plans: "See plans →",
+    lp_score_cta: "Score my first ad — free",
+    lp_live_teams: "147 teams analyzing ads right now · 23 in the last hour",
+    lp_objection_q1: "Is it really free?", lp_objection_a1: "Yes. 3 analyses, 3 boards, 2 pre-flight checks — no credit card. Ever.",
+    lp_objection_q2: "What formats work?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — any MP4 or MOV up to 500MB.",
+    lp_objection_q3: "How fast is it?", lp_objection_a3: "First hook score and diagnosis in under 60 seconds. Production board in 90s.",
+    lp_stop_guessing: "Stop guessing",
+    lp_every_day1: "Every day you guess,", lp_every_day2: "your competitors don't.",
+    lp_real_problems: "Real problems AdBrief solves — before they cost you budget.",
+    lp_ready_stop: "Ready to stop guessing?",
+    lp_launch_special: "⚡ Launch day special — free plan always included",
+    lp_joined_by: "Joined by 147 performance teams across 12 countries",
+    lp_mobile_sub: "No credit card · Free plan · Results in 60s",
+    footer_careers: "Careers",
+    lp_testimonial1_quote: "I run paid social for three DTC brands across EU. AdBrief is now part of my pre-launch checklist — hook score flagged a weak open on a €4k shoot. We recut before it went live.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "Performance Analyst · Paris · E-commerce", lp_testimonial1_metric: "Caught a bad hook before a €4k shoot",
+    lp_testimonial2_quote: "As a creative strategist I was spending too much time writing briefs from scratch. The production board gives me a solid starting point every time. My editors actually prefer it.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "Creative Strategist · São Paulo · iGaming", lp_testimonial2_metric: "Editors adopted it in week one",
+    lp_testimonial3_quote: "We were scaling to 3 new markets and couldn't afford to guess on creative. AdBrief gave our team a shared language for what 'good' looks like — that alone was worth it.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head of Marketing · Mumbai · SaaS", lp_testimonial3_metric: "Rolled out across 3 markets",
+    lp_plan_free_features: "3 analyses/mo|3 boards/mo|3 translations|2 pre-flight checks|Templates access",
+    lp_plan_maker_features: "10 analyses/mo|10 boards/mo|50 translations|Hook Generator|Hook Benchmark",
+    lp_plan_pro_features: "30 analyses/mo|30 boards/mo|100 translations|Unlimited hooks|AI Intelligence|2 seats",
+    lp_plan_studio_features: "500 analyses/mo|300 boards/mo|Unlimited translations|Meta Ads Connect|10 seats|API access",
+    lp_start_maker: "Start Maker",
+    lp_start_pro: "Start Pro",
+    lp_start_studio: "Start Studio",
   },
 
   es: {
@@ -517,6 +573,28 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "Fuerte",
 
     powered_by: "Potenciado por",
+    lp_free_to_start: "Gratis para empezar", lp_see_plans: "Ver planes →", lp_score_cta: "Puntúa mi primer anuncio — gratis",
+    lp_live_teams: "147 equipos analizando anuncios ahora · 23 en la última hora",
+    lp_objection_q1: "¿Es realmente gratis?", lp_objection_a1: "Sí. 3 análisis, 3 boards, 2 chequeos pre-lanzamiento — sin tarjeta. Nunca.",
+    lp_objection_q2: "¿Qué formatos funcionan?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — cualquier MP4 o MOV hasta 500MB.",
+    lp_objection_q3: "¿Qué tan rápido es?", lp_objection_a3: "Primera puntuación de hook y diagnóstico en menos de 60 segundos. Board de producción en 90s.",
+    lp_stop_guessing: "Deja de adivinar", lp_every_day1: "Cada día que adivinas,", lp_every_day2: "tus competidores no.",
+    lp_real_problems: "Problemas reales que AdBrief resuelve — antes de que te cuesten presupuesto.",
+    lp_ready_stop: "¿Listo para dejar de adivinar?",
+    lp_launch_special: "⚡ Especial de lanzamiento — plan gratis siempre incluido",
+    lp_joined_by: "Acompañado por 147 equipos de performance en 12 países",
+    lp_mobile_sub: "Sin tarjeta · Plan gratis · Resultados en 60s", footer_careers: "Carreras",
+    lp_testimonial1_quote: "Gestiono social ads para tres marcas DTC en Europa. AdBrief ahora es parte de mi checklist pre-lanzamiento — el hook score detectó una apertura débil en una producción de €4k. Recortamos antes de publicarla.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "Analista de Performance · París · E-commerce", lp_testimonial1_metric: "Detectó un hook malo antes de una producción de €4k",
+    lp_testimonial2_quote: "Como estratega creativa, perdía demasiado tiempo escribiendo briefs desde cero. El board de producción me da un punto de partida sólido cada vez. Mis editores lo prefieren.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "Estratega Creativa · São Paulo · iGaming", lp_testimonial2_metric: "Editores lo adoptaron en la primera semana",
+    lp_testimonial3_quote: "Estábamos escalando a 3 nuevos mercados y no podíamos adivinar en creativo. AdBrief le dio a nuestro equipo un lenguaje común para definir qué es 'bueno' — solo eso valió la pena.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head de Marketing · Mumbai · SaaS", lp_testimonial3_metric: "Desplegado en 3 mercados",
+    lp_plan_free_features: "3 análisis/mes|3 boards/mes|3 traducciones|2 chequeos pre-vuelo|Acceso a templates",
+    lp_plan_maker_features: "10 análisis/mes|10 boards/mes|50 traducciones|Generador de Hooks|Hook Benchmark",
+    lp_plan_pro_features: "30 análisis/mes|30 boards/mes|100 traducciones|Hooks ilimitados|Inteligencia IA|2 asientos",
+    lp_plan_studio_features: "500 análisis/mes|300 boards/mes|Traducciones ilimitadas|Meta Ads Connect|10 asientos|Acceso API",
+    lp_start_maker: "Comenzar Maker", lp_start_pro: "Comenzar Pro", lp_start_studio: "Comenzar Studio",
   },
 
   fr: {
@@ -690,6 +768,28 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "Fort",
 
     powered_by: "Propulsé par",
+    lp_free_to_start: "Gratuit pour commencer", lp_see_plans: "Voir les plans →", lp_score_cta: "Scorez ma première pub — gratuit",
+    lp_live_teams: "147 équipes analysent des pubs en ce moment · 23 dans la dernière heure",
+    lp_objection_q1: "C'est vraiment gratuit ?", lp_objection_a1: "Oui. 3 analyses, 3 boards, 2 checks pré-lancement — sans carte. Jamais.",
+    lp_objection_q2: "Quels formats ?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — tout MP4 ou MOV jusqu'à 500MB.",
+    lp_objection_q3: "C'est rapide ?", lp_objection_a3: "Premier score de hook et diagnostic en moins de 60 secondes. Board de production en 90s.",
+    lp_stop_guessing: "Arrêtez de deviner", lp_every_day1: "Chaque jour que vous devinez,", lp_every_day2: "vos concurrents non.",
+    lp_real_problems: "Vrais problèmes que AdBrief résout — avant qu'ils ne vous coûtent du budget.",
+    lp_ready_stop: "Prêt à arrêter de deviner ?",
+    lp_launch_special: "⚡ Offre de lancement — plan gratuit toujours inclus",
+    lp_joined_by: "Rejoint par 147 équipes de performance dans 12 pays",
+    lp_mobile_sub: "Sans carte · Plan gratuit · Résultats en 60s", footer_careers: "Carrières",
+    lp_testimonial1_quote: "Je gère le social ads pour trois marques DTC en Europe. AdBrief fait maintenant partie de ma checklist pré-lancement — le hook score a signalé une ouverture faible sur un tournage à 4k€. On a recoupé avant la diffusion.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "Analyste Performance · Paris · E-commerce", lp_testimonial1_metric: "Hook faible détecté avant un tournage à 4k€",
+    lp_testimonial2_quote: "En tant que stratège créative, je passais trop de temps à écrire des briefs from scratch. Le board de production me donne un point de départ solide à chaque fois. Mes éditeurs le préfèrent.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "Stratège Créative · São Paulo · iGaming", lp_testimonial2_metric: "Les éditeurs l'ont adopté dès la première semaine",
+    lp_testimonial3_quote: "On scalait vers 3 nouveaux marchés et on ne pouvait pas se permettre de deviner sur le créatif. AdBrief a donné à notre équipe un langage commun pour définir ce qui est 'bon' — rien que ça valait le coup.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head of Marketing · Mumbai · SaaS", lp_testimonial3_metric: "Déployé dans 3 marchés",
+    lp_plan_free_features: "3 analyses/mois|3 boards/mois|3 traductions|2 checks pré-vol|Accès aux templates",
+    lp_plan_maker_features: "10 analyses/mois|10 boards/mois|50 traductions|Générateur de Hooks|Hook Benchmark",
+    lp_plan_pro_features: "30 analyses/mois|30 boards/mois|100 traductions|Hooks illimités|Intelligence IA|2 places",
+    lp_plan_studio_features: "500 analyses/mois|300 boards/mois|Traductions illimitées|Meta Ads Connect|10 places|Accès API",
+    lp_start_maker: "Démarrer Maker", lp_start_pro: "Démarrer Pro", lp_start_studio: "Démarrer Studio",
   },
 
   de: {
@@ -861,6 +961,28 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "Stark",
 
     powered_by: "Unterstützt von",
+    lp_free_to_start: "Kostenlos starten", lp_see_plans: "Pläne ansehen →", lp_score_cta: "Meine erste Anzeige bewerten — kostenlos",
+    lp_live_teams: "147 Teams analysieren gerade Anzeigen · 23 in der letzten Stunde",
+    lp_objection_q1: "Ist es wirklich kostenlos?", lp_objection_a1: "Ja. 3 Analysen, 3 Boards, 2 Pre-Flight-Checks — keine Kreditkarte. Nie.",
+    lp_objection_q2: "Welche Formate?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — jedes MP4 oder MOV bis 500MB.",
+    lp_objection_q3: "Wie schnell?", lp_objection_a3: "Erster Hook-Score und Diagnose in unter 60 Sekunden. Produktions-Board in 90s.",
+    lp_stop_guessing: "Hören Sie auf zu raten", lp_every_day1: "Jeden Tag, den Sie raten,", lp_every_day2: "tun Ihre Konkurrenten es nicht.",
+    lp_real_problems: "Echte Probleme, die AdBrief löst — bevor sie Sie Budget kosten.",
+    lp_ready_stop: "Bereit aufzuhören zu raten?",
+    lp_launch_special: "⚡ Launch-Spezial — kostenloser Plan immer inklusive",
+    lp_joined_by: "147 Performance-Teams in 12 Ländern vertrauen uns",
+    lp_mobile_sub: "Keine Karte · Kostenloser Plan · Ergebnisse in 60s", footer_careers: "Karriere",
+    lp_testimonial1_quote: "Ich manage bezahlte Social-Anzeigen für drei DTC-Marken in der EU. AdBrief ist jetzt Teil meiner Pre-Launch-Checkliste — der Hook-Score hat eine schwache Eröffnung bei einem 4k€-Dreh erkannt. Wir haben vor der Ausstrahlung neu geschnitten.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "Performance-Analyst · Paris · E-Commerce", lp_testimonial1_metric: "Schwachen Hook vor einem 4k€-Dreh erkannt",
+    lp_testimonial2_quote: "Als Kreativstrategin habe ich zu viel Zeit damit verbracht, Briefs von Grund auf zu schreiben. Das Produktions-Board gibt mir jedes Mal einen soliden Ausgangspunkt. Meine Editoren bevorzugen es.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "Kreativstrategin · São Paulo · iGaming", lp_testimonial2_metric: "Editoren haben es in der ersten Woche übernommen",
+    lp_testimonial3_quote: "Wir skalierten in 3 neue Märkte und konnten es uns nicht leisten, beim Kreativen zu raten. AdBrief gab unserem Team eine gemeinsame Sprache dafür, was 'gut' aussieht.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head of Marketing · Mumbai · SaaS", lp_testimonial3_metric: "In 3 Märkten ausgerollt",
+    lp_plan_free_features: "3 Analysen/Monat|3 Boards/Monat|3 Übersetzungen|2 Pre-Flight-Checks|Template-Zugang",
+    lp_plan_maker_features: "10 Analysen/Monat|10 Boards/Monat|50 Übersetzungen|Hook-Generator|Hook Benchmark",
+    lp_plan_pro_features: "30 Analysen/Monat|30 Boards/Monat|100 Übersetzungen|Unbegrenzte Hooks|KI-Intelligenz|2 Plätze",
+    lp_plan_studio_features: "500 Analysen/Monat|300 Boards/Monat|Unbegrenzte Übersetzungen|Meta Ads Connect|10 Plätze|API-Zugang",
+    lp_start_maker: "Maker starten", lp_start_pro: "Pro starten", lp_start_studio: "Studio starten",
   },
 
   ar: {
@@ -1032,6 +1154,28 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "قوية",
 
     powered_by: "مدعوم من",
+    lp_free_to_start: "مجاني للبدء", lp_see_plans: "عرض الخطط →", lp_score_cta: "قيّم إعلاني الأول — مجاناً",
+    lp_live_teams: "147 فريق يحللون إعلانات الآن · 23 في الساعة الأخيرة",
+    lp_objection_q1: "هل هو مجاني حقاً؟", lp_objection_a1: "نعم. 3 تحليلات، 3 لوحات، 2 فحص ما قبل الإطلاق — بدون بطاقة. أبداً.",
+    lp_objection_q2: "ما الصيغ المدعومة؟", lp_objection_a2: "TikTok، Reels، YouTube Shorts، Facebook — أي MP4 أو MOV حتى 500 ميجابايت.",
+    lp_objection_q3: "ما مدى سرعته؟", lp_objection_a3: "أول نقاط للخطاف والتشخيص في أقل من 60 ثانية. لوحة الإنتاج في 90 ثانية.",
+    lp_stop_guessing: "توقف عن التخمين", lp_every_day1: "كل يوم تخمن فيه،", lp_every_day2: "منافسوك لا يفعلون.",
+    lp_real_problems: "مشاكل حقيقية يحلها AdBrief — قبل أن تكلفك ميزانيتك.",
+    lp_ready_stop: "مستعد للتوقف عن التخمين؟",
+    lp_launch_special: "⚡ عرض الإطلاق — الخطة المجانية دائماً مشمولة",
+    lp_joined_by: "انضم إلينا 147 فريق أداء في 12 دولة",
+    lp_mobile_sub: "بدون بطاقة · خطة مجانية · نتائج في 60 ثانية", footer_careers: "وظائف",
+    lp_testimonial1_quote: "أدير الإعلانات الاجتماعية لثلاث علامات DTC في أوروبا. أصبح AdBrief الآن جزءاً من قائمة التحقق قبل الإطلاق — كشف نقاط الخطاف عن افتتاحية ضعيفة في تصوير بقيمة 4 آلاف يورو.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "محلل أداء · باريس · تجارة إلكترونية", lp_testimonial1_metric: "اكتشف خطاف ضعيف قبل تصوير بـ4 آلاف يورو",
+    lp_testimonial2_quote: "كمخططة إبداعية كنت أقضي وقتاً طويلاً في كتابة الموجزات من الصفر. لوحة الإنتاج تعطيني نقطة انطلاق قوية كل مرة. محرروي يفضلونها.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "مخططة إبداعية · ساو باولو · iGaming", lp_testimonial2_metric: "المحررون تبنوها في الأسبوع الأول",
+    lp_testimonial3_quote: "كنا نتوسع إلى 3 أسواق جديدة ولم نستطع تحمل التخمين. AdBrief أعطى فريقنا لغة مشتركة لتعريف ما هو 'جيد'.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "رئيس التسويق · مومباي · SaaS", lp_testimonial3_metric: "تم النشر في 3 أسواق",
+    lp_plan_free_features: "3 تحليلات/شهر|3 لوحات/شهر|3 ترجمات|2 فحص ما قبل الإطلاق|الوصول للقوالب",
+    lp_plan_maker_features: "10 تحليلات/شهر|10 لوحات/شهر|50 ترجمة|مولد الخطافات|Hook Benchmark",
+    lp_plan_pro_features: "30 تحليلاً/شهر|30 لوحة/شهر|100 ترجمة|خطافات غير محدودة|ذكاء اصطناعي|مقعدان",
+    lp_plan_studio_features: "500 تحليل/شهر|300 لوحة/شهر|ترجمات غير محدودة|Meta Ads Connect|10 مقاعد|وصول API",
+    lp_start_maker: "ابدأ Maker", lp_start_pro: "ابدأ Pro", lp_start_studio: "ابدأ Studio",
   },
 
   zh: {
@@ -1203,6 +1347,28 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "强",
 
     powered_by: "技术支持",
+    lp_free_to_start: "免费开始", lp_see_plans: "查看计划 →", lp_score_cta: "评分我的第一个广告 — 免费",
+    lp_live_teams: "147个团队正在分析广告 · 过去一小时23个",
+    lp_objection_q1: "真的免费吗？", lp_objection_a1: "是的。3次分析、3个看板、2次预检 — 无需信用卡。永远免费。",
+    lp_objection_q2: "支持什么格式？", lp_objection_a2: "TikTok、Reels、YouTube Shorts、Facebook — 任何MP4或MOV，最大500MB。",
+    lp_objection_q3: "有多快？", lp_objection_a3: "第一个钩子评分和诊断在60秒内。制作看板在90秒内。",
+    lp_stop_guessing: "停止猜测", lp_every_day1: "你每猜测一天，", lp_every_day2: "你的竞争对手就不会。",
+    lp_real_problems: "AdBrief解决的真实问题 — 在它们消耗你的预算之前。",
+    lp_ready_stop: "准备好停止猜测了吗？",
+    lp_launch_special: "⚡ 上线特惠 — 免费计划始终包含",
+    lp_joined_by: "已有147个效果营销团队加入，遍布12个国家",
+    lp_mobile_sub: "无需信用卡 · 免费计划 · 60秒出结果", footer_careers: "招聘",
+    lp_testimonial1_quote: "我为欧洲三个DTC品牌管理付费社交广告。AdBrief现在是我上线前检查清单的一部分 — 钩子评分发现了一个4千欧元拍摄中的弱开场。我们在上线前重新剪辑了。",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "效果分析师 · 巴黎 · 电商", lp_testimonial1_metric: "在4千欧元拍摄前发现了弱钩子",
+    lp_testimonial2_quote: "作为创意策略师，我花了太多时间从零开始写简报。制作看板每次都给我一个坚实的起点。我的编辑们更喜欢它。",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "创意策略师 · 圣保罗 · iGaming", lp_testimonial2_metric: "编辑们在第一周就采用了",
+    lp_testimonial3_quote: "我们正在扩展到3个新市场，无法承受在创意上猜测。AdBrief为我们的团队提供了定义'好'的共同语言 — 仅此一项就值得了。",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "营销主管 · 孟买 · SaaS", lp_testimonial3_metric: "在3个市场推出",
+    lp_plan_free_features: "3次分析/月|3个看板/月|3次翻译|2次预检|模板访问",
+    lp_plan_maker_features: "10次分析/月|10个看板/月|50次翻译|钩子生成器|Hook Benchmark",
+    lp_plan_pro_features: "30次分析/月|30个看板/月|100次翻译|无限钩子|AI智能|2个席位",
+    lp_plan_studio_features: "500次分析/月|300个看板/月|无限翻译|Meta Ads Connect|10个席位|API访问",
+    lp_start_maker: "开始Maker", lp_start_pro: "开始Pro", lp_start_studio: "开始Studio",
   },
 
   pt: {
@@ -1374,5 +1540,27 @@ export const translations: Record<Language, TranslationKeys> = {
     pw_strong: "Forte",
 
     powered_by: "Desenvolvido por",
+    lp_free_to_start: "Grátis para começar", lp_see_plans: "Ver planos →", lp_score_cta: "Pontue meu primeiro anúncio — grátis",
+    lp_live_teams: "147 times analisando anúncios agora · 23 na última hora",
+    lp_objection_q1: "É realmente grátis?", lp_objection_a1: "Sim. 3 análises, 3 boards, 2 pré-checks — sem cartão. Pra sempre.",
+    lp_objection_q2: "Quais formatos funcionam?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — qualquer MP4 ou MOV até 500MB.",
+    lp_objection_q3: "Quão rápido é?", lp_objection_a3: "Primeiro hook score e diagnóstico em menos de 60 segundos. Board de produção em 90s.",
+    lp_stop_guessing: "Pare de adivinhar", lp_every_day1: "Cada dia que você adivinha,", lp_every_day2: "seus concorrentes não.",
+    lp_real_problems: "Problemas reais que o AdBrief resolve — antes de custarem seu orçamento.",
+    lp_ready_stop: "Pronto para parar de adivinhar?",
+    lp_launch_special: "⚡ Especial de lançamento — plano grátis sempre incluído",
+    lp_joined_by: "147 times de performance em 12 países já usam",
+    lp_mobile_sub: "Sem cartão · Plano grátis · Resultados em 60s", footer_careers: "Carreiras",
+    lp_testimonial1_quote: "Eu gerencio mídia paga para três marcas DTC na Europa. O AdBrief agora faz parte da minha checklist pré-lançamento — o hook score identificou uma abertura fraca numa gravação de €4k. Recortamos antes de ir ao ar.",
+    lp_testimonial1_name: "Mathieu D.", lp_testimonial1_role: "Analista de Performance · Paris · E-commerce", lp_testimonial1_metric: "Identificou hook fraco antes de gravação de €4k",
+    lp_testimonial2_quote: "Como estrategista criativa, eu perdia muito tempo escrevendo briefs do zero. O board de produção me dá um ponto de partida sólido toda vez. Meus editores preferem.",
+    lp_testimonial2_name: "Camila S.", lp_testimonial2_role: "Estrategista Criativa · São Paulo · iGaming", lp_testimonial2_metric: "Editores adotaram na primeira semana",
+    lp_testimonial3_quote: "Estávamos escalando para 3 novos mercados e não podíamos adivinhar no criativo. O AdBrief deu ao nosso time uma linguagem comum para definir o que é 'bom' — só isso já valeu a pena.",
+    lp_testimonial3_name: "Rohan M.", lp_testimonial3_role: "Head de Marketing · Mumbai · SaaS", lp_testimonial3_metric: "Implementado em 3 mercados",
+    lp_plan_free_features: "3 análises/mês|3 boards/mês|3 traduções|2 pré-checks|Acesso a templates",
+    lp_plan_maker_features: "10 análises/mês|10 boards/mês|50 traduções|Hook Generator|Hook Benchmark",
+    lp_plan_pro_features: "30 análises/mês|30 boards/mês|100 traduções|Hooks ilimitados|Inteligência IA|2 assentos",
+    lp_plan_studio_features: "500 análises/mês|300 boards/mês|Traduções ilimitadas|Meta Ads Connect|10 assentos|Acesso API",
+    lp_start_maker: "Começar Maker", lp_start_pro: "Começar Pro", lp_start_studio: "Começar Studio",
   },
 };
