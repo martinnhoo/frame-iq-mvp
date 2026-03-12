@@ -189,10 +189,10 @@ export default function DashboardOverview() {
   const hasData = insights.totalAnalyzed > 0;
 
   // Gamification: total actions & contextual sub-greeting
-  const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? usage.hooks_count ?? 0);
+  const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? 0);
 
   const getContextualGreeting = () => {
-    const lastAction = profile?.last_ai_action_at ? new Date(profile.last_ai_action_at) : null;
+    const lastAction = profile?.last_ai_action_at ? new Date(profile.last_ai_action_at as string) : null;
     const hoursSinceLastAction = lastAction ? (Date.now() - lastAction.getTime()) / 3600000 : Infinity;
     if (hoursSinceLastAction > 72) return dt("gm_greet_comeback");
     if (totalActions >= 30) return dt("gm_greet_prolific");
