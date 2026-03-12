@@ -102,6 +102,7 @@ function PersonaDetailEditable({
   dt: (key: any) => string;
   language: string;
 }) {
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<PersonaResult>(initial);
