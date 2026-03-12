@@ -838,28 +838,28 @@ const Index = () => {
             <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% -20%,rgba(167,139,250,0.18),transparent 60%)"}} />
             <div className="relative z-10">
               <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-5 font-display">
-                ⚡ Launch day special — free plan always included
+               {t("lp_launch_special")}
               </p>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
-                Find out why your ads<br />
+                {t("cta_title1")}<br />
                 <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-                  underperform. Free.
+                  {t("cta_title2")}
                 </span>
               </h2>
               <p className="text-white/50 text-base mb-8 max-w-lg mx-auto font-body leading-relaxed">
-                Upload any video. Get a clear diagnosis with specific fixes in under 60 seconds. No credit card. No setup.
+                {t("cta_desc")}
               </p>
 
               {/* Trust signals row */}
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 font-body">
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> Free plan included
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check1")}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> No credit card
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check2")}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <Check className="w-3.5 h-3.5 text-green-400" /> Real results in 60s
+                  <Check className="w-3.5 h-3.5 text-green-400" /> {t("cta_check3")}
                 </span>
               </div>
 
