@@ -241,7 +241,7 @@ function PersonaDetailEditable({
         className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6">
         <div className="flex items-start gap-5">
           <div className="shrink-0">
-            <Persona3DAvatar emoji={draft.avatar_emoji} name={draft.name} gender={draft.gender} size="lg" />
+            <Persona3DAvatar emoji={draft.avatar_emoji} name={draft.name} gender={draft.gender} seed={activeDetail?.id} size="lg" />
           </div>
           <div className="pt-2 flex-1 space-y-2">
             <EditableTextField field="name" value={draft.name} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-2xl font-bold text-white block"} />
@@ -756,7 +756,7 @@ CTA: ${persona.cta_style}`;
                   </button>
 
                   <div className="mb-4">
-                    <Persona3DAvatar emoji={p.result.avatar_emoji} name={p.result.name} gender={p.result.gender} size="md" />
+                    <Persona3DAvatar emoji={p.result.avatar_emoji} name={p.result.name} gender={p.result.gender} seed={p.id} size="md" />
                   </div>
 
                   <h3 className="text-white font-bold text-sm text-center">{p.result.name}</h3>
