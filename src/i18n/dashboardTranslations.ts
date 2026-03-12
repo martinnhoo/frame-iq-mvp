@@ -825,6 +825,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "创建首个画像", ov_clear_persona: "清除画像",
     bo_production_boards: "个制作板", bo_create_first: "创建首个制作板",
     bo_describe_concept: "描述您的广告概念，获取场景、脚本和制作备注",
+    gm_streak: "连续天数", gm_streak_days: "天", gm_streak_best: "最佳", gm_streak_start: "今天使用工具开始你的连续记录！",
+    gm_streak_keep: "明天再来保持连续！",
+    gm_level: "创意等级", gm_level_observer: "观察者", gm_level_analyst: "分析师",
+    gm_level_strategist: "策略师", gm_level_producer: "制作人", gm_level_director: "创意总监",
+    gm_level_next: "距下一级", gm_level_actions: "次操作",
+    gm_weekly: "周评分", gm_weekly_up: "比上周上升", gm_weekly_down: "比上周下降",
+    gm_weekly_stable: "稳定", gm_weekly_no_data: "分析视频以跟踪进度",
+    gm_weekly_this: "本周", gm_weekly_last: "上周",
+    gm_greet_comeback: "欢迎回来！我们想你了 🙌", gm_greet_streak: "天连续！太厉害了 🔥",
+    gm_greet_new: "今天一起创作吧！", gm_greet_prolific: "你最近一直在高产出 💪",
   },
 
   fr: {
