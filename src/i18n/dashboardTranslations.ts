@@ -292,6 +292,32 @@ export type DashT = {
   cm_active_persona: string;
   cm_manage_personas: string;
   cm_clear: string;
+
+  // Gamification
+  gm_streak: string;
+  gm_streak_days: string;
+  gm_streak_best: string;
+  gm_streak_start: string;
+  gm_streak_keep: string;
+  gm_level: string;
+  gm_level_observer: string;
+  gm_level_analyst: string;
+  gm_level_strategist: string;
+  gm_level_producer: string;
+  gm_level_director: string;
+  gm_level_next: string;
+  gm_level_actions: string;
+  gm_weekly: string;
+  gm_weekly_up: string;
+  gm_weekly_down: string;
+  gm_weekly_stable: string;
+  gm_weekly_no_data: string;
+  gm_weekly_this: string;
+  gm_weekly_last: string;
+  gm_greet_comeback: string;
+  gm_greet_streak: string;
+  gm_greet_new: string;
+  gm_greet_prolific: string;
 };
 
 export const dashTranslations: Record<DashLang, DashT> = {
