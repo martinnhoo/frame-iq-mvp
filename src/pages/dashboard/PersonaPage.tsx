@@ -396,48 +396,26 @@ function PersonaDetailEditable({
           <p className="text-[11px] text-red-400 text-center">{kitError}</p>
         )}
 
-        {/* Color pickers */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_primary")}</p>
-            <div className="flex items-center gap-2">
-              <input type="color" value={brandKit.primary_color || "#8B5CF6"}
-                onChange={async e => {
-                  const newKit = { ...brandKit, primary_color: e.target.value };
-                  setBrandKit(newKit);
-                  if (activeDetail) {
-                    const { supabase: _sb } = { supabase }; const _supabase = _sb;
-                    await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
-                  }
-                }}
-                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0" />
-              <span className="text-xs text-white/40 font-mono">{brandKit.primary_color || "#8B5CF6"}</span>
+        {/* Asset summary when logo uploaded */}
+        {brandKit.logo_data_url && (
+          <div className="rounded-xl p-3 space-y-2" style={{ background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.15)" }}>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider">{dt("pe_brand_assets_used")}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(52,211,153,0.25)" }}>
+                <img src={brandKit.logo_data_url} alt="logo" className="w-full h-full object-contain p-1" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-white/60 truncate">{brandKit.file_name || "brand-logo"}</p>
+                <p className="text-[10px] text-green-400/50">{dt("pe_brand_note")}</p>
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_secondary")}</p>
-            <div className="flex items-center gap-2">
-              <input type="color" value={brandKit.secondary_color || "#EC4899"}
-                onChange={async e => {
-                  const newKit = { ...brandKit, secondary_color: e.target.value };
-                  setBrandKit(newKit);
-                  if (activeDetail) {
-                    const { supabase: _sb } = { supabase }; const _supabase = _sb;
-                    await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
-                  }
-                }}
-                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0" />
-              <span className="text-xs text-white/40 font-mono">{brandKit.secondary_color || "#EC4899"}</span>
-            </div>
-          </div>
-        </div>
-
-        {(brandKit.primary_color || brandKit.logo_data_url) && (
-          <p className="text-[10px] text-purple-400/60 text-center pt-1">
-            {dt("pe_brand_note")}
-          </p>
         )}
       </motion.div>
+
+      {/* ── SUGGESTED TEMPLATES ─────────────────────────────── */}
+      <SuggestedTemplates persona={draft} dt={dt} language={language} navigate={navigate} />
     </div>
   );
 }
