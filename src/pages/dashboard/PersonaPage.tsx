@@ -686,6 +686,7 @@ CTA: ${persona.cta_style}`;
                           id: d.id,
                           result: d.result as PersonaResult,
                           answers: d.answers as Record<string, string>,
+                          brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
                           created_at: d.created_at,
                         }))
                       );
