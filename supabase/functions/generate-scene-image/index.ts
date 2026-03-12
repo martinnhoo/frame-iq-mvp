@@ -64,6 +64,17 @@ Requirements:
 
     console.log(`Generating scene image ${scene_index}: ${scene_title}`);
 
+    // Build messages — include logo as image input if available
+    const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [
+      { type: "text", text: prompt },
+    ];
+    if (brand_logo_url) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: brand_logo_url },
+      });
+    }
+
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -72,7 +83,7 @@ Requirements:
       },
       body: JSON.stringify({
         model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: brand_logo_url ? userContent : prompt }],
         modalities: ["image", "text"],
       }),
     });
