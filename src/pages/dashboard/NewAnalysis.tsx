@@ -56,14 +56,14 @@ const NewAnalysis = () => {
   const [showPersonaGate, setShowPersonaGate] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const personaLang = selectedPersona ? detectLanguageFromPersona(selectedPersona.language_style) : "EN";
-  const [language, setLanguage] = useState(personaLang);
-  const [langOverridden, setLangOverridden] = useState(false);
-  const [prevPersonaLang, setPrevPersonaLang] = useState(personaLang);
+  const personaMarket = selectedPersona ? detectMarketFromPersona(selectedPersona.language_style) : "US";
+  const [market, setMarket] = useState(personaMarket);
+  const [marketOverridden, setMarketOverridden] = useState(false);
+  const [prevPersonaMarket, setPrevPersonaMarket] = useState(personaMarket);
 
-  if (personaLang !== prevPersonaLang) {
-    setPrevPersonaLang(personaLang);
-    if (!langOverridden) setLanguage(personaLang);
+  if (personaMarket !== prevPersonaMarket) {
+    setPrevPersonaMarket(personaMarket);
+    if (!marketOverridden) setMarket(personaMarket);
   }
 
   const handleDrop = (e: React.DragEvent) => {
