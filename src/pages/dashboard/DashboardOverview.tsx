@@ -58,10 +58,10 @@ export default function DashboardOverview() {
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
 
   const planLimits = {
-    free:   { analyses: 3,   boards: 3,   preflights: 2 },
-    maker:  { analyses: 10,  boards: 10,  preflights: 10 },
-    pro:    { analyses: 30,  boards: 30,  preflights: 30 },
-    studio: { analyses: 500, boards: 300, preflights: 9999 },
+    free:   { analyses: 3,   boards: 3,   preflights: 3 },
+    maker:  { analyses: 20,  boards: 20,  preflights: 20 },
+    pro:    { analyses: 60,  boards: 60,  preflights: 60 },
+    studio: { analyses: 9999, boards: 9999, preflights: 9999 },
   };
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
 

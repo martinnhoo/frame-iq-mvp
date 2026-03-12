@@ -47,6 +47,7 @@ const Index = () => {
       name: "Free",
       price: "$0",
       period: t("pricing_mo"),
+      desc: "Try before you commit. No credit card.",
       features: t("lp_plan_free_features").split("|"),
       cta: t("pricing_cta_free") || "Get started free",
       highlighted: false
@@ -55,6 +56,7 @@ const Index = () => {
       name: "Maker",
       price: "$19",
       period: t("pricing_mo"),
+      desc: "For solo creators and freelancers.",
       features: t("lp_plan_maker_features").split("|"),
       cta: t("lp_start_maker"),
       highlighted: false
@@ -63,6 +65,7 @@ const Index = () => {
       name: "Pro",
       price: "$49",
       period: t("pricing_mo"),
+      desc: "For performance teams running ads at scale.",
       features: t("lp_plan_pro_features").split("|"),
       cta: t("lp_start_pro"),
       highlighted: true,
@@ -72,6 +75,7 @@ const Index = () => {
       name: "Studio",
       price: "$149",
       period: t("pricing_mo"),
+      desc: "For teams that produce every day.",
       features: t("lp_plan_studio_features").split("|"),
       cta: t("lp_start_studio"),
       highlighted: false
@@ -658,15 +662,25 @@ const Index = () => {
                       <span className="text-5xl font-bold font-display">{plan.price}</span>
                       <span className="text-muted-foreground font-body">{plan.period}</span>
                     </div>
+                    {plan.desc && (
+                      <p className="text-xs text-muted-foreground/70 mt-2 font-body">{plan.desc}</p>
+                    )}
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ul className="space-y-3">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-3 text-sm font-body">
-                          <Check className="w-4 h-4 text-green-500 shrink-0" />
-                          <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
+                      {plan.features.map((feature, i) => {
+                        const denied = feature.startsWith("✗ ");
+                        const label = denied ? feature.slice(2) : feature;
+                        return (
+                          <li key={i} className={`flex items-center gap-3 text-sm font-body ${denied ? "opacity-40" : ""}`}>
+                            {denied
+                              ? <span className="w-4 h-4 text-muted-foreground/50 shrink-0 flex items-center justify-center text-xs">✕</span>
+                              : <Check className="w-4 h-4 text-green-500 shrink-0" />
+                            }
+                            <span className={denied ? "line-through text-muted-foreground/50" : "text-muted-foreground"}>{label}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                     <Button 
                       className={`w-full font-body ${
