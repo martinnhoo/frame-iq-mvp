@@ -1212,6 +1212,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "إنشاء أول شخصية", ov_clear_persona: "مسح الشخصية",
     bo_production_boards: "لوحات إنتاج", bo_create_first: "إنشاء أول لوحة",
     bo_describe_concept: "صِف مفهوم إعلانك واحصل على مشاهد ونصوص وملاحظات إنتاج",
+    gm_streak: "سلسلة", gm_streak_days: "أيام", gm_streak_best: "الأفضل", gm_streak_start: "استخدم أداة اليوم لبدء سلسلتك!",
+    gm_streak_keep: "عُد غداً للحفاظ عليها!",
+    gm_level: "المستوى الإبداعي", gm_level_observer: "مراقب", gm_level_analyst: "محلل",
+    gm_level_strategist: "استراتيجي", gm_level_producer: "منتج", gm_level_director: "مدير إبداعي",
+    gm_level_next: "للمستوى التالي", gm_level_actions: "إجراءات",
+    gm_weekly: "نقاط الأسبوع", gm_weekly_up: "أعلى من الأسبوع الماضي", gm_weekly_down: "أقل من الأسبوع الماضي",
+    gm_weekly_stable: "مستقر", gm_weekly_no_data: "حلل فيديوهات لتتبع التقدم",
+    gm_weekly_this: "هذا الأسبوع", gm_weekly_last: "الأسبوع الماضي",
+    gm_greet_comeback: "مرحباً بعودتك! افتقدناك 🙌", gm_greet_streak: "أيام متتالية! أنت مشتعل 🔥",
+    gm_greet_new: "لننشئ شيئاً رائعاً اليوم!", gm_greet_prolific: "كنت منتجاً جداً مؤخراً 💪",
   },
 };
 
