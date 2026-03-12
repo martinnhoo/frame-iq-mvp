@@ -128,7 +128,7 @@ function PersonaDetailEditable({
         uploaded_at: new Date().toISOString(),
       };
       setBrandKit(newKit);
-      await supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
+      await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
     } catch (e: any) {
       setKitError(e.message || "Upload failed");
     } finally {
