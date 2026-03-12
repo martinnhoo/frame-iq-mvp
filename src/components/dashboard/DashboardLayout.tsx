@@ -24,6 +24,7 @@ export interface ActivePersona {
   language_style: string;
   cta_style: string;
   bio: string;
+  brand_kit?: { logo_data_url?: string; file_name?: string; uploaded_at?: string };
 }
 
 export interface DashboardContext {
