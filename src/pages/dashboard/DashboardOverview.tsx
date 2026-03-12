@@ -237,6 +237,9 @@ export default function DashboardOverview() {
                 {dt("ov_lets_ship")}
               </span>
             </h1>
+            {contextGreeting && (
+              <p className="text-xs text-white/30 mt-1" style={mono}>{contextGreeting}</p>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
