@@ -429,10 +429,16 @@ const NewBoard = () => {
               <CardTitle className="text-sm flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Target Market
+                {selectedPersona && !marketOverridden && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto"
+                    style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
+                    via {selectedPersona.name.split(" ")[0]}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={market} onValueChange={setMarket}>
+              <Select value={market} onValueChange={(v) => { setMarket(v); setMarketOverridden(true); }}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -447,9 +453,16 @@ const NewBoard = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Script language auto-detected from market
-              </p>
+              {marketOverridden && selectedPersona ? (
+                <button onClick={() => { setMarket(personaMarket); setMarketOverridden(false); }}
+                  className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline mt-2">
+                  Reset to persona market
+                </button>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedPersona ? "Auto-detected from active persona" : "Script language auto-detected from market"}
+                </p>
+              )}
             </CardContent>
           </Card>
 
