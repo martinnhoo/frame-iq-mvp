@@ -311,7 +311,7 @@ function PersonaDetailEditable({
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
           <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
-          <EditableList field="media_habits" items={draft.media_habits} color="text-cyan-400" />
+          <EditableListField field="media_habits" items={draft.media_habits} color="text-cyan-400" editing={editing} onChange={handleListChange} />
         </motion.div>
       )}
 
