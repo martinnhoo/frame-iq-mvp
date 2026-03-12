@@ -804,7 +804,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.8}}>After · {item.tag}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.8}}>{t("after_label")} · {item.tag}</span>
                       <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
                     </div>
                     <p className="text-sm leading-relaxed font-body text-white/70">{item.after}</p>
