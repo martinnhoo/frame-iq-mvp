@@ -1634,7 +1634,7 @@ const TemplatesPage = () => {
           userId={user.id}
         />
       )}
-    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto space-y-3 sm:space-y-4 flex-1">
+    <div className="p-4 sm:p-4 lg:p-6 max-w-7xl mx-auto space-y-3 sm:space-y-4 flex-1">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -1664,7 +1664,7 @@ const TemplatesPage = () => {
       </div>
 
       {/* Category pills — horizontal scroll */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-3 sm:mx-0 px-3 sm:px-0">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
@@ -1708,7 +1708,7 @@ const TemplatesPage = () => {
           <p className="font-medium">{ot("tp_no_match")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
           {paginated.map((template) => {
             const meta = CAT_META[template.category];
             return (
