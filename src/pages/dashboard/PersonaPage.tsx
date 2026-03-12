@@ -297,7 +297,7 @@ function PersonaDetailEditable({
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
           <div>
             <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_lang_style")}</p>
-            <EditableText field="language_style" value={draft.language_style} className={editing ? "" : "text-sm text-white/60"} />
+            <EditableTextField field="language_style" value={draft.language_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
           <div>
             <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
