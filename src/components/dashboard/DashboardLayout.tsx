@@ -92,8 +92,12 @@ export default function DashboardLayout() {
 
   const setSelectedPersona = (p: ActivePersona | null) => {
     setSelectedPersonaState(p);
-    if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
-    else localStorage.removeItem("frameiq_active_persona");
+    try {
+      if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
+      else localStorage.removeItem("frameiq_active_persona");
+    } catch {
+      // localStorage unavailable (private browsing, storage full, etc.)
+    }
   };
 
   const fetchUsage = async (userId: string) => {
