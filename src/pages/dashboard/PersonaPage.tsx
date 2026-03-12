@@ -301,7 +301,7 @@ function PersonaDetailEditable({
           </div>
           <div>
             <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
-            <EditableText field="cta_style" value={draft.cta_style} className={editing ? "" : "text-sm text-white/60"} />
+            <EditableTextField field="cta_style" value={draft.cta_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
         </div>
       </motion.div>
