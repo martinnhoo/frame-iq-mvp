@@ -41,6 +41,7 @@ const Section = ({
 const BoardDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { selectedPersona } = useOutletContext<DashboardContext>();
   const [board, setBoard] = useState<BoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({
