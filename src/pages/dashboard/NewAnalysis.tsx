@@ -17,28 +17,28 @@ const STEP_LABELS: Record<ProgressStep, string> = {
 
 const STEP_ORDER: ProgressStep[] = ["extracting", "uploading", "transcribing", "analyzing", "done"];
 
-const LANGUAGES = [
-  { code: "PT", flag: "🇧🇷", name: "Português" },
-  { code: "ES", flag: "🇲🇽", name: "Español" },
-  { code: "EN", flag: "🇺🇸", name: "English" },
-  { code: "HI", flag: "🇮🇳", name: "Hindi" },
-  { code: "FR", flag: "🇫🇷", name: "Français" },
-  { code: "DE", flag: "🇩🇪", name: "Deutsch" },
-  { code: "IT", flag: "🇮🇹", name: "Italiano" },
-  { code: "AR", flag: "🇸🇦", name: "العربية" },
+const MARKETS = [
+  { code: "BR", flag: "🇧🇷", name: "Brazil" },
+  { code: "MX", flag: "🇲🇽", name: "Mexico" },
+  { code: "US", flag: "🇺🇸", name: "United States" },
+  { code: "IN", flag: "🇮🇳", name: "India" },
+  { code: "FR", flag: "🇫🇷", name: "France" },
+  { code: "DE", flag: "🇩🇪", name: "Germany" },
+  { code: "IT", flag: "🇮🇹", name: "Italy" },
+  { code: "AE", flag: "🇸🇦", name: "Arabia" },
 ];
 
-function detectLanguageFromPersona(style: string): string {
-  if (!style) return "EN";
+function detectMarketFromPersona(style: string): string {
+  if (!style) return "US";
   const s = style.toLowerCase();
-  if (s.includes("portug") || s.includes("brasil")) return "PT";
-  if (s.includes("espanh") || s.includes("español") || s.includes("spanish")) return "ES";
-  if (s.includes("hindi")) return "HI";
+  if (s.includes("portug") || s.includes("brasil")) return "BR";
+  if (s.includes("espanh") || s.includes("español") || s.includes("spanish")) return "MX";
+  if (s.includes("hindi")) return "IN";
   if (s.includes("french") || s.includes("françai")) return "FR";
   if (s.includes("german") || s.includes("deutsch")) return "DE";
   if (s.includes("italian")) return "IT";
-  if (s.includes("arabic")) return "AR";
-  return "EN";
+  if (s.includes("arabic") || s.includes("árabe")) return "AE";
+  return "US";
 }
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
