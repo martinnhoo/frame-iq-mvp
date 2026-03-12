@@ -372,8 +372,8 @@ function PersonaDetailEditable({
                 📦
               </div>
               <div>
-                <p className="text-sm font-semibold text-white/70">Upload your brand kit</p>
-                <p className="text-[11px] text-white/30 mt-0.5">ZIP comprimido com logo, cores e guia — max 20MB</p>
+                <p className="text-sm font-semibold text-white/70">{dt("pe_brand_upload_cta")}</p>
+                <p className="text-[11px] text-white/30 mt-0.5">{dt("pe_brand_upload_hint")}</p>
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
                 {["ZIP", "PNG", "SVG", "JPG"].map(t => (
