@@ -387,6 +387,10 @@ export default function PersonaPage() {
       setActiveDetail(null);
       setView("list");
     }
+    // If this was the globally active persona, clear it
+    if (globalPersona?.id === id) {
+      setGlobalPersona(null);
+    }
     toast.success(dt("pe_deleted"));
   };
 

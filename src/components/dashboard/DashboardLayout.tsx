@@ -132,7 +132,19 @@ export default function DashboardLayout() {
       } catch {}
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
-      if (personaData) setSavedPersonas(personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[]);
+      const loadedPersonas = personaData
+        ? (personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[])
+        : [];
+      setSavedPersonas(loadedPersonas);
+      // If cached active persona was deleted, clear it
+      setSelectedPersonaState(prev => {
+        if (!prev) return null;
+        if (!loadedPersonas.some(p => p.id === prev.id)) {
+          localStorage.removeItem("frameiq_active_persona");
+          return null;
+        }
+        return prev;
+      });
       // Welcome popups for special accounts
       const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
         "victoriafnogueira@hotmail.com": {
