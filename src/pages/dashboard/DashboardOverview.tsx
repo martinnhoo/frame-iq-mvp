@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import GamificationWidgets from "@/components/dashboard/GamificationWidgets";
 
 interface InsightsData {
   avgHookScore: number | null;
