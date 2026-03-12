@@ -124,6 +124,16 @@ export default function Onboarding() {
     try {
       const session = await saveOnboarding();
       if (!session) return;
+
+      // Send welcome email for ALL new users (email signup + Google OAuth)
+      supabase.functions.invoke('send-welcome-email', {
+        body: {
+          user_id: session.user.id,
+          first_name: (state.name || session.user.user_metadata?.full_name || '').trim().split(' ')[0],
+          language: state.language || navigator.language || 'en',
+        }
+      }).catch(() => {}); // silent fail — don't block
+
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
       toast.success("Welcome to AdBrief 🚀");
       navigate(feat?.url || "/dashboard");
