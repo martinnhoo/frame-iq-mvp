@@ -145,14 +145,19 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       const loadedPersonas = personaData
-        ? (personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[])
+        ? (personaData
+            .filter((d: Record<string, unknown>) => d.result && typeof d.result === "object")
+            .map((d: Record<string, unknown>) => ({
+              id: d.id as string,
+              ...(d.result as object),
+            })) as ActivePersona[])
         : [];
       setSavedPersonas(loadedPersonas);
       // If cached active persona was deleted, clear it
       setSelectedPersonaState(prev => {
         if (!prev) return null;
         if (!loadedPersonas.some(p => p.id === prev.id)) {
-          localStorage.removeItem("frameiq_active_persona");
+          try { localStorage.removeItem("frameiq_active_persona"); } catch {}
           return null;
         }
         return prev;
