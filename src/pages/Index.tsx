@@ -492,28 +492,25 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               {
-                quote: "I run paid social for three DTC brands across EU. AdBrief is now part of my pre-launch checklist — hook score flagged a weak open on a €4k shoot. We recut before it went live.",
-                name: "Mathieu D.",
-                role: "Performance Analyst · Paris · E-commerce",
-                metric: "Caught a bad hook before a €4k shoot",
-                avatar: "MD",
-                color: "#a78bfa",
+                quote: t("lp_testimonial1_quote"),
+                name: t("lp_testimonial1_name"),
+                role: t("lp_testimonial1_role"),
+                metric: t("lp_testimonial1_metric"),
+                avatar: "MD", color: "#a78bfa",
               },
               {
-                quote: "As a creative strategist I was spending too much time writing briefs from scratch. The production board gives me a solid starting point every time. My editors actually prefer it.",
-                name: "Camila S.",
-                role: "Creative Strategist · São Paulo · iGaming",
-                metric: "Editors adopted it in week one",
-                avatar: "CS",
-                color: "#f472b6",
+                quote: t("lp_testimonial2_quote"),
+                name: t("lp_testimonial2_name"),
+                role: t("lp_testimonial2_role"),
+                metric: t("lp_testimonial2_metric"),
+                avatar: "CS", color: "#f472b6",
               },
               {
-                quote: "We were scaling to 3 new markets and couldn't afford to guess on creative. AdBrief gave our team a shared language for what 'good' looks like — that alone was worth it.",
-                name: "Rohan M.",
-                role: "Head of Marketing · Mumbai · SaaS",
-                metric: "Rolled out across 3 markets",
-                avatar: "RM",
-                color: "#34d399",
+                quote: t("lp_testimonial3_quote"),
+                name: t("lp_testimonial3_name"),
+                role: t("lp_testimonial3_role"),
+                metric: t("lp_testimonial3_metric"),
+                avatar: "RM", color: "#34d399",
               },
             ].map((t, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
