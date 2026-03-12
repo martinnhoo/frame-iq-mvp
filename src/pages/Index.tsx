@@ -476,10 +476,10 @@ const Index = () => {
           {/* Numbers row */}
           <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 mb-10">
             {[
-              { value: "2.4M+",  label: "Ads analyzed" },
-              { value: "147",    label: "Performance teams" },
-              { value: "12",     label: "Countries" },
-              { value: "< 60s",  label: "To first insight" },
+              { value: "2.4M+",  label: t("social_ads") },
+              { value: "147",    label: t("social_teams") },
+              { value: "12",     label: t("social_countries") },
+              { value: "< 60s",  label: t("social_time") },
             ].map((s) => (
               <div key={s.value} className="text-center">
                 <div className="text-2xl font-bold font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.value}</div>
