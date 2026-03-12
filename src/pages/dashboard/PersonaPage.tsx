@@ -389,7 +389,7 @@ function PersonaDetailEditable({
                   setBrandKit(newKit);
                   if (activeDetail) {
                     const { supabase: _sb } = { supabase }; const _supabase = _sb;
-                    supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
+                    await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
                   }
                 }}
                 className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0" />
