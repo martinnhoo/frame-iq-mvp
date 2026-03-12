@@ -37,12 +37,21 @@ You MUST depict the EXACT SAME person with the EXACT SAME clothes, hairstyle, an
       ? `\nLOCATION CONSISTENCY: ${location_context}`
       : '';
 
+    const brandBlock = brand_logo_url
+      ? `\nBRAND IDENTITY (CRITICAL):
+- The brand logo MUST be visible and naturally integrated into the scene
+- Show the logo on the product, screen, packaging, signage, or any relevant surface
+- The logo should feel organic in the scene (on a phone screen, product label, storefront sign, etc.)
+- Do NOT just overlay the logo — integrate it into the scene composition`
+      : '';
+
     const prompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
 
 Scene: "${scene_title || `Scene ${(scene_index ?? 0) + 1}`}"
 Visual direction: ${visual_description}
 ${charBlock}
 ${locationBlock}
+${brandBlock}
 
 Requirements:
 - Square 1:1 composition

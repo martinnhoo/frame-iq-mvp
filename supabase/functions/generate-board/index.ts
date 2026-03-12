@@ -320,6 +320,12 @@ IMPORTANT: If talent is involved, every scene's visual_description MUST referenc
 
     } // end else mock block
 
+    // Attach brand_kit from persona if available
+    const brandKit = body.persona_context?.brand_kit || null;
+    if (brandKit) {
+      (board as Record<string, unknown>).brand_kit = brandKit;
+    }
+
     // Save to boards table
     const { data: boardRecord, error: insertError } = await supabaseClient
       .from('boards')
