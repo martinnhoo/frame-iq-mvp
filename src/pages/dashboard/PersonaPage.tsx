@@ -10,6 +10,47 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+// ─── Stable sub-components (outside parent to avoid re-mount on each render) ──
+
+function EditableTextField({ field, value, className = "", rows, editing, onChange }: {
+  field: string; value: string; className?: string; rows?: number; editing: boolean;
+  onChange: (field: string, value: string) => void;
+}) {
+  if (!editing) return <span className={className}>{value || "—"}</span>;
+  return rows ? (
+    <textarea value={value} onChange={e => onChange(field, e.target.value)} rows={rows}
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
+  ) : (
+    <input value={value} onChange={e => onChange(field, e.target.value)}
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
+  );
+}
+
+function EditableListField({ field, items, color, editing, onChange }: {
+  field: string; items: string[]; color: string; editing: boolean;
+  onChange: (field: string, value: string) => void;
+}) {
+  if (!editing) return (
+    <ul className="space-y-2">
+      {(items || []).map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-white/60">
+          <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <textarea
+      value={(items || []).join("\n")}
+      onChange={e => onChange(field, e.target.value)}
+      rows={Math.max(2, (items || []).length)}
+      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
+    />
+  );
+}
+
 interface PersonaResult {
   name: string;
   age: string;
