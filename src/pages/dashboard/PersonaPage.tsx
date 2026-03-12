@@ -170,6 +170,7 @@ function PersonaDetailEditable({
       };
       setBrandKit(newKit);
       await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
+      toast.success(dt("pe_brand_logo_done"));
     } catch (e: any) {
       setKitError(e.message || "Upload failed");
     } finally {
