@@ -323,10 +323,10 @@ function PersonaDetailEditable({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>🎨</span> Brand Kit
+              <span>🎨</span> {dt("pe_brand_kit")}
             </h3>
             <p className="text-[11px] text-white/30 mt-0.5">
-              Logo, cores e guia de marca — usados na geração de imagens dos boards
+              {dt("pe_brand_kit_desc")}
             </p>
           </div>
           {(brandKit.logo_data_url || brandKit.uploaded_at) && (
