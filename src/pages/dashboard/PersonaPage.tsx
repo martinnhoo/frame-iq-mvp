@@ -551,8 +551,8 @@ function PersonaDetailEditable({
 
 type View = "list" | "builder" | "detail";
 
-export default function PersonaPage() {
-  const { user, selectedPersona: globalPersona, setSelectedPersona: setGlobalPersona } = useOutletContext<DashboardContext>();
+function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
+  const { user, selectedPersona: globalPersona, setSelectedPersona: setGlobalPersona } = ctx;
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [view, setView] = useState<View>("list");
@@ -1099,4 +1099,16 @@ CTA: ${persona.cta_style}`;
       )}
     </div>
   );
+}
+
+export default function PersonaPage() {
+  const ctx = useOutletContext<DashboardContext>();
+  if (!ctx || !ctx.user) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-white/20" />
+      </div>
+    );
+  }
+  return <PersonaPageInner ctx={ctx} />;
 }
