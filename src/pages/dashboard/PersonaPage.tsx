@@ -408,7 +408,7 @@ function PersonaDetailEditable({
             </div>
           </div>
           <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor secundária</p>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_secondary")}</p>
             <div className="flex items-center gap-2">
               <input type="color" value={brandKit.secondary_color || "#EC4899"}
                 onChange={async e => {
