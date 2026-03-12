@@ -33,9 +33,15 @@ function EditableListField({ field, items, color, editing, onChange }: {
   field: string; items: string[]; color: string; editing: boolean;
   onChange: (field: string, value: string) => void;
 }) {
+  const normalizedItems = Array.isArray(items)
+    ? items
+    : typeof items === "string"
+      ? [items]
+      : [];
+
   if (!editing) return (
     <ul className="space-y-2">
-      {(items || []).map((item, i) => (
+      {normalizedItems.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-sm text-white/60">
           <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
           {item}
@@ -45,9 +51,9 @@ function EditableListField({ field, items, color, editing, onChange }: {
   );
   return (
     <textarea
-      value={(items || []).join("\n")}
+      value={normalizedItems.join("\n")}
       onChange={e => onChange(field, e.target.value)}
-      rows={Math.max(2, (items || []).length)}
+      rows={Math.max(2, normalizedItems.length)}
       className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
     />
   );
