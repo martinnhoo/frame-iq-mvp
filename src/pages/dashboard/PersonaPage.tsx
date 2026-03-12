@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3 } from "lucide-react";
@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { TEMPLATES, CAT_META, type Template } from "@/pages/dashboard/TemplatesPage";
+import { getTemplateTranslation } from "@/i18n/templateTranslations";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
