@@ -895,7 +895,7 @@ CTA: ${persona.cta_style}`;
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-1 mt-3">
-                    {p.result.best_platforms.slice(0, 3).map((pl) => (
+                    {(p.result.best_platforms || []).slice(0, 3).map((pl) => (
                       <span key={pl} className="px-2 py-0.5 rounded-full text-[10px] border border-purple-500/20 text-purple-300 bg-purple-500/5">
                         {pl}
                       </span>
