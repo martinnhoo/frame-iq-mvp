@@ -218,7 +218,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.25 }}
             className="flex flex-col items-center gap-3 mt-8 font-body"
           >
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">Powered by</span>
+            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">{t("powered_by")}</span>
             <div className="flex items-center gap-6">
               {/* OpenAI */}
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
