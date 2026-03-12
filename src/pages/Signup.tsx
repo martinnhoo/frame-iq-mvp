@@ -62,6 +62,18 @@ const Signup = () => {
         toast.error(error.message);
       }
     } else {
+      // Fire welcome email async — don't block navigation
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user?.id) {
+          supabase.functions.invoke('send-welcome-email', {
+            body: {
+              user_id: data.user.id,
+              first_name: name.trim().split(' ')[0],
+              language: navigator.language || 'en',
+            }
+          }).catch(() => {}); // silent fail
+        }
+      });
       navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
     }
     setEmailLoading(false);

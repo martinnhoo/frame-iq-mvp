@@ -128,9 +128,15 @@ Deno.serve(async (req) => {
       .update({ preferred_language: lang })
       .eq('id', user_id);
 
-    // TODO: Uncomment when RESEND_API_KEY is available:
-    /*
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      console.warn('RESEND_API_KEY not set — skipping email send');
+      return new Response(
+        JSON.stringify({ success: false, error: 'RESEND_API_KEY not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -138,7 +144,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'AdBrief <hello@adbrief.pro>',
+        from: Deno.env.get('RESEND_FROM_EMAIL') || 'AdBrief <hello@adbrief.pro>',
         to: [email],
         subject: t.subject,
         html: html,
@@ -152,22 +158,6 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, language: lang, email }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    */
-
-    // MOCK: Return the email content for preview
-    return new Response(
-      JSON.stringify({
-        success: true,
-        mock_mode: true,
-        language: lang,
-        subject: t.subject,
-        recipient: email,
-        first_name: name,
-        message: 'Add RESEND_API_KEY to send real emails. Preview HTML below.',
-        html_preview: html,
-      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

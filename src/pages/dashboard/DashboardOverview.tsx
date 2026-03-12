@@ -279,6 +279,45 @@ export default function DashboardOverview() {
 
 
 
+        {/* ── ONBOARDING HERO — only for new users ──────────── */}
+        {totalActions === 0 && (
+          <div className="rounded-2xl p-6 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(236,72,153,0.08))", border: "1px solid rgba(167,139,250,0.25)" }}>
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(167,139,250,0.08), transparent 60%)" }} />
+            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              <div className="text-5xl">🎬</div>
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-widest text-purple-400/60 mb-1" style={{ fontFamily: "'DM Mono', monospace" }}>Step 1 of 1</p>
+                <h2 className="text-lg font-extrabold text-white mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>Upload your first ad. Get a Hook Score in 60s.</h2>
+                <p className="text-sm text-white/40">Drop any video — TikTok, Reel, YouTube Short, Meta. AdBrief tells you exactly what's working and what to fix.</p>
+              </div>
+              <button
+                onClick={() => navigate("/dashboard/analyses/new")}
+                className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
+                style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", fontFamily: "'Syne', sans-serif" }}>
+                Analyze my first ad →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── UPGRADE NUDGE — free users nearing limit ──────── */}
+        {(!profile?.plan || profile.plan === "free") && usedAnalyses >= 2 && (
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
+            style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)" }}>
+            <span className="text-lg shrink-0">⚠️</span>
+            <p className="text-xs text-amber-300/70 flex-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <span className="text-amber-300 font-bold">{usedAnalyses} of {limits.analyses} free analyses used.</span>{" "}
+              Upgrade to keep your momentum — from $19/mo.
+            </p>
+            <button onClick={() => navigate("/pricing")}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black transition-all hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", fontFamily: "'Syne', sans-serif" }}>
+              Upgrade →
+            </button>
+          </div>
+        )}
+
         {/* ── TOP ROW: Usage + Performance ──────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {/* Usage blocks */}
