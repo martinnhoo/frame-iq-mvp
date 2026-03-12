@@ -244,14 +244,14 @@ function PersonaDetailEditable({
             <Persona3DAvatar emoji={draft.avatar_emoji} name={draft.name} gender={draft.gender} size="lg" />
           </div>
           <div className="pt-2 flex-1 space-y-2">
-            <EditableText field="name" value={draft.name} className={editing ? "" : "text-2xl font-bold text-white block"} />
+            <EditableTextField field="name" value={draft.name} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-2xl font-bold text-white block"} />
             <div className="flex items-center gap-3">
-              <EditableText field="age" value={draft.age} className={editing ? "!w-20" : "text-white/40 text-sm"} />
+              <EditableTextField field="age" value={draft.age} editing={editing} onChange={handleFieldChange} className={editing ? "!w-20" : "text-white/40 text-sm"} />
               {!editing && <span className="text-white/20">·</span>}
-              <EditableText field="gender" value={draft.gender} className={editing ? "!w-28" : "text-white/40 text-sm"} />
+              <EditableTextField field="gender" value={draft.gender} editing={editing} onChange={handleFieldChange} className={editing ? "!w-28" : "text-white/40 text-sm"} />
             </div>
-            <EditableText field="headline" value={draft.headline} className={editing ? "" : "text-purple-300 font-semibold block"} />
-            <EditableText field="bio" value={draft.bio} rows={3} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
+            <EditableTextField field="headline" value={draft.headline} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-purple-300 font-semibold block"} />
+            <EditableTextField field="bio" value={draft.bio} rows={3} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
           </div>
         </div>
       </motion.div>
