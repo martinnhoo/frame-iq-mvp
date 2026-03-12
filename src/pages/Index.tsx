@@ -884,7 +884,7 @@ const Index = () => {
 
               {/* Live social proof under CTA */}
               <p className="mt-6 text-[11px] text-white/25 font-body">
-                Joined by <span className="text-white/50 font-semibold">147 performance teams</span> across 12 countries
+                {t("lp_joined_by")}
               </p>
             </div>
           </motion.div>
