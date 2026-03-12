@@ -182,7 +182,7 @@ function getSmartTemplates(persona: PersonaResult, language: string): { template
 }
 
 function SuggestedTemplates({ persona, dt, language, navigate }: {
-  persona: PersonaResult; dt: (k: any) => string; language: string; navigate: (path: string) => void;
+  persona: PersonaResult; dt: (k: any) => string; language: string; navigate: (path: string, opts?: any) => void;
 }) {
   const suggestions = useMemo(() => getSmartTemplates(persona, language), [persona, language]);
   if (suggestions.length === 0) return null;
@@ -203,10 +203,17 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
           const tt = language !== "en" ? getTemplateTranslation(tpl.id, language) : null;
           const name = tt?.name || tpl.name;
           const desc = tt?.desc || tpl.description;
+          const prompt = tt?.prompt || tpl.prompt;
           const catMeta = CAT_META[tpl.category];
           return (
             <button key={tpl.id}
-              onClick={() => navigate(`/dashboard/boards/new?template=${tpl.id}`)}
+              onClick={() => navigate("/dashboard/boards/new", {
+                state: {
+                  templatePrompt: prompt,
+                  templateName: name,
+                  templateDuration: tpl.duration,
+                }
+              })}
               className="group flex flex-col gap-2 p-3 rounded-xl text-left transition-all hover:scale-[1.02]"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div className="flex items-center gap-2">
