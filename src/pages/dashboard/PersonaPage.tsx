@@ -30,7 +30,8 @@ interface PersonaResult {
 }
 
 interface BrandKit {
-  logo_url?: string;       // public URL from Supabase storage
+  logo_data_url?: string;  // base64 data URL stored directly in JSONB
+  file_name?: string;
   primary_color?: string;  // hex e.g. "#6D28D9"
   secondary_color?: string;
   font_name?: string;
@@ -68,26 +69,65 @@ function PersonaDetailEditable({
   useEffect(() => { setDraft(initial); }, [initial]);
   useEffect(() => { setBrandKit(activeDetail?.brand_kit || {}); }, [activeDetail]);
 
+  // Helper: read file as base64 data URL
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result as string);
+      r.onerror = () => rej(new Error("Read failed"));
+      r.readAsDataURL(file);
+    });
+
+  // Helper: extract first image from ZIP as data URL
+  const extractLogoFromZip = async (file: File): Promise<string | null> => {
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(file);
+      const imageExts = [".png", ".svg", ".jpg", ".jpeg", ".webp"];
+      // Prefer files named "logo" first, then any image
+      const files = Object.keys(zip.files).filter(n => !zip.files[n].dir);
+      const logoFile = files.find(n => /logo/i.test(n) && imageExts.some(e => n.toLowerCase().endsWith(e)))
+        || files.find(n => imageExts.some(e => n.toLowerCase().endsWith(e)));
+      if (!logoFile) return null;
+      const blob = await zip.files[logoFile].async("blob");
+      const ext = logoFile.split(".").pop()?.toLowerCase() || "png";
+      const mimeMap: Record<string, string> = { png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", svg:"image/svg+xml", webp:"image/webp" };
+      const namedFile = new File([blob], logoFile, { type: mimeMap[ext] || "image/png" });
+      return fileToDataUrl(namedFile);
+    } catch {
+      return null;
+    }
+  };
+
   const handleBrandKitUpload = async (file: File) => {
     if (!activeDetail) return;
-    // Accept zip, png, jpg, svg, pdf (brand guideline common formats)
-    const allowed = ["application/zip","application/x-zip-compressed","image/png","image/jpeg","image/svg+xml","application/pdf"];
-    if (!allowed.includes(file.type)) {
-      setKitError("Accepted: ZIP, PNG, JPG, SVG or PDF"); return;
-    }
-    if (file.size > 20 * 1024 * 1024) { setKitError("Max 20MB"); return; }
+    const isZip = file.type === "application/zip" || file.type === "application/x-zip-compressed" || file.name.endsWith(".zip");
+    const isImage = file.type.startsWith("image/");
+    if (!isZip && !isImage) { setKitError("Accepted: ZIP with brand kit, or PNG/JPG/SVG logo"); return; }
+    // Cap: images 2MB, ZIP 20MB
+    const maxSize = isZip ? 20 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (file.size > maxSize) { setKitError(isZip ? "ZIP max 20MB" : "Logo max 2MB — tip: use SVG for best quality"); return; }
     setKitError(null);
     setKitUploading(true);
     try {
       const { supabase } = await import("@/integrations/supabase/client");
-      const ext = file.name.split(".").pop();
-      const path = `brand-kits/${activeDetail.id}/kit.${ext}`;
-      const { error: upErr } = await supabase.storage.from("brand-kits").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("brand-kits").getPublicUrl(path);
-      const newKit: BrandKit = { ...brandKit, logo_url: urlData.publicUrl, uploaded_at: new Date().toISOString() };
+      let logoDataUrl: string | null = null;
+      let fileName = file.name;
+
+      if (isZip) {
+        logoDataUrl = await extractLogoFromZip(file);
+        if (!logoDataUrl) { setKitError("No image found in ZIP. Include a PNG, SVG or JPG logo file."); setKitUploading(false); return; }
+      } else {
+        logoDataUrl = await fileToDataUrl(file);
+      }
+
+      const newKit: BrandKit = {
+        ...brandKit,
+        logo_data_url: logoDataUrl,   // base64 stored directly in JSONB
+        file_name: fileName,
+        uploaded_at: new Date().toISOString(),
+      };
       setBrandKit(newKit);
-      // Persist in personas table as brand_kit JSONB column
       await supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
     } catch (e: any) {
       setKitError(e.message || "Upload failed");
@@ -278,7 +318,7 @@ function PersonaDetailEditable({
               Logo, cores e guia de marca — usados na geração de imagens dos boards
             </p>
           </div>
-          {brandKit.uploaded_at && (
+          {(brandKit.logo_data_url || brandKit.uploaded_at) && (
             <span className="text-[10px] text-green-400/70 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Uploaded
             </span>
@@ -287,7 +327,7 @@ function PersonaDetailEditable({
 
         {/* Upload zone */}
         <input ref={kitRef} type="file"
-          accept=".zip,.png,.jpg,.jpeg,.svg,.pdf,application/zip,image/*,application/pdf"
+          accept=".zip,.png,.jpg,.jpeg,.svg,.webp,application/zip,image/*"
           className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) handleBrandKitUpload(f); }} />
 
@@ -304,14 +344,15 @@ function PersonaDetailEditable({
               <div className="w-8 h-8 rounded-full border-2 border-purple-400/40 border-t-purple-400 animate-spin" />
               <span className="text-xs text-white/40">Uploading brand kit...</span>
             </div>
-          ) : brandKit.logo_url ? (
+          ) : brandKit.logo_data_url ? (
             <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)" }}>
-                ✅
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(52,211,153,0.35)" }}>
+                <img src={brandKit.logo_data_url} alt="logo"
+                  className="w-full h-full object-contain p-1.5" />
               </div>
-              <p className="text-sm font-semibold text-green-300">Brand kit uploaded</p>
-              <p className="text-[11px] text-white/30">Click to replace</p>
+              <p className="text-sm font-semibold text-green-300">Logo carregada ✓</p>
+              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · clique para trocar</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
@@ -324,7 +365,7 @@ function PersonaDetailEditable({
                 <p className="text-[11px] text-white/30 mt-0.5">ZIP comprimido com logo, cores e guia — max 20MB</p>
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
-                {["ZIP", "PNG", "SVG", "PDF"].map(t => (
+                {["ZIP", "PNG", "SVG", "JPG"].map(t => (
                   <span key={t} className="text-[10px] px-2 py-0.5 rounded-full text-white/30"
                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>{t}</span>
                 ))}
@@ -373,7 +414,7 @@ function PersonaDetailEditable({
           </div>
         </div>
 
-        {(brandKit.primary_color || brandKit.logo_url) && (
+        {(brandKit.primary_color || brandKit.logo_data_url) && (
           <p className="text-[10px] text-purple-400/60 text-center pt-1">
             ✨ O board generator vai usar essas cores e logo nos próximos boards desta persona
           </p>
