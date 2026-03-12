@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
       "martinhovff@gmail.com": "studio",
       "victoriafnogueira@hotmail.com": "free",
       "isadoradblima@gmail.com": "free",
+      "denis.magalhaes10@gmail.com": "studio",
     };
     if (user.email && LIFETIME_ACCOUNTS[user.email]) {
       const lifetimePlan = LIFETIME_ACCOUNTS[user.email];
