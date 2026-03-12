@@ -286,7 +286,7 @@ function PersonaDetailEditable({
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_formats")}</p>
-            <EditableList field="best_formats" items={draft.best_formats} color="text-blue-300" />
+            <EditableListField field="best_formats" items={draft.best_formats} color="text-blue-300" editing={editing} onChange={handleListChange} />
           </div>
           <div>
             <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
