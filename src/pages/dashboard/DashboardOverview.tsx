@@ -188,6 +188,19 @@ export default function DashboardOverview() {
   const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
+  // Gamification: total actions & contextual sub-greeting
+  const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? usage.hooks_count ?? 0);
+
+  const getContextualGreeting = () => {
+    const lastAction = profile?.last_ai_action_at ? new Date(profile.last_ai_action_at) : null;
+    const hoursSinceLastAction = lastAction ? (Date.now() - lastAction.getTime()) / 3600000 : Infinity;
+    if (hoursSinceLastAction > 72) return dt("gm_greet_comeback");
+    if (totalActions >= 30) return dt("gm_greet_prolific");
+    if (totalActions === 0) return dt("gm_greet_new");
+    return null; // will show streak msg in widget
+  };
+  const contextGreeting = getContextualGreeting();
+
   const tools = [
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
