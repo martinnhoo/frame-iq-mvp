@@ -244,11 +244,11 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.28 }}
             className="flex items-center justify-center gap-6 mt-5 font-body"
           >
-            <span className="text-sm text-muted-foreground">Free to start</span>
+            <span className="text-sm text-muted-foreground">{t("lp_free_to_start")}</span>
             <span className="text-muted-foreground/30">·</span>
-            <span className="text-sm text-muted-foreground">Results in <span className="text-foreground font-semibold">60 seconds</span></span>
+            <span className="text-sm text-muted-foreground">{t("hero_check_2")}</span>
             <span className="text-muted-foreground/30">·</span>
-            <a href="#pricing" className="text-sm text-primary hover:underline">See plans →</a>
+            <a href="#pricing" className="text-sm text-primary hover:underline">{t("lp_see_plans")}</a>
           </motion.div>
           
           <motion.div 
