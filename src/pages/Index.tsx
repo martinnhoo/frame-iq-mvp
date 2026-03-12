@@ -790,7 +790,7 @@ const Index = () => {
                 <div className="p-5 md:p-6 flex gap-4" style={{background:"rgba(239,68,68,0.03)"}}>
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/50 font-display">Before</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/50 font-display">{t("before_label")}</span>
                       <span className="h-px flex-1 bg-red-400/10" />
                     </div>
                     <p className="text-sm text-muted-foreground/60 leading-relaxed font-body">{item.before}</p>
