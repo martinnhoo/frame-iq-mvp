@@ -817,12 +817,12 @@ const Index = () => {
           {/* Inline CTA inside Before/After section */}
           <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
             className="mt-10 text-center">
-            <p className="text-sm text-muted-foreground/50 mb-4 font-body">Ready to stop guessing?</p>
+            <p className="text-sm text-muted-foreground/50 mb-4 font-body">{t("lp_ready_stop")}</p>
             <Button
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold h-auto border-0 rounded-xl px-8 py-3.5 shadow-lg shadow-purple-500/20 font-body"
               onClick={() => navigate("/signup")}
             >
-              Score my first ad — free
+              {t("lp_score_cta")}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
