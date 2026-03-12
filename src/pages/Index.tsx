@@ -962,9 +962,9 @@ const Index = () => {
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-base h-auto rounded-xl py-4 shadow-lg shadow-purple-500/30 font-body"
           onClick={() => navigate("/signup")}
         >
-          Score my first ad — free →
+          {t("lp_score_cta")} →
         </Button>
-        <p className="text-center text-[10px] text-white/25 mt-2 font-body">No credit card · Free plan · Results in 60s</p>
+        <p className="text-center text-[10px] text-white/25 mt-2 font-body">{t("lp_mobile_sub")}</p>
       </div>
     </div>
   );
