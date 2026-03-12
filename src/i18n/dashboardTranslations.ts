@@ -954,6 +954,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Créer première persona", ov_clear_persona: "Effacer persona",
     bo_production_boards: "boards de production", bo_create_first: "Créer premier board",
     bo_describe_concept: "Décrivez votre concept publicitaire et obtenez scènes, scripts et notes de production",
+    gm_streak: "Série", gm_streak_days: "jours", gm_streak_best: "Meilleure", gm_streak_start: "Utilisez un outil aujourd'hui pour démarrer votre série !",
+    gm_streak_keep: "Revenez demain pour continuer !",
+    gm_level: "Niveau Créatif", gm_level_observer: "Observateur", gm_level_analyst: "Analyste",
+    gm_level_strategist: "Stratège", gm_level_producer: "Producteur", gm_level_director: "Directeur Créatif",
+    gm_level_next: "pour prochain niveau", gm_level_actions: "actions",
+    gm_weekly: "Score Hebdo", gm_weekly_up: "en hausse vs semaine dernière", gm_weekly_down: "en baisse vs semaine dernière",
+    gm_weekly_stable: "Stable", gm_weekly_no_data: "Analysez des vidéos pour suivre les progrès",
+    gm_weekly_this: "Cette semaine", gm_weekly_last: "Semaine dernière",
+    gm_greet_comeback: "Content de vous revoir ! Vous nous avez manqué 🙌", gm_greet_streak: "jours de série ! Vous êtes en feu 🔥",
+    gm_greet_new: "Créons quelque chose de génial aujourd'hui !", gm_greet_prolific: "Vous avez été très productif 💪",
   },
 
   de: {
