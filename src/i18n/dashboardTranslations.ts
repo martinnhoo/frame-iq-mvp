@@ -435,6 +435,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Create first persona", ov_clear_persona: "Clear persona",
     bo_production_boards: "production boards", bo_create_first: "Create first board",
     bo_describe_concept: "Describe your ad concept and get scenes, scripts, and production notes",
+    gm_streak: "Streak", gm_streak_days: "days", gm_streak_best: "Best", gm_streak_start: "Use a tool today to start your streak!",
+    gm_streak_keep: "Come back tomorrow to keep it going!",
+    gm_level: "Creative Level", gm_level_observer: "Observer", gm_level_analyst: "Analyst",
+    gm_level_strategist: "Strategist", gm_level_producer: "Producer", gm_level_director: "Creative Director",
+    gm_level_next: "to next level", gm_level_actions: "actions",
+    gm_weekly: "Weekly Score", gm_weekly_up: "up from last week", gm_weekly_down: "down from last week",
+    gm_weekly_stable: "Stable", gm_weekly_no_data: "Analyze videos to track progress",
+    gm_weekly_this: "This week", gm_weekly_last: "Last week",
+    gm_greet_comeback: "Welcome back! We missed you 🙌", gm_greet_streak: "day streak! You're on fire 🔥",
+    gm_greet_new: "Let's build something great today!", gm_greet_prolific: "You've been crushing it lately 💪",
   },
 
   pt: {
