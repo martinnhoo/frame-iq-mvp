@@ -638,7 +638,7 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
               .filter((d: any) => d.result && typeof d.result === "object")
               .map((d: any) => ({
                 id: d.id,
-                result: d.result as PersonaResult,
+                result: sanitizeResult(d.result),
                 answers: (d.answers || {}) as Record<string, string>,
                 brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
                 created_at: d.created_at,
@@ -753,9 +753,30 @@ CTA: ${persona.cta_style}`;
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Sanitize PersonaResult so no field is null/undefined — prevents black screen on any browser
+  const sanitizeResult = (r: any): PersonaResult => ({
+    name:           r?.name           || "—",
+    age:            r?.age            || "—",
+    gender:         r?.gender         || "—",
+    headline:       r?.headline       || "",
+    bio:            r?.bio            || "",
+    pains:          Array.isArray(r?.pains)          ? r.pains          : [],
+    desires:        Array.isArray(r?.desires)        ? r.desires        : [],
+    objections:     Array.isArray(r?.objections)     ? r.objections     : [],
+    triggers:       Array.isArray(r?.triggers)       ? r.triggers       : [],
+    media_habits:   Array.isArray(r?.media_habits)   ? r.media_habits   : [],
+    best_platforms: Array.isArray(r?.best_platforms) ? r.best_platforms : [],
+    best_formats:   Array.isArray(r?.best_formats)   ? r.best_formats   : [],
+    hook_angles:    Array.isArray(r?.hook_angles)    ? r.hook_angles    : [],
+    language_style: r?.language_style || "",
+    cta_style:      r?.cta_style      || "",
+    avatar_emoji:   r?.avatar_emoji   || "👤",
+  });
+
   const openPersona = (p: SavedPersona) => {
-    setActiveDetail(p);
-    setResult(p.result);
+    const safe = { ...p, result: sanitizeResult(p.result) };
+    setActiveDetail(safe);
+    setResult(safe.result);
     setView("detail");
   };
 
@@ -824,7 +845,7 @@ CTA: ${persona.cta_style}`;
                           .filter((d: any) => d.result && typeof d.result === "object")
                           .map((d: any) => ({
                             id: d.id,
-                            result: d.result as PersonaResult,
+                            result: sanitizeResult(d.result),
                             answers: (d.answers || {}) as Record<string, string>,
                             brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
                             created_at: d.created_at,
