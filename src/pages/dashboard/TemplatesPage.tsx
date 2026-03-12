@@ -212,7 +212,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
 const T = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
   ({ id, name, description, category, duration, prompt });
 
-const TEMPLATES: Template[] = [
+export const TEMPLATES: Template[] = [
   T("ugc-direct-hook", "UGC Direct Hook", "Creator speaks to camera with bold opening.", "ugc", 30,
     `UGC-style ad. Scene 1 (0-3s): Bold hook. Scene 2 (4-10s): Relatable pain. Scene 3 (11-20s): Product intro + solution. Scene 4 (21-27s): Quick demo. Scene 5 (28-30s): CTA. Tone: Authentic, conversational.`),
   T("ugc-day-in-life", "Day in My Life", "Creator shows routine featuring product naturally.", "ugc", 60,
