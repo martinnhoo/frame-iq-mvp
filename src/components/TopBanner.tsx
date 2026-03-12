@@ -25,10 +25,9 @@ export default function TopBanner() {
       }}
     >
       {VARIANT === "high-demand" ? (
-        <p className="text-[12px] text-white/60 leading-snug" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          <span className="text-white/80 font-semibold">⚡ High demand:</span>{" "}
-          AI features may take a few extra seconds to process.{" "}
-          <span className="text-white/40">We're scaling up to meet usage.</span>
+        <p className="text-[12px] text-white/55 leading-snug" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <span className="text-white/75 font-semibold">⚡ We're experiencing high demand.</span>{" "}
+          Features may take a few more seconds than usual.
         </p>
       ) : (
         <p className="text-[12px] text-white/60 leading-snug" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
