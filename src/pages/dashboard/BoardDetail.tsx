@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Trash2, Shuffle, ChevronUp, Zap, Image, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 
 interface BoardData {
   id: string;
@@ -40,6 +41,7 @@ const Section = ({
 const BoardDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { selectedPersona } = useOutletContext<DashboardContext>();
   const [board, setBoard] = useState<BoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({
@@ -101,8 +103,12 @@ const BoardDetail = () => {
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
-      // Extract brand kit logo from board content if available
-      const brandLogo = ((board?.content as Record<string, unknown>)?.brand_kit as Record<string, unknown>)?.logo_data_url as string | undefined;
+      // Try board content first, then active persona's brand kit
+      const boardBrandLogo = ((board?.content as Record<string, unknown>)?.brand_kit as Record<string, unknown>)?.logo_data_url as string | undefined;
+      const personaBrandLogo = (selectedPersona as any)?.brand_kit?.logo_data_url as string | undefined;
+      const brandLogo = boardBrandLogo || personaBrandLogo;
+
+      console.log("[BoardDetail] Brand logo source:", boardBrandLogo ? "board" : personaBrandLogo ? "persona" : "none", "length:", brandLogo?.length || 0);
 
       const { data, error } = await supabase.functions.invoke("generate-scene-image", {
         body: {
