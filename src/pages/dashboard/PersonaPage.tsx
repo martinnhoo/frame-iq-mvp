@@ -268,7 +268,7 @@ function PersonaDetailEditable({
             transition={{ delay: 0.1 + idx * 0.05 }}
             className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
             <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
-            <EditableList field={field} items={items} color={color} />
+            <EditableListField field={field} items={items} color={color} editing={editing} onChange={handleListChange} />
           </motion.div>
         ))}
       </div>
