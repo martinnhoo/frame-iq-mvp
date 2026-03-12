@@ -267,6 +267,10 @@ export type DashT = {
   pe_brand_primary: string;
   pe_brand_secondary: string;
   pe_brand_note: string;
+  pe_suggested_templates: string;
+  pe_suggested_templates_desc: string;
+  pe_brand_assets_used: string;
+  pe_use_template: string;
 
   // Translate
   tr_title: string;
