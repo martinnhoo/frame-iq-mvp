@@ -764,14 +764,14 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              Stop guessing
+              {t("lp_stop_guessing")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
-              Every day you guess,<br/>
-              <span className="text-muted-foreground/50">your competitors don't.</span>
+              {t("lp_every_day1")}<br/>
+              <span className="text-muted-foreground/50">{t("lp_every_day2")}</span>
             </h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto font-body text-base">
-              Real problems AdBrief solves — before they cost you budget.
+              {t("lp_real_problems")}
             </p>
           </div>
 
