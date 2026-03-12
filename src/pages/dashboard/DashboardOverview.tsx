@@ -240,6 +240,9 @@ export default function DashboardOverview() {
             {contextGreeting && (
               <p className="text-xs text-white/30 mt-1" style={mono}>{contextGreeting}</p>
             )}
+            <div className="mt-2">
+              <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
@@ -276,8 +279,7 @@ export default function DashboardOverview() {
           </div>
         )}
 
-        {/* ── GAMIFICATION WIDGETS ─────────────────────────────── */}
-        <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
+
 
         {/* ── TOP ROW: Usage + Performance ──────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
