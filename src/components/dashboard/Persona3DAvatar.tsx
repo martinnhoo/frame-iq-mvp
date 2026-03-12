@@ -5,6 +5,8 @@ interface Persona3DAvatarProps {
   emoji: string;
   name: string;
   gender: string;
+  /** Stable seed for avatar generation (use persona ID). Falls back to name if not provided. */
+  seed?: string;
   size?: "sm" | "md" | "lg";
   onClick?: () => void;
 }
