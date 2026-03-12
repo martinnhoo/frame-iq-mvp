@@ -61,7 +61,7 @@ const LangPill = ({ value, onChange, exclude = [] }: { value: string; onChange: 
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${l.code === value ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/[0.06]"}`}>
                 <span className="text-lg">{l.flag}</span>
                 <span className="flex-1 text-left font-medium">{l.name}</span>
-                <span className="text-[10px] text-white/25">{l.market}</span>
+                <span className="text-[10px] text-white/45">{l.market}</span>
               </button>
             ))}
           </div>
@@ -301,7 +301,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               </p>
             </div>
             <button onClick={e => { e.stopPropagation(); setFile(null); setTranscript(""); setTranslated(""); }}
-              className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all">
+              className="h-8 w-8 rounded-xl flex items-center justify-center text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -315,7 +315,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
             <p className="text-white/40 text-sm">or click to browse · MP4, MOV, AVI, MP3, WAV</p>
             <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
               {["🎬 TikTok", "📱 Reels", "▶️ YouTube", "📣 Voiceover"].map(t => (
-                <span key={t} className="text-xs text-white/20 px-2 py-1 rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>{t}</span>
+                <span key={t} className="text-xs text-white/40 px-2 py-1 rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>{t}</span>
               ))}
             </div>
           </div>
@@ -330,7 +330,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
               <span className="text-sm font-semibold text-white" style={syne}>{STEP_LABELS[step]}</span>
             </div>
-            <span className="text-xs font-mono text-white/30">{overallProgress}%</span>
+            <span className="text-xs font-mono text-white/50">{overallProgress}%</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <div className="h-full rounded-full transition-all duration-500" style={{
@@ -357,7 +357,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       {/* Language + Run button */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
         <div>
-          <p className="text-xs text-white/30 mb-2" style={mono}>TRANSLATE OUTPUT TO</p>
+          <p className="text-xs text-white/50 mb-2" style={mono}>TRANSLATE OUTPUT TO</p>
           <LangPill value={targetLang} onChange={setTargetLang} />
         </div>
         <button onClick={handleRun} disabled={!file || isProcessing}
@@ -408,7 +408,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
             <div className="p-4 min-h-[140px]">
               {translated
                 ? <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{translated}</p>
-                : <p className="text-white/20 text-sm italic">Translation appears here</p>}
+                : <p className="text-white/40 text-sm italic">Translation appears here</p>}
             </div>
           </div>
         </div>
@@ -474,28 +474,28 @@ const AdaptMode = ({ userId }: { userId: string }) => {
           <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-white/30" />
+                <FileText className="h-4 w-4 text-white/50" />
                 <span className="text-xs text-white/40" style={mono}>YOUR SCRIPT</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-white/20" style={mono}>{input.length} chars</span>
+                <span className="text-xs text-white/40" style={mono}>{input.length} chars</span>
                 <LangPill value={sourceLang} onChange={setSourceLang} exclude={targetLangs} />
               </div>
             </div>
             <Textarea
               placeholder={"Paste your ad script, VO, caption, or hook here...\n\nInclude hook → body → CTA for best results."}
               value={input} onChange={e => setInput(e.target.value)} rows={10}
-              className="bg-transparent border-0 resize-none text-white/80 placeholder:text-white/20 focus-visible:ring-0 px-4 py-3 text-sm leading-relaxed" />
+              className="bg-transparent border-0 resize-none text-white/80 placeholder:text-white/40 focus-visible:ring-0 px-4 py-3 text-sm leading-relaxed" />
           </div>
           <div>
-            <label className="block text-xs text-white/30 mb-2" style={mono}>CONTEXT <span className="text-white/15 normal-case font-sans">(product, platform, audience — optional)</span></label>
+            <label className="block text-xs text-white/50 mb-2" style={mono}>CONTEXT <span className="text-white/15 normal-case font-sans">(product, platform, audience — optional)</span></label>
             <input value={context} onChange={e => setContext(e.target.value)}
               placeholder='e.g. "iGaming app, TikTok, male 25-35"'
               className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)" }} />
           </div>
           <div>
-            <label className="block text-xs text-white/30 mb-2.5" style={mono}>TONE</label>
+            <label className="block text-xs text-white/50 mb-2.5" style={mono}>TONE</label>
             <div className="flex flex-wrap gap-2">
               {TONES.map(t => (
                 <button key={t.id} onClick={() => setTone(t.id)}
@@ -513,7 +513,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
         <div className="lg:col-span-2 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs text-white/30" style={mono}>TARGET MARKETS</label>
+              <label className="text-xs text-white/50" style={mono}>TARGET MARKETS</label>
               <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", ...mono }}>{targetLangs.length}/6</span>
             </div>
             <div className="grid grid-cols-2 gap-1.5 max-h-80 overflow-y-auto">
@@ -541,7 +541,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
               ? <><Loader2 className="h-4 w-4 animate-spin" /> Adapting {targetLangs.length} markets...</>
               : <><Sparkles className="h-4 w-4" /> Adapt for {targetLangs.length} market{targetLangs.length !== 1 ? "s" : ""}</>}
           </button>
-          <div className="rounded-2xl p-4 text-xs text-white/30 leading-relaxed"
+          <div className="rounded-2xl p-4 text-xs text-white/50 leading-relaxed"
             style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.1)" }}>
             <p className="text-white/50 font-semibold mb-1">Not just translation.</p>
             AI rewrites hooks, adapts slang, urgency phrases, and cultural references — so your ad actually converts in each market.
@@ -572,7 +572,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                     <span className="text-xl">{r.flag}</span>
                     <div>
                       <p className="text-sm font-bold text-white" style={syne}>{r.langName}</p>
-                      <p className="text-[10px] text-white/25">{r.market}</p>
+                      <p className="text-[10px] text-white/45">{r.market}</p>
                     </div>
                   </div>
                   <button onClick={() => copyResult(i)}
@@ -622,7 +622,7 @@ const TranslatePage = () => {
         </div>
         <div>
           <h1 className="text-xl font-bold text-white" style={syne}>Translate &amp; Transcribe</h1>
-          <p className="text-xs text-white/30">Drop a video to extract the script · Adapt any text for any market</p>
+          <p className="text-xs text-white/50">Drop a video to extract the script · Adapt any text for any market</p>
         </div>
       </div>
 

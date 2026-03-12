@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
@@ -15,6 +17,8 @@ const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function BriefGenerator() {
   const { user } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [objective, setObjective] = useState("conversion");
@@ -61,7 +65,7 @@ export default function BriefGenerator() {
           <ClipboardList className="h-5 w-5" style={{ color: "#60a5fa" }} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground" style={syne}>Brief Generator</h1>
+          <h1 className="text-xl font-bold text-foreground" style={syne}>{dt("br_title")}</h1>
           <p className="text-sm text-muted-foreground" style={mono}>Production-ready creative briefs in seconds</p>
         </div>
       </div>
@@ -259,7 +263,7 @@ export default function BriefGenerator() {
 
           {/* Feedback */}
           <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
-            <span className="text-[10px] text-white/20" style={mono}>Was this brief useful?</span>
+            <span className="text-[10px] text-white/40" style={mono}>Was this brief useful?</span>
             <FeedbackBar
               userId={user.id}
               sourceType="brief"

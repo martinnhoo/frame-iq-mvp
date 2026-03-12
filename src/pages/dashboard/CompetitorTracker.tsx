@@ -115,15 +115,15 @@ export default function CompetitorTracker() {
             <Eye className="h-5 w-5 text-white/40" />
             Competitor Tracker
           </h1>
-          <p className="text-white/30 text-sm mt-0.5">
+          <p className="text-white/50 text-sm mt-0.5">
             Track competitor brands — live data requires Meta Ads + TikTok API.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-xl bg-white/[0.04] border border-white/[0.06] p-1">
+          <div className="flex items-center gap-1 rounded-xl bg-white/[0.08] border border-white/[0.12] p-1">
             {(["7d", "30d", "all"] as DateFilter[]).map(f => (
               <button key={f} onClick={() => setDateFilter(f)}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"}`}>
+                className={`px-2.5 py-1 rounded-lg text-xs transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/50 hover:text-white/60"}`}>
                 {f === "7d" ? "7d" : f === "30d" ? "30d" : "All"}
               </button>
             ))}
@@ -139,7 +139,7 @@ export default function CompetitorTracker() {
 
       {/* Add form */}
       {adding && (
-        <div className="rounded-2xl border border-white/[0.1] bg-white/[0.03] p-4 space-y-3">
+        <div className="rounded-2xl border border-white/[0.1] bg-white/[0.07] p-4 space-y-3">
           <p className="text-sm font-semibold text-white/70">Track a new competitor</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -148,7 +148,7 @@ export default function CompetitorTracker() {
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               onKeyDown={e => e.key === "Enter" && handleAdd()}
               autoFocus
-              className="flex-1 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm placeholder:text-white/25 outline-none focus:border-white/20"
+              className="flex-1 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm placeholder:text-white/45 outline-none focus:border-white/20"
             />
             <select
               value={form.market}
@@ -178,12 +178,12 @@ export default function CompetitorTracker() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
         <input
           placeholder="Search tracked competitors..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-white/20 outline-none focus:border-white/20"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-white text-sm placeholder:text-white/40 outline-none focus:border-white/20"
         />
       </div>
 
@@ -198,16 +198,16 @@ export default function CompetitorTracker() {
       {/* Competitors list */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-white/20" />
+          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] py-14 flex flex-col items-center gap-4 text-center">
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] py-14 flex flex-col items-center gap-4 text-center">
           <div className="h-12 w-12 rounded-2xl bg-white/[0.06] flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-white/20" />
+            <TrendingUp className="h-5 w-5 text-white/40" />
           </div>
           <div>
             <p className="text-white/40 font-medium">No competitors tracked yet</p>
-            <p className="text-white/20 text-sm mt-1">Add a brand to start monitoring their ads</p>
+            <p className="text-white/40 text-sm mt-1">Add a brand to start monitoring their ads</p>
           </div>
           <button
             onClick={() => setAdding(true)}
@@ -217,8 +217,8 @@ export default function CompetitorTracker() {
           </button>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[1fr_80px_100px_80px_40px] gap-4 px-5 py-3 border-b border-white/[0.06] text-[10px] text-white/25 uppercase tracking-widest">
+        <div className="rounded-2xl border border-white/[0.15] overflow-hidden">
+          <div className="hidden sm:grid grid-cols-[1fr_80px_100px_80px_40px] gap-4 px-5 py-3 border-b border-white/[0.12] text-[10px] text-white/45 uppercase tracking-widest">
             <span>Brand</span>
             <span>Market</span>
             <span>Platform</span>
@@ -230,18 +230,18 @@ export default function CompetitorTracker() {
             return (
               <div
                 key={c.id}
-                className="group flex flex-col sm:grid sm:grid-cols-[1fr_80px_100px_80px_40px] gap-2 sm:gap-4 px-5 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors"
+                className="group flex flex-col sm:grid sm:grid-cols-[1fr_80px_100px_80px_40px] gap-2 sm:gap-4 px-5 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.06] transition-colors"
               >
                 <span className="text-white font-medium">{c.name}</span>
                 <span className="text-white/50 text-sm">{mkt?.flag} {c.market}</span>
                 <span className="text-white/50 text-sm">{c.platform}</span>
-                <span className="text-white/25 text-xs flex items-center gap-1">
+                <span className="text-white/45 text-xs flex items-center gap-1">
                   <Clock className="h-3 w-3" />{timeAgo(c.created_at)}
                 </span>
                 <button
                   onClick={() => handleDelete(c.id, c.name)}
                   disabled={deleting === c.id}
-                  className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
                 >
                   {deleting === c.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                 </button>

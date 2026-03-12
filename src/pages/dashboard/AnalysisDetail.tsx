@@ -101,13 +101,13 @@ const AnalysisDetail = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="h-7 w-7 animate-spin text-white/20" />
+      <Loader2 className="h-7 w-7 animate-spin text-white/40" />
     </div>
   );
 
   if (!analysis) return (
     <div className="p-8 text-center">
-      <p className="text-white/30 text-sm mb-4">Analysis not found.</p>
+      <p className="text-white/50 text-sm mb-4">Analysis not found.</p>
       <button onClick={() => navigate("/dashboard/analyses")}
         className="text-sm text-white/50 hover:text-white underline">Back</button>
     </div>
@@ -177,8 +177,8 @@ const AnalysisDetail = () => {
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center px-6">
           <Loader2 className="h-12 w-12 animate-spin text-purple-400/60" />
           <p className="font-bold text-white text-lg" style={jakarta}>Analysis in progress</p>
-          <p className="text-white/30 text-sm">Usually takes 30–60 seconds</p>
-          <div className="flex items-center gap-2 text-white/20 text-xs">
+          <p className="text-white/50 text-sm">Usually takes 30–60 seconds</p>
+          <div className="flex items-center gap-2 text-white/40 text-xs">
             <RefreshCw className="h-3 w-3 animate-spin" />
             Auto-refreshing...
           </div>
@@ -191,7 +191,7 @@ const AnalysisDetail = () => {
           <AlertCircle className="h-12 w-12 text-red-400/60" />
           <p className="font-bold text-white text-lg" style={jakarta}>Analysis failed</p>
           {result?.error && (
-            <p className="text-white/30 text-sm max-w-md">{String(result.error)}</p>
+            <p className="text-white/50 text-sm max-w-md">{String(result.error)}</p>
           )}
           <button onClick={() => navigate("/dashboard/analyses/new")}
             className="text-sm text-white/40 hover:text-white underline">Try again</button>
@@ -255,7 +255,7 @@ const AnalysisDetail = () => {
                   </div>
                 )}
                 {!visualHook && !audioHook && (
-                  <p className="text-sm text-white/30 italic">Hook not extracted</p>
+                  <p className="text-sm text-white/50 italic">Hook not extracted</p>
                 )}
               </div>
             </div>
@@ -348,7 +348,7 @@ const AnalysisDetail = () => {
 
           {/* ── Feedback ── */}
           <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] text-white/20" style={mono}>Was this analysis useful?</span>
+            <span className="text-[10px] text-white/40" style={mono}>Was this analysis useful?</span>
             <FeedbackBar
               userId={user.id}
               sourceType="analysis"
@@ -387,7 +387,7 @@ const AnalysisDetail = () => {
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center px-6">
           <AlertCircle className="h-12 w-12 text-amber-400/60" />
           <p className="font-bold text-white text-lg" style={jakarta}>No results available</p>
-          <p className="text-white/30 text-sm">The analysis completed but returned no data.</p>
+          <p className="text-white/50 text-sm">The analysis completed but returned no data.</p>
           <button onClick={() => navigate("/dashboard/analyses/new")}
             className="text-sm text-white/40 hover:text-white underline">Try again</button>
         </div>

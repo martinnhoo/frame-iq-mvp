@@ -3,6 +3,8 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video } from "lucide-react";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import PersonaGateModal from "@/components/PersonaGateModal";
@@ -45,6 +47,8 @@ const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const NewAnalysis = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -213,7 +217,7 @@ const NewAnalysis = () => {
             <div>
               <label className="text-xs text-white/40 uppercase tracking-wider mb-2 block">Title (optional)</label>
               <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Nike Q1 — UGC Test"
-                className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/25 transition-colors" />
+                className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/25 transition-colors" />
             </div>
 
             {/* Market */}
@@ -228,7 +232,7 @@ const NewAnalysis = () => {
                 )}
                 {marketOverridden && (
                   <button onClick={() => { setMarket(personaMarket); setMarketOverridden(false); }}
-                    className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline">
+                    className="text-[10px] text-white/50 hover:text-white/60 transition-colors underline">
                     Reset to persona
                   </button>
                 )}
@@ -237,7 +241,7 @@ const NewAnalysis = () => {
                 {MARKETS.map(m => (
                   <button key={m.code} onClick={() => { setMarket(m.code); setMarketOverridden(true); }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm border transition-all ${
-                      market === m.code ? "border-purple-400/50 bg-purple-500/10 text-white" : "border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/15"
+                      market === m.code ? "border-purple-400/50 bg-purple-500/10 text-white" : "border-white/[0.15] text-white/40 hover:text-white/70 hover:border-white/15"
                     }`}>
                     <span>{m.flag}</span> {m.name}
                   </button>
@@ -247,7 +251,7 @@ const NewAnalysis = () => {
 
             {/* Drop zone */}
             <div className={`rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
-              isDragging ? "border-purple-400/60 bg-purple-500/10" : file ? "border-green-400/40 bg-green-500/5" : "border-white/[0.1] hover:border-white/20 hover:bg-white/[0.02]"
+              isDragging ? "border-purple-400/60 bg-purple-500/10" : file ? "border-green-400/40 bg-green-500/5" : "border-white/[0.1] hover:border-white/20 hover:bg-white/[0.06]"
             }`} onDragOver={e => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} onClick={() => !file && fileRef.current?.click()}>
               <input ref={fileRef} type="file" accept="video/*" onChange={handleFileInput} className="hidden" />
               {file ? (
@@ -262,15 +266,15 @@ const NewAnalysis = () => {
                       {(file.size / (1024 * 1024)).toFixed(1)} MB{needsExtraction(file) && " · ⚡ Audio will be extracted automatically"}
                     </p>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); setFile(null); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all">
+                  <button onClick={e => { e.stopPropagation(); setFile(null); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 py-10 px-6">
-                  <Upload className="h-8 w-8 text-white/20" />
+                  <Upload className="h-8 w-8 text-white/40" />
                   <p className="text-white/50 text-sm font-medium">Drop video here or click to browse</p>
-                  <p className="text-xs text-white/20">MP4, MOV, AVI — any size (audio auto-extracted if &gt;25MB)</p>
+                  <p className="text-xs text-white/40">MP4, MOV, AVI — any size (audio auto-extracted if &gt;25MB)</p>
                 </div>
               )}
             </div>
@@ -278,14 +282,14 @@ const NewAnalysis = () => {
             {/* OR URL */}
             <div className="relative flex items-center">
               <div className="flex-1 h-px bg-white/[0.06]" />
-              <span className="px-3 text-xs text-white/20 uppercase tracking-wider">or paste URL</span>
+              <span className="px-3 text-xs text-white/40 uppercase tracking-wider">or paste URL</span>
               <div className="flex-1 h-px bg-white/[0.06]" />
             </div>
 
             <div className="relative">
-              <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+              <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://www.tiktok.com/@brand/video/..."
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/25 transition-colors" />
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/25 transition-colors" />
             </div>
 
             <button
@@ -297,7 +301,7 @@ const NewAnalysis = () => {
             </button>
 
             {!selectedPersona && (
-              <p className="text-center text-[11px] text-white/25 -mt-1">
+              <p className="text-center text-[11px] text-white/45 -mt-1">
                 💡{" "}
                 <button onClick={() => setShowPersonaGate(true)} className="text-purple-400/70 hover:text-purple-400 underline transition-colors">
                   Ative uma persona
@@ -307,7 +311,7 @@ const NewAnalysis = () => {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 space-y-6">
+          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-8 space-y-6">
             <div className="text-center">
               {step === "done" ? (
                 <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
@@ -319,7 +323,7 @@ const NewAnalysis = () => {
               <h3 className="text-lg font-semibold text-white" style={syne}>
                 {step === "done" ? "Analysis complete!" : "Analyzing your video..."}
               </h3>
-              {step !== "done" && <p className="text-sm text-white/30 mt-1">Usually takes 30–60 seconds</p>}
+              {step !== "done" && <p className="text-sm text-white/50 mt-1">Usually takes 30–60 seconds</p>}
             </div>
 
             <div className="space-y-3">
@@ -328,7 +332,7 @@ const NewAnalysis = () => {
                 const isDone = stepIdx > i;
                 const isActive = stepIdx === i;
                 return (
-                  <div key={s} className={`flex items-center gap-3 transition-all duration-300 ${isDone || isActive ? "text-white" : "text-white/20"}`}>
+                  <div key={s} className={`flex items-center gap-3 transition-all duration-300 ${isDone || isActive ? "text-white" : "text-white/40"}`}>
                     {isDone ? <Check className="h-4 w-4 text-green-400 shrink-0" /> : isActive ? (
                       <div className="h-4 w-4 shrink-0 flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" /></div>
                     ) : (
@@ -344,7 +348,7 @@ const NewAnalysis = () => {
               <div className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${overallProgress}%`, background: step === "done" ? "#34d399" : "linear-gradient(90deg, #a78bfa, #f472b6)" }} />
             </div>
-            <p className="text-xs text-white/20 text-center font-mono">{overallProgress}%</p>
+            <p className="text-xs text-white/40 text-center font-mono">{overallProgress}%</p>
           </div>
         )}
       </div>

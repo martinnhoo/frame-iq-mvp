@@ -20,10 +20,10 @@ const Section = ({
   id: string; icon: React.ElementType; title: string; open: boolean;
   onToggle: () => void; children: React.ReactNode; badge?: React.ReactNode;
 }) => (
-  <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+  <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] overflow-hidden">
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.03] transition-colors"
+      className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.07] transition-colors"
     >
       <span className="flex items-center gap-2.5 text-sm font-semibold text-white/80">
         <Icon className="h-4 w-4 text-white/40" />
@@ -31,7 +31,7 @@ const Section = ({
       </span>
       <span className="flex items-center gap-2">
         {badge}
-        <ChevronDown className={`h-4 w-4 text-white/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-white/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </span>
     </button>
     {open && <div className="px-5 pb-5 pt-1">{children}</div>}
@@ -181,11 +181,11 @@ const BoardDetail = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-5 w-5 animate-spin text-white/30" />
+      <Loader2 className="h-5 w-5 animate-spin text-white/50" />
     </div>
   );
   if (!board) return (
-    <div className="p-8 text-center text-white/30">Board not found</div>
+    <div className="p-8 text-center text-white/50">Board not found</div>
   );
 
   const content = board.content as Record<string, unknown> | null;
@@ -224,7 +224,7 @@ const BoardDetail = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
             {board.title || "Untitled Board"}
           </h1>
-          <p className="text-white/30 text-sm mt-0.5 line-clamp-1">{board.prompt}</p>
+          <p className="text-white/50 text-sm mt-0.5 line-clamp-1">{board.prompt}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`px-2.5 py-1 rounded-lg text-xs font-mono capitalize border ${
@@ -236,7 +236,7 @@ const BoardDetail = () => {
           </span>
           <button
             onClick={handleDelete}
-            className="h-8 w-8 flex items-center justify-center rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            className="h-8 w-8 flex items-center justify-center rounded-xl text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -244,7 +244,7 @@ const BoardDetail = () => {
       </div>
 
       {!content ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-12 text-center text-white/30 text-sm">
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-12 text-center text-white/50 text-sm">
           This board has no content yet.
         </div>
       ) : (
@@ -283,8 +283,8 @@ const BoardDetail = () => {
                 ["Duration", `${String(overview.duration_seconds ?? overview.duration ?? "—")}s`],
                 ["Aspect Ratio", String(overview.aspect_ratio ?? "—")],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-white/[0.04] p-3">
-                  <p className="text-xs text-white/30 mb-1">{label}</p>
+                <div key={label} className="rounded-xl bg-white/[0.08] p-3">
+                  <p className="text-xs text-white/50 mb-1">{label}</p>
                   <p className="text-sm font-semibold text-white capitalize">{value}</p>
                 </div>
               ))}
@@ -294,16 +294,16 @@ const BoardDetail = () => {
           {/* Audience */}
           <Section id="audience" icon={Users} title="Target Audience" open={open.audience} onToggle={() => toggle("audience")}>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl bg-white/[0.04] p-3">
-                <p className="text-xs text-white/30 mb-1">Age Range</p>
+              <div className="rounded-xl bg-white/[0.08] p-3">
+                <p className="text-xs text-white/50 mb-1">Age Range</p>
                 <p className="text-white font-medium">{String(audience.age_range || "—")}</p>
               </div>
-              <div className="rounded-xl bg-white/[0.04] p-3">
-                <p className="text-xs text-white/30 mb-1">Gender</p>
+              <div className="rounded-xl bg-white/[0.08] p-3">
+                <p className="text-xs text-white/50 mb-1">Gender</p>
                 <p className="text-white font-medium capitalize">{String(audience.gender_skew || "—")}</p>
               </div>
-              <div className="rounded-xl bg-white/[0.04] p-3 sm:col-span-2">
-                <p className="text-xs text-white/30 mb-1.5">Interests</p>
+              <div className="rounded-xl bg-white/[0.08] p-3 sm:col-span-2">
+                <p className="text-xs text-white/50 mb-1.5">Interests</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(audience.interests as string[] || []).map((int, i) => (
                     <span key={i} className="px-2 py-0.5 rounded-full bg-white/[0.08] text-white/60 text-xs">{int}</span>
@@ -311,8 +311,8 @@ const BoardDetail = () => {
                 </div>
               </div>
               {audience.cultural_notes && (
-                <div className="rounded-xl bg-white/[0.04] p-3 sm:col-span-2">
-                  <p className="text-xs text-white/30 mb-1">Cultural Notes</p>
+                <div className="rounded-xl bg-white/[0.08] p-3 sm:col-span-2">
+                  <p className="text-xs text-white/50 mb-1">Cultural Notes</p>
                   <p className="text-white/60 text-sm">{String(audience.cultural_notes)}</p>
                 </div>
               )}
@@ -328,14 +328,14 @@ const BoardDetail = () => {
                 ["Pacing", String(strategy.pacing || "—")],
                 ["CTA", String(strategy.cta_type || "—")],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-white/[0.04] p-3">
-                  <p className="text-xs text-white/30 mb-1">{label}</p>
+                <div key={label} className="rounded-xl bg-white/[0.08] p-3">
+                  <p className="text-xs text-white/50 mb-1">{label}</p>
                   <p className="text-white font-medium capitalize">{value}</p>
                 </div>
               ))}
               {(hook.hook_line || hook.visual_hook || strategy.key_message) && (
-                <div className="rounded-xl bg-white/[0.04] p-3 sm:col-span-2">
-                  <p className="text-xs text-white/30 mb-1">{hook.visual_hook ? "Visual Hook" : "Key Message"}</p>
+                <div className="rounded-xl bg-white/[0.08] p-3 sm:col-span-2">
+                  <p className="text-xs text-white/50 mb-1">{hook.visual_hook ? "Visual Hook" : "Key Message"}</p>
                   <p className="text-white/70 italic">"{String(hook.visual_hook || strategy.key_message)}"</p>
                 </div>
               )}
@@ -362,7 +362,7 @@ const BoardDetail = () => {
               {scenes.map((scene, i) => (
                 <div
                   key={i}
-                  className="rounded-xl bg-white/[0.04] border border-white/[0.06] overflow-hidden"
+                  className="rounded-xl bg-white/[0.08] border border-white/[0.12] overflow-hidden"
                 >
                   {/* Scene image */}
                   {sceneImages[i] ? (
@@ -390,7 +390,7 @@ const BoardDetail = () => {
                           {String(scene.scene_number ?? i + 1).padStart(2, "0")}
                         </span>
                         {scene.timestamp && (
-                          <span className="text-xs text-white/30 font-mono">{String(scene.timestamp)}</span>
+                          <span className="text-xs text-white/50 font-mono">{String(scene.timestamp)}</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -412,7 +412,7 @@ const BoardDetail = () => {
                             `Scene ${i + 1}: ${String(scene.visual_description || "")}\n${scene.vo_script ? `VO: "${String(scene.vo_script)}"` : ""}`,
                             `scene-${i}`
                           )}
-                          className="text-white/20 hover:text-white/60 transition-colors"
+                          className="text-white/40 hover:text-white/60 transition-colors"
                         >
                           {copied === `scene-${i}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                         </button>
@@ -420,14 +420,14 @@ const BoardDetail = () => {
                     </div>
                     <p className="text-sm text-white/80 mb-2">{String(scene.visual_description || "")}</p>
                     {(scene.vo_script || scene.dialogue_or_vo) && (
-                      <div className="rounded-lg bg-white/[0.06] border border-white/[0.06] px-3 py-2 mt-2">
-                        <p className="text-xs text-white/30 mb-1">Voice Over</p>
+                      <div className="rounded-lg bg-white/[0.06] border border-white/[0.12] px-3 py-2 mt-2">
+                        <p className="text-xs text-white/50 mb-1">Voice Over</p>
                         <p className="text-sm text-white/70 italic">"{String(scene.vo_script || scene.dialogue_or_vo)}"</p>
                       </div>
                     )}
                     {(scene.onscreen_text || scene.on_screen_text) && (
                       <div className="mt-2 rounded-lg bg-white/[0.06] px-3 py-2">
-                        <p className="text-xs text-white/30 mb-1">On-screen Text</p>
+                        <p className="text-xs text-white/50 mb-1">On-screen Text</p>
                         <p className="text-sm text-white font-mono">{String(scene.onscreen_text || scene.on_screen_text)}</p>
                       </div>
                     )}
@@ -445,8 +445,8 @@ const BoardDetail = () => {
                   const label = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
                   const displayVal = Array.isArray(value) ? (value as string[]).join(", ") : String(value);
                   return (
-                    <div key={key} className="rounded-xl bg-white/[0.04] p-3">
-                      <p className="text-xs text-white/30 mb-1">{label}</p>
+                    <div key={key} className="rounded-xl bg-white/[0.08] p-3">
+                      <p className="text-xs text-white/50 mb-1">{label}</p>
                       <p className="text-sm text-white/80 font-medium">{displayVal}</p>
                     </div>
                   );
@@ -455,7 +455,7 @@ const BoardDetail = () => {
             </Section>
           )}
           {/* A/B Script Variants */}
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4">
               <span className="flex items-center gap-2.5 text-sm font-semibold text-white/80">
                 <Shuffle className="h-4 w-4 text-white/40" />
@@ -473,34 +473,34 @@ const BoardDetail = () => {
                   const exp = abExpanded === i;
                   const scoreColor = v.predicted_score >= 8 ? "text-green-400" : v.predicted_score >= 6.5 ? "text-yellow-400" : "text-white/50";
                   return (
-                    <div key={i} className="rounded-xl border border-white/[0.07] bg-[#0a0a0a] overflow-hidden">
+                    <div key={i} className="rounded-xl border border-white/[0.13] bg-[#0a0a0a] overflow-hidden">
                       <div className="flex items-start gap-3 p-4">
                         <div className="shrink-0 text-center w-10">
                           <div className={`text-sm font-bold font-mono ${scoreColor}`}>{v.predicted_score?.toFixed(1)}</div>
-                          <div className="text-[9px] text-white/20 uppercase">/10</div>
+                          <div className="text-[9px] text-white/40 uppercase">/10</div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-white" style={{fontFamily:"'Syne',sans-serif"}}>{v.angle}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.08] text-white/25">{v.hook_type}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.15] text-white/45">{v.hook_type}</span>
                           </div>
                           <p className="text-xs text-white/50 leading-relaxed italic">"{v.hook}"</p>
-                          <p className="text-[11px] text-white/25 mt-1">{v.key_change}</p>
+                          <p className="text-[11px] text-white/45 mt-1">{v.key_change}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button onClick={async () => { await navigator.clipboard.writeText(v.script_rewrite); setAbCopied(i); toast.success("Script copied!"); setTimeout(() => setAbCopied(null), 2000); }}
-                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-white/30 hover:text-white transition-all">
+                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white transition-all">
                             {abCopied === i ? <Check className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
                           </button>
                           <button onClick={() => setAbExpanded(exp ? null : i)}
-                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.07] flex items-center justify-center text-white/30 hover:text-white transition-all">
+                            className="h-7 w-7 rounded-lg bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white transition-all">
                             {exp ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                           </button>
                         </div>
                       </div>
                       {exp && (
                         <div className="border-t border-white/[0.05] px-4 pb-4 pt-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2" style={{fontFamily:"'DM Mono',monospace"}}>Full script</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={{fontFamily:"'DM Mono',monospace"}}>Full script</p>
                           <p className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{v.script_rewrite}</p>
                         </div>
                       )}
@@ -511,7 +511,7 @@ const BoardDetail = () => {
             )}
             {abVariants.length === 0 && !abLoading && (
               <div className="px-5 pb-5 text-center">
-                <p className="text-xs text-white/20">Click "Generate 3 Variants" to create A/B test versions of this board's VO script</p>
+                <p className="text-xs text-white/40">Click "Generate 3 Variants" to create A/B test versions of this board's VO script</p>
               </div>
             )}
           </div>

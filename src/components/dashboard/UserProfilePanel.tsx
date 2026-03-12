@@ -126,10 +126,10 @@ function PersonaDetailView({
 
   const Field = ({ label, value, field }: { label: string; value: string; field: keyof PersonaRecord }) => (
     <div className="space-y-1">
-      <label className="text-[9px] uppercase tracking-widest text-white/20">{label}</label>
+      <label className="text-[9px] uppercase tracking-widest text-white/40">{label}</label>
       {editing ? (
         <input value={value} onChange={e => setDraft(d => ({ ...d, [field]: e.target.value }))}
-          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors" />
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors" />
       ) : (
         <p className="text-xs text-white/60">{value || "—"}</p>
       )}
@@ -138,13 +138,13 @@ function PersonaDetailView({
 
   const ListField = ({ label, values, field }: { label: string; values: string[]; field: keyof PersonaRecord }) => (
     <div className="space-y-1.5">
-      <label className="text-[9px] uppercase tracking-widest text-white/20">{label}</label>
+      <label className="text-[9px] uppercase tracking-widest text-white/40">{label}</label>
       {editing ? (
         <textarea
           value={(values || []).join("\n")}
           onChange={e => setDraft(d => ({ ...d, [field]: e.target.value.split("\n").filter(Boolean) }))}
           rows={Math.max(2, (values || []).length)}
-          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none"
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none"
           placeholder="One per line"
         />
       ) : (
@@ -155,7 +155,7 @@ function PersonaDetailView({
               <span>{v}</span>
             </p>
           ))}
-          {(!values || values.length === 0) && <p className="text-xs text-white/25">—</p>}
+          {(!values || values.length === 0) && <p className="text-xs text-white/45">—</p>}
         </div>
       )}
     </div>
@@ -164,7 +164,7 @@ function PersonaDetailView({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="h-8 w-8 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-all">
+        <button onClick={onBack} className="h-8 w-8 rounded-xl bg-white/[0.08] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all">
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1" />
@@ -176,7 +176,7 @@ function PersonaDetailView({
         ) : (
           <div className="flex gap-2">
             <button onClick={() => { setDraft(persona); setEditing(false); }}
-              className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">Cancel</button>
+              className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/60 transition-colors">Cancel</button>
             <button onClick={handleSave} disabled={saving}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium hover:bg-purple-500/30 transition-all">
               {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Save
@@ -184,7 +184,7 @@ function PersonaDetailView({
           </div>
         )}
         <button onClick={onDelete} disabled={isDeleting}
-          className="h-8 w-8 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
+          className="h-8 w-8 rounded-xl bg-white/[0.08] flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all">
           {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
         </button>
       </div>
@@ -213,13 +213,13 @@ function PersonaDetailView({
         <Field label="CTA style" value={draft.cta_style || ""} field="cta_style" />
         {editing ? (
           <div className="space-y-1">
-            <label className="text-[9px] uppercase tracking-widest text-white/20">Bio</label>
+            <label className="text-[9px] uppercase tracking-widest text-white/40">Bio</label>
             <textarea value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))}
-              rows={3} className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none" />
+              rows={3} className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none" />
           </div>
         ) : (
           <div className="space-y-1">
-            <label className="text-[9px] uppercase tracking-widest text-white/20">Bio</label>
+            <label className="text-[9px] uppercase tracking-widest text-white/40">Bio</label>
             <p className="text-xs text-white/50 leading-relaxed">{draft.bio || "—"}</p>
           </div>
         )}
@@ -423,10 +423,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       <div
         role="dialog"
         aria-label="User profile"
-        className="panel-enter fixed right-0 top-0 bottom-0 z-[61] w-full max-w-[420px] flex flex-col bg-[#0c0c0c] border-l border-white/[0.07] shadow-[−20px_0_80px_rgba(0,0,0,0.8)]"
+        className="panel-enter fixed right-0 top-0 bottom-0 z-[61] w-full max-w-[420px] flex flex-col bg-[#0c0c0c] border-l border-white/[0.13] shadow-[−20px_0_80px_rgba(0,0,0,0.8)]"
       >
         {/* ── Header ── */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] shrink-0">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.12] shrink-0">
           {/* Avatar orb */}
           <div className="relative shrink-0">
             {avatarUrl ? (
@@ -451,12 +451,12 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">{profile?.name || user.email?.split("@")[0]}</p>
-            <p className="text-xs text-white/30 truncate">{user.email}</p>
+            <p className="text-xs text-white/50 truncate">{user.email}</p>
           </div>
 
           <button
             onClick={onClose}
-            className="shrink-0 h-8 w-8 rounded-xl bg-white/[0.04] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-all"
+            className="shrink-0 h-8 w-8 rounded-xl bg-white/[0.08] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -472,7 +472,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                 tab === t.id
                   ? "bg-white/[0.09] text-white"
-                  : "text-white/25 hover:text-white/50 hover:bg-white/[0.04]"
+                  : "text-white/45 hover:text-white/50 hover:bg-white/[0.08]"
               }`}
             >
               <t.icon className="h-3 w-3" />
@@ -488,20 +488,20 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {tab === "profile" && (
             <div className="px-5 py-5 space-y-4">
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/20 mb-1.5">Display name</label>
+                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1.5">Display name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder:text-white/15 outline-none focus:border-white/20 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-white text-sm placeholder:text-white/15 outline-none focus:border-white/20 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/20 mb-1.5">Email</label>
+                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1.5">Email</label>
                 <input
                   value={user.email || ""}
                   disabled
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] text-white/25 text-sm cursor-not-allowed"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.04] text-white/45 text-sm cursor-not-allowed"
                 />
               </div>
 
@@ -522,12 +522,12 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
               {/* Onboarding answers */}
               {profile?.onboarding_data && Object.keys(profile.onboarding_data).length > 0 && (
-                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/20 mb-3">Setup answers</p>
+                <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3">Setup answers</p>
                   <div className="space-y-2">
                     {Object.entries(profile.onboarding_data).map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between gap-3">
-                        <span className="text-xs text-white/25 capitalize shrink-0">{k.replace(/_/g, " ")}</span>
+                        <span className="text-xs text-white/45 capitalize shrink-0">{k.replace(/_/g, " ")}</span>
                         <span className="text-xs text-white/50 text-right truncate">
                           {Array.isArray(v) ? (v as string[]).join(", ") : String(v)}
                         </span>
@@ -543,7 +543,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {tab === "preferences" && (
             <div className="px-5 py-5 space-y-5">
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/20 mb-3">Primary market</label>
+                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-3">Primary market</label>
                 <div className="grid grid-cols-4 gap-2">
                   {MARKETS.map((m) => (
                     <button
@@ -552,7 +552,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                       className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-center transition-all ${
                         market === m.code
                           ? "border-white/25 bg-white/[0.08] text-white"
-                          : "border-white/[0.05] text-white/25 hover:border-white/15 hover:text-white/50"
+                          : "border-white/[0.05] text-white/45 hover:border-white/15 hover:text-white/50"
                       }`}
                     >
                       <span className="text-xl">{m.flag}</span>
@@ -563,7 +563,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/20 mb-3">Preferred language</label>
+                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-3">Preferred language</label>
                 <div className="flex flex-wrap gap-2">
                   {LANGUAGES.map((l) => (
                     <button
@@ -572,7 +572,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                       className={`px-4 py-1.5 rounded-xl text-sm border transition-all ${
                         lang === l.code
                           ? "border-white/25 bg-white/[0.08] text-white font-medium"
-                          : "border-white/[0.05] text-white/25 hover:border-white/15 hover:text-white/50"
+                          : "border-white/[0.05] text-white/45 hover:border-white/15 hover:text-white/50"
                       }`}
                     >
                       {l.label}
@@ -596,7 +596,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {tab === "plan" && (
             <div className="px-5 py-5 space-y-4">
               {/* Current plan card */}
-              <div className={`rounded-2xl bg-gradient-to-br ${plan.gradient} border border-white/[0.08] p-5`}>
+              <div className={`rounded-2xl bg-gradient-to-br ${plan.gradient} border border-white/[0.15] p-5`}>
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-lg font-bold text-white">{plan.label}</p>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/60 border border-white/10">
@@ -610,7 +610,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               {/* Upgrade options */}
               {(profile?.plan === "free" || profile?.plan === "maker") && (
                 <>
-                  <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2">Upgrade to</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Upgrade to</p>
                   <div className="space-y-2">
                     {(["maker", "pro", "studio"] as const)
                       .filter((k) => {
@@ -627,7 +627,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all group ${
                               isPopular
                                 ? "border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50 hover:bg-purple-500/10"
-                                : "border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
+                                : "border-white/[0.13] bg-white/[0.06] hover:border-white/15 hover:bg-white/[0.08]"
                             }`}
                           >
                             <div className="text-left">
@@ -635,11 +635,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                                 <p className="text-sm font-semibold text-white">{p.label}</p>
                                 {isPopular && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/20 font-bold">POPULAR</span>}
                               </div>
-                              <p className="text-xs text-white/30">{p.desc}</p>
+                              <p className="text-xs text-white/50">{p.desc}</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-sm font-bold text-white/60">{p.price}</span>
-                              <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
+                              <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-white/50 transition-colors" />
                             </div>
                           </button>
                         );
@@ -654,23 +654,23 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {/* ══ SECURITY ══ */}
           {tab === "security" && (
             <div className="px-5 py-5 space-y-4">
-              <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-3">
+              <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white/70 font-medium">Email</p>
-                    <p className="text-xs text-white/30 mt-0.5">{user.email}</p>
+                    <p className="text-xs text-white/50 mt-0.5">{user.email}</p>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">
                     Verified
                   </span>
                 </div>
 
-                <div className="h-px bg-white/[0.04]" />
+                <div className="h-px bg-white/[0.08]" />
 
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-white/70 font-medium">Account created</p>
-                    <p className="text-xs text-white/30 mt-0.5">
+                    <p className="text-xs text-white/50 mt-0.5">
                       {user.created_at
                         ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
                         : "—"}
@@ -702,7 +702,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     <Sparkles className="h-3.5 w-3.5 text-purple-400" />
                     Saved Personas
                   </p>
-                  <p className="text-xs text-white/20 mt-0.5">Your AI audience profiles</p>
+                  <p className="text-xs text-white/40 mt-0.5">Your AI audience profiles</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <a
@@ -715,7 +715,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   <button
                     onClick={loadPersonas}
                     disabled={personasLoading}
-                    className="h-7 w-7 rounded-lg bg-white/[0.04] flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.08] transition-all disabled:opacity-30"
+                    className="h-7 w-7 rounded-lg bg-white/[0.08] flex items-center justify-center text-white/45 hover:text-white/60 hover:bg-white/[0.08] transition-all disabled:opacity-30"
                     title="Refresh"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${personasLoading ? "animate-spin" : ""}`} />
@@ -728,9 +728,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   <Loader2 className="h-5 w-5 animate-spin text-white/15" />
                 </div>
               ) : personas.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/[0.07] py-10 flex flex-col items-center gap-3">
+                <div className="rounded-2xl border border-dashed border-white/[0.13] py-10 flex flex-col items-center gap-3">
                   <span className="text-4xl select-none">🧠</span>
-                  <p className="text-sm text-white/25 font-medium">No personas yet</p>
+                  <p className="text-sm text-white/45 font-medium">No personas yet</p>
                   <p className="text-xs text-white/15 text-center px-6 leading-relaxed">
                     Generate one using the Persona Builder in the sidebar to see it here
                   </p>

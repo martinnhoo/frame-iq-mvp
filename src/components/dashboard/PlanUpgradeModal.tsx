@@ -92,18 +92,18 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free" }: Props)
         onClick={onClose}
       >
         <div
-          className="modal-enter w-full max-w-3xl bg-[#0d0d0d] rounded-3xl border border-white/[0.08] shadow-2xl overflow-hidden"
+          className="modal-enter w-full max-w-3xl bg-[#0d0d0d] rounded-3xl border border-white/[0.15] shadow-2xl overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between px-7 py-5 border-b border-white/[0.06]">
+          <div className="flex items-center justify-between px-7 py-5 border-b border-white/[0.12]">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Zap className="h-5 w-5 text-yellow-400" />
                 Upgrade your plan
               </h2>
-              <p className="text-xs text-white/30 mt-0.5">3-day free trial on all plans · Cancel anytime</p>
+              <p className="text-xs text-white/50 mt-0.5">3-day free trial on all plans · Cancel anytime</p>
             </div>
-            <button onClick={onClose} className="h-8 w-8 rounded-xl bg-white/[0.05] flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-all">
+            <button onClick={onClose} className="h-8 w-8 rounded-xl bg-white/[0.05] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -126,7 +126,7 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free" }: Props)
                     <p className={`text-base font-bold ${plan.accent}`}>{plan.name}</p>
                     <p className="mt-1">
                       <span className="text-2xl font-black text-white">{plan.price}</span>
-                      <span className="text-xs text-white/30">{plan.period}</span>
+                      <span className="text-xs text-white/50">{plan.period}</span>
                     </p>
                   </div>
                   <div className="space-y-1.5 flex-1">
@@ -140,7 +140,7 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free" }: Props)
                   <button
                     disabled={isCurrent || selecting === plan.id}
                     className={`mt-4 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all ${
-                      isCurrent ? "bg-white/5 text-white/20 cursor-default" : "bg-white/10 text-white hover:bg-white/15 active:scale-95"
+                      isCurrent ? "bg-white/5 text-white/40 cursor-default" : "bg-white/10 text-white hover:bg-white/15 active:scale-95"
                     }`}
                   >
                     {selecting === plan.id ? (

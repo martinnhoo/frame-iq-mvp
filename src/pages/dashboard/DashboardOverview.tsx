@@ -231,7 +231,7 @@ export default function DashboardOverview() {
         <div className="flex items-start justify-between gap-4 pt-2">
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
-            <p className="text-[10px] text-white/20 uppercase tracking-[0.22em] mb-1.5 mt-3" style={mono}>{greeting}</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-[0.22em] mb-1.5 mt-3" style={mono}>{greeting}</p>
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -239,7 +239,7 @@ export default function DashboardOverview() {
               </span>
             </h1>
             {contextGreeting && (
-              <p className="text-xs text-white/30 mt-1" style={mono}>{contextGreeting}</p>
+              <p className="text-xs text-white/50 mt-1" style={mono}>{contextGreeting}</p>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
@@ -271,7 +271,7 @@ export default function DashboardOverview() {
               <Sparkles className="h-3.5 w-3.5" /> {dt("ov_create_persona")}
             </button>
             <button onClick={() => { setDismissedBanner(true); localStorage.setItem("frameiq_dismiss_profile_banner", "1"); }}
-              className="text-white/20 hover:text-white/50 transition-colors shrink-0 p-1">
+              className="text-white/40 hover:text-white/50 transition-colors shrink-0 p-1">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -334,9 +334,9 @@ export default function DashboardOverview() {
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{s.used}</span>
-                  <span className="text-xs text-white/25">/ {s.limit > 0 ? s.limit : "∞"}</span>
+                  <span className="text-xs text-white/45">/ {s.limit > 0 ? s.limit : "∞"}</span>
                 </div>
-                <p className="text-[11px] text-white/35">{s.label}</p>
+                <p className="text-[11px] text-white/55">{s.label}</p>
                 <StatBar used={s.used} limit={s.limit} accent={s.accent} />
               </div>
             </button>
@@ -354,9 +354,9 @@ export default function DashboardOverview() {
                 <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>
                   {hasData && insights.avgHookScore ? insights.avgHookScore.toFixed(1) : "—"}
                 </span>
-                {hasData && insights.avgHookScore && <span className="text-xs text-white/25">/ 10</span>}
+                {hasData && insights.avgHookScore && <span className="text-xs text-white/45">/ 10</span>}
               </div>
-              <p className="text-[11px] text-white/35">{dt("ov_avg_hook_score")}</p>
+              <p className="text-[11px] text-white/55">{dt("ov_avg_hook_score")}</p>
               {hasData && (
                 <p className="text-[10px] mt-0.5" style={{ color: "#34d399", ...mono }}>
                   {insights.totalAnalyzed} {dt("ov_analyzed")}
@@ -369,9 +369,9 @@ export default function DashboardOverview() {
         {/* ── TOOLS GRID ─────────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20" style={syne}>{dt("ov_tools")}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40" style={syne}>{dt("ov_tools")}</p>
             <button onClick={() => navigate("/dashboard/analyses/new")}
-              className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition-colors" style={mono}>
+              className="flex items-center gap-1.5 text-[11px] text-white/50 hover:text-white/60 transition-colors" style={mono}>
               <Plus className="h-3 w-3" /> {dt("ov_new_analysis")}
             </button>
           </div>
@@ -407,7 +407,7 @@ export default function DashboardOverview() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-white/30 hidden sm:block">{t.desc}</p>
+                  <p className="text-[11px] text-white/50 hidden sm:block">{t.desc}</p>
                 </div>
               </button>
             ))}
@@ -427,11 +427,11 @@ export default function DashboardOverview() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white" style={syne}>{dt("ov_intel_feed")}</p>
-                  <p className="text-[10px] text-white/25">{dt("ov_intel_signals")}</p>
+                  <p className="text-[10px] text-white/45">{dt("ov_intel_signals")}</p>
                 </div>
               </div>
               <button onClick={() => navigate("/dashboard/intelligence")}
-                className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+                className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
                 {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
               </button>
             </div>
@@ -443,7 +443,7 @@ export default function DashboardOverview() {
                     style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.12)" }}>🧠</div>
                   <div>
                     <p className="text-sm font-bold text-white mb-1" style={syne}>{dt("ov_no_signals")}</p>
-                    <p className="text-xs text-white/30 leading-relaxed">{dt("ov_no_signals_desc")}</p>
+                    <p className="text-xs text-white/50 leading-relaxed">{dt("ov_no_signals_desc")}</p>
                   </div>
                   <button onClick={() => navigate("/dashboard/analyses/new")}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
@@ -480,7 +480,7 @@ export default function DashboardOverview() {
               {trendData.length >= 4 && (
                 <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>{dt("ov_hook_trend")}</span>
+                    <span className="text-[10px] text-white/45 uppercase tracking-widest" style={mono}>{dt("ov_hook_trend")}</span>
                     <span className="text-[10px]" style={{ color: "#34d399", ...mono }}>
                       latest: {trendData[trendData.length - 1]?.score.toFixed(1)}/10
                     </span>
@@ -511,15 +511,15 @@ export default function DashboardOverview() {
               <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)" }}>
-                    <Clock className="h-4 w-4 text-white/35" />
+                    <Clock className="h-4 w-4 text-white/55" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-white" style={syne}>{dt("ov_recent_work")}</p>
-                    <p className="text-[10px] text-white/25">{dt("ov_latest_activity")}</p>
+                    <p className="text-[10px] text-white/45">{dt("ov_latest_activity")}</p>
                   </div>
                 </div>
                 <button onClick={() => navigate("/dashboard/analyses")}
-                  className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+                  className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
                   {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
@@ -527,7 +527,7 @@ export default function DashboardOverview() {
                 {recentActivity.length === 0 ? (
                   <div className="flex flex-col items-center text-center py-8 gap-3">
                     <span className="text-3xl">📂</span>
-                    <p className="text-sm text-white/30">{dt("ov_no_work")}</p>
+                    <p className="text-sm text-white/50">{dt("ov_no_work")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
                       style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
@@ -548,7 +548,7 @@ export default function DashboardOverview() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white/70 group-hover:text-white truncate transition-colors">{item.title}</p>
-                      <p className="text-[10px] text-white/25 capitalize" style={mono}>
+                      <p className="text-[10px] text-white/45 capitalize" style={mono}>
                         {item.type} · {timeAgo(item.created_at)}
                       </p>
                     </div>
@@ -581,7 +581,7 @@ export default function DashboardOverview() {
               <div className="p-5">
                 {!hasData ? (
                   <div className="py-4 space-y-3">
-                    <p className="text-xs text-white/25 text-center leading-relaxed">{dt("ov_run_first")}</p>
+                    <p className="text-xs text-white/45 text-center leading-relaxed">{dt("ov_run_first")}</p>
                     <button onClick={() => navigate("/dashboard/analyses/new")}
                       className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
@@ -597,7 +597,7 @@ export default function DashboardOverview() {
                       { label: dt("ov_total_analyzed"),  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
                     ].map(s => (
                       <div key={s.label} className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-white/35">{s.label}</span>
+                        <span className="text-xs text-white/55">{s.label}</span>
                         <span className="text-xs font-bold truncate" style={{ color: s.accent, ...mono }}>{s.value}</span>
                       </div>
                     ))}

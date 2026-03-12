@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
@@ -15,6 +17,8 @@ const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function ScriptGenerator() {
   const { user } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [audience, setAudience] = useState("");
@@ -65,7 +69,7 @@ export default function ScriptGenerator() {
           <FileText className="h-5 w-5" style={{ color: "#a78bfa" }} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground" style={syne}>Script Generator</h1>
+          <h1 className="text-xl font-bold text-foreground" style={syne}>{dt("sg_title")}</h1>
           <p className="text-sm text-muted-foreground" style={mono}>AI-powered ad scripts for any platform</p>
         </div>
       </div>
@@ -138,7 +142,7 @@ export default function ScriptGenerator() {
 
         <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
           <Sparkles className="h-4 w-4" />
-          {loading ? "Generating 3 scripts..." : "Generate Scripts"}
+          {loading ? dt("sg_generating") : dt("sg_generate")}
         </Button>
       </div>
 
@@ -157,7 +161,7 @@ export default function ScriptGenerator() {
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => copyScript(s, i)} className="gap-1.5">
                   {copied === i ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copied === i ? "Copied" : "Copy"}
+                  {copied === i ? "Copied" : dt("sg_copy")}
                 </Button>
               </div>
 

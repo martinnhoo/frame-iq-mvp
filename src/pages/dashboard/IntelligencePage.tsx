@@ -96,16 +96,16 @@ function getScore(row: AnalysisRow): number | null {
 
 const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-3" style={mono}>{label}</p>
+    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-3" style={mono}>{label}</p>
     {children}
   </div>
 );
 
 const KpiCard = ({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: React.ElementType; color: string }) => (
-  <div className="rounded-2xl border border-white/[0.07] p-4" style={{ background: "#0a0a0d" }}>
+  <div className="rounded-2xl border border-white/[0.13] p-4" style={{ background: "#0a0a0d" }}>
     <div className="flex items-center gap-2 mb-2">
       <Icon className="h-3.5 w-3.5" style={{ color }} />
-      <p className="text-[10px] uppercase tracking-widest text-white/20" style={mono}>{label}</p>
+      <p className="text-[10px] uppercase tracking-widest text-white/40" style={mono}>{label}</p>
     </div>
     <p className="text-xl font-bold text-white truncate" style={syne}>{value}</p>
   </div>
@@ -189,7 +189,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
           </div>
           <div>
             <p className="text-sm font-bold text-white" style={syne}>Import Ad Performance Data</p>
-            <p className="text-[11px] text-white/30">Upload your platform CSV export — AI extracts creative insights</p>
+            <p className="text-[11px] text-white/50">Upload your platform CSV export — AI extracts creative insights</p>
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
       <div className="p-5 space-y-4">
         {/* Platform selector */}
         <div>
-          <p className="text-[10px] text-white/30 mb-2 uppercase tracking-wider" style={mono}>Select platform</p>
+          <p className="text-[10px] text-white/50 mb-2 uppercase tracking-wider" style={mono}>Select platform</p>
           <div className="flex gap-2">
             {(["meta", "google", "tiktok", "other"] as const).map(p => {
               const m = PLATFORM_META[p];
@@ -217,7 +217,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
 
         {/* Instructions toggle */}
         <button onClick={() => setShowInstructions(v => !v)}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] text-white/35 hover:text-white/55 transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] text-white/55 hover:text-white/55 transition-colors"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <span>How to export from {PLATFORM_META[platform].label}</span>
           {showInstructions ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -249,7 +249,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-white/60">Drop your CSV export here</p>
-              <p className="text-[11px] text-white/25 mt-0.5">or click to browse — CSV, TSV, XLSX supported</p>
+              <p className="text-[11px] text-white/45 mt-0.5">or click to browse — CSV, TSV, XLSX supported</p>
             </div>
           </div>
         ) : (
@@ -258,9 +258,9 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
             <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate">{file.name}</p>
-              <p className="text-[11px] text-white/30">{(file.size / 1024).toFixed(0)} KB · {PLATFORM_META[platform].label}</p>
+              <p className="text-[11px] text-white/50">{(file.size / 1024).toFixed(0)} KB · {PLATFORM_META[platform].label}</p>
             </div>
-            <button onClick={() => setFile(null)} className="text-white/20 hover:text-white/50 transition-colors">
+            <button onClick={() => setFile(null)} className="text-white/40 hover:text-white/50 transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -268,7 +268,7 @@ function AdsUploadPanel({ userId, onImported, personaContext }: { userId: string
 
         {/* Context field (optional) */}
         <div>
-          <p className="text-[10px] text-white/30 mb-2 uppercase tracking-wider" style={mono}>
+          <p className="text-[10px] text-white/50 mb-2 uppercase tracking-wider" style={mono}>
             Context <span className="normal-case text-white/15 font-sans">(optional — helps AI give better suggestions)</span>
           </p>
           <textarea
@@ -326,9 +326,9 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
             </span>
           </div>
           <div className="flex items-center gap-3 mt-0.5">
-            {imp.date_range && <p className="text-[11px] text-white/30">{imp.date_range}</p>}
-            {imp.total_ads && <p className="text-[11px] text-white/20">{imp.total_ads} ads</p>}
-            {imp.total_spend && <p className="text-[11px] text-white/20">{imp.currency} {imp.total_spend.toLocaleString()} spent</p>}
+            {imp.date_range && <p className="text-[11px] text-white/50">{imp.date_range}</p>}
+            {imp.total_ads && <p className="text-[11px] text-white/40">{imp.total_ads} ads</p>}
+            {imp.total_spend && <p className="text-[11px] text-white/40">{imp.currency} {imp.total_spend.toLocaleString()} spent</p>}
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -337,7 +337,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
             <X className="h-3.5 w-3.5" />
           </button>
           <button onClick={() => setExpanded(v => !v)}
-            className="h-7 px-2.5 rounded-lg text-[11px] flex items-center gap-1 text-white/30 hover:text-white/60 transition-colors"
+            className="h-7 px-2.5 rounded-lg text-[11px] flex items-center gap-1 text-white/50 hover:text-white/60 transition-colors"
             style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
             {expanded ? "Collapse" : "View insights"}
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -348,7 +348,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
       {/* Summary bar */}
       {r.summary && (
         <div className="px-4 pb-3">
-          <p className="text-[11px] text-white/35 leading-relaxed">{r.summary}</p>
+          <p className="text-[11px] text-white/55 leading-relaxed">{r.summary}</p>
         </div>
       )}
 
@@ -367,7 +367,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
                 <div key={k.label} className="rounded-xl p-3" style={{ background: pm.accent, border: `1px solid ${pm.color}20` }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <k.icon className="h-3 w-3" style={{ color: pm.color }} />
-                    <p className="text-[10px] text-white/30 uppercase tracking-wider" style={mono}>{k.label}</p>
+                    <p className="text-[10px] text-white/50 uppercase tracking-wider" style={mono}>{k.label}</p>
                   </div>
                   <p className="text-base font-bold text-white" style={mono}>{k.value}</p>
                 </div>
@@ -378,7 +378,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
           {/* Top creatives */}
           {r.top_creatives?.length > 0 && (
             <div>
-              <p className="text-[10px] text-white/20 uppercase tracking-widest mb-2" style={mono}>Top Performing</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2" style={mono}>Top Performing</p>
               <div className="space-y-2">
                 {r.top_creatives.slice(0, 5).map((c, i) => (
                   <div key={i} className="rounded-xl px-3 py-2.5 flex items-start gap-3"
@@ -387,11 +387,11 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-white truncate">{c.name}</p>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                        {c.ctr != null && <span className="text-[10px] text-white/30">CTR {fmtPct(c.ctr)}</span>}
-                        {c.cpa != null && <span className="text-[10px] text-white/30">CPA {fmt(c.cpa, "$")}</span>}
-                        {c.roas != null && <span className="text-[10px] text-white/30">ROAS {fmt(c.roas, "", 2)}x</span>}
-                        {c.hook_rate != null && <span className="text-[10px] text-white/30">Hook {fmtPct(c.hook_rate)}</span>}
-                        {c.spend != null && <span className="text-[10px] text-white/20">Spend {fmt(c.spend, "$", 0)}</span>}
+                        {c.ctr != null && <span className="text-[10px] text-white/50">CTR {fmtPct(c.ctr)}</span>}
+                        {c.cpa != null && <span className="text-[10px] text-white/50">CPA {fmt(c.cpa, "$")}</span>}
+                        {c.roas != null && <span className="text-[10px] text-white/50">ROAS {fmt(c.roas, "", 2)}x</span>}
+                        {c.hook_rate != null && <span className="text-[10px] text-white/50">Hook {fmtPct(c.hook_rate)}</span>}
+                        {c.spend != null && <span className="text-[10px] text-white/40">Spend {fmt(c.spend, "$", 0)}</span>}
                       </div>
                       {c.why_winning && <p className="text-[11px] text-green-400/60 mt-1">{c.why_winning}</p>}
                     </div>
@@ -404,7 +404,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
           {/* Worst creatives */}
           {r.worst_creatives?.length > 0 && (
             <div>
-              <p className="text-[10px] text-white/20 uppercase tracking-widest mb-2" style={mono}>Needs Attention</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2" style={mono}>Needs Attention</p>
               <div className="space-y-2">
                 {r.worst_creatives.slice(0, 3).map((c, i) => (
                   <div key={i} className="rounded-xl px-3 py-2.5 flex items-start gap-3"
@@ -423,12 +423,12 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
           {/* Patterns */}
           {r.patterns && (
             <div>
-              <p className="text-[10px] text-white/20 uppercase tracking-widest mb-2" style={mono}>Patterns Detected</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2" style={mono}>Patterns Detected</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {Object.entries(r.patterns).filter(([, v]) => v).map(([k, v]) => (
                   <div key={k} className="rounded-xl px-3 py-2.5"
                     style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <p className="text-[10px] text-white/25 capitalize mb-0.5" style={mono}>
+                    <p className="text-[10px] text-white/45 capitalize mb-0.5" style={mono}>
                       {k.replace(/_/g, " ")}
                     </p>
                     <p className="text-xs text-white/55">{v as string}</p>
@@ -441,7 +441,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
           {/* Insights */}
           {r.insights?.length > 0 && (
             <div>
-              <p className="text-[10px] text-white/20 uppercase tracking-widest mb-2" style={mono}>AI Insights</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-2" style={mono}>AI Insights</p>
               <ul className="space-y-1.5">
                 {r.insights.map((ins, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-white/45 leading-relaxed">
@@ -553,7 +553,7 @@ export default function IntelligencePage() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+      <Loader2 className="h-6 w-6 animate-spin text-white/40" />
     </div>
   );
 
@@ -573,7 +573,7 @@ export default function IntelligencePage() {
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-white/25">
+            <p className="text-[11px] text-white/45">
               {overallStats.total} analyses · {imports.length} platform imports · {memoryData.length} memory signals
             </p>
           </div>
@@ -586,7 +586,7 @@ export default function IntelligencePage() {
             {rebuilding ? "Rebuilding..." : "Rebuild profile"}
           </button>
           <button onClick={loadData}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/25 hover:text-white transition-all"
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-white/45 hover:text-white transition-all"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
@@ -627,10 +627,10 @@ export default function IntelligencePage() {
           </div>
 
           {analyses.length === 0 && memoryData.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/[0.07] py-16 text-center">
+            <div className="rounded-2xl border border-dashed border-white/[0.13] py-16 text-center">
               <p className="text-3xl mb-3">🧠</p>
               <p className="text-white/40 text-sm font-semibold mb-1">No creative signals yet</p>
-              <p className="text-white/20 text-xs">Run an analysis or generate hooks to build your creative intelligence profile</p>
+              <p className="text-white/40 text-xs">Run an analysis or generate hooks to build your creative intelligence profile</p>
             </div>
           ) : (
             <>
@@ -657,7 +657,7 @@ export default function IntelligencePage() {
                                     {stat.avgScore}/10
                                   </span>
                                 )}
-                                <span className="text-[10px] text-white/25" style={mono}>{stat.count}x</span>
+                                <span className="text-[10px] text-white/45" style={mono}>{stat.count}x</span>
                               </div>
                             </div>
                             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
@@ -687,9 +687,9 @@ export default function IntelligencePage() {
                         });
                         return Object.entries(byType).sort((a, b) => b[1].count - a[1].count).slice(0, 4).map(([type, s]) => (
                           <div key={type} className="p-4" style={{ background: "#0a0a0d" }}>
-                            <p className="text-[10px] text-white/25 uppercase tracking-wider truncate mb-1" style={mono}>{type}</p>
+                            <p className="text-[10px] text-white/45 uppercase tracking-wider truncate mb-1" style={mono}>{type}</p>
                             <p className="text-xl font-bold text-white" style={mono}>{(s.total / s.count).toFixed(1)}</p>
-                            <p className="text-[10px] text-white/20">{s.count} samples</p>
+                            <p className="text-[10px] text-white/40">{s.count} samples</p>
                           </div>
                         ));
                       })()}
@@ -703,7 +703,7 @@ export default function IntelligencePage() {
                           }}>
                             {(m.hook_score || 0).toFixed(1)}
                           </span>
-                          <p className="text-[11px] text-white/35 truncate flex-1">{m.notes}</p>
+                          <p className="text-[11px] text-white/55 truncate flex-1">{m.notes}</p>
                           <span className="text-[10px] text-white/15 shrink-0 ml-auto">{m.platform}</span>
                         </div>
                       ))}
@@ -720,7 +720,7 @@ export default function IntelligencePage() {
                     <p className="text-sm font-semibold text-white">What the AI knows about you</p>
                   </div>
                   {aiProfile?.last_updated && (
-                    <span className="text-[10px] text-white/20" style={mono}>
+                    <span className="text-[10px] text-white/40" style={mono}>
                       Updated {new Date(String(aiProfile.last_updated)).toLocaleDateString()}
                     </span>
                   )}
@@ -741,7 +741,7 @@ export default function IntelligencePage() {
 
                 {aiProfile?.ai_summary
                   ? <p className="text-xs text-white/50 leading-relaxed">{String(aiProfile.ai_summary)}</p>
-                  : <p className="text-xs text-white/30 leading-relaxed">
+                  : <p className="text-xs text-white/50 leading-relaxed">
                       Your AI profile builds automatically after each analysis. After 3+ analyses you'll see personalized format recommendations, hook patterns, and market insights here.
                     </p>}
 
@@ -754,7 +754,7 @@ export default function IntelligencePage() {
                       { label: "Best markets", values: aiProfile?.best_markets as string[] },
                     ].filter(g => g.values?.length).map(group => (
                       <div key={group.label} className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p className="text-[9px] uppercase tracking-widest text-white/20 mb-1.5" style={mono}>{group.label}</p>
+                        <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1.5" style={mono}>{group.label}</p>
                         <div className="space-y-0.5">
                           {group.values.slice(0, 3).map((v, i) => (
                             <p key={i} className="text-[10px] text-white/50 truncate">{v}</p>
@@ -767,7 +767,7 @@ export default function IntelligencePage() {
 
                 {aiProfile?.ai_recommendations && (
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest text-white/20 mb-2" style={mono}>Personalized recommendations</p>
+                    <p className="text-[9px] uppercase tracking-widest text-white/40 mb-2" style={mono}>Personalized recommendations</p>
                     <ul className="space-y-1.5">
                       {(aiProfile.ai_recommendations as string[]).map((r, i) => (
                         <li key={i} className="flex items-start gap-2 text-xs text-white/40">
@@ -794,7 +794,7 @@ export default function IntelligencePage() {
               <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>
-                <p className="text-[10px] text-white/25 truncate">{selectedPersona.headline}</p>
+                <p className="text-[10px] text-white/45 truncate">{selectedPersona.headline}</p>
               </div>
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 font-bold" style={mono}>ACTIVE</span>
             </div>
@@ -815,10 +815,10 @@ export default function IntelligencePage() {
               </div>
             </Section>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/[0.07] py-12 text-center">
+            <div className="rounded-2xl border border-dashed border-white/[0.13] py-12 text-center">
               <p className="text-3xl mb-3">📊</p>
-              <p className="text-white/35 text-sm font-semibold mb-1">No platform data imported yet</p>
-              <p className="text-white/20 text-xs max-w-xs mx-auto">
+              <p className="text-white/55 text-sm font-semibold mb-1">No platform data imported yet</p>
+              <p className="text-white/40 text-xs max-w-xs mx-auto">
                 Upload a CSV export from Meta, Google, or TikTok Ads and the AI will extract creative performance insights automatically.
               </p>
             </div>

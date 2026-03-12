@@ -171,7 +171,7 @@ const Select = ({ value, onChange, options }: {
           {(selected?.emoji || selected?.flag) && <span>{selected.emoji || selected.flag}</span>}
           <span style={mono}>{selected?.label}</span>
         </span>
-        <ChevronDown className="h-3.5 w-3.5 text-white/30" />
+        <ChevronDown className="h-3.5 w-3.5 text-white/50" />
       </button>
       {open && (
         <div className="absolute top-full mt-1 left-0 z-30 w-full rounded-xl border overflow-hidden shadow-2xl"
@@ -342,7 +342,7 @@ export default function PreflightCheck() {
               </div>
               Pre-flight Check
             </h1>
-            <p className="text-white/30 text-xs mt-1" style={mono}>
+            <p className="text-white/50 text-xs mt-1" style={mono}>
               AI analysis of your script — compliance · hook · structure · platform fit
             </p>
           </div>
@@ -374,7 +374,7 @@ export default function PreflightCheck() {
                 {icon}{label}
               </button>
             ))}
-            <span className="ml-2 text-[10px] text-white/20" style={mono}>
+            <span className="ml-2 text-[10px] text-white/40" style={mono}>
               {inputMode === "video" ? "Whisper transcribes audio → Claude analyzes" : "Paste script → Claude analyzes"}
             </span>
           </div>
@@ -383,7 +383,7 @@ export default function PreflightCheck() {
             /* Script mode */
             <div className="p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Script *</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Script *</label>
                 <span className="text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
                   {wordCount}w · ~{estimatedSeconds}s
                 </span>
@@ -408,9 +408,9 @@ export default function PreflightCheck() {
                   <FileVideo className="h-5 w-5 shrink-0" style={{ color: "#34d399" }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate" style={mono}>{videoFile.name}</p>
-                    <p className="text-[10px] text-white/30" style={mono}>{(videoFile.size / 1024 / 1024).toFixed(1)} MB · Audio will be transcribed with Whisper</p>
+                    <p className="text-[10px] text-white/50" style={mono}>{(videoFile.size / 1024 / 1024).toFixed(1)} MB · Audio will be transcribed with Whisper</p>
                   </div>
-                  <button onClick={() => setVideoFile(null)} className="h-6 w-6 rounded-lg flex items-center justify-center text-white/30 hover:text-white transition-colors">
+                  <button onClick={() => setVideoFile(null)} className="h-6 w-6 rounded-lg flex items-center justify-center text-white/50 hover:text-white transition-colors">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -429,7 +429,7 @@ export default function PreflightCheck() {
                     onChange={e => e.target.files?.[0] && setVideoFile(e.target.files[0])} />
                   <Upload className="h-7 w-7 mb-3" style={{ color: "rgba(255,255,255,0.2)" }} />
                   <p className="text-sm font-medium text-white/60">Drop your video here</p>
-                  <p className="text-[11px] text-white/25 mt-1" style={mono}>MP4, MOV, AVI, WebM · Audio extracted + analyzed</p>
+                  <p className="text-[11px] text-white/45 mt-1" style={mono}>MP4, MOV, AVI, WebM · Audio extracted + analyzed</p>
                   <div className="flex items-center gap-2 mt-3 text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
                     <span className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)" }}>Whisper AI</span>
                     <span>→</span>
@@ -437,7 +437,7 @@ export default function PreflightCheck() {
                   </div>
                 </div>
               )}
-              <p className="text-[10px] text-white/20 mt-2 text-center" style={mono}>
+              <p className="text-[10px] text-white/40 mt-2 text-center" style={mono}>
                 Requires OPENAI_API_KEY for Whisper transcription
               </p>
             </div>
@@ -446,7 +446,7 @@ export default function PreflightCheck() {
           {/* Hook + CTA row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Hook (0–3s) <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Hook (0–3s) <span className="text-white/15">optional</span></label>
               <input value={hook} onChange={e => setHook(e.target.value)}
                 placeholder="First line the viewer hears..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
@@ -456,7 +456,7 @@ export default function PreflightCheck() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>CTA <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>CTA <span className="text-white/15">optional</span></label>
               <input value={cta} onChange={e => setCta(e.target.value)}
                 placeholder="e.g. Jogue agora, acesse o link..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
@@ -470,20 +470,20 @@ export default function PreflightCheck() {
           {/* Config grid */}
           <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Platform</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Platform</label>
               <Select value={platform} onChange={setPlatform} options={PLATFORMS} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Market</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Market</label>
               <Select value={market} onChange={setMarket} options={MARKETS} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Duration</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Duration</label>
               <Select value={duration} onChange={setDuration}
                 options={DURATIONS.map(d => ({ value: d, label: `${d}s` }))} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Format</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Format</label>
               <Select value={format} onChange={setFormat}
                 options={FORMATS.map(f => ({ value: f, label: f }))} />
             </div>
@@ -492,7 +492,7 @@ export default function PreflightCheck() {
           {/* Product + compliance */}
           <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Product / Brand <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Product / Brand <span className="text-white/15">optional</span></label>
               <input value={product} onChange={e => setProduct(e.target.value)}
                 placeholder="e.g. Afun Bet, iGaming app..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
@@ -500,7 +500,7 @@ export default function PreflightCheck() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/30" style={mono}>Compliance notes <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Compliance notes <span className="text-white/15">optional</span></label>
               <input value={complianceNotes} onChange={e => setComplianceNotes(e.target.value)}
                 placeholder="e.g. NL platform, avoid 'casino'..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
@@ -511,7 +511,7 @@ export default function PreflightCheck() {
 
           {/* Funnel Stage */}
           <div className="px-4 pb-2">
-            <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2">Funnel Stage</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2">Funnel Stage</p>
             <div className="grid grid-cols-3 gap-1.5">
               {[
                 { id: "tofu", label: "ToFu", desc: "Awareness", color: "#60a5fa" },
@@ -755,7 +755,7 @@ export default function PreflightCheck() {
                       <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
                         <span className="text-xs font-medium w-28 shrink-0" style={{ ...mono, color: "rgba(255,255,255,0.4)" }}>{p.platform}</span>
                         <StatusBadge status={p.status} />
-                        <p className="text-xs text-white/35 flex-1" style={mono}>{p.detail}</p>
+                        <p className="text-xs text-white/55 flex-1" style={mono}>{p.detail}</p>
                       </div>
                     ))}
                   </div>
@@ -768,7 +768,7 @@ export default function PreflightCheck() {
               <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-3.5 w-3.5 text-white/30" />
+                    <AlertCircle className="h-3.5 w-3.5 text-white/50" />
                     <span className="text-[10px] uppercase tracking-[0.2em]" style={{ ...mono, color: "rgba(255,255,255,0.3)" }}>Language Review</span>
                   </div>
                   <StatusBadge status={result.language_check.status} />
@@ -779,17 +779,17 @@ export default function PreflightCheck() {
                       <div key={i} className="px-4 py-3 space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold" style={{ ...mono, color: "#f87171" }}>"{issue.found}"</span>
-                          <ArrowRight className="h-3 w-3 text-white/20" />
+                          <ArrowRight className="h-3 w-3 text-white/40" />
                           <span className="text-xs font-bold" style={{ ...mono, color: "#34d399" }}>"{issue.fix}"</span>
                           <CopyBtn text={issue.fix} />
                         </div>
-                        <p className="text-[11px] text-white/35" style={mono}>{issue.issue}</p>
+                        <p className="text-[11px] text-white/55" style={mono}>{issue.issue}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="px-4 py-3">
-                    <p className="text-xs text-white/30" style={mono}>No language issues found</p>
+                    <p className="text-xs text-white/50" style={mono}>No language issues found</p>
                   </div>
                 )}
               </div>

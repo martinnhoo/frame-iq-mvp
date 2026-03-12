@@ -161,11 +161,11 @@ const DashboardOverview = () => {
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] text-white/25 uppercase tracking-[0.2em] mb-1.5" style={mono}>{greeting}</p>
+          <p className="text-[10px] text-white/45 uppercase tracking-[0.2em] mb-1.5" style={mono}>{greeting}</p>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight" style={{ ...syne, letterSpacing: "-0.03em" }}>
             {firstName}, <GradText>let's ship.</GradText>
           </h1>
-          <p className="text-sm text-white/35 mt-1">Your creative intelligence workspace</p>
+          <p className="text-sm text-white/55 mt-1">Your creative intelligence workspace</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:flex items-center px-3 py-1.5 rounded-full text-[10px] capitalize"
@@ -187,7 +187,7 @@ const DashboardOverview = () => {
 
         {/* Usage meters — left */}
         <div className="lg:col-span-1">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-3" style={mono}>This month</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/45 mb-3" style={mono}>This month</p>
           <div className="rounded-2xl overflow-hidden" style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
             {[
               { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
@@ -199,7 +199,7 @@ const DashboardOverview = () => {
               const isLast = i === arr.length - 1;
               return (
                 <button key={s.label} onClick={() => navigate(s.url)}
-                  className="w-full flex items-center gap-4 px-5 py-4 transition-all hover:bg-white/[0.03] text-left group"
+                  className="w-full flex items-center gap-4 px-5 py-4 transition-all hover:bg-white/[0.07] text-left group"
                   style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${s.accent}15` }}>
                     <s.icon style={{ color: s.accent, width: 17, height: 17 }} />
@@ -208,7 +208,7 @@ const DashboardOverview = () => {
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-semibold text-white/60">{s.label}</span>
                       <span className="text-xs font-bold" style={{ color: critical ? "#f87171" : s.accent, ...mono }}>
-                        {s.used}<span className="text-white/25 font-normal">/{s.limit > 0 ? s.limit : "∞"}</span>
+                        {s.used}<span className="text-white/45 font-normal">/{s.limit > 0 ? s.limit : "∞"}</span>
                       </span>
                     </div>
                     <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -225,7 +225,7 @@ const DashboardOverview = () => {
 
         {/* Quick actions — right 2/3 */}
         <div className="lg:col-span-2">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/25 mb-3" style={mono}>Quick actions</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/45 mb-3" style={mono}>Quick actions</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {quickActions.map(a => (
               <button key={a.title} onClick={() => navigate(a.url)}
@@ -254,7 +254,7 @@ const DashboardOverview = () => {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white leading-tight" style={syne}>{a.title}</p>
-                  <p className="text-[10px] text-white/30 mt-0.5 leading-snug">{a.desc}</p>
+                  <p className="text-[10px] text-white/50 mt-0.5 leading-snug">{a.desc}</p>
                 </div>
               </button>
             ))}
@@ -275,11 +275,11 @@ const DashboardOverview = () => {
               </div>
               <div>
                 <p className="text-sm font-bold text-white" style={syne}>Intelligence feed</p>
-                <p className="text-[10px] text-white/25">AI-powered creative insights</p>
+                <p className="text-[10px] text-white/45">AI-powered creative insights</p>
               </div>
             </div>
             <button onClick={() => navigate("/dashboard/intelligence")}
-              className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+              className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
               View all <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -291,7 +291,7 @@ const DashboardOverview = () => {
                   style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>🧠</div>
                 <div>
                   <p className="text-sm font-bold text-white mb-1" style={syne}>No insights yet</p>
-                  <p className="text-xs text-white/30 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
+                  <p className="text-xs text-white/50 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
                 </div>
                 <button onClick={() => navigate("/dashboard/analyses/new")}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
@@ -327,7 +327,7 @@ const DashboardOverview = () => {
           {trendData.length >= 4 && (
             <div className="px-5 pb-5 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-white/25 uppercase tracking-widest" style={mono}>Hook score trend</span>
+                <span className="text-[10px] text-white/45 uppercase tracking-widest" style={mono}>Hook score trend</span>
                 <span className="text-[10px] text-white/40" style={mono}>
                   latest: <span style={{ color: "#a78bfa" }}>{trendData[trendData.length - 1]?.score.toFixed(1)}/10</span>
                 </span>
@@ -360,7 +360,7 @@ const DashboardOverview = () => {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white" style={syne}>Performance</p>
-                  <p className="text-[10px] text-white/25">Creative metrics</p>
+                  <p className="text-[10px] text-white/45">Creative metrics</p>
                 </div>
               </div>
               <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
@@ -377,7 +377,7 @@ const DashboardOverview = () => {
               {!hasData ? (
                 <div className="text-center py-6">
                   <p className="text-3xl mb-3">📊</p>
-                  <p className="text-xs text-white/25 leading-relaxed">Analyze videos to see<br />performance metrics here</p>
+                  <p className="text-xs text-white/45 leading-relaxed">Analyze videos to see<br />performance metrics here</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -388,7 +388,7 @@ const DashboardOverview = () => {
                     { label: "Total analyzed",  value: String(insights.totalAnalyzed),    accent: "#60a5fa" },
                   ].map(s => (
                     <div key={s.label} className="flex items-center justify-between">
-                      <span className="text-xs text-white/35">{s.label}</span>
+                      <span className="text-xs text-white/55">{s.label}</span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: s.accent, background: `${s.accent}12`, ...mono }}>{s.value}</span>
                     </div>
                   ))}
@@ -406,11 +406,11 @@ const DashboardOverview = () => {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white" style={syne}>Recent work</p>
-                  <p className="text-[10px] text-white/25">Latest activity</p>
+                  <p className="text-[10px] text-white/45">Latest activity</p>
                 </div>
               </div>
               <button onClick={() => navigate("/dashboard/analyses")}
-                className="text-xs text-white/25 hover:text-white/60 transition-colors flex items-center gap-1">
+                className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
                 All <ArrowRight className="h-3 w-3" />
               </button>
             </div>
@@ -418,7 +418,7 @@ const DashboardOverview = () => {
               {recentActivity.length === 0 ? (
                 <div className="flex flex-col items-center text-center py-8 gap-3">
                   <span className="text-3xl">📂</span>
-                  <p className="text-sm text-white/30 leading-relaxed">Nothing yet —<br />start by analyzing a video</p>
+                  <p className="text-sm text-white/50 leading-relaxed">Nothing yet —<br />start by analyzing a video</p>
                   <button onClick={() => navigate("/dashboard/analyses/new")}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
                     style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
@@ -429,7 +429,7 @@ const DashboardOverview = () => {
                 recentActivity.map(item => (
                   <button key={item.id}
                     onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all group hover:bg-white/[0.04]">
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all group hover:bg-white/[0.08]">
                     <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: item.type === "analysis" ? "rgba(167,139,250,0.12)" : "rgba(96,165,250,0.12)" }}>
                       {item.type === "analysis"
@@ -438,7 +438,7 @@ const DashboardOverview = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-white/70 group-hover:text-white truncate transition-colors">{item.title}</p>
-                      <p className="text-[10px] text-white/25 capitalize" style={mono}>{item.type} · {timeAgo(item.created_at)}</p>
+                      <p className="text-[10px] text-white/45 capitalize" style={mono}>{item.type} · {timeAgo(item.created_at)}</p>
                     </div>
                     <ChevronRight className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 shrink-0 transition-colors" />
                   </button>

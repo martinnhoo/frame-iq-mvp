@@ -43,7 +43,7 @@ function EditableListField({ field, items, color, editing, onChange }: {
     <ul className="space-y-2">
       {normalizedItems.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-          <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
+          <span className="text-white/40 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
           {item}
         </li>
       ))}
@@ -195,7 +195,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-yellow-400" /> {dt("pe_suggested_templates")}
         </h3>
-        <p className="text-[11px] text-white/30 mt-0.5">{dt("pe_suggested_templates_desc")}</p>
+        <p className="text-[11px] text-white/50 mt-0.5">{dt("pe_suggested_templates_desc")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -219,10 +219,10 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
               <div className="flex items-center gap-2">
                 <span className="text-base">{catMeta?.emoji || "📄"}</span>
                 <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full text-white/25"
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full text-white/45"
                   style={{ background: "rgba(255,255,255,0.05)" }}>{tpl.duration}s</span>
               </div>
-              <p className="text-[11px] text-white/35 line-clamp-2 leading-relaxed">{desc}</p>
+              <p className="text-[11px] text-white/55 line-clamp-2 leading-relaxed">{desc}</p>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] text-yellow-400/50 italic">↳ {reason}</span>
                 <span className="text-[10px] text-purple-400/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -347,7 +347,7 @@ function PersonaDetailEditable({
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white/60 transition-colors">
           <ChevronLeft className="h-4 w-4" /> {dt("pe_all")}
         </button>
         <div className="flex items-center gap-2 flex-wrap">
@@ -373,7 +373,7 @@ function PersonaDetailEditable({
           ) : (
             <>
               <button onClick={() => { setDraft(initial); setEditing(false); }}
-                className="px-3 py-1.5 rounded-lg text-xs text-white/30 hover:text-white/60 transition-colors">{dt("pe_cancel")}</button>
+                className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/60 transition-colors">{dt("pe_cancel")}</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-semibold hover:bg-green-500/30 transition-all">
                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} {dt("pe_save_btn")}
@@ -401,7 +401,7 @@ function PersonaDetailEditable({
             <EditableTextField field="name" value={draft.name} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-2xl font-bold text-white block"} />
             <div className="flex items-center gap-3">
               <EditableTextField field="age" value={draft.age} editing={editing} onChange={handleFieldChange} className={editing ? "!w-20" : "text-white/40 text-sm"} />
-              {!editing && <span className="text-white/20">·</span>}
+              {!editing && <span className="text-white/40">·</span>}
               <EditableTextField field="gender" value={draft.gender} editing={editing} onChange={handleFieldChange} className={editing ? "!w-28" : "text-white/40 text-sm"} />
             </div>
             <EditableTextField field="headline" value={draft.headline} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-purple-300 font-semibold block"} />
@@ -420,7 +420,7 @@ function PersonaDetailEditable({
         ].map(({ title, items, color, field }, idx) => (
           <motion.div key={title} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + idx * 0.05 }}
-            className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+            className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
             <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
             <EditableListField field={field} items={items} color={color} editing={editing} onChange={handleListChange} />
           </motion.div>
@@ -429,32 +429,32 @@ function PersonaDetailEditable({
 
       {/* Ad strategy */}
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-        className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 space-y-5">
+        className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5 space-y-5">
         <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">{dt("pe_ad_strategy")} {draft.name}</h3>
 
         <div>
-          <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
+          <p className="text-xs text-white/45 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
           <EditableListField field="hook_angles" items={draft.hook_angles} color="text-purple-400" editing={editing} onChange={handleListChange} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_formats")}</p>
+            <p className="text-xs text-white/45 mb-2 uppercase tracking-wider">{dt("pe_best_formats")}</p>
             <EditableListField field="best_formats" items={draft.best_formats} color="text-blue-300" editing={editing} onChange={handleListChange} />
           </div>
           <div>
-            <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
+            <p className="text-xs text-white/45 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
             <EditableListField field="best_platforms" items={draft.best_platforms} color="text-purple-300" editing={editing} onChange={handleListChange} />
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.12]">
           <div>
-            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_lang_style")}</p>
+            <p className="text-xs text-white/45 mb-1 uppercase tracking-wider">{dt("pe_lang_style")}</p>
             <EditableTextField field="language_style" value={draft.language_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
           <div>
-            <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
+            <p className="text-xs text-white/45 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
             <EditableTextField field="cta_style" value={draft.cta_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
         </div>
@@ -463,7 +463,7 @@ function PersonaDetailEditable({
       {/* Media habits */}
       {(draft.media_habits?.length > 0 || editing) && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+          className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
           <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
           <EditableListField field="media_habits" items={draft.media_habits} color="text-cyan-400" editing={editing} onChange={handleListChange} />
         </motion.div>
@@ -479,7 +479,7 @@ function PersonaDetailEditable({
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <span>🎨</span> {dt("pe_brand_kit")}
             </h3>
-            <p className="text-[11px] text-white/30 mt-0.5">
+            <p className="text-[11px] text-white/50 mt-0.5">
               {dt("pe_brand_kit_desc")}
             </p>
           </div>
@@ -517,7 +517,7 @@ function PersonaDetailEditable({
                   className="w-full h-full object-contain p-1.5" />
               </div>
               <p className="text-sm font-semibold text-green-300">{dt("pe_brand_logo_done")}</p>
-              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · {dt("pe_brand_click_replace")}</p>
+              <p className="text-[11px] text-white/50">{brandKit.file_name || "brand kit"} · {dt("pe_brand_click_replace")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
@@ -527,11 +527,11 @@ function PersonaDetailEditable({
               </div>
               <div>
                 <p className="text-sm font-semibold text-white/70">{dt("pe_brand_upload_cta")}</p>
-                <p className="text-[11px] text-white/30 mt-0.5">{dt("pe_brand_upload_hint")}</p>
+                <p className="text-[11px] text-white/50 mt-0.5">{dt("pe_brand_upload_hint")}</p>
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
                 {["ZIP", "PNG", "SVG", "JPG"].map(t => (
-                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full text-white/30"
+                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full text-white/50"
                     style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>{t}</span>
                 ))}
               </div>
@@ -546,7 +546,7 @@ function PersonaDetailEditable({
         {/* Asset summary when logo uploaded */}
         {brandKit.logo_data_url && (
           <div className="rounded-xl p-3 space-y-2" style={{ background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.15)" }}>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider">{dt("pe_brand_assets_used")}</p>
+            <p className="text-[10px] text-white/45 uppercase tracking-wider">{dt("pe_brand_assets_used")}</p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(52,211,153,0.25)" }}>
@@ -833,7 +833,7 @@ CTA: ${persona.cta_style}`;
               <Sparkles className="h-5 w-5 text-purple-400" />
               {dt("pe_saved")}
             </h1>
-            <p className="text-white/30 text-sm mt-1">{dt("pe_profiles_sub")}</p>
+            <p className="text-white/50 text-sm mt-1">{dt("pe_profiles_sub")}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -875,7 +875,7 @@ CTA: ${persona.cta_style}`;
 
         {loadingSaved ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-5 w-5 animate-spin text-white/20" />
+            <Loader2 className="h-5 w-5 animate-spin text-white/40" />
           </div>
         ) : saved.length === 0 ? (
           <motion.div
@@ -887,7 +887,7 @@ CTA: ${persona.cta_style}`;
               <Users className="h-8 w-8 text-purple-400/50" />
             </div>
             <h3 className="text-white/50 font-medium mb-2">{dt("pe_empty")}</h3>
-            <p className="text-white/25 text-sm mb-6 max-w-xs">
+            <p className="text-white/45 text-sm mb-6 max-w-xs">
               {dt("pe_create_desc")}
             </p>
             <button
@@ -908,7 +908,7 @@ CTA: ${persona.cta_style}`;
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => openPersona(p)}
-                  className="group relative flex flex-col items-center p-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.15] transition-all cursor-pointer"
+                  className="group relative flex flex-col items-center p-5 rounded-2xl border border-white/[0.15] bg-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.15] transition-all cursor-pointer"
                 >
                   <button
                     onClick={(e) => deletePersona(p.id, e)}
@@ -923,7 +923,7 @@ CTA: ${persona.cta_style}`;
 
                   <h3 className="text-white font-bold text-sm text-center">{p.result.name}</h3>
                   <p className="text-purple-300 text-xs text-center mt-0.5 line-clamp-1">{p.result.headline}</p>
-                  <p className="text-white/25 text-[11px] mt-1">
+                  <p className="text-white/45 text-[11px] mt-1">
                     {p.result.age} · {p.result.gender}
                   </p>
 
@@ -990,12 +990,12 @@ CTA: ${persona.cta_style}`;
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 mb-8">
-        <button onClick={backToList} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors mr-2">
+        <button onClick={backToList} className="flex items-center gap-1 text-sm text-white/45 hover:text-white/50 transition-colors mr-2">
           <ChevronLeft className="h-4 w-4" />
         </button>
         <Users className="h-5 w-5 text-white/40" />
         <h1 className="text-lg font-bold text-white">{dt("pe_builder")}</h1>
-        <span className="ml-auto text-xs font-mono text-white/20">
+        <span className="ml-auto text-xs font-mono text-white/40">
           {step + 1}/{STEPS.length}
         </span>
       </div>
@@ -1008,7 +1008,7 @@ CTA: ${persona.cta_style}`;
       </div>
 
       <h2 className="text-2xl font-bold text-white mb-2">{current.q}</h2>
-      {current.sub && <p className="text-white/35 text-sm mb-6">{current.sub}</p>}
+      {current.sub && <p className="text-white/55 text-sm mb-6">{current.sub}</p>}
 
       {/* Text input */}
       {current.type === "text" && (
@@ -1019,7 +1019,7 @@ CTA: ${persona.cta_style}`;
             placeholder={(current as { placeholder?: string }).placeholder}
             rows={3}
             autoFocus
-            className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm resize-none outline-none focus:border-white/25 transition-colors"
+            className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/40 text-sm resize-none outline-none focus:border-white/25 transition-colors"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -1029,7 +1029,7 @@ CTA: ${persona.cta_style}`;
           />
           <div className="flex items-center justify-between">
             {step > 0 ? (
-              <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
+              <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/45 hover:text-white/50 transition-colors">
                 <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
               </button>
             ) : (
@@ -1058,7 +1058,7 @@ CTA: ${persona.cta_style}`;
                 className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all ${
                   answer === opt.value
                     ? "border-white/40 bg-white/10 text-white"
-                    : "border-white/[0.08] bg-white/[0.02] text-white/50 hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                    : "border-white/[0.15] bg-white/[0.06] text-white/50 hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
                 }`}
               >
                 <span className="text-xl">{opt.emoji}</span>
@@ -1068,7 +1068,7 @@ CTA: ${persona.cta_style}`;
             ))}
           </div>
           {step > 0 && (
-            <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/20 hover:text-white/40 transition-colors mt-2">
+            <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/40 hover:text-white/40 transition-colors mt-2">
               <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
             </button>
           )}
@@ -1080,12 +1080,12 @@ CTA: ${persona.cta_style}`;
         <div className="space-y-6">
           <div className="flex items-center justify-center gap-3">
             <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
-              <p className="text-xs text-white/30 mb-0.5">{dt("pe_from")}</p>
+              <p className="text-xs text-white/50 mb-0.5">{dt("pe_from")}</p>
               <p className="text-2xl font-bold text-white">{ageMin}</p>
             </div>
             <div className="h-px w-8 bg-white/20" />
             <div className="px-5 py-3 rounded-2xl bg-white/[0.07] border border-white/[0.12] text-center min-w-[80px]">
-              <p className="text-xs text-white/30 mb-0.5">{dt("pe_to")}</p>
+              <p className="text-xs text-white/50 mb-0.5">{dt("pe_to")}</p>
               <p className="text-2xl font-bold text-white">{ageMax >= 55 ? "55+" : ageMax}</p>
             </div>
           </div>
@@ -1121,14 +1121,14 @@ CTA: ${persona.cta_style}`;
                 style={{ left: `calc(${((Math.min(ageMax, 55) - 18) / (55 - 18)) * 100}% - 10px)` }}
               />
             </div>
-            <div className="flex justify-between mt-4 px-2 text-[10px] text-white/20">
+            <div className="flex justify-between mt-4 px-2 text-[10px] text-white/40">
               <span>18</span><span>25</span><span>35</span><span>45</span><span>55+</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             {step > 0 ? (
-              <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">
+              <button onClick={() => setStep((s) => s - 1)} className="flex items-center gap-1 text-sm text-white/45 hover:text-white/50 transition-colors">
                 <ArrowLeft className="h-4 w-4" /> {dt("pe_back")}
               </button>
             ) : (
@@ -1153,7 +1153,7 @@ export default function PersonaPage() {
   if (!ctx || !ctx.user) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-white/20" />
+        <Loader2 className="h-5 w-5 animate-spin text-white/40" />
       </div>
     );
   }

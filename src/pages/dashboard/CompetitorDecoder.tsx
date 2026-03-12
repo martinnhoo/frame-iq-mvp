@@ -91,7 +91,7 @@ export default function CompetitorDecoder() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-white" style={syne}>Competitor Pattern Decoder</h1>
-          <p className="text-xs text-white/30 mt-0.5">Paste any competitor ad — AI decodes the framework, tactics, and how to counter it</p>
+          <p className="text-xs text-white/50 mt-0.5">Paste any competitor ad — AI decodes the framework, tactics, and how to counter it</p>
         </div>
       </div>
 
@@ -112,10 +112,10 @@ export default function CompetitorDecoder() {
       </div>
 
       {/* Input */}
-      <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-5 space-y-4">
+      <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-5 space-y-4">
         {/* URL field */}
         <div>
-          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/30 mb-2" style={mono}>Video URL <span className="text-white/15 normal-case font-sans">(TikTok, Instagram, YouTube — optional)</span></label>
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/50 mb-2" style={mono}>Video URL <span className="text-white/15 normal-case font-sans">(TikTok, Instagram, YouTube — optional)</span></label>
           <div className="flex gap-2">
             <input
               type="url"
@@ -138,7 +138,7 @@ export default function CompetitorDecoder() {
         </div>
 
         <div>
-          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/30 mb-2" style={mono}>Ad script / transcript</label>
+          <label className="block text-[10px] uppercase tracking-[0.15em] text-white/50 mb-2" style={mono}>Ad script / transcript</label>
           <textarea
             value={adText}
             onChange={e => setAdText(e.target.value)}
@@ -160,16 +160,16 @@ export default function CompetitorDecoder() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-white/30 mb-2">Industry</label>
+            <label className="block text-xs text-white/50 mb-2">Industry</label>
             <select value={industry} onChange={e => setIndustry(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#111] border border-white/[0.08] text-white text-sm outline-none focus:border-white/20 transition-colors">
+              className="w-full px-4 py-3 rounded-xl bg-[#111] border border-white/[0.15] text-white text-sm outline-none focus:border-white/20 transition-colors">
               {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-white/30 mb-2">Market context</label>
+            <label className="block text-xs text-white/50 mb-2">Market context</label>
             <select value={market} onChange={e => setMarket(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#111] border border-white/[0.08] text-white text-sm outline-none focus:border-white/20 transition-colors">
+              className="w-full px-4 py-3 rounded-xl bg-[#111] border border-white/[0.15] text-white text-sm outline-none focus:border-white/20 transition-colors">
               {[["BR","🇧🇷 Brazil"],["MX","🇲🇽 Mexico"],["US","🇺🇸 United States"],["IN","🇮🇳 India"],["GLOBAL","🌍 Global"]].map(([v,l]) =>
                 <option key={v} value={v}>{l}</option>)}
             </select>
@@ -178,7 +178,7 @@ export default function CompetitorDecoder() {
 
         {/* Context (optional) */}
         <div>
-          <label className="block text-xs text-white/30 mb-2">Context <span className="text-white/15">(optional — helps AI give better counter-strategies)</span></label>
+          <label className="block text-xs text-white/50 mb-2">Context <span className="text-white/15">(optional — helps AI give better counter-strategies)</span></label>
           <textarea
             value={context}
             onChange={e => setContext(e.target.value)}
@@ -196,7 +196,7 @@ export default function CompetitorDecoder() {
             <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>
-              <p className="text-[10px] text-white/25 truncate">{selectedPersona.headline}</p>
+              <p className="text-[10px] text-white/45 truncate">{selectedPersona.headline}</p>
             </div>
             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 font-bold" style={mono}>ACTIVE</span>
           </div>
@@ -222,24 +222,24 @@ export default function CompetitorDecoder() {
           {/* Top row: Framework + Threat + Score */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Framework */}
-            <div className="sm:col-span-1 rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-4">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2" style={mono}>Framework</p>
+            <div className="sm:col-span-1 rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-4">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={mono}>Framework</p>
               <p className="text-base font-bold text-white" style={syne}>{result.framework}</p>
               <div className="flex flex-wrap gap-1.5 mt-3">
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${HOOK_TYPE_COLORS[result.hook_type] || "text-white/40 bg-white/5 border-white/10"}`}>
                   {result.hook_type?.replace(/_/g, " ")}
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/[0.08] text-white/35">
+                <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/[0.15] text-white/55">
                   {result.creative_model}
                 </span>
               </div>
             </div>
 
             {/* Hook score */}
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-4 flex flex-col justify-between">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2" style={mono}>Hook score</p>
+            <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-4 flex flex-col justify-between">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={mono}>Hook score</p>
               <div>
-                <div className="text-3xl font-bold text-white" style={syne}>{result.hook_score.toFixed(1)}<span className="text-base text-white/20">/10</span></div>
+                <div className="text-3xl font-bold text-white" style={syne}>{result.hook_score.toFixed(1)}<span className="text-base text-white/40">/10</span></div>
                 <div className="h-1.5 rounded-full bg-white/[0.06] mt-3 overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${(result.hook_score / 10) * 100}%` }} />
                 </div>
@@ -251,12 +251,12 @@ export default function CompetitorDecoder() {
               const t = THREAT_CONFIG[result.threat_level] || THREAT_CONFIG.medium;
               return (
                 <div className={`rounded-2xl border ${t.border} ${t.bg} p-4`}>
-                  <p className="text-[10px] uppercase tracking-widest text-white/20 mb-2" style={mono}>Threat level</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={mono}>Threat level</p>
                   <div className="flex items-center gap-2">
                     <AlertTriangle className={`h-5 w-5 shrink-0 ${t.color}`} />
                     <span className={`text-base font-bold ${t.color}`} style={syne}>{t.label}</span>
                   </div>
-                  <p className="text-xs text-white/30 mt-2 leading-relaxed">
+                  <p className="text-xs text-white/50 mt-2 leading-relaxed">
                     Target: {result.target_audience}
                   </p>
                 </div>
@@ -266,16 +266,16 @@ export default function CompetitorDecoder() {
 
           {/* Emotional triggers + Persuasion */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-4">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 mb-3" style={mono}>Emotional triggers</p>
+            <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-4">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3" style={mono}>Emotional triggers</p>
               <div className="flex flex-wrap gap-1.5">
                 {result.emotional_triggers?.map(t => (
                   <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-300">{t}</span>
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-4">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 mb-3" style={mono}>Persuasion tactics</p>
+            <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-4">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3" style={mono}>Persuasion tactics</p>
               <div className="flex flex-wrap gap-1.5">
                 {result.persuasion_tactics?.map(t => (
                   <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">{t}</span>
@@ -326,7 +326,7 @@ export default function CompetitorDecoder() {
                 await navigator.clipboard.writeText(result.counter_strategy);
                 setCopiedCounter(true); toast.success("Copied!");
                 setTimeout(() => setCopiedCounter(false), 2000);
-              }} className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-xs text-white/40 hover:text-white transition-all">
+              }} className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/[0.15] text-xs text-white/40 hover:text-white transition-all">
                 {copiedCounter ? <><Check className="h-3.5 w-3.5 text-green-400" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy to clipboard</>}
               </button>
             )}
@@ -351,9 +351,9 @@ export default function CompetitorDecoder() {
 
       {/* Empty state */}
       {!loading && !result && (
-        <div className="rounded-2xl border border-dashed border-white/[0.07] py-16 text-center space-y-3">
+        <div className="rounded-2xl border border-dashed border-white/[0.13] py-16 text-center space-y-3">
           <div className="text-4xl">🔍</div>
-          <p className="text-white/30 text-sm font-medium">Paste any competitor ad and decode their playbook</p>
+          <p className="text-white/50 text-sm font-medium">Paste any competitor ad and decode their playbook</p>
           <p className="text-white/15 text-xs">Works with TikTok captions, Meta ad copy, YouTube scripts, or any ad transcript</p>
         </div>
       )}

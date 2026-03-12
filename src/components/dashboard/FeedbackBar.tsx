@@ -55,7 +55,7 @@ export function FeedbackBar({
     return (
       <div className={`flex items-center gap-1.5 ${className}`}>
         <Check className="h-3 w-3 text-green-400" />
-        <span className="text-[10px] text-white/25" style={mono}>
+        <span className="text-[10px] text-white/45" style={mono}>
           {rated === 1 ? "Marked as useful" : "Noted — AI will adapt"}
         </span>
       </div>
@@ -65,7 +65,7 @@ export function FeedbackBar({
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {!compact && (
-        <span className="text-[10px] text-white/20" style={mono}>
+        <span className="text-[10px] text-white/40" style={mono}>
           Was this helpful?
         </span>
       )}
@@ -73,7 +73,7 @@ export function FeedbackBar({
         onClick={() => submit(1)}
         disabled={loading}
         title="This was useful"
-        className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-green-500/15 hover:text-green-400 text-white/20 disabled:opacity-40"
+        className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-green-500/15 hover:text-green-400 text-white/40 disabled:opacity-40"
         style={{ border: "1px solid rgba(255,255,255,0.07)" }}
       >
         <ThumbsUp className="h-3 w-3" />
@@ -82,7 +82,7 @@ export function FeedbackBar({
         onClick={() => submit(-1)}
         disabled={loading}
         title="This wasn't useful"
-        className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/15 hover:text-red-400 text-white/20 disabled:opacity-40"
+        className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/15 hover:text-red-400 text-white/40 disabled:opacity-40"
         style={{ border: "1px solid rgba(255,255,255,0.07)" }}
       >
         <ThumbsDown className="h-3 w-3" />

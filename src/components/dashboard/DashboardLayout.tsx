@@ -195,17 +195,17 @@ export default function DashboardLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-white/30" />
-          <p className="text-xs text-white/20 font-mono">{dt("ov_loading")}</p>
+          <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+          <p className="text-xs text-white/40 font-mono">{dt("ov_loading")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex">
+    <div className="min-h-screen bg-[#11131c] flex">
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -216,7 +216,7 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile topbar */}
-        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.06] bg-[#080808] sticky top-0 z-30">
+        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#0f1117] sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all mr-3"
@@ -260,13 +260,13 @@ export default function DashboardLayout() {
             {personaPickerOpen && (
               <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl"
                 style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <div className="px-3 py-2.5 border-b border-white/[0.06]">
-                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono">{dt("ov_active_persona_label")}</p>
-                   <p className="text-[11px] text-white/20 mt-0.5">{dt("ov_set_persona")}</p>
+                <div className="px-3 py-2.5 border-b border-white/[0.12]">
+                 <p className="text-[10px] uppercase tracking-widest text-white/50 font-mono">{dt("ov_active_persona_label")}</p>
+                   <p className="text-[11px] text-white/40 mt-0.5">{dt("ov_set_persona")}</p>
                  </div>
                 {savedPersonas.length === 0 ? (
                   <div className="p-4 text-center">
-                   <p className="text-xs text-white/30 mb-3">{dt("ov_no_personas_yet")}</p>
+                   <p className="text-xs text-white/50 mb-3">{dt("ov_no_personas_yet")}</p>
                      <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
                        style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
@@ -277,26 +277,26 @@ export default function DashboardLayout() {
                   <div className="py-1 max-h-64 overflow-y-auto">
                     {selectedPersona && (
                       <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors text-xs text-white/30">
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.08] transition-colors text-xs text-white/50">
                          <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
                          {dt("ov_clear_persona")}
                       </button>
                     )}
                     {savedPersonas.map(p => (
                       <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.04] transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.08] transition-colors"
                         style={selectedPersona?.id === p.id ? { background: "rgba(167,139,250,0.08)" } : {}}>
                         <span className="h-7 w-7 rounded-full flex items-center justify-center text-base shrink-0" style={{ background: "rgba(167,139,250,0.1)" }}>{p.avatar_emoji}</span>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-white truncate">{p.name}</p>
-                          <p className="text-[10px] text-white/30 truncate">{p.headline}</p>
+                          <p className="text-[10px] text-white/50 truncate">{p.headline}</p>
                         </div>
                         {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-purple-400 shrink-0">{dt("pe_active")}</span>}
                       </button>
                     ))}
-                    <div className="px-3 py-2 border-t border-white/[0.06]">
+                    <div className="px-3 py-2 border-t border-white/[0.12]">
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
-                        className="text-[10px] text-white/25 hover:text-white/50 transition-colors flex items-center gap-1">
+                        className="text-[10px] text-white/45 hover:text-white/50 transition-colors flex items-center gap-1">
                         <Sparkles className="h-3 w-3" /> {dt("cm_manage_personas")}
                       </button>
                     </div>
@@ -307,7 +307,7 @@ export default function DashboardLayout() {
           </div>
 
           {selectedPersona && (
-            <div className="flex items-center gap-2 text-[10px] text-white/20 font-mono overflow-hidden">
+            <div className="flex items-center gap-2 text-[10px] text-white/40 font-mono overflow-hidden">
               <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age || "—"} · {(selectedPersona.best_platforms || []).slice(0,2).join(", ") || "—"}</span>
             </div>
           )}
@@ -330,7 +330,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto bg-[#050505]">
+        <main className="flex-1 overflow-auto bg-[#0d0f18]">
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
@@ -362,7 +362,7 @@ export default function DashboardLayout() {
               <p className="text-sm text-white/50 leading-relaxed">
                 {welcomeMsg.body}
               </p>
-              <p className="text-xs text-white/30">
+              <p className="text-xs text-white/50">
                 Aproveite cada ferramenta, crie sem medo, e brilhe! ✨
               </p>
               <button onClick={() => setVikaPopup(false)}

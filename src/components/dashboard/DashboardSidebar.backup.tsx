@@ -82,7 +82,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           className={`h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-200 ${active ? "bg-black/30" : "opacity-50 group-hover:opacity-100"}`}
           style={{ background: active ? undefined : item.dot }}
         />
-        <item.icon className={`h-4 w-4 shrink-0 transition-all ${active ? "text-black" : "text-white/30 group-hover:text-white/70"}`} />
+        <item.icon className={`h-4 w-4 shrink-0 transition-all ${active ? "text-black" : "text-white/50 group-hover:text-white/70"}`} />
         <span className="flex-1 font-medium tracking-[-0.01em]">{item.title}</span>
         {active && <ChevronRight className="h-3 w-3 text-black/25" />}
       </NavLink>
@@ -96,13 +96,13 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     "U";
 
   const planColors: Record<string, string> = {
-    free:    "text-white/25",
+    free:    "text-white/45",
     creator: "text-blue-400",
     starter: "text-emerald-400",
     studio:  "text-purple-400",
     scale:   "text-amber-400",
   };
-  const planColor = planColors[profile?.plan || "free"] || "text-white/25";
+  const planColor = planColors[profile?.plan || "free"] || "text-white/45";
 
   return (
     <>
@@ -171,7 +171,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             <NavLink
               to="/pricing"
               onClick={onClose}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-white/[0.07] bg-gradient-to-r from-purple-950/40 to-pink-950/20 text-white/50 text-xs hover:text-white transition-all group"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-white/[0.13] bg-gradient-to-r from-purple-950/40 to-pink-950/20 text-white/50 text-xs hover:text-white transition-all group"
             >
               <Zap className="h-3 w-3 text-yellow-400 shrink-0" />
               <span className="flex-1">Upgrade plan</span>
@@ -187,7 +187,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           {/* User card */}
           <button
             onClick={() => setProfileOpen(true)}
-            className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl hover:bg-white/[0.05] transition-all group text-left border border-transparent hover:border-white/[0.06]"
+            className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl hover:bg-white/[0.05] transition-all group text-left border border-transparent hover:border-white/[0.12]"
             aria-label="Open profile settings"
           >
             <Avatar className="h-8 w-8 shrink-0 ring-1 ring-white/10">
@@ -204,7 +204,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
                 {profile?.plan || "free"} plan
               </p>
             </div>
-            <Settings className="h-3.5 w-3.5 text-white/12 group-hover:text-white/35 group-hover:rotate-45 transition-all duration-300 shrink-0" />
+            <Settings className="h-3.5 w-3.5 text-white/12 group-hover:text-white/55 group-hover:rotate-45 transition-all duration-300 shrink-0" />
           </button>
         </div>
       </aside>

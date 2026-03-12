@@ -99,17 +99,17 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/[0.1] bg-[#0a0a0a] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.12]">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
               <Globe className="h-4 w-4 text-emerald-400" />
             </div>
             <div>
               <p className="text-sm font-bold text-white" style={{ fontFamily: "'Syne',sans-serif" }}>Translate template</p>
-              <p className="text-[11px] text-white/30">{template.name}</p>
+              <p className="text-[11px] text-white/50">{template.name}</p>
             </div>
           </div>
-          <button onClick={onClose} className="h-8 w-8 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-white/30 hover:text-white transition-colors">
+          <button onClick={onClose} className="h-8 w-8 rounded-xl bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-white/50 hover:text-white transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -118,24 +118,24 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
           {/* Target market */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Target market</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Target market</p>
               <div className="relative">
                 <button onClick={() => setLangOpen(o => !o)}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-sm transition-all">
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.15] hover:bg-white/[0.08] text-white text-sm transition-all">
                   <span className="text-base">{lang.flag}</span>
                   <span className="flex-1 text-left font-medium">{lang.name}</span>
-                  <ChevronDown className="h-3 w-3 text-white/30" />
+                  <ChevronDown className="h-3 w-3 text-white/50" />
                 </button>
                 {langOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.08] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
+                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.15] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
                       {LANGUAGES.map(l => (
                         <button key={l.code} onClick={() => { setSelectedLang(l.code); setLangOpen(false); setPreview(null); }}
                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors ${l.code === selectedLang ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/[0.06]"}`}>
                           <span>{l.flag}</span>
                           <span className="flex-1 text-left">{l.name}</span>
-                          <span className="text-white/20 text-[10px]">{l.market}</span>
+                          <span className="text-white/40 text-[10px]">{l.market}</span>
                         </button>
                       ))}
                     </div>
@@ -145,18 +145,18 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
             </div>
 
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Ad language (VO)</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Ad language (VO)</p>
               <div className="relative">
                 <button onClick={() => setAdLangOpen(o => !o)}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.08] text-white text-sm transition-all">
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.15] hover:bg-white/[0.08] text-white text-sm transition-all">
                   <span className="text-base">{adLangData.flag}</span>
                   <span className="flex-1 text-left font-medium">{adLangData.name}</span>
-                  <ChevronDown className="h-3 w-3 text-white/30" />
+                  <ChevronDown className="h-3 w-3 text-white/50" />
                 </button>
                 {adLangOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setAdLangOpen(false)} />
-                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.08] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
+                    <div className="absolute top-full mt-1 left-0 z-20 rounded-2xl border border-white/[0.15] shadow-2xl p-2 w-56 max-h-60 overflow-y-auto" style={{ background: "#0d0d0d" }}>
                       {LANGUAGES.map(l => (
                         <button key={l.code} onClick={() => { setAdLang(l.code); setAdLangOpen(false); setPreview(null); }}
                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors ${l.code === adLang ? "bg-white/10 text-white" : "text-white/50 hover:text-white hover:bg-white/[0.06]"}`}>
@@ -174,14 +174,14 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
           {/* Preview */}
           {preview ? (
             <div className="space-y-3">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Translated brief</p>
+              <div className="rounded-2xl border border-white/[0.13] bg-white/[0.06] p-4">
+                <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'DM Mono',monospace" }}>Translated brief</p>
                 <p className="text-xs text-white/60 leading-relaxed">{preview.text}</p>
               </div>
               {preview.notes && (
                 <div className="rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15 px-4 py-3">
                   <p className="text-[10px] uppercase tracking-widest text-emerald-400/50 mb-1" style={{ fontFamily: "'DM Mono',monospace" }}>Cultural adaptation</p>
-                  <p className="text-[11px] text-white/35 leading-relaxed">{preview.notes}</p>
+                  <p className="text-[11px] text-white/55 leading-relaxed">{preview.notes}</p>
                 </div>
               )}
               <button onClick={handleUseTranslated}
@@ -200,7 +200,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
 
           {/* Skip */}
           <button onClick={() => { onUse(template); onClose(); }}
-            className="w-full text-center text-xs text-white/20 hover:text-white/40 transition-colors py-1">
+            className="w-full text-center text-xs text-white/40 hover:text-white/40 transition-colors py-1">
             Skip translation — use original in English →
           </button>
         </div>
@@ -1641,19 +1641,19 @@ const TemplatesPage = () => {
            <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
             <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> {ot("tp_title")}
           </h1>
-          <p className="text-white/30 text-xs mt-1">
+          <p className="text-white/50 text-xs mt-1">
             <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> {ot("tp_formats")} · {Object.keys(CAT_META).length} {ot("tp_industries")} ·{" "}
             <span style={{ color: "#34d399" }}>
               <Globe className="h-3 w-3 inline -mt-0.5 mr-0.5" />18 {ot("tp_languages")}
             </span>
           </p>
         </div>
-        <span className="text-[11px] text-white/20 shrink-0 mt-1" style={mono}>{filtered.length} {ot("tp_shown")}</span>
+        <span className="text-[11px] text-white/40 shrink-0 mt-1" style={mono}>{filtered.length} {ot("tp_shown")}</span>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/25" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/45" />
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -1703,7 +1703,7 @@ const TemplatesPage = () => {
 
       {/* Grid */}
       {paginated.length === 0 ? (
-        <div className="text-center py-16 text-white/20">
+        <div className="text-center py-16 text-white/40">
           <p className="text-4xl mb-3">🔍</p>
           <p className="font-medium">{ot("tp_no_match")}</p>
         </div>
@@ -1723,7 +1723,7 @@ const TemplatesPage = () => {
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
                       {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
                     </span>
-                    <span className="flex items-center gap-1 text-[10px] text-white/25" style={mono}>
+                    <span className="flex items-center gap-1 text-[10px] text-white/45" style={mono}>
                       <Clock className="h-3 w-3" />{template.duration}s
                     </span>
                   </div>
@@ -1778,7 +1778,7 @@ const TemplatesPage = () => {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
+            className="h-8 w-8 rounded-lg bg-white/[0.08] border border-white/[0.15] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -1803,7 +1803,7 @@ const TemplatesPage = () => {
                 className={`h-8 min-w-[2rem] px-2 rounded-lg text-xs font-mono transition-all ${
                   p === page
                     ? "bg-white text-black font-bold"
-                    : "bg-white/[0.04] border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20"
+                    : "bg-white/[0.08] border border-white/[0.15] text-white/40 hover:text-white hover:border-white/20"
                 }`}
               >
                 {p}
@@ -1814,7 +1814,7 @@ const TemplatesPage = () => {
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
+            className="h-8 w-8 rounded-lg bg-white/[0.08] border border-white/[0.15] flex items-center justify-center text-white/40 hover:text-white hover:border-white/20 disabled:opacity-20 transition-all"
           >
             <ChevronRightIcon className="h-4 w-4" />
           </button>
@@ -1830,7 +1830,7 @@ const TemplatesPage = () => {
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
             <div className="min-w-0">
               <p className="text-sm font-bold text-white">{(language !== "en" ? getUpgradeCTA("unlock", language) : null) || "Unlock all"} {TEMPLATES.length} {(language !== "en" ? getUpgradeCTA("templates", language) : null) || "templates"} ⚡</p>
-              <p className="text-xs text-white/35">{(language !== "en" ? getUpgradeCTA("plan_desc", language) : null) || "Studio plan · 30 analyses · 30 boards · unlimited hooks"}</p>
+              <p className="text-xs text-white/55">{(language !== "en" ? getUpgradeCTA("plan_desc", language) : null) || "Studio plan · 30 analyses · 30 boards · unlimited hooks"}</p>
             </div>
             <button
               onClick={() => navigate("/pricing")}

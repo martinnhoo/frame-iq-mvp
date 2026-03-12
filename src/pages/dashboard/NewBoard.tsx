@@ -14,11 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layers, Zap, TrendingUp } from "lucide-react";
 import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 
 const FUNNEL_STAGES = [
-  { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
-  { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+  { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "bofu", label: dt("bo_bofu"), full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
 ];
 
 const MARKETS = [
@@ -90,6 +92,8 @@ function detectMarketFromPersona(style: string): string {
 const NewBoard = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const location = useLocation();
   const state = location.state as LocationState | null;
 
@@ -311,11 +315,11 @@ const NewBoard = () => {
 
               {/* Live Hook Score Preview */}
               {(hookPreview || hookScoring) && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.07] bg-white/[0.03]">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.13] bg-white/[0.07]">
                   {hookScoring ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white/30 shrink-0" />
-                      <span className="text-xs text-white/30">Scoring hook preview...</span>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white/50 shrink-0" />
+                      <span className="text-xs text-white/50">Scoring hook preview...</span>
                     </>
                   ) : hookPreview ? (
                     <>
@@ -326,11 +330,11 @@ const NewBoard = () => {
                           <span className={`text-sm font-bold font-mono ${hookPreview.score >= 8 ? "text-green-400" : hookPreview.score >= 6.5 ? "text-yellow-400" : "text-red-400"}`}>
                             {hookPreview.score.toFixed(1)}/10
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.08] text-white/25 capitalize">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-white/[0.15] text-white/45 capitalize">
                             {hookPreview.type?.replace(/_/g, " ")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-white/25 mt-0.5 truncate">{hookPreview.feedback}</p>
+                        <p className="text-[11px] text-white/45 mt-0.5 truncate">{hookPreview.feedback}</p>
                       </div>
                       <TrendingUp className="h-3.5 w-3.5 text-white/15 shrink-0" />
                     </>
@@ -456,7 +460,7 @@ const NewBoard = () => {
               </Select>
               {marketOverridden && selectedPersona ? (
                 <button onClick={() => { setMarket(personaMarket); setMarketOverridden(false); }}
-                  className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline mt-2">
+                  className="text-[10px] text-white/50 hover:text-white/60 transition-colors underline mt-2">
                   Reset to persona market
                 </button>
               ) : (
@@ -554,8 +558,8 @@ const NewBoard = () => {
       </div>
 
       {/* Funnel stage */}
-      <div className="rounded-2xl border border-white/[0.07] bg-[#0a0a0a] p-5">
-        <label className="block text-xs text-white/30 mb-3">Funnel stage — who are you talking to?</label>
+      <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-5">
+        <label className="block text-xs text-white/50 mb-3">Funnel stage — who are you talking to?</label>
         <div className="grid grid-cols-3 gap-2">
           {FUNNEL_STAGES.map(f => (
             <button key={f.value} onClick={() => setFunnelStage(f.value)}
@@ -580,7 +584,7 @@ const NewBoard = () => {
         {generating ? (
           <>
             <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            {progress || "Generating..."}
+            {progress || dt("bo_generating")}
           </>
         ) : (
           <>

@@ -152,6 +152,10 @@ export type DashT = {
   hg_feedback_up: string;
   hg_feedback_down: string;
   hg_empty: string;
+  sg_title: string; sg_generate: string; sg_generating: string; sg_product: string; sg_copy: string;
+  br_title: string; br_generate: string; br_generating: string; br_copy: string;
+  na_title: string; na_upload: string; na_analyze: string; na_analyzing: string;
+  cm_generate: string; cm_copy: string; cm_copied: string; cm_back: string; cm_product: string;
 
   // Pre-flight
   pf_title: string;
@@ -372,6 +376,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     hg_score: "Score", hg_type: "Type", hg_strength: "Strength",
     hg_feedback_up: "Got it — more like this 👍", hg_feedback_down: "Noted — fewer of this type 👎",
     hg_empty: "Generate hooks to see results here",
+    sg_title: "Script Generator", sg_generate: "Generate Script", sg_generating: "Generating...", sg_product: "Product / Brand", sg_copy: "Copy",
+    br_title: "Brief Generator", br_generate: "Generate Brief", br_generating: "Generating...", br_copy: "Copy",
+    na_title: "New Analysis", na_upload: "Upload Video", na_analyze: "Analyze", na_analyzing: "Analyzing...",
+    cm_generate: "Generate", cm_copy: "Copy", cm_copied: "Copied", cm_back: "Back", cm_product: "Product / Brand",
     pf_title: "Pre-flight Check", pf_subtitle: "AI analysis — compliance · hook · structure · platform fit",
     pf_script: "Script", pf_video: "Video", pf_script_label: "Script",
     pf_script_ph: "Paste your ad script here...", pf_hook_label: "Hook (0-3s)", pf_cta_label: "CTA",
@@ -784,6 +792,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     hg_score: "评分", hg_type: "类型", hg_strength: "强度",
     hg_feedback_up: "明白了 — 多来这类 👍", hg_feedback_down: "已记录 — 减少此类 👎",
     hg_empty: "生成钩子后结果将显示在这里",
+    sg_title: "脚本生成器", sg_generate: "生成脚本", sg_generating: "生成中...", sg_product: "产品/品牌", sg_copy: "复制", br_title: "Brief生成器", br_generate: "生成Brief", br_generating: "生成中...", br_copy: "复制", na_title: "新分析", na_upload: "上传视频", na_analyze: "分析", na_analyzing: "分析中...", cm_generate: "生成", cm_copy: "复制", cm_copied: "已复制", cm_back: "返回", cm_product: "产品/品牌",
     pf_title: "预检", pf_subtitle: "AI分析 — 合规 · 钩子 · 结构 · 平台适配",
     pf_script: "脚本", pf_video: "视频", pf_script_label: "脚本",
     pf_script_ph: "在此粘贴您的广告脚本...", pf_hook_label: "钩子（0-3秒）", pf_cta_label: "行动号召",
@@ -922,6 +931,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     hg_score: "Score", hg_type: "Type", hg_strength: "Force",
     hg_feedback_up: "Compris — plus comme ça 👍", hg_feedback_down: "Noté — moins de ce type 👎",
     hg_empty: "Générez des hooks pour voir les résultats ici",
+    sg_title: "Générateur de Script", sg_generate: "Générer Script", sg_generating: "Génération...", sg_product: "Produit / Marque", sg_copy: "Copier", br_title: "Générateur de Brief", br_generate: "Générer Brief", br_generating: "Génération...", br_copy: "Copier", na_title: "Nouvelle Analyse", na_upload: "Importer Vidéo", na_analyze: "Analyser", na_analyzing: "Analyse...", cm_generate: "Générer", cm_copy: "Copier", cm_copied: "Copié", cm_back: "Retour", cm_product: "Produit / Marque",
     pf_title: "Check pré-vol", pf_subtitle: "Analyse IA — conformité · hook · structure · plateforme",
     pf_script: "Script", pf_video: "Vidéo", pf_script_label: "Script",
     pf_script_ph: "Collez votre script ici...", pf_hook_label: "Hook (0-3s)", pf_cta_label: "CTA",

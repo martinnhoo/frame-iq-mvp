@@ -23,7 +23,7 @@ const statusConfig: Record<string, { label: string; icon: React.ElementType; cls
 };
 
 const hookColor = (score: number | null) => {
-  if (!score) return "text-white/30";
+  if (!score) return "text-white/50";
   if (score >= 8) return "text-green-400";
   if (score >= 6) return "text-yellow-400";
   return "text-red-400";
@@ -71,7 +71,7 @@ const AnalysesList = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Analyses</h1>
-          <p className="text-white/30 text-sm mt-0.5">{analyses.length} total</p>
+          <p className="text-white/50 text-sm mt-0.5">{analyses.length} total</p>
         </div>
         <button
           onClick={() => navigate("/dashboard/analyses/new")}
@@ -82,13 +82,13 @@ const AnalysesList = () => {
       </div>
 
       {analyses.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] py-16 flex flex-col items-center text-center gap-4">
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] py-16 flex flex-col items-center text-center gap-4">
           <div className="h-14 w-14 rounded-2xl bg-white/[0.06] flex items-center justify-center">
-            <BarChart3 className="h-6 w-6 text-white/20" />
+            <BarChart3 className="h-6 w-6 text-white/40" />
           </div>
           <div>
             <p className="text-white/50 font-medium">No analyses yet</p>
-            <p className="text-white/25 text-sm mt-1">Upload a video to get AI-powered creative insights</p>
+            <p className="text-white/45 text-sm mt-1">Upload a video to get AI-powered creative insights</p>
           </div>
           <button
             onClick={() => navigate("/dashboard/analyses/new")}
@@ -107,7 +107,7 @@ const AnalysesList = () => {
               <div
                 key={a.id}
                 onClick={() => navigate(`/dashboard/analyses/${a.id}`)}
-                className="group flex items-center gap-4 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04] transition-all cursor-pointer"
+                className="group flex items-center gap-4 p-4 rounded-2xl border border-white/[0.12] bg-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.08] transition-all cursor-pointer"
               >
                 <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
                   <BarChart3 className="h-4 w-4 text-purple-400" />
@@ -116,7 +116,7 @@ const AnalysesList = () => {
                   <p className="font-medium text-white/80 group-hover:text-white truncate transition-colors">
                     {a.title || "Untitled Analysis"}
                   </p>
-                  <p className="text-xs text-white/25 mt-0.5">
+                  <p className="text-xs text-white/45 mt-0.5">
                     {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                   </p>
                 </div>
@@ -133,7 +133,7 @@ const AnalysesList = () => {
                   <button
                     onClick={(e) => handleDelete(e, a.id, a.status)}
                     disabled={deleting === a.id}
-                    className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
                   >
                     {deleting === a.id
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />

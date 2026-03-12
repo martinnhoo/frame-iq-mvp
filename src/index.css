@@ -6,23 +6,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    /* Lifted from pure black → dark slate for better readability across screens */
+    --background: 224 15% 9%;
+    --foreground: 0 0% 96%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
+    --card: 224 13% 12%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 224 13% 11%;
+    --popover-foreground: 0 0% 96%;
 
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 0 0% 64%;
+    --secondary: 0 0% 70%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 7%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 224 12% 15%;
+    --muted-foreground: 0 0% 62%;
 
     --accent: 262 83% 58%;
     --accent-foreground: 0 0% 100%;
@@ -30,14 +31,14 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 13%;
-    --input: 0 0% 13%;
+    --border: 224 12% 20%;
+    --input: 224 12% 17%;
     --ring: 0 0% 100%;
     --radius: 0.5rem;
 
     /* Brand accent variables */
     --purple: 258 89% 66%;
-    --purple-glow: rgba(124, 58, 237, 0.15);
+    --purple-glow: rgba(124, 58, 237, 0.18);
     --coral: 0 100% 71%;
     --emerald: 160 84% 39%;
     --sidebar-w: 252px;
@@ -48,8 +49,8 @@
 
 html, body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  background: #000;
-  color: #fff;
+  background: #13151f;
+  color: #f4f4f5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
