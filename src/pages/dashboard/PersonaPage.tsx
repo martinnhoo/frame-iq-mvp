@@ -180,7 +180,9 @@ function PersonaDetailEditable({
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave(draft);
+    // Include brand_kit in the saved result
+    const updatedDraft = { ...draft, brand_kit: brandKit } as any;
+    await onSave(updatedDraft);
     setEditing(false);
     setSaving(false);
   };
