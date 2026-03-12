@@ -216,28 +216,28 @@ const NewAnalysis = () => {
                 className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/20 text-sm outline-none focus:border-white/25 transition-colors" />
             </div>
 
-            {/* Language */}
+            {/* Market */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-xs text-white/40 uppercase tracking-wider">Língua do ad</label>
-                {selectedPersona && !langOverridden && (
+                <label className="text-xs text-white/40 uppercase tracking-wider">Market</label>
+                {selectedPersona && !marketOverridden && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                     style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
                     via {selectedPersona.name.split(" ")[0]}
                   </span>
                 )}
-                {langOverridden && (
-                  <button onClick={() => { setLanguage(personaLang); setLangOverridden(false); }}
+                {marketOverridden && (
+                  <button onClick={() => { setMarket(personaMarket); setMarketOverridden(false); }}
                     className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline">
-                    Resetar para persona
+                    Reset to persona
                   </button>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {LANGUAGES.map(m => (
-                  <button key={m.code} onClick={() => { setLanguage(m.code); setLangOverridden(true); }}
+                {MARKETS.map(m => (
+                  <button key={m.code} onClick={() => { setMarket(m.code); setMarketOverridden(true); }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm border transition-all ${
-                      language === m.code ? "border-purple-400/50 bg-purple-500/10 text-white" : "border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/15"
+                      market === m.code ? "border-purple-400/50 bg-purple-500/10 text-white" : "border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/15"
                     }`}>
                     <span>{m.flag}</span> {m.name}
                   </button>
