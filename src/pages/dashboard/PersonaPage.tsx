@@ -93,13 +93,14 @@ interface SavedPersona {
 // ─── Editable Detail Component ───────────────────────────────────────────
 function PersonaDetailEditable({
   result: initial, activeDetail, globalPersona, setGlobalPersona,
-  onCopy, copied, onNew, onBack, onSave, dt,
+  onCopy, copied, onNew, onBack, onSave, dt, language,
 }: {
   result: PersonaResult; activeDetail: SavedPersona | null;
   globalPersona: any; setGlobalPersona: (p: any) => void;
   onCopy: () => void; copied: boolean; onNew: () => void; onBack: () => void;
   onSave: (updated: PersonaResult) => Promise<void>;
   dt: (key: any) => string;
+  language: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
