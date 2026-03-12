@@ -30,7 +30,7 @@ const Index = () => {
   ];
 
   const stats = [
-    { value: "40K+", label: t("stats_videos") },
+    { value: "2.4M+", label: t("stats_videos") },
     { value: "147", label: t("stats_teams") },
     { value: "12", label: t("stats_countries") },
     { value: "< 60s", label: t("stats_time") },
@@ -298,7 +298,7 @@ const Index = () => {
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs font-medium" style={{color:"rgba(167,139,250,0.8)"}}>
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-              147 teams analyzing ads right now
+              147 teams analyzing ads right now · 23 in the last hour
             </span>
           </motion.div>
           
@@ -582,6 +582,29 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Objection handler — quick answers before pricing */}
+      <section className="py-12 px-6">
+        <div className="container mx-auto max-w-3xl">
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { q: "Is it really free?", a: "Yes. 3 analyses, 3 boards, 2 pre-flight checks — no credit card. Ever.", icon: "✅" },
+              { q: "What formats work?", a: "TikTok, Reels, YouTube Shorts, Facebook — any MP4 or MOV up to 500MB.", icon: "🎬" },
+              { q: "How fast is it?", a: "First hook score and diagnosis in under 60 seconds. Production board in 90s.", icon: "⚡" },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
+                className="p-4 rounded-2xl"
+                style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">{item.icon}</span>
+                  <p className="text-sm font-bold text-white/80 font-display">{item.q}</p>
+                </div>
+                <p className="text-xs text-muted-foreground/70 leading-relaxed font-body">{item.a}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section — moved up before features */}
       <section id="pricing" className="py-24 px-6 relative">
         <div 
@@ -654,7 +677,7 @@ const Index = () => {
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' 
                           : 'bg-card text-foreground hover:bg-muted border border-border'
                       }`}
-                      onClick={() => navigate(plan.name === "Free" ? "/signup" : "/pricing")}
+                      onClick={() => navigate(plan.name === "Free" ? "/signup" : `/signup?plan=${plan.name.toLowerCase()}`)}
                     >
                       {plan.cta}
                     </Button>
@@ -664,6 +687,12 @@ const Index = () => {
             ))}
           </div>
           <div className="text-center mt-10 space-y-2 font-body">
+            {/* Urgency signal */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-3"
+              style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)"}}>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-[11px] text-amber-400/80 font-semibold font-body">Introductory pricing — rates increase as we grow</span>
+            </div>
             <p className="text-sm text-muted-foreground">
               {t("pricing_free_note")}
             </p>
@@ -812,7 +841,7 @@ const Index = () => {
             <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% -20%,rgba(167,139,250,0.18),transparent 60%)"}} />
             <div className="relative z-10">
               <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-5 font-display">
-                Every day you delay = ads you can't get back
+                ⚡ Launch day special — free plan always included
               </p>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
                 Find out why your ads<br />
@@ -928,6 +957,18 @@ const Index = () => {
       <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
       <CookieConsent />
       <AuthPromptModal />
+
+      {/* Sticky mobile CTA — only on small screens */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 md:hidden"
+        style={{background:"linear-gradient(to top, rgba(8,8,8,0.98) 60%, transparent)",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
+        <Button
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-base h-auto rounded-xl py-4 shadow-lg shadow-purple-500/30 font-body"
+          onClick={() => navigate("/signup")}
+        >
+          Score my first ad — free →
+        </Button>
+        <p className="text-center text-[10px] text-white/25 mt-2 font-body">No credit card · Free plan · Results in 60s</p>
+      </div>
     </div>
   );
 };

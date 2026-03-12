@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,8 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
   const { t } = useLanguage();
 
   const handleGoogleSignup = async () => {
@@ -113,6 +115,12 @@ const Signup = () => {
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, delay: 0.15 }}>
           <Card className="w-full border-border/50 bg-card/80 backdrop-blur-md shadow-2xl shadow-purple-500/10" style={{ border: '1px solid rgba(139, 92, 246, 0.15)' }}>
             <CardHeader className="text-center space-y-2">
+              {planParam && (
+                <div className="mb-3 px-4 py-2.5 rounded-xl text-center text-sm font-semibold"
+                  style={{background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.25)",color:"#c084fc"}}>
+                  🎯 Starting with <span className="capitalize">{planParam}</span> plan
+                </div>
+              )}
               <CardTitle className="text-2xl font-bold tracking-tight">{t("auth_signup_title")}</CardTitle>
               <CardDescription className="text-muted-foreground">{t("auth_signup_subtitle")}</CardDescription>
             </CardHeader>
