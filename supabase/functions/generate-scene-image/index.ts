@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { visual_description, scene_title, scene_index, character_context, location_context } = await req.json();
+    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url } = await req.json();
 
     if (!visual_description) {
       return new Response(JSON.stringify({ error: "Missing visual_description" }), {
