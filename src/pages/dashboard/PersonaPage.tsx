@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +110,7 @@ function PersonaDetailEditable({
     setKitError(null);
     setKitUploading(true);
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
+      const { supabase: _sb } = { supabase }; const _supabase = _sb;
       let logoDataUrl: string | null = null;
       let fileName = file.name;
 
@@ -388,7 +388,7 @@ function PersonaDetailEditable({
                   const newKit = { ...brandKit, primary_color: e.target.value };
                   setBrandKit(newKit);
                   if (activeDetail) {
-                    const { supabase } = await import("@/integrations/supabase/client");
+                    const { supabase: _sb } = { supabase }; const _supabase = _sb;
                     supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
                   }
                 }}
@@ -404,7 +404,7 @@ function PersonaDetailEditable({
                   const newKit = { ...brandKit, secondary_color: e.target.value };
                   setBrandKit(newKit);
                   if (activeDetail) {
-                    const { supabase } = await import("@/integrations/supabase/client");
+                    const { supabase: _sb } = { supabase }; const _supabase = _sb;
                     supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
                   }
                 }}

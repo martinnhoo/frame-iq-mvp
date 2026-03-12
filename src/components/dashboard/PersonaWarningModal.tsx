@@ -1,7 +1,5 @@
 // Re-export PersonaGateModal as PersonaWarningModal for backward compat with NewBoard
 import PersonaGateModal from "@/components/PersonaGateModal";
-import { useNavigate } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 
 interface Props {
   open: boolean;
