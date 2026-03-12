@@ -14,25 +14,49 @@ const STEP_LABELS: Record<ProgressStep, string> = {
 };
 const STEP_ORDER: ProgressStep[] = ["extracting", "uploading", "transcribing", "analyzing", "done"];
 
-const MARKETS = [
-  { code: "GLOBAL", flag: "🌍", name: "Global" },
-  { code: "BR", flag: "🇧🇷", name: "Brazil" },
-  { code: "MX", flag: "🇲🇽", name: "Mexico" },
-  { code: "US", flag: "🇺🇸", name: "United States" },
-  { code: "IN", flag: "🇮🇳", name: "India" },
-  { code: "GB", flag: "🇬🇧", name: "United Kingdom" },
-  { code: "ES", flag: "🇪🇸", name: "Spain" },
-  { code: "AR", flag: "🇦🇷", name: "Argentina" },
+const LANGUAGES = [
+  { code: "PT", flag: "🇧🇷", name: "Português" },
+  { code: "ES", flag: "🇲🇽", name: "Español" },
+  { code: "EN", flag: "🇺🇸", name: "English" },
+  { code: "HI", flag: "🇮🇳", name: "Hindi" },
+  { code: "FR", flag: "🇫🇷", name: "Français" },
+  { code: "DE", flag: "🇩🇪", name: "Deutsch" },
+  { code: "IT", flag: "🇮🇹", name: "Italiano" },
+  { code: "AR", flag: "🇸🇦", name: "العربية" },
 ];
+
+// Map persona language_style keywords → language code
+function detectLanguageFromPersona(style: string): string {
+  if (!style) return "EN";
+  const s = style.toLowerCase();
+  if (s.includes("portug") || s.includes("brasil")) return "PT";
+  if (s.includes("espanh") || s.includes("español") || s.includes("spanish")) return "ES";
+  if (s.includes("hindi")) return "HI";
+  if (s.includes("french") || s.includes("françai")) return "FR";
+  if (s.includes("german") || s.includes("deutsch")) return "DE";
+  if (s.includes("italian")) return "IT";
+  if (s.includes("arabic")) return "AR";
+  return "EN";
+}
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const NewAnalysis = () => {
-  const { user, refreshUsage } = useOutletContext<DashboardContext>();
+  const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-  const [market, setMarket] = useState("GLOBAL");
+  // Language: starts from persona if available, user can override
+  const personaLang = selectedPersona ? detectLanguageFromPersona(selectedPersona.language_style) : "EN";
+  const [language, setLanguage] = useState(personaLang);
+  const [langOverridden, setLangOverridden] = useState(false);
+
+  // Sync language from persona when it changes (unless user manually overrode)
+  const [prevPersonaLang, setPrevPersonaLang] = useState(personaLang);
+  if (personaLang !== prevPersonaLang) {
+    setPrevPersonaLang(personaLang);
+    if (!langOverridden) setLanguage(personaLang);
+  }
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [step, setStep] = useState<ProgressStep>("idle");
@@ -149,7 +173,7 @@ const NewAnalysis = () => {
       const formData = new FormData();
       if (fileToSend) formData.append("video_file", fileToSend);
       if (videoUrl) formData.append("video_url", videoUrl);
-      formData.append("market", market);
+      formData.append("market", language);
       formData.append("user_id", user.id);
       formData.append("analysis_id", record.id);
       formData.append("title", title || file?.name || "Untitled");
@@ -226,17 +250,31 @@ const NewAnalysis = () => {
                 />
               </div>
 
-              {/* Market */}
+              {/* Language — auto from persona, user can override */}
               <div>
-                <label className="text-xs text-white/40 uppercase tracking-wider mb-2 block">Market</label>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-xs text-white/40 uppercase tracking-wider">Língua do ad</label>
+                  {selectedPersona && !langOverridden && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                      style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
+                      via {selectedPersona.name.split(" ")[0]}
+                    </span>
+                  )}
+                  {langOverridden && (
+                    <button onClick={() => { setLanguage(personaLang); setLangOverridden(false); }}
+                      className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline">
+                      Resetar para persona
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {MARKETS.map(m => (
+                  {LANGUAGES.map(m => (
                     <button
                       key={m.code}
-                      onClick={() => setMarket(m.code)}
+                      onClick={() => { setLanguage(m.code); setLangOverridden(true); }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm border transition-all ${
-                        market === m.code
-                          ? "border-white/30 bg-white/10 text-white"
+                        language === m.code
+                          ? "border-purple-400/50 bg-purple-500/10 text-white"
                           : "border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/15"
                       }`}
                     >
@@ -306,12 +344,25 @@ const NewAnalysis = () => {
               </div>
 
               <button
-                onClick={startAnalysis}
+                onClick={() => {
+                  if (!selectedPersona) {
+                    setShowPersonaGate(true);
+                  } else {
+                    startAnalysis();
+                  }
+                }}
                 disabled={!file && !videoUrl.trim()}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                Start Analysis
+                {selectedPersona ? "Start Analysis" : "Start Analysis"}
               </button>
+
+              {/* Persona nudge — shown only when no persona selected */}
+              {!selectedPersona && (
+                <p className="text-center text-[11px] text-white/25 -mt-1">
+                  💡 <button onClick={() => setShowPersonaGate(true)} className="text-purple-400/70 hover:text-purple-400 underline transition-colors">Ative uma persona</button> para resultados mais precisos
+                </p>
+              )}
             </div>
           ) : (
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 space-y-6">
@@ -370,6 +421,11 @@ const NewAnalysis = () => {
             </div>
           )}
     </div>
+    <PersonaGateModal
+      open={showPersonaGate}
+      onClose={() => setShowPersonaGate(false)}
+      intent="analysis"
+    />
   );
 };
 

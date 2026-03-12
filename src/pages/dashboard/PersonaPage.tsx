@@ -29,10 +29,20 @@ interface PersonaResult {
   avatar_emoji: string;
 }
 
+interface BrandKit {
+  logo_url?: string;       // public URL from Supabase storage
+  primary_color?: string;  // hex e.g. "#6D28D9"
+  secondary_color?: string;
+  font_name?: string;
+  brand_name?: string;
+  uploaded_at?: string;
+}
+
 interface SavedPersona {
   id: string;
   result: PersonaResult;
   answers: Record<string, string>;
+  brand_kit?: BrandKit;
   created_at: string;
 }
 
@@ -50,8 +60,41 @@ function PersonaDetailEditable({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<PersonaResult>(initial);
+  const [brandKit, setBrandKit] = useState<BrandKit>(activeDetail?.brand_kit || {});
+  const [kitUploading, setKitUploading] = useState(false);
+  const [kitError, setKitError] = useState<string | null>(null);
+  const kitRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setDraft(initial); }, [initial]);
+  useEffect(() => { setBrandKit(activeDetail?.brand_kit || {}); }, [activeDetail]);
+
+  const handleBrandKitUpload = async (file: File) => {
+    if (!activeDetail) return;
+    // Accept zip, png, jpg, svg, pdf (brand guideline common formats)
+    const allowed = ["application/zip","application/x-zip-compressed","image/png","image/jpeg","image/svg+xml","application/pdf"];
+    if (!allowed.includes(file.type)) {
+      setKitError("Accepted: ZIP, PNG, JPG, SVG or PDF"); return;
+    }
+    if (file.size > 20 * 1024 * 1024) { setKitError("Max 20MB"); return; }
+    setKitError(null);
+    setKitUploading(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ext = file.name.split(".").pop();
+      const path = `brand-kits/${activeDetail.id}/kit.${ext}`;
+      const { error: upErr } = await supabase.storage.from("brand-kits").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("brand-kits").getPublicUrl(path);
+      const newKit: BrandKit = { ...brandKit, logo_url: urlData.publicUrl, uploaded_at: new Date().toISOString() };
+      setBrandKit(newKit);
+      // Persist in personas table as brand_kit JSONB column
+      await supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
+    } catch (e: any) {
+      setKitError(e.message || "Upload failed");
+    } finally {
+      setKitUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -220,6 +263,122 @@ function PersonaDetailEditable({
           <EditableList field="media_habits" items={draft.media_habits} color="text-cyan-400" />
         </motion.div>
       )}
+
+      {/* ── BRAND KIT ─────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        className="rounded-2xl p-5 space-y-4"
+        style={{ background: "rgba(139,92,246,0.04)", border: "1px solid rgba(139,92,246,0.18)" }}>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <span>🎨</span> Brand Kit
+            </h3>
+            <p className="text-[11px] text-white/30 mt-0.5">
+              Logo, cores e guia de marca — usados na geração de imagens dos boards
+            </p>
+          </div>
+          {brandKit.uploaded_at && (
+            <span className="text-[10px] text-green-400/70 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Uploaded
+            </span>
+          )}
+        </div>
+
+        {/* Upload zone */}
+        <input ref={kitRef} type="file"
+          accept=".zip,.png,.jpg,.jpeg,.svg,.pdf,application/zip,image/*,application/pdf"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleBrandKitUpload(f); }} />
+
+        <div
+          onClick={() => kitRef.current?.click()}
+          className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 py-8 px-4 text-center"
+          style={{
+            borderColor: brandKit.logo_url ? "rgba(52,211,153,0.35)" : "rgba(139,92,246,0.25)",
+            background: brandKit.logo_url ? "rgba(52,211,153,0.04)" : "rgba(139,92,246,0.03)",
+          }}>
+
+          {kitUploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-full border-2 border-purple-400/40 border-t-purple-400 animate-spin" />
+              <span className="text-xs text-white/40">Uploading brand kit...</span>
+            </div>
+          ) : brandKit.logo_url ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)" }}>
+                ✅
+              </div>
+              <p className="text-sm font-semibold text-green-300">Brand kit uploaded</p>
+              <p className="text-[11px] text-white/30">Click to replace</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)" }}>
+                📦
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white/70">Upload your brand kit</p>
+                <p className="text-[11px] text-white/30 mt-0.5">ZIP comprimido com logo, cores e guia — max 20MB</p>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-center">
+                {["ZIP", "PNG", "SVG", "PDF"].map(t => (
+                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full text-white/30"
+                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {kitError && (
+          <p className="text-[11px] text-red-400 text-center">{kitError}</p>
+        )}
+
+        {/* Color pickers */}
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <div>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor primária</p>
+            <div className="flex items-center gap-2">
+              <input type="color" value={brandKit.primary_color || "#8B5CF6"}
+                onChange={async e => {
+                  const newKit = { ...brandKit, primary_color: e.target.value };
+                  setBrandKit(newKit);
+                  if (activeDetail) {
+                    const { supabase } = await import("@/integrations/supabase/client");
+                    supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
+                  }
+                }}
+                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0" />
+              <span className="text-xs text-white/40 font-mono">{brandKit.primary_color || "#8B5CF6"}</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor secundária</p>
+            <div className="flex items-center gap-2">
+              <input type="color" value={brandKit.secondary_color || "#EC4899"}
+                onChange={async e => {
+                  const newKit = { ...brandKit, secondary_color: e.target.value };
+                  setBrandKit(newKit);
+                  if (activeDetail) {
+                    const { supabase } = await import("@/integrations/supabase/client");
+                    supabase.from("personas").update({ brand_kit: newKit }).eq("id", activeDetail.id);
+                  }
+                }}
+                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0" />
+              <span className="text-xs text-white/40 font-mono">{brandKit.secondary_color || "#EC4899"}</span>
+            </div>
+          </div>
+        </div>
+
+        {(brandKit.primary_color || brandKit.logo_url) && (
+          <p className="text-[10px] text-purple-400/60 text-center pt-1">
+            ✨ O board generator vai usar essas cores e logo nos próximos boards desta persona
+          </p>
+        )}
+      </motion.div>
     </div>
   );
 }
