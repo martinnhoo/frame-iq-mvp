@@ -112,7 +112,7 @@ export default function Persona3DAvatar({ emoji, name, gender, seed, size = "md"
         ? ["stubble", "beard", "mustache", "goatee"][Math.floor(r(16) * 4)]
         : "none",
     };
-  }, [name, gender]);
+  }, [seedStr, gender]);
 
   const skinDarker = useMemo(() => {
     const hex = traits.skin;
