@@ -303,7 +303,7 @@ export default function DashboardLayout() {
 
           {selectedPersona && (
             <div className="flex items-center gap-2 text-[10px] text-white/20 font-mono overflow-hidden">
-              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age} · {selectedPersona.best_platforms.slice(0,2).join(", ")}</span>
+              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age || "—"} · {(selectedPersona.best_platforms || []).slice(0,2).join(", ") || "—"}</span>
             </div>
           )}
 
