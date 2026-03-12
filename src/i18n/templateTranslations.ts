@@ -2,7 +2,7 @@
 // Keys = template IDs, values = { lang: { name, desc } }
 
 type Lang = "pt" | "es" | "fr" | "de" | "zh" | "ar";
-type TT = { name: string; desc: string };
+type TT = { name: string; desc: string; prompt?: string };
 
 const t: Record<string, Partial<Record<Lang, TT>>> = {
   // ── UGC ──

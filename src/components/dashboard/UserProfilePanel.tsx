@@ -756,7 +756,6 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         emoji={persona.avatar_emoji || "👤"}
                         name={persona.name}
                         gender={persona.gender || ""}
-                        seed={persona.id}
                         size="md"
                       />
                       <p className="text-xs text-white/50 group-hover:text-white transition-colors text-center truncate w-full">{persona.name}</p>

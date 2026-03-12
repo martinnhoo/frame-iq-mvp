@@ -918,7 +918,7 @@ CTA: ${persona.cta_style}`;
                   </button>
 
                   <div className="mb-4">
-                    <Persona3DAvatar emoji={p.result.avatar_emoji} name={p.result.name} gender={p.result.gender} seed={p.id} size="md" />
+                    <Persona3DAvatar emoji={p.result.avatar_emoji} name={p.result.name} gender={p.result.gender} size="md" />
                   </div>
 
                   <h3 className="text-white font-bold text-sm text-center">{p.result.name}</h3>
