@@ -276,7 +276,7 @@ const Index = () => {
               }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors fill-current opacity-60" />
-              See a real result
+              {t("hero_cta_secondary")}
             </Button>
           </motion.div>
 
