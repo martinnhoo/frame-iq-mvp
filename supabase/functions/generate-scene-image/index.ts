@@ -37,21 +37,13 @@ You MUST depict the EXACT SAME person with the EXACT SAME clothes, hairstyle, an
       ? `\nLOCATION CONSISTENCY: ${location_context}`
       : '';
 
-    const brandBlock = brand_logo_url
-      ? `\nBRAND IDENTITY (CRITICAL):
-- The brand logo MUST be visible and naturally integrated into the scene
-- Show the logo on the product, screen, packaging, signage, or any relevant surface
-- The logo should feel organic in the scene (on a phone screen, product label, storefront sign, etc.)
-- Do NOT just overlay the logo — integrate it into the scene composition`
-      : '';
-
-    const prompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
+    // STEP 1: Generate the base scene (without logo)
+    const scenePrompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
 
 Scene: "${scene_title || `Scene ${(scene_index ?? 0) + 1}`}"
 Visual direction: ${visual_description}
 ${charBlock}
 ${locationBlock}
-${brandBlock}
 
 Requirements:
 - Square 1:1 composition
@@ -60,22 +52,12 @@ Requirements:
 - Clean composition with clear focal point
 - No text, no watermarks, no UI overlays, no borders
 - Studio-quality or on-location production feel
-- Should look like a real frame from a high-budget video ad`;
+- Should look like a real frame from a high-budget video ad
+${brand_logo_url ? '- IMPORTANT: Leave a natural surface visible where a brand logo could be placed (product, screen, packaging, signage, wall, etc.)' : ''}`;
 
-    console.log(`Generating scene image ${scene_index}: ${scene_title}`);
+    console.log(`[Step 1] Generating base scene ${scene_index}: ${scene_title}`);
 
-    // Build messages — include logo as image input if available
-    const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [
-      { type: "text", text: prompt },
-    ];
-    if (brand_logo_url) {
-      userContent.push({
-        type: "image_url",
-        image_url: { url: brand_logo_url },
-      });
-    }
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const sceneRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${LOVABLE_API_KEY}`,
@@ -83,41 +65,105 @@ Requirements:
       },
       body: JSON.stringify({
         model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: brand_logo_url ? userContent : prompt }],
+        messages: [{ role: "user", content: scenePrompt }],
         modalities: ["image", "text"],
       }),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("AI image generation error:", res.status, errText);
-      if (res.status === 429) {
+    if (!sceneRes.ok) {
+      const errText = await sceneRes.text();
+      console.error("AI scene generation error:", sceneRes.status, errText);
+      if (sceneRes.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited — please wait a moment and try again" }), {
           status: 429, headers: { ...cors, "Content-Type": "application/json" },
         });
       }
-      if (res.status === 402) {
+      if (sceneRes.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted — please add credits" }), {
           status: 402, headers: { ...cors, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI image error: ${res.status}`);
+      throw new Error(`AI scene error: ${sceneRes.status}`);
     }
 
-    const data = await res.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const sceneData = await sceneRes.json();
+    const sceneImageUrl = sceneData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    if (!imageUrl) {
-      console.error("No image in response:", JSON.stringify(data).slice(0, 500));
-      throw new Error("No image generated — try again");
+    if (!sceneImageUrl) {
+      console.error("No image in scene response:", JSON.stringify(sceneData).slice(0, 500));
+      throw new Error("No scene image generated — try again");
     }
 
-    console.log(`Scene ${scene_index} image generated successfully`);
+    console.log(`[Step 1] Base scene ${scene_index} generated successfully`);
 
-    return new Response(JSON.stringify({ 
-      url: imageUrl, 
-      scene_index,
-    }), {
+    // If no brand logo, return the base scene directly
+    if (!brand_logo_url) {
+      return new Response(JSON.stringify({ url: sceneImageUrl, scene_index }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // STEP 2: Composite the real logo into the scene using image editing
+    console.log(`[Step 2] Compositing brand logo into scene ${scene_index}`);
+
+    const compositePrompt = `You are given two images:
+1. A photorealistic scene from a video ad storyboard
+2. A brand logo
+
+Your task: Place the EXACT brand logo from image 2 into the scene from image 1.
+The logo must be placed NATURALLY on a visible surface in the scene — such as a product, phone screen, laptop screen, packaging, signage, storefront, clothing, wall poster, or any relevant surface.
+
+CRITICAL RULES:
+- The logo must be the EXACT same logo from image 2 — do NOT modify, redraw, or reinterpret it
+- Reproduce the logo's exact colors, shapes, typography, and proportions
+- The logo should look like it belongs in the scene (proper perspective, lighting, shadows)
+- Do NOT change anything else in the scene — keep everything pixel-perfect except where the logo is placed
+- The logo should be clearly visible but naturally integrated
+- Match the surface's perspective and lighting`;
+
+    const compositeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-pro-image-preview",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: compositePrompt },
+            { type: "image_url", image_url: { url: sceneImageUrl } },
+            { type: "image_url", image_url: { url: brand_logo_url } },
+          ],
+        }],
+        modalities: ["image", "text"],
+      }),
+    });
+
+    if (!compositeRes.ok) {
+      const errText = await compositeRes.text();
+      console.error("Logo composite error:", compositeRes.status, errText);
+      // If compositing fails, fall back to the base scene
+      console.log(`[Step 2] Composite failed, returning base scene`);
+      return new Response(JSON.stringify({ url: sceneImageUrl, scene_index }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const compositeData = await compositeRes.json();
+    const finalImageUrl = compositeData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!finalImageUrl) {
+      console.error("No image in composite response, falling back to base scene");
+      return new Response(JSON.stringify({ url: sceneImageUrl, scene_index }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`[Step 2] Logo composited successfully into scene ${scene_index}`);
+
+    return new Response(JSON.stringify({ url: finalImageUrl, scene_index }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
 
