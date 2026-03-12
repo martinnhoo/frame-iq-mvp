@@ -230,7 +230,8 @@ export default function DashboardOverview() {
         {/* ── HEADER ──────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4 pt-2">
           <div>
-            <p className="text-[10px] text-white/20 uppercase tracking-[0.22em] mb-1.5" style={mono}>{greeting}</p>
+            <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.22em] mb-1.5 mt-3" style={mono}>{greeting}</p>
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -240,9 +241,6 @@ export default function DashboardOverview() {
             {contextGreeting && (
               <p className="text-xs text-white/30 mt-1" style={mono}>{contextGreeting}</p>
             )}
-            <div className="mt-2">
-              <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
-            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
