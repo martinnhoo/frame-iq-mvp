@@ -90,7 +90,136 @@ interface SavedPersona {
   created_at: string;
 }
 
-// ─── Editable Detail Component ───────────────────────────────────────────
+// ─── Smart Template Suggestions ──────────────────────────────────────────
+// Maps persona attributes to the most relevant template categories & specific templates
+function getSmartTemplates(persona: PersonaResult, language: string): { template: Template; reason: string }[] {
+  const platforms = (persona.best_platforms || []).map(p => p.toLowerCase());
+  const formats = (persona.best_formats || []).map(f => f.toLowerCase());
+  const pains = (persona.pains || []).map(p => p.toLowerCase()).join(" ");
+  const desires = (persona.desires || []).map(d => d.toLowerCase()).join(" ");
+  const hooks = (persona.hook_angles || []).map(h => h.toLowerCase()).join(" ");
+  const gender = (persona.gender || "").toLowerCase();
+  const age = persona.age || "";
+  const allText = `${pains} ${desires} ${hooks} ${persona.bio || ""}`.toLowerCase();
+
+  const scored: { template: Template; score: number; reason: string }[] = [];
+
+  for (const t of TEMPLATES) {
+    let score = 0;
+    let reason = "";
+    const cat = t.category;
+    const desc = t.description.toLowerCase();
+    const prompt = t.prompt.toLowerCase();
+
+    // Platform match: if persona targets TikTok → UGC, hook, react templates score higher
+    if (platforms.some(p => p.includes("tiktok"))) {
+      if (["ugc", "hook", "react"].includes(cat)) { score += 3; reason = "TikTok"; }
+    }
+    if (platforms.some(p => p.includes("meta") || p.includes("facebook") || p.includes("instagram"))) {
+      if (["testimonial", "promo", "story", "product"].includes(cat)) { score += 3; reason = "Meta/Instagram"; }
+    }
+    if (platforms.some(p => p.includes("youtube"))) {
+      if (["tutorial", "story", "testimonial"].includes(cat)) { score += 3; reason = "YouTube"; }
+    }
+
+    // Format match
+    if (formats.some(f => f.includes("ugc")) && cat === "ugc") { score += 4; reason = reason || "UGC format"; }
+    if (formats.some(f => f.includes("testimonial")) && cat === "testimonial") { score += 4; reason = reason || "Testimonial"; }
+    if (formats.some(f => f.includes("tutorial")) && cat === "tutorial") { score += 3; reason = reason || "Tutorial"; }
+
+    // Pain/desire keyword matching
+    const keywords = ["transformation", "before", "after", "trust", "price", "expensive", "cheap", "fear", "risk", 
+      "health", "beauty", "money", "save", "fast", "easy", "pain", "sleep", "energy", "weight", "fitness",
+      "food", "game", "gaming", "bet", "invest", "credit", "debt"];
+    for (const kw of keywords) {
+      if (allText.includes(kw) && (desc.includes(kw) || prompt.includes(kw) || cat.includes(kw))) {
+        score += 2; reason = reason || kw;
+      }
+    }
+
+    // Age-based: younger audiences → UGC, challenges, react
+    if (age.includes("18") || age.includes("25") || age.includes("24")) {
+      if (["ugc", "react", "hook"].includes(cat)) score += 1;
+    }
+    // Older audiences → testimonial, tutorial, b2b
+    if (age.includes("35") || age.includes("45") || age.includes("55")) {
+      if (["testimonial", "tutorial", "b2b"].includes(cat)) score += 1;
+    }
+
+    // Hook angle keyword matching
+    if (hooks.includes("myth") && t.id.includes("myth")) score += 5;
+    if (hooks.includes("transformation") && t.id.includes("transformation")) score += 5;
+    if (hooks.includes("honest") && t.id.includes("honest")) score += 5;
+    if (hooks.includes("comparison") && t.id.includes("comparison")) score += 5;
+    if (hooks.includes("challenge") && t.id.includes("challenge")) score += 5;
+
+    if (score > 0) scored.push({ template: t, score, reason });
+  }
+
+  // Sort by score desc, take top 6, deduplicate categories (max 2 per category)
+  scored.sort((a, b) => b.score - a.score);
+  const result: { template: Template; reason: string }[] = [];
+  const catCount: Record<string, number> = {};
+  for (const item of scored) {
+    const c = item.template.category;
+    catCount[c] = (catCount[c] || 0) + 1;
+    if (catCount[c] > 2) continue;
+    result.push({ template: item.template, reason: item.reason });
+    if (result.length >= 6) break;
+  }
+  return result;
+}
+
+function SuggestedTemplates({ persona, dt, language, navigate }: {
+  persona: PersonaResult; dt: (k: any) => string; language: string; navigate: (path: string) => void;
+}) {
+  const suggestions = useMemo(() => getSmartTemplates(persona, language), [persona, language]);
+  if (suggestions.length === 0) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+      className="rounded-2xl p-5 space-y-4"
+      style={{ background: "rgba(234,179,8,0.04)", border: "1px solid rgba(234,179,8,0.15)" }}>
+      <div>
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-yellow-400" /> {dt("pe_suggested_templates")}
+        </h3>
+        <p className="text-[11px] text-white/30 mt-0.5">{dt("pe_suggested_templates_desc")}</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {suggestions.map(({ template: tpl, reason }) => {
+          const tt = language !== "en" ? getTemplateTranslation(tpl.id, language) : null;
+          const name = tt?.name || tpl.name;
+          const desc = tt?.desc || tpl.description;
+          const catMeta = CAT_META[tpl.category];
+          return (
+            <button key={tpl.id}
+              onClick={() => navigate(`/dashboard/boards/new?template=${tpl.id}`)}
+              className="group flex flex-col gap-2 p-3 rounded-xl text-left transition-all hover:scale-[1.02]"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center gap-2">
+                <span className="text-base">{catMeta?.emoji || "📄"}</span>
+                <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full text-white/25"
+                  style={{ background: "rgba(255,255,255,0.05)" }}>{tpl.duration}s</span>
+              </div>
+              <p className="text-[11px] text-white/35 line-clamp-2 leading-relaxed">{desc}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-yellow-400/50 italic">↳ {reason}</span>
+                <span className="text-[10px] text-purple-400/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  {dt("pe_use_template")} <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+
 function PersonaDetailEditable({
   result: initial, activeDetail, globalPersona, setGlobalPersona,
   onCopy, copied, onNew, onBack, onSave, dt, language,
