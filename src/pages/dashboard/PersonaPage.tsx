@@ -679,6 +679,7 @@ export default function PersonaPage() {
       setResult(parsed);
 
       // Save
+      let newPersona: SavedPersona | null = null;
       try {
         const { data: inserted } = await supabase
           .from("personas" as never)
@@ -686,18 +687,18 @@ export default function PersonaPage() {
           .select()
           .single();
         if (inserted) {
-          const newP: SavedPersona = {
+          newPersona = {
             id: (inserted as any).id,
             result: parsed,
             answers: finalAnswers,
             created_at: (inserted as any).created_at,
           };
-          setSaved((prev) => [newP, ...prev]);
+          setSaved((prev) => [newPersona!, ...prev]);
         }
       } catch {}
 
       setView("detail");
-      setActiveDetail(null);
+      setActiveDetail(newPersona);
     } catch (err: any) {
       toast.error(err?.message || dt("cm_error"));
     } finally {
