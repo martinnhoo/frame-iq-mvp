@@ -256,6 +256,17 @@ export type DashT = {
   pe_lang_style: string;
   pe_cta_style: string;
   pe_media_habits: string;
+  pe_brand_kit: string;
+  pe_brand_kit_desc: string;
+  pe_brand_uploaded: string;
+  pe_brand_uploading: string;
+  pe_brand_logo_done: string;
+  pe_brand_click_replace: string;
+  pe_brand_upload_cta: string;
+  pe_brand_upload_hint: string;
+  pe_brand_primary: string;
+  pe_brand_secondary: string;
+  pe_brand_note: string;
 
   // Translate
   tr_title: string;
@@ -400,6 +411,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "Best Formats", pe_best_platforms: "Best Platforms",
     pe_lang_style: "Language Style", pe_cta_style: "CTA Style",
     pe_media_habits: "Media Habits",
+    pe_brand_kit: "Brand Kit", pe_brand_kit_desc: "Logo, colors & brand guide — used in board image generation",
+    pe_brand_uploaded: "Uploaded", pe_brand_uploading: "Uploading brand kit...",
+    pe_brand_logo_done: "Logo uploaded ✓", pe_brand_click_replace: "click to replace",
+    pe_brand_upload_cta: "Upload your brand kit", pe_brand_upload_hint: "Compressed ZIP with logo, colors & guide — max 20MB",
+    pe_brand_primary: "Primary color", pe_brand_secondary: "Secondary color",
+    pe_brand_note: "✨ The board generator will use these colors and logo on upcoming boards for this persona",
     tr_title: "Translate", tr_subtitle: "Adapt your ad script to any market",
     tr_source: "Source language", tr_target: "Target language", tr_translate: "Translate",
     tr_translating: "Translating...", tr_copy: "Copy", tr_result: "Translation",
@@ -529,6 +546,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "Melhores Formatos", pe_best_platforms: "Melhores Plataformas",
     pe_lang_style: "Estilo de Linguagem", pe_cta_style: "Estilo de CTA",
     pe_media_habits: "Hábitos de Mídia",
+    pe_brand_kit: "Brand Kit", pe_brand_kit_desc: "Logo, cores e guia de marca — usados na geração de imagens dos boards",
+    pe_brand_uploaded: "Enviado", pe_brand_uploading: "Enviando brand kit...",
+    pe_brand_logo_done: "Logo carregada ✓", pe_brand_click_replace: "clique para trocar",
+    pe_brand_upload_cta: "Envie seu brand kit", pe_brand_upload_hint: "ZIP comprimido com logo, cores e guia — max 20MB",
+    pe_brand_primary: "Cor primária", pe_brand_secondary: "Cor secundária",
+    pe_brand_note: "✨ O board generator vai usar essas cores e logo nos próximos boards desta persona",
     tr_title: "Traduzir", tr_subtitle: "Adapte seu script para qualquer mercado",
     tr_source: "Idioma de origem", tr_target: "Idioma alvo", tr_translate: "Traduzir",
     tr_translating: "Traduzindo...", tr_copy: "Copiar", tr_result: "Tradução",
@@ -659,6 +682,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "Mejores Formatos", pe_best_platforms: "Mejores Plataformas",
     pe_lang_style: "Estilo de Lenguaje", pe_cta_style: "Estilo de CTA",
     pe_media_habits: "Hábitos de Medios",
+    pe_brand_kit: "Brand Kit", pe_brand_kit_desc: "Logo, colores y guía de marca — usados en la generación de imágenes",
+    pe_brand_uploaded: "Subido", pe_brand_uploading: "Subiendo brand kit...",
+    pe_brand_logo_done: "Logo subida ✓", pe_brand_click_replace: "clic para cambiar",
+    pe_brand_upload_cta: "Sube tu brand kit", pe_brand_upload_hint: "ZIP con logo, colores y guía — máx 20MB",
+    pe_brand_primary: "Color primario", pe_brand_secondary: "Color secundario",
+    pe_brand_note: "✨ El generador de boards usará estos colores y logo en los próximos boards de esta persona",
     tr_title: "Traducir", tr_subtitle: "Adapta tu guión a cualquier mercado",
     tr_source: "Idioma de origen", tr_target: "Idioma destino", tr_translate: "Traducir",
     tr_translating: "Traduciendo...", tr_copy: "Copiar", tr_result: "Traducción",
@@ -789,6 +818,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "最佳格式", pe_best_platforms: "最佳平台",
     pe_lang_style: "语言风格", pe_cta_style: "CTA风格",
     pe_media_habits: "媒体习惯",
+    pe_brand_kit: "品牌套件", pe_brand_kit_desc: "Logo、颜色和品牌指南——用于面板图像生成",
+    pe_brand_uploaded: "已上传", pe_brand_uploading: "正在上传品牌套件...",
+    pe_brand_logo_done: "Logo已上传 ✓", pe_brand_click_replace: "点击更换",
+    pe_brand_upload_cta: "上传您的品牌套件", pe_brand_upload_hint: "包含Logo、颜色和指南的ZIP压缩包 — 最大20MB",
+    pe_brand_primary: "主色", pe_brand_secondary: "辅色",
+    pe_brand_note: "✨ 面板生成器将在此角色的下一个面板中使用这些颜色和Logo",
     tr_title: "翻译", tr_subtitle: "将您的广告脚本适配到任何市场",
     tr_source: "源语言", tr_target: "目标语言", tr_translate: "翻译",
     tr_translating: "翻译中...", tr_copy: "复制", tr_result: "翻译结果",
@@ -918,6 +953,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "Meilleurs formats", pe_best_platforms: "Meilleures plateformes",
     pe_lang_style: "Style de langage", pe_cta_style: "Style de CTA",
     pe_media_habits: "Habitudes médias",
+    pe_brand_kit: "Brand Kit", pe_brand_kit_desc: "Logo, couleurs et guide de marque — utilisés pour la génération d'images",
+    pe_brand_uploaded: "Envoyé", pe_brand_uploading: "Envoi du brand kit...",
+    pe_brand_logo_done: "Logo envoyé ✓", pe_brand_click_replace: "cliquez pour changer",
+    pe_brand_upload_cta: "Envoyez votre brand kit", pe_brand_upload_hint: "ZIP avec logo, couleurs et guide — max 20Mo",
+    pe_brand_primary: "Couleur primaire", pe_brand_secondary: "Couleur secondaire",
+    pe_brand_note: "✨ Le générateur de boards utilisera ces couleurs et ce logo pour les prochains boards de cette persona",
     tr_title: "Traduire", tr_subtitle: "Adaptez votre script à n'importe quel marché",
     tr_source: "Langue source", tr_target: "Langue cible", tr_translate: "Traduire",
     tr_translating: "Traduction...", tr_copy: "Copier", tr_result: "Traduction",
@@ -1047,6 +1088,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "Beste Formate", pe_best_platforms: "Beste Plattformen",
     pe_lang_style: "Sprachstil", pe_cta_style: "CTA-Stil",
     pe_media_habits: "Mediengewohnheiten",
+    pe_brand_kit: "Brand Kit", pe_brand_kit_desc: "Logo, Farben & Markenführung — verwendet bei der Board-Bildgenerierung",
+    pe_brand_uploaded: "Hochgeladen", pe_brand_uploading: "Brand Kit wird hochgeladen...",
+    pe_brand_logo_done: "Logo hochgeladen ✓", pe_brand_click_replace: "Klicken zum Ersetzen",
+    pe_brand_upload_cta: "Brand Kit hochladen", pe_brand_upload_hint: "ZIP mit Logo, Farben & Guide — max 20MB",
+    pe_brand_primary: "Primärfarbe", pe_brand_secondary: "Sekundärfarbe",
+    pe_brand_note: "✨ Der Board-Generator wird diese Farben und dieses Logo für die nächsten Boards dieser Persona verwenden",
     tr_title: "Übersetzen", tr_subtitle: "Skript für jeden Markt anpassen",
     tr_source: "Quellsprache", tr_target: "Zielsprache", tr_translate: "Übersetzen",
     tr_translating: "Übersetze...", tr_copy: "Kopieren", tr_result: "Übersetzung",
@@ -1176,6 +1223,12 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pe_best_formats: "أفضل الصيغ", pe_best_platforms: "أفضل المنصات",
     pe_lang_style: "أسلوب اللغة", pe_cta_style: "أسلوب CTA",
     pe_media_habits: "عادات الوسائط",
+    pe_brand_kit: "حزمة العلامة التجارية", pe_brand_kit_desc: "الشعار والألوان ودليل العلامة — يُستخدم في إنشاء صور اللوحات",
+    pe_brand_uploaded: "تم الرفع", pe_brand_uploading: "جارٍ رفع حزمة العلامة...",
+    pe_brand_logo_done: "تم رفع الشعار ✓", pe_brand_click_replace: "انقر للتبديل",
+    pe_brand_upload_cta: "ارفع حزمة علامتك التجارية", pe_brand_upload_hint: "ملف ZIP مع الشعار والألوان والدليل — بحد أقصى 20 ميغا",
+    pe_brand_primary: "اللون الأساسي", pe_brand_secondary: "اللون الثانوي",
+    pe_brand_note: "✨ سيستخدم منشئ اللوحات هذه الألوان والشعار في اللوحات القادمة لهذه الشخصية",
     tr_title: "ترجمة", tr_subtitle: "تكيّف نصك مع أي سوق",
     tr_source: "لغة المصدر", tr_target: "اللغة الهدف", tr_translate: "ترجمة",
     tr_translating: "جاري الترجمة...", tr_copy: "نسخ", tr_result: "الترجمة",

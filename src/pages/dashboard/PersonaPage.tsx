@@ -323,15 +323,15 @@ function PersonaDetailEditable({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>🎨</span> Brand Kit
+              <span>🎨</span> {dt("pe_brand_kit")}
             </h3>
             <p className="text-[11px] text-white/30 mt-0.5">
-              Logo, cores e guia de marca — usados na geração de imagens dos boards
+              {dt("pe_brand_kit_desc")}
             </p>
           </div>
           {(brandKit.logo_data_url || brandKit.uploaded_at) && (
             <span className="text-[10px] text-green-400/70 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Uploaded
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> {dt("pe_brand_uploaded")}
             </span>
           )}
         </div>
@@ -353,7 +353,7 @@ function PersonaDetailEditable({
           {kitUploading ? (
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded-full border-2 border-purple-400/40 border-t-purple-400 animate-spin" />
-              <span className="text-xs text-white/40">Uploading brand kit...</span>
+              <span className="text-xs text-white/40">{dt("pe_brand_uploading")}</span>
             </div>
           ) : brandKit.logo_data_url ? (
             <div className="flex flex-col items-center gap-2">
@@ -362,8 +362,8 @@ function PersonaDetailEditable({
                 <img src={brandKit.logo_data_url} alt="logo"
                   className="w-full h-full object-contain p-1.5" />
               </div>
-              <p className="text-sm font-semibold text-green-300">Logo carregada ✓</p>
-              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · clique para trocar</p>
+              <p className="text-sm font-semibold text-green-300">{dt("pe_brand_logo_done")}</p>
+              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · {dt("pe_brand_click_replace")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
@@ -372,8 +372,8 @@ function PersonaDetailEditable({
                 📦
               </div>
               <div>
-                <p className="text-sm font-semibold text-white/70">Upload your brand kit</p>
-                <p className="text-[11px] text-white/30 mt-0.5">ZIP comprimido com logo, cores e guia — max 20MB</p>
+                <p className="text-sm font-semibold text-white/70">{dt("pe_brand_upload_cta")}</p>
+                <p className="text-[11px] text-white/30 mt-0.5">{dt("pe_brand_upload_hint")}</p>
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
                 {["ZIP", "PNG", "SVG", "JPG"].map(t => (
@@ -392,7 +392,7 @@ function PersonaDetailEditable({
         {/* Color pickers */}
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor primária</p>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_primary")}</p>
             <div className="flex items-center gap-2">
               <input type="color" value={brandKit.primary_color || "#8B5CF6"}
                 onChange={async e => {
@@ -408,7 +408,7 @@ function PersonaDetailEditable({
             </div>
           </div>
           <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor secundária</p>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_secondary")}</p>
             <div className="flex items-center gap-2">
               <input type="color" value={brandKit.secondary_color || "#EC4899"}
                 onChange={async e => {
@@ -427,7 +427,7 @@ function PersonaDetailEditable({
 
         {(brandKit.primary_color || brandKit.logo_data_url) && (
           <p className="text-[10px] text-purple-400/60 text-center pt-1">
-            ✨ O board generator vai usar essas cores e logo nos próximos boards desta persona
+            {dt("pe_brand_note")}
           </p>
         )}
       </motion.div>
