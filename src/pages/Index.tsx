@@ -878,7 +878,7 @@ const Index = () => {
                   className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 border-white/10 font-body"
                   onClick={() => navigate("/book-demo")}
                 >
-                  Book a 15-min demo
+                  {t("cta_secondary_btn")}
                 </Button>
               </div>
 
