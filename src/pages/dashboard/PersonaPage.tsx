@@ -290,7 +290,7 @@ function PersonaDetailEditable({
           </div>
           <div>
             <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
-            <EditableList field="best_platforms" items={draft.best_platforms} color="text-purple-300" />
+            <EditableListField field="best_platforms" items={draft.best_platforms} color="text-purple-300" editing={editing} onChange={handleListChange} />
           </div>
         </div>
 
