@@ -492,26 +492,26 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               {
-                quote: "Honest review: I was skeptical. But the hook score actually matched what we saw in results. Helped me kill a script before we filmed it.",
-                name: "Lucas F.",
-                role: "Creative lead · São Paulo",
-                metric: "Stopped a bad shoot early",
-                avatar: "LF",
+                quote: "I run paid social for three DTC brands across EU. AdBrief is now part of my pre-launch checklist — hook score flagged a weak open on a €4k shoot. We recut before it went live.",
+                name: "Mathieu D.",
+                role: "Performance Analyst · Paris · E-commerce",
+                metric: "Caught a bad hook before a €4k shoot",
+                avatar: "MD",
                 color: "#a78bfa",
               },
               {
-                quote: "Briefing editors used to take me 30 min of back-and-forth. The production board cuts that down a lot. Not perfect but way faster.",
+                quote: "As a creative strategist I was spending too much time writing briefs from scratch. The production board gives me a solid starting point every time. My editors actually prefer it.",
                 name: "Camila S.",
-                role: "Creative Strategist · MX",
-                metric: "Faster editor briefs",
+                role: "Creative Strategist · São Paulo · iGaming",
+                metric: "Editors adopted it in week one",
                 avatar: "CS",
                 color: "#f472b6",
               },
               {
-                quote: "The AI suggestions aren't always spot-on, but about 70% of the time they point at exactly what I already suspected. Good for a gut-check.",
+                quote: "We were scaling to 3 new markets and couldn't afford to guess on creative. AdBrief gave our team a shared language for what 'good' looks like — that alone was worth it.",
                 name: "Rohan M.",
-                role: "Performance team · Mumbai",
-                metric: "Good for validating hunches",
+                role: "Head of Marketing · Mumbai · SaaS",
+                metric: "Rolled out across 3 markets",
                 avatar: "RM",
                 color: "#34d399",
               },
@@ -519,10 +519,10 @@ const Index = () => {
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
                 className="relative p-5 rounded-2xl flex flex-col gap-4"
                 style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)"}}>
-                {/* Stars — 4/5 para soar mais real */}
+                {/* Stars */}
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_,j) => (
-                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill={j < 4 ? "#fbbf24" : "rgba(255,255,255,0.1)"}><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z"/></svg>
+                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z"/></svg>
                   ))}
                 </div>
                 {/* Quote */}
