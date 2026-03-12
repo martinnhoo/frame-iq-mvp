@@ -12,6 +12,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AuthPromptModal from "@/components/AuthPromptModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
+import TopBanner from "@/components/TopBanner";
+import LogoTicker from "@/components/LogoTicker";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -86,8 +88,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Top banner — high demand / live activity — static, pushes nav down */}
+      <TopBanner />
+
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
+      <nav className="sticky top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <Link to="/">
             <Logo size="lg" />
@@ -152,7 +157,7 @@ const Index = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex flex-col justify-center px-6 overflow-hidden pt-28 pb-16">
+      <section className="relative flex flex-col justify-center px-6 overflow-hidden pt-16 pb-16">
         {/* Background Effects */}
         <div 
           className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none"
@@ -461,6 +466,9 @@ const Index = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Logo ticker — brands running ads */}
+      <LogoTicker />
 
       {/* Social proof — numbers + testimonial */}
       <section className="py-12 px-6 border-y border-white/[0.06]">
