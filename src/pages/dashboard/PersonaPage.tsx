@@ -10,6 +10,47 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+// ─── Stable sub-components (outside parent to avoid re-mount on each render) ──
+
+function EditableTextField({ field, value, className = "", rows, editing, onChange }: {
+  field: string; value: string; className?: string; rows?: number; editing: boolean;
+  onChange: (field: string, value: string) => void;
+}) {
+  if (!editing) return <span className={className}>{value || "—"}</span>;
+  return rows ? (
+    <textarea value={value} onChange={e => onChange(field, e.target.value)} rows={rows}
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
+  ) : (
+    <input value={value} onChange={e => onChange(field, e.target.value)}
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
+  );
+}
+
+function EditableListField({ field, items, color, editing, onChange }: {
+  field: string; items: string[]; color: string; editing: boolean;
+  onChange: (field: string, value: string) => void;
+}) {
+  if (!editing) return (
+    <ul className="space-y-2">
+      {(items || []).map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-white/60">
+          <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <textarea
+      value={(items || []).join("\n")}
+      onChange={e => onChange(field, e.target.value)}
+      rows={Math.max(2, (items || []).length)}
+      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
+    />
+  );
+}
+
 interface PersonaResult {
   name: string;
   age: string;
@@ -143,40 +184,10 @@ function PersonaDetailEditable({
     setSaving(false);
   };
 
-  const updateField = (field: keyof PersonaResult, value: string) =>
+  const handleFieldChange = (field: string, value: string) =>
     setDraft(d => ({ ...d, [field]: value }));
-  const updateList = (field: keyof PersonaResult, value: string) =>
+  const handleListChange = (field: string, value: string) =>
     setDraft(d => ({ ...d, [field]: value.split("\n").filter(Boolean) }));
-
-  const EditableText = ({ field, value, className = "", rows }: { field: keyof PersonaResult; value: string; className?: string; rows?: number }) =>
-    editing ? (
-      rows ? (
-        <textarea value={value} onChange={e => updateField(field, e.target.value)} rows={rows}
-          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
-      ) : (
-        <input value={value} onChange={e => updateField(field, e.target.value)}
-          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
-      )
-    ) : <span className={className}>{value || "—"}</span>;
-
-  const EditableList = ({ field, items, color }: { field: keyof PersonaResult; items: string[]; color: string }) =>
-    editing ? (
-      <textarea
-        value={(items || []).join("\n")}
-        onChange={e => updateList(field, e.target.value)}
-        rows={Math.max(2, (items || []).length)}
-        className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
-      />
-    ) : (
-      <ul className="space-y-2">
-        {(items || []).map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-            <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
@@ -233,14 +244,14 @@ function PersonaDetailEditable({
             <Persona3DAvatar emoji={draft.avatar_emoji} name={draft.name} gender={draft.gender} size="lg" />
           </div>
           <div className="pt-2 flex-1 space-y-2">
-            <EditableText field="name" value={draft.name} className={editing ? "" : "text-2xl font-bold text-white block"} />
+            <EditableTextField field="name" value={draft.name} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-2xl font-bold text-white block"} />
             <div className="flex items-center gap-3">
-              <EditableText field="age" value={draft.age} className={editing ? "!w-20" : "text-white/40 text-sm"} />
+              <EditableTextField field="age" value={draft.age} editing={editing} onChange={handleFieldChange} className={editing ? "!w-20" : "text-white/40 text-sm"} />
               {!editing && <span className="text-white/20">·</span>}
-              <EditableText field="gender" value={draft.gender} className={editing ? "!w-28" : "text-white/40 text-sm"} />
+              <EditableTextField field="gender" value={draft.gender} editing={editing} onChange={handleFieldChange} className={editing ? "!w-28" : "text-white/40 text-sm"} />
             </div>
-            <EditableText field="headline" value={draft.headline} className={editing ? "" : "text-purple-300 font-semibold block"} />
-            <EditableText field="bio" value={draft.bio} rows={3} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
+            <EditableTextField field="headline" value={draft.headline} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-purple-300 font-semibold block"} />
+            <EditableTextField field="bio" value={draft.bio} rows={3} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
           </div>
         </div>
       </motion.div>
@@ -257,7 +268,7 @@ function PersonaDetailEditable({
             transition={{ delay: 0.1 + idx * 0.05 }}
             className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
             <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
-            <EditableList field={field} items={items} color={color} />
+            <EditableListField field={field} items={items} color={color} editing={editing} onChange={handleListChange} />
           </motion.div>
         ))}
       </div>
@@ -269,28 +280,28 @@ function PersonaDetailEditable({
 
         <div>
           <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
-          <EditableList field="hook_angles" items={draft.hook_angles} color="text-purple-400" />
+          <EditableListField field="hook_angles" items={draft.hook_angles} color="text-purple-400" editing={editing} onChange={handleListChange} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_formats")}</p>
-            <EditableList field="best_formats" items={draft.best_formats} color="text-blue-300" />
+            <EditableListField field="best_formats" items={draft.best_formats} color="text-blue-300" editing={editing} onChange={handleListChange} />
           </div>
           <div>
             <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_best_platforms")}</p>
-            <EditableList field="best_platforms" items={draft.best_platforms} color="text-purple-300" />
+            <EditableListField field="best_platforms" items={draft.best_platforms} color="text-purple-300" editing={editing} onChange={handleListChange} />
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
           <div>
             <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_lang_style")}</p>
-            <EditableText field="language_style" value={draft.language_style} className={editing ? "" : "text-sm text-white/60"} />
+            <EditableTextField field="language_style" value={draft.language_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
           <div>
             <p className="text-xs text-white/25 mb-1 uppercase tracking-wider">{dt("pe_cta_style")}</p>
-            <EditableText field="cta_style" value={draft.cta_style} className={editing ? "" : "text-sm text-white/60"} />
+            <EditableTextField field="cta_style" value={draft.cta_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
         </div>
       </motion.div>
@@ -300,7 +311,7 @@ function PersonaDetailEditable({
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
           <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
-          <EditableList field="media_habits" items={draft.media_habits} color="text-cyan-400" />
+          <EditableListField field="media_habits" items={draft.media_habits} color="text-cyan-400" editing={editing} onChange={handleListChange} />
         </motion.div>
       )}
 
