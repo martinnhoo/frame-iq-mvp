@@ -353,7 +353,7 @@ function PersonaDetailEditable({
           {kitUploading ? (
             <div className="flex flex-col items-center gap-2">
               <div className="w-8 h-8 rounded-full border-2 border-purple-400/40 border-t-purple-400 animate-spin" />
-              <span className="text-xs text-white/40">Uploading brand kit...</span>
+              <span className="text-xs text-white/40">{dt("pe_brand_uploading")}</span>
             </div>
           ) : brandKit.logo_data_url ? (
             <div className="flex flex-col items-center gap-2">
