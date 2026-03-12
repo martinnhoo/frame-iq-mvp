@@ -280,7 +280,7 @@ function PersonaDetailEditable({
 
         <div>
           <p className="text-xs text-white/25 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
-          <EditableList field="hook_angles" items={draft.hook_angles} color="text-purple-400" />
+          <EditableListField field="hook_angles" items={draft.hook_angles} color="text-purple-400" editing={editing} onChange={handleListChange} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
