@@ -174,6 +174,33 @@ type TranslationKeys = {
 
   // Powered by
   powered_by: string;
+
+  // Landing page extras
+  lp_free_to_start: string;
+  lp_see_plans: string;
+  lp_score_cta: string;
+  lp_live_teams: string;
+  lp_objection_q1: string; lp_objection_a1: string;
+  lp_objection_q2: string; lp_objection_a2: string;
+  lp_objection_q3: string; lp_objection_a3: string;
+  lp_stop_guessing: string;
+  lp_every_day1: string; lp_every_day2: string;
+  lp_real_problems: string;
+  lp_ready_stop: string;
+  lp_launch_special: string;
+  lp_joined_by: string;
+  lp_mobile_sub: string;
+  footer_careers: string;
+  lp_testimonial1_quote: string; lp_testimonial1_name: string; lp_testimonial1_role: string; lp_testimonial1_metric: string;
+  lp_testimonial2_quote: string; lp_testimonial2_name: string; lp_testimonial2_role: string; lp_testimonial2_metric: string;
+  lp_testimonial3_quote: string; lp_testimonial3_name: string; lp_testimonial3_role: string; lp_testimonial3_metric: string;
+  lp_plan_free_features: string;
+  lp_plan_maker_features: string;
+  lp_plan_pro_features: string;
+  lp_plan_studio_features: string;
+  lp_start_maker: string;
+  lp_start_pro: string;
+  lp_start_studio: string;
 };
 
 export const translations: Record<Language, TranslationKeys> = {
