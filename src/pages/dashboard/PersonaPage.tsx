@@ -800,8 +800,9 @@ CTA: ${persona.cta_style}`;
       dt={dt}
       onSave={async (updated) => {
         if (activeDetail) {
+          const resultWithBrandKit = { ...updated, brand_kit: activeDetail.brand_kit } as any;
           await supabase.from("personas" as never)
-            .update({ result: updated } as never)
+            .update({ result: resultWithBrandKit } as never)
             .eq("id" as never, activeDetail.id);
           setSaved(prev => prev.map(p => p.id === activeDetail.id ? { ...p, result: updated } : p));
         }
