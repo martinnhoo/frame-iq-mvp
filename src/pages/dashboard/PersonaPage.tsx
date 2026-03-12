@@ -815,6 +815,7 @@ CTA: ${persona.cta_style}`;
       onNew={startNew}
       onBack={backToList}
       dt={dt}
+      language={language}
       onSave={async (updated) => {
         if (activeDetail) {
           const resultWithBrandKit = { ...updated, brand_kit: activeDetail.brand_kit } as any;
