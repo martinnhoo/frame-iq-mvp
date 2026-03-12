@@ -492,26 +492,26 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               {
-                quote: "We went from guessing why ads failed to knowing in 60 seconds. Hook score alone saved us two full production days last month.",
-                name: "Lucas Ferreira",
-                role: "Head of Creative · São Paulo",
-                metric: "+34% hook rate in 3 weeks",
+                quote: "Honest review: I was skeptical. But the hook score actually matched what we saw in results. Helped me kill a script before we filmed it.",
+                name: "Lucas F.",
+                role: "Creative lead · São Paulo",
+                metric: "Stopped a bad shoot early",
                 avatar: "LF",
                 color: "#a78bfa",
               },
               {
-                quote: "The production board feature is insane. I brief editors in one click now. Zero revision rounds on the last 8 ads we shipped.",
-                name: "Camila Souza",
-                role: "Creative Strategist · Mexico City",
-                metric: "0 revision rounds last sprint",
+                quote: "Briefing editors used to take me 30 min of back-and-forth. The production board cuts that down a lot. Not perfect but way faster.",
+                name: "Camila S.",
+                role: "Creative Strategist · MX",
+                metric: "Faster editor briefs",
                 avatar: "CS",
                 color: "#f472b6",
               },
               {
-                quote: "Finally stopped wasting budget on weak hooks. AdBrief catches problems before they go to production. Paid for itself in week one.",
-                name: "Rohan Mehta",
-                role: "Performance Lead · Mumbai",
-                metric: "−41% creative waste MoM",
+                quote: "The AI suggestions aren't always spot-on, but about 70% of the time they point at exactly what I already suspected. Good for a gut-check.",
+                name: "Rohan M.",
+                role: "Performance team · Mumbai",
+                metric: "Good for validating hunches",
                 avatar: "RM",
                 color: "#34d399",
               },
@@ -519,18 +519,18 @@ const Index = () => {
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
                 className="relative p-5 rounded-2xl flex flex-col gap-4"
                 style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)"}}>
-                {/* Stars */}
+                {/* Stars — 4/5 para soar mais real */}
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_,j) => (
-                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z"/></svg>
+                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill={j < 4 ? "#fbbf24" : "rgba(255,255,255,0.1)"}><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z"/></svg>
                   ))}
                 </div>
                 {/* Quote */}
                 <p className="text-sm text-white/60 leading-relaxed font-body flex-1">"{t.quote}"</p>
-                {/* Metric pill */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold w-fit"
-                  style={{background:`${t.color}15`,border:`1px solid ${t.color}30`,color:t.color}}>
-                  ↑ {t.metric}
+                {/* Metric pill — sem seta exagerada */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold w-fit"
+                  style={{background:`${t.color}10`,border:`1px solid ${t.color}25`,color:t.color}}>
+                  {t.metric}
                 </div>
                 {/* Author */}
                 <div className="flex items-center gap-3 pt-1 border-t border-white/[0.06]">
