@@ -362,8 +362,8 @@ function PersonaDetailEditable({
                 <img src={brandKit.logo_data_url} alt="logo"
                   className="w-full h-full object-contain p-1.5" />
               </div>
-              <p className="text-sm font-semibold text-green-300">Logo carregada ✓</p>
-              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · clique para trocar</p>
+              <p className="text-sm font-semibold text-green-300">{dt("pe_brand_logo_done")}</p>
+              <p className="text-[11px] text-white/30">{brandKit.file_name || "brand kit"} · {dt("pe_brand_click_replace")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
