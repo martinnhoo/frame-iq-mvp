@@ -13,7 +13,7 @@ import { getTemplateTranslation, getCategoryLabel, getUpgradeCTA } from "@/i18n/
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
 
-interface Template {
+export interface Template {
   id: string;
   name: string;
   description: string;
