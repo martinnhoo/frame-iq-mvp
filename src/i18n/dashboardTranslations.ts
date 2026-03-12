@@ -292,6 +292,32 @@ export type DashT = {
   cm_active_persona: string;
   cm_manage_personas: string;
   cm_clear: string;
+
+  // Gamification
+  gm_streak: string;
+  gm_streak_days: string;
+  gm_streak_best: string;
+  gm_streak_start: string;
+  gm_streak_keep: string;
+  gm_level: string;
+  gm_level_observer: string;
+  gm_level_analyst: string;
+  gm_level_strategist: string;
+  gm_level_producer: string;
+  gm_level_director: string;
+  gm_level_next: string;
+  gm_level_actions: string;
+  gm_weekly: string;
+  gm_weekly_up: string;
+  gm_weekly_down: string;
+  gm_weekly_stable: string;
+  gm_weekly_no_data: string;
+  gm_weekly_this: string;
+  gm_weekly_last: string;
+  gm_greet_comeback: string;
+  gm_greet_streak: string;
+  gm_greet_new: string;
+  gm_greet_prolific: string;
 };
 
 export const dashTranslations: Record<DashLang, DashT> = {
@@ -409,6 +435,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Create first persona", ov_clear_persona: "Clear persona",
     bo_production_boards: "production boards", bo_create_first: "Create first board",
     bo_describe_concept: "Describe your ad concept and get scenes, scripts, and production notes",
+    gm_streak: "Streak", gm_streak_days: "days", gm_streak_best: "Best", gm_streak_start: "Use a tool today to start your streak!",
+    gm_streak_keep: "Come back tomorrow to keep it going!",
+    gm_level: "Creative Level", gm_level_observer: "Observer", gm_level_analyst: "Analyst",
+    gm_level_strategist: "Strategist", gm_level_producer: "Producer", gm_level_director: "Creative Director",
+    gm_level_next: "to next level", gm_level_actions: "actions",
+    gm_weekly: "Weekly Score", gm_weekly_up: "up from last week", gm_weekly_down: "down from last week",
+    gm_weekly_stable: "Stable", gm_weekly_no_data: "Analyze videos to track progress",
+    gm_weekly_this: "This week", gm_weekly_last: "Last week",
+    gm_greet_comeback: "Welcome back! We missed you 🙌", gm_greet_streak: "day streak! You're on fire 🔥",
+    gm_greet_new: "Let's build something great today!", gm_greet_prolific: "You've been crushing it lately 💪",
   },
 
   pt: {
@@ -529,6 +565,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Criar primeira persona", ov_clear_persona: "Limpar persona",
     bo_production_boards: "boards de produção", bo_create_first: "Criar primeiro board",
     bo_describe_concept: "Descreva o conceito do seu anúncio e receba cenas, scripts e notas de produção",
+    gm_streak: "Sequência", gm_streak_days: "dias", gm_streak_best: "Melhor", gm_streak_start: "Use uma ferramenta hoje para iniciar sua sequência!",
+    gm_streak_keep: "Volte amanhã para manter a sequência!",
+    gm_level: "Nível Criativo", gm_level_observer: "Observador", gm_level_analyst: "Analista",
+    gm_level_strategist: "Estrategista", gm_level_producer: "Produtor", gm_level_director: "Diretor Criativo",
+    gm_level_next: "para próximo nível", gm_level_actions: "ações",
+    gm_weekly: "Score Semanal", gm_weekly_up: "acima da semana passada", gm_weekly_down: "abaixo da semana passada",
+    gm_weekly_stable: "Estável", gm_weekly_no_data: "Analise vídeos para acompanhar progresso",
+    gm_weekly_this: "Esta semana", gm_weekly_last: "Semana passada",
+    gm_greet_comeback: "Bem-vindo de volta! Sentimos sua falta 🙌", gm_greet_streak: "dias de sequência! Você está on fire 🔥",
+    gm_greet_new: "Vamos criar algo incrível hoje!", gm_greet_prolific: "Você tem arrasado ultimamente 💪",
   },
 
   es: {
@@ -649,6 +695,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Crear primera persona", ov_clear_persona: "Limpiar persona",
     bo_production_boards: "boards de producción", bo_create_first: "Crear primer board",
     bo_describe_concept: "Describe el concepto de tu anuncio y obtén escenas, guiones y notas de producción",
+    gm_streak: "Racha", gm_streak_days: "días", gm_streak_best: "Mejor", gm_streak_start: "¡Usa una herramienta hoy para iniciar tu racha!",
+    gm_streak_keep: "¡Vuelve mañana para mantenerla!",
+    gm_level: "Nivel Creativo", gm_level_observer: "Observador", gm_level_analyst: "Analista",
+    gm_level_strategist: "Estratega", gm_level_producer: "Productor", gm_level_director: "Director Creativo",
+    gm_level_next: "para siguiente nivel", gm_level_actions: "acciones",
+    gm_weekly: "Score Semanal", gm_weekly_up: "arriba vs semana pasada", gm_weekly_down: "abajo vs semana pasada",
+    gm_weekly_stable: "Estable", gm_weekly_no_data: "Analiza videos para seguir el progreso",
+    gm_weekly_this: "Esta semana", gm_weekly_last: "Semana pasada",
+    gm_greet_comeback: "¡Bienvenido de vuelta! Te extrañamos 🙌", gm_greet_streak: "días de racha! Estás on fire 🔥",
+    gm_greet_new: "¡Vamos a crear algo increíble hoy!", gm_greet_prolific: "Has estado imparable últimamente 💪",
   },
 
   zh: {
@@ -769,6 +825,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "创建首个画像", ov_clear_persona: "清除画像",
     bo_production_boards: "个制作板", bo_create_first: "创建首个制作板",
     bo_describe_concept: "描述您的广告概念，获取场景、脚本和制作备注",
+    gm_streak: "连续天数", gm_streak_days: "天", gm_streak_best: "最佳", gm_streak_start: "今天使用工具开始你的连续记录！",
+    gm_streak_keep: "明天再来保持连续！",
+    gm_level: "创意等级", gm_level_observer: "观察者", gm_level_analyst: "分析师",
+    gm_level_strategist: "策略师", gm_level_producer: "制作人", gm_level_director: "创意总监",
+    gm_level_next: "距下一级", gm_level_actions: "次操作",
+    gm_weekly: "周评分", gm_weekly_up: "比上周上升", gm_weekly_down: "比上周下降",
+    gm_weekly_stable: "稳定", gm_weekly_no_data: "分析视频以跟踪进度",
+    gm_weekly_this: "本周", gm_weekly_last: "上周",
+    gm_greet_comeback: "欢迎回来！我们想你了 🙌", gm_greet_streak: "天连续！太厉害了 🔥",
+    gm_greet_new: "今天一起创作吧！", gm_greet_prolific: "你最近一直在高产出 💪",
   },
 
   fr: {
@@ -888,6 +954,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Créer première persona", ov_clear_persona: "Effacer persona",
     bo_production_boards: "boards de production", bo_create_first: "Créer premier board",
     bo_describe_concept: "Décrivez votre concept publicitaire et obtenez scènes, scripts et notes de production",
+    gm_streak: "Série", gm_streak_days: "jours", gm_streak_best: "Meilleure", gm_streak_start: "Utilisez un outil aujourd'hui pour démarrer votre série !",
+    gm_streak_keep: "Revenez demain pour continuer !",
+    gm_level: "Niveau Créatif", gm_level_observer: "Observateur", gm_level_analyst: "Analyste",
+    gm_level_strategist: "Stratège", gm_level_producer: "Producteur", gm_level_director: "Directeur Créatif",
+    gm_level_next: "pour prochain niveau", gm_level_actions: "actions",
+    gm_weekly: "Score Hebdo", gm_weekly_up: "en hausse vs semaine dernière", gm_weekly_down: "en baisse vs semaine dernière",
+    gm_weekly_stable: "Stable", gm_weekly_no_data: "Analysez des vidéos pour suivre les progrès",
+    gm_weekly_this: "Cette semaine", gm_weekly_last: "Semaine dernière",
+    gm_greet_comeback: "Content de vous revoir ! Vous nous avez manqué 🙌", gm_greet_streak: "jours de série ! Vous êtes en feu 🔥",
+    gm_greet_new: "Créons quelque chose de génial aujourd'hui !", gm_greet_prolific: "Vous avez été très productif 💪",
   },
 
   de: {
@@ -1007,6 +1083,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "Erste Persona erstellen", ov_clear_persona: "Persona löschen",
     bo_production_boards: "Produktions-Boards", bo_create_first: "Erstes Board erstellen",
     bo_describe_concept: "Beschreiben Sie Ihr Anzeigenkonzept und erhalten Sie Szenen, Skripte und Produktionsnotizen",
+    gm_streak: "Serie", gm_streak_days: "Tage", gm_streak_best: "Beste", gm_streak_start: "Nutzen Sie heute ein Tool, um Ihre Serie zu starten!",
+    gm_streak_keep: "Kommen Sie morgen wieder, um weiterzumachen!",
+    gm_level: "Kreativ-Level", gm_level_observer: "Beobachter", gm_level_analyst: "Analyst",
+    gm_level_strategist: "Stratege", gm_level_producer: "Produzent", gm_level_director: "Kreativdirektor",
+    gm_level_next: "zum nächsten Level", gm_level_actions: "Aktionen",
+    gm_weekly: "Wochen-Score", gm_weekly_up: "höher als letzte Woche", gm_weekly_down: "niedriger als letzte Woche",
+    gm_weekly_stable: "Stabil", gm_weekly_no_data: "Analysieren Sie Videos, um Fortschritt zu verfolgen",
+    gm_weekly_this: "Diese Woche", gm_weekly_last: "Letzte Woche",
+    gm_greet_comeback: "Willkommen zurück! Wir haben Sie vermisst 🙌", gm_greet_streak: "Tage Serie! Sie sind on fire 🔥",
+    gm_greet_new: "Lassen Sie uns heute etwas Großartiges erschaffen!", gm_greet_prolific: "Sie waren zuletzt sehr produktiv 💪",
   },
 
   ar: {
@@ -1126,6 +1212,16 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_create_first_persona: "إنشاء أول شخصية", ov_clear_persona: "مسح الشخصية",
     bo_production_boards: "لوحات إنتاج", bo_create_first: "إنشاء أول لوحة",
     bo_describe_concept: "صِف مفهوم إعلانك واحصل على مشاهد ونصوص وملاحظات إنتاج",
+    gm_streak: "سلسلة", gm_streak_days: "أيام", gm_streak_best: "الأفضل", gm_streak_start: "استخدم أداة اليوم لبدء سلسلتك!",
+    gm_streak_keep: "عُد غداً للحفاظ عليها!",
+    gm_level: "المستوى الإبداعي", gm_level_observer: "مراقب", gm_level_analyst: "محلل",
+    gm_level_strategist: "استراتيجي", gm_level_producer: "منتج", gm_level_director: "مدير إبداعي",
+    gm_level_next: "للمستوى التالي", gm_level_actions: "إجراءات",
+    gm_weekly: "نقاط الأسبوع", gm_weekly_up: "أعلى من الأسبوع الماضي", gm_weekly_down: "أقل من الأسبوع الماضي",
+    gm_weekly_stable: "مستقر", gm_weekly_no_data: "حلل فيديوهات لتتبع التقدم",
+    gm_weekly_this: "هذا الأسبوع", gm_weekly_last: "الأسبوع الماضي",
+    gm_greet_comeback: "مرحباً بعودتك! افتقدناك 🙌", gm_greet_streak: "أيام متتالية! أنت مشتعل 🔥",
+    gm_greet_new: "لننشئ شيئاً رائعاً اليوم!", gm_greet_prolific: "كنت منتجاً جداً مؤخراً 💪",
   },
 };
 

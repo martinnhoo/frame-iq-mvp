@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import GamificationWidgets from "@/components/dashboard/GamificationWidgets";
 
 interface InsightsData {
   avgHookScore: number | null;
@@ -187,6 +188,19 @@ export default function DashboardOverview() {
   const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
   const hasData = insights.totalAnalyzed > 0;
 
+  // Gamification: total actions & contextual sub-greeting
+  const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? 0);
+
+  const getContextualGreeting = () => {
+    const lastAction = profile?.last_ai_action_at ? new Date(profile.last_ai_action_at as string) : null;
+    const hoursSinceLastAction = lastAction ? (Date.now() - lastAction.getTime()) / 3600000 : Infinity;
+    if (hoursSinceLastAction > 72) return dt("gm_greet_comeback");
+    if (totalActions >= 30) return dt("gm_greet_prolific");
+    if (totalActions === 0) return dt("gm_greet_new");
+    return null; // will show streak msg in widget
+  };
+  const contextGreeting = getContextualGreeting();
+
   const tools = [
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
@@ -223,6 +237,9 @@ export default function DashboardOverview() {
                 {dt("ov_lets_ship")}
               </span>
             </h1>
+            {contextGreeting && (
+              <p className="text-xs text-white/30 mt-1" style={mono}>{contextGreeting}</p>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
@@ -258,6 +275,9 @@ export default function DashboardOverview() {
             </button>
           </div>
         )}
+
+        {/* ── GAMIFICATION WIDGETS ─────────────────────────────── */}
+        <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
 
         {/* ── TOP ROW: Usage + Performance ──────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
