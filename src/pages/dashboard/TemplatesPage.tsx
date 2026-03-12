@@ -1500,7 +1500,7 @@ Tone: Convenient.`),
 ];
 
 
-const CAT_META: Record<string, { label: string; color: string; emoji: string }> = {
+export const CAT_META: Record<string, { label: string; color: string; emoji: string }> = {
   ugc:        { label: "UGC",          color: "text-violet-400 bg-violet-400/10 border-violet-400/25",  emoji: "📱" },
   testimonial:{ label: "Testimonial",  color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "⭐" },
   promo:      { label: "Promo",        color: "text-orange-400 bg-orange-400/10 border-orange-400/25",  emoji: "🔥" },
