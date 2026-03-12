@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url } = body;
+    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url, aspect_ratio } = body;
 
     console.log(`[INPUT] scene_index=${scene_index}, has_brand_logo=${!!brand_logo_url}, logo_length=${brand_logo_url?.length || 0}`);
 
