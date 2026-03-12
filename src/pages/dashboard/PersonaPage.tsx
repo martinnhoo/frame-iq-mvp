@@ -170,6 +170,7 @@ function PersonaDetailEditable({
       };
       setBrandKit(newKit);
       await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
+      toast.success(dt("pe_brand_logo_done"));
     } catch (e: any) {
       setKitError(e.message || "Upload failed");
     } finally {
@@ -179,7 +180,9 @@ function PersonaDetailEditable({
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave(draft);
+    // Include brand_kit in the saved result
+    const updatedDraft = { ...draft, brand_kit: brandKit } as any;
+    await onSave(updatedDraft);
     setEditing(false);
     setSaving(false);
   };
