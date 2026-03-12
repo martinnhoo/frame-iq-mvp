@@ -184,40 +184,10 @@ function PersonaDetailEditable({
     setSaving(false);
   };
 
-  const updateField = (field: keyof PersonaResult, value: string) =>
+  const handleFieldChange = (field: string, value: string) =>
     setDraft(d => ({ ...d, [field]: value }));
-  const updateList = (field: keyof PersonaResult, value: string) =>
+  const handleListChange = (field: string, value: string) =>
     setDraft(d => ({ ...d, [field]: value.split("\n").filter(Boolean) }));
-
-  const EditableText = ({ field, value, className = "", rows }: { field: keyof PersonaResult; value: string; className?: string; rows?: number }) =>
-    editing ? (
-      rows ? (
-        <textarea value={value} onChange={e => updateField(field, e.target.value)} rows={rows}
-          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
-      ) : (
-        <input value={value} onChange={e => updateField(field, e.target.value)}
-          className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
-      )
-    ) : <span className={className}>{value || "—"}</span>;
-
-  const EditableList = ({ field, items, color }: { field: keyof PersonaResult; items: string[]; color: string }) =>
-    editing ? (
-      <textarea
-        value={(items || []).join("\n")}
-        onChange={e => updateList(field, e.target.value)}
-        rows={Math.max(2, (items || []).length)}
-        className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
-      />
-    ) : (
-      <ul className="space-y-2">
-        {(items || []).map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-            <span className="text-white/20 shrink-0 font-mono text-xs mt-0.5">{i + 1}.</span>
-            {item}
-          </li>
-        ))}
-      </ul>
-    );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
