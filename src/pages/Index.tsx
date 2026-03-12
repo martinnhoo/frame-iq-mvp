@@ -262,7 +262,7 @@ const Index = () => {
               onClick={() => navigate("/signup")}
             >
               <span className="relative z-10 flex items-center gap-2">
-                Score my first ad — free
+                 {t("lp_score_cta")}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </span>
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
