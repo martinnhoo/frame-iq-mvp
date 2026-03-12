@@ -100,6 +100,14 @@ const BoardDetail = () => {
       : undefined;
   };
 
+  const getAspectRatio = () => {
+    const c = board?.content as Record<string, unknown> | null;
+    if (!c) return "1:1";
+    const overview = (c.overview as Record<string, unknown>) || {};
+    const production = (c.production as Record<string, unknown>) || {};
+    return String(overview.aspect_ratio || production.aspect_ratio || "1:1");
+  };
+
   const generateSceneImage = async (sceneIndex: number, visualDescription: string, sceneTitle?: string) => {
     setGeneratingImages(prev => ({ ...prev, [sceneIndex]: true }));
     try {
@@ -118,6 +126,7 @@ const BoardDetail = () => {
           character_context: getCharacterContext(),
           location_context: getLocationContext(),
           brand_logo_url: brandLogo || undefined,
+          aspect_ratio: getAspectRatio(),
         },
       });
       if (error) throw error;
@@ -357,7 +366,7 @@ const BoardDetail = () => {
                 >
                   {/* Scene image */}
                   {sceneImages[i] ? (
-                    <div className="relative aspect-square">
+                    <div className="relative" style={{ aspectRatio: getAspectRatio().replace(":", "/") }}>
                       <img src={sceneImages[i]} alt={`Scene ${i + 1}`}
                         className="w-full h-full object-cover" />
                       <button onClick={() => setSceneImages(prev => { const n = {...prev}; delete n[i]; return n; })}

@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url } = body;
+    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url, aspect_ratio } = body;
 
     console.log(`[INPUT] scene_index=${scene_index}, has_brand_logo=${!!brand_logo_url}, logo_length=${brand_logo_url?.length || 0}`);
 
@@ -40,7 +40,16 @@ You MUST depict the EXACT SAME person with the EXACT SAME clothes, hairstyle, an
       ? `\nLOCATION CONSISTENCY: ${location_context}`
       : '';
 
-    // STEP 1: Generate the base scene (without logo)
+    // Resolve aspect ratio for prompt and composition
+    const ar = aspect_ratio || "1:1";
+    const arDescriptions: Record<string, string> = {
+      "9:16": "Portrait 9:16 vertical composition (1080x1920) — optimized for TikTok/Reels/Shorts",
+      "16:9": "Landscape 16:9 horizontal composition (1920x1080) — optimized for YouTube/TV",
+      "1:1": "Square 1:1 composition (1080x1080) — optimized for Facebook/Instagram feed",
+      "4:5": "Portrait 4:5 composition (1080x1350) — optimized for Instagram feed",
+    };
+    const arDescription = arDescriptions[ar] || `${ar} composition`;
+
     const scenePrompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
 
 Scene: "${scene_title || `Scene ${(scene_index ?? 0) + 1}`}"
@@ -49,7 +58,7 @@ ${charBlock}
 ${locationBlock}
 
 Requirements:
-- Square 1:1 composition
+- ${arDescription}
 - Photorealistic, cinematic lighting and color grading
 - Professional advertising production quality
 - Clean composition with clear focal point
