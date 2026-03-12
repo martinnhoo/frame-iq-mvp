@@ -331,7 +331,7 @@ function PersonaDetailEditable({
           </div>
           {(brandKit.logo_data_url || brandKit.uploaded_at) && (
             <span className="text-[10px] text-green-400/70 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Uploaded
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> {dt("pe_brand_uploaded")}
             </span>
           )}
         </div>
