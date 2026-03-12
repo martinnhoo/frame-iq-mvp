@@ -109,8 +109,8 @@ function getSmartTemplates(persona: PersonaResult, language: string): { template
   const pains    = toArr(persona.pains).map((p: string) => p.toLowerCase()).join(" ");
   const desires  = toArr(persona.desires).map((d: string) => d.toLowerCase()).join(" ");
   const hooks    = toArr(persona.hook_angles).map((h: string) => h.toLowerCase()).join(" ");
-  const gender = (persona.gender || "").toLowerCase();
-  const age = persona.age || "";
+  const gender = String(persona.gender || "").toLowerCase();
+  const age = String(persona.age || "");
   const allText = `${pains} ${desires} ${hooks} ${persona.bio || ""}`.toLowerCase();
 
   const scored: { template: Template; score: number; reason: string }[] = [];
@@ -760,9 +760,9 @@ CTA: ${persona.cta_style}`;
 
   // Sanitize PersonaResult so no field is null/undefined — prevents black screen on any browser
   const sanitizeResult = (r: any): PersonaResult => ({
-    name:           r?.name           || "—",
-    age:            r?.age            || "—",
-    gender:         r?.gender         || "—",
+    name:           String(r?.name   || "—"),
+    age:            String(r?.age    || "—"),
+    gender:         String(r?.gender || "—"),
     headline:       r?.headline       || "",
     bio:            r?.bio            || "",
     pains:          toArr(r?.pains),
