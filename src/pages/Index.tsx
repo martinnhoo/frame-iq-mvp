@@ -288,17 +288,17 @@ const Index = () => {
           >
             <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              No credit card required
+             {t("hero_check_1")}
             </span>
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              First result in under 60 seconds
+              {t("hero_check_2")}
             </span>
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs font-medium" style={{color:"rgba(167,139,250,0.8)"}}>
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-              147 teams analyzing ads right now · 23 in the last hour
+              {t("lp_live_teams")}
             </span>
           </motion.div>
           
