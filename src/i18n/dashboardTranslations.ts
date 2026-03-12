@@ -256,6 +256,17 @@ export type DashT = {
   pe_lang_style: string;
   pe_cta_style: string;
   pe_media_habits: string;
+  pe_brand_kit: string;
+  pe_brand_kit_desc: string;
+  pe_brand_uploaded: string;
+  pe_brand_uploading: string;
+  pe_brand_logo_done: string;
+  pe_brand_click_replace: string;
+  pe_brand_upload_cta: string;
+  pe_brand_upload_hint: string;
+  pe_brand_primary: string;
+  pe_brand_secondary: string;
+  pe_brand_note: string;
 
   // Translate
   tr_title: string;
