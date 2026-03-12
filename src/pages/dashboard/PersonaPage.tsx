@@ -551,16 +551,7 @@ function PersonaDetailEditable({
 
 type View = "list" | "builder" | "detail";
 
-export default function PersonaPage() {
-  const ctx = useOutletContext<DashboardContext>();
-  // Guard against missing context (can happen during auth redirect)
-  if (!ctx || !ctx.user) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-white/20" />
-      </div>
-    );
-  }
+function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
   const { user, selectedPersona: globalPersona, setSelectedPersona: setGlobalPersona } = ctx;
   const { language } = useLanguage();
   const dt = useDashT(language);
