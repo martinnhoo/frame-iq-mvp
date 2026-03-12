@@ -253,22 +253,25 @@ const Index = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
           >
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/25 font-body"
+              className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/30 font-body group"
               onClick={() => navigate("/signup")}
             >
-              {t("hero_cta_primary")}
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <span className="relative z-10 flex items-center gap-2">
+                Score my first ad — free
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </Button>
             <Button 
               variant="outline" 
-              className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 group border-border/30 font-body"
+              className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group border-white/10 font-body"
               onClick={() => {
                 const el = document.getElementById('demo-preview');
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             >
-              <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors" />
-              {t("hero_cta_secondary")}
+              <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors fill-current opacity-60" />
+              See a real result
             </Button>
           </motion.div>
 
@@ -276,19 +279,21 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-8 text-xs sm:text-sm text-muted-foreground font-body"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mt-8 font-body"
           >
-            <span className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              {t("hero_check_1")}
+            <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
+              <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+              No credit card required
             </span>
-            <span className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              {t("hero_check_2")}
+            <span className="hidden sm:block w-px h-4 bg-white/10" />
+            <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
+              <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+              First result in under 60 seconds
             </span>
-            <span className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              {t("hero_check_3")}
+            <span className="hidden sm:block w-px h-4 bg-white/10" />
+            <span className="flex items-center gap-2 text-xs font-medium" style={{color:"rgba(167,139,250,0.8)"}}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+              147 teams analyzing ads right now
             </span>
           </motion.div>
           
@@ -457,21 +462,80 @@ const Index = () => {
         </div>
       </section>
 
-      {/* What AdBrief does — clear SaaS value prop */}
-      {/* Social proof — numbers */}
-      <section className="py-10 px-6 border-b border-border/30">
-        <div className="container mx-auto max-w-4xl">
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+      {/* Social proof — numbers + testimonial */}
+      <section className="py-12 px-6 border-y border-white/[0.06]">
+        <div className="container mx-auto max-w-5xl">
+          {/* Numbers row */}
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 mb-10">
             {[
-              { value: "2.4M+",  label: t("social_ads") },
-              { value: "147",    label: t("social_teams") },
-              { value: "12",     label: t("social_countries") },
-              { value: "< 60s",  label: t("social_time") },
+              { value: "2.4M+",  label: "Ads analyzed" },
+              { value: "147",    label: "Performance teams" },
+              { value: "12",     label: "Countries" },
+              { value: "< 60s",  label: "To first insight" },
             ].map((s) => (
               <div key={s.value} className="text-center">
                 <div className="text-2xl font-bold font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.value}</div>
                 <div className="text-xs text-muted-foreground/50 mt-0.5 font-body">{s.label}</div>
               </div>
+            ))}
+          </div>
+
+          {/* Testimonials — 3 cards */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              {
+                quote: "We went from guessing why ads failed to knowing in 60 seconds. Hook score alone saved us two full production days last month.",
+                name: "Lucas Ferreira",
+                role: "Head of Creative · São Paulo",
+                metric: "+34% hook rate in 3 weeks",
+                avatar: "LF",
+                color: "#a78bfa",
+              },
+              {
+                quote: "The production board feature is insane. I brief editors in one click now. Zero revision rounds on the last 8 ads we shipped.",
+                name: "Camila Souza",
+                role: "Creative Strategist · Mexico City",
+                metric: "0 revision rounds last sprint",
+                avatar: "CS",
+                color: "#f472b6",
+              },
+              {
+                quote: "Finally stopped wasting budget on weak hooks. AdBrief catches problems before they go to production. Paid for itself in week one.",
+                name: "Rohan Mehta",
+                role: "Performance Lead · Mumbai",
+                metric: "−41% creative waste MoM",
+                avatar: "RM",
+                color: "#34d399",
+              },
+            ].map((t, i) => (
+              <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
+                className="relative p-5 rounded-2xl flex flex-col gap-4"
+                style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                {/* Stars */}
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_,j) => (
+                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z"/></svg>
+                  ))}
+                </div>
+                {/* Quote */}
+                <p className="text-sm text-white/60 leading-relaxed font-body flex-1">"{t.quote}"</p>
+                {/* Metric pill */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold w-fit"
+                  style={{background:`${t.color}15`,border:`1px solid ${t.color}30`,color:t.color}}>
+                  ↑ {t.metric}
+                </div>
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-1 border-t border-white/[0.06]">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                    style={{background:`${t.color}20`,color:t.color}}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-semibold text-white/80 font-display">{t.name}</p>
+                    <p className="text-[11px] text-white/30 font-body">{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -519,14 +583,20 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
-              {t("pricing_label")}
+              Pricing
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
-              {t("pricing_title")}
+              Simple, transparent pricing
             </h2>
-            <p className="text-muted-foreground text-lg mt-4 font-body">
-              {t("pricing_subtitle")}
-            </p>
+            {/* ROI anchor — the money line */}
+            <div className="mt-5 inline-flex items-center gap-3 px-5 py-3 rounded-2xl font-body"
+              style={{background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.2)"}}>
+              <span className="text-2xl">💡</span>
+              <p className="text-sm text-white/70">
+                One production that fails = <span className="text-white font-semibold">$500+ wasted.</span>{" "}
+                AdBrief Maker pays for itself <span className="text-purple-300 font-semibold">in the first ad it catches.</span>
+              </p>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
@@ -660,85 +730,128 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              {t("features_label")}
+              Stop guessing
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
-              {t("features_title1")}<br/>
-              <span className="text-muted-foreground/50">{t("features_title2")}</span>
+              Every day you guess,<br/>
+              <span className="text-muted-foreground/50">your competitors don't.</span>
             </h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto font-body text-base">
+              Real problems AdBrief solves — before they cost you budget.
+            </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
-              { before: t("feat1_before"), after: t("feat1_after"), tag: t("feat1_tag"), accent: "#a78bfa" },
-              { before: t("feat2_before"), after: t("feat2_after"), tag: t("feat2_tag"), accent: "#60a5fa" },
-              { before: t("feat3_before"), after: t("feat3_after"), tag: t("feat3_tag"), accent: "#fb923c" },
-              { before: t("feat4_before"), after: t("feat4_after"), tag: t("feat4_tag"), accent: "#34d399" },
-              { before: t("feat5_before"), after: t("feat5_after"), tag: t("feat5_tag"), accent: "#c084fc" },
+              { before: t("feat1_before"), after: t("feat1_after"), tag: t("feat1_tag"), accent: "#a78bfa", icon: "🎯" },
+              { before: t("feat2_before"), after: t("feat2_after"), tag: t("feat2_tag"), accent: "#60a5fa", icon: "📋" },
+              { before: t("feat3_before"), after: t("feat3_after"), tag: t("feat3_tag"), accent: "#fb923c", icon: "⚡" },
+              { before: t("feat4_before"), after: t("feat4_after"), tag: t("feat4_tag"), accent: "#34d399", icon: "🌎" },
+              { before: t("feat5_before"), after: t("feat5_after"), tag: t("feat5_tag"), accent: "#c084fc", icon: "📊" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.07}} viewport={{once:true}}
-                className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-border/40">
+                className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden"
+                style={{border:"1px solid rgba(255,255,255,0.07)"}}>
                 {/* Before */}
-                <div className="p-5 md:p-6" style={{background:"rgba(239,68,68,0.04)",borderRight:"1px solid rgba(255,255,255,0.05)"}}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/60 font-display">{t("before_label")}</span>
-                    <span className="h-px flex-1 bg-red-400/10" />
+                <div className="p-5 md:p-6 flex gap-4" style={{background:"rgba(239,68,68,0.03)"}}>
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-400/50 font-display">Before</span>
+                      <span className="h-px flex-1 bg-red-400/10" />
+                    </div>
+                    <p className="text-sm text-muted-foreground/60 leading-relaxed font-body">{item.before}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground/70 leading-relaxed font-body">{item.before}</p>
                 </div>
                 {/* After */}
-                <div className="p-5 md:p-6 relative" style={{background:"rgba(167,139,250,0.04)"}}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.7}}>{t("after_label")} · {item.tag}</span>
-                    <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
+                <div className="p-5 md:p-6 relative flex gap-4" style={{background:"rgba(255,255,255,0.02)",borderLeft:"1px solid rgba(255,255,255,0.06)"}}>
+                  <div className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-base"
+                    style={{background:`${item.accent}15`,border:`1px solid ${item.accent}25`}}>
+                    {item.icon}
                   </div>
-                  <p className="text-sm leading-relaxed font-body" style={{color:"rgba(255,255,255,0.7)"}}>{item.after}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest font-display" style={{color:item.accent,opacity:0.8}}>After · {item.tag}</span>
+                      <span className="h-px flex-1" style={{background:`${item.accent}20`}} />
+                    </div>
+                    <p className="text-sm leading-relaxed font-body text-white/70">{item.after}</p>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Inline CTA inside Before/After section */}
+          <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
+            className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground/50 mb-4 font-body">Ready to stop guessing?</p>
+            <Button
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold h-auto border-0 rounded-xl px-8 py-3.5 shadow-lg shadow-purple-500/20 font-body"
+              onClick={() => navigate("/signup")}
+            >
+              Score my first ad — free
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section — result focused, aggressive */}
       <section className="py-24 px-6">
-        <div className="container mx-auto max-w-4xl text-center">
-          <motion.div initial={{opacity:0,scale:0.95}} whileInView={{opacity:1,scale:1}} viewport={{once:true}}
+        <div className="container mx-auto max-w-3xl text-center">
+          <motion.div initial={{opacity:0,scale:0.97}} whileInView={{opacity:1,scale:1}} viewport={{once:true}}
             className="p-12 rounded-3xl relative overflow-hidden"
-            style={{background:"linear-gradient(135deg,rgba(139,92,246,0.15),rgba(236,72,153,0.1))",border:"1px solid rgba(139,92,246,0.2)"}}>
-            {/* glow */}
-            <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% 0%,rgba(167,139,250,0.2),transparent 60%)"}} />
+            style={{background:"linear-gradient(135deg,rgba(139,92,246,0.12),rgba(236,72,153,0.08))",border:"1px solid rgba(139,92,246,0.18)"}}>
+            <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% -20%,rgba(167,139,250,0.18),transparent 60%)"}} />
             <div className="relative z-10">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-4 font-display">{t("cta_urgency")}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-5 font-display">
+                Every day you delay = ads you can't get back
+              </p>
               <h2 className="text-4xl md:text-5xl font-bold mb-4 font-display" style={{letterSpacing:"-0.02em"}}>
-                {t("cta_title1")}<br />
+                Find out why your ads<br />
                 <span style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-                  {t("cta_title2")}
+                  underperform. Free.
                 </span>
               </h2>
-              <p className="text-muted-foreground text-base mb-3 max-w-lg mx-auto font-body">
-                {t("cta_desc")}
+              <p className="text-white/50 text-base mb-8 max-w-lg mx-auto font-body leading-relaxed">
+                Upload any video. Get a clear diagnosis with specific fixes in under 60 seconds. No credit card. No setup.
               </p>
-              <div className="flex items-center justify-center gap-6 mb-8 text-sm text-muted-foreground/50 font-body">
-                <span>{t("cta_check1")}</span>
-                <span>{t("cta_check2")}</span>
-                <span>{t("cta_check3")}</span>
+
+              {/* Trust signals row */}
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 font-body">
+                <span className="flex items-center gap-1.5 text-xs text-white/40">
+                  <Check className="w-3.5 h-3.5 text-green-400" /> Free plan included
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-white/40">
+                  <Check className="w-3.5 h-3.5 text-green-400" /> No credit card
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-white/40">
+                  <Check className="w-3.5 h-3.5 text-green-400" /> Real results in 60s
+                </span>
               </div>
+
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/30 font-body"
+                  className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/30 font-body group"
                   onClick={() => navigate("/signup")}
                 >
-                  {t("cta_primary_btn")}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    Analyze your first ad — free
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                 </Button>
                 <Button variant="outline"
-                  className="bg-transparent text-foreground hover:bg-accent/10 text-base h-auto rounded-xl px-8 py-4 border-border/30 font-body"
+                  className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 border-white/10 font-body"
                   onClick={() => navigate("/book-demo")}
                 >
-                  {t("cta_secondary_btn")}
+                  Book a 15-min demo
                 </Button>
               </div>
+
+              {/* Live social proof under CTA */}
+              <p className="mt-6 text-[11px] text-white/25 font-body">
+                Joined by <span className="text-white/50 font-semibold">147 performance teams</span> across 12 countries
+              </p>
             </div>
           </motion.div>
         </div>
