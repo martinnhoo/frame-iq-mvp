@@ -98,12 +98,17 @@ interface SavedPersona {
 
 // ─── Smart Template Suggestions ──────────────────────────────────────────
 // Maps persona attributes to the most relevant template categories & specific templates
+// Ensure a field is always a proper string array regardless of what came from the DB
+const toArr = (v: any): string[] =>
+  Array.isArray(v) ? v.filter((x: any) => typeof x === "string") :
+  typeof v === "string" && v.trim() ? v.split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean) : [];
+
 function getSmartTemplates(persona: PersonaResult, language: string): { template: Template; reason: string }[] {
-  const platforms = (persona.best_platforms || []).map(p => p.toLowerCase());
-  const formats = (persona.best_formats || []).map(f => f.toLowerCase());
-  const pains = (persona.pains || []).map(p => p.toLowerCase()).join(" ");
-  const desires = (persona.desires || []).map(d => d.toLowerCase()).join(" ");
-  const hooks = (persona.hook_angles || []).map(h => h.toLowerCase()).join(" ");
+  const platforms = toArr(persona.best_platforms).map((p: string) => p.toLowerCase());
+  const formats  = toArr(persona.best_formats).map((f: string) => f.toLowerCase());
+  const pains    = toArr(persona.pains).map((p: string) => p.toLowerCase()).join(" ");
+  const desires  = toArr(persona.desires).map((d: string) => d.toLowerCase()).join(" ");
+  const hooks    = toArr(persona.hook_angles).map((h: string) => h.toLowerCase()).join(" ");
   const gender = (persona.gender || "").toLowerCase();
   const age = persona.age || "";
   const allText = `${pains} ${desires} ${hooks} ${persona.bio || ""}`.toLowerCase();
@@ -760,14 +765,14 @@ CTA: ${persona.cta_style}`;
     gender:         r?.gender         || "—",
     headline:       r?.headline       || "",
     bio:            r?.bio            || "",
-    pains:          Array.isArray(r?.pains)          ? r.pains          : [],
-    desires:        Array.isArray(r?.desires)        ? r.desires        : [],
-    objections:     Array.isArray(r?.objections)     ? r.objections     : [],
-    triggers:       Array.isArray(r?.triggers)       ? r.triggers       : [],
-    media_habits:   Array.isArray(r?.media_habits)   ? r.media_habits   : [],
-    best_platforms: Array.isArray(r?.best_platforms) ? r.best_platforms : [],
-    best_formats:   Array.isArray(r?.best_formats)   ? r.best_formats   : [],
-    hook_angles:    Array.isArray(r?.hook_angles)    ? r.hook_angles    : [],
+    pains:          toArr(r?.pains),
+    desires:        toArr(r?.desires),
+    objections:     toArr(r?.objections),
+    triggers:       toArr(r?.triggers),
+    media_habits:   toArr(r?.media_habits),
+    best_platforms: toArr(r?.best_platforms),
+    best_formats:   toArr(r?.best_formats),
+    hook_angles:    toArr(r?.hook_angles),
     language_style: r?.language_style || "",
     cta_style:      r?.cta_style      || "",
     avatar_emoji:   r?.avatar_emoji   || "👤",
