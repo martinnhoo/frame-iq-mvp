@@ -611,7 +611,7 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">
-              Pricing
+               {t("pricing_label")}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">
               Simple, transparent pricing
