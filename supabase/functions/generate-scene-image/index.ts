@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { visual_description, scene_title, scene_index, character_context, location_context } = await req.json();
+    const { visual_description, scene_title, scene_index, character_context, location_context, brand_logo_url } = await req.json();
 
     if (!visual_description) {
       return new Response(JSON.stringify({ error: "Missing visual_description" }), {
@@ -37,12 +37,21 @@ You MUST depict the EXACT SAME person with the EXACT SAME clothes, hairstyle, an
       ? `\nLOCATION CONSISTENCY: ${location_context}`
       : '';
 
+    const brandBlock = brand_logo_url
+      ? `\nBRAND IDENTITY (CRITICAL):
+- The brand logo MUST be visible and naturally integrated into the scene
+- Show the logo on the product, screen, packaging, signage, or any relevant surface
+- The logo should feel organic in the scene (on a phone screen, product label, storefront sign, etc.)
+- Do NOT just overlay the logo — integrate it into the scene composition`
+      : '';
+
     const prompt = `Create a high-quality, photorealistic production storyboard reference image for a video ad scene.
 
 Scene: "${scene_title || `Scene ${(scene_index ?? 0) + 1}`}"
 Visual direction: ${visual_description}
 ${charBlock}
 ${locationBlock}
+${brandBlock}
 
 Requirements:
 - Square 1:1 composition
@@ -55,6 +64,17 @@ Requirements:
 
     console.log(`Generating scene image ${scene_index}: ${scene_title}`);
 
+    // Build messages — include logo as image input if available
+    const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [
+      { type: "text", text: prompt },
+    ];
+    if (brand_logo_url) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: brand_logo_url },
+      });
+    }
+
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,7 +83,7 @@ Requirements:
       },
       body: JSON.stringify({
         model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: brand_logo_url ? userContent : prompt }],
         modalities: ["image", "text"],
       }),
     });

@@ -206,6 +206,7 @@ const NewBoard = () => {
               hook_angles: selectedPersona.hook_angles, language_style: selectedPersona.language_style,
               cta_style: selectedPersona.cta_style, best_platforms: selectedPersona.best_platforms,
               best_formats: selectedPersona.best_formats, bio: selectedPersona.bio,
+              brand_kit: (selectedPersona as any).brand_kit || undefined,
             } : null,
           }),
         },
