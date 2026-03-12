@@ -69,16 +69,38 @@ interface LocationState {
   templateDuration?: number;
 }
 
+function detectMarketFromPersona(style: string): string {
+  if (!style) return "ANY";
+  const s = style.toLowerCase();
+  if (s.includes("portug") || s.includes("brasil")) return "BR";
+  if (s.includes("espanh") || s.includes("español") || s.includes("spanish")) return "MX";
+  if (s.includes("english") || s.includes("inglês")) return "US";
+  if (s.includes("hindi")) return "IN";
+  if (s.includes("french") || s.includes("françai")) return "FR";
+  if (s.includes("german") || s.includes("deutsch")) return "DE";
+  if (s.includes("italian")) return "IT";
+  if (s.includes("arabic") || s.includes("árabe")) return "AE";
+  if (s.includes("japan")) return "JP";
+  if (s.includes("thai")) return "TH";
+  if (s.includes("indonesi")) return "ID";
+  if (s.includes("filipino") || s.includes("tagalog")) return "PH";
+  return "ANY";
+}
+
 const NewBoard = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as LocationState | null;
 
+  const personaMarket = selectedPersona ? detectMarketFromPersona(selectedPersona.language_style) : "ANY";
+
   // Form state
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [market, setMarket] = useState("ANY");
+  const [market, setMarket] = useState(personaMarket);
+  const [marketOverridden, setMarketOverridden] = useState(false);
+  const [prevPersonaMarket, setPrevPersonaMarket] = useState(personaMarket);
   const [platform, setPlatform] = useState("tiktok");
   const [duration, setDuration] = useState(30);
   const [hasTalent, setHasTalent] = useState(true);
@@ -94,6 +116,12 @@ const NewBoard = () => {
   const [showPersonaWarning, setShowPersonaWarning] = useState(false);
   const [pendingGenerate, setPendingGenerate] = useState(false);
   const hookDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-sync market from persona
+  if (personaMarket !== prevPersonaMarket) {
+    setPrevPersonaMarket(personaMarket);
+    if (!marketOverridden) setMarket(personaMarket);
+  }
 
   // Pre-fill from template if navigating from templates page
   useEffect(() => {
@@ -401,10 +429,16 @@ const NewBoard = () => {
               <CardTitle className="text-sm flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 Target Market
+                {selectedPersona && !marketOverridden && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto"
+                    style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
+                    via {selectedPersona.name.split(" ")[0]}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={market} onValueChange={setMarket}>
+              <Select value={market} onValueChange={(v) => { setMarket(v); setMarketOverridden(true); }}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -419,9 +453,16 @@ const NewBoard = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Script language auto-detected from market
-              </p>
+              {marketOverridden && selectedPersona ? (
+                <button onClick={() => { setMarket(personaMarket); setMarketOverridden(false); }}
+                  className="text-[10px] text-white/30 hover:text-white/60 transition-colors underline mt-2">
+                  Reset to persona market
+                </button>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedPersona ? "Auto-detected from active persona" : "Script language auto-detected from market"}
+                </p>
+              )}
             </CardContent>
           </Card>
 
