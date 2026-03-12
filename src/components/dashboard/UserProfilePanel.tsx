@@ -191,7 +191,7 @@ function PersonaDetailView({
 
       {/* Avatar + Name */}
       <div className="flex flex-col items-center gap-3 py-4">
-        <Persona3DAvatar emoji={draft.avatar_emoji || "👤"} name={draft.name} gender={draft.gender || ""} seed={persona.id} size="lg" />
+        <Persona3DAvatar emoji={draft.avatar_emoji || "👤"} name={draft.name} gender={draft.gender || ""} size="lg" />
         {editing ? (
           <input value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
             className="text-center text-lg font-bold text-white bg-transparent border-b border-white/20 outline-none" />
@@ -756,7 +756,6 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         emoji={persona.avatar_emoji || "👤"}
                         name={persona.name}
                         gender={persona.gender || ""}
-                        seed={persona.id}
                         size="md"
                       />
                       <p className="text-xs text-white/50 group-hover:text-white transition-colors text-center truncate w-full">{persona.name}</p>

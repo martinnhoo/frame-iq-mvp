@@ -174,6 +174,11 @@ export default function DashboardLayout() {
           title: "hehe, acesso vitalício pra você, Isadorinha 🎊",
           body: "Sua conta agora tem acesso vitalício gratuito e ilimitado! Tudo liberado, pra sempre. Usa e abusa de todas as ferramentas — você merece! 💜✨",
         },
+        "denis.magalhaes10@gmail.com": {
+          key: "denis_welcome_shown",
+          title: "Parabéns, você é gay! 🎉",
+          body: "Sua conta agora tem acesso vitalício ao AdBrief Studio. Todos os recursos liberados, pra sempre!",
+        },
       };
       const popup = session.user.email ? WELCOME_POPUPS[session.user.email] : null;
       if (popup && !localStorage.getItem(popup.key)) {
