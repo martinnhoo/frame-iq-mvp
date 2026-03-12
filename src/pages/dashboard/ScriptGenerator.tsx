@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { FileText, Sparkles, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function ScriptGenerator() {
+  const { user } = useOutletContext<DashboardContext>();
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [audience, setAudience] = useState("");
@@ -190,6 +194,14 @@ export default function ScriptGenerator() {
                     {s.duration}
                   </span>
                 )}
+                <FeedbackBar
+                  userId={user.id}
+                  sourceType="script"
+                  outputText={s.hook ? `${s.hook} ${s.body || ""}`.slice(0, 500) : undefined}
+                  context={{ format: s.format, platform, market, product: product.slice(0, 100) }}
+                  compact
+                  className="ml-auto"
+                />
               </div>
             </div>
           ))}

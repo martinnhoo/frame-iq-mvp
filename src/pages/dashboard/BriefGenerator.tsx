@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ClipboardList, Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
 export default function BriefGenerator() {
+  const { user } = useOutletContext<DashboardContext>();
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [objective, setObjective] = useState("conversion");
@@ -252,6 +256,18 @@ export default function BriefGenerator() {
               ⚖️ {b.compliance_notes}
             </div>
           )}
+
+          {/* Feedback */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
+            <span className="text-[10px] text-white/20" style={mono}>Was this brief useful?</span>
+            <FeedbackBar
+              userId={user.id}
+              sourceType="brief"
+              outputText={JSON.stringify(b).slice(0, 1000)}
+              context={{ objective, market, product: product.slice(0, 100) }}
+              compact
+            />
+          </div>
         </div>
       )}
     </div>

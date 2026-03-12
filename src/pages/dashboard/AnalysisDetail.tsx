@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 interface AnalysisData {
   id: string;
@@ -344,6 +345,19 @@ const AnalysisDetail = () => {
               </div>
             </div>
           )}
+
+          {/* ── Feedback ── */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] text-white/20" style={mono}>Was this analysis useful?</span>
+            <FeedbackBar
+              userId={user.id}
+              sourceType="analysis"
+              sourceId={analysis.id}
+              outputText={summary || brief || undefined}
+              context={{ hookScore, hookStrength, hookType, creativeModel, format, platforms }}
+              compact
+            />
+          </div>
 
           {/* ── Upgrade nudge ── */}
           <div className="rounded-2xl p-4 flex items-center gap-4"

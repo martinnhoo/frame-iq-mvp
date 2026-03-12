@@ -713,24 +713,69 @@ export default function IntelligencePage() {
               )}
 
               {/* AI profile */}
-              <div className="rounded-2xl p-5" style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Brain className="h-4 w-4 text-violet-400" />
-                  <p className="text-sm font-semibold text-white">What the AI knows about your creatives</p>
+              <div className="rounded-2xl p-5 space-y-4" style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-violet-400" />
+                    <p className="text-sm font-semibold text-white">What the AI knows about you</p>
+                  </div>
+                  {aiProfile?.last_updated && (
+                    <span className="text-[10px] text-white/20" style={mono}>
+                      Updated {new Date(String(aiProfile.last_updated)).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
+
+                {aiProfile?.creative_style && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] px-2.5 py-1 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-400 font-bold" style={mono}>
+                      {String(aiProfile.creative_style)}
+                    </span>
+                    {aiProfile.avg_hook_score && (
+                      <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-white/40 font-bold" style={mono}>
+                        avg {String(aiProfile.avg_hook_score)}/10 hook score
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {aiProfile?.ai_summary
                   ? <p className="text-xs text-white/50 leading-relaxed">{String(aiProfile.ai_summary)}</p>
                   : <p className="text-xs text-white/30 leading-relaxed">
-                      Your AI profile builds automatically after each analysis. After 5+ analyses you'll see personalized format recommendations, hook patterns, and market insights here.
+                      Your AI profile builds automatically after each analysis. After 3+ analyses you'll see personalized format recommendations, hook patterns, and market insights here.
                     </p>}
-                {aiProfile?.ai_recommendations && (
-                  <ul className="mt-3 space-y-1">
-                    {(aiProfile.ai_recommendations as string[]).map((r, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs text-white/40">
-                        <span className="text-violet-400 shrink-0">·</span>{r}
-                      </li>
+
+                {/* Top signals */}
+                {(aiProfile?.top_performing_models || aiProfile?.best_platforms || aiProfile?.best_markets) && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Best formats", values: aiProfile?.top_performing_models as string[] },
+                      { label: "Best platforms", values: aiProfile?.best_platforms as string[] },
+                      { label: "Best markets", values: aiProfile?.best_markets as string[] },
+                    ].filter(g => g.values?.length).map(group => (
+                      <div key={group.label} className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-[9px] uppercase tracking-widest text-white/20 mb-1.5" style={mono}>{group.label}</p>
+                        <div className="space-y-0.5">
+                          {group.values.slice(0, 3).map((v, i) => (
+                            <p key={i} className="text-[10px] text-white/50 truncate">{v}</p>
+                          ))}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                )}
+
+                {aiProfile?.ai_recommendations && (
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-white/20 mb-2" style={mono}>Personalized recommendations</p>
+                    <ul className="space-y-1.5">
+                      {(aiProfile.ai_recommendations as string[]).map((r, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-white/40">
+                          <span className="text-violet-400 shrink-0 mt-0.5">→</span>{r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </>
