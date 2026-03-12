@@ -47,7 +47,7 @@ const Index = () => {
       name: "Free",
       price: "$0",
       period: t("pricing_mo"),
-      features: ["3 analyses/mo", "3 boards/mo", "3 translations", "2 pre-flight checks", "Templates access"],
+      features: t("lp_plan_free_features").split("|"),
       cta: t("pricing_cta_free") || "Get started free",
       highlighted: false
     },
@@ -55,16 +55,16 @@ const Index = () => {
       name: "Maker",
       price: "$19",
       period: t("pricing_mo"),
-      features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator", "Hook Benchmark"],
-      cta: "Start Maker",
+      features: t("lp_plan_maker_features").split("|"),
+      cta: t("lp_start_maker"),
       highlighted: false
     },
     {
       name: "Pro",
       price: "$49",
       period: t("pricing_mo"),
-      features: ["30 analyses/mo", "30 boards/mo", "100 translations", "Unlimited hooks", "AI Intelligence", "2 seats"],
-      cta: "Start Pro",
+      features: t("lp_plan_pro_features").split("|"),
+      cta: t("lp_start_pro"),
       highlighted: true,
       badge: t("pricing_most_popular")
     },
@@ -72,8 +72,8 @@ const Index = () => {
       name: "Studio",
       price: "$149",
       period: t("pricing_mo"),
-      features: ["500 analyses/mo", "300 boards/mo", "Unlimited translations", "Meta Ads Connect", "10 seats", "API access"],
-      cta: "Start Studio",
+      features: t("lp_plan_studio_features").split("|"),
+      cta: t("lp_start_studio"),
       highlighted: false
     }
   ];
