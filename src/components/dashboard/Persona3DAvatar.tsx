@@ -83,11 +83,12 @@ const DISABILITY_TYPES = [
   "vitiligo", "eye_patch", "wheelchair_badge",
 ];
 
-export default function Persona3DAvatar({ emoji, name, gender, size = "md", onClick }: Persona3DAvatarProps) {
+export default function Persona3DAvatar({ emoji, name, gender, seed, size = "md", onClick }: Persona3DAvatarProps) {
   const [hovered, setHovered] = useState(false);
 
   const dims = size === "sm" ? 64 : size === "md" ? 96 : 128;
-  const hash = name.split("").reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
+  const seedStr = seed || name;
+  const hash = seedStr.split("").reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
   const r = (o: number) => seeded(hash, o);
 
   const traits = useMemo(() => {
