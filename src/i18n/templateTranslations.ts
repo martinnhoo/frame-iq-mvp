@@ -908,7 +908,7 @@ const t: Record<string, Partial<Record<Lang, TT>>> = {
 
 export type TemplateLang = Lang;
 
-export function getTemplateTranslation(id: string, lang: string): { name: string; desc: string } | null {
+export function getTemplateTranslation(id: string, lang: string): TT | null {
   const entry = t[id];
   if (!entry) return null;
   return (entry as Record<string, TT>)[lang] || null;
