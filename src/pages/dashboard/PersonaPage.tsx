@@ -392,7 +392,7 @@ function PersonaDetailEditable({
         {/* Color pickers */}
         <div className="grid grid-cols-2 gap-3 pt-1">
           <div>
-            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">Cor primária</p>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider mb-1.5">{dt("pe_brand_primary")}</p>
             <div className="flex items-center gap-2">
               <input type="color" value={brandKit.primary_color || "#8B5CF6"}
                 onChange={async e => {
