@@ -74,7 +74,14 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
-    try { const s = localStorage.getItem("frameiq_active_persona"); return s ? JSON.parse(s) : null; } catch { return null; }
+    try {
+      const s = localStorage.getItem("frameiq_active_persona");
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      // Validate essential fields exist
+      if (!parsed || !parsed.id || !parsed.name) return null;
+      return parsed;
+    } catch { return null; }
   });
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
@@ -85,8 +92,12 @@ export default function DashboardLayout() {
 
   const setSelectedPersona = (p: ActivePersona | null) => {
     setSelectedPersonaState(p);
-    if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
-    else localStorage.removeItem("frameiq_active_persona");
+    try {
+      if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
+      else localStorage.removeItem("frameiq_active_persona");
+    } catch {
+      // localStorage unavailable (private browsing, storage full, etc.)
+    }
   };
 
   const fetchUsage = async (userId: string) => {
@@ -134,14 +145,19 @@ export default function DashboardLayout() {
       // Load personas for picker
       const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
       const loadedPersonas = personaData
-        ? (personaData.map((d: Record<string, unknown>) => ({ id: d.id as string, ...(d.result as object) })) as ActivePersona[])
+        ? (personaData
+            .filter((d: Record<string, unknown>) => d.result && typeof d.result === "object")
+            .map((d: Record<string, unknown>) => ({
+              id: d.id as string,
+              ...(d.result as object),
+            })) as ActivePersona[])
         : [];
       setSavedPersonas(loadedPersonas);
       // If cached active persona was deleted, clear it
       setSelectedPersonaState(prev => {
         if (!prev) return null;
         if (!loadedPersonas.some(p => p.id === prev.id)) {
-          localStorage.removeItem("frameiq_active_persona");
+          try { localStorage.removeItem("frameiq_active_persona"); } catch {}
           return null;
         }
         return prev;
@@ -287,7 +303,7 @@ export default function DashboardLayout() {
 
           {selectedPersona && (
             <div className="flex items-center gap-2 text-[10px] text-white/20 font-mono overflow-hidden">
-              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age} · {selectedPersona.best_platforms.slice(0,2).join(", ")}</span>
+              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age || "—"} · {(selectedPersona.best_platforms || []).slice(0,2).join(", ") || "—"}</span>
             </div>
           )}
 

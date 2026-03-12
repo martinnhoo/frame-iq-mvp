@@ -626,21 +626,27 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
   // ── Fetch saved personas ──
   useEffect(() => {
     const fetchSaved = async () => {
-      const { data } = await supabase
-        .from("personas")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      if (data) {
-        setSaved(
-          data.map((d: any) => ({
-            id: d.id,
-            result: d.result as PersonaResult,
-            answers: d.answers as Record<string, string>,
-            brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
-            created_at: d.created_at,
-          }))
-        );
+      try {
+        const { data } = await supabase
+          .from("personas")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+        if (data) {
+          setSaved(
+            data
+              .filter((d: any) => d.result && typeof d.result === "object")
+              .map((d: any) => ({
+                id: d.id,
+                result: d.result as PersonaResult,
+                answers: (d.answers || {}) as Record<string, string>,
+                brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
+                created_at: d.created_at,
+              }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch personas:", err);
       }
       setLoadingSaved(false);
     };
@@ -814,13 +820,15 @@ CTA: ${persona.cta_style}`;
                   .then(({ data }) => {
                     if (data)
                       setSaved(
-                        data.map((d: any) => ({
-                          id: d.id,
-                          result: d.result as PersonaResult,
-                          answers: d.answers as Record<string, string>,
-                          brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
-                          created_at: d.created_at,
-                        }))
+                        data
+                          .filter((d: any) => d.result && typeof d.result === "object")
+                          .map((d: any) => ({
+                            id: d.id,
+                            result: d.result as PersonaResult,
+                            answers: (d.answers || {}) as Record<string, string>,
+                            brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
+                            created_at: d.created_at,
+                          }))
                       );
                     setLoadingSaved(false);
                   });
@@ -887,7 +895,7 @@ CTA: ${persona.cta_style}`;
                   </p>
 
                   <div className="flex flex-wrap justify-center gap-1 mt-3">
-                    {p.result.best_platforms.slice(0, 3).map((pl) => (
+                    {(p.result.best_platforms || []).slice(0, 3).map((pl) => (
                       <span key={pl} className="px-2 py-0.5 rounded-full text-[10px] border border-purple-500/20 text-purple-300 bg-purple-500/5">
                         {pl}
                       </span>
