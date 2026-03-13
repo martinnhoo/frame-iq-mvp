@@ -1,0 +1,183 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+type Lang = 'en' | 'pt' | 'es' | 'hi';
+
+const templates: Record<Lang, { subject: string; greeting: string; body: string; cta: string }> = {
+  en: {
+    subject: "We miss you — AdBrief",
+    greeting: "Hey",
+    body: "It's been a while since your last visit.\n\nYour competitors are shipping new creatives every day. Drop a video and see what's working — it takes 30 seconds.",
+    cta: "Analyze a video now",
+  },
+  pt: {
+    subject: "Sentimos sua falta — AdBrief",
+    greeting: "Oi",
+    body: "Faz um tempo desde sua última visita.\n\nSeus concorrentes estão lançando criativos novos todos os dias. Suba um vídeo e veja o que funciona — leva 30 segundos.",
+    cta: "Analisar um vídeo agora",
+  },
+  es: {
+    subject: "Te extrañamos — AdBrief",
+    greeting: "Hola",
+    body: "Ha pasado un tiempo desde tu última visita.\n\nTus competidores lanzan creativos nuevos cada día. Sube un video y ve qué funciona — toma 30 segundos.",
+    cta: "Analizar un video ahora",
+  },
+  hi: {
+    subject: "हम आपको याद कर रहे हैं — AdBrief",
+    greeting: "नमस्ते",
+    body: "आपकी आखिरी विज़िट को काफी समय हो गया है।\n\nआपके प्रतियोगी हर दिन नए क्रिएटिव्स शिप कर रहे हैं। एक वीडियो अपलोड करें और देखें क्या काम कर रहा है — सिर्फ 30 सेकंड लगते हैं।",
+    cta: "अभी एक वीडियो एनालाइज़ करें",
+  },
+};
+
+function detectLang(raw?: string | null): Lang {
+  if (!raw) return 'en';
+  const code = raw.toLowerCase().slice(0, 2);
+  if (code === 'pt') return 'pt';
+  if (code === 'es') return 'es';
+  if (code === 'hi') return 'hi';
+  return 'en';
+}
+
+function buildHtml(t: typeof templates['en'], firstName: string, appUrl: string): string {
+  const lines = t.body.split('\n').map(l =>
+    l.trim() === '' ? '<br/>' : `<p style="margin:0 0 8px;color:#a1a1aa;font-size:15px;line-height:1.6;">${l}</p>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#000;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;">
+        <tr><td style="padding-bottom:32px;">
+          <span style="font-size:22px;font-weight:700;color:#fff;">ad</span><span style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#c084fc,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">brief</span>
+        </td></tr>
+        <tr><td style="padding-bottom:20px;">
+          <p style="margin:0;color:#fff;font-size:17px;font-weight:600;">${t.greeting} ${firstName},</p>
+        </td></tr>
+        <tr><td style="padding-bottom:28px;">
+          ${lines}
+        </td></tr>
+        <tr><td style="padding-bottom:40px;">
+          <a href="${appUrl}/dashboard/analyses/new" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">${t.cta} →</a>
+        </td></tr>
+        <tr><td style="border-top:1px solid #222;padding-top:20px;">
+          <p style="margin:0;color:#555;font-size:12px;">— AdBrief</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      console.warn('RESEND_API_KEY not set — skipping reengagement emails');
+      return new Response(
+        JSON.stringify({ success: false, error: 'RESEND_API_KEY not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const appUrl = Deno.env.get('APP_URL') || 'https://adbrief.pro';
+
+    // Find users who haven't performed any AI action in the last 7 days
+    // and whose account is at least 7 days old
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Get inactive users: last_ai_action_at older than 7 days OR null (never used),
+    // created more than 7 days ago, not already emailed this month
+    const { data: inactiveUsers, error: queryError } = await supabase
+      .from('profiles')
+      .select('id, email, name, preferred_language, last_ai_action_at, usage_alert_flags')
+      .lt('created_at', sevenDaysAgo)
+      .not('email', 'is', null);
+
+    if (queryError) throw queryError;
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const alertKey = `reengagement_${currentMonth}`;
+    let sent = 0;
+    let skipped = 0;
+
+    for (const user of (inactiveUsers || [])) {
+      // Skip if last activity was within 7 days
+      if (user.last_ai_action_at && new Date(user.last_ai_action_at) > new Date(sevenDaysAgo)) {
+        skipped++;
+        continue;
+      }
+
+      // Skip if already emailed this month
+      const flags: Record<string, boolean> = (user.usage_alert_flags as Record<string, boolean>) || {};
+      if (flags[alertKey]) {
+        skipped++;
+        continue;
+      }
+
+      const lang = detectLang(user.preferred_language);
+      const t = templates[lang];
+      const firstName = (user.name || '').trim().split(' ')[0] || 'there';
+      const html = buildHtml(t, firstName, appUrl);
+
+      // Send email
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'AdBrief <hello@adbrief.pro>',
+          to: [user.email],
+          subject: t.subject,
+          html,
+        }),
+      });
+
+      if (res.ok) {
+        // Mark as sent this month
+        await supabase
+          .from('profiles')
+          .update({ usage_alert_flags: { ...flags, [alertKey]: true } })
+          .eq('id', user.id);
+        sent++;
+      } else {
+        const errBody = await res.text();
+        console.error(`Failed to send to ${user.email}: ${res.status} ${errBody}`);
+      }
+    }
+
+    console.log(`Reengagement: sent=${sent}, skipped=${skipped}, total=${(inactiveUsers || []).length}`);
+
+    return new Response(
+      JSON.stringify({ success: true, sent, skipped, total: (inactiveUsers || []).length }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('send-reengagement-email error:', error);
+    return new Response(
+      JSON.stringify({ error: (error as Error).message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
