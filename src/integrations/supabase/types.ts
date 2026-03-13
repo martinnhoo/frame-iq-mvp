@@ -292,9 +292,43 @@ export type Database = {
         }
         Relationships: []
       }
+      output_feedback: {
+        Row: {
+          comment: string | null
+          context: Json | null
+          created_at: string | null
+          id: string
+          output_id: string | null
+          output_type: string
+          rating: number | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          output_id?: string | null
+          output_type: string
+          rating?: number | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          output_id?: string | null
+          output_type?: string
+          rating?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       personas: {
         Row: {
           answers: Json | null
+          brand_kit: Json | null
           created_at: string | null
           id: string
           result: Json | null
@@ -302,6 +336,7 @@ export type Database = {
         }
         Insert: {
           answers?: Json | null
+          brand_kit?: Json | null
           created_at?: string | null
           id?: string
           result?: Json | null
@@ -309,6 +344,7 @@ export type Database = {
         }
         Update: {
           answers?: Json | null
+          brand_kit?: Json | null
           created_at?: string | null
           id?: string
           result?: Json | null
