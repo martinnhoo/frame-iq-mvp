@@ -1110,7 +1110,7 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_login_subtitle: "سجل الدخول إلى حساب AdBrief",
     auth_signup_title: "أنشئ حسابك",
     auth_signup_subtitle: "ابدأ بتحليل الفيديوهات وتوسيع إبداعاتك",
-    auth_email: "البريد الإلكتروني للعمل",
+    auth_email: "Email",
     auth_password: "كلمة المرور",
     auth_name: "الاسم الكامل",
     auth_forgot: "نسيت كلمة المرور؟",
