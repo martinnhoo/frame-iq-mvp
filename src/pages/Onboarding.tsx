@@ -81,6 +81,8 @@ const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", 
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const checkoutPlan = searchParams.get("checkout");
   const { language: globalLang, setLanguage: setGlobalLanguage } = useLanguage();
   const [step, setStep] = useState<Step>("name");
   const [saving, setSaving] = useState(false);
