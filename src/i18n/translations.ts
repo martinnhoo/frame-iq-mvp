@@ -1303,7 +1303,7 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_login_subtitle: "登录您的AdBrief账户",
     auth_signup_title: "创建账户",
     auth_signup_subtitle: "开始分析视频并扩展您的创意",
-    auth_email: "工作邮箱",
+    auth_email: "Email",
     auth_password: "密码",
     auth_name: "全名",
     auth_forgot: "忘记密码？",
