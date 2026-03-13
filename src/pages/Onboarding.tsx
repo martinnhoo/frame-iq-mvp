@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 import { ArrowRight, Check, Loader2, ChevronRight, Zap } from "lucide-react";
@@ -81,6 +81,8 @@ const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", 
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const checkoutPlan = searchParams.get("checkout");
   const { language: globalLang, setLanguage: setGlobalLanguage } = useLanguage();
   const [step, setStep] = useState<Step>("name");
   const [saving, setSaving] = useState(false);
@@ -95,6 +97,15 @@ export default function Onboarding() {
   const ot = useObT(activeLang);
 
   useEffect(() => { if (step === "name") nameRef.current?.focus(); }, [step]);
+
+  // Auto-trigger checkout if plan param was passed from signup
+  const [autoCheckoutTriggered, setAutoCheckoutTriggered] = useState(false);
+  useEffect(() => {
+    if (step === "plan" && checkoutPlan && PLAN_PRICES[checkoutPlan] && !autoCheckoutTriggered) {
+      setAutoCheckoutTriggered(true);
+      handlePlanCheckout(checkoutPlan);
+    }
+  }, [step, checkoutPlan, autoCheckoutTriggered]);
 
   const stepIdx = STEP_ORDER.indexOf(step);
   const pct = Math.round(((stepIdx + 1) / STEP_ORDER.length) * 100);

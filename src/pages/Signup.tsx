@@ -62,7 +62,8 @@ const Signup = () => {
         toast.error(error.message);
       }
     } else {
-      navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
+      const confirmUrl = `/confirm-email?email=${encodeURIComponent(email.trim())}${planParam ? `&plan=${planParam}` : ''}`;
+      navigate(confirmUrl);
     }
     setEmailLoading(false);
   };

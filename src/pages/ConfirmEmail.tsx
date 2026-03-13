@@ -20,18 +20,20 @@ const ConfirmEmail = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get("email");
+    const planParam = params.get("plan");
+    if (emailParam) setEmail(emailParam);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN" && session) {
           setConfirmed(true);
-          setTimeout(() => navigate("/dashboard"), 2000);
+          const redirectUrl = planParam ? `/dashboard?checkout=${planParam}` : "/dashboard";
+          setTimeout(() => navigate(redirectUrl), 2000);
         }
       }
     );
-
-    const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get("email");
-    if (emailParam) setEmail(emailParam);
 
     return () => subscription.unsubscribe();
   }, [navigate]);

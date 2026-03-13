@@ -128,9 +128,10 @@ export default function DashboardLayout() {
 
         setProfile(profileData);
 
-        // New user — redirect to onboarding
+        // New user — redirect to onboarding (preserve checkout param)
         if (!profileData.onboarding_completed) {
-          navigate("/onboarding");
+          const checkoutParam = new URLSearchParams(window.location.search).get("checkout");
+          navigate(checkoutParam ? `/onboarding?checkout=${checkoutParam}` : "/onboarding");
           return;
         }
       }
