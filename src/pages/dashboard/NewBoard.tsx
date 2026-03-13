@@ -17,7 +17,7 @@ import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal"
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
-const FUNNEL_STAGES = [
+const getFunnelStages = (dt: (key: any) => string) => [
   { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
   { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
   { value: "bofu", label: dt("bo_bofu"), full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
@@ -561,7 +561,7 @@ const NewBoard = () => {
       <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-5">
         <label className="block text-xs text-white/50 mb-3">Funnel stage — who are you talking to?</label>
         <div className="grid grid-cols-3 gap-2">
-          {FUNNEL_STAGES.map(f => (
+          {getFunnelStages(dt).map(f => (
             <button key={f.value} onClick={() => setFunnelStage(f.value)}
               className="flex flex-col items-center p-3 rounded-xl border text-center transition-all"
               style={funnelStage === f.value

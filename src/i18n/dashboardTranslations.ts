@@ -614,6 +614,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Esta semana", gm_weekly_last: "Semana passada",
     gm_greet_comeback: "Bem-vindo de volta! Sentimos sua falta 🙌", gm_greet_streak: "dias de sequência! Você está on fire 🔥",
     gm_greet_new: "Vamos criar algo incrível hoje!", gm_greet_prolific: "Você tem arrasado ultimamente 💪",
+    sg_title: "Gerador de Script", sg_generate: "Gerar Script", sg_generating: "Gerando...", sg_product: "Produto / Marca", sg_copy: "Copiar",
+    br_title: "Gerador de Brief", br_generate: "Gerar Brief", br_generating: "Gerando...", br_copy: "Copiar",
+    na_title: "Nova Análise", na_upload: "Fazer Upload", na_analyze: "Analisar", na_analyzing: "Analisando...",
+    cm_generate: "Gerar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Voltar", cm_product: "Produto / Marca",
   },
 
   es: {
@@ -752,6 +756,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Esta semana", gm_weekly_last: "Semana pasada",
     gm_greet_comeback: "¡Bienvenido de vuelta! Te extrañamos 🙌", gm_greet_streak: "días de racha! Estás on fire 🔥",
     gm_greet_new: "¡Vamos a crear algo increíble hoy!", gm_greet_prolific: "Has estado imparable últimamente 💪",
+    sg_title: "Generador de Script", sg_generate: "Generar Script", sg_generating: "Generando...", sg_product: "Producto / Marca", sg_copy: "Copiar",
+    br_title: "Generador de Brief", br_generate: "Generar Brief", br_generating: "Generando...", br_copy: "Copiar",
+    na_title: "Nuevo Análisis", na_upload: "Subir Video", na_analyze: "Analizar", na_analyzing: "Analizando...",
+    cm_generate: "Generar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Volver", cm_product: "Producto / Marca",
   },
 
   zh: {
@@ -1166,6 +1174,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Diese Woche", gm_weekly_last: "Letzte Woche",
     gm_greet_comeback: "Willkommen zurück! Wir haben Sie vermisst 🙌", gm_greet_streak: "Tage Serie! Sie sind on fire 🔥",
     gm_greet_new: "Lassen Sie uns heute etwas Großartiges erschaffen!", gm_greet_prolific: "Sie waren zuletzt sehr produktiv 💪",
+    sg_title: "Skript-Generator", sg_generate: "Skript generieren", sg_generating: "Wird generiert...", sg_product: "Produkt / Marke", sg_copy: "Kopieren",
+    br_title: "Brief-Generator", br_generate: "Brief generieren", br_generating: "Wird generiert...", br_copy: "Kopieren",
+    na_title: "Neue Analyse", na_upload: "Video hochladen", na_analyze: "Analysieren", na_analyzing: "Analysiere...",
+    cm_generate: "Generieren", cm_copy: "Kopieren", cm_copied: "Kopiert", cm_back: "Zurück", cm_product: "Produkt / Marke",
   },
 
   ar: {
@@ -1303,6 +1315,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "هذا الأسبوع", gm_weekly_last: "الأسبوع الماضي",
     gm_greet_comeback: "مرحباً بعودتك! افتقدناك 🙌", gm_greet_streak: "أيام متتالية! أنت مشتعل 🔥",
     gm_greet_new: "لننشئ شيئاً رائعاً اليوم!", gm_greet_prolific: "كنت منتجاً جداً مؤخراً 💪",
+    sg_title: "مولّد النصوص", sg_generate: "توليد نص", sg_generating: "جاري التوليد...", sg_product: "المنتج / العلامة", sg_copy: "نسخ",
+    br_title: "مولّد الإحاطة", br_generate: "توليد إحاطة", br_generating: "جاري التوليد...", br_copy: "نسخ",
+    na_title: "تحليل جديد", na_upload: "رفع فيديو", na_analyze: "تحليل", na_analyzing: "جاري التحليل...",
+    cm_generate: "توليد", cm_copy: "نسخ", cm_copied: "تم النسخ", cm_back: "رجوع", cm_product: "المنتج / العلامة",
   },
 };
 
