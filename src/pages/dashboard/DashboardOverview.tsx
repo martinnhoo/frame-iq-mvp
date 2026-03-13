@@ -44,9 +44,16 @@ const StatBar = ({ used, limit, accent }: { used: number; limit: number; accent:
   );
 };
 
+const PLAN_PRICES: Record<string, string> = {
+  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
+  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
+  studio: "price_1T9seMDr9So14Xzt0vEJNQIX",
+};
+
 export default function DashboardOverview() {
   const { user, profile, usage, usageDetails, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
@@ -56,6 +63,29 @@ export default function DashboardOverview() {
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
   const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
+
+  // Auto-trigger Stripe checkout if ?checkout=plan param is present
+  useEffect(() => {
+    const checkoutPlan = searchParams.get("checkout");
+    if (!checkoutPlan || checkoutPlan === "success") return;
+    const priceId = PLAN_PRICES[checkoutPlan];
+    if (!priceId) return;
+    // Clear param immediately to prevent re-trigger
+    searchParams.delete("checkout");
+    setSearchParams(searchParams, { replace: true });
+    // Invoke checkout
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: { price_id: priceId },
+        });
+        if (error) throw error;
+        if (data?.url) window.location.href = data.url;
+      } catch (err) {
+        console.error("Auto-checkout failed:", err);
+      }
+    })();
+  }, []);
 
   const planLimits = {
     free:   { analyses: 3,   boards: 3,   preflights: 3 },
