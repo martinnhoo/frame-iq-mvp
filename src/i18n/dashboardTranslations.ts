@@ -614,6 +614,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Esta semana", gm_weekly_last: "Semana passada",
     gm_greet_comeback: "Bem-vindo de volta! Sentimos sua falta 🙌", gm_greet_streak: "dias de sequência! Você está on fire 🔥",
     gm_greet_new: "Vamos criar algo incrível hoje!", gm_greet_prolific: "Você tem arrasado ultimamente 💪",
+    sg_title: "Gerador de Script", sg_generate: "Gerar Script", sg_generating: "Gerando...", sg_product: "Produto / Marca", sg_copy: "Copiar",
+    br_title: "Gerador de Brief", br_generate: "Gerar Brief", br_generating: "Gerando...", br_copy: "Copiar",
+    na_title: "Nova Análise", na_upload: "Fazer Upload", na_analyze: "Analisar", na_analyzing: "Analisando...",
+    cm_generate: "Gerar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Voltar", cm_product: "Produto / Marca",
   },
 
   es: {
