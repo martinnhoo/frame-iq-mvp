@@ -159,6 +159,16 @@ export default function Onboarding() {
     try {
       const session = await saveOnboarding();
       if (!session) return;
+
+      // Send welcome email (fire-and-forget)
+      supabase.functions.invoke('send-welcome-email', {
+        body: {
+          user_id: session.user.id,
+          first_name: (state.name || session.user.user_metadata?.full_name || '').trim().split(' ')[0],
+          language: state.language || navigator.language || 'en',
+        }
+      }).catch(() => {});
+
       const priceId = PLAN_PRICES[planKey];
       if (!priceId) { finish(); return; }
       const { data, error } = await supabase.functions.invoke('create-checkout', {
