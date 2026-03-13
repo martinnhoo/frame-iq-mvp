@@ -561,7 +561,7 @@ const NewBoard = () => {
       <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-5">
         <label className="block text-xs text-white/50 mb-3">Funnel stage — who are you talking to?</label>
         <div className="grid grid-cols-3 gap-2">
-          {FUNNEL_STAGES.map(f => (
+          {getFunnelStages(dt).map(f => (
             <button key={f.value} onClick={() => setFunnelStage(f.value)}
               className="flex flex-col items-center p-3 rounded-xl border text-center transition-all"
               style={funnelStage === f.value
