@@ -17,7 +17,7 @@ import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal"
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
-const FUNNEL_STAGES = [
+const getFunnelStages = (dt: (key: any) => string) => [
   { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
   { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
   { value: "bofu", label: dt("bo_bofu"), full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },

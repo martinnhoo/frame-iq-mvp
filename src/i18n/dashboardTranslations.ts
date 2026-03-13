@@ -1315,6 +1315,10 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "هذا الأسبوع", gm_weekly_last: "الأسبوع الماضي",
     gm_greet_comeback: "مرحباً بعودتك! افتقدناك 🙌", gm_greet_streak: "أيام متتالية! أنت مشتعل 🔥",
     gm_greet_new: "لننشئ شيئاً رائعاً اليوم!", gm_greet_prolific: "كنت منتجاً جداً مؤخراً 💪",
+    sg_title: "مولّد النصوص", sg_generate: "توليد نص", sg_generating: "جاري التوليد...", sg_product: "المنتج / العلامة", sg_copy: "نسخ",
+    br_title: "مولّد الإحاطة", br_generate: "توليد إحاطة", br_generating: "جاري التوليد...", br_copy: "نسخ",
+    na_title: "تحليل جديد", na_upload: "رفع فيديو", na_analyze: "تحليل", na_analyzing: "جاري التحليل...",
+    cm_generate: "توليد", cm_copy: "نسخ", cm_copied: "تم النسخ", cm_back: "رجوع", cm_product: "المنتج / العلامة",
   },
 };
 
