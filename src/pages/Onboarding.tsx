@@ -98,6 +98,15 @@ export default function Onboarding() {
 
   useEffect(() => { if (step === "name") nameRef.current?.focus(); }, [step]);
 
+  // Auto-trigger checkout if plan param was passed from signup
+  const [autoCheckoutTriggered, setAutoCheckoutTriggered] = useState(false);
+  useEffect(() => {
+    if (step === "plan" && checkoutPlan && PLAN_PRICES[checkoutPlan] && !autoCheckoutTriggered) {
+      setAutoCheckoutTriggered(true);
+      handlePlanCheckout(checkoutPlan);
+    }
+  }, [step, checkoutPlan, autoCheckoutTriggered]);
+
   const stepIdx = STEP_ORDER.indexOf(step);
   const pct = Math.round(((stepIdx + 1) / STEP_ORDER.length) * 100);
   const set = <K extends keyof OnboardingState>(k: K, v: OnboardingState[K]) =>
