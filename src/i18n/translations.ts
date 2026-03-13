@@ -1496,7 +1496,7 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_login_subtitle: "Entre na sua conta AdBrief",
     auth_signup_title: "Crie sua conta",
     auth_signup_subtitle: "Comece a analisar vídeos e escalar seus criativos",
-    auth_email: "Email corporativo",
+    auth_email: "Email",
     auth_password: "Senha",
     auth_name: "Nome completo",
     auth_forgot: "Esqueceu a senha?",
