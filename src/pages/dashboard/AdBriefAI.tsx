@@ -3,7 +3,6 @@ import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Send, Loader2, ChevronDown, ChevronUp, Sparkles, RotateCcw, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const m = { fontFamily: "'DM Mono', monospace" } as const;
@@ -132,13 +131,6 @@ export default function AdBriefAI() {
     })();
   }, [user?.id]);
 
-  /* ── Save important insights back ── */
-  const saveInsight = async (text: string) => {
-    if (!user?.id || text.length < 20) return;
-    const truncated = text.slice(0, 1500);
-    await (supabase as any).from("ai_user_insights").upsert({ user_id: user.id, summary: truncated, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
-  };
-
   /* ── Send message ── */
   const send = async (text?: string) => {
     const msg = (text ?? input).trim();
@@ -149,75 +141,38 @@ export default function AdBriefAI() {
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
-    const systemPrompt = `You are AdBrief AI — an elite media buyer and creative performance strategist with 10+ years running paid social at scale. You work exclusively with ad performance data, creative briefs, hooks, scripts, audience targeting, and campaign optimization.
-
-YOUR ONLY DOMAIN: paid advertising, creative performance, hooks, scripts, briefs, audience strategy, campaign data analysis, CTR/ROAS improvement, editor performance, market strategy.
-
-If the user asks ANYTHING outside this domain, respond with a single off_topic block explaining you only handle ad performance and creative intelligence.
-
-USER'S FULL CONTEXT:
-${context}
-
-RESPONSE FORMAT — you must ALWAYS respond with a valid JSON array of blocks. No text outside the JSON. Each block:
-{
-  "type": "action" | "pattern" | "hooks" | "warning" | "insight" | "off_topic",
-  "title": "short title",
-  "content": "optional paragraph",
-  "items": ["optional", "bullet", "list"]
-}
-
-Block types:
-- action: specific things to do NOW
-- pattern: data patterns from their account
-- hooks: ready-to-use hook copy variations
-- warning: something costing them money/performance
-- insight: deeper strategic observation
-- off_topic: when question is outside ad performance domain
-
-Rules:
-- Always reference THEIR actual data (filenames, editors, CTRs, markets) when available
-- Never repeat hooks or recommendations already visible in the context
-- Be brutally direct — no filler, no "great question!", no corporate speak
-- If they ask for hooks, write REAL copy they can use immediately
-- Max 4 blocks per response — prioritize the most impactful
-- If data is missing, say what data they need to import to get better answers`;
-
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: [{ role: "user", content: msg }],
-        }),
+      const { data, error } = await supabase.functions.invoke("adbrief-ai-chat", {
+        body: { message: msg, context, user_id: user.id },
       });
-      const data = await res.json();
-      const raw = data.content?.[0]?.text || "[]";
-      let blocks: Block[] = [];
-      try {
-        const clean = raw.replace(/```json|```/g, "").trim();
-        blocks = JSON.parse(clean);
-        if (!Array.isArray(blocks)) blocks = [{ type: "insight", title: "Response", content: raw }];
-      } catch {
-        blocks = [{ type: "insight", title: "Response", content: raw }];
+
+      if (error || !data?.blocks) {
+        const errorBlock: Block = {
+          type: "warning",
+          title: "Couldn't get a response",
+          content: error?.message?.includes("not found") || error?.message?.includes("404")
+            ? "The AI function isn't deployed yet. Go to your Supabase dashboard → Edge Functions → deploy 'adbrief-ai-chat'."
+            : !contextReady || context.includes("No data")
+            ? "No performance data found. Import a CSV from Meta or TikTok in Import Data → then come back."
+            : `Error: ${error?.message || "Unknown error"}. Try again or check your Supabase edge function logs.`,
+        };
+        setMessages(prev => [...prev, { role: "assistant", blocks: [errorBlock], ts: Date.now() }]);
+        return;
       }
 
-      const aiMsg: AIMessage = { role: "assistant", blocks, ts: Date.now() };
-      setMessages(prev => [...prev, aiMsg]);
+      const blocks: Block[] = Array.isArray(data.blocks) ? data.blocks : [{ type: "insight", title: "Response", content: String(data.blocks) }];
+      setMessages(prev => [...prev, { role: "assistant", blocks, ts: Date.now() }]);
 
-      // Save insights from insight/pattern blocks
-      const insightText = blocks.filter(b => ["insight","pattern"].includes(b.type))
-        .map(b => `${b.title}: ${b.content || ""} ${(b.items||[]).join(". ")}`)
-        .join("\n").slice(0, 1500);
-      if (insightText) saveInsight(insightText);
-
-    } catch {
-      toast.error("Failed to get response");
+    } catch (e: any) {
+      const errorBlock: Block = {
+        type: "warning",
+        title: "Connection error",
+        content: `Failed to reach the AI: ${e?.message || "network error"}. Check your internet connection and try again.`,
+      };
+      setMessages(prev => [...prev, { role: "assistant", blocks: [errorBlock], ts: Date.now() }]);
     } finally {
       setLoading(false);
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   };
 

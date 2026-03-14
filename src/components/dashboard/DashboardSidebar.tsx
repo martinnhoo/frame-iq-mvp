@@ -1,7 +1,7 @@
 import {
   BarChart3, LayoutGrid, Brain, Layers, Plane, Cpu,
   Zap, Settings, ChevronRight, Target, FileText, ClipboardList,
-  RefreshCw, Upload, Globe, Sparkles,
+  RefreshCw, Upload, Globe, Sparkles, BookOpen,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -48,6 +48,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const intelligenceItems = [
     { title: "Performance Loop", url: "/dashboard/loop",        icon: RefreshCw,     accent: "#f472b6", badge: "CORE" },
     { title: "AdBrief AI",       url: "/dashboard/loop/ai",     icon: Brain,         accent: "#a78bfa", badge: "AI"   },
+    { title: "How it works",     url: "/dashboard/loop/guide",  icon: BookOpen,      accent: "#34d399" },
     { title: "Import Data",      url: "/dashboard/loop/import", icon: Upload,        accent: "#60a5fa" },
   ];
 

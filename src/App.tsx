@@ -48,6 +48,7 @@ import CreativeLoopPage from "./pages/dashboard/CreativeLoopPage";
 import LoopImportPage from "./pages/dashboard/LoopImportPage";
 import LoopSettingsPage from "./pages/dashboard/LoopSettingsPage";
 import AdBriefAI from "./pages/dashboard/AdBriefAI";
+import LoopGuidePage from "./pages/dashboard/LoopGuidePage";
 import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
 import ToolPage from "@/pages/seo/ToolPage";
@@ -121,6 +122,7 @@ const App = () => (
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
                 <Route path="loop/ai" element={<AdBriefAI />} />
+                <Route path="loop/guide" element={<LoopGuidePage />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />
               <Route path="/tools/:slug"   element={<ToolPage />} />
