@@ -312,18 +312,18 @@ const Index = () => {
               Creative Performance Loop
             </h2>
             <p className="text-muted-foreground mt-4 max-w-2xl mx-auto font-body text-base leading-relaxed">
-              The cycle that nobody closes: Brief → Editor produces → Ad runs → Data comes back → AI learns → Next brief already knows what works. Automatically.
+              Upload your ad videos. Import your performance data. The AI decodes what works for YOUR account — and every tool on the platform adapts. It grows with you.
             </p>
           </div>
 
           {/* Loop steps — 5 cards */}
           <div className="grid md:grid-cols-5 gap-3 mb-12">
             {[
-              { n: "01", title: "Import Data", desc: "Connect your Meta, TikTok, or upload CSV. Performance data flows in.", icon: "📥", color: "#60a5fa" },
-              { n: "02", title: "Parse Creatives", desc: "AI reads your file naming convention and extracts metadata automatically.", icon: "🔍", color: "#a78bfa" },
-              { n: "03", title: "Find Patterns", desc: "AI discovers which combos win: hook type + market + platform + audience.", icon: "🧠", color: "#f472b6" },
-              { n: "04", title: "Predict & Score", desc: "Before spending, get a 0-100 score: \"78% chance to beat your avg CTR.\"", icon: "🎯", color: "#34d399" },
-              { n: "05", title: "Ship & Repeat", desc: "Every new brief is pre-calibrated. Performance feeds back. Loop gets smarter.", icon: "🔄", color: "#fbbf24" },
+              { n: "01", title: "Upload Ads", desc: "Upload your actual ad videos running on Meta, TikTok, etc. AI analyzes each one.", icon: "📥", color: "#60a5fa" },
+              { n: "02", title: "AI Decodes", desc: "Hook type, creative model, audience fit, platform match — everything gets stored.", icon: "🧠", color: "#a78bfa" },
+              { n: "03", title: "Patterns Emerge", desc: "After 10+ ads, AI identifies YOUR winning formula: what combos drive results.", icon: "🎯", color: "#f472b6" },
+              { n: "04", title: "Tools Adapt", desc: "Hooks, scripts, briefs — everything generated is now calibrated to your data.", icon: "⚡", color: "#34d399" },
+              { n: "05", title: "Loop Grows", desc: "More ads = more context = smarter tools. The AI literally grows with your business.", icon: "📈", color: "#fbbf24" },
             ].map((step, i) => (
               <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
                 className="p-5 rounded-2xl text-center relative"
