@@ -10,6 +10,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import GamificationWidgets from "@/components/dashboard/GamificationWidgets";
+import LiteMode from "@/components/dashboard/LiteMode";
 
 interface InsightsData {
   avgHookScore: number | null;
@@ -57,6 +58,9 @@ export default function DashboardOverview() {
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
+  const [isLiteMode, setIsLiteMode] = useState(() => localStorage.getItem("adbrief_mode") === "lite");
+  function switchToLite() { localStorage.setItem("adbrief_mode", "lite"); setIsLiteMode(true); }
+  function switchToPro()  { localStorage.setItem("adbrief_mode", "pro");  setIsLiteMode(false); }
 
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
@@ -247,6 +251,8 @@ export default function DashboardOverview() {
     { label: dt("ov_preflights"), used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
   ];
 
+  if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
+
   return (
     <div className="min-h-full relative">
       {/* Ambient glows */}
@@ -273,6 +279,14 @@ export default function DashboardOverview() {
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
+            <button
+              onClick={switchToLite}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+              style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
+              title="Switch to simplified Lite Mode"
+            >
+              <Layers className="h-3 w-3" /> Lite
+            </button>
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
               <button onClick={() => navigate("/pricing")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
