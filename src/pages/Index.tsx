@@ -148,11 +148,11 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: "#060608" }}>
       <TopBanner />
 
       {/* Navbar */}
-      <nav className="sticky top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/60 backdrop-blur-xl">
+      <nav className="sticky top-0 left-0 right-0 z-50 border-b border-white/[0.05]" style={{ background: "rgba(6,6,8,0.85)", backdropFilter: "blur(20px)" }}>
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <Link to="/"><Logo size="lg" /></Link>
           <div className="hidden md:flex items-center gap-8">
@@ -241,8 +241,70 @@ const Index = () => {
             <span>✓ {t("hero_check_2")}</span>
             <span>✓ {t("hero_check_3")}</span>
           </motion.div>
+
+          {/* Product mock */}
+          <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
+            className="mt-16 max-w-3xl mx-auto rounded-2xl overflow-hidden"
+            style={{ border: "1px solid rgba(167,139,250,0.2)", boxShadow: "0 0 80px rgba(167,139,250,0.08), 0 32px 64px rgba(0,0,0,0.5)" }}>
+            {/* Mock toolbar */}
+            <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(167,139,250,0.06)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+              </div>
+              <div className="flex-1 mx-4 h-5 rounded-md flex items-center px-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span className="text-[10px] text-white/20" style={{ fontFamily: "'Inter',sans-serif" }}>adbrief.pro/dashboard/loop/ai</span>
+              </div>
+            </div>
+            {/* Mock content */}
+            <div className="p-5" style={{ background: "#07070f" }}>
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}>🧠</div>
+                <div>
+                  <p className="text-xs font-bold text-white/80" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>AdBrief AI</p>
+                  <p className="text-[10px]" style={{ color: "rgba(52,211,153,0.7)", fontFamily: "'Inter',sans-serif" }}>● Full account context loaded</p>
+                </div>
+              </div>
+              {/* User message */}
+              <div className="flex justify-end mb-3">
+                <div className="text-xs px-3 py-2 rounded-xl rounded-br-sm text-white/80 max-w-xs" style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.2)", fontFamily: "'Inter',sans-serif" }}>
+                  What's my best performing hook type based on my data?
+                </div>
+              </div>
+              {/* AI blocks */}
+              <div className="space-y-2">
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(96,165,250,0.2)", background: "rgba(96,165,250,0.06)" }}>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <span className="text-sm">📊</span>
+                    <span className="text-xs font-bold" style={{ color: "#60a5fa", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>Pattern detected</span>
+                  </div>
+                  <div className="px-3 pb-2.5">
+                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Inter',sans-serif" }}>Curiosity hooks outperform your avg CTR by <span style={{ color: "#60a5fa", fontWeight: 600 }}>2.3×</span> — 14 of your last 20 winners used this angle.</p>
+                  </div>
+                </div>
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(244,114,182,0.2)", background: "rgba(244,114,182,0.06)" }}>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <span className="text-sm">⚡</span>
+                    <span className="text-xs font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>3 hooks ready to use</span>
+                  </div>
+                  <div className="px-3 pb-2.5 space-y-1">
+                    {["\"Você sabia que 90% das pessoas erra aqui...\"", "\"O erro que está custando seu ROAS\"", "\"Testamos 200 anúncios. Isso foi o que funcionou\""].map((h,i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="text-[10px] mt-0.5" style={{ color: "rgba(244,114,182,0.5)" }}>→</span>
+                        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "'Inter',sans-serif" }}>{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
+
+      <LogoTicker />
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* REAL SCENARIO — interactive Before / After                 */}
@@ -334,8 +396,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      <LogoTicker />
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* HOW IT WORKS — 3 dead-simple steps                        */}
@@ -679,12 +739,13 @@ const Index = () => {
 
       {/* Sticky mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-4 md:hidden"
-        style={{ background: "linear-gradient(to top, rgba(8,8,8,0.98) 60%, transparent)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-base h-auto rounded-xl py-4 shadow-lg shadow-purple-500/30 font-body"
+        style={{ background: "linear-gradient(to top, rgba(6,6,8,0.98) 70%, transparent)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <button className="w-full font-bold text-sm rounded-xl py-3.5 text-black font-body whitespace-nowrap"
+          style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}
           onClick={() => navigate("/signup")}>
-          Start free — upload your first ad →
-        </Button>
-        <p className="text-center text-[10px] text-white/25 mt-2 font-body">No credit card • Free forever plan</p>
+          {t("hero_cta_primary")} →
+        </button>
+        <p className="text-center text-[10px] text-white/20 mt-1.5 font-body">{t("lp_mobile_sub")}</p>
       </div>
     </div>
   );

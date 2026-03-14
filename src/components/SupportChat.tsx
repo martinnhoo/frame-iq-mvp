@@ -105,69 +105,55 @@ export default function SupportChat() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
-        <div className="w-96 rounded-lg shadow-lg overflow-hidden flex flex-col bg-background border border-border">
-          <div className="bg-muted p-4 flex items-center justify-between border-b border-border">
-            <span className="font-semibold text-sm text-foreground">AdBrief Support</span>
-            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+        <div className="w-80 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ background: "#0e0e14", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div className="p-3 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <span className="font-semibold text-sm text-white/80">AdBrief Support</span>
+            <button onClick={() => setIsOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
               <X className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
-          <div className="p-4 h-80 overflow-y-auto flex-grow flex-shrink" ref={chatContainerRef}>
+          <div className="p-3 h-72 overflow-y-auto flex-grow" ref={chatContainerRef}>
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`mb-2 ${message.role === "user" ? "text-right" : "text-left"}`}
-              >
-                <div
-                  className={`inline-block p-2 rounded-lg text-sm max-w-[85%] ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-none"
-                      : "bg-muted text-foreground rounded-bl-none"
-                  }`}
-                >
+              <div key={index} className={`mb-2 ${message.role === "user" ? "text-right" : "text-left"}`}>
+                <div className={`inline-block px-3 py-2 rounded-xl text-sm max-w-[85%] ${
+                  message.role === "user"
+                    ? "text-white rounded-br-sm"
+                    : "text-white/70 rounded-bl-sm"
+                }`} style={{ background: message.role === "user" ? "linear-gradient(135deg,#a78bfa,#f472b6)" : "rgba(255,255,255,0.06)" }}>
                   {message.content}
                 </div>
               </div>
             ))}
             {isLoading && (
               <div className="text-left mb-2">
-                <div className="inline-block p-2 rounded-lg text-sm bg-muted text-foreground rounded-bl-none">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="inline-block px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <Loader2 className="h-3 w-3 animate-spin text-white/40" />
                 </div>
               </div>
             )}
           </div>
-          <div className="p-4 border-t border-border">
-            <div className="flex rounded-md shadow-sm gap-2">
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                rows={1}
-                className="block w-full rounded-md border border-border bg-background py-1.5 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary sm:text-sm sm:leading-6 px-3 resize-none"
-                placeholder={placeholder}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="shrink-0"
-                onClick={handleSendMessage}
-                disabled={isLoading}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+          <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="flex gap-2">
+              <textarea value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                rows={1} placeholder={placeholder}
+                className="flex-1 rounded-xl text-sm text-white/80 resize-none px-3 py-2 outline-none"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }} />
+              <button onClick={handleSendMessage} disabled={isLoading}
+                className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", border: "none", cursor: "pointer" }}>
+                <Send className="h-3.5 w-3.5 text-black" />
+              </button>
             </div>
           </div>
         </div>
       ) : (
-        <Button onClick={() => setIsOpen(true)} className="rounded-full">
-          <MessageCircle className="h-4 w-4 mr-2" /> Support
-        </Button>
+        <button onClick={() => setIsOpen(true)}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+          style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.3)", cursor: "pointer" }}
+          title="Support">
+          <MessageCircle className="h-4 w-4" style={{ color: "#a78bfa" }} />
+        </button>
       )}
     </div>
   );
