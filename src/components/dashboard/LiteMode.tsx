@@ -6,6 +6,7 @@ import {
   TrendingUp, Heart, Laugh, AlertTriangle, Eye, Star, Users, Monitor, Film, Tv2, Smartphone,
 } from "lucide-react";
 import type { Profile } from "./DashboardLayout";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
 const m = { fontFamily: "'DM Mono', monospace" } as React.CSSProperties;
@@ -15,7 +16,7 @@ interface LiteModeProps {
   onSwitchToPro: () => void;
 }
 
-const GOALS = [
+const GOALS_EN = [
   { id: "analyze",   emoji: "📊", label: "Score my hook",            desc: "0–10 hook score + exact fixes",              route: "/dashboard/analyses/new" },
   { id: "script",    emoji: "✍️", label: "Write a video script",      desc: "Full script from a single prompt",           route: "/dashboard/script" },
   { id: "brief",     emoji: "🎬", label: "Create a production brief", desc: "Scene-by-scene brief ready for your editor", route: "/dashboard/boards/new" },
@@ -24,6 +25,23 @@ const GOALS = [
   { id: "persona",   emoji: "🧠", label: "Build an audience persona", desc: "Deep profile of who you're targeting",       route: "/dashboard/persona" },
 ];
 
+const GOALS_PT = [
+  { id: "analyze",   emoji: "📊", label: "Avaliar meu hook",              desc: "Nota 0–10 + melhorias exatas",                  route: "/dashboard/analyses/new" },
+  { id: "script",    emoji: "✍️", label: "Escrever um script de vídeo",   desc: "Script completo a partir de um único prompt",   route: "/dashboard/script" },
+  { id: "brief",     emoji: "🎬", label: "Criar um brief de produção",    desc: "Brief cena a cena pronto para o editor",        route: "/dashboard/boards/new" },
+  { id: "preflight", emoji: "✅", label: "Revisão pré-lançamento",        desc: "Pegue erros antes de gastar um centavo",        route: "/dashboard/preflight" },
+  { id: "hooks",     emoji: "⚡", label: "Gerar variações de hook",       desc: "10+ hooks para o mesmo conceito",               route: "/dashboard/hooks" },
+  { id: "persona",   emoji: "🧠", label: "Criar persona de audiência",    desc: "Perfil profundo de quem você está segmentando", route: "/dashboard/persona" },
+];
+
+const GOALS_ES = [
+  { id: "analyze",   emoji: "📊", label: "Puntuar mi hook",               desc: "Puntuación 0–10 + mejoras exactas",             route: "/dashboard/analyses/new" },
+  { id: "script",    emoji: "✍️", label: "Escribir un script de video",   desc: "Script completo desde un solo prompt",          route: "/dashboard/script" },
+  { id: "brief",     emoji: "🎬", label: "Crear un brief de producción",  desc: "Brief escena a escena listo para tu editor",    route: "/dashboard/boards/new" },
+  { id: "preflight", emoji: "✅", label: "Revisión pre-lanzamiento",      desc: "Detecta errores antes de gastar un peso",       route: "/dashboard/preflight" },
+  { id: "hooks",     emoji: "⚡", label: "Generar variaciones de hook",   desc: "10+ hooks para el mismo concepto",              route: "/dashboard/hooks" },
+  { id: "persona",   emoji: "🧠", label: "Construir persona de audiencia","desc": "Perfil profundo de a quién estás apuntando",  route: "/dashboard/persona" },
+];
 const PLATFORMS = [
   { id: "tiktok",    emoji: "🎵", label: "TikTok" },
   { id: "facebook",  emoji: "👤", label: "Facebook" },
@@ -78,12 +96,116 @@ const pillStyle = (selected: boolean): React.CSSProperties => ({
 
 export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<string | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
   const [industry, setIndustry] = useState<string | null>(null);
   const [audience, setAudience] = useState<string | null>(null);
   const [emotion, setEmotion] = useState<string | null>(null);
+
+  const isPT = language === "pt";
+  const isES = language === "es";
+
+  const GOALS = isPT ? GOALS_PT : isES ? GOALS_ES : GOALS_EN;
+
+  const INDUSTRIES = isPT ? [
+    { id: "ecommerce", emoji: "🛍️", label: "E-commerce" },
+    { id: "igaming",   emoji: "🎮", label: "iGaming" },
+    { id: "saas",      emoji: "💻", label: "SaaS / App" },
+    { id: "finance",   emoji: "💰", label: "Finanças" },
+    { id: "health",    emoji: "❤️", label: "Saúde" },
+    { id: "other",     emoji: "🌐", label: "Outro" },
+  ] : isES ? [
+    { id: "ecommerce", emoji: "🛍️", label: "E-commerce" },
+    { id: "igaming",   emoji: "🎮", label: "iGaming" },
+    { id: "saas",      emoji: "💻", label: "SaaS / App" },
+    { id: "finance",   emoji: "💰", label: "Finanzas" },
+    { id: "health",    emoji: "❤️", label: "Salud" },
+    { id: "other",     emoji: "🌐", label: "Otro" },
+  ] : [
+    { id: "ecommerce", emoji: "🛍️", label: "E-commerce" },
+    { id: "igaming",   emoji: "🎮", label: "iGaming" },
+    { id: "saas",      emoji: "💻", label: "SaaS / App" },
+    { id: "finance",   emoji: "💰", label: "Finance" },
+    { id: "health",    emoji: "❤️", label: "Health" },
+    { id: "other",     emoji: "🌐", label: "Other" },
+  ];
+
+  const AUDIENCES = isPT ? [
+    { id: "cold",      emoji: "🧊", label: "Tráfego frio",      desc: "Nunca ouviu falar de você" },
+    { id: "warm",      emoji: "🔥", label: "Quente / retarget", desc: "Visitou ou interagiu antes" },
+    { id: "lookalike", emoji: "👥", label: "Lookalike",         desc: "Parecido com seus clientes atuais" },
+    { id: "broad",     emoji: "🌍", label: "Aberto",            desc: "Sem segmentação específica" },
+  ] : isES ? [
+    { id: "cold",      emoji: "🧊", label: "Tráfico frío",      desc: "Nunca oyó hablar de ti" },
+    { id: "warm",      emoji: "🔥", label: "Cálido / retarget", desc: "Visitó o interactuó antes" },
+    { id: "lookalike", emoji: "👥", label: "Lookalike",         desc: "Similar a tus clientes actuales" },
+    { id: "broad",     emoji: "🌍", label: "Amplio",            desc: "Sin segmentación específica" },
+  ] : [
+    { id: "cold",      emoji: "🧊", label: "Cold traffic",    desc: "Never heard of you" },
+    { id: "warm",      emoji: "🔥", label: "Warm / retarget", desc: "Visited or engaged before" },
+    { id: "lookalike", emoji: "👥", label: "Lookalike",       desc: "Similar to existing customers" },
+    { id: "broad",     emoji: "🌍", label: "Broad",           desc: "No specific targeting" },
+  ];
+
+  const EMOTIONS = isPT ? [
+    { id: "curiosity",  emoji: "🔍", label: "Curiosidade" },
+    { id: "social",     emoji: "⭐", label: "Prova social" },
+    { id: "fear",       emoji: "⚠️", label: "Medo / urgência" },
+    { id: "humor",      emoji: "😄", label: "Humor" },
+    { id: "aspiration", emoji: "🚀", label: "Aspiração" },
+    { id: "community",  emoji: "🤝", label: "Comunidade" },
+  ] : isES ? [
+    { id: "curiosity",  emoji: "🔍", label: "Curiosidad" },
+    { id: "social",     emoji: "⭐", label: "Prueba social" },
+    { id: "fear",       emoji: "⚠️", label: "Miedo / urgencia" },
+    { id: "humor",      emoji: "😄", label: "Humor" },
+    { id: "aspiration", emoji: "🚀", label: "Aspiración" },
+    { id: "community",  emoji: "🤝", label: "Comunidad" },
+  ] : [
+    { id: "curiosity",  emoji: "🔍", label: "Curiosity" },
+    { id: "social",     emoji: "⭐", label: "Social proof" },
+    { id: "fear",       emoji: "⚠️", label: "Fear / urgency" },
+    { id: "humor",      emoji: "😄", label: "Humor" },
+    { id: "aspiration", emoji: "🚀", label: "Aspiration" },
+    { id: "community",  emoji: "🤝", label: "Community" },
+  ];
+
+  const STEPS = isPT
+    ? [{ num: 1, label: "Objetivo" }, { num: 2, label: "Plataforma" }, { num: 3, label: "Contexto" }, { num: 4, label: "Ângulo" }]
+    : isES
+    ? [{ num: 1, label: "Objetivo" }, { num: 2, label: "Plataforma" }, { num: 3, label: "Contexto" }, { num: 4, label: "Ángulo" }]
+    : [{ num: 1, label: "Goal" }, { num: 2, label: "Platform" }, { num: 3, label: "Context" }, { num: 4, label: "Angle" }];
+
+  const ui = {
+    badge:          isPT ? "Modo Lite" : isES ? "Modo Lite" : "Lite Mode",
+    step1_supra:    isPT ? "O que você quer fazer?" : isES ? "¿Qué quieres hacer?" : "What do you want to do?",
+    step1_heading:  isPT ? "escolha seu ponto de partida." : isES ? "elige tu punto de partida." : "pick your starting point.",
+    step1_sub:      isPT ? "Escolha um — guiamos o resto." : isES ? "Elige uno — te guiamos el resto." : "Pick one — we'll guide you through the rest.",
+    step2_supra:    isPT ? "Plataforma" : isES ? "Plataforma" : "Platform",
+    step2_heading:  isPT ? "Onde isso vai rodar?" : isES ? "¿Dónde va a correr esto?" : "Where will this run?",
+    step2_sub:      isPT ? "Vamos calibrar benchmarks e recomendações de formato por plataforma." : isES ? "Calibraremos benchmarks y recomendaciones de formato por plataforma." : "We'll calibrate benchmarks and format recommendations per platform.",
+    step2_skip:     isPT ? "Pular — decidir depois" : isES ? "Saltar — decidir después" : "Skip — decide later",
+    step3_supra:    isPT ? "Contexto" : isES ? "Contexto" : "Context",
+    step3_heading:  isPT ? "Conta sobre a campanha." : isES ? "Cuéntanos sobre la campaña." : "Tell us about your campaign.",
+    step3_industry: isPT ? "Indústria" : isES ? "Industria" : "Industry",
+    step3_audience: isPT ? "Audiência" : isES ? "Audiencia" : "Audience",
+    step3_continue: isPT ? "Continuar" : isES ? "Continuar" : "Continue",
+    step4_supra:    isPT ? "Ângulo criativo" : isES ? "Ángulo creativo" : "Creative angle",
+    step4_heading:  isPT ? "Qual emoção move este anúncio?" : isES ? "¿Qué emoción mueve este anuncio?" : "What emotion drives this ad?",
+    step4_sub:      isPT ? "Isso define o estilo do hook, o tom e a direção do script." : isES ? "Esto define el estilo del hook, el tono y la dirección del script." : "This shapes hook style, tone, and script direction.",
+    brief_label:    isPT ? "Seu brief" : isES ? "Tu brief" : "Your brief",
+    generate:       isPT ? "Gerar agora" : isES ? "Generar ahora" : "Generate now",
+    skip_angle:     isPT ? "Pular ângulo — só gerar" : isES ? "Saltar ángulo — solo generar" : "Skip angle — just go",
+    back:           isPT ? "← Voltar" : isES ? "← Volver" : "← Back",
+    quick_jump:     isPT ? "Atalhos" : isES ? "Accesos rápidos" : "Quick jump",
+    q_analyses:     isPT ? "Minhas análises" : isES ? "Mis análisis" : "My analyses",
+    q_boards:       isPT ? "Meus boards" : isES ? "Mis boards" : "My boards",
+    q_personas:     isPT ? "Personas" : isES ? "Personas" : "Personas",
+    q_hooks:        isPT ? "Hooks" : isES ? "Hooks" : "Hooks",
+    greeting:       isPT ? "escolha seu ponto de partida." : isES ? "elige tu punto de partida." : "pick your starting point.",
+  };
 
   const name = profile?.name?.split(" ")[0] || "there";
 
@@ -136,7 +258,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
           </div>
           <div>
             <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", lineHeight: 1 }}>AdBrief</p>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", lineHeight: 1.2 }}>Lite Mode</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", lineHeight: 1.2 }}>{ui.badge}</p>
           </div>
         </div>
 
@@ -177,10 +299,10 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* STEP 1 — Goal */}
         {step === 1 && (
           <div>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>What do you want to do?</p>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>{ui.step1_supra}</p>
             <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 28 }}>
               Hey {name},<br />
-              <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>pick your starting point.</span>
+              <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{ui.step1_heading}</span>
             </h1>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {GOALS.map(g => (
@@ -200,10 +322,10 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* STEP 2 — Platform */}
         {step === 2 && (
           <div>
-            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>Platform</p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>Where will this run?</h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>We'll calibrate benchmarks and format recommendations per platform.</p>
+            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>{ui.back}</button>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>{ui.step2_supra}</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>{ui.step2_heading}</h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>{ui.step2_sub}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {PLATFORMS.map(p => (
                 <button key={p.id} onClick={() => handlePlatform(p.id)} style={{ ...card(platform === p.id), padding: "22px 16px", textAlign: "center" }}>
@@ -212,18 +334,18 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
                 </button>
               ))}
             </div>
-            <button onClick={() => setStep(3)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 12, cursor: "pointer", textDecoration: "underline", marginTop: 18, padding: 0, display: "block" }}>Skip — decide later</button>
+            <button onClick={() => setStep(3)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 12, cursor: "pointer", textDecoration: "underline", marginTop: 18, padding: 0, display: "block" }}>{ui.step2_skip}</button>
           </div>
         )}
 
         {/* STEP 3 — Industry + Audience */}
         {step === 3 && (
           <div>
-            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>Context</p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 28 }}>Tell us about your campaign.</h1>
+            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>{ui.back}</button>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>{ui.step3_supra}</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 28 }}>{ui.step3_heading}</h1>
 
-            <p style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>Industry</p>
+            <p style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>{ui.step3_industry}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 28 }}>
               {INDUSTRIES.map(ind => (
                 <button key={ind.id} onClick={() => setIndustry(ind.id)} style={{ ...card(industry === ind.id), padding: "14px 10px", textAlign: "center" }}>
@@ -233,7 +355,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
               ))}
             </div>
 
-            <p style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>Audience</p>
+            <p style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>{ui.step3_audience}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32 }}>
               {AUDIENCES.map(a => (
                 <button key={a.id} onClick={() => setAudience(a.id)} style={{ ...pillStyle(audience === a.id), display: "flex", alignItems: "center", gap: 12, textAlign: "left", width: "100%" }}>
@@ -247,7 +369,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
             </div>
 
             <button onClick={() => handleAudience(audience || "broad")} style={{ width: "100%", padding: "14px", borderRadius: 999, fontSize: 14, fontWeight: 800, background: (audience || industry) ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.04)", color: (audience || industry) ? "#a78bfa" : "rgba(255,255,255,0.2)", border: `1px solid ${(audience || industry) ? "rgba(167,139,250,0.35)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              Continue <ArrowRight size={15} />
+              {ui.step3_continue} <ArrowRight size={15} />
             </button>
           </div>
         )}
@@ -255,10 +377,10 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* STEP 4 — Angle */}
         {step === 4 && (
           <div>
-            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>Creative angle</p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>What emotion drives this ad?</h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>This shapes hook style, tone, and script direction.</p>
+            <button onClick={goBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer", marginBottom: 20, padding: 0, display: "flex", alignItems: "center", gap: 4 }}>{ui.back}</button>
+            <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>{ui.step4_supra}</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>{ui.step4_heading}</h1>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 28 }}>{ui.step4_sub}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
               {EMOTIONS.map(e => (
                 <button key={e.id} onClick={() => setEmotion(e.id)} style={{ ...card(emotion === e.id), padding: "18px 16px", textAlign: "center" }}>
@@ -270,7 +392,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
 
             {/* Brief summary */}
             <div style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)", borderRadius: 16, padding: "14px 16px", marginBottom: 20 }}>
-              <p style={{ ...m, fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>Your brief</p>
+              <p style={{ ...m, fontSize: 9, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>{ui.brief_label}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {chips.map(c => <span key={c} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.08)" }}>{c}</span>)}
                 {emotion && <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>{EMOTIONS.find(e => e.id === emotion)?.label}</span>}
@@ -278,10 +400,10 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
             </div>
 
             <button onClick={handleLaunch} style={{ width: "100%", padding: "16px", borderRadius: 999, fontSize: 15, fontWeight: 800, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 24px rgba(167,139,250,0.35)" }}>
-              Generate now <ArrowRight size={16} />
+              {ui.generate} <ArrowRight size={16} />
             </button>
             <button onClick={() => { setEmotion(null); handleLaunch(); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 12, cursor: "pointer", textDecoration: "underline", marginTop: 14, padding: 0, display: "block", width: "100%", textAlign: "center" }}>
-              Skip angle — just go
+              {ui.skip_angle}
             </button>
           </div>
         )}
@@ -289,13 +411,13 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* Quick access step 1 */}
         {step === 1 && (
           <div style={{ marginTop: 36 }}>
-            <p style={{ ...m, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.18)", marginBottom: 12 }}>Quick jump</p>
+            <p style={{ ...m, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.18)", marginBottom: 12 }}>{ui.quick_jump}</p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[
-                { label: "My analyses", route: "/dashboard/analyses", icon: <BarChart3 size={11} /> },
-                { label: "My boards",   route: "/dashboard/boards",   icon: <FileText size={11} /> },
-                { label: "Personas",    route: "/dashboard/persona",  icon: <Target size={11} /> },
-                { label: "Hooks",       route: "/dashboard/hooks",    icon: <Sparkles size={11} /> },
+                { label: ui.q_analyses, route: "/dashboard/analyses", icon: <BarChart3 size={11} /> },
+                { label: ui.q_boards,   route: "/dashboard/boards",   icon: <FileText size={11} /> },
+                { label: ui.q_personas, route: "/dashboard/persona",  icon: <Target size={11} /> },
+                { label: ui.q_hooks,    route: "/dashboard/hooks",    icon: <Sparkles size={11} /> },
               ].map(item => (
                 <button key={item.route} onClick={() => navigate(item.route)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 11, background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
                   {item.icon} {item.label}
