@@ -104,7 +104,7 @@ const Index = () => {
       name: "Free",
       price: "$0",
       period: t("pricing_mo"),
-      desc: "Try before you commit. No credit card.",
+      desc: t("plan_free_desc"),
       features: t("lp_plan_free_features").split("|"),
       cta: t("pricing_cta_free") || "Get started free",
       highlighted: false
@@ -113,7 +113,7 @@ const Index = () => {
       name: "Maker",
       price: "$19",
       period: t("pricing_mo"),
-      desc: "For solo creators and freelancers.",
+      desc: t("plan_maker_desc"),
       features: t("lp_plan_maker_features").split("|"),
       cta: t("lp_start_maker"),
       highlighted: false
@@ -122,7 +122,7 @@ const Index = () => {
       name: "Pro",
       price: "$49",
       period: t("pricing_mo"),
-      desc: "For performance teams running ads at scale.",
+      desc: t("plan_pro_desc"),
       features: t("lp_plan_pro_features").split("|"),
       cta: t("lp_start_pro"),
       highlighted: true,
@@ -132,7 +132,7 @@ const Index = () => {
       name: "Studio",
       price: "$149",
       period: t("pricing_mo"),
-      desc: "For teams that produce every day.",
+      desc: t("plan_studio_desc"),
       features: t("lp_plan_studio_features").split("|"),
       cta: t("lp_start_studio"),
       highlighted: false
@@ -166,8 +166,8 @@ const Index = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-body" onClick={() => navigate("/login")}>{t("nav_signin")}</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 font-body" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-body whitespace-nowrap" onClick={() => navigate("/login")}>{t("nav_signin")}</Button>
+            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -182,7 +182,7 @@ const Index = () => {
                       <a key={link.label} href={link.href} className="text-lg text-muted-foreground hover:text-foreground transition-colors font-body">{link.label}</a>
                     )
                   )}
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-body" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -222,24 +222,24 @@ const Index = () => {
           {/* CTA */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10">
-            <Button className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/30 font-body group"
+            <Button className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/30 font-body group whitespace-nowrap"
               onClick={() => navigate("/signup")}>
               <span className="relative z-10 flex items-center gap-2">
-                Start free — upload your first ad
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                {t("hero_cta_primary")}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 shrink-0" />
               </span>
             </Button>
-            <Button variant="outline" className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group border-white/10 font-body"
+            <Button variant="outline" className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group border-white/10 font-body whitespace-nowrap"
               onClick={() => { document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              See how it works
+              {t("hero_cta_secondary")}
             </Button>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
             className="flex items-center justify-center gap-6 mt-6 font-body text-xs text-muted-foreground/60">
-            <span>✓ Free plan forever</span>
-            <span>✓ No credit card</span>
-            <span>✓ 2 min setup</span>
+            <span>✓ {t("hero_check_1")}</span>
+            <span>✓ {t("hero_check_2")}</span>
+            <span>✓ {t("hero_check_3")}</span>
           </motion.div>
         </div>
       </section>
@@ -344,34 +344,19 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-14">
             <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              DEAD SIMPLE
+              {t("how_label2")}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-4 font-display" style={{ letterSpacing: "-0.02em" }}>
-              3 steps. That's it.
+              {t("how_title2")}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                n: "1", icon: "📥", title: "Upload your ads",
-                desc: "Drag & drop your ad videos and import a CSV with performance data (CTR, CPC, ROAS). Takes 2 minutes.",
-                result: "AI starts analyzing everything",
-                color: "#a78bfa",
-              },
-              {
-                n: "2", icon: "🧠", title: "AI learns your patterns",
-                desc: "The AI identifies what works: which hooks, formats, markets, and audiences drive YOUR results. Not industry averages — YOUR data.",
-                result: "Winning formula decoded",
-                color: "#f472b6",
-              },
-              {
-                n: "3", icon: "⚡", title: "Generate calibrated content",
-                desc: "Every script, brief, and hook the AI generates is now tuned to your account. Plus: predictive scores before you produce anything.",
-                result: "Stop guessing, start knowing",
-                color: "#34d399",
-              },
-            ].map((step, i) => (
+            {([
+              { n: "1", icon: "📥", title: t("how_s1_title"), desc: t("how_s1_desc"), result: t("how_s1_result"), color: "#a78bfa" },
+              { n: "2", icon: "🧠", title: t("how_s2_title"), desc: t("how_s2_desc"), result: t("how_s2_result"), color: "#f472b6" },
+              { n: "3", icon: "⚡", title: t("how_s3_title"), desc: t("how_s3_desc"), result: t("how_s3_result"), color: "#34d399" },
+            ] as {n:string;icon:string;title:string;desc:string;result:string;color:string}[]).map((step, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 }} viewport={{ once: true }}
                 className="p-7 rounded-2xl relative" style={{ background: `${step.color}05`, border: `1px solid ${step.color}15` }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4" style={{ background: `${step.color}12` }}>{step.icon}</div>
@@ -394,10 +379,10 @@ const Index = () => {
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold font-display" style={{ letterSpacing: "-0.02em" }}>
-              What the AI actually tells you
+              {t("ai_section_title")}
             </h2>
             <p className="text-muted-foreground mt-3 max-w-lg mx-auto font-body text-base">
-              Real outputs. Real insights. Not generic tips — data-driven decisions from YOUR account.
+              {t("ai_section_sub")}
             </p>
           </div>
 
@@ -454,18 +439,18 @@ const Index = () => {
         <div className="container mx-auto max-w-3xl text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-2xl md:text-3xl font-bold font-display mb-6" style={{ letterSpacing: "-0.01em" }}>
-              Your media buyer forgets.
+              {t("prov_title1")}
               <br />
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                The AI doesn't.
+                {t("prov_title2")}
               </span>
             </h2>
             <div className="grid md:grid-cols-3 gap-4 mt-8">
-              {[
-                { human: "Remembers last 10 ads", ai: "Remembers every ad ever", icon: "🧠" },
-                { human: "Gut feeling on what works", ai: "Data-backed predictions", icon: "🎯" },
-                { human: "Same mistakes next quarter", ai: "Never repeats a mistake", icon: "🔄" },
-              ].map((item, i) => (
+              {([
+                { human: t("prov_h1"), ai: t("prov_ai1"), icon: "🧠" },
+                { human: t("prov_h2"), ai: t("prov_ai2"), icon: "🎯" },
+                { human: t("prov_h3"), ai: t("prov_ai3"), icon: "🔄" },
+              ] as {human:string;ai:string;icon:string}[]).map((item, i) => (
                 <div key={i} className="p-5 rounded-2xl text-left" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
                   <span className="text-xl mb-3 block">{item.icon}</span>
                   <p className="text-xs text-red-400/60 line-through font-body mb-1">{item.human}</p>
@@ -592,7 +577,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-3"
               style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[11px] text-amber-400/80 font-semibold font-body">Introductory pricing — rates increase as we grow</span>
+              <span className="text-[11px] text-amber-400/80 font-semibold font-body">{t("pricing_urgency")}</span>
             </div>
             <p className="text-sm text-muted-foreground">{t("pricing_free_note")}</p>
             <button onClick={() => navigate("/pricing")} className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors">{t("pricing_see_all")}</button>
