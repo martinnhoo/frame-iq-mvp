@@ -17,13 +17,13 @@ import LogoTicker from "@/components/LogoTicker";
 
 function ScenarioBlock({ t }: { t: (k: string) => string }) {
   const [active, setActive] = useState<"without" | "with">("without");
-  const without = [
+  const without: { text: string; icon: string; highlight?: boolean }[] = [
     { text: t("scenario_w1"), icon: "✗" },
     { text: t("scenario_w2"), icon: "✗" },
     { text: t("scenario_w3"), icon: "✗" },
     { text: t("scenario_w4"), icon: "✗" },
   ];
-  const withAB = [
+  const withAB: { text: string; icon: string; highlight?: boolean }[] = [
     { text: t("scenario_a1"), icon: "→" },
     { text: t("scenario_a2"), icon: "→" },
     { text: t("scenario_a3"), icon: "→", highlight: true },
