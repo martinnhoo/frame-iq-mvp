@@ -86,8 +86,6 @@ type TranslationKeys = {
   feature_translation_desc: string;
   feature_intelligence_title: string;
   feature_intelligence_desc: string;
-  feature_ai_video_title: string;
-  feature_ai_video_desc: string;
   feature_api_title: string;
   feature_api_desc: string;
 
@@ -317,7 +315,7 @@ export const translations: Record<Language, TranslationKeys> = {
     feature_translation_desc: "Localize scripts with cultural adaptation — tone, slang, and context preserved across 10+ markets.",
     feature_intelligence_title: "Creative Intelligence",
     feature_intelligence_desc: "AI learns your patterns, spots creative fatigue, and tells you what to test next.",
-    feature_ai_video_title: "AI Video Generation",
+    feature_ai_video_title: "AI Creative Intelligence",
     feature_ai_video_desc: "From concept board to MP4 with AI voiceover. No editors needed.",
     feature_api_title: "API Access",
     feature_api_desc: "Integrate AdBrief into your existing workflow with our REST API.",

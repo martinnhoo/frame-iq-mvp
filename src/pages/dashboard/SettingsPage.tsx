@@ -135,7 +135,6 @@ const SettingsPage = () => {
           {[
             { name: "Anthropic Claude", desc: "Analysis, boards, translation, persona", key: "ANTHROPIC" },
             { name: "OpenAI Whisper", desc: "Video transcription", key: "OPENAI" },
-            { name: "ElevenLabs", desc: "Voiceover generation (Studio/Scale)", key: "ELEVENLABS" },
           ].map(({ name, desc }) => (
             <div key={name} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
