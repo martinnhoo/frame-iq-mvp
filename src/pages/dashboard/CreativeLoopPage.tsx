@@ -171,6 +171,12 @@ export default function CreativeLoopPage() {
         </div>
       </div>
 
+      {/* Coming soon banner */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 12, background: "linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.04))", border: "1px solid rgba(251,191,36,0.25)" }}>
+        <span style={{ fontSize: 14 }}>⚡</span>
+        <span style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(251,191,36,0.8)", letterSpacing: "0.04em" }}>Coming soon: direct Meta Ads connection</span>
+      </div>
+
       {/* Cycle visualization */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "24px 20px" }}>
         <p style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.2)", marginBottom: 16 }}>The Loop</p>
