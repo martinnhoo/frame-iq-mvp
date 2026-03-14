@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useOutletContext, useNavigate, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,17 +219,18 @@ export default function DashboardOverview() {
 
   const firstName = profile?.name?.split(" ")[0] || "there";
 
-  // Session greeting — once per login per language
-  const SESSION_KEY = `adbrief_session_greeting_${language}`;
-  const getSessionGreeting = () => {
-    const existing = sessionStorage.getItem(SESSION_KEY);
+  // Session greeting — once per login per language, stable via useMemo
+  const greeting = useMemo(() => {
+    const key = `adbrief_session_greeting_${language}`;
+    const existing = sessionStorage.getItem(key);
     if (existing) return existing;
-    const pool = dt("session_greetings").split("|");
-    const picked = pool[Math.floor(Math.random() * pool.length)];
-    sessionStorage.setItem(SESSION_KEY, picked);
+    const pool = dt("session_greetings").split("|").filter(Boolean);
+    const picked = pool[Math.floor(Math.random() * pool.length)] || pool[0];
+    sessionStorage.setItem(key, picked);
     return picked;
-  };
-  const greeting = getSessionGreeting();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
   const hasData = insights.totalAnalyzed > 0;
 
   // Gamification: total actions
