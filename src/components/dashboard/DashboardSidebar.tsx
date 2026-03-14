@@ -84,7 +84,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     profile?.email?.charAt(0)?.toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() || "U";
 
-  const NavItem = ({ item }: { item: typeof loopItems[0] & { badge?: string } }) => {
+  const NavItem = ({ item }: { item: { title: string; url: string; icon: any; accent: string; end?: boolean; badge?: string } }) => {
     const active = isActive(item.url, (item as { end?: boolean }).end);
     return (
       <NavLink
