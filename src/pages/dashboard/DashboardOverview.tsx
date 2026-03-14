@@ -237,13 +237,16 @@ export default function DashboardOverview() {
   const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? 0);
 
   const tools = [
-    { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#0ea5e9", badge: "AI" },
+    { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#0ea5e9" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
-    { title: dt("ov_hooks"),     desc: dt("ov_hooks_desc"),     icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
+    { title: dt("ov_hooks"),     desc: dt("ov_hooks_desc"),     icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c" },
+    { title: "Script",           desc: "Full ad script",        icon: Zap,       url: "/dashboard/script",       accent: "#0ea5e9" },
+    { title: "Brief",            desc: "Production brief",      icon: Sparkles,  url: "/dashboard/brief",        accent: "#60a5fa" },
     { title: dt("nav_translate"),desc: dt("ov_translate_desc"), icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
     { title: dt("ov_templates"), desc: dt("ov_templates_desc"), icon: Layers,    url: "/dashboard/templates",    accent: "#06b6d4" },
     { title: dt("nav_preflight"),desc: dt("ov_preflight_desc"), icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
     { title: dt("nav_persona"),  desc: dt("ov_persona_desc"),   icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
+    { title: "Competitor",       desc: "Decode competitor ads", icon: Brain,     url: "/dashboard/competitor",   accent: "#34d399" },
   ];
 
   const usageBlocks = [
