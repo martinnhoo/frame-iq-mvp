@@ -79,7 +79,7 @@ export default function BriefGenerator() {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-brief", {
-        body: { product, offer, objective, market, audience, competitors, extra_context: extraContext },
+        body: { product, offer, objective, market, audience, competitors, extra_context: extraContext, user_id: user.id },
       });
       if (error) throw error;
       setResult(data);

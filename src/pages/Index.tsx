@@ -189,14 +189,14 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground leading-[1.08] tracking-tight font-display"
           >
-            Your ads learn.
+            AI that decodes
             <br />
             <span style={{
               background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-            }}>Every brief gets smarter.</span>
+            }}>your winning formula.</span>
           </motion.h1>
           
           <motion.p 
@@ -205,7 +205,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-[17px] md:text-[19px] max-w-[640px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body"
           >
-            AdBrief closes the loop between ad performance and creative production. Import your data → AI learns what wins → every next brief is pre-calibrated.
+            Upload your ads, feed your performance data. AdBrief's AI learns what works for YOUR account — hooks, formats, markets, audiences — and every tool gets smarter with every ad you run.
           </motion.p>
 
           {/* Loop cycle mini-visual */}
@@ -216,11 +216,11 @@ const Index = () => {
             className="flex items-center justify-center gap-2 mt-10 flex-wrap font-body"
           >
             {[
-              { label: "Brief", icon: "📋", color: "#a78bfa" },
-              { label: "Produce", icon: "🎬", color: "#60a5fa" },
-              { label: "Run Ads", icon: "📊", color: "#f472b6" },
-              { label: "AI Learns", icon: "🧠", color: "#34d399" },
-              { label: "Repeat", icon: "🔄", color: "#fbbf24" },
+              { label: "Upload Ads", icon: "📥", color: "#60a5fa" },
+              { label: "AI Decodes", icon: "🧠", color: "#a78bfa" },
+              { label: "Patterns Found", icon: "🎯", color: "#f472b6" },
+              { label: "Tools Adapt", icon: "⚡", color: "#34d399" },
+              { label: "Loop Grows", icon: "📈", color: "#fbbf24" },
             ].map((step, i) => (
               <div key={step.label} className="flex items-center gap-2">
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
@@ -312,18 +312,18 @@ const Index = () => {
               Creative Performance Loop
             </h2>
             <p className="text-muted-foreground mt-4 max-w-2xl mx-auto font-body text-base leading-relaxed">
-              The cycle that nobody closes: Brief → Editor produces → Ad runs → Data comes back → AI learns → Next brief already knows what works. Automatically.
+              Upload your ad videos. Import your performance data. The AI decodes what works for YOUR account — and every tool on the platform adapts. It grows with you.
             </p>
           </div>
 
           {/* Loop steps — 5 cards */}
           <div className="grid md:grid-cols-5 gap-3 mb-12">
             {[
-              { n: "01", title: "Import Data", desc: "Connect your Meta, TikTok, or upload CSV. Performance data flows in.", icon: "📥", color: "#60a5fa" },
-              { n: "02", title: "Parse Creatives", desc: "AI reads your file naming convention and extracts metadata automatically.", icon: "🔍", color: "#a78bfa" },
-              { n: "03", title: "Find Patterns", desc: "AI discovers which combos win: hook type + market + platform + audience.", icon: "🧠", color: "#f472b6" },
-              { n: "04", title: "Predict & Score", desc: "Before spending, get a 0-100 score: \"78% chance to beat your avg CTR.\"", icon: "🎯", color: "#34d399" },
-              { n: "05", title: "Ship & Repeat", desc: "Every new brief is pre-calibrated. Performance feeds back. Loop gets smarter.", icon: "🔄", color: "#fbbf24" },
+              { n: "01", title: "Upload Ads", desc: "Upload your actual ad videos running on Meta, TikTok, etc. AI analyzes each one.", icon: "📥", color: "#60a5fa" },
+              { n: "02", title: "AI Decodes", desc: "Hook type, creative model, audience fit, platform match — everything gets stored.", icon: "🧠", color: "#a78bfa" },
+              { n: "03", title: "Patterns Emerge", desc: "After 10+ ads, AI identifies YOUR winning formula: what combos drive results.", icon: "🎯", color: "#f472b6" },
+              { n: "04", title: "Tools Adapt", desc: "Hooks, scripts, briefs — everything generated is now calibrated to your data.", icon: "⚡", color: "#34d399" },
+              { n: "05", title: "Loop Grows", desc: "More ads = more context = smarter tools. The AI literally grows with your business.", icon: "📈", color: "#fbbf24" },
             ].map((step, i) => (
               <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
                 className="p-5 rounded-2xl text-center relative"
@@ -342,9 +342,9 @@ const Index = () => {
           {/* Key differentiators */}
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { title: "Not generic — learns from YOUR data", desc: "Every pattern comes from your actual ad performance, not industry averages.", icon: "🎯", color: "#a78bfa" },
-              { title: "Closes the manual loop", desc: "No more staring at Ads Manager → extracting insights → briefing the team. It's automatic.", icon: "⚡", color: "#f472b6" },
-              { title: "Measurable ROI", desc: "Track how your avg CTR improves over time. \"Since using AdBrief, my CTR went up 34%.\"", icon: "📈", color: "#34d399" },
+              { title: "Decodes YOUR algorithm", desc: "Not industry benchmarks. The AI learns from your actual ads, your actual performance, your actual account. Every insight is specific to you.", icon: "🔬", color: "#a78bfa" },
+              { title: "Context that accumulates", desc: "Every video you upload, every analysis you run, every performance CSV — it all feeds the AI. After 30 days, it knows your business better than you.", icon: "🧠", color: "#f472b6" },
+              { title: "Measurable ROI", desc: "Track your avg CTR, ROAS, and hook scores over time. \"Since I started using AdBrief, my CTR went from 1.2% to 1.9%.\"", icon: "📈", color: "#34d399" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
                 className="p-6 rounded-2xl"

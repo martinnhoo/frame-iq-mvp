@@ -9,11 +9,33 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { product, offer, objective, market, audience, competitors, extra_context } = await req.json();
+    const { product, offer, objective, market, audience, competitors, extra_context, user_id } = await req.json();
 
     if (!product) return new Response(JSON.stringify({ error: "Missing product" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
+    // Fetch accumulated creative context from the loop
+    let loopContext = "";
+    if (user_id) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const loopRes = await fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+          },
+          body: JSON.stringify({ action: "get_context", user_id }),
+        });
+        if (loopRes.ok) {
+          const loopData = await loopRes.json();
+          if (loopData.has_data && loopData.context) {
+            loopContext = `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (learned from this client's real ad data) ---\n${loopData.context}\n--- Use these insights to calibrate the brief. Favor proven patterns when applicable. ---`;
+          }
+        }
+      } catch { /* loop context is optional */ }
+    }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
 
@@ -38,6 +60,7 @@ Market: ${market}
 ${audience ? `Audience notes: ${audience}` : ""}
 ${competitors ? `Competitors/References: ${competitors}` : ""}
 ${extra_context ? `Extra context: ${extra_context}` : ""}
+${loopContext}
 
 Return ONLY a JSON object — no markdown, no explanation:
 {
