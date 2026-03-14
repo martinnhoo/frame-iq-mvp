@@ -291,19 +291,44 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* ── ONBOARDING — new users ─────────────────────────── */}
-        {totalActions === 0 && (
-          <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(6,182,212,0.06))", border: "1px solid rgba(14,165,233,0.25)" }}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="text-4xl">🎬</div>
-              <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-sky-400/60 mb-1">Start here</p>
-                <h2 className="text-base font-extrabold text-white mb-1">Upload your first ad. Get a Hook Score in 60s.</h2>
-                <p className="text-sm text-white/40">Drop any video — TikTok, Reel, YouTube Short, Meta. AdBrief tells you exactly what's working and what to fix.</p>
+        {/* ── ONBOARDING WIZARD — new users (< 5 actions) ────── */}
+        {totalActions < 5 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(14,165,233,0.2)" }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div>
+                <p className="text-xs font-bold text-white/70">Get started — 3 steps to your first money-saving insight</p>
+                <p className="text-[10px] text-white/25 mt-0.5">{usedAnalyses > 0 ? "1" : "0"}/3 complete</p>
               </div>
-              <button onClick={() => navigate("/dashboard/analyses/new")} className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-                Analyze my first ad →
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${usedAnalyses > 0 ? 33 : 0}%`, background: "linear-gradient(90deg,#0ea5e9,#06b6d4)" }} />
+                </div>
+                <span className="text-[10px] text-white/25">{usedAnalyses > 0 ? "33" : "0"}%</span>
+              </div>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {([
+                { n: 1, icon: "🎬", title: "Analyze your first ad", desc: "Upload any video — AdBrief scores the hook, flags what's costing you budget, tells you exactly what to fix.", cta: "Analyze now →", url: "/dashboard/analyses/new", done: usedAnalyses > 0 },
+                { n: 2, icon: "⚡", title: "Generate hooks before producing", desc: "Test 10 hook angles in 30s. Each gets a predicted CTR score. Never produce a weak hook again.", cta: "Generate hooks →", url: "/dashboard/hooks", done: false },
+                { n: 3, icon: "🧠", title: "Ask AdBrief AI what to fix", desc: "Your AI already knows your account. Ask it what's wasting budget and what to produce next.", cta: "Ask AI →", url: "/dashboard/loop/ai", done: false },
+              ] as {n:number;icon:string;title:string;desc:string;cta:string;url:string;done:boolean}[]).map(step => (
+                <button key={step.n} onClick={() => navigate(step.url)}
+                  className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm"
+                    style={{ background: step.done ? "rgba(52,211,153,0.12)" : "rgba(14,165,233,0.06)", border: `1px solid ${step.done ? "rgba(52,211,153,0.25)" : "rgba(14,165,233,0.15)"}` }}>
+                    {step.done ? "✓" : step.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] text-white/20">Step {step.n}</span>
+                      {step.done && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>Done</span>}
+                    </div>
+                    <p className="text-xs font-semibold text-white/75">{step.title}</p>
+                    <p className="text-[11px] text-white/30 leading-relaxed mt-0.5">{step.desc}</p>
+                  </div>
+                  <span className="text-[11px] text-sky-400/60 shrink-0 mt-1 whitespace-nowrap">{step.cta}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}

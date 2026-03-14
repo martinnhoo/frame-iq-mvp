@@ -99,6 +99,20 @@ const Index = () => {
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
   const { t } = useLanguage();
 
+  // ── A/B Test: CTA copy ──────────────────────────────────────────────────
+  const abVariant = (() => {
+    const stored = localStorage.getItem("adbrief_ab_cta");
+    if (stored) return stored;
+    const v = Math.random() < 0.5 ? "a" : "b";
+    localStorage.setItem("adbrief_ab_cta", v);
+    return v;
+  })();
+  const ctaPrimary = abVariant === "a"
+    ? t("hero_cta_primary")  // "Save your next $500 in wasted budget — free"
+    : "Find what's killing your CTR — free";  // variant B
+  // ────────────────────────────────────────────────────────────────────────
+
+
   const plans = [
     {
       name: "Free",
@@ -229,7 +243,7 @@ const Index = () => {
                 <button onClick={() => navigate("/signup")}
                   className="font-body font-bold text-[15px] whitespace-nowrap flex items-center gap-2 justify-center"
                   style={{ padding: "14px 28px", borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
-                  {t("hero_cta_primary")} <ArrowRight size={16} />
+                  {ctaPrimary} <ArrowRight size={16} />
                 </button>
                 <button onClick={() => { const el = document.getElementById("how-it-works"); el ? el.scrollIntoView({ behavior: "smooth" }) : navigate("/guides/hook-framework-ctr"); }}
                   className="font-body font-semibold text-[15px] whitespace-nowrap"
@@ -743,7 +757,7 @@ const Index = () => {
         <button className="w-full font-bold text-sm rounded-xl py-3.5 text-black font-body whitespace-nowrap"
           style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}
           onClick={() => navigate("/signup")}>
-          {t("hero_cta_primary")} →
+          {ctaPrimary} →
         </button>
         <p className="text-center text-[10px] text-white/20 mt-1.5 font-body">{t("lp_mobile_sub")}</p>
       </div>

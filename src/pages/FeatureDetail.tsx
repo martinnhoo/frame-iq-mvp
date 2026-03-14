@@ -16,8 +16,8 @@ const featureMeta: Record<string, {
   "video-analysis": {
     icon: Video,
     title: "Video Analysis",
-    headline: "Upload any ad. Get a full breakdown in 60 seconds.",
-    description: "AdBrief's AI engine watches your video, extracts the hook, identifies the creative model, transcribes the audio, and generates a production-ready brief — all automatically.",
+    headline: "Know exactly why your ad is burning budget — in 60 seconds.",
+    description: "AdBrief analyzes your video, scores the hook, flags what's weak, and tells you exactly what to fix before you spend another dollar. Average team saves $340/week catching bad hooks early.",
     details: [
       "Automatic hook extraction from the first 3 seconds with emotional trigger classification",
       "Creative model identification: UGC, talking head, product demo, listicle, comparison, and 12 more",

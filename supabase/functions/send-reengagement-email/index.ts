@@ -9,16 +9,16 @@ type Lang = 'en' | 'pt' | 'es' | 'hi';
 
 const templates: Record<Lang, { subject: string; greeting: string; body: string; cta: string }> = {
   en: {
-    subject: "We miss you — AdBrief",
+    subject: "Your budget is burning — AdBrief",
     greeting: "Hey",
-    body: "It's been a while since your last visit.\n\nYour competitors are shipping new creatives every day. Drop a video and see what's working — it takes 30 seconds.",
-    cta: "Analyze a video now",
+    body: "Every day without checking your creatives is money left on the table.\n\nThe average team wastes $340/week on weak hooks they never caught. AdBrief flags them in 60 seconds.\n\nCome back and check what's eating your budget.",
+    cta: "Stop wasting budget — analyze now",
   },
   pt: {
-    subject: "Sentimos sua falta — AdBrief",
+    subject: "Seu orçamento está sendo desperdiçado — AdBrief",
     greeting: "Oi",
-    body: "Faz um tempo desde sua última visita.\n\nSeus concorrentes estão lançando criativos novos todos os dias. Suba um vídeo e veja o que funciona — leva 30 segundos.",
-    cta: "Analisar um vídeo agora",
+    body: "Cada dia sem verificar seus criativos é dinheiro perdido.\n\nA maioria dos times desperdiça R$1.700/semana em hooks fracos que nunca detectaram. O AdBrief identifica em 60 segundos.\n\nVolte e veja o que está consumindo seu orçamento.",
+    cta: "Parar de desperdiçar — analisar agora",
   },
   es: {
     subject: "Te extrañamos — AdBrief",
