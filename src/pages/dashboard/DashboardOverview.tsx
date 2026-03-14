@@ -219,23 +219,12 @@ export default function DashboardOverview() {
 
   const firstName = profile?.name?.split(" ")[0] || "there";
 
-  // Session greeting — generated once per login, not on page refresh
-  const SESSION_KEY = "adbrief_session_greeting";
+  // Session greeting — once per login per language
+  const SESSION_KEY = `adbrief_session_greeting_${language}`;
   const getSessionGreeting = () => {
     const existing = sessionStorage.getItem(SESSION_KEY);
     if (existing) return existing;
-    const pool = [
-      "Let's make something that actually converts.",
-      "Your AI is ready. Are you?",
-      "One brief away from a winner.",
-      "The best creative of your career starts here.",
-      "Let's find what works — and double down.",
-      "Build smart. Ship fast.",
-      "Your competitors are guessing. You're not.",
-      "Time to turn data into creatives.",
-      "What are we testing today?",
-      "Good data beats good luck. Always.",
-    ];
+    const pool = dt("session_greetings").split("|");
     const picked = pool[Math.floor(Math.random() * pool.length)];
     sessionStorage.setItem(SESSION_KEY, picked);
     return picked;

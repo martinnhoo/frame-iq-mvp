@@ -156,7 +156,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               <ChevronRight className="h-3.5 w-3.5 opacity-30 group-hover:opacity-60 transition-opacity" />
             </NavLink>
           )}
-          <div className="px-1"><LanguageSwitcher /></div>
+          <div className="px-1"><LanguageSwitcher direction="up" /></div>
           <button onClick={() => setProfileOpen(true)}
             className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-all group text-left"
             style={{ border: "1px solid rgba(255,255,255,0.05)" }}

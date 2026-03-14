@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Language, languageNames, languageFlags } from "@/i18n/translations";
+import { Language } from "@/i18n/translations";
 
 const languages: { code: Language; flag: string; name: string }[] = [
   { code: "en", flag: "🇺🇸", name: "English" },
@@ -12,11 +12,11 @@ const languages: { code: Language; flag: string; name: string }[] = [
   { code: "zh", flag: "🇨🇳", name: "中文" },
 ];
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher = ({ direction = "auto" }: { direction?: "up" | "down" | "auto" }) => {
   const { language, setLanguage } = useLanguage();
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   const current = languages.find(l => l.code === language) || languages[0];
 
   useEffect(() => {
@@ -27,10 +27,22 @@ const LanguageSwitcher = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleOpen = () => {
+    if (direction === "auto" && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setOpenUp(rect.bottom > window.innerHeight - 280);
+    } else {
+      setOpenUp(direction === "up");
+    }
+    setOpen(o => !o);
+  };
+
+  const dropPos = openUp ? "bottom-full mb-2 right-0" : "top-full mt-2 right-0";
+
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={handleOpen}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white transition-all text-xs font-medium"
       >
         <span className="text-base leading-none">{current.flag}</span>
@@ -42,7 +54,7 @@ const LanguageSwitcher = () => {
 
       {open && (
         <div
-          className="absolute right-0 mt-2 rounded-2xl border border-white/[0.1] shadow-2xl p-1.5 min-w-[160px]"
+          className={`absolute ${dropPos} rounded-2xl border border-white/[0.1] shadow-2xl p-1.5 min-w-[160px]`}
           style={{ background: "#111", zIndex: 9999 }}
         >
           {languages.map(lang => (

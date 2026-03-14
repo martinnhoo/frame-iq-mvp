@@ -337,6 +337,7 @@ export type DashT = {
   gm_greet_streak: string;
   gm_greet_new: string;
   gm_greet_prolific: string;
+  session_greetings: string;
 };
 
 export const dashTranslations: Record<DashLang, DashT> = {
@@ -476,6 +477,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "This week", gm_weekly_last: "Last week",
     gm_greet_comeback: "Welcome back! We missed you 🙌", gm_greet_streak: "day streak! You're on fire 🔥",
     gm_greet_new: "Let's build something great today!", gm_greet_prolific: "You've been crushing it lately 💪",
+    session_greetings: "Let's make something that actually converts.|Your AI is ready. Are you?|One brief away from a winner.|The best creative of your career starts here.|Let's find what works — and double down.|Build smart. Ship fast.|Your competitors are guessing. You're not.|Time to turn data into creatives.|What are we testing today?|Good data beats good luck. Always.",
   },
 
   pt: {
@@ -614,6 +616,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Esta semana", gm_weekly_last: "Semana passada",
     gm_greet_comeback: "Bem-vindo de volta! Sentimos sua falta 🙌", gm_greet_streak: "dias de sequência! Você está on fire 🔥",
     gm_greet_new: "Vamos criar algo incrível hoje!", gm_greet_prolific: "Você tem arrasado ultimamente 💪",
+    session_greetings: "Vamos criar algo que realmente converte.|Sua IA está pronta. E você?|Um brief longe de um criativo vencedor.|O melhor criativo da sua carreira começa aqui.|Vamos descobrir o que funciona — e dobrar a aposta.|Crie com inteligência. Lance rápido.|Seus concorrentes estão no achismo. Você não.|Hora de transformar dados em criativos.|O que vamos testar hoje?|Bons dados batem boa sorte. Sempre.",
     sg_title: "Gerador de Script", sg_generate: "Gerar Script", sg_generating: "Gerando...", sg_product: "Produto / Marca", sg_copy: "Copiar",
     br_title: "Gerador de Brief", br_generate: "Gerar Brief", br_generating: "Gerando...", br_copy: "Copiar",
     na_title: "Nova Análise", na_upload: "Fazer Upload", na_analyze: "Analisar", na_analyzing: "Analisando...",
@@ -756,6 +759,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Esta semana", gm_weekly_last: "Semana pasada",
     gm_greet_comeback: "¡Bienvenido de vuelta! Te extrañamos 🙌", gm_greet_streak: "días de racha! Estás on fire 🔥",
     gm_greet_new: "¡Vamos a crear algo increíble hoy!", gm_greet_prolific: "Has estado imparable últimamente 💪",
+    session_greetings: "Hagamos algo que realmente convierta.|Tu IA está lista. ¿Y tú?|Un brief lejos de un ganador.|El mejor creativo de tu carrera empieza aquí.|Encontremos lo que funciona — y apostemos doble.|Crea con inteligencia. Lanza rápido.|Tus competidores están adivinando. Tú no.|Es hora de convertir datos en creativos.|¿Qué vamos a probar hoy?|Los buenos datos ganan a la buena suerte. Siempre.",
     sg_title: "Generador de Script", sg_generate: "Generar Script", sg_generating: "Generando...", sg_product: "Producto / Marca", sg_copy: "Copiar",
     br_title: "Generador de Brief", br_generate: "Generar Brief", br_generating: "Generando...", br_copy: "Copiar",
     na_title: "Nuevo Análisis", na_upload: "Subir Video", na_analyze: "Analizar", na_analyzing: "Analizando...",
@@ -899,6 +903,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "本周", gm_weekly_last: "上周",
     gm_greet_comeback: "欢迎回来！我们想你了 🙌", gm_greet_streak: "天连续！太厉害了 🔥",
     gm_greet_new: "今天一起创作吧！", gm_greet_prolific: "你最近一直在高产出 💪",
+    session_greetings: "让我们创作真正能转化的内容。|你的AI已就绪，你呢？|距离爆款创意只差一个简报。|你职业生涯最好的创意从这里开始。|找到有效的方法，然后加倍投入。|智慧创作，快速上线。|你的竞争对手在猜测，你不是。|是时候把数据变成创意了。|今天我们测试什么？|好数据胜过好运气，永远如此。",
   },
 
   fr: {
@@ -1037,6 +1042,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Cette semaine", gm_weekly_last: "Semaine dernière",
     gm_greet_comeback: "Content de vous revoir ! Vous nous avez manqué 🙌", gm_greet_streak: "jours de série ! Vous êtes en feu 🔥",
     gm_greet_new: "Créons quelque chose de génial aujourd'hui !", gm_greet_prolific: "Vous avez été très productif 💪",
+    session_greetings: "Créons quelque chose qui convertit vraiment.|Votre IA est prête. Et vous ?|Un brief suffit pour trouver un gagnant.|Votre meilleur créatif commence ici.|Trouvons ce qui fonctionne — et doublez la mise.|Créez intelligemment. Lancez vite.|Vos concurrents devinent. Pas vous.|Il est temps de transformer les données en créatifs.|Qu'allons-nous tester aujourd'hui ?|Les bonnes données battent la chance. Toujours.",
   },
 
   de: {
@@ -1174,6 +1180,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "Diese Woche", gm_weekly_last: "Letzte Woche",
     gm_greet_comeback: "Willkommen zurück! Wir haben Sie vermisst 🙌", gm_greet_streak: "Tage Serie! Sie sind on fire 🔥",
     gm_greet_new: "Lassen Sie uns heute etwas Großartiges erschaffen!", gm_greet_prolific: "Sie waren zuletzt sehr produktiv 💪",
+    session_greetings: "Erstellen wir etwas, das wirklich konvertiert.|Deine KI ist bereit. Du auch?|Ein Brief entfernt von einem Gewinner.|Dein bestes Creative beginnt hier.|Finden wir, was funktioniert — und verdoppeln.|Klug erstellen. Schnell launchen.|Deine Konkurrenz rät. Du nicht.|Zeit, Daten in Creatives zu verwandeln.|Was testen wir heute?|Gute Daten schlagen Glück. Immer.",
     sg_title: "Skript-Generator", sg_generate: "Skript generieren", sg_generating: "Wird generiert...", sg_product: "Produkt / Marke", sg_copy: "Kopieren",
     br_title: "Brief-Generator", br_generate: "Brief generieren", br_generating: "Wird generiert...", br_copy: "Kopieren",
     na_title: "Neue Analyse", na_upload: "Video hochladen", na_analyze: "Analysieren", na_analyzing: "Analysiere...",
@@ -1315,6 +1322,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     gm_weekly_this: "هذا الأسبوع", gm_weekly_last: "الأسبوع الماضي",
     gm_greet_comeback: "مرحباً بعودتك! افتقدناك 🙌", gm_greet_streak: "أيام متتالية! أنت مشتعل 🔥",
     gm_greet_new: "لننشئ شيئاً رائعاً اليوم!", gm_greet_prolific: "كنت منتجاً جداً مؤخراً 💪",
+    session_greetings: "لنصنع شيئاً يحقق تحويلات حقيقية.|ذكاؤك الاصطناعي جاهز. وأنت؟|موجز واحد يفصلك عن الفوز.|أفضل إعلان في مسيرتك يبدأ من هنا.|لنجد ما ينجح — ونضاعف الرهان.|أنشئ بذكاء. أطلق بسرعة.|منافسوك يخمّنون. أنت لا.|حان وقت تحويل البيانات إلى إعلانات.|ماذا نختبر اليوم؟|البيانات الجيدة تتفوق على الحظ. دائماً.",
     sg_title: "مولّد النصوص", sg_generate: "توليد نص", sg_generating: "جاري التوليد...", sg_product: "المنتج / العلامة", sg_copy: "نسخ",
     br_title: "مولّد الإحاطة", br_generate: "توليد إحاطة", br_generating: "جاري التوليد...", br_copy: "نسخ",
     na_title: "تحليل جديد", na_upload: "رفع فيديو", na_analyze: "تحليل", na_analyzing: "جاري التحليل...",

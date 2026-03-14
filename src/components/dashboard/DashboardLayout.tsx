@@ -259,8 +259,8 @@ export default function DashboardLayout() {
             </button>
 
             {personaPickerOpen && (
-              <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl"
-                style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden shadow-2xl"
+                style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
                 <div className="px-3 py-2.5 border-b border-white/[0.12]">
                  <p className="text-[10px] uppercase tracking-widest text-white/50 font-mono">{dt("ov_active_persona_label")}</p>
                    <p className="text-[11px] text-white/40 mt-0.5">{dt("ov_set_persona")}</p>
