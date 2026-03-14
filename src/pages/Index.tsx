@@ -434,62 +434,112 @@ const Index = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* TESTIMONIALS — adapted to Loop narrative                   */}
+      {/* CASE REAL — premium redesign                               */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 border-y border-white/[0.06]">
         <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold font-display">Teams that stopped guessing</h2>
+          <div className="text-center mb-10">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-display"
+              style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              {t("lp_case_label")}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-display" style={{letterSpacing:"-0.02em"}}>
+              {t("lp_case_title")}
+            </h2>
+            <p className="text-muted-foreground mt-3 text-sm font-body max-w-xl mx-auto">{t("lp_case_sub")}</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {
-                quote: "After 3 weeks, AdBrief was predicting our winning ads with 80% accuracy. Our media buyer now uses it before every production.",
-                name: "Marcus D.",
-                role: "Head of Growth, iGaming Agency",
-                metric: "CTR +47% in 30 days",
-                avatar: "MD", color: "#a78bfa",
-              },
-              {
-                quote: "We uploaded 200 past creatives. The AI found patterns we'd never seen — our best hook type was one we barely used. Changed everything.",
-                name: "Carolina S.",
-                role: "Creative Director, DTC Brand",
-                metric: "3x more winners per batch",
-                avatar: "CS", color: "#f472b6",
-              },
-              {
-                quote: "The predictive score saved us from producing 4 concepts that would have flopped. That alone paid for a year of AdBrief.",
-                name: "Rafael M.",
-                role: "Performance Lead, Fintech",
-                metric: "$12k saved in Q1",
-                avatar: "RM", color: "#34d399",
-              },
-            ].map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className="relative p-6 rounded-2xl flex flex-col gap-4"
-                style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, j) => (
-                    <svg key={j} width="12" height="12" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 3.9H11L8 7.1l1 3.9L6 8.8 3 11l1-3.9L1 4.9h3.7z" /></svg>
-                  ))}
-                </div>
-                <p className="text-sm text-white/60 leading-relaxed font-body flex-1">"{item.quote}"</p>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold w-fit"
-                  style={{ background: `${item.color}10`, border: `1px solid ${item.color}25`, color: item.color }}>
-                  {item.metric}
-                </div>
-                <div className="flex items-center gap-3 pt-2 border-t border-white/[0.06]">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
-                    style={{ background: `${item.color}20`, color: item.color }}>{item.avatar}</div>
+          <motion.div initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
+            className="rounded-3xl overflow-hidden"
+            style={{background:"linear-gradient(135deg,rgba(167,139,250,0.07),rgba(244,114,182,0.04))",border:"1px solid rgba(167,139,250,0.18)"}}>
+            <div className="px-6 py-3 border-b border-white/[0.06] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[11px] text-white/30 font-body tracking-wide">{t("lp_case_context")}</span>
+            </div>
+            <div className="p-6 md:p-10 grid md:grid-cols-2 gap-10 items-center">
+              <div>
+                <div className="text-5xl mb-4 opacity-20 font-display leading-none">"</div>
+                <p className="text-base md:text-lg text-white/75 leading-relaxed font-body italic mb-6">
+                  {t("lp_case_quote")}
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                    style={{background:"rgba(167,139,250,0.2)",color:"#a78bfa",border:"1px solid rgba(167,139,250,0.3)"}}>
+                    MF
+                  </div>
                   <div>
-                    <p className="text-[12px] font-semibold text-white/80 font-display">{item.name}</p>
-                    <p className="text-[11px] text-white/30 font-body">{item.role}</p>
+                    <p className="text-sm font-bold text-white/90 font-display">{t("lp_case_author")}</p>
+                    <p className="text-[11px] text-white/35 font-body">{t("lp_case_role")}</p>
                   </div>
                 </div>
+              </div>
+              <div className="grid gap-3">
+                {([
+                  { val: t("lp_case_m1_val"), label: t("lp_case_m1_label"), color: "#a78bfa" },
+                  { val: t("lp_case_m2_val"), label: t("lp_case_m2_label"), color: "#f472b6" },
+                  { val: t("lp_case_m3_val"), label: t("lp_case_m3_label"), color: "#34d399" },
+                ] as {val:string;label:string;color:string}[]).map((m,i) => (
+                  <motion.div key={i} initial={{opacity:0,x:20}} whileInView={{opacity:1,x:0}} transition={{delay:i*0.1}} viewport={{once:true}}
+                    className="flex items-center gap-5 p-4 rounded-2xl"
+                    style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                    <div className="text-3xl font-extrabold font-display shrink-0" style={{color:m.color}}>{m.val}</div>
+                    <div className="text-sm text-white/50 font-body leading-snug">{m.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CREATIVE PERFORMANCE LOOP                                   */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-24 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none"
+          style={{background:"radial-gradient(ellipse at 60% 50%,rgba(167,139,250,0.06),transparent 60%)"}} />
+        <div className="container mx-auto max-w-5xl relative">
+          <div className="text-center mb-14">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-display"
+              style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              {t("lp_loop_label")}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-display" style={{letterSpacing:"-0.02em"}}>
+              {t("lp_loop_title")}
+            </h2>
+            <p className="text-muted-foreground mt-3 text-sm font-body max-w-xl mx-auto">{t("lp_loop_sub")}</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            {([
+              { n:"01", emoji:"📋", title:t("lp_loop_step1"), desc:t("lp_loop_step1_desc"), color:"#a78bfa" },
+              { n:"02", emoji:"🎬", title:t("lp_loop_step2"), desc:t("lp_loop_step2_desc"), color:"#60a5fa" },
+              { n:"03", emoji:"📊", title:t("lp_loop_step3"), desc:t("lp_loop_step3_desc"), color:"#f472b6" },
+              { n:"04", emoji:"🧠", title:t("lp_loop_step4"), desc:t("lp_loop_step4_desc"), color:"#34d399" },
+            ] as {n:string;emoji:string;title:string;desc:string;color:string}[]).map((step, i) => (
+              <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
+                className="relative p-5 rounded-2xl flex flex-col gap-3"
+                style={{background:"rgba(255,255,255,0.025)",border:`1px solid ${step.color}25`}}>
+                {i < 3 && (
+                  <div className="hidden md:flex absolute -right-3 top-8 z-10 w-6 h-6 items-center justify-center rounded-full text-white/20 text-xs"
+                    style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)"}}>→</div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold font-display" style={{color:step.color,opacity:0.3}}>{step.n}</span>
+                  <span className="text-xl">{step.emoji}</span>
+                </div>
+                <p className="text-sm font-bold text-white/85 font-display">{step.title}</p>
+                <p className="text-xs text-white/40 font-body leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
+
+          {/* Coming soon banner */}
+          <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
+            className="flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl mx-auto w-fit"
+            style={{background:"linear-gradient(135deg,rgba(251,191,36,0.1),rgba(251,191,36,0.05))",border:"1px solid rgba(251,191,36,0.3)"}}>
+            <span className="text-base">⚡</span>
+            <span className="text-sm font-semibold text-amber-300/80 font-body">{t("lp_loop_banner")}</span>
+          </motion.div>
         </div>
       </section>
 
