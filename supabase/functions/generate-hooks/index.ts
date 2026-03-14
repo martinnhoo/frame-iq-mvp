@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Load user AI profile for personalization
+    // Load user AI profile + loop context for personalization
     let userContext = '';
     if (user_id) {
       const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
@@ -68,6 +68,24 @@ Deno.serve(async (req) => {
       if (profile) {
         userContext = `\nUSER CONTEXT: Their avg hook score is ${profile.avg_hook_score}/10. Best models: ${(profile.top_performing_models || []).join(', ')}. Creative style: ${profile.creative_style || 'unknown'}.`;
       }
+
+      // Fetch loop context (learned patterns + creative memory)
+      try {
+        const loopRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/creative-loop`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
+          },
+          body: JSON.stringify({ action: 'get_context', user_id }),
+        });
+        if (loopRes.ok) {
+          const loopData = await loopRes.json();
+          if (loopData.has_data && loopData.context) {
+            userContext += `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (from real ad data) ---\n${loopData.context}\n--- Use these patterns to generate hooks that match proven winners. ---`;
+          }
+        }
+      } catch { /* optional */ }
     }
 
     if (!ANTHROPIC_API_KEY) {
