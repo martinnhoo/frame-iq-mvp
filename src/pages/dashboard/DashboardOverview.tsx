@@ -280,6 +280,7 @@ export default function DashboardOverview() {
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {/* Animated Pro / Lite toggle */}
+            {/* Toggle: currently in PRO — knob right, PRO highlighted */}
             <button
               onClick={switchToLite}
               title="Switch to Lite Mode"
@@ -288,11 +289,11 @@ export default function DashboardOverview() {
                 display: "flex", alignItems: "center",
                 background: "rgba(167,139,250,0.08)",
                 border: "1px solid rgba(167,139,250,0.22)",
-                borderRadius: 999, padding: "4px 5px 4px 10px",
+                borderRadius: 999, padding: "4px 10px 4px 5px",
                 gap: 6, cursor: "pointer", transition: "all 0.2s",
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>PRO</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>LITE</span>
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "flex-end",
                 width: 36, height: 20, borderRadius: 999,
@@ -301,7 +302,7 @@ export default function DashboardOverview() {
               }}>
                 <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.04em" }}>LITE</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.04em" }}>PRO</span>
             </button>
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
               <button onClick={() => navigate("/pricing")}
