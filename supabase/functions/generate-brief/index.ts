@@ -60,6 +60,7 @@ Market: ${market}
 ${audience ? `Audience notes: ${audience}` : ""}
 ${competitors ? `Competitors/References: ${competitors}` : ""}
 ${extra_context ? `Extra context: ${extra_context}` : ""}
+${loopContext}
 
 Return ONLY a JSON object — no markdown, no explanation:
 {

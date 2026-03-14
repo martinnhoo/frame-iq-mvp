@@ -78,6 +78,7 @@ Duration: ${duration}
 Market: ${market} (VO language: ${VO_LANG[market] || "English"})
 Creative angle: ${angle}
 ${extra_context ? `Extra context: ${extra_context}` : ""}
+${loopContext}
 
 Return ONLY a JSON object — no markdown, no explanation:
 {
