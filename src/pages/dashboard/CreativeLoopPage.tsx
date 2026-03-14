@@ -137,81 +137,77 @@ export default function CreativeLoopPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  const hasData = stats.totalEntries > 0;
+  const hasPatterns = stats.totalPatterns > 0;
+
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
+    <div style={{ padding: "24px 24px 60px", maxWidth: 960, margin: "0 auto", ...j }}>
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 24 }}>
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #a78bfa, #f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <RefreshCw size={18} color="#000" />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#a78bfa,#f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <RefreshCw size={16} color="#000" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-foreground" style={j}>Creative Performance Loop</h1>
-              <p className="text-xs text-muted-foreground" style={m}>AI learns from your real ad data → calibrates every output</p>
-            </div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>Performance Loop</h1>
           </div>
+          <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>
+            AI learns from your ad data — every import makes the next brief smarter
+          </p>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Button size="sm" variant="outline" onClick={() => navigate("/dashboard/loop/settings")} className="gap-1.5">
-            <Settings size={14} /> Nomenclature
-          </Button>
-          <Button size="sm" onClick={runLearning} disabled={learning || stats.totalEntries === 0} className="gap-1.5"
-            style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
-            {learning ? <Loader2 size={14} className="animate-spin" /> : <Brain size={14} />}
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button onClick={() => navigate("/dashboard/loop/settings")}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <Settings size={13} /> Naming rules
+          </button>
+          <button onClick={runLearning} disabled={learning || !hasData}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: hasData ? "linear-gradient(135deg,#a78bfa,#f472b6)" : "rgba(255,255,255,0.05)", color: hasData ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 700, cursor: hasData ? "pointer" : "not-allowed", border: "none" }}>
+            {learning ? <Loader2 size={13} className="animate-spin" /> : <Brain size={13} />}
             {learning ? "Learning..." : "Run Learning"}
-          </Button>
+          </button>
         </div>
       </div>
 
-      {/* Coming soon banner */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 12, background: "linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.04))", border: "1px solid rgba(251,191,36,0.25)" }}>
-        <span style={{ fontSize: 14 }}>⚡</span>
-        <span style={{ ...m, fontSize: 11, fontWeight: 700, color: "rgba(251,191,36,0.8)", letterSpacing: "0.04em" }}>Coming soon: direct Meta Ads connection</span>
+      {/* ── Coming soon banner — subtle ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", marginBottom: 24, width: "fit-content" }}>
+        <span style={{ fontSize: 12 }}>⚡</span>
+        <span style={{ ...m, fontSize: 10, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Coming soon: direct Meta Ads connection</span>
       </div>
 
-      {/* Cycle visualization */}
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "24px 20px" }}>
-        <p style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.2)", marginBottom: 16 }}>The Loop</p>
-        <div style={{ display: "flex", alignItems: "center", gap: 0, overflowX: "auto" }}>
+      {/* ── Loop steps — horizontal timeline ── */}
+      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px 24px", marginBottom: 20 }}>
+        <p style={{ ...m, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", marginBottom: 18 }}>The loop</p>
+        <div style={{ display: "flex", alignItems: "flex-start", overflowX: "auto", paddingBottom: 4 }}>
           {CYCLE_STEPS.map((step, i) => {
-            const isActive = i <= activeStep;
-            const isCurrent = i === activeStep;
+            const done = i < activeStep;
+            const current = i === activeStep;
             return (
-              <div key={step.id} style={{ display: "flex", alignItems: "center", flex: i < CYCLE_STEPS.length - 1 ? 1 : 0 }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 80 }}>
+              <div key={step.id} style={{ display: "flex", alignItems: "flex-start", flex: i < CYCLE_STEPS.length - 1 ? 1 : 0, minWidth: 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, minWidth: 72 }}>
                   <div style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    background: isCurrent ? `linear-gradient(135deg, ${step.color}, ${step.color}cc)` : isActive ? `${step.color}20` : "rgba(255,255,255,0.03)",
-                    border: isCurrent ? `2px solid ${step.color}` : `1px solid ${isActive ? `${step.color}30` : "rgba(255,255,255,0.06)"}`,
+                    width: 40, height: 40, borderRadius: 12,
+                    background: current ? `linear-gradient(135deg,${step.color},${step.color}bb)` : done ? `${step.color}18` : "rgba(255,255,255,0.03)",
+                    border: `1.5px solid ${current ? step.color : done ? `${step.color}35` : "rgba(255,255,255,0.06)"}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: isCurrent ? `0 0 20px ${step.color}30` : "none",
+                    boxShadow: current ? `0 0 16px ${step.color}30` : "none",
                     transition: "all 0.3s",
                   }}>
-                    {isActive && i < activeStep ? (
-                      <CheckCircle2 size={18} style={{ color: step.color }} />
-                    ) : (
-                      <step.icon size={18} style={{ color: isCurrent ? "#000" : isActive ? step.color : "rgba(255,255,255,0.2)" }} />
-                    )}
+                    {done ? <CheckCircle2 size={16} style={{ color: step.color }} /> : <step.icon size={16} style={{ color: current ? "#000" : done ? step.color : "rgba(255,255,255,0.18)" }} />}
                   </div>
                   <div style={{ textAlign: "center" }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: isActive ? "#fff" : "rgba(255,255,255,0.25)", marginBottom: 2 }}>{step.label}</p>
-                    <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.2)", maxWidth: 90 }}>{step.desc}</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: current || done ? "#fff" : "rgba(255,255,255,0.22)", marginBottom: 2, whiteSpace: "nowrap" }}>{step.label}</p>
+                    <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.2)", lineHeight: 1.4, maxWidth: 80 }}>{step.desc}</p>
                   </div>
                 </div>
                 {i < CYCLE_STEPS.length - 1 && (
-                  <div style={{
-                    flex: 1, height: 2, margin: "0 4px", marginBottom: 36,
-                    background: i < activeStep ? `linear-gradient(90deg, ${step.color}, ${CYCLE_STEPS[i + 1].color})` : "rgba(255,255,255,0.05)",
-                    borderRadius: 999, transition: "all 0.4s",
-                  }} />
+                  <div style={{ flex: 1, height: 1.5, margin: "20px 6px 0", background: done ? `linear-gradient(90deg,${step.color}80,${CYCLE_STEPS[i+1].color}80)` : "rgba(255,255,255,0.05)", borderRadius: 999, transition: "all 0.4s" }} />
                 )}
               </div>
             );
@@ -219,68 +215,74 @@ export default function CreativeLoopPage() {
         </div>
       </div>
 
-      {/* Stats grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-        <StatCard label="Creatives" value={String(stats.totalEntries)} color="#60a5fa" icon={FileText} />
-        <StatCard label="Patterns" value={String(stats.totalPatterns)} sub={`${stats.winners} winners`} color="#a78bfa" icon={Brain} />
-        <StatCard label="Avg CTR" value={stats.avgCtr ? `${(stats.avgCtr * 100).toFixed(2)}%` : "—"} color="#34d399" icon={TrendingUp} />
-        <StatCard label="Top Platform" value={stats.topPlatform || "—"} color="#fbbf24" icon={Zap} />
+      {/* ── Stats row ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+        {[
+          { label: "Creatives", value: String(stats.totalEntries), color: "#60a5fa", icon: FileText },
+          { label: "Patterns", value: String(stats.totalPatterns), sub: `${stats.winners} winning`, color: "#a78bfa", icon: Brain },
+          { label: "Avg CTR", value: stats.avgCtr ? `${(stats.avgCtr*100).toFixed(2)}%` : "—", color: "#34d399", icon: TrendingUp },
+          { label: "Top Platform", value: stats.topPlatform || "—", color: "#fbbf24", icon: Zap },
+        ].map(s => (
+          <div key={s.label} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+              <s.icon size={13} style={{ color: s.color, opacity: 0.7 }} />
+              <span style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{s.label}</span>
+            </div>
+            <p style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.value}</p>
+            {s.sub && <p style={{ ...m, fontSize: 10, color: s.color, marginTop: 4, opacity: 0.7 }}>{s.sub}</p>}
+          </div>
+        ))}
       </div>
 
-      {/* Empty state / Import CTA */}
-      {stats.totalEntries === 0 && (
-        <div style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.15)", borderRadius: 20, padding: "32px 24px", textAlign: "center" }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(96,165,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <Upload size={24} style={{ color: "#60a5fa" }} />
+      {/* ── Empty state ── */}
+      {!hasData && (
+        <div style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)", borderRadius: 18, padding: "40px 24px", textAlign: "center" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(96,165,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <Upload size={22} style={{ color: "#60a5fa" }} />
           </div>
-          <h3 style={{ ...j, fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Start your loop</h3>
-          <p style={{ ...m, fontSize: 13, color: "rgba(255,255,255,0.4)", maxWidth: 400, margin: "0 auto 20px", lineHeight: 1.6 }}>
-            Import your ad performance data (CSV/XLSX from Meta, TikTok, or any platform). The AI will parse your creative filenames, discover patterns, and start calibrating every future output.
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Start your loop</h3>
+          <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.4)", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.7 }}>
+            Import a CSV from Meta, TikTok, or any platform. The AI parses your creative filenames, finds winning patterns, and calibrates every future output.
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-            <Button onClick={() => navigate("/dashboard/loop/import")} className="gap-2"
-              style={{ background: "linear-gradient(135deg, #60a5fa, #a78bfa)", color: "#000" }}>
-              <Upload size={14} /> Import Performance Data
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/dashboard/loop/settings")} className="gap-2">
-              <Settings size={14} /> Configure Naming Convention
-            </Button>
+            <button onClick={() => navigate("/dashboard/loop/import")}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#60a5fa,#a78bfa)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
+              <Upload size={14} /> Import Data
+            </button>
+            <button onClick={() => navigate("/dashboard/loop/settings")}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer" }}>
+              <Settings size={14} /> Naming Rules
+            </button>
           </div>
         </div>
       )}
 
-      {/* Winning patterns */}
+      {/* ── Winning patterns ── */}
       {patterns.filter(p => p.is_winner).length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Sparkles size={16} style={{ color: "#fbbf24" }} />
-              <span style={{ ...j, fontSize: 14, fontWeight: 800, color: "#fff" }}>Winning Patterns</span>
-              <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Outperform your avg CTR by 20%+</span>
-            </div>
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <Sparkles size={14} style={{ color: "#fbbf24" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Winning Patterns</span>
+            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>outperform avg CTR by 20%+</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {patterns.filter(p => p.is_winner).slice(0, 6).map(p => (
-              <div key={p.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 14, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.1)" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(52,211,153,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <TrendingUp size={14} style={{ color: "#34d399" }} />
+              <div key={p.id} style={{ display: "flex", gap: 12, padding: "12px 14px", borderRadius: 12, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.1)" }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(52,211,153,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                  <TrendingUp size={12} style={{ color: "#34d399" }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 5 }}>
                     {Object.entries(p.variables).filter(([_, v]) => v !== "unknown").map(([k, v]) => (
-                      <span key={k} style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        {v}
-                      </span>
+                      <span key={k} style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>{v as string}</span>
                     ))}
                   </div>
-                  {p.insight_text && (
-                    <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{p.insight_text}</p>
-                  )}
-                  <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-                    {p.avg_ctr && <span style={{ ...m, fontSize: 10, color: "#34d399" }}>CTR {(p.avg_ctr * 100).toFixed(2)}%</span>}
+                  {p.insight_text && <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, marginBottom: 5 }}>{p.insight_text}</p>}
+                  <div style={{ display: "flex", gap: 12 }}>
+                    {p.avg_ctr && <span style={{ ...m, fontSize: 10, color: "#34d399" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
                     {p.avg_roas && <span style={{ ...m, fontSize: 10, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
                     <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} samples</span>
-                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{(p.confidence * 100).toFixed(0)}% confidence</span>
+                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% conf</span>
                   </div>
                 </div>
               </div>
@@ -289,52 +291,47 @@ export default function CreativeLoopPage() {
         </div>
       )}
 
-      {/* All patterns */}
-      {patterns.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Brain size={16} style={{ color: "#a78bfa" }} />
-            <span style={{ ...j, fontSize: 14, fontWeight: 800, color: "#fff" }}>All Learned Patterns</span>
-            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{patterns.length} discovered</span>
+      {/* ── All patterns table ── */}
+      {hasPatterns && (
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px", overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <Brain size={14} style={{ color: "#a78bfa" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>All Patterns</span>
+            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{patterns.length} discovered</span>
           </div>
-          <div className="overflow-x-auto">
+          <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Combination", "CTR", "CPC", "ROAS", "Samples", "Conf.", ""].map(h => (
-                    <th key={h} style={{ ...m, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", padding: "8px 10px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {h}
-                    </th>
+                  {["Combination", "CTR", "ROAS", "Samples", "Confidence", ""].map(h => (
+                    <th key={h} style={{ ...m, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", padding: "6px 10px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {patterns.slice(0, 15).map(p => (
                   <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-                    <td style={{ padding: "10px", maxWidth: 200 }}>
+                    <td style={{ padding: "10px" }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                         {Object.entries(p.variables).filter(([_, v]) => v !== "unknown").map(([k, v]) => (
-                          <span key={k} style={{ ...m, fontSize: 9, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)" }}>{v}</span>
+                          <span key={k} style={{ ...m, fontSize: 9, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)" }}>{v as string}</span>
                         ))}
                       </div>
                     </td>
-                    <td style={{ ...m, fontSize: 12, color: p.is_winner ? "#34d399" : "rgba(255,255,255,0.5)", padding: "10px" }}>
-                      {p.avg_ctr ? `${(p.avg_ctr * 100).toFixed(2)}%` : "—"}
+                    <td style={{ ...m, fontSize: 12, color: p.avg_ctr ? "#34d399" : "rgba(255,255,255,0.2)", padding: "10px" }}>
+                      {p.avg_ctr ? `${(p.avg_ctr*100).toFixed(2)}%` : "—"}
                     </td>
-                    <td style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.5)", padding: "10px" }}>
-                      {p.avg_cpc ? `$${p.avg_cpc.toFixed(2)}` : "—"}
-                    </td>
-                    <td style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.5)", padding: "10px" }}>
+                    <td style={{ ...m, fontSize: 12, color: p.avg_roas ? "#fbbf24" : "rgba(255,255,255,0.2)", padding: "10px" }}>
                       {p.avg_roas ? `${p.avg_roas.toFixed(1)}x` : "—"}
                     </td>
-                    <td style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.4)", padding: "10px" }}>{p.sample_size}</td>
+                    <td style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.35)", padding: "10px" }}>{p.sample_size}</td>
                     <td style={{ padding: "10px" }}>
-                      <div style={{ width: 40, height: 4, borderRadius: 999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                        <div style={{ width: `${p.confidence * 100}%`, height: "100%", borderRadius: 999, background: p.confidence >= 0.6 ? "#34d399" : p.confidence >= 0.3 ? "#fbbf24" : "#f87171" }} />
+                      <div style={{ width: 60, height: 4, borderRadius: 999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${p.confidence*100}%`, background: p.is_winner ? "#34d399" : "#a78bfa", borderRadius: 999 }} />
                       </div>
                     </td>
                     <td style={{ padding: "10px" }}>
-                      {p.is_winner && <span style={{ ...m, fontSize: 9, color: "#34d399", background: "rgba(52,211,153,0.1)", padding: "2px 6px", borderRadius: 999 }}>⚡ Winner</span>}
+                      {p.is_winner && <span style={{ ...m, fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>WIN</span>}
                     </td>
                   </tr>
                 ))}
@@ -343,30 +340,6 @@ export default function CreativeLoopPage() {
           </div>
         </div>
       )}
-
-      {/* Quick actions */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <button onClick={() => navigate("/dashboard/loop/import")}
-          style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(96,165,250,0.3)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}>
-          <Upload size={18} style={{ color: "#60a5fa" }} />
-          <div>
-            <p style={{ ...j, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>Import Data</p>
-            <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>CSV / XLSX from ad platforms</p>
-          </div>
-        </button>
-        <button onClick={() => navigate("/dashboard/brief")}
-          style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}>
-          <Sparkles size={18} style={{ color: "#a78bfa" }} />
-          <div>
-            <p style={{ ...j, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>Generate Brief</p>
-            <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Pre-calibrated with your data</p>
-          </div>
-        </button>
-      </div>
     </div>
   );
 }
