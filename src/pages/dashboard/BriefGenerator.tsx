@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { ClipboardList, Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3 } from "lucide-react";
+import { ClipboardList, Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,19 @@ import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
+/** Extract market code from persona language_style like "Brazilian Portuguese" → "BR" */
+function deriveMarket(lang?: string): string | null {
+  if (!lang) return null;
+  const l = lang.toLowerCase();
+  if (l.includes("brazil") || l.includes("portugu")) return "BR";
+  if (l.includes("mexic") || l.includes("spanish")) return "MX";
+  if (l.includes("india")) return "IN";
+  if (l.includes("english") && !l.includes("india")) return "US";
+  return "GLOBAL";
+}
+
 export default function BriefGenerator() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
@@ -29,6 +40,38 @@ export default function BriefGenerator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [personaApplied, setPersonaApplied] = useState(false);
+
+  // Auto-fill from active persona
+  useEffect(() => {
+    if (!selectedPersona) { setPersonaApplied(false); return; }
+    const p = selectedPersona;
+    const m = deriveMarket(p.language_style);
+    if (m) setMarket(m);
+
+    // Build audience from persona
+    const audienceParts = [
+      p.age ? `Age: ${p.age}` : "",
+      p.gender ? `Gender: ${p.gender}` : "",
+      p.pains?.length ? `Pain points: ${p.pains.join(", ")}` : "",
+      p.desires?.length ? `Desires: ${p.desires.join(", ")}` : "",
+    ].filter(Boolean);
+    if (audienceParts.length) setAudience(audienceParts.join(". "));
+
+    // Build extra context from persona
+    const ctxParts = [
+      p.headline ? `Persona: ${p.name} — ${p.headline}` : `Persona: ${p.name}`,
+      p.triggers?.length ? `Purchase triggers: ${p.triggers.join(", ")}` : "",
+      p.hook_angles?.length ? `Preferred hook angles: ${p.hook_angles.join(", ")}` : "",
+      p.cta_style ? `CTA style: ${p.cta_style}` : "",
+      p.language_style ? `Language/tone: ${p.language_style}` : "",
+      p.best_platforms?.length ? `Best platforms: ${p.best_platforms.join(", ")}` : "",
+      p.best_formats?.length ? `Best formats: ${p.best_formats.join(", ")}` : "",
+    ].filter(Boolean);
+    if (ctxParts.length) setExtraContext(ctxParts.join("\n"));
+
+    setPersonaApplied(true);
+  }, [selectedPersona]);
 
   const generate = async () => {
     if (!product.trim()) { toast.error("Enter a product/service description"); return; }
@@ -70,6 +113,16 @@ export default function BriefGenerator() {
         </div>
       </div>
 
+      {/* Persona context badge */}
+      {personaApplied && selectedPersona && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
+          <Brain className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+          <span className="text-xs text-muted-foreground" style={mono}>
+            Persona <strong className="text-foreground">{selectedPersona.name}</strong> auto-applied — audience, market & context pre-filled
+          </span>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Product / Service *</label>
@@ -82,7 +135,7 @@ export default function BriefGenerator() {
             <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 50% off, free trial, limited time" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience (optional)</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "✓" : "(optional)"}</label>
             <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Women 25-34, fitness enthusiasts" />
           </div>
         </div>
@@ -102,7 +155,7 @@ export default function BriefGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market {personaApplied ? "✓" : ""}</label>
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -121,7 +174,7 @@ export default function BriefGenerator() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context (optional)</label>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
           <Textarea placeholder="Brand guidelines, compliance rules, past campaign learnings..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
@@ -133,7 +186,6 @@ export default function BriefGenerator() {
 
       {b && (
         <div className="space-y-4">
-          {/* Header */}
           <div className="rounded-2xl border border-border/50 p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-foreground" style={syne}>{b.campaign_name}</h2>
@@ -145,7 +197,6 @@ export default function BriefGenerator() {
             <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.objective}</p>
           </div>
 
-          {/* Target Audience */}
           {b.target_audience && (
             <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
@@ -175,7 +226,6 @@ export default function BriefGenerator() {
             </div>
           )}
 
-          {/* Core Message + Value Prop */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
@@ -193,7 +243,6 @@ export default function BriefGenerator() {
             </div>
           </div>
 
-          {/* Key Messages + CTA */}
           <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
             <span className="text-sm font-bold text-foreground" style={syne}>Key Messages</span>
             <ul className="space-y-1">{b.key_messages?.map((m: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}>→ {m}</li>)}</ul>
@@ -203,7 +252,6 @@ export default function BriefGenerator() {
             </div>
           </div>
 
-          {/* Formats */}
           {b.formats?.length > 0 && (
             <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
               <span className="text-sm font-bold text-foreground" style={syne}>Recommended Formats</span>
@@ -221,7 +269,6 @@ export default function BriefGenerator() {
             </div>
           )}
 
-          {/* Visual + Tone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
@@ -236,7 +283,6 @@ export default function BriefGenerator() {
             </div>
           </div>
 
-          {/* KPIs + Do Not */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
@@ -254,14 +300,12 @@ export default function BriefGenerator() {
             </div>
           </div>
 
-          {/* Compliance */}
           {b.compliance_notes && (
             <div className="rounded-xl border border-border/50 p-4 text-xs text-muted-foreground/60" style={{ ...mono, background: "rgba(255,255,255,0.02)" }}>
               ⚖️ {b.compliance_notes}
             </div>
           )}
 
-          {/* Feedback */}
           <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
             <span className="text-[10px] text-white/40" style={mono}>Was this brief useful?</span>
             <FeedbackBar
