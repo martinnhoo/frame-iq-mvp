@@ -216,11 +216,11 @@ const Index = () => {
             className="flex items-center justify-center gap-2 mt-10 flex-wrap font-body"
           >
             {[
-              { label: "Brief", icon: "📋", color: "#a78bfa" },
-              { label: "Produce", icon: "🎬", color: "#60a5fa" },
-              { label: "Run Ads", icon: "📊", color: "#f472b6" },
-              { label: "AI Learns", icon: "🧠", color: "#34d399" },
-              { label: "Repeat", icon: "🔄", color: "#fbbf24" },
+              { label: "Upload Ads", icon: "📥", color: "#60a5fa" },
+              { label: "AI Decodes", icon: "🧠", color: "#a78bfa" },
+              { label: "Patterns Found", icon: "🎯", color: "#f472b6" },
+              { label: "Tools Adapt", icon: "⚡", color: "#34d399" },
+              { label: "Loop Grows", icon: "📈", color: "#fbbf24" },
             ].map((step, i) => (
               <div key={step.label} className="flex items-center gap-2">
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
