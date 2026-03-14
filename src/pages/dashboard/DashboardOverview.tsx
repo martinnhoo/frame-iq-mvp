@@ -279,31 +279,16 @@ export default function DashboardOverview() {
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
-            {/* Animated Pro / Lite toggle */}
-            {/* Toggle: currently in PRO — knob right, PRO highlighted */}
-            <button
-              onClick={switchToLite}
-              title="Switch to Lite Mode"
-              style={{
-                ...syne,
-                display: "flex", alignItems: "center",
-                background: "rgba(167,139,250,0.08)",
-                border: "1px solid rgba(167,139,250,0.22)",
-                borderRadius: 999, padding: "4px 10px 4px 5px",
-                gap: 6, cursor: "pointer", transition: "all 0.2s",
-              }}
-            >
-              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>LITE</span>
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "flex-end",
-                width: 36, height: 20, borderRadius: 999,
-                background: "linear-gradient(135deg, #a78bfa, #f472b6)",
-                padding: "2px 3px", transition: "all 0.3s",
-              }}>
-                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }} />
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.04em" }}>PRO</span>
-            </button>
+            {/* Binance-style segmented toggle — PRO active */}
+            <div style={{ display: "flex", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: 2, gap: 0 }}>
+              <button
+                onClick={switchToLite}
+                style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}
+              >LITE</button>
+              <button
+                style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(167,139,250,0.3)" }}
+              >PRO</button>
+            </div>
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
               <button onClick={() => navigate("/pricing")}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
