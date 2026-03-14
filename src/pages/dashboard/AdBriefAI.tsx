@@ -81,7 +81,22 @@ function BlockCard({ block, onNavigate }: { block: Block; onNavigate?: (route: s
 export default function AdBriefAI() {
   const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<AIMessage[]>([]);
+  const SESSION_CHAT_KEY = "adbrief_ai_chat_session";
+  const [messages, setMessages] = useState<AIMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_CHAT_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  // Persist messages to sessionStorage on change
+  useEffect(() => {
+    try {
+      // Only keep last 20 messages to avoid bloat
+      const toSave = messages.slice(-20);
+      sessionStorage.setItem(SESSION_CHAT_KEY, JSON.stringify(toSave));
+    } catch {}
+  }, [messages]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [contextReady, setContextReady] = useState(false);
@@ -225,7 +240,7 @@ export default function AdBriefAI() {
           </p>
         </div>
         {messages.length > 0 && (
-          <button onClick={() => setMessages([])} title="Clear chat"
+          <button onClick={() => { setMessages([]); sessionStorage.removeItem("adbrief_ai_chat_session"); }} title="Clear chat"
             style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
             <RotateCcw size={12} /> Clear
           </button>

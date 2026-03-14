@@ -1,7 +1,7 @@
 import {
   BarChart3, LayoutGrid, Brain, Layers, Plane, Cpu,
   Zap, Settings, ChevronRight, Target, FileText, ClipboardList,
-  RefreshCw, Upload, Globe, Sparkles, BookOpen,
+  RefreshCw, Upload, Globe, Sparkles, BookOpen, Search,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -59,6 +59,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { title: "Script",            url: "/dashboard/script",    icon: FileText,      accent: "#0ea5e9" },
     { title: "Brief",             url: "/dashboard/brief",     icon: ClipboardList, accent: "#60a5fa" },
     { title: dt("nav_preflight"), url: "/dashboard/preflight", icon: Plane,         accent: "#fbbf24" },
+    { title: "Competitor",        url: "/dashboard/competitor",icon: Search,        accent: "#34d399" },
   ];
 
   const audienceItems = [

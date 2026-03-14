@@ -269,7 +269,7 @@ export default function DashboardOverview() {
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
             <h1 className="text-2xl font-extrabold mt-3 text-white" style={{ letterSpacing: "-0.03em", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-              {firstName}, <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{dt("ov_lets_ship")}</span>
+              {firstName}, <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>sua IA está ativa.</span>
             </h1>
             <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{greeting}</p>
           </div>
@@ -326,10 +326,10 @@ export default function DashboardOverview() {
         )}
 
         {/* ── INTELLIGENCE FEED + QUICK ACTIONS ─────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Intelligence feed — 2 cols */}
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="md:col-span-2 rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center gap-2">
                 <Brain size={14} style={{ color: "#0ea5e9" }} />
@@ -341,8 +341,26 @@ export default function DashboardOverview() {
             </div>
             <div className="divide-y divide-white/[0.04]">
               {intelFeed.length === 0 ? (
-                <div className="px-4 py-6 text-center">
-                  <p className="text-xs text-white/20">No insights yet. Analyze your first ad to start building intelligence.</p>
+                <div className="px-4 py-5 space-y-2">
+                  {[
+                    { icon: "🎬", title: "Analyze your first ad", body: "Upload any video — AdBrief scores the hook, flags weak points, and tells you exactly what to fix.", url: "/dashboard/analyses/new", tag: "Start here" },
+                    { icon: "⚡", title: "Generate hooks before producing", body: "Test 10 hook angles in 30s before committing budget to production.", url: "/dashboard/hooks", tag: "Save budget" },
+                    { icon: "📋", title: "Brief your editor with AI", body: "Turn any insight into a production-ready brief. No back-and-forth, no guesswork.", url: "/dashboard/brief", tag: "Efficiency" },
+                  ].map((tip, i) => (
+                    <button key={i} onClick={() => navigate(tip.url)}
+                      className="w-full flex items-start gap-3 p-3 rounded-xl text-left hover:bg-white/[0.03] transition-colors"
+                      style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+                      <span className="text-xl shrink-0">{tip.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-xs font-semibold text-white/70">{tip.title}</p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9" }}>{tip.tag}</span>
+                        </div>
+                        <p className="text-[11px] text-white/30 leading-relaxed">{tip.body}</p>
+                      </div>
+                      <ChevronRight size={13} className="text-white/15 shrink-0 mt-1" />
+                    </button>
+                  ))}
                 </div>
               ) : intelFeed.map(item => (
                 <button key={item.id} onClick={() => item.url && navigate(item.url)}
@@ -373,7 +391,7 @@ export default function DashboardOverview() {
                 { label: "Hook Score", value: hasData && insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)}/10` : "—", color: "#34d399", sub: `${insights.totalAnalyzed} analyzed` },
                 { label: "Analyses", value: String(usedAnalyses), color: "#0ea5e9", sub: `/ ${limits.analyses > 9990 ? "∞" : limits.analyses}` },
                 { label: "Boards", value: String(usedBoards), color: "#60a5fa", sub: `/ ${limits.boards > 9990 ? "∞" : limits.boards}` },
-                { label: "Pre-flights", value: String(usedPreflights), color: "#fbbf24", sub: `/ ${limits.preflights > 9990 ? "∞" : limits.preflights}` },
+                { label: "Est. saved", value: usedAnalyses > 0 ? `$${(usedAnalyses * 47).toLocaleString()}` : "—", color: "#fbbf24", sub: "~$47 per caught ad" },
               ].map(s => (
                 <div key={s.label} className="rounded-xl p-3" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <p className="text-xl font-extrabold" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif", letterSpacing: "-0.04em" }}>{s.value}</p>
