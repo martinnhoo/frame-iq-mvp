@@ -221,7 +221,7 @@ export default function DashboardOverview() {
 
   // Session greeting — once per login per language, stable via useMemo
   const greeting = useMemo(() => {
-    const key = `adbrief_session_greeting_${language}`;
+    const key = `adbrief_session_greeting_v2_${language}`;
     const existing = sessionStorage.getItem(key);
     if (existing) return existing;
     const pool = dt("session_greetings").split("|").filter(Boolean);

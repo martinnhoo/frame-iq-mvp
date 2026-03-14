@@ -221,7 +221,7 @@ const Index = () => {
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-[17px] leading-relaxed font-body mb-8"
                 style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
-                AdBrief learns from your performance data and tells you exactly what to produce next — the right hook, format, and angle. More winners. Less waste. Every cycle.
+                AdBrief catches weak hooks before you spend. Identifies what's draining your budget. Tells you exactly what to produce next — and why it will work.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
@@ -231,7 +231,7 @@ const Index = () => {
                   style={{ padding: "14px 28px", borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
                   {t("hero_cta_primary")} <ArrowRight size={16} />
                 </button>
-                <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                <button onClick={() => { const el = document.getElementById("how-it-works"); el ? el.scrollIntoView({ behavior: "smooth" }) : navigate("/guides/hook-framework-ctr"); }}
                   className="font-body font-semibold text-[15px] whitespace-nowrap"
                   style={{ padding: "14px 24px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
                   {t("hero_cta_secondary")}
