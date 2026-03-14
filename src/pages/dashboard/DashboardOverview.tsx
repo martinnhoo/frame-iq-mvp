@@ -253,422 +253,210 @@ export default function DashboardOverview() {
   ];
 
   if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
+  if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
+
+  // Compute fatigue signal
+  const avgScore = insights.avgHookScore ?? 0;
+  const fatigue = hasData && avgScore < 5;
+  const winning = hasData && avgScore >= 7.5;
 
   return (
-    <div className="min-h-full relative">
-      {/* Ambient glows */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <Glow color="#0ea5e9" size={500} opacity={0.06} top="0%" left="30%" />
-        <Glow color="#06b6d4" size={400} opacity={0.04} top="50%" left="80%" />
-      </div>
+    <div className="min-h-full" style={{ background: "#07070f" }}>
+      <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-5">
 
-      <div className="relative p-4 sm:p-6 max-w-6xl mx-auto space-y-6 page-enter">
-
-        {/* ── HEADER ──────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-4 pt-2">
+        {/* ── TOP: Name + greeting + toggle ─────────────────── */}
+        <div className="flex items-start justify-between gap-4 pt-1">
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
-            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight mt-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
-              <span className="text-white">{firstName}, </span>
-              <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                {dt("ov_lets_ship")}
-              </span>
+            <h1 className="text-2xl font-extrabold mt-3 text-white" style={{ letterSpacing: "-0.03em", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+              {firstName}, <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{dt("ov_lets_ship")}</span>
             </h1>
-            <p className="text-[13px] text-white/35 mt-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400 }}>{greeting}</p>
+            <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{greeting}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
-            {/* Binance-style segmented toggle — PRO active */}
             <div style={{ display: "flex", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: 2, gap: 0 }}>
-              <button
-                onClick={switchToLite}
-                style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}
-              >LITE</button>
-              <button
-                style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}
-              >PRO</button>
+              <button onClick={switchToLite} style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}>LITE</button>
+              <button style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em" }}>PRO</button>
             </div>
-            {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
-              <button onClick={() => navigate("/pricing")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
-                style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
-                <Zap className="h-3 w-3" /> Upgrade
+            {(!profile?.plan || profile.plan === "free") && (
+              <button onClick={() => navigate("/pricing")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ ...syne, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000" }}>
+                Upgrade
               </button>
             )}
           </div>
         </div>
 
-        {/* Complete profile banner for users without persona */}
-        {!selectedPersona && !dismissedBanner && (
-          <div className="rounded-2xl p-4 flex items-center gap-4"
-            style={{ background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(6,182,212,0.05))", border: "1px solid rgba(14,165,233,0.2)" }}>
-            <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.25)" }}>
-              <Target className="h-5 w-5 text-sky-400" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white" style={syne}>{dt("ov_complete_profile")}</p>
-              <p className="text-xs text-white/40 mt-0.5">{dt("ov_complete_profile_desc")}</p>
-            </div>
-            <button onClick={() => navigate("/dashboard/persona")}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold shrink-0 transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
-              <Sparkles className="h-3.5 w-3.5" /> {dt("ov_create_persona")}
-            </button>
-            <button onClick={() => { setDismissedBanner(true); localStorage.setItem("frameiq_dismiss_profile_banner", "1"); }}
-              className="text-white/40 hover:text-white/50 transition-colors shrink-0 p-1">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-
-
-        {/* ── ONBOARDING HERO — only for new users ──────────── */}
+        {/* ── ONBOARDING — new users ─────────────────────────── */}
         {totalActions === 0 && (
-          <div className="rounded-2xl p-6 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(236,72,153,0.08))", border: "1px solid rgba(14,165,233,0.25)" }}>
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(14,165,233,0.08), transparent 60%)" }} />
-            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="text-5xl">🎬</div>
+          <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(6,182,212,0.06))", border: "1px solid rgba(14,165,233,0.25)" }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="text-4xl">🎬</div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-sky-400/60 mb-1" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>Step 1 of 1</p>
-                <h2 className="text-lg font-extrabold text-white mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>Upload your first ad. Get a Hook Score in 60s.</h2>
+                <p className="text-[10px] uppercase tracking-widest text-sky-400/60 mb-1">Start here</p>
+                <h2 className="text-base font-extrabold text-white mb-1">Upload your first ad. Get a Hook Score in 60s.</h2>
                 <p className="text-sm text-white/40">Drop any video — TikTok, Reel, YouTube Short, Meta. AdBrief tells you exactly what's working and what to fix.</p>
               </div>
-              <button
-                onClick={() => navigate("/dashboard/analyses/new")}
-                className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
-                style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", fontFamily: "'Syne', sans-serif" }}>
+              <button onClick={() => navigate("/dashboard/analyses/new")} className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
                 Analyze my first ad →
               </button>
             </div>
           </div>
         )}
 
-        {/* ── UPGRADE NUDGE — free users nearing limit ──────── */}
-        {(!profile?.plan || profile.plan === "free") && usedAnalyses >= 2 && (
-          <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
-            style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)" }}>
+        {/* ── ALERT BANNER — fatigue or winning ─────────────── */}
+        {fatigue && (
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.25)" }}>
             <span className="text-lg shrink-0">⚠️</span>
-            <p className="text-xs text-amber-300/70 flex-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <span className="text-amber-300 font-bold">{usedAnalyses} of {limits.analyses} free analyses used.</span>{" "}
-              Upgrade to keep your momentum — from $19/mo.
-            </p>
-            <button onClick={() => navigate("/pricing")}
-              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black transition-all hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", fontFamily: "'Syne', sans-serif" }}>
-              Upgrade →
-            </button>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-amber-300">Creative fatigue detected</p>
+              <p className="text-[11px] text-amber-300/60 mt-0.5">Avg hook score {avgScore.toFixed(1)}/10 — below threshold. Your CPMr may be rising. Time to refresh creative angles.</p>
+            </div>
+            <button onClick={() => navigate("/dashboard/hooks")} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black" style={{ background: "linear-gradient(135deg,#fbbf24,#f59e0b)" }}>Generate hooks →</button>
+          </div>
+        )}
+        {winning && !fatigue && (
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)" }}>
+            <span className="text-lg shrink-0">🚀</span>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-emerald-400">Strong creative account</p>
+              <p className="text-[11px] text-emerald-400/60 mt-0.5">Avg hook score {avgScore.toFixed(1)}/10 — above 7.5. Andromeda is learning your winning patterns. Scale what's working.</p>
+            </div>
+            <button onClick={() => navigate("/dashboard/loop/ai")} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black" style={{ background: "linear-gradient(135deg,#34d399,#10b981)" }}>Ask AI what to scale →</button>
           </div>
         )}
 
-        {/* ── TOP ROW: Usage + Performance ──────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {/* Usage blocks */}
-          {usageBlocks.map(s => (
-            <button key={s.label} onClick={() => navigate(s.url)}
-              className="group flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200 hover:scale-[1.02]"
-              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${s.accent}30`; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}>
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: `${s.accent}12`, border: `1px solid ${s.accent}20` }}>
-                <s.icon style={{ color: s.accent, width: 18, height: 18 }} />
-              </div>
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{s.used}</span>
-                  <span className="text-xs text-white/45">/ {s.limit > 0 ? s.limit : "∞"}</span>
-                </div>
-                <p className="text-[11px] text-white/55">{s.label}</p>
-                <StatBar used={s.used} limit={s.limit} accent={s.accent} />
-              </div>
-            </button>
-          ))}
+        {/* ── INTELLIGENCE FEED + QUICK ACTIONS ─────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* Hook score card */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl"
-            style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.2)" }}>
-              <TrendingUp style={{ color: "#34d399", width: 18, height: 18 }} />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>
-                  {hasData && insights.avgHookScore ? insights.avgHookScore.toFixed(1) : "—"}
-                </span>
-                {hasData && insights.avgHookScore && <span className="text-xs text-white/45">/ 10</span>}
+          {/* Intelligence feed — 2 cols */}
+          <div className="lg:col-span-2 rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="flex items-center gap-2">
+                <Brain size={14} style={{ color: "#0ea5e9" }} />
+                <span className="text-xs font-bold text-white/70">Intelligence Feed</span>
               </div>
-              <p className="text-[11px] text-white/55">{dt("ov_avg_hook_score")}</p>
-              {hasData && (
-                <p className="text-[10px] mt-0.5" style={{ color: "#34d399", ...mono }}>
-                  {insights.totalAnalyzed} {dt("ov_analyzed")}
-                </p>
-              )}
+              <button onClick={() => navigate("/dashboard/loop/ai")} className="text-[11px] text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+                Ask AI <ArrowRight size={11} />
+              </button>
             </div>
+            <div className="divide-y divide-white/[0.04]">
+              {intelFeed.length === 0 ? (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-xs text-white/20">No insights yet. Analyze your first ad to start building intelligence.</p>
+                </div>
+              ) : intelFeed.map(item => (
+                <button key={item.id} onClick={() => item.url && navigate(item.url)}
+                  className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-white/[0.02] transition-colors">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-sm mt-0.5"
+                    style={{ background: `${item.color}12`, border: `1px solid ${item.color}25` }}>
+                    {item.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-xs font-semibold text-white/80 truncate">{item.title}</p>
+                      <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: `${item.color}18`, color: item.color }}>{item.tag}</span>
+                    </div>
+                    <p className="text-[11px] text-white/35 leading-relaxed line-clamp-2">{item.body}</p>
+                  </div>
+                  {item.url && <ChevronRight size={13} className="text-white/15 shrink-0 mt-1" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick actions + stats — 1 col */}
+          <div className="flex flex-col gap-3">
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Hook Score", value: hasData && insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)}/10` : "—", color: "#34d399", sub: `${insights.totalAnalyzed} analyzed` },
+                { label: "Analyses", value: String(usedAnalyses), color: "#0ea5e9", sub: `/ ${limits.analyses > 9990 ? "∞" : limits.analyses}` },
+                { label: "Boards", value: String(usedBoards), color: "#60a5fa", sub: `/ ${limits.boards > 9990 ? "∞" : limits.boards}` },
+                { label: "Pre-flights", value: String(usedPreflights), color: "#fbbf24", sub: `/ ${limits.preflights > 9990 ? "∞" : limits.preflights}` },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl p-3" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-xl font-extrabold" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif", letterSpacing: "-0.04em" }}>{s.value}</p>
+                  <p className="text-[10px] text-white/40 mt-0.5">{s.label}</p>
+                  <p className="text-[10px] text-white/20">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Primary CTA */}
+            <button onClick={() => navigate("/dashboard/analyses/new")}
+              className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-bold text-sm text-black"
+              style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+              <span className="flex items-center gap-2"><BarChart3 size={16} /> Analyze new ad</span>
+              <ArrowRight size={15} />
+            </button>
+
+            {/* Secondary CTAs */}
+            {[
+              { label: "Generate hooks", icon: Zap, url: "/dashboard/hooks", color: "#fb923c" },
+              { label: "Create brief", icon: Wand2, url: "/dashboard/brief", color: "#60a5fa" },
+              { label: "Ask AdBrief AI", icon: Brain, url: "/dashboard/loop/ai", color: "#0ea5e9" },
+            ].map(a => (
+              <button key={a.label} onClick={() => navigate(a.url)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all hover:bg-white/[0.04]"
+                style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "rgba(255,255,255,0.65)" }}>
+                <span className="flex items-center gap-2"><a.icon size={14} style={{ color: a.color }} />{a.label}</span>
+                <ChevronRight size={13} className="text-white/20" />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ── TOOLS GRID ─────────────────────────────────────── */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40" style={syne}>{dt("ov_tools")}</p>
-            <button onClick={() => navigate("/dashboard/analyses/new")}
-              className="flex items-center gap-1.5 text-[11px] text-white/50 hover:text-white/60 transition-colors" style={mono}>
-              <Plus className="h-3 w-3" /> {dt("ov_new_analysis")}
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {tools.map(t => (
-              <button key={t.title} onClick={() => navigate(t.url)}
-                className="group relative flex flex-col gap-3 p-4 rounded-2xl text-left transition-all duration-200 hover:scale-[1.02] overflow-hidden"
-                style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = `${t.accent}35`;
-                  (e.currentTarget as HTMLElement).style.background = `${t.accent}08`;
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
-                  (e.currentTarget as HTMLElement).style.background = "#0f0f0f";
-                }}>
-                {/* Gradient corner glow */}
-                <div className="absolute top-0 right-0 w-16 h-16 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ background: `radial-gradient(circle, ${t.accent}25, transparent 70%)`, transform: "translate(30%, -30%)" }} />
-                {/* Icon */}
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
-                  style={{ background: `${t.accent}15`, border: `1px solid ${t.accent}25` }}>
-                  <t.icon style={{ color: t.accent, width: 17, height: 17 }} />
-                </div>
-                {/* Text */}
-                <div>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[13px] font-bold text-white" style={syne}>{t.title}</span>
-                    {t.badge && (
-                      <span className="text-[8px] font-bold px-1 py-0.5 rounded"
-                        style={{ ...mono, color: t.accent, background: `${t.accent}18`, border: `1px solid ${t.accent}30` }}>
-                        {t.badge}
-                      </span>
-                    )}
+        {/* ── RECENT WORK ────────────────────────────────────── */}
+        {recentActivity.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="flex items-center gap-2">
+                <Clock size={13} className="text-white/30" />
+                <span className="text-xs font-bold text-white/50">Recent work</span>
+              </div>
+              <button onClick={() => navigate("/dashboard/analyses")} className="text-[11px] text-white/25 hover:text-white/50 transition-colors">View all →</button>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {recentActivity.map(item => (
+                <button key={item.id} onClick={() => navigate(`/dashboard/${item.type === "analysis" ? "analyses" : "boards"}/${item.id}`)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/[0.02] transition-colors">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: item.type === "analysis" ? "rgba(14,165,233,0.12)" : "rgba(96,165,250,0.12)" }}>
+                    {item.type === "analysis" ? <BarChart3 size={11} style={{ color: "#0ea5e9" }} /> : <LayoutGrid size={11} style={{ color: "#60a5fa" }} />}
                   </div>
-                  <p className="text-[11px] text-white/50 hidden sm:block">{t.desc}</p>
+                  <span className="flex-1 text-xs text-white/60 truncate">{item.title}</span>
+                  <span className="text-[10px] text-white/20 shrink-0">{timeAgo(item.created_at)}</span>
+                  <ChevronRight size={12} className="text-white/15 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── ALL TOOLS ──────────────────────────────────────── */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/25 mb-3">All tools</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {tools.map(tool => (
+              <button key={tool.title} onClick={() => navigate(tool.url)}
+                className="flex items-center gap-3 p-3 rounded-xl text-left transition-all hover:bg-white/[0.04]"
+                style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.06)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${tool.accent}35`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${tool.accent}12`, border: `1px solid ${tool.accent}20` }}>
+                  <tool.icon size={15} style={{ color: tool.accent }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white/75 truncate">{tool.title}</p>
+                  <p className="text-[10px] text-white/30 truncate">{tool.desc}</p>
                 </div>
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── BOTTOM ROW: Intel + Activity + Performance ──────── */}
-        <div className="grid gap-4 lg:grid-cols-5">
-
-          {/* Intelligence feed — 3/5 */}
-          <div className="lg:col-span-3 rounded-2xl overflow-hidden flex flex-col"
-            style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(14,165,233,0.12)" }}>
-                  <Brain className="h-4 w-4" style={{ color: "#0ea5e9" }} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_intel_feed")}</p>
-                  <p className="text-[10px] text-white/45">{dt("ov_intel_signals")}</p>
-                </div>
-              </div>
-              <button onClick={() => navigate("/dashboard/intelligence")}
-                className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
-                {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-
-            <div className="p-4 flex-1">
-              {intelFeed.length === 0 ? (
-                <div className="flex flex-col items-center text-center py-10 gap-4">
-                  <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl"
-                    style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.12)" }}>🧠</div>
-                  <div>
-                    <p className="text-sm font-bold text-white mb-1" style={syne}>{dt("ov_no_signals")}</p>
-                    <p className="text-xs text-white/50 leading-relaxed">{dt("ov_no_signals_desc")}</p>
-                  </div>
-                  <button onClick={() => navigate("/dashboard/analyses/new")}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-                    style={{ ...syne, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)" }}>
-                    <Plus className="h-3.5 w-3.5" /> {dt("ov_start_analyzing")}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {intelFeed.map(item => (
-                    <button key={item.id} onClick={() => item.url && navigate(item.url)}
-                      className="w-full text-left flex items-start gap-3 p-3.5 rounded-xl transition-all hover:scale-[1.01]"
-                      style={{ border: `1px solid ${item.borderColor}`, background: `${item.color}06` }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${item.color}10`; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${item.color}06`; }}>
-                      <span className="text-xl shrink-0 leading-none mt-0.5">{item.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-white truncate" style={syne}>{item.title}</p>
-                          <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase"
-                            style={{ ...mono, color: item.color, background: `${item.color}18`, border: `1px solid ${item.color}30` }}>
-                            {item.tag}
-                          </span>
-                        </div>
-                        <p className="text-xs text-white/40 leading-relaxed">{item.body}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-white/15 group-hover:text-white/50 shrink-0 mt-1" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Sparkline */}
-              {trendData.length >= 4 && (
-                <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] text-white/45 uppercase tracking-widest" style={mono}>{dt("ov_hook_trend")}</span>
-                    <span className="text-[10px]" style={{ color: "#34d399", ...mono }}>
-                      latest: {trendData[trendData.length - 1]?.score.toFixed(1)}/10
-                    </span>
-                  </div>
-                  <div className="flex items-end gap-1 h-10">
-                    {trendData.map((p, i) => {
-                      const h = Math.round((p.score / 10) * 100);
-                      const isLast = i === trendData.length - 1;
-                      const color = p.score >= 7 ? "#34d399" : p.score >= 5 ? "#0ea5e9" : "#f87171";
-                      return (
-                        <div key={i} title={`${p.score} · ${p.date}`}
-                          className="flex-1 rounded-sm"
-                          style={{ height: `${h}%`, minHeight: 3, background: isLast ? "#fff" : color, opacity: isLast ? 1 : 0.45 }} />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right col — 2/5 */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-
-            {/* Recent activity */}
-            <div className="rounded-2xl overflow-hidden flex-1"
-              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.05)" }}>
-                    <Clock className="h-4 w-4 text-white/55" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white" style={syne}>{dt("ov_recent_work")}</p>
-                    <p className="text-[10px] text-white/45">{dt("ov_latest_activity")}</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/dashboard/analyses")}
-                  className="text-xs text-white/45 hover:text-white/60 transition-colors flex items-center gap-1">
-                  {dt("ov_view_all")} <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-              <div className="p-2">
-                {recentActivity.length === 0 ? (
-                  <div className="flex flex-col items-center text-center py-8 gap-3">
-                    <span className="text-3xl">📂</span>
-                    <p className="text-sm text-white/50">{dt("ov_no_work")}</p>
-                    <button onClick={() => navigate("/dashboard/analyses/new")}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
-                      style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)" }}>
-                      <Plus className="h-3 w-3" /> {dt("ov_get_started")}
-                    </button>
-                  </div>
-                ) : recentActivity.map(item => (
-                  <button key={item.id}
-                    onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all group"
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                    <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: item.type === "analysis" ? "rgba(14,165,233,0.12)" : "rgba(96,165,250,0.12)" }}>
-                      {item.type === "analysis"
-                        ? <BarChart3 className="h-4 w-4" style={{ color: "#0ea5e9" }} />
-                        : <LayoutGrid className="h-4 w-4" style={{ color: "#60a5fa" }} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/70 group-hover:text-white truncate transition-colors">{item.title}</p>
-                      <p className="text-[10px] text-white/45 capitalize" style={mono}>
-                        {item.type} · {timeAgo(item.created_at)}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 shrink-0 transition-colors" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Performance snapshot */}
-            <div className="rounded-2xl overflow-hidden"
-              style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
-                    <TrendingUp className="h-4 w-4" style={{ color: "#34d399" }} />
-                  </div>
-                  <p className="text-sm font-bold text-white" style={syne}>{dt("ov_performance")}</p>
-                </div>
-                <div className="flex items-center gap-0.5 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  {(["7d", "30d", "all"] as const).map(f => (
-                    <button key={f} onClick={() => setDateFilter(f)}
-                      className="px-2 py-0.5 rounded-md text-[10px] transition-all"
-                      style={{ ...mono, background: dateFilter === f ? "rgba(255,255,255,0.1)" : "transparent", color: dateFilter === f ? "#fff" : "rgba(255,255,255,0.3)" }}>
-                      {f === "all" ? "All" : f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="p-5">
-                {!hasData ? (
-                  <div className="py-4 space-y-3">
-                    <p className="text-xs text-white/45 text-center leading-relaxed">{dt("ov_run_first")}</p>
-                    <button onClick={() => navigate("/dashboard/analyses/new")}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
-                      <Plus className="h-3.5 w-3.5" /> {dt("an_new")}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3.5">
-                    {[
-                      { label: dt("ov_avg_hook_score"), value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#0ea5e9" },
-                      { label: dt("ov_top_model"),       value: insights.bestModel || "—",       accent: "#06b6d4" },
-                      { label: dt("ov_top_market"),      value: insights.mostUsedMarket || "—",  accent: "#34d399" },
-                      { label: dt("ov_total_analyzed"),  value: String(insights.totalAnalyzed),  accent: "#60a5fa" },
-                    ].map(s => (
-                      <div key={s.label} className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-white/55">{s.label}</span>
-                        <span className="text-xs font-bold truncate" style={{ color: s.accent, ...mono }}>{s.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Upgrade nudge */}
-            {(!profile?.plan || profile.plan === "free") && (
-              <div className="rounded-2xl p-5 relative overflow-hidden"
-                style={{ background: "linear-gradient(135deg, rgba(14,165,233,0.1), rgba(6,182,212,0.06))", border: "1px solid rgba(14,165,233,0.2)" }}>
-                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-                  style={{ background: "radial-gradient(circle, rgba(14,165,233,0.25), transparent 70%)" }} />
-                <div className="relative">
-                  <p className="text-sm font-extrabold text-white mb-1" style={syne}>{dt("ov_unlock_full")}</p>
-                  <p className="text-xs text-white/40 mb-3 leading-relaxed">{dt("ov_unlock_desc")}</p>
-                  <button onClick={() => navigate("/pricing")}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
-                    style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
-                    {dt("ov_see_plans")} <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
