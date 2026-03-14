@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Menu, ArrowRight, Check, Shield, Clock } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import LegalModal from "@/components/LegalModal";
@@ -14,6 +14,85 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
 import TopBanner from "@/components/TopBanner";
 import LogoTicker from "@/components/LogoTicker";
+
+function ScenarioBlock({ t }: { t: (k: string) => string }) {
+  const [active, setActive] = useState<"without" | "with">("without");
+  const without = [
+    { text: t("scenario_w1"), icon: "✗" },
+    { text: t("scenario_w2"), icon: "✗" },
+    { text: t("scenario_w3"), icon: "✗" },
+    { text: t("scenario_w4"), icon: "✗" },
+  ];
+  const withAB = [
+    { text: t("scenario_a1"), icon: "→" },
+    { text: t("scenario_a2"), icon: "→" },
+    { text: t("scenario_a3"), icon: "→", highlight: true },
+    { text: t("scenario_a4"), icon: "→" },
+  ];
+  const isWithout = active === "without";
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+      {/* Label */}
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/35 mb-5 font-display text-center">
+        {t("scenario_label")}
+      </p>
+      {/* Toggle */}
+      <div className="flex justify-center mb-8">
+        <div className="flex p-1 rounded-full gap-1" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          {(["without", "with"] as const).map(side => {
+            const isActive = active === side;
+            const label = side === "without" ? t("scenario_without") : t("scenario_with");
+            const activeColor = side === "without" ? "rgba(239,68,68,0.15)" : "rgba(52,211,153,0.15)";
+            const activeBorder = side === "without" ? "rgba(239,68,68,0.35)" : "rgba(52,211,153,0.35)";
+            const activeText = side === "without" ? "#f87171" : "#34d399";
+            return (
+              <button key={side} onClick={() => setActive(side)}
+                className="px-4 py-2 rounded-full text-xs font-bold font-display transition-all duration-200"
+                style={{
+                  background: isActive ? activeColor : "transparent",
+                  border: isActive ? `1px solid ${activeBorder}` : "1px solid transparent",
+                  color: isActive ? activeText : "rgba(255,255,255,0.3)",
+                }}>
+                {side === "without" ? "✗ " : "✓ "}{label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* Content */}
+      <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${isWithout ? "rgba(239,68,68,0.12)" : "rgba(52,211,153,0.12)"}`, background: isWithout ? "rgba(239,68,68,0.03)" : "rgba(52,211,153,0.03)", transition: "all 0.3s" }}>
+        {/* Header bar */}
+        <div className="flex items-center gap-2 px-6 py-3 border-b" style={{ borderColor: isWithout ? "rgba(239,68,68,0.1)" : "rgba(52,211,153,0.1)" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: isWithout ? "#f87171" : "#34d399" }} />
+          <span className="text-xs font-bold font-display" style={{ color: isWithout ? "#f87171" : "#34d399" }}>
+            {isWithout ? t("scenario_without") : t("scenario_with")}
+          </span>
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={active}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="p-6 md:p-8 space-y-3">
+            {(isWithout ? without : withAB).map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}
+                className="flex items-start gap-3 font-body text-sm"
+                style={{ color: isWithout ? "rgba(255,255,255,0.45)" : item.highlight ? "#34d399" : "rgba(255,255,255,0.7)" }}>
+                <span className="shrink-0 font-bold mt-0.5" style={{ color: isWithout ? "rgba(248,113,113,0.5)" : "#34d399" }}>{item.icon}</span>
+                <span className={item.highlight ? "font-semibold" : ""}>{item.text}</span>
+              </motion.div>
+            ))}
+            {/* Bottom line */}
+            <div className="pt-4 border-t mt-4" style={{ borderColor: isWithout ? "rgba(239,68,68,0.1)" : "rgba(52,211,153,0.1)" }}>
+              <p className="text-xs font-semibold font-display" style={{ color: isWithout ? "#f87171" : "#34d399" }}>
+                {isWithout ? `⚠ ${t("scenario_w_cost")}` : `✓ ${t("scenario_a_result")}`}
+              </p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
 
 const Index = () => {
   const navigate = useNavigate();
@@ -166,46 +245,11 @@ const Index = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* REAL EXAMPLE — Show a practical scenario                   */}
+      {/* REAL SCENARIO — interactive Before / After                 */}
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="py-16 px-6 border-y border-white/[0.06]">
         <div className="container mx-auto max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="rounded-2xl p-8 md:p-10" style={{ background: "rgba(139, 92, 246, 0.04)", border: "1px solid rgba(139, 92, 246, 0.12)" }}>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground/40 mb-6 font-display">Real scenario</p>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Without */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="w-2 h-2 rounded-full bg-red-400" />
-                  <span className="text-sm font-bold text-red-400/80 font-display">Without AdBrief</span>
-                </div>
-                <div className="space-y-3 font-body text-sm text-muted-foreground/60">
-                  <p>→ Media buyer tests 20 creatives. 15 fail.</p>
-                  <p>→ $3,000 wasted on ads that didn't convert.</p>
-                  <p>→ Same mistakes repeated next month.</p>
-                  <p>→ Nobody remembers which hook worked 3 months ago.</p>
-                  <p className="text-red-400/60 font-semibold pt-2">Cost: $3,000/month in failed tests + $8,000 salary</p>
-                </div>
-              </div>
-              
-              {/* With */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-sm font-bold text-green-400/80 font-display">With AdBrief (after 30 days)</span>
-                </div>
-                <div className="space-y-3 font-body text-sm text-muted-foreground/80">
-                  <p>→ AI analyzed 50 of your past ads.</p>
-                  <p>→ Knows: "Curiosity hooks + UGC + BR market = 2.1% CTR"</p>
-                  <p>→ Before you produce: <span className="text-green-400 font-semibold">"This concept scores 87/100"</span></p>
-                  <p>→ Every brief, script, hook is calibrated to YOUR data.</p>
-                  <p className="text-green-400/80 font-semibold pt-2">Result: 40% fewer failed ads. AI remembers everything.</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          <ScenarioBlock t={t} />
         </div>
       </section>
 
@@ -428,65 +472,6 @@ const Index = () => {
                   <p className="text-sm text-green-400/80 font-semibold font-body">{item.ai}</p>
                 </div>
               ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* CASE REAL — premium redesign                               */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 border-y border-white/[0.06]">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-10">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-display"
-              style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
-              {t("lp_case_label")}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-3 font-display" style={{letterSpacing:"-0.02em"}}>
-              {t("lp_case_title")}
-            </h2>
-            <p className="text-muted-foreground mt-3 text-sm font-body max-w-xl mx-auto">{t("lp_case_sub")}</p>
-          </div>
-
-          <motion.div initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
-            className="rounded-3xl overflow-hidden"
-            style={{background:"linear-gradient(135deg,rgba(167,139,250,0.07),rgba(244,114,182,0.04))",border:"1px solid rgba(167,139,250,0.18)"}}>
-            <div className="px-6 py-3 border-b border-white/[0.06] flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[11px] text-white/30 font-body tracking-wide">{t("lp_case_context")}</span>
-            </div>
-            <div className="p-6 md:p-10 grid md:grid-cols-2 gap-10 items-center">
-              <div>
-                <div className="text-5xl mb-4 opacity-20 font-display leading-none">"</div>
-                <p className="text-base md:text-lg text-white/75 leading-relaxed font-body italic mb-6">
-                  {t("lp_case_quote")}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                    style={{background:"rgba(167,139,250,0.2)",color:"#a78bfa",border:"1px solid rgba(167,139,250,0.3)"}}>
-                    MF
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white/90 font-display">{t("lp_case_author")}</p>
-                    <p className="text-[11px] text-white/35 font-body">{t("lp_case_role")}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-3">
-                {([
-                  { val: t("lp_case_m1_val"), label: t("lp_case_m1_label"), color: "#a78bfa" },
-                  { val: t("lp_case_m2_val"), label: t("lp_case_m2_label"), color: "#f472b6" },
-                  { val: t("lp_case_m3_val"), label: t("lp_case_m3_label"), color: "#34d399" },
-                ] as {val:string;label:string;color:string}[]).map((m,i) => (
-                  <motion.div key={i} initial={{opacity:0,x:20}} whileInView={{opacity:1,x:0}} transition={{delay:i*0.1}} viewport={{once:true}}
-                    className="flex items-center gap-5 p-4 rounded-2xl"
-                    style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>
-                    <div className="text-3xl font-extrabold font-display shrink-0" style={{color:m.color}}>{m.val}</div>
-                    <div className="text-sm text-white/50 font-body leading-snug">{m.label}</div>
-                  </motion.div>
-                ))}
-              </div>
             </div>
           </motion.div>
         </div>
