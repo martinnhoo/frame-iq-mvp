@@ -4,7 +4,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_TOOLS } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'DM Mono', monospace" };
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
 const typeColor: Record<string, string> = { generator: "#fb923c", analyzer: "#22d3ee", calculator: "#34d399" };
 
 export default function ToolPage() {
@@ -85,20 +85,23 @@ export default function ToolPage() {
           </div>
         </div>
 
-        {/* Related tools */}
-        <div style={{ borderRadius: 20, padding: 20, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 24 }}>
-          <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>More free tools</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {SEO_TOOLS.filter(t => t.slug !== slug).map(t => (
+        {/* Related tools — clean grid */}
+        <div style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 14 }}>More free tools</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+            {SEO_TOOLS.filter(t => t.slug !== slug).slice(0, 6).map(t => (
               <button key={t.slug} onClick={() => navigate(`/tools/${t.slug}`)}
-                style={{ fontSize: 13, padding: "7px 14px", borderRadius: 20, background: "rgba(167,139,250,0.08)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: "pointer" }}>
-                {t.name}
+                style={{ textAlign: "left", padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", transition: "border-color .15s" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"}>
+                <p style={{ ...j, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 3 }}>{t.name}</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{t.description.slice(0, 55)}…</p>
               </button>
             ))}
           </div>
         </div>
 
-        <SeoCTA />
+        <SeoCTA context="tool" />
       </div>
     </SeoLayout>
   );

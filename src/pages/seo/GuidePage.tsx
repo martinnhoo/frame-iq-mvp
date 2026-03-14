@@ -4,7 +4,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_GUIDES } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'DM Mono', monospace" };
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
 
 export default function GuidePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -87,7 +87,7 @@ export default function GuidePage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {related.map(r => (
                 <div key={r.slug} onClick={() => navigate(`/guides/${r.slug}`)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 14, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 14, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s" }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
                   <div>
@@ -101,7 +101,7 @@ export default function GuidePage() {
           </div>
         )}
 
-        <SeoCTA />
+        <SeoCTA context="guide" />
       </div>
     </SeoLayout>
   );

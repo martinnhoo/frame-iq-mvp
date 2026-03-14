@@ -4,7 +4,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_TOOLS } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'DM Mono', monospace" };
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
 const typeColor: Record<string, string> = { generator: "#fb923c", analyzer: "#22d3ee", calculator: "#34d399" };
 
 export default function ToolsIndex() {
@@ -26,7 +26,7 @@ export default function ToolsIndex() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16, marginBottom: 16 }}>
           {SEO_TOOLS.map(tool => (
             <div key={tool.slug} onClick={() => navigate(`/tools/${tool.slug}`)}
-              style={{ background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 24, cursor: "pointer", transition: "border-color .15s, transform .12s" }}
+              style={{ background: "#090910", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 24, cursor: "pointer", transition: "border-color .15s, transform .12s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>

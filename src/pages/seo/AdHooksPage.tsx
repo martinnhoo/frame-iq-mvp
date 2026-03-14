@@ -5,7 +5,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_HOOKS } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'DM Mono', monospace" };
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
 
 const HOOK_EXAMPLES: Record<string, { score: number; text: string; platform: string; industry: string }[]> = {
   "curiosity": [
@@ -93,14 +93,14 @@ export default function AdHooksPage() {
 
           {/* Main content */}
           <div>
-            <div style={{ marginBottom: 28, padding: "20px 22px", borderRadius: 18, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ marginBottom: 28, padding: "20px 22px", borderRadius: 18, background: "#090910", border: "1px solid rgba(255,255,255,0.07)" }}>
               <p style={{ ...j, fontSize: 19, fontWeight: 700, marginBottom: 8 }}>{activeHook.emoji} {activeHook.label}</p>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{activeHook.description}</p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {examples.map((ex, i) => (
-                <div key={i} style={{ padding: "20px 22px", borderRadius: 18, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div key={i} style={{ padding: "20px 22px", borderRadius: 18, background: "#090910", border: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: `${scoreColor(ex.score)}15`, border: `1px solid ${scoreColor(ex.score)}30` }}>
                       <span style={{ ...m, fontSize: 13, fontWeight: 700, color: scoreColor(ex.score) }}>{ex.score}</span>

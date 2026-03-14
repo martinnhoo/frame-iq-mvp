@@ -5,7 +5,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_LANDING_PAGES, SEO_PLATFORMS, SEO_INDUSTRIES } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'DM Mono', monospace" };
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
 
 // Placeholder ad cards — will be replaced with real ads as library grows
 const PLACEHOLDER_ADS = Array.from({ length: 12 }, (_, i) => ({
@@ -49,7 +49,7 @@ export function AdsLibraryIndex() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 12 }}>
             {pages.map(page => (
               <div key={page.slug} onClick={() => navigate(`/${page.slug}`)}
-                style={{ padding: "20px 22px", borderRadius: 16, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s, transform .12s" }}
+                style={{ padding: "20px 22px", borderRadius: 16, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s, transform .12s" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
                 <p style={{ ...j, fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{page.title}</p>
@@ -176,7 +176,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 14 }}>
         {ads.map((ad) => (
           <div key={ad.id}
-            style={{ background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, overflow: "hidden", position: "relative" }}>
+            style={{ background: "#090910", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, overflow: "hidden", position: "relative" }}>
             {/* Thumbnail placeholder */}
             <div style={{ height: 140, background: `linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.05))`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
               <span style={{ fontSize: 32, opacity: 0.3 }}>🎬</span>

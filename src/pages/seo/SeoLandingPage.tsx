@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
-const m = { fontFamily: "'DM Mono', monospace" } as React.CSSProperties;
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
 
 interface FAQ { q: string; a: string; }
 interface SeoLandingPageProps {
@@ -52,7 +52,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
             <h2 style={{ ...j, fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Frequently Asked Questions</h2>
             <script type="application/ld+json">{JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) })}</script>
             {faqs.map(faq => (
-              <details key={faq.q} style={{ background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "16px 18px", marginBottom: 4 }}>
+              <details key={faq.q} style={{ background: "#090910", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "16px 18px", marginBottom: 4 }}>
                 <summary style={{ ...j, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)", listStyle: "none", display: "flex", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>{faq.q}<span style={{ color: accentColor, flexShrink: 0 }}>+</span></summary>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginTop: 12 }}>{faq.a}</p>
               </details>
@@ -60,7 +60,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
           </div>
         )}
         {relatedLinks.length > 0 && (
-          <div style={{ borderRadius: 16, padding: 18, background: "#0e0e12", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 32 }}>
+          <div style={{ borderRadius: 16, padding: 18, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 32 }}>
             <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Related</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {relatedLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} style={{ fontSize: 13, padding: "7px 14px", borderRadius: 20, background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}22`, cursor: "pointer" }}>{l.label}</button>)}
