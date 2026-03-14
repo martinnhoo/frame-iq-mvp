@@ -212,16 +212,16 @@ const Index = () => {
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="font-display font-bold leading-[1.06] tracking-tight mb-6"
                 style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
-                Most of your ad budget<br />is funding{" "}
+                The AI that makes{" "}
                 <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  bad hooks.
+                  every ad dollar work harder.
                 </span>
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-[17px] leading-relaxed font-body mb-8"
                 style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
-                AdBrief finds the exact reason your ads underperform — weak hook, wrong format, dead CTA — and generates the fix before you spend another dollar.
+                AdBrief learns from your performance data and tells you exactly what to produce next — the right hook, format, and angle. More winners. Less waste. Every cycle.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
@@ -656,14 +656,14 @@ const Index = () => {
             <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%,rgba(14,165,233,0.18),transparent 60%)" }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display" style={{ letterSpacing: "-0.02em" }}>
-                Every failed ad is money
+                Your ads should perform.
                 <br />
                 <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  that funded your competitor.
+                  AdBrief makes sure they do.
                 </span>
               </h2>
               <p className="text-white/50 text-base mb-8 max-w-lg mx-auto font-body leading-relaxed">
-                Upload your first ad now. Get the exact diagnosis — hook score, weak point, fix — in 60 seconds. Free. No setup.
+                Join 147+ performance teams using AdBrief to produce smarter creatives, reduce wasted spend, and scale what actually works.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 font-body">
