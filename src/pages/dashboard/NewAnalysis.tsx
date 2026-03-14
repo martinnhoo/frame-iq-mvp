@@ -5,9 +5,84 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
-import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video } from "lucide-react";
+import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import PersonaGateModal from "@/components/PersonaGateModal";
+
+// ── CSV Meta Ads Parser ──────────────────────────────────────────────────────
+interface MetaAdRow {
+  adName: string;
+  ctr?: string; roas?: string; spend?: string; impressions?: string;
+  cpc?: string; cpp?: string; reach?: string; frequency?: string;
+  videoPlays?: string; video25?: string; video50?: string; video75?: string; video100?: string;
+  conversions?: string; costPerResult?: string;
+}
+
+function parseMetaCSV(text: string): MetaAdRow[] {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim().toLowerCase());
+  const findCol = (...names: string[]) => headers.findIndex(h => names.some(n => h.includes(n)));
+  const adNameIdx = findCol("ad name", "nome do anúncio", "nombre del anuncio");
+  if (adNameIdx === -1) return [];
+  const ctrIdx = findCol("ctr"); const roasIdx = findCol("roas");
+  const spendIdx = findCol("amount spent", "valor gasto", "gasto", "spend");
+  const impIdx = findCol("impressions", "impressões");
+  const cpcIdx = findCol("cpc"); const cppIdx = findCol("cpp");
+  const reachIdx = findCol("reach", "alcance"); const freqIdx = findCol("frequency", "frequência");
+  const vp = findCol("video plays", "reproduções de vídeo", "video views");
+  const v25 = findCol("25%", "video watched at 25");
+  const v50 = findCol("50%", "video watched at 50");
+  const v75 = findCol("75%", "video watched at 75");
+  const v100 = findCol("100%", "video watched at 100");
+  const convIdx = findCol("results", "conversions", "resultados");
+  const cprIdx = findCol("cost per result", "custo por resultado");
+
+  const get = (row: string[], idx: number) => idx >= 0 ? (row[idx] || "").replace(/"/g, "").trim() : undefined;
+
+  return lines.slice(1).map(line => {
+    const cols = line.split(",");
+    return {
+      adName: get(cols, adNameIdx) || "",
+      ctr: get(cols, ctrIdx), roas: get(cols, roasIdx), spend: get(cols, spendIdx),
+      impressions: get(cols, impIdx), cpc: get(cols, cpcIdx), cpp: get(cols, cppIdx),
+      reach: get(cols, reachIdx), frequency: get(cols, freqIdx),
+      videoPlays: get(cols, vp), video25: get(cols, v25), video50: get(cols, v50),
+      video75: get(cols, v75), video100: get(cols, v100),
+      conversions: get(cols, convIdx), costPerResult: get(cols, cprIdx),
+    };
+  }).filter(r => r.adName);
+}
+
+function fuzzyMatch(a: string, b: string): number {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const na = norm(a); const nb = norm(b);
+  if (na === nb) return 1;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  // token overlap
+  const ta = new Set(na.split(/\s+/)); const tb = new Set(nb.split(/\s+/));
+  const inter = [...ta].filter(t => tb.has(t)).length;
+  return inter / Math.max(ta.size, tb.size, 1);
+}
+
+function formatMetaData(row: MetaAdRow): string {
+  const parts: string[] = [];
+  if (row.ctr) parts.push(`CTR: ${row.ctr}%`);
+  if (row.roas) parts.push(`ROAS: ${row.roas}x`);
+  if (row.spend) parts.push(`Spend: $${row.spend}`);
+  if (row.impressions) parts.push(`Impressions: ${row.impressions}`);
+  if (row.cpc) parts.push(`CPC: $${row.cpc}`);
+  if (row.reach) parts.push(`Reach: ${row.reach}`);
+  if (row.frequency) parts.push(`Frequency: ${row.frequency}`);
+  if (row.videoPlays) parts.push(`Video plays: ${row.videoPlays}`);
+  if (row.video25) parts.push(`Watched 25%: ${row.video25}`);
+  if (row.video50) parts.push(`Watched 50%: ${row.video50}`);
+  if (row.video75) parts.push(`Watched 75%: ${row.video75}`);
+  if (row.video100) parts.push(`Watched 100%: ${row.video100}`);
+  if (row.conversions) parts.push(`Results: ${row.conversions}`);
+  if (row.costPerResult) parts.push(`Cost/result: $${row.costPerResult}`);
+  return parts.join(" | ");
+}
 
 type ProgressStep = "idle" | "extracting" | "uploading" | "transcribing" | "analyzing" | "done" | "error";
 
@@ -58,6 +133,40 @@ const NewAnalysis = () => {
   const [step, setStep] = useState<ProgressStep>("idle");
   const [progress, setProgress] = useState(0);
   const [showPersonaGate, setShowPersonaGate] = useState(false);
+
+  // ── CSV enrichment state ─────────────────────────────────────────────────
+  const [csvRows, setCsvRows] = useState<MetaAdRow[]>([]);
+  const [matchedRow, setMatchedRow] = useState<MetaAdRow | null>(null);
+  const [csvLoaded, setCsvLoaded] = useState(false);
+  const [showCsvPicker, setShowCsvPicker] = useState(false);
+  const csvRef = useRef<HTMLInputElement>(null);
+
+  const handleCsvFile = (f: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const rows = parseMetaCSV(text);
+      setCsvRows(rows);
+      setCsvLoaded(true);
+      setShowCsvPicker(false);
+      // Auto-match against current title or file name
+      const name = title || file?.name?.replace(/\.[^/.]+$/, "") || "";
+      if (name && rows.length > 0) {
+        const scored = rows.map(r => ({ r, score: fuzzyMatch(name, r.adName) })).sort((a, b) => b.score - a.score);
+        if (scored[0].score > 0.4) setMatchedRow(scored[0].r);
+      }
+    };
+    reader.readAsText(f);
+  };
+
+  // When title changes, try to re-match
+  const handleTitleChange = (v: string) => {
+    setTitle(v);
+    if (csvRows.length > 0 && v) {
+      const scored = csvRows.map(r => ({ r, score: fuzzyMatch(v, r.adName) })).sort((a, b) => b.score - a.score);
+      if (scored[0].score > 0.4) setMatchedRow(scored[0].r);
+    }
+  };
   const fileRef = useRef<HTMLInputElement>(null);
 
   const personaMarket = selectedPersona ? detectMarketFromPersona(selectedPersona.language_style) : "US";
@@ -163,6 +272,11 @@ const NewAnalysis = () => {
       formData.append("user_id", user.id);
       formData.append("analysis_id", record.id);
       formData.append("title", title || file?.name || "Untitled");
+      // Inject Meta performance data if available
+      if (matchedRow) {
+        formData.append("meta_performance_data", formatMetaData(matchedRow));
+        formData.append("meta_ad_name", matchedRow.adName);
+      }
 
       const data = await uploadWithProgress(formData);
 
@@ -216,8 +330,81 @@ const NewAnalysis = () => {
             {/* Title */}
             <div>
               <label className="text-xs text-white/40 uppercase tracking-wider mb-2 block">Title (optional)</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Nike Q1 — UGC Test"
+              <input value={title} onChange={e => handleTitleChange(e.target.value)} placeholder="e.g. Nike Q1 — UGC Test"
                 className="w-full px-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/25 transition-colors" />
+            </div>
+
+            {/* CSV Enrichment */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-white/40 uppercase tracking-wider">Meta Ads Data <span className="normal-case text-white/25">(optional — enriches analysis with real CTR, ROAS, retention)</span></label>
+              </div>
+
+              {!csvLoaded ? (
+                <div
+                  className="w-full rounded-2xl border border-dashed border-white/[0.1] text-center cursor-pointer transition-all hover:border-sky-500/40 hover:bg-sky-500/[0.03]"
+                  style={{ padding: "14px 16px" }}
+                  onClick={() => csvRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleCsvFile(f); }}>
+                  <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleCsvFile(f); }} />
+                  <div className="flex items-center justify-center gap-2">
+                    <FileSpreadsheet size={14} className="text-white/30" />
+                    <span className="text-xs text-white/30">Drop your Meta Ads CSV here or <span className="text-sky-400/70">browse</span></span>
+                  </div>
+                  <p className="text-[10px] text-white/15 mt-1">Export from Meta Ads Manager → Reports → Ads level → Export CSV</p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-white/[0.08] overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: "rgba(14,165,233,0.06)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <FileSpreadsheet size={13} className="text-sky-400" />
+                    <span className="text-xs font-semibold text-sky-400">{csvRows.length} ads found in CSV</span>
+                    <button onClick={() => { setCsvLoaded(false); setCsvRows([]); setMatchedRow(null); }}
+                      className="ml-auto text-white/20 hover:text-white/50 transition-colors">
+                      <X size={13} />
+                    </button>
+                  </div>
+
+                  {/* Match result */}
+                  {matchedRow ? (
+                    <div className="px-4 py-3">
+                      <div className="flex items-start gap-2 mb-2">
+                        <Check size={13} className="text-green-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-green-400 mb-0.5">Auto-matched: <span className="text-white/60 font-normal truncate">{matchedRow.adName}</span></p>
+                          <p className="text-[11px] text-white/30 leading-relaxed">
+                            {[matchedRow.ctr && `CTR ${matchedRow.ctr}%`, matchedRow.roas && `ROAS ${matchedRow.roas}x`, matchedRow.spend && `$${matchedRow.spend} spent`, matchedRow.video25 && `25% retention: ${matchedRow.video25}`].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                      </div>
+                      <button onClick={() => setShowCsvPicker(!showCsvPicker)}
+                        className="text-[11px] text-white/30 hover:text-white/50 flex items-center gap-1 transition-colors">
+                        Wrong match? Pick manually <ChevronDown size={11} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-white/40 mb-2">No automatic match found. Select the right ad:</p>
+                    </div>
+                  )}
+
+                  {/* Manual picker */}
+                  {(!matchedRow || showCsvPicker) && (
+                    <div className="max-h-40 overflow-y-auto" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                      {csvRows.map((row, i) => (
+                        <button key={i} onClick={() => { setMatchedRow(row); setShowCsvPicker(false); }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-white/[0.04] transition-colors border-b border-white/[0.04] last:border-0">
+                          <p className="text-xs text-white/70 truncate">{row.adName}</p>
+                          <p className="text-[10px] text-white/25 mt-0.5">
+                            {[row.ctr && `CTR ${row.ctr}%`, row.roas && `ROAS ${row.roas}x`, row.spend && `$${row.spend}`].filter(Boolean).join(" · ")}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Market */}

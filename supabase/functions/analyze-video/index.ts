@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
     const formData = await req.formData();
     const videoFile = formData.get('video_file') as File | null;
     const videoUrl = formData.get('video_url') as string | null;
-    const market = (formData.get('market') as string) || 'GLOBAL';
+    const meta_performance_data = formData.get('meta_performance_data') as string | null;
+    const meta_ad_name = formData.get('meta_ad_name') as string | null;
     const campaign_goal = formData.get('campaign_goal') as string | null;
     const user_id = formData.get('user_id') as string;
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
@@ -251,7 +252,8 @@ Analyze this video ad and return ONLY valid JSON (no markdown, no explanation) w
 Market context: ${market}
 Campaign goal: ${campaign_goal || 'conversions'}
 Transcript: ${transcript || '[No transcript available]'}
-${videoUrl ? `Video URL: ${videoUrl}` : ''}`;
+${videoUrl ? `Video URL: ${videoUrl}` : ''}
+${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cross-reference your visual analysis):\n${meta_performance_data}\n\nIMPORTANT: When real performance data is provided, your analysis MUST:\n1. Cross-reference the hook score with actual CTR (low CTR + weak hook = confirmed problem)\n2. If video retention drops early but conversions are strong = hook problem, offer is solid\n3. If ROAS is high but spend is low = winning creative being under-scaled\n4. Reference the actual numbers in your summary and improvement_suggestions\n5. Add a field "performance_verdict": one sentence verdict combining visual analysis + real data` : ''}`;
 
     let analysis: Record<string, unknown>;
 
