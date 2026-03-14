@@ -193,7 +193,7 @@ const Index = () => {
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* HERO                                                        */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden pt-16 pb-8 md:pt-24 md:pb-12 px-6">
+      <section className="relative overflow-hidden pt-6 pb-8 md:pt-10 md:pb-12 px-6">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.1) 0%, transparent 65%)', filter: 'blur(80px)' }} />
 
