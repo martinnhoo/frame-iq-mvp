@@ -342,9 +342,9 @@ const Index = () => {
           {/* Key differentiators */}
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { title: "Not generic — learns from YOUR data", desc: "Every pattern comes from your actual ad performance, not industry averages.", icon: "🎯", color: "#a78bfa" },
-              { title: "Closes the manual loop", desc: "No more staring at Ads Manager → extracting insights → briefing the team. It's automatic.", icon: "⚡", color: "#f472b6" },
-              { title: "Measurable ROI", desc: "Track how your avg CTR improves over time. \"Since using AdBrief, my CTR went up 34%.\"", icon: "📈", color: "#34d399" },
+              { title: "Decodes YOUR algorithm", desc: "Not industry benchmarks. The AI learns from your actual ads, your actual performance, your actual account. Every insight is specific to you.", icon: "🔬", color: "#a78bfa" },
+              { title: "Context that accumulates", desc: "Every video you upload, every analysis you run, every performance CSV — it all feeds the AI. After 30 days, it knows your business better than you.", icon: "🧠", color: "#f472b6" },
+              { title: "Measurable ROI", desc: "Track your avg CTR, ROAS, and hook scores over time. \"Since I started using AdBrief, my CTR went from 1.2% to 1.9%.\"", icon: "📈", color: "#34d399" },
             ].map((item, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
                 className="p-6 rounded-2xl"
