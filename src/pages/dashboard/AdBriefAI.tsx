@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { Send, Loader2, ChevronDown, ChevronUp, Sparkles, RotateCcw, Brain } from "lucide-react";
+import { Send, Loader2, ChevronDown, ChevronUp, Sparkles, RotateCcw, Brain, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 interface Block {
-  type: "action" | "pattern" | "hooks" | "warning" | "insight" | "off_topic";
+  type: "action" | "pattern" | "hooks" | "warning" | "insight" | "off_topic" | "navigate";
   title: string;
   content?: string;
   items?: string[];
+  route?: string;
+  params?: Record<string, string>;
+  cta?: string;
 }
 interface AIMessage { role: "user" | "assistant"; blocks?: Block[]; userText?: string; ts: number; }
 
@@ -22,20 +25,37 @@ const BS: Record<Block["type"], { color: string; icon: string; bg: string; borde
   warning:   { color: "#fbbf24", icon: "⚠️", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.2)"  },
   insight:   { color: "#34d399", icon: "🧠", bg: "rgba(52,211,153,0.07)",  border: "rgba(52,211,153,0.2)"  },
   off_topic: { color: "rgba(255,255,255,0.25)", icon: "🚫", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)" },
+  navigate:  { color: "#0ea5e9", icon: "→", bg: "rgba(14,165,233,0.05)", border: "rgba(14,165,233,0.25)" },
 };
 
 const QUICK = [
-  "What's my best performing hook type?",
-  "Which market should I double down on?",
-  "Write 3 hooks for cold traffic based on my data",
-  "Why might my CTRs be dropping?",
-  "What should I test next?",
-  "Which editor has the best results?",
+  "My ad retains well after 10s but drops in the first 3. What's wrong with my hook?",
+  "Which hook type is winning in my account right now?",
+  "My CPMr spiked this week. What should I produce to fix it?",
+  "Which market should I double down on and why?",
+  "My CTR dropped 40% this week. Diagnose it.",
+  "Write 3 hooks for my top-performing market based on my data",
 ];
 
-function BlockCard({ block }: { block: Block }) {
+function BlockCard({ block, onNavigate }: { block: Block; onNavigate?: (route: string, params?: Record<string, string>) => void }) {
   const s = BS[block.type];
   const [open, setOpen] = useState(true);
+
+  // Navigate block — special CTA card
+  if (block.type === "navigate") {
+    return (
+      <div style={{ borderRadius: 14, border: `1px solid ${s.border}`, background: s.bg, overflow: "hidden", marginBottom: 8, padding: "14px 16px" }}>
+        <p style={{ ...j, fontSize: 13, fontWeight: 700, color: s.color, marginBottom: 6 }}>{block.title}</p>
+        {block.content && <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 12 }}>{block.content}</p>}
+        <button
+          onClick={() => onNavigate?.(block.route!, block.params)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", ...j }}>
+          {block.cta || "Open tool →"} <ArrowRight size={13} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ borderRadius: 14, border: `1px solid ${s.border}`, background: s.bg, overflow: "hidden", marginBottom: 8 }}>
       <button onClick={() => setOpen(o => !o)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: "none", border: "none", cursor: "pointer" }}>
@@ -60,6 +80,7 @@ function BlockCard({ block }: { block: Block }) {
 
 export default function AdBriefAI() {
   const { user, profile } = useOutletContext<DashboardContext>();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,6 +88,15 @@ export default function AdBriefAI() {
   const [context, setContext] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleNavigate = (route: string, params?: Record<string, string>) => {
+    if (!params || Object.keys(params).length === 0) {
+      navigate(route);
+      return;
+    }
+    const sp = new URLSearchParams(params).toString();
+    navigate(`${route}?${sp}`);
+  };
 
   /* ── Load all user context once ── */
   useEffect(() => {
@@ -241,7 +271,7 @@ export default function AdBriefAI() {
                   </div>
                   <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em" }}>ADBRIEF AI</span>
                 </div>
-                {msg.blocks?.map((b, bi) => <BlockCard key={bi} block={b} />)}
+                {msg.blocks?.map((b, bi) => <BlockCard key={bi} block={b} onNavigate={handleNavigate} />)}
               </div>
             )}
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ClipboardList, Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,15 @@ export default function BriefGenerator() {
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
+  const [searchParams] = useSearchParams();
+  // Pre-fill from AI navigation
+  useEffect(() => {
+    const p = searchParams.get("product"); if (p) setProduct(p);
+    const o = searchParams.get("offer"); if (o) setOffer(o);
+    const m = searchParams.get("market"); if (m) setMarket(m);
+    const a = searchParams.get("audience"); if (a) setAudience(a);
+    const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
+  }, []);
   const [objective, setObjective] = useState("conversion");
   const [market, setMarket] = useState("US");
   const [audience, setAudience] = useState("");

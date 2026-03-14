@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp, ThumbsUp, ThumbsDown } from "lucide-react";
@@ -65,6 +65,13 @@ export default function HookGenerator() {
   const [niche, setNiche] = useState("");
   const [market, setMarket] = useState("GLOBAL");
   const [platform, setPlatform] = useState("TikTok");
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const p = searchParams.get("product"); if (p) setProduct(p);
+    const n = searchParams.get("niche"); if (n) setNiche(n);
+    const m = searchParams.get("market"); if (m) setMarket(m);
+    const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
+  }, []);
   const [tone, setTone] = useState("Aggressive / Urgent");
   const [count, setCount] = useState(10);
   const [funnelStage, setFunnelStage] = useState("tofu");

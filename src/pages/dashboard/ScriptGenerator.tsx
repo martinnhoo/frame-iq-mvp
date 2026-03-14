@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { FileText, Sparkles, Copy, Check, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,16 @@ export default function ScriptGenerator() {
   const [duration, setDuration] = useState("30s");
   const [angle, setAngle] = useState("");
   const [extraContext, setExtraContext] = useState("");
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const p = searchParams.get("product"); if (p) setProduct(p);
+    const o = searchParams.get("offer"); if (o) setOffer(o);
+    const m = searchParams.get("market"); if (m) setMarket(m);
+    const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
+    const a = searchParams.get("angle"); if (a) setAngle(a);
+    const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState<number | null>(null);

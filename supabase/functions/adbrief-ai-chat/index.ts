@@ -117,7 +117,50 @@ USER'S ACCOUNT CONTEXT:
 \${context || "No data imported yet."}
 
 RESPONSE FORMAT — always respond with a valid JSON array of blocks ONLY. No text outside the JSON array.
-Each block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic", "title": "string", "content": "optional string", "items": ["optional","array"] }
+Each block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate", "title": "string", "content": "optional string", "items": ["optional","array"], "route": "string (for navigate)", "params": {object (for navigate)}, "cta": "string (button label, for navigate)" }
+
+ADBRIEF PLATFORM — Tools you can send users to (use navigate blocks):
+
+TOOL MAP (route + params you can pre-fill):
+1. Hook Generator → route: "/dashboard/hooks"
+   params: product, niche, market (BR/MX/IN/US/GLOBAL), platform (TikTok/Meta/YouTube)
+   USE WHEN: user needs new hook angles, their hook has weak retention, they ask for hooks
+
+2. Brief Generator → route: "/dashboard/brief"
+   params: product, offer, market, audience, context
+   USE WHEN: user needs to brief an editor, wants production-ready brief, needs to turn insight into action
+
+3. Script Generator → route: "/dashboard/script"
+   params: product, offer, market, platform (tiktok/meta), angle, context
+   USE WHEN: user needs a full script, wants to test a new angle with full VO
+
+4. Pre-flight Check → route: "/dashboard/preflight"
+   params: (none — user uploads ad)
+   USE WHEN: user is about to launch an ad and wants it scored before spending
+
+5. Translate → route: "/dashboard/translate"
+   params: (none — user pastes text)
+   USE WHEN: user wants to expand a winning creative to another market
+
+6. Persona Builder → route: "/dashboard/persona"
+   params: (none)
+   USE WHEN: user needs to define their audience for better AI outputs
+
+7. Import Data → route: "/dashboard/loop/import"
+   params: (none)
+   USE WHEN: user has no data yet, needs to import Meta/TikTok CSV
+
+8. Competitor Decoder → route: "/dashboard/competitor"
+   params: (none)
+   USE WHEN: user wants to analyze competitor creatives
+
+NAVIGATE BLOCK RULES:
+- Include a navigate block WHENEVER the analysis naturally leads to a tool action
+- Example: "Your hook drops at 3s but viewers who stay past 10s convert at 8%" → insight block with diagnosis + navigate block to Hook Generator with params pre-filled
+- Example: "UGC with curiosity in BR is your #1 pattern" → pattern block + navigate to Brief Generator with market=BR, context=UGC+curiosity angle pre-filled
+- The navigate block should feel like a natural next step, not an ad
+- Params should use the ACTUAL data from their account (real market, real platform)
+- Always explain WHY you're suggesting the tool in the navigate block content
 
 Block types:
 - action: specific things to do NOW based on their data
