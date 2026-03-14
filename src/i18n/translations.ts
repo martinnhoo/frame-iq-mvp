@@ -86,6 +86,8 @@ type TranslationKeys = {
   feature_translation_desc: string;
   feature_intelligence_title: string;
   feature_intelligence_desc: string;
+  feature_ai_video_title: string;
+  feature_ai_video_desc: string;
   feature_api_title: string;
   feature_api_desc: string;
 

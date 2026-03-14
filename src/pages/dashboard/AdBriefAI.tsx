@@ -120,7 +120,7 @@ export default function AdBriefAI() {
       const [analysesRes, patternsRes, personaRes, entriesRes, savedRes] = await Promise.all([
         supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
         (supabase as any).from("learned_patterns").select("pattern_key,variables,avg_ctr,avg_cpc,avg_roas,confidence,is_winner,insight_text,sample_size").eq("user_id", user.id).order("confidence", { ascending: false }).limit(50),
-        supabase.from("personas" as never).select("name,result").eq("user_id", user.id).eq("is_active", true).single(),
+        (supabase as any).from("personas").select("name,result").eq("user_id", user.id).eq("is_active", true).single(),
         (supabase as any).from("creative_entries").select("filename,market,editor,platform,creative_type,ctr,roas,spend,clicks,impressions,import_batch_id").eq("user_id", user.id).order("ctr", { ascending: false }).limit(500),
         (supabase as any).from("ai_user_insights").select("summary").eq("user_id", user.id).single(),
       ]);
