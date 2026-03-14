@@ -129,7 +129,7 @@ export default function GamificationWidgets({ userId, dt, totalActions }: Props)
       )}
 
       {/* ── LEVEL SECTION ── */}
-      <div className="flex items-center gap-2.5 px-4 py-2.5">
+      <a href="/levels" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}>
         {/* Icon badge */}
         <div
           className="relative flex items-center justify-center w-8 h-8 rounded-xl shrink-0 transition-transform duration-300"
@@ -201,7 +201,7 @@ export default function GamificationWidgets({ userId, dt, totalActions }: Props)
             </div>
           )}
         </div>
-      </div>
+      </a>
 
       {/* ── DIVIDER ── */}
       <div className="w-px self-stretch my-2" style={{ background: "rgba(255,255,255,0.06)" }} />

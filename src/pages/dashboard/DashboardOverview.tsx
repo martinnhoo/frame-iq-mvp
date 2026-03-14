@@ -267,7 +267,7 @@ export default function DashboardOverview() {
         <div className="flex items-start justify-between gap-4 pt-2">
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
-            <p className="text-[10px] text-white/40 uppercase tracking-[0.22em] mb-1.5 mt-3" style={mono}>{greeting}</p>
+            <p className="text-[11px] text-white/30 mb-1.5 mt-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 500, letterSpacing: "0.08em" }}>{greeting}</p>
             <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -275,7 +275,7 @@ export default function DashboardOverview() {
               </span>
             </h1>
             {contextGreeting && (
-              <p className="text-xs text-white/50 mt-1" style={mono}>{contextGreeting}</p>
+              <p className="text-[13px] text-white/40 mt-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, lineHeight: 1.5 }}>{contextGreeting}</p>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">

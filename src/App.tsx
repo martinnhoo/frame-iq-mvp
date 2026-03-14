@@ -13,6 +13,7 @@ import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
 import BookDemo from "./pages/BookDemo";
 import FAQ from "./pages/FAQ";
+import Levels from "./pages/Levels";
 import FeatureDetail from "./pages/FeatureDetail";
 import Pricing from "./pages/Pricing";
 import Terms from "./pages/Terms";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/book-demo" element={<BookDemo />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/levels" element={<Levels />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
