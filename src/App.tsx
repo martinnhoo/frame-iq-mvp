@@ -15,6 +15,7 @@ import BookDemo from "./pages/BookDemo";
 import FAQ from "./pages/FAQ";
 import Levels from "./pages/Levels";
 import FeatureDetail from "./pages/FeatureDetail";
+import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -96,6 +97,7 @@ const App = () => (
               <Route path="/refund" element={<Refund />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/features/:slug" element={<FeatureDetail />} />
+              <Route path="/features" element={<Features />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
