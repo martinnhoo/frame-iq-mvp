@@ -212,16 +212,16 @@ const Index = () => {
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="font-display font-bold leading-[1.06] tracking-tight mb-6"
                 style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
-                Stop wasting budget<br />on ads that{" "}
+                Most of your ad budget<br />is funding{" "}
                 <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  never had a chance.
+                  bad hooks.
                 </span>
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-[17px] leading-relaxed font-body mb-8"
                 style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
-                AdBrief scores your hooks, learns from your data, and tells you exactly what to produce next — before you spend a dollar.
+                AdBrief finds the exact reason your ads underperform — weak hook, wrong format, dead CTA — and generates the fix before you spend another dollar.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
@@ -656,14 +656,14 @@ const Index = () => {
             <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%,rgba(14,165,233,0.18),transparent 60%)" }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display" style={{ letterSpacing: "-0.02em" }}>
-                Stop testing blind.
+                Every failed ad is money
                 <br />
                 <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  Start knowing what works.
+                  that funded your competitor.
                 </span>
               </h2>
               <p className="text-white/50 text-base mb-8 max-w-lg mx-auto font-body leading-relaxed">
-                Upload your first ad today. In 30 days, you'll have an AI that knows your account better than anyone on your team.
+                Upload your first ad now. Get the exact diagnosis — hook score, weak point, fix — in 60 seconds. Free. No setup.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 font-body">
