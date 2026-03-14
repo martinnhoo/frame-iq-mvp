@@ -191,116 +191,116 @@ const Index = () => {
       </nav>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* HERO — Bold claim, simple, direct                          */}
+      {/* HERO                                                        */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section className="relative flex flex-col justify-center px-6 overflow-hidden pt-20 pb-16">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(60px)' }} />
+      <section className="relative overflow-hidden pt-16 pb-8 md:pt-24 md:pb-12 px-6">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.1) 0%, transparent 65%)', filter: 'blur(80px)' }} />
 
-        <div className="relative z-10 max-w-[880px] mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center rounded-full px-4 py-1.5 text-[12px] mb-8 gap-2 font-body"
-            style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-muted-foreground">Used by 147+ teams across 12 countries</span>
-          </motion.div>
+        <div className="relative z-10 max-w-[1100px] mx-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-16">
 
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-[36px] md:text-[48px] lg:text-[60px] font-bold text-foreground leading-[1.08] tracking-tight font-display">
-            In 30 days, this AI knows
-            <br />
-            <span style={{ background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              your account better than you.
-            </span>
-          </motion.h1>
+            {/* LEFT — copy */}
+            <div className="flex-1 min-w-0">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold mb-8 font-body"
+                style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>147+ performance teams — BR, MX, IN, US</span>
+              </motion.div>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-[17px] md:text-[19px] max-w-[620px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body">
-            Upload your ads. Feed your data. AdBrief learns what actually works — hooks, formats, markets — and tells you exactly what to produce next.
-          </motion.p>
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+                className="font-display font-bold leading-[1.06] tracking-tight mb-6"
+                style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
+                Stop wasting budget<br />on ads that{" "}
+                <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                  never had a chance.
+                </span>
+              </motion.h1>
 
-          {/* CTA */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10">
-            <Button className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-8 py-4 shadow-lg shadow-purple-500/30 font-body group whitespace-nowrap"
-              onClick={() => navigate("/signup")}>
-              <span className="relative z-10 flex items-center gap-2">
-                {t("hero_cta_primary")}
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 shrink-0" />
-              </span>
-            </Button>
-            <Button variant="outline" className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group border-white/10 font-body whitespace-nowrap"
-              onClick={() => { document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
-              {t("hero_cta_secondary")}
-            </Button>
-          </motion.div>
+              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-[17px] leading-relaxed font-body mb-8"
+                style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
+                AdBrief scores your hooks, learns from your data, and tells you exactly what to produce next — before you spend a dollar.
+              </motion.p>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="flex items-center justify-center gap-6 mt-6 font-body text-xs text-muted-foreground/60">
-            <span>✓ {t("hero_check_1")}</span>
-            <span>✓ {t("hero_check_2")}</span>
-            <span>✓ {t("hero_check_3")}</span>
-          </motion.div>
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-col sm:flex-row gap-3 mb-6">
+                <button onClick={() => navigate("/signup")}
+                  className="font-body font-bold text-[15px] whitespace-nowrap flex items-center gap-2 justify-center"
+                  style={{ padding: "14px 28px", borderRadius: 14, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+                  {t("hero_cta_primary")} <ArrowRight size={16} />
+                </button>
+                <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                  className="font-body font-semibold text-[15px] whitespace-nowrap"
+                  style={{ padding: "14px 24px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
+                  {t("hero_cta_secondary")}
+                </button>
+              </motion.div>
 
-          {/* Product mock */}
-          <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
-            className="mt-16 max-w-3xl mx-auto rounded-2xl overflow-hidden"
-            style={{ border: "1px solid rgba(167,139,250,0.2)", boxShadow: "0 0 80px rgba(167,139,250,0.08), 0 32px 64px rgba(0,0,0,0.5)" }}>
-            {/* Mock toolbar */}
-            <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(167,139,250,0.06)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
-              </div>
-              <div className="flex-1 mx-4 h-5 rounded-md flex items-center px-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span className="text-[10px] text-white/20" style={{ fontFamily: "'Inter',sans-serif" }}>adbrief.pro/dashboard/loop/ai</span>
-              </div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+                className="flex flex-wrap items-center gap-x-5 gap-y-2 font-body text-[12px]"
+                style={{ color: "rgba(255,255,255,0.3)" }}>
+                <span>✓ {t("hero_check_1")}</span>
+                <span>✓ {t("hero_check_2")}</span>
+                <span>✓ {t("hero_check_3")}</span>
+              </motion.div>
             </div>
-            {/* Mock content */}
-            <div className="p-5" style={{ background: "#07070f" }}>
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}>🧠</div>
-                <div>
-                  <p className="text-xs font-bold text-white/80" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif" }}>AdBrief AI</p>
-                  <p className="text-[10px]" style={{ color: "rgba(52,211,153,0.7)", fontFamily: "'Inter',sans-serif" }}>● Full account context loaded</p>
+
+            {/* RIGHT — product mock */}
+            <motion.div initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, delay: 0.35 }}
+              className="flex-1 min-w-0 w-full lg:max-w-[520px]"
+              style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(167,139,250,0.18)", boxShadow: "0 0 80px rgba(167,139,250,0.07), 0 32px 64px rgba(0,0,0,0.6)" }}>
+              <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(167,139,250,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,90,90,0.35)" }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,190,50,0.35)" }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(50,215,75,0.35)" }} />
+                </div>
+                <div className="flex-1 mx-3 h-5 rounded-md flex items-center px-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)", fontFamily: "'Inter',sans-serif" }}>adbrief.pro/dashboard/loop/ai</span>
                 </div>
               </div>
-              {/* User message */}
-              <div className="flex justify-end mb-3">
-                <div className="text-xs px-3 py-2 rounded-xl rounded-br-sm text-white/80 max-w-xs" style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.2)", fontFamily: "'Inter',sans-serif" }}>
-                  What's my best performing hook type based on my data?
+              <div className="p-5" style={{ background: "#07070f" }}>
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {([
+                    { label: "Budget saved", value: "38%", color: "#34d399" },
+                    { label: "Avg hook score", value: "7.4", color: "#a78bfa" },
+                    { label: "Winners found", value: "12", color: "#f472b6" },
+                  ] as {label:string;value:string;color:string}[]).map(s => (
+                    <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <p className="font-bold text-xl" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{s.value}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'Inter',sans-serif" }}>{s.label}</p>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              {/* AI blocks */}
-              <div className="space-y-2">
-                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(96,165,250,0.2)", background: "rgba(96,165,250,0.06)" }}>
-                  <div className="flex items-center gap-2 px-3 py-2">
-                    <span className="text-sm">📊</span>
-                    <span className="text-xs font-bold" style={{ color: "#60a5fa", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>Pattern detected</span>
-                  </div>
-                  <div className="px-3 pb-2.5">
-                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Inter',sans-serif" }}>Curiosity hooks outperform your avg CTR by <span style={{ color: "#60a5fa", fontWeight: 600 }}>2.3×</span> — 14 of your last 20 winners used this angle.</p>
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-sm" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}>🧠</div>
+                  <div className="flex-1">
+                    <p className="text-[11px] font-bold mb-1" style={{ color: "#a78bfa", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>AdBrief AI · Pattern detected</p>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Inter',sans-serif" }}>
+                      Curiosity hooks outperform your avg by <span style={{ color: "#34d399", fontWeight: 600 }}>2.3×</span>. Last 3 wasted creatives all used VSL format in BR — avoid this combo.
+                    </p>
                   </div>
                 </div>
-                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(244,114,182,0.2)", background: "rgba(244,114,182,0.06)" }}>
-                  <div className="flex items-center gap-2 px-3 py-2">
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(244,114,182,0.2)", background: "rgba(244,114,182,0.05)" }}>
+                  <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid rgba(244,114,182,0.1)" }}>
                     <span className="text-sm">⚡</span>
-                    <span className="text-xs font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>3 hooks ready to use</span>
+                    <span className="text-[11px] font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>3 hooks — predicted CTR 2.1%+</span>
                   </div>
-                  <div className="px-3 pb-2.5 space-y-1">
-                    {["\"Você sabia que 90% das pessoas erra aqui...\"", "\"O erro que está custando seu ROAS\"", "\"Testamos 200 anúncios. Isso foi o que funcionou\""].map((h,i) => (
-                      <div key={i} className="flex gap-2">
-                        <span className="text-[10px] mt-0.5" style={{ color: "rgba(244,114,182,0.5)" }}>→</span>
-                        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "'Inter',sans-serif" }}>{h}</span>
+                  <div className="px-3 py-2.5 space-y-1.5">
+                    {["\"Você ainda está adivinhando o que funciona?\"", "\"O erro que está queimando seu orçamento hoje\"", "\"Testamos 200 anúncios. Só 12 funcionaram — eis o padrão\""].map((h, i) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="text-[10px] mt-0.5 shrink-0" style={{ color: "rgba(244,114,182,0.5)" }}>→</span>
+                        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)", fontFamily: "'Inter',sans-serif" }}>{h}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
