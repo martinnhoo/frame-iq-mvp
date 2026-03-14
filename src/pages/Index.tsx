@@ -264,9 +264,9 @@ const Index = () => {
               <div className="p-5" style={{ background: "#07070f" }}>
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   {([
-                    { label: "Budget saved", value: "38%", color: "#34d399" },
-                    { label: "Avg hook score", value: "7.4", color: "#a78bfa" },
-                    { label: "Winners found", value: "12", color: "#f472b6" },
+                    { label: t("hero_mock_stat1"), value: "38%", color: "#34d399" },
+                    { label: t("hero_mock_stat2"), value: "7.4", color: "#a78bfa" },
+                    { label: t("hero_mock_stat3"), value: "12", color: "#f472b6" },
                   ] as {label:string;value:string;color:string}[]).map(s => (
                     <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                       <p className="font-bold text-xl" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{s.value}</p>
@@ -286,10 +286,10 @@ const Index = () => {
                 <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(244,114,182,0.2)", background: "rgba(244,114,182,0.05)" }}>
                   <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid rgba(244,114,182,0.1)" }}>
                     <span className="text-sm">⚡</span>
-                    <span className="text-[11px] font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>3 hooks — predicted CTR 2.1%+</span>
+                    <span className="text-[11px] font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{t("hero_mock_label")}</span>
                   </div>
                   <div className="px-3 py-2.5 space-y-1.5">
-                    {["\"Você ainda está adivinhando o que funciona?\"", "\"O erro que está queimando seu orçamento hoje\"", "\"Testamos 200 anúncios. Só 12 funcionaram — eis o padrão\""].map((h, i) => (
+                    {[t("hero_hook1"), t("hero_hook2"), t("hero_hook3")].map((h, i) => (
                       <div key={i} className="flex gap-2 items-start">
                         <span className="text-[10px] mt-0.5 shrink-0" style={{ color: "rgba(244,114,182,0.5)" }}>→</span>
                         <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)", fontFamily: "'Inter',sans-serif" }}>{h}</span>
