@@ -16,12 +16,12 @@ export default function ToolPage() {
     <SeoLayout title="Tool Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>Tool not found.</p>
-        <button onClick={() => navigate("/tools")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer" }}>← Back to Tools</button>
+        <button onClick={() => navigate("/tools")} style={{ color: "#0ea5e9", background: "none", border: "none", cursor: "pointer" }}>← Back to Tools</button>
       </div>
     </SeoLayout>
   );
 
-  const accent = typeColor[tool.type] ?? "#a78bfa";
+  const accent = typeColor[tool.type] ?? "#0ea5e9";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -54,7 +54,7 @@ export default function ToolPage() {
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 28 }}>{tool.description}</p>
           <div style={{ display: "flex", gap: 12 }}>
             <button onClick={() => navigate(tool.dashboardRoute ?? "/signup")}
-              style={{ ...j, padding: "13px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+              style={{ ...j, padding: "13px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
               {tool.requiresAuth ? "Try free — create account" : "Try it free"}
             </button>
             <button onClick={() => navigate("/pricing")}
@@ -92,7 +92,7 @@ export default function ToolPage() {
             {SEO_TOOLS.filter(t => t.slug !== slug).slice(0, 6).map(t => (
               <button key={t.slug} onClick={() => navigate(`/tools/${t.slug}`)}
                 style={{ textAlign: "left", padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", transition: "border-color .15s" }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"}>
                 <p style={{ ...j, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 3 }}>{t.name}</p>
                 <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{t.description.slice(0, 55)}…</p>

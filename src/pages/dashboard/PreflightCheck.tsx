@@ -451,7 +451,7 @@ export default function PreflightCheck() {
                 placeholder="First line the viewer hears..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
-                onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(167,139,250,0.35)"; }}
+                onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(14,165,233,0.35)"; }}
                 onBlur={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
               />
             </div>
@@ -461,7 +461,7 @@ export default function PreflightCheck() {
                 placeholder="e.g. Jogue agora, acesse o link..."
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
-                onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(244,114,182,0.35)"; }}
+                onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(6,182,212,0.35)"; }}
                 onBlur={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
               />
             </div>
@@ -515,7 +515,7 @@ export default function PreflightCheck() {
             <div className="grid grid-cols-3 gap-1.5">
               {[
                 { id: "tofu", label: "ToFu", desc: "Awareness", color: "#60a5fa" },
-                { id: "mofu", label: "MoFu", desc: "Consideration", color: "#a78bfa" },
+                { id: "mofu", label: "MoFu", desc: "Consideration", color: "#0ea5e9" },
                 { id: "bofu", label: "BoFu", desc: "Conversion", color: "#34d399" },
               ].map(f => (
                 <button key={f.id} onClick={() => setFunnelStage(f.id)}
@@ -625,17 +625,17 @@ export default function PreflightCheck() {
             </div>
 
             {/* Hook Analysis */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(167,139,250,0.15)" }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(14,165,233,0.15)" }}>
               <SectionHeader label="Hook Analysis" icon={<Sparkles className="h-3.5 w-3.5" />} />
               <div className="p-4 space-y-4">
                 <div className="flex items-start gap-4">
                   {/* Score circle */}
                   <div className="shrink-0 h-14 w-14 rounded-2xl flex flex-col items-center justify-center"
-                    style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                    <span className="text-xl font-bold" style={{ color: "#a78bfa", ...mono }}>
+                    style={{ background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)" }}>
+                    <span className="text-xl font-bold" style={{ color: "#0ea5e9", ...mono }}>
                       {result.hook_analysis.score}
                     </span>
-                    <span className="text-[9px]" style={{ ...mono, color: "rgba(167,139,250,0.6)" }}>/10</span>
+                    <span className="text-[9px]" style={{ ...mono, color: "rgba(14,165,233,0.6)" }}>/10</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
@@ -654,9 +654,9 @@ export default function PreflightCheck() {
                   </div>
                 </div>
                 {result.hook_analysis.rewrite && (
-                  <div className="rounded-xl p-3" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                  <div className="rounded-xl p-3" style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)" }}>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#a78bfa" }}>
+                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#0ea5e9" }}>
                         <ArrowRight className="h-3 w-3 inline mr-1" />Suggested rewrite
                       </p>
                       <CopyBtn text={result.hook_analysis.rewrite} />
@@ -701,9 +701,9 @@ export default function PreflightCheck() {
                   </div>
                 </div>
                 {result.cta_check.suggestion && (
-                  <div className="rounded-xl p-3" style={{ background: "rgba(244,114,182,0.06)", border: "1px solid rgba(244,114,182,0.2)" }}>
+                  <div className="rounded-xl p-3" style={{ background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.2)" }}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#f472b6" }}>Suggested CTA</p>
+                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#06b6d4" }}>Suggested CTA</p>
                       <CopyBtn text={result.cta_check.suggestion} />
                     </div>
                     <p className="text-sm text-white/80" style={mono}>"{result.cta_check.suggestion}"</p>

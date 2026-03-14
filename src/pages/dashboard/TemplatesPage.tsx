@@ -1517,11 +1517,11 @@ export const CAT_META: Record<string, { label: string; color: string; emoji: str
   health:     { label: "Health",       color: "text-rose-400 bg-rose-400/10 border-rose-400/25",        emoji: "💊" },
   beauty:     { label: "Beauty",       color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/25",emoji: "💄" },
   food:       { label: "Food",         color: "text-orange-300 bg-orange-300/10 border-orange-300/25",  emoji: "🍔" },
-  gaming:     { label: "Gaming",       color: "text-purple-400 bg-purple-400/10 border-purple-400/25",  emoji: "🎮" },
+  gaming:     { label: "Gaming",       color: "text-sky-400 bg-sky-400/10 border-sky-400/25",  emoji: "🎮" },
   real_estate:{ label: "Real Estate",  color: "text-sky-400 bg-sky-400/10 border-sky-400/25",           emoji: "🏠" },
   education:  { label: "Education",    color: "text-blue-300 bg-blue-300/10 border-blue-300/25",        emoji: "📚" },
   travel:     { label: "Travel",       color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/25",        emoji: "✈️" },
-  igaming:    { label: "iGaming",      color: "text-purple-300 bg-purple-300/10 border-purple-300/25",  emoji: "🎰" },
+  igaming:    { label: "iGaming",      color: "text-purple-300 bg-sky-300/10 border-sky-300/25",  emoji: "🎰" },
   fintech:    { label: "Fintech",      color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/25",emoji: "💳" },
   saas:       { label: "SaaS",         color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "☁️" },
   fitness:    { label: "Fitness",      color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "💪" },
@@ -1552,16 +1552,16 @@ const PER_PAGE = 24;
 
 const getCatAccent = (cat: string): string => {
   const map: Record<string, string> = {
-    ugc: "#a78bfa", testimonial: "#34d399", promo: "#fb923c", tutorial: "#60a5fa",
-    hook: "#f87171", product: "#22d3ee", story: "#fbbf24", react: "#f472b6",
+    ugc: "#0ea5e9", testimonial: "#34d399", promo: "#fb923c", tutorial: "#60a5fa",
+    hook: "#f87171", product: "#22d3ee", story: "#fbbf24", react: "#06b6d4",
     app: "#a3e635", b2b: "#818cf8", seasonal: "#2dd4bf", ecommerce: "#facc15",
     finance: "#34d399", health: "#fb7185", beauty: "#e879f9", food: "#fb923c",
     gaming: "#c084fc", real_estate: "#38bdf8", education: "#93c5fd", travel: "#67e8f9",
     igaming: "#c084fc", fintech: "#6ee7b7", saas: "#60a5fa", fitness: "#4ade80",
     fashion: "#f9a8d4", automotive: "#a1a1aa", crypto: "#fde047", insurance: "#94a3b8",
-    hr: "#a78bfa", ngo: "#fda4af", pet: "#fcd34d",
+    hr: "#0ea5e9", ngo: "#fda4af", pet: "#fcd34d",
   };
-  return map[cat] || "#a78bfa";
+  return map[cat] || "#0ea5e9";
 };
 
 const TemplatesPage = () => {
@@ -1639,7 +1639,7 @@ const TemplatesPage = () => {
       <div className="flex items-start justify-between gap-3">
         <div>
            <h1 className="text-xl font-bold text-white flex items-center gap-2" style={syne}>
-            <Layers className="h-5 w-5" style={{ color: "#a78bfa" }} /> {ot("tp_title")}
+            <Layers className="h-5 w-5" style={{ color: "#0ea5e9" }} /> {ot("tp_title")}
           </h1>
           <p className="text-white/50 text-xs mt-1">
             <span className="text-white/50 font-semibold">{TEMPLATES.length}</span> {ot("tp_formats")} · {Object.keys(CAT_META).length} {ot("tp_industries")} ·{" "}
@@ -1693,7 +1693,7 @@ const TemplatesPage = () => {
             onClick={() => { setActiveDuration(d); setPage(1); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all min-h-[36px]"
             style={activeDuration === d
-              ? { background: "rgba(167,139,250,0.15)", borderColor: "rgba(167,139,250,0.4)", color: "#a78bfa" }
+              ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.4)", color: "#0ea5e9" }
               : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}
           >
             <Clock className="h-3 w-3" />{label}

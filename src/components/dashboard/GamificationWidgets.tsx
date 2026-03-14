@@ -19,8 +19,8 @@ interface MasteryLevel {
 const LEVELS: MasteryLevel[] = [
   { name: "gm_level_observer",   min: 0,   icon: "👁️",  color: "#94a3b8", bgColor: "rgba(148,163,184,0.10)", trackColor: "rgba(148,163,184,0.15)", label: "Observer"   },
   { name: "gm_level_analyst",    min: 5,   icon: "🔍",  color: "#60a5fa", bgColor: "rgba(96,165,250,0.10)",  trackColor: "rgba(96,165,250,0.15)",  label: "Analyst"    },
-  { name: "gm_level_strategist", min: 20,  icon: "🎯",  color: "#a78bfa", bgColor: "rgba(167,139,250,0.10)", trackColor: "rgba(167,139,250,0.15)", label: "Strategist" },
-  { name: "gm_level_producer",   min: 50,  icon: "🎬",  color: "#f472b6", bgColor: "rgba(244,114,182,0.10)", trackColor: "rgba(244,114,182,0.15)", label: "Producer"   },
+  { name: "gm_level_strategist", min: 20,  icon: "🎯",  color: "#0ea5e9", bgColor: "rgba(14,165,233,0.10)", trackColor: "rgba(14,165,233,0.15)", label: "Strategist" },
+  { name: "gm_level_producer",   min: 50,  icon: "🎬",  color: "#06b6d4", bgColor: "rgba(6,182,212,0.10)", trackColor: "rgba(6,182,212,0.15)", label: "Producer"   },
   { name: "gm_level_director",   min: 100, icon: "👑",  color: "#fbbf24", bgColor: "rgba(251,191,36,0.10)",  trackColor: "rgba(251,191,36,0.15)",  label: "Director"   },
 ];
 

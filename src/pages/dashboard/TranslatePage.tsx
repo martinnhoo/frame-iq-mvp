@@ -280,8 +280,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         onClick={() => fileRef.current?.click()}
         className="relative rounded-3xl border-2 border-dashed cursor-pointer transition-all"
         style={{
-          borderColor: drag ? "#a78bfa" : file ? "#34d399" : "rgba(255,255,255,0.1)",
-          background: drag ? "rgba(167,139,250,0.06)" : file ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
+          borderColor: drag ? "#0ea5e9" : file ? "#34d399" : "rgba(255,255,255,0.1)",
+          background: drag ? "rgba(14,165,233,0.06)" : file ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
           minHeight: file ? 72 : 180,
         }}>
         <input ref={fileRef} type="file" accept="video/*,audio/*" className="hidden"
@@ -308,8 +308,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         ) : (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="h-16 w-16 rounded-2xl mb-4 flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.15), rgba(244,114,182,0.1))", border: "1px solid rgba(167,139,250,0.2)" }}>
-              <Upload className="h-8 w-8" style={{ color: "#a78bfa" }} />
+              style={{ background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.2)" }}>
+              <Upload className="h-8 w-8" style={{ color: "#0ea5e9" }} />
             </div>
             <p className="text-white font-bold text-base mb-1" style={syne}>Drop your video here</p>
             <p className="text-white/40 text-sm">or click to browse · MP4, MOV, AVI, MP3, WAV</p>
@@ -327,7 +327,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         <div className="rounded-2xl p-5 space-y-4" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
+              <Loader2 className="h-4 w-4 animate-spin text-sky-400" />
               <span className="text-sm font-semibold text-white" style={syne}>{STEP_LABELS[step]}</span>
             </div>
             <span className="text-xs font-mono text-white/50">{overallProgress}%</span>
@@ -335,7 +335,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
             <div className="h-full rounded-full transition-all duration-500" style={{
               width: `${overallProgress}%`,
-              background: "linear-gradient(90deg, #a78bfa, #f472b6)",
+              background: "linear-gradient(90deg, #0ea5e9, #06b6d4)",
             }} />
           </div>
           <div className="flex gap-1">
@@ -344,8 +344,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               const done = stepIdx > i;
               const active = stepIdx === i;
               return (
-                <div key={s} className="flex items-center gap-1.5 text-xs" style={{ color: done ? "#34d399" : active ? "#a78bfa" : "rgba(255,255,255,0.15)" }}>
-                  {done ? <Check className="h-3 w-3" /> : active ? <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" /> : <div className="h-1.5 w-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }} />}
+                <div key={s} className="flex items-center gap-1.5 text-xs" style={{ color: done ? "#34d399" : active ? "#0ea5e9" : "rgba(255,255,255,0.15)" }}>
+                  {done ? <Check className="h-3 w-3" /> : active ? <div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" /> : <div className="h-1.5 w-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.1)" }} />}
                   <span>{s === "extracting" ? "Extract" : s === "uploading" ? "Upload" : s === "transcribing" ? "Transcribe" : "Translate"}</span>
                 </div>
               );
@@ -362,7 +362,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         </div>
         <button onClick={handleRun} disabled={!file || isProcessing}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-7 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+          style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
           {isProcessing ? <><Loader2 className="h-4 w-4 animate-spin" /> {STEP_LABELS[step]}</>
            : <><Wand2 className="h-4 w-4" /> Transcribe &amp; Translate</>}
         </button>
@@ -374,7 +374,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                <Mic className="h-4 w-4" style={{ color: "#0ea5e9" }} />
                 <span className="text-sm font-bold text-white" style={syne}>Original Transcript</span>
               </div>
               {transcript && (
@@ -501,7 +501,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                 <button key={t.id} onClick={() => setTone(t.id)}
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                   style={tone === t.id
-                    ? { background: "rgba(167,139,250,0.15)", borderColor: "rgba(167,139,250,0.5)", color: "#a78bfa" }
+                    ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.5)", color: "#0ea5e9" }
                     : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}>
                   {t.label}
                 </button>
@@ -514,7 +514,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-xs text-white/50" style={mono}>TARGET MARKETS</label>
-              <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", ...mono }}>{targetLangs.length}/6</span>
+              <span className="text-xs px-2 py-0.5 rounded-lg" style={{ background: "rgba(14,165,233,0.1)", color: "#0ea5e9", ...mono }}>{targetLangs.length}/6</span>
             </div>
             <div className="grid grid-cols-2 gap-1.5 max-h-80 overflow-y-auto">
               {LANGUAGES.filter(l => l.code !== sourceLang).map(l => {
@@ -523,8 +523,8 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                   <button key={l.code} onClick={() => toggleTarget(l.code)}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-left transition-all"
                     style={{
-                      background: active ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.02)",
-                      border: `1px solid ${active ? "rgba(167,139,250,0.35)" : "rgba(255,255,255,0.06)"}`,
+                      background: active ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.02)",
+                      border: `1px solid ${active ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.06)"}`,
                       color: active ? "#fff" : "rgba(255,255,255,0.4)",
                     }}>
                     <span className="text-base">{l.flag}</span>
@@ -536,13 +536,13 @@ const AdaptMode = ({ userId }: { userId: string }) => {
           </div>
           <button onClick={handleAdapt} disabled={loading || !input.trim() || !targetLangs.length}
             className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+            style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
             {loading
               ? <><Loader2 className="h-4 w-4 animate-spin" /> Adapting {targetLangs.length} markets...</>
               : <><Sparkles className="h-4 w-4" /> Adapt for {targetLangs.length} market{targetLangs.length !== 1 ? "s" : ""}</>}
           </button>
           <div className="rounded-2xl p-4 text-xs text-white/50 leading-relaxed"
-            style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.1)" }}>
+            style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)" }}>
             <p className="text-white/50 font-semibold mb-1">Not just translation.</p>
             AI rewrites hooks, adapts slang, urgency phrases, and cultural references — so your ad actually converts in each market.
           </div>
@@ -643,12 +643,12 @@ const TranslatePage = () => {
       {/* Mode description banner */}
       <div className="rounded-2xl p-4 flex items-start gap-3"
         style={{
-          background: mode === "transcribe" ? "rgba(167,139,250,0.06)" : "rgba(52,211,153,0.06)",
-          border: `1px solid ${mode === "transcribe" ? "rgba(167,139,250,0.15)" : "rgba(52,211,153,0.15)"}`,
+          background: mode === "transcribe" ? "rgba(14,165,233,0.06)" : "rgba(52,211,153,0.06)",
+          border: `1px solid ${mode === "transcribe" ? "rgba(14,165,233,0.15)" : "rgba(52,211,153,0.15)"}`,
         }}>
         {mode === "transcribe" ? (
           <>
-            <Mic className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#a78bfa" }} />
+            <Mic className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#0ea5e9" }} />
             <div>
               <p className="text-sm font-bold text-white" style={syne}>Drop any video — get the full script</p>
               <p className="text-xs text-white/40 mt-0.5 leading-relaxed">Upload a competitor ad, your own footage, or a reference clip. AI extracts the transcript in the original language, then translates it to your target language — perfect for briefing editors.</p>

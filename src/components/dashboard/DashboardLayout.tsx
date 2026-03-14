@@ -249,7 +249,7 @@ export default function DashboardLayout() {
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
               style={selectedPersona
-                ? { background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", color: "#a78bfa" }
+                ? { background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9" }
                 : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }
               }
             >
@@ -270,7 +270,7 @@ export default function DashboardLayout() {
                    <p className="text-xs text-white/50 mb-3">{dt("ov_no_personas_yet")}</p>
                      <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
-                       style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                       style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)" }}>
                        <Sparkles className="h-3 w-3" /> {dt("ov_create_first_persona")}
                      </button>
                   </div>
@@ -286,13 +286,13 @@ export default function DashboardLayout() {
                     {savedPersonas.map(p => (
                       <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.08] transition-colors"
-                        style={selectedPersona?.id === p.id ? { background: "rgba(167,139,250,0.08)" } : {}}>
-                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-base shrink-0" style={{ background: "rgba(167,139,250,0.1)" }}>{p.avatar_emoji}</span>
+                        style={selectedPersona?.id === p.id ? { background: "rgba(14,165,233,0.08)" } : {}}>
+                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-base shrink-0" style={{ background: "rgba(14,165,233,0.1)" }}>{p.avatar_emoji}</span>
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-white truncate">{p.name}</p>
                           <p className="text-[10px] text-white/50 truncate">{p.headline}</p>
                         </div>
-                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-purple-400 shrink-0">{dt("pe_active")}</span>}
+                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-sky-400 shrink-0">{dt("pe_active")}</span>}
                       </button>
                     ))}
                     <div className="px-3 py-2 border-t border-white/[0.12]">
@@ -340,18 +340,18 @@ export default function DashboardLayout() {
       {vikaPopup && welcomeMsg && (
         <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
           <div className="relative w-full max-w-sm rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()}
-            style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(167,139,250,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
+            style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(14,165,233,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
             <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
               @keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity:1; } 100% { transform: translateY(60px) rotate(360deg); opacity:0; } }
               .confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation: confetti 1.5s ease-out forwards; }
             `}</style>
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, rgba(167,139,250,0.2), transparent 70%)" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% 0%, rgba(14,165,233,0.2), transparent 70%)" }} />
             {/* Confetti */}
             {[...Array(12)].map((_, i) => (
               <div key={i} className="confetti-piece pointer-events-none"
                 style={{
                   left: `${10 + Math.random() * 80}%`, top: `${5 + Math.random() * 20}%`,
-                  background: ["#a78bfa","#f472b6","#fbbf24","#34d399","#60a5fa"][i % 5],
+                  background: ["#0ea5e9","#06b6d4","#fbbf24","#34d399","#60a5fa"][i % 5],
                   animationDelay: `${i * 0.1}s`, transform: `rotate(${Math.random() * 360}deg)`,
                 }} />
             ))}
@@ -368,7 +368,7 @@ export default function DashboardLayout() {
               </p>
               <button onClick={() => setVikaPopup(false)}
                 className="mt-2 px-6 py-2.5 rounded-xl text-sm font-bold text-black transition-all hover:scale-105"
-                style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+                style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>
                 <PartyPopper className="inline h-4 w-4 mr-1.5 -mt-0.5" />
                 Vamos lá!
               </button>

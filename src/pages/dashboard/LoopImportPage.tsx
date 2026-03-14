@@ -241,8 +241,8 @@ export default function LoopImportPage() {
               if (!sampleName) return null;
               const parsed = parseFilename(sampleName);
               return (
-                <div style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.12)", borderRadius: 14, padding: "14px 16px" }}>
-                  <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>PARSED FROM: <span style={{ color: "#a78bfa" }}>{sampleName}</span></p>
+                <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 14, padding: "14px 16px" }}>
+                  <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>PARSED FROM: <span style={{ color: "#0ea5e9" }}>{sampleName}</span></p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {Object.entries(parsed).map(([k, v]) => (
                       <span key={k} style={{ ...m, fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)" }}>
@@ -255,7 +255,7 @@ export default function LoopImportPage() {
             })()}
 
             <Button onClick={processImport} disabled={loading} className="w-full gap-2"
-              style={{ background: "linear-gradient(135deg, #60a5fa, #a78bfa)", color: "#000" }}>
+              style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)", color: "#000" }}>
               {loading ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               {loading ? "Processing..." : "Import & Parse Creatives"}
             </Button>
@@ -275,7 +275,7 @@ export default function LoopImportPage() {
             {results.skipped > 0 && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>⚠ {results.skipped} skipped</span>}
           </div>
           <Button onClick={() => navigate("/dashboard/loop")} className="gap-2"
-            style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+            style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
             Go to Loop → Run Learning
           </Button>
         </div>

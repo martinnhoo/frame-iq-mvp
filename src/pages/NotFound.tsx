@@ -30,7 +30,7 @@ const NotFound = () => {
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
             style={{
-              background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.1) 0%, transparent 60%)',
+              background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.1) 0%, transparent 60%)',
               filter: 'blur(60px)',
             }}
           />
@@ -52,7 +52,7 @@ const NotFound = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0"
                 asChild
               >
                 <Link to="/">

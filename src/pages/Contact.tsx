@@ -52,7 +52,7 @@ const Contact = () => {
               Sign in
             </Button>
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+              className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0"
               onClick={() => navigate("/signup")}
             >
               Get started free
@@ -70,7 +70,7 @@ const Contact = () => {
                   <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
                   <Link to="/blog" className="text-lg text-secondary hover:text-foreground">Blog</Link>
                   <Link to="/contact" className="text-lg text-foreground">Contact</Link>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>
+                  <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white" onClick={() => navigate("/signup")}>
                     Get started
                   </Button>
                 </div>
@@ -129,7 +129,7 @@ const Contact = () => {
                 <Button
                   type="submit"
                   disabled={sending}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 h-11"
+                  className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0 h-11"
                 >
                   {sending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -145,7 +145,7 @@ const Contact = () => {
             <div className="max-w-lg mx-auto">
               <a 
                 href="mailto:support@adbrief.pro"
-                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-purple-500/30"
+                className="flex items-center justify-center gap-3 p-6 rounded-2xl transition-all duration-300 hover:border-sky-500/30"
                 style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
               >
                 <div 
@@ -169,7 +169,7 @@ const Contact = () => {
                 Need API access, custom integrations, or a dedicated CSM? Book a call with our team to discuss how AdBrief can fit your workflow.
               </p>
               <Button 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0"
                 onClick={() => navigate("/book-demo")}
               >
                 Book a demo call

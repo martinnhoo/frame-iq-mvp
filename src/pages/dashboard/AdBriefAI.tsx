@@ -16,9 +16,9 @@ interface Block {
 interface AIMessage { role: "user" | "assistant"; blocks?: Block[]; userText?: string; ts: number; }
 
 const BS: Record<Block["type"], { color: string; icon: string; bg: string; border: string }> = {
-  action:    { color: "#a78bfa", icon: "🎯", bg: "rgba(167,139,250,0.07)", border: "rgba(167,139,250,0.2)"  },
+  action:    { color: "#0ea5e9", icon: "🎯", bg: "rgba(14,165,233,0.07)", border: "rgba(14,165,233,0.2)"  },
   pattern:   { color: "#60a5fa", icon: "📊", bg: "rgba(96,165,250,0.07)",  border: "rgba(96,165,250,0.2)"  },
-  hooks:     { color: "#f472b6", icon: "⚡", bg: "rgba(244,114,182,0.07)", border: "rgba(244,114,182,0.2)" },
+  hooks:     { color: "#06b6d4", icon: "⚡", bg: "rgba(6,182,212,0.07)", border: "rgba(6,182,212,0.2)" },
   warning:   { color: "#fbbf24", icon: "⚠️", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.2)"  },
   insight:   { color: "#34d399", icon: "🧠", bg: "rgba(52,211,153,0.07)",  border: "rgba(52,211,153,0.2)"  },
   off_topic: { color: "rgba(255,255,255,0.25)", icon: "🚫", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)" },
@@ -185,7 +185,7 @@ export default function AdBriefAI() {
 
       {/* Header */}
       <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#a78bfa,#f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Brain size={16} color="#000" />
         </div>
         <div>
@@ -229,14 +229,14 @@ export default function AdBriefAI() {
           <div key={i} style={{ maxWidth: 640, margin: "0 auto 20px" }}>
             {msg.role === "user" ? (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
-                <div style={{ padding: "10px 14px", borderRadius: 14, background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.2)", fontSize: 13, color: "rgba(255,255,255,0.85)", ...j, maxWidth: "80%" }}>
+                <div style={{ padding: "10px 14px", borderRadius: 14, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.2)", fontSize: 13, color: "rgba(255,255,255,0.85)", ...j, maxWidth: "80%" }}>
                   {msg.userText}
                 </div>
               </div>
             ) : (
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg,#a78bfa,#f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Sparkles size={10} color="#000" />
                   </div>
                   <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em" }}>ADBRIEF AI</span>
@@ -249,12 +249,12 @@ export default function AdBriefAI() {
 
         {loading && (
           <div style={{ maxWidth: 640, margin: "0 auto 20px", display: "flex", gap: 8, alignItems: "center" }}>
-            <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg,#a78bfa,#f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Sparkles size={10} color="#000" />
             </div>
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
               {[0,1,2].map(d => (
-                <div key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#a78bfa", opacity: 0.6, animation: `pulse 1.2s ease-in-out ${d*0.2}s infinite` }} />
+                <div key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", opacity: 0.6, animation: `pulse 1.2s ease-in-out ${d*0.2}s infinite` }} />
               ))}
             </div>
           </div>
@@ -282,8 +282,8 @@ export default function AdBriefAI() {
           <button
             onClick={() => send()}
             disabled={!input.trim() || loading || !contextReady}
-            style={{ width: 44, height: 44, borderRadius: 12, background: input.trim() && !loading ? "linear-gradient(135deg,#a78bfa,#f472b6)" : "rgba(255,255,255,0.06)", border: "none", cursor: input.trim() && !loading ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
-            {loading ? <Loader2 size={16} color="#a78bfa" className="animate-spin" /> : <Send size={16} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
+            style={{ width: 44, height: 44, borderRadius: 12, background: input.trim() && !loading ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.06)", border: "none", cursor: input.trim() && !loading ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+            {loading ? <Loader2 size={16} color="#0ea5e9" className="animate-spin" /> : <Send size={16} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
           </button>
         </div>
         <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: 8, letterSpacing: "0.06em" }}>

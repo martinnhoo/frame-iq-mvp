@@ -55,9 +55,9 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const FEATURES_STATIC = [
-  { value: "analyze",      url: "/dashboard/analyses/new", emoji: "🔍", accent: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "analyze",      url: "/dashboard/analyses/new", emoji: "🔍", accent: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
   { value: "board",        url: "/dashboard/boards/new",   emoji: "🎬", accent: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "templates",    url: "/dashboard/templates",    emoji: "📋", accent: "#f472b6", bg: "rgba(244,114,182,0.08)", border: "rgba(244,114,182,0.2)" },
+  { value: "templates",    url: "/dashboard/templates",    emoji: "📋", accent: "#06b6d4", bg: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.2)" },
   { value: "translate",    url: "/dashboard/translate",    emoji: "🌍", accent: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
   { value: "preflight",    url: "/dashboard/preflight",    emoji: "✅", accent: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.2)" },
   { value: "intelligence", url: "/dashboard/intelligence", emoji: "🧠", accent: "#c084fc", bg: "rgba(192,132,252,0.08)", border: "rgba(192,132,252,0.2)" },
@@ -230,7 +230,7 @@ export default function Onboarding() {
 
       {/* Progress */}
       <div className="h-px bg-white/[0.05] mx-6 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #a78bfa, #f472b6)" }} />
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #0ea5e9, #06b6d4)" }} />
       </div>
 
       {/* Content */}
@@ -301,10 +301,10 @@ export default function Onboarding() {
                       setTimeout(goNext, 220);
                     }}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all duration-150"
-                      style={{ borderColor: active ? "rgba(167,139,250,0.5)" : "rgba(255,255,255,0.07)", background: active ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.02)" }}>
+                      style={{ borderColor: active ? "rgba(14,165,233,0.5)" : "rgba(255,255,255,0.07)", background: active ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.02)" }}>
                       <span className="text-xl">{lang.flag}</span>
                       <span className={`text-sm font-medium flex-1 ${active ? "text-white" : "text-white/50"}`}>{lang.label}</span>
-                      {active && <Check className="h-3.5 w-3.5 text-purple-400 shrink-0" />}
+                      {active && <Check className="h-3.5 w-3.5 text-sky-400 shrink-0" />}
                     </button>
                   );
                 })}
@@ -330,7 +330,7 @@ export default function Onboarding() {
                   return (
                     <button key={src.value} onClick={() => { set("source", src.value); if (src.value !== "other") setTimeout(goNext, 220); }}
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl border text-left transition-all duration-150"
-                      style={{ borderColor: active ? "rgba(244,114,182,0.45)" : "rgba(255,255,255,0.07)", background: active ? "rgba(244,114,182,0.08)" : "rgba(255,255,255,0.02)" }}>
+                      style={{ borderColor: active ? "rgba(6,182,212,0.45)" : "rgba(255,255,255,0.07)", background: active ? "rgba(6,182,212,0.08)" : "rgba(255,255,255,0.02)" }}>
                       <span className="text-base w-5 text-center">{src.emoji}</span>
                       <span className={`text-sm font-medium ${active ? "text-white" : "text-white/50"}`}>{getSourceLabel(src.value)}</span>
                     </button>
@@ -402,7 +402,7 @@ export default function Onboarding() {
                   { emoji: "🔄", title: ot("persona_b3_t"), desc: ot("persona_b3_d") },
                 ].map(({ emoji, title, desc }) => (
                   <div key={title} className="flex items-start gap-4 px-4 py-4 rounded-2xl"
-                    style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.12)" }}>
+                    style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.12)" }}>
                     <span className="text-xl shrink-0">{emoji}</span>
                     <div>
                       <p className="text-sm font-semibold text-white">{title}</p>
@@ -415,7 +415,7 @@ export default function Onboarding() {
               <div className="space-y-3">
                 <button onClick={() => { finish(); setTimeout(() => window.location.href = "/dashboard/persona", 500); }}
                   className="w-full py-3.5 rounded-2xl font-bold text-sm text-black transition-all"
-                  style={{ ...syne, background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+                  style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>
                   {ot("persona_cta")}
                 </button>
                 <button onClick={goNext}
@@ -441,10 +441,10 @@ export default function Onboarding() {
               <div className="space-y-2.5">
                 {PLANS.map(plan => (
                   <div key={plan.key} className="relative rounded-2xl border p-4"
-                    style={{ borderColor: plan.highlight ? "rgba(167,139,250,0.35)" : "rgba(255,255,255,0.07)", background: plan.highlight ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.02)" }}>
+                    style={{ borderColor: plan.highlight ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.07)", background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)" }}>
                     {plan.highlight && (
                       <span className="absolute top-3.5 right-3.5 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide"
-                        style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", ...mono }}>
+                        style={{ background: "rgba(14,165,233,0.2)", color: "#0ea5e9", ...mono }}>
                         {ot("plan_most_popular")}
                       </span>
                     )}

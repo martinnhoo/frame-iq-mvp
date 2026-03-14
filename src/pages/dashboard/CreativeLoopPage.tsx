@@ -40,8 +40,8 @@ interface LoopStats {
 
 const CYCLE_STEPS = [
   { id: "import",  label: "Import Data",   icon: Upload,      color: "#60a5fa", desc: "Connect your ad performance data" },
-  { id: "parse",   label: "Parse Creatives", icon: FileText,  color: "#a78bfa", desc: "AI extracts metadata from filenames" },
-  { id: "learn",   label: "Find Patterns",  icon: Brain,      color: "#f472b6", desc: "AI discovers winning combinations" },
+  { id: "parse",   label: "Parse Creatives", icon: FileText,  color: "#0ea5e9", desc: "AI extracts metadata from filenames" },
+  { id: "learn",   label: "Find Patterns",  icon: Brain,      color: "#06b6d4", desc: "AI discovers winning combinations" },
   { id: "predict", label: "Score & Brief",  icon: Target,     color: "#34d399", desc: "Predict before spending" },
   { id: "ship",    label: "Ship & Track",   icon: TrendingUp, color: "#fbbf24", desc: "Performance feeds back into the loop" },
 ];
@@ -153,7 +153,7 @@ export default function CreativeLoopPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 24 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#a78bfa,#f472b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <RefreshCw size={16} color="#000" />
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>Performance Loop</h1>
@@ -168,7 +168,7 @@ export default function CreativeLoopPage() {
             <Settings size={13} /> Naming rules
           </button>
           <button onClick={runLearning} disabled={learning || !hasData}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: hasData ? "linear-gradient(135deg,#a78bfa,#f472b6)" : "rgba(255,255,255,0.05)", color: hasData ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 700, cursor: hasData ? "pointer" : "not-allowed", border: "none" }}>
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: hasData ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.05)", color: hasData ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 700, cursor: hasData ? "pointer" : "not-allowed", border: "none" }}>
             {learning ? <Loader2 size={13} className="animate-spin" /> : <Brain size={13} />}
             {learning ? "Learning..." : "Run Learning"}
           </button>
@@ -219,7 +219,7 @@ export default function CreativeLoopPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
         {[
           { label: "Creatives", value: String(stats.totalEntries), color: "#60a5fa", icon: FileText },
-          { label: "Patterns", value: String(stats.totalPatterns), sub: `${stats.winners} winning`, color: "#a78bfa", icon: Brain },
+          { label: "Patterns", value: String(stats.totalPatterns), sub: `${stats.winners} winning`, color: "#0ea5e9", icon: Brain },
           { label: "Avg CTR", value: stats.avgCtr ? `${(stats.avgCtr*100).toFixed(2)}%` : "—", color: "#34d399", icon: TrendingUp },
           { label: "Top Platform", value: stats.topPlatform || "—", color: "#fbbf24", icon: Zap },
         ].map(s => (
@@ -246,7 +246,7 @@ export default function CreativeLoopPage() {
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => navigate("/dashboard/loop/import")}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#60a5fa,#a78bfa)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#60a5fa,#0ea5e9)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
               <Upload size={14} /> Import Data
             </button>
             <button onClick={() => navigate("/dashboard/loop/settings")}
@@ -295,7 +295,7 @@ export default function CreativeLoopPage() {
       {hasPatterns && (
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <Brain size={14} style={{ color: "#a78bfa" }} />
+            <Brain size={14} style={{ color: "#0ea5e9" }} />
             <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>All Patterns</span>
             <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{patterns.length} discovered</span>
           </div>
@@ -327,7 +327,7 @@ export default function CreativeLoopPage() {
                     <td style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.35)", padding: "10px" }}>{p.sample_size}</td>
                     <td style={{ padding: "10px" }}>
                       <div style={{ width: 60, height: 4, borderRadius: 999, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${p.confidence*100}%`, background: p.is_winner ? "#34d399" : "#a78bfa", borderRadius: 999 }} />
+                        <div style={{ height: "100%", width: `${p.confidence*100}%`, background: p.is_winner ? "#34d399" : "#0ea5e9", borderRadius: 999 }} />
                       </div>
                     </td>
                     <td style={{ padding: "10px" }}>

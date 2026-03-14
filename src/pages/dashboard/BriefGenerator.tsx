@@ -115,8 +115,8 @@ export default function BriefGenerator() {
 
       {/* Persona context badge */}
       {personaApplied && selectedPersona && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
-          <Brain className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
+          <Brain className="h-3.5 w-3.5" style={{ color: "#0ea5e9" }} />
           <span className="text-xs text-muted-foreground" style={mono}>
             Persona <strong className="text-foreground">{selectedPersona.name}</strong> auto-applied — audience, market & context pre-filled
           </span>
@@ -178,7 +178,7 @@ export default function BriefGenerator() {
           <Textarea placeholder="Brand guidelines, compliance rules, past campaign learnings..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #a78bfa)" }}>
+        <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? "Generating brief..." : "Generate Creative Brief"}
         </Button>
@@ -200,7 +200,7 @@ export default function BriefGenerator() {
           {b.target_audience && (
             <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                <Users className="h-4 w-4" style={{ color: "#0ea5e9" }} />
                 <span className="text-sm font-bold text-foreground" style={syne}>Target Audience</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm" style={mono}>
@@ -229,7 +229,7 @@ export default function BriefGenerator() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
-                <Target className="h-4 w-4" style={{ color: "#f472b6" }} />
+                <Target className="h-4 w-4" style={{ color: "#06b6d4" }} />
                 <span className="text-sm font-bold text-foreground" style={syne}>Core Message</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.core_message}</p>

@@ -206,7 +206,7 @@ const NewAnalysis = () => {
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-purple-400" />
+            <BarChart3 className="h-5 w-5 text-sky-400" />
             <h1 className="text-lg font-bold text-white" style={{ ...syne, letterSpacing: "-0.02em" }}>New Analysis</h1>
           </div>
         </div>
@@ -226,7 +226,7 @@ const NewAnalysis = () => {
                 <label className="text-xs text-white/40 uppercase tracking-wider">Market</label>
                 {selectedPersona && !marketOverridden && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                    style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
+                    style={{ background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", color: "#0ea5e9" }}>
                     via {selectedPersona.name.split(" ")[0]}
                   </span>
                 )}
@@ -241,7 +241,7 @@ const NewAnalysis = () => {
                 {MARKETS.map(m => (
                   <button key={m.code} onClick={() => { setMarket(m.code); setMarketOverridden(true); }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm border transition-all ${
-                      market === m.code ? "border-purple-400/50 bg-purple-500/10 text-white" : "border-white/[0.15] text-white/40 hover:text-white/70 hover:border-white/15"
+                      market === m.code ? "border-sky-400/50 bg-sky-500/10 text-white" : "border-white/[0.15] text-white/40 hover:text-white/70 hover:border-white/15"
                     }`}>
                     <span>{m.flag}</span> {m.name}
                   </button>
@@ -251,7 +251,7 @@ const NewAnalysis = () => {
 
             {/* Drop zone */}
             <div className={`rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
-              isDragging ? "border-purple-400/60 bg-purple-500/10" : file ? "border-green-400/40 bg-green-500/5" : "border-white/[0.1] hover:border-white/20 hover:bg-white/[0.06]"
+              isDragging ? "border-sky-400/60 bg-sky-500/10" : file ? "border-green-400/40 bg-green-500/5" : "border-white/[0.1] hover:border-white/20 hover:bg-white/[0.06]"
             }`} onDragOver={e => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} onClick={() => !file && fileRef.current?.click()}>
               <input ref={fileRef} type="file" accept="video/*" onChange={handleFileInput} className="hidden" />
               {file ? (
@@ -295,7 +295,7 @@ const NewAnalysis = () => {
             <button
               onClick={() => { if (!selectedPersona) { setShowPersonaGate(true); } else { startAnalysis(); } }}
               disabled={!file && !videoUrl.trim()}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               Start Analysis
             </button>
@@ -303,7 +303,7 @@ const NewAnalysis = () => {
             {!selectedPersona && (
               <p className="text-center text-[11px] text-white/45 -mt-1">
                 💡{" "}
-                <button onClick={() => setShowPersonaGate(true)} className="text-purple-400/70 hover:text-purple-400 underline transition-colors">
+                <button onClick={() => setShowPersonaGate(true)} className="text-sky-400/70 hover:text-sky-400 underline transition-colors">
                   Ative uma persona
                 </button>{" "}
                 para resultados mais precisos
@@ -318,7 +318,7 @@ const NewAnalysis = () => {
                   <Check className="h-6 w-6 text-green-400" />
                 </div>
               ) : (
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-400 mb-3" />
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-sky-400 mb-3" />
               )}
               <h3 className="text-lg font-semibold text-white" style={syne}>
                 {step === "done" ? "Analysis complete!" : "Analyzing your video..."}
@@ -334,7 +334,7 @@ const NewAnalysis = () => {
                 return (
                   <div key={s} className={`flex items-center gap-3 transition-all duration-300 ${isDone || isActive ? "text-white" : "text-white/40"}`}>
                     {isDone ? <Check className="h-4 w-4 text-green-400 shrink-0" /> : isActive ? (
-                      <div className="h-4 w-4 shrink-0 flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" /></div>
+                      <div className="h-4 w-4 shrink-0 flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" /></div>
                     ) : (
                       <div className="h-4 w-4 shrink-0 flex items-center justify-center"><div className="h-1.5 w-1.5 rounded-full bg-white/10" /></div>
                     )}
@@ -346,7 +346,7 @@ const NewAnalysis = () => {
 
             <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
               <div className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress}%`, background: step === "done" ? "#34d399" : "linear-gradient(90deg, #a78bfa, #f472b6)" }} />
+                style={{ width: `${overallProgress}%`, background: step === "done" ? "#34d399" : "linear-gradient(90deg, #0ea5e9, #06b6d4)" }} />
             </div>
             <p className="text-xs text-white/40 text-center font-mono">{overallProgress}%</p>
           </div>

@@ -28,13 +28,13 @@ export function SeoCTA({ headline, sub, primaryLabel, primaryHref = "/signup", s
   const pl = primaryLabel ?? copy.primaryLabel;
 
   return (
-    <div style={{ margin: "80px 24px 0", borderRadius: 24, padding: "56px 40px", textAlign: "center", background: "linear-gradient(135deg,rgba(167,139,250,0.12) 0%,rgba(244,114,182,0.07) 100%)", border: "1px solid rgba(167,139,250,0.18)", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(167,139,250,0.25),transparent 70%)", pointerEvents: "none" }} />
+    <div style={{ margin: "80px 24px 0", borderRadius: 24, padding: "56px 40px", textAlign: "center", background: "linear-gradient(135deg,rgba(14,165,233,0.12) 0%,rgba(6,182,212,0.07) 100%)", border: "1px solid rgba(14,165,233,0.18)", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(14,165,233,0.25),transparent 70%)", pointerEvents: "none" }} />
       <h2 style={{ ...j, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 12, position: "relative" }}>{h}</h2>
       <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, margin: "0 auto 28px", lineHeight: 1.6, position: "relative" }}>{s}</p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", position: "relative" }}>
         <button onClick={() => navigate(primaryHref)}
-          style={{ ...j, padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+          style={{ ...j, padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
           {pl}
         </button>
         {secondaryLabel && (

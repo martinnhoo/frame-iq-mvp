@@ -70,7 +70,7 @@ const LanguageSwitcher = ({ direction = "auto" }: { direction?: "up" | "down" | 
               <span className="text-base">{lang.flag}</span>
               <span>{lang.name}</span>
               {language === lang.code && (
-                <span className="ml-auto text-purple-400 text-xs">✓</span>
+                <span className="ml-auto text-sky-400 text-xs">✓</span>
               )}
             </button>
           ))}

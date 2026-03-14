@@ -28,7 +28,7 @@ interface IntelItem {
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
-const GradText = ({ children, from = "#a78bfa", to = "#f472b6" }: { children: React.ReactNode; from?: string; to?: string }) => (
+const GradText = ({ children, from = "#0ea5e9", to = "#06b6d4" }: { children: React.ReactNode; from?: string; to?: string }) => (
   <span style={{ background: `linear-gradient(135deg, ${from}, ${to})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
     {children}
   </span>
@@ -101,7 +101,7 @@ const DashboardOverview = () => {
         const s = (a.result as Record<string, unknown>)?.hook_score as number || 0;
         return s > (best?.r?.hook_score as number || 0) ? { r: a.result as Record<string, unknown>, t: a.title || "Untitled" } : best;
       }, null);
-      if (bestEntry?.r.creative_model) feed.push({ id: "best", icon: "⚡", color: "#a78bfa", borderColor: "rgba(167,139,250,0.2)", title: `Best: ${String(bestEntry.t).slice(0, 28)}`, body: `Model "${bestEntry.r.creative_model}" — score ${bestEntry.r.hook_score}/10. Replicate this format.`, url: "/dashboard/boards/new", tag: "Insight" });
+      if (bestEntry?.r.creative_model) feed.push({ id: "best", icon: "⚡", color: "#0ea5e9", borderColor: "rgba(14,165,233,0.2)", title: `Best: ${String(bestEntry.t).slice(0, 28)}`, body: `Model "${bestEntry.r.creative_model}" — score ${bestEntry.r.hook_score}/10. Replicate this format.`, url: "/dashboard/boards/new", tag: "Insight" });
       if (data.length < 3) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Score hooks before spending", body: "Hook Generator predicts performance in 30s — before you commit to production.", url: "/dashboard/hooks", tag: "Tip" });
       setIntelFeed(feed.slice(0, 4));
       const points: Record<string, { sum: number; count: number }> = {};
@@ -145,11 +145,11 @@ const DashboardOverview = () => {
   const isFree = !profile?.plan || profile.plan === "free";
 
   const quickActions = [
-    { title: "Analyze video",     desc: "Hook score in 60s",        icon: BarChart3,  url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
+    { title: "Analyze video",     desc: "Hook score in 60s",        icon: BarChart3,  url: "/dashboard/analyses/new", accent: "#0ea5e9", badge: "AI" },
     { title: "Create board",      desc: "Production brief",         icon: LayoutGrid, url: "/dashboard/boards/new",   accent: "#60a5fa" },
     { title: "Hook Generator",    desc: "10 angles in 30s",         icon: Cpu,        url: "/dashboard/hooks",        accent: "#fb923c", badge: "AI" },
     { title: "Translate",         desc: "18 markets",               icon: Languages,  url: "/dashboard/translate",    accent: "#34d399" },
-    { title: "Templates",         desc: "183 proven formats",       icon: Sparkles,   url: "/dashboard/templates",    accent: "#f472b6" },
+    { title: "Templates",         desc: "183 proven formats",       icon: Sparkles,   url: "/dashboard/templates",    accent: "#06b6d4" },
     { title: "Pre-flight",        desc: "Check before going live",  icon: Plane,      url: "/dashboard/preflight",    accent: "#fbbf24" },
     { title: "Competitor decode", desc: "Reverse-engineer ads",     icon: Brain,      url: "/dashboard/competitor",   accent: "#22d3ee", badge: "AI" },
     { title: "Persona",           desc: "Define your audience",     icon: Target,     url: "/dashboard/persona",      accent: "#c084fc" },
@@ -175,7 +175,7 @@ const DashboardOverview = () => {
           {isFree && (
             <button onClick={() => navigate("/pricing")}
               className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95"
-              style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+              style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
               <Zap className="h-3 w-3" /> Upgrade
             </button>
           )}
@@ -190,7 +190,7 @@ const DashboardOverview = () => {
           <p className="text-[10px] uppercase tracking-[0.2em] text-white/45 mb-3" style={mono}>This month</p>
           <div className="rounded-2xl overflow-hidden" style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
             {[
-              { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#a78bfa", icon: BarChart3 },
+              { label: "Analyses", used: usedAnalyses, limit: limits.analyses, url: "/dashboard/analyses/new", accent: "#0ea5e9", icon: BarChart3 },
               { label: "Boards",   used: usedBoards,   limit: limits.boards,   url: "/dashboard/boards/new",   accent: "#60a5fa", icon: LayoutGrid },
               { label: "Videos",   used: usedVideos,   limit: limits.videos,   url: "/dashboard/videos",       accent: "#34d399", icon: Video },
             ].map((s, i, arr) => {
@@ -270,8 +270,8 @@ const DashboardOverview = () => {
           style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(167,139,250,0.12)" }}>
-                <Brain className="h-4 w-4" style={{ color: "#a78bfa" }} />
+              <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(14,165,233,0.12)" }}>
+                <Brain className="h-4 w-4" style={{ color: "#0ea5e9" }} />
               </div>
               <div>
                 <p className="text-sm font-bold text-white" style={syne}>Intelligence feed</p>
@@ -288,14 +288,14 @@ const DashboardOverview = () => {
             {intelFeed.length === 0 ? (
               <div className="flex flex-col items-center text-center py-10 gap-4">
                 <div className="h-16 w-16 rounded-2xl flex items-center justify-center text-3xl"
-                  style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>🧠</div>
+                  style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>🧠</div>
                 <div>
                   <p className="text-sm font-bold text-white mb-1" style={syne}>No insights yet</p>
                   <p className="text-xs text-white/50 leading-relaxed">Analyze a few videos to unlock<br />AI-powered creative insights</p>
                 </div>
                 <button onClick={() => navigate("/dashboard/analyses/new")}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-                  style={{ ...syne, background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }}>
+                  style={{ ...syne, background: "rgba(14,165,233,0.12)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)" }}>
                   <Plus className="h-3.5 w-3.5" /> Start analyzing
                 </button>
               </div>
@@ -329,14 +329,14 @@ const DashboardOverview = () => {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] text-white/45 uppercase tracking-widest" style={mono}>Hook score trend</span>
                 <span className="text-[10px] text-white/40" style={mono}>
-                  latest: <span style={{ color: "#a78bfa" }}>{trendData[trendData.length - 1]?.score.toFixed(1)}/10</span>
+                  latest: <span style={{ color: "#0ea5e9" }}>{trendData[trendData.length - 1]?.score.toFixed(1)}/10</span>
                 </span>
               </div>
               <div className="flex items-end gap-1 h-12">
                 {trendData.map((p, i) => {
                   const h = Math.round((p.score / 10) * 100);
                   const isLast = i === trendData.length - 1;
-                  const color = p.score >= 7 ? "#34d399" : p.score >= 5 ? "#a78bfa" : "#f87171";
+                  const color = p.score >= 7 ? "#34d399" : p.score >= 5 ? "#0ea5e9" : "#f87171";
                   return (
                     <div key={i} title={`${p.score} · ${p.date}`}
                       className="flex-1 rounded-sm transition-all"
@@ -382,8 +382,8 @@ const DashboardOverview = () => {
               ) : (
                 <div className="space-y-4">
                   {[
-                    { label: "Avg hook score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#a78bfa" },
-                    { label: "Top model",       value: insights.bestModel || "—",         accent: "#f472b6" },
+                    { label: "Avg hook score", value: insights.avgHookScore ? `${insights.avgHookScore.toFixed(1)} / 10` : "—", accent: "#0ea5e9" },
+                    { label: "Top model",       value: insights.bestModel || "—",         accent: "#06b6d4" },
                     { label: "Top market",      value: insights.mostUsedMarket || "—",    accent: "#34d399" },
                     { label: "Total analyzed",  value: String(insights.totalAnalyzed),    accent: "#60a5fa" },
                   ].map(s => (
@@ -431,9 +431,9 @@ const DashboardOverview = () => {
                     onClick={() => navigate(item.type === "analysis" ? `/dashboard/analyses/${item.id}` : `/dashboard/boards/${item.id}`)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all group hover:bg-white/[0.08]">
                     <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: item.type === "analysis" ? "rgba(167,139,250,0.12)" : "rgba(96,165,250,0.12)" }}>
+                      style={{ background: item.type === "analysis" ? "rgba(14,165,233,0.12)" : "rgba(96,165,250,0.12)" }}>
                       {item.type === "analysis"
-                        ? <BarChart3 className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                        ? <BarChart3 className="h-4 w-4" style={{ color: "#0ea5e9" }} />
                         : <LayoutGrid className="h-4 w-4" style={{ color: "#60a5fa" }} />}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -450,15 +450,15 @@ const DashboardOverview = () => {
           {/* Upgrade card */}
           {isFree && (
             <div className="rounded-2xl p-5 relative overflow-hidden"
-              style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.12), rgba(244,114,182,0.07))", border: "1px solid rgba(167,139,250,0.2)" }}>
+              style={{ background: "linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.07))", border: "1px solid rgba(14,165,233,0.2)" }}>
               <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%)" }} />
+                style={{ background: "radial-gradient(circle, rgba(14,165,233,0.25), transparent 70%)" }} />
               <div className="relative">
                 <p className="text-sm font-extrabold text-white mb-1" style={syne}>Unlock full access ⚡</p>
                 <p className="text-xs text-white/40 mb-4 leading-relaxed">More analyses, boards, and AI tools — from $9/mo.</p>
                 <button onClick={() => navigate("/pricing")}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:scale-105"
-                  style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                  style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
                   See plans <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>

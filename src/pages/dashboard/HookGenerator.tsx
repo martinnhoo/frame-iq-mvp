@@ -10,7 +10,7 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 
 const FUNNEL_STAGES = [
   { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Awareness — cold audience, no brand knowledge", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Consideration — warm, evaluating options", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Consideration — warm, evaluating options", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
   { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Conversion — hot, ready to decide", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
 ];
 
@@ -35,7 +35,7 @@ const MARKETS = [
 ];
 
 const HOOK_TYPE_COLORS: Record<string, string> = {
-  curiosity:        "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  curiosity:        "text-sky-400 bg-sky-400/10 border-sky-400/20",
   social_proof:     "text-green-400 bg-green-400/10 border-green-400/20",
   pattern_interrupt:"text-orange-400 bg-orange-400/10 border-orange-400/20",
   direct_offer:     "text-blue-400 bg-blue-400/10 border-blue-400/20",
@@ -153,8 +153,8 @@ export default function HookGenerator() {
       />
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Zap className="h-5 w-5 text-purple-400" />
+        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
+          <Zap className="h-5 w-5 text-sky-400" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white" style={syne}>{dt("hg_title")}</h1>

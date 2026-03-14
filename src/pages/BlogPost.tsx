@@ -727,7 +727,7 @@ const BlogPost = () => {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -740,7 +740,7 @@ const BlogPost = () => {
                   <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
                   <Link to="/blog" className="text-lg text-foreground">Blog</Link>
                   <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                  <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white" onClick={() => navigate("/signup")}>Get started</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -758,7 +758,7 @@ const BlogPost = () => {
 
             {/* Meta */}
             <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}>
+              <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#0ea5e9' }}>
                 {post.category}
               </span>
               <span className="flex items-center text-xs text-muted-foreground gap-1">
@@ -776,7 +776,7 @@ const BlogPost = () => {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6">
               {post.title}
             </h1>
-            <p className="text-secondary text-lg leading-relaxed mb-12 border-l-2 border-purple-500/50 pl-4">
+            <p className="text-secondary text-lg leading-relaxed mb-12 border-l-2 border-sky-500/50 pl-4">
               {post.description}
             </p>
 
@@ -802,7 +802,7 @@ const BlogPost = () => {
               <p className="text-secondary mb-6">Join 147+ performance teams shipping more creative, faster.</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+                  className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                   onClick={() => navigate("/signup")}
                 >
                   Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />

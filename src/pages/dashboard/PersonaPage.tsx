@@ -22,10 +22,10 @@ function EditableTextField({ field, value, className = "", rows, editing, onChan
   if (!editing) return <span className={className}>{value || "—"}</span>;
   return rows ? (
     <textarea value={value} onChange={e => onChange(field, e.target.value)} rows={rows}
-      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none ${className}`} />
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-sky-500/40 transition-colors resize-none ${className}`} />
   ) : (
     <input value={value} onChange={e => onChange(field, e.target.value)}
-      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors ${className}`} />
+      className={`w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-sky-500/40 transition-colors ${className}`} />
   );
 }
 
@@ -54,7 +54,7 @@ function EditableListField({ field, items, color, editing, onChange }: {
       value={normalizedItems.join("\n")}
       onChange={e => onChange(field, e.target.value)}
       rows={Math.max(2, normalizedItems.length)}
-      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-purple-500/40 transition-colors resize-none"
+      className="w-full px-3 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white text-sm outline-none focus:border-sky-500/40 transition-colors resize-none"
     />
   );
 }
@@ -225,7 +225,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
               <p className="text-[11px] text-white/55 line-clamp-2 leading-relaxed">{desc}</p>
               <div className="flex items-center justify-between">
                 <span className="text-[9px] text-yellow-400/50 italic">↳ {reason}</span>
-                <span className="text-[10px] text-purple-400/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                <span className="text-[10px] text-sky-400/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                   {dt("pe_use_template")} <ArrowRight className="h-3 w-3" />
                 </span>
               </div>
@@ -354,13 +354,13 @@ function PersonaDetailEditable({
           {activeDetail && globalPersona?.id === activeDetail.id ? (
             <button onClick={() => setGlobalPersona(null)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.4)", color: "#a78bfa" }}>
+              style={{ background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.4)", color: "#0ea5e9" }}>
               <Check className="h-3.5 w-3.5" /> {dt("pe_active_deactivate")}
             </button>
           ) : activeDetail ? (
             <button onClick={() => setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.2),rgba(244,114,182,0.2))", border: "1px solid rgba(167,139,250,0.3)", color: "#c4b5fd" }}>
+              style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.2),rgba(6,182,212,0.2))", border: "1px solid rgba(14,165,233,0.3)", color: "#c4b5fd" }}>
               <Users className="h-3.5 w-3.5" /> {dt("pe_activate")}
             </button>
           ) : null}
@@ -434,7 +434,7 @@ function PersonaDetailEditable({
 
         <div>
           <p className="text-xs text-white/45 mb-2 uppercase tracking-wider">{dt("pe_hook_angles")}</p>
-          <EditableListField field="hook_angles" items={draft.hook_angles} color="text-purple-400" editing={editing} onChange={handleListChange} />
+          <EditableListField field="hook_angles" items={draft.hook_angles} color="text-sky-400" editing={editing} onChange={handleListChange} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -506,7 +506,7 @@ function PersonaDetailEditable({
 
           {kitUploading ? (
             <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 rounded-full border-2 border-purple-400/40 border-t-purple-400 animate-spin" />
+              <div className="w-8 h-8 rounded-full border-2 border-sky-400/40 border-t-purple-400 animate-spin" />
               <span className="text-xs text-white/40">{dt("pe_brand_uploading")}</span>
             </div>
           ) : brandKit.logo_data_url ? (
@@ -813,10 +813,10 @@ CTA: ${persona.cta_style}`;
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-8">
         <div className="relative h-16 w-16">
-          <div className="absolute inset-0 rounded-full border-2 border-purple-500/20 animate-ping" />
-          <div className="absolute inset-2 rounded-full border-2 border-purple-500/40 animate-pulse" />
-          <div className="absolute inset-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-purple-400" />
+          <div className="absolute inset-0 rounded-full border-2 border-sky-500/20 animate-ping" />
+          <div className="absolute inset-2 rounded-full border-2 border-sky-500/40 animate-pulse" />
+          <div className="absolute inset-4 rounded-full bg-sky-500/20 flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-sky-400" />
           </div>
         </div>
         <p className="text-white/40 text-sm">{dt("pe_building")}</p>
@@ -830,7 +830,7 @@ CTA: ${persona.cta_style}`;
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-400" />
+              <Sparkles className="h-5 w-5 text-sky-400" />
               {dt("pe_saved")}
             </h1>
             <p className="text-white/50 text-sm mt-1">{dt("pe_profiles_sub")}</p>
@@ -838,7 +838,7 @@ CTA: ${persona.cta_style}`;
           <div className="flex items-center gap-2">
             <button
               onClick={startNew}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-semibold hover:opacity-90 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-all"
             >
               <Plus className="h-4 w-4" /> {dt("pe_new")}
             </button>
@@ -883,8 +883,8 @@ CTA: ${persona.cta_style}`;
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-20 text-center"
           >
-            <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
-              <Users className="h-8 w-8 text-purple-400/50" />
+            <div className="w-20 h-20 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">
+              <Users className="h-8 w-8 text-sky-400/50" />
             </div>
             <h3 className="text-white/50 font-medium mb-2">{dt("pe_empty")}</h3>
             <p className="text-white/45 text-sm mb-6 max-w-xs">
@@ -929,7 +929,7 @@ CTA: ${persona.cta_style}`;
 
                   <div className="flex flex-wrap justify-center gap-1 mt-3">
                     {(p.result.best_platforms || []).slice(0, 3).map((pl) => (
-                      <span key={pl} className="px-2 py-0.5 rounded-full text-[10px] border border-purple-500/20 text-purple-300 bg-purple-500/5">
+                      <span key={pl} className="px-2 py-0.5 rounded-full text-[10px] border border-sky-500/20 text-purple-300 bg-sky-500/5">
                         {pl}
                       </span>
                     ))}
@@ -940,14 +940,14 @@ CTA: ${persona.cta_style}`;
                   </p>
 
                   {globalPersona?.id === p.id ? (
-                    <div className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}>
+                    <div className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(14,165,233,0.15)", color: "#0ea5e9" }}>
                       ✓ {dt("pe_active")}
                     </div>
                   ) : (
                     <button
                       onClick={(e) => { e.stopPropagation(); setGlobalPersona({ id: p.id, ...p.result } as any); }}
                       className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-all"
-                      style={{ background: "rgba(167,139,250,0.12)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.25)" }}>
+                      style={{ background: "rgba(14,165,233,0.12)", color: "#c4b5fd", border: "1px solid rgba(14,165,233,0.25)" }}>
                       {dt("pe_use")}
                     </button>
                   )}
@@ -1113,7 +1113,7 @@ CTA: ${persona.cta_style}`;
                 style={{ zIndex: 4 }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white shadow-lg border-2 border-purple-500 pointer-events-none transition-all"
+                className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white shadow-lg border-2 border-sky-500 pointer-events-none transition-all"
                 style={{ left: `calc(${((ageMin - 18) / (55 - 18)) * 100}% - 10px)` }}
               />
               <div

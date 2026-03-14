@@ -50,7 +50,7 @@ const HOOK_EXAMPLES: Record<string, { score: number; text: string; platform: str
   ],
 };
 
-const scoreColor = (s: number) => s >= 9 ? "#34d399" : s >= 8 ? "#a78bfa" : "#fbbf24";
+const scoreColor = (s: number) => s >= 9 ? "#34d399" : s >= 8 ? "#0ea5e9" : "#fbbf24";
 const scoreLabel = (s: number) => s >= 9 ? "Viral" : s >= 8 ? "High" : "Medium";
 
 export default function AdHooksPage() {
@@ -72,7 +72,7 @@ export default function AdHooksPage() {
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Ad Hooks Library</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 14 }}>
             The hooks that<br />
-            <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>stop the scroll</span>
+            <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>stop the scroll</span>
           </h1>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
             Organized by hook type, scored by AI. Use them as inspiration — or generate your own in seconds.
@@ -84,7 +84,7 @@ export default function AdHooksPage() {
           <div style={{ position: "sticky", top: 80 }}>
             {SEO_HOOKS.map(h => (
               <button key={h.slug} onClick={() => setActive(h.slug)}
-                style={{ ...j, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 12, fontSize: 13, fontWeight: active === h.slug ? 700 : 500, background: active === h.slug ? "rgba(167,139,250,0.12)" : "transparent", color: active === h.slug ? "#a78bfa" : "rgba(255,255,255,0.45)", border: `1px solid ${active === h.slug ? "rgba(167,139,250,0.3)" : "transparent"}`, cursor: "pointer", marginBottom: 4, transition: "all .15s" }}>
+                style={{ ...j, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 12, fontSize: 13, fontWeight: active === h.slug ? 700 : 500, background: active === h.slug ? "rgba(14,165,233,0.12)" : "transparent", color: active === h.slug ? "#0ea5e9" : "rgba(255,255,255,0.45)", border: `1px solid ${active === h.slug ? "rgba(14,165,233,0.3)" : "transparent"}`, cursor: "pointer", marginBottom: 4, transition: "all .15s" }}>
                 <span style={{ fontSize: 16 }}>{h.emoji}</span>
                 {h.label}
               </button>
@@ -117,12 +117,12 @@ export default function AdHooksPage() {
             </div>
 
             {/* Generate CTA */}
-            <div style={{ marginTop: 20, padding: "20px 22px", borderRadius: 18, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ marginTop: 20, padding: "20px 22px", borderRadius: 18, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <p style={{ ...j, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
                 Generate {activeHook.label.toLowerCase()} for your own product →
               </p>
               <button onClick={() => navigate("/tools/ad-hook-generator")}
-                style={{ ...j, padding: "9px 20px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                style={{ ...j, padding: "9px 20px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 Hook Generator (free)
               </button>
             </div>

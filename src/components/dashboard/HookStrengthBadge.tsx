@@ -13,7 +13,7 @@ const HOOK_CONFIG: Record<HookLevel, { label: string; className: string }> = {
   low: { label: "Low", className: "bg-destructive/10 text-destructive border-destructive/30" },
   medium: { label: "Medium", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" },
   high: { label: "High", className: "bg-green-500/10 text-green-400 border-green-500/30" },
-  viral: { label: "Viral", className: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  viral: { label: "Viral", className: "bg-sky-500/10 text-sky-400 border-sky-500/30" },
 };
 
 interface HookStrengthBadgeProps {

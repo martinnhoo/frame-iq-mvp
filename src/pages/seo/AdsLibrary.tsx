@@ -36,7 +36,7 @@ export function AdsLibraryIndex() {
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Ads Library</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 14 }}>
             Ad creatives that<br />
-            <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>actually work</span>
+            <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>actually work</span>
           </h1>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
             Every ad scored and analyzed by AI. Learn the hook, the framework, and why it converts.
@@ -50,7 +50,7 @@ export function AdsLibraryIndex() {
             {pages.map(page => (
               <div key={page.slug} onClick={() => navigate(`/${page.slug}`)}
                 style={{ padding: "20px 22px", borderRadius: 16, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s, transform .12s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
                 <p style={{ ...j, fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{page.title}</p>
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{page.subheadline}</p>
@@ -130,12 +130,12 @@ export function AdsLibraryLanding() {
         {/* Hook type filters */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 32 }}>
           <button onClick={() => setActiveFilter(null)}
-            style={{ ...j, padding: "7px 16px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: !activeFilter ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)", color: !activeFilter ? "#a78bfa" : "rgba(255,255,255,0.4)", border: `1px solid ${!activeFilter ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer" }}>
+            style={{ ...j, padding: "7px 16px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: !activeFilter ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.04)", color: !activeFilter ? "#0ea5e9" : "rgba(255,255,255,0.4)", border: `1px solid ${!activeFilter ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer" }}>
             All hooks
           </button>
           {hookTypes.map(ht => (
             <button key={ht} onClick={() => setActiveFilter(activeFilter === ht ? null : ht)}
-              style={{ ...j, padding: "7px 16px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: activeFilter === ht ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)", color: activeFilter === ht ? "#a78bfa" : "rgba(255,255,255,0.4)", border: `1px solid ${activeFilter === ht ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer" }}>
+              style={{ ...j, padding: "7px 16px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: activeFilter === ht ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.04)", color: activeFilter === ht ? "#0ea5e9" : "rgba(255,255,255,0.4)", border: `1px solid ${activeFilter === ht ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer" }}>
               {ht}
             </button>
           ))}
@@ -178,7 +178,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
           <div key={ad.id}
             style={{ background: "#090910", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, overflow: "hidden", position: "relative" }}>
             {/* Thumbnail placeholder */}
-            <div style={{ height: 140, background: `linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.05))`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            <div style={{ height: 140, background: `linear-gradient(135deg, rgba(14,165,233,0.08), rgba(6,182,212,0.05))`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
               <span style={{ fontSize: 32, opacity: 0.3 }}>🎬</span>
               {/* Hook score badge */}
               <div style={{ position: "absolute", top: 10, left: 10, padding: "4px 10px", borderRadius: 20, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", gap: 6 }}>
@@ -188,7 +188,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
               {/* Lock overlay */}
               <div style={{ position: "absolute", inset: 0, background: "rgba(6,6,8,0.5)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <button onClick={() => navigate("/signup")}
-                  style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 999, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+                  style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 999, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
                   View analysis →
                 </button>
               </div>
@@ -196,7 +196,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
 
             <div style={{ padding: "14px 16px" }}>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(167,139,250,0.1)", color: "#a78bfa" }}>{ad.hookType}</span>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(14,165,233,0.1)", color: "#0ea5e9" }}>{ad.hookType}</span>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)" }}>{ad.creativeType}</span>
               </div>
               <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{ad.duration}s · {ad.platform}</p>
@@ -211,7 +211,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
           Want your winning ad featured here?
         </p>
         <button onClick={() => navigate("/signup")}
-          style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: "pointer" }}>
+          style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer" }}>
           Submit an ad →
         </button>
       </div>

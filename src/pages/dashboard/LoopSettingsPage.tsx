@@ -148,11 +148,11 @@ export default function LoopSettingsPage() {
         </div>
 
         {/* Live preview */}
-        <div style={{ background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.12)", borderRadius: 14, padding: "14px 16px" }}>
+        <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 14, padding: "14px 16px" }}>
           <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>LIVE PREVIEW</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {Object.entries(parsedPreview).map(([label, value]) => (
-              <span key={label} style={{ ...m, fontSize: 11, padding: "4px 10px", borderRadius: 999, background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", color: "#a78bfa" }}>
+              <span key={label} style={{ ...m, fontSize: 11, padding: "4px 10px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9" }}>
                 <span style={{ color: "rgba(255,255,255,0.3)" }}>{label}:</span> {value}
               </span>
             ))}
@@ -184,7 +184,7 @@ export default function LoopSettingsPage() {
                   <option key={o.name} value={o.name}>{o.label}</option>
                 ))}
               </select>
-              <span style={{ ...m, fontSize: 11, color: "rgba(167,139,250,0.6)", minWidth: 60 }}>
+              <span style={{ ...m, fontSize: 11, color: "rgba(14,165,233,0.6)", minWidth: 60 }}>
                 → {exampleFilename.split(separator)[idx] || "—"}
               </span>
               <button onClick={() => removeField(idx)} style={{ color: "rgba(255,255,255,0.15)", cursor: "pointer", background: "none", border: "none" }}>
@@ -196,7 +196,7 @@ export default function LoopSettingsPage() {
       </div>
 
       <Button onClick={save} disabled={saving} className="w-full gap-2"
-        style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000" }}>
+        style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
         {saving ? "Saving..." : "Save Configuration"}
       </Button>

@@ -29,13 +29,13 @@ const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const
 const jakarta = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const SCORE_COLOR = (s: number) =>
-  s >= 8 ? "#34d399" : s >= 6 ? "#a78bfa" : s >= 4 ? "#fbbf24" : "#f87171";
+  s >= 8 ? "#34d399" : s >= 6 ? "#0ea5e9" : s >= 4 ? "#fbbf24" : "#f87171";
 
 const SCORE_LABEL = (s: number) =>
   s >= 8.5 ? "Viral" : s >= 7 ? "High" : s >= 5 ? "Medium" : "Low";
 
 const MetricCard = ({
-  label, value, sub, accent = "#a78bfa"
+  label, value, sub, accent = "#0ea5e9"
 }: {
   label: string; value: string; sub?: string; accent?: string;
 }) => (
@@ -133,7 +133,7 @@ const AnalysisDetail = () => {
   const platforms = (result?.recommended_platforms as string[]) ?? analysis.recommended_platforms ?? [];
   const suggestions = (result?.improvement_suggestions as string[]) ?? analysis.improvement_suggestions ?? [];
 
-  const scoreColor = hookScore !== null ? SCORE_COLOR(hookScore) : "#a78bfa";
+  const scoreColor = hookScore !== null ? SCORE_COLOR(hookScore) : "#0ea5e9";
   const scoreLabel = hookScore !== null ? SCORE_LABEL(hookScore) : null;
 
   const isProcessing = analysis.status === "pending" || analysis.status === "processing";
@@ -175,7 +175,7 @@ const AnalysisDetail = () => {
       {/* ── PROCESSING ── */}
       {isProcessing && (
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center px-6">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-400/60" />
+          <Loader2 className="h-12 w-12 animate-spin text-sky-400/60" />
           <p className="font-bold text-white text-lg" style={jakarta}>Analysis in progress</p>
           <p className="text-white/50 text-sm">Usually takes 30–60 seconds</p>
           <div className="flex items-center gap-2 text-white/40 text-xs">
@@ -224,8 +224,8 @@ const AnalysisDetail = () => {
               </div>
             </div>
 
-            <MetricCard label="Creative Model" value={creativeModel ?? "—"} sub={format ?? undefined} accent="#a78bfa" />
-            <MetricCard label="Hook Type" value={hookType ? hookType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "—"} accent="#f472b6" />
+            <MetricCard label="Creative Model" value={creativeModel ?? "—"} sub={format ?? undefined} accent="#0ea5e9" />
+            <MetricCard label="Hook Type" value={hookType ? hookType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "—"} accent="#06b6d4" />
             <MetricCard label="Pacing" value={pacing ? pacing.charAt(0).toUpperCase() + pacing.slice(1) : "—"} sub={tone ?? undefined} accent="#60a5fa" />
             <MetricCard label="CTA" value={ctaType ? ctaType.charAt(0).toUpperCase() + ctaType.slice(1) : "—"} accent="#fb923c" />
             <MetricCard label="Market" value={marketGuess ?? "—"} sub={languageDetected ?? undefined} accent="#34d399" />
@@ -236,10 +236,10 @@ const AnalysisDetail = () => {
 
             {/* Hook (0-3s) */}
             <div className="rounded-2xl overflow-hidden"
-              style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
-              <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(167,139,250,0.12)" }}>
+              style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)" }}>
+              <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(14,165,233,0.12)" }}>
                 <p className="text-[10px] uppercase tracking-[0.18em]"
-                  style={{ ...mono, color: "rgba(167,139,250,0.6)" }}>Hook (0–3s)</p>
+                  style={{ ...mono, color: "rgba(14,165,233,0.6)" }}>Hook (0–3s)</p>
               </div>
               <div className="p-4 space-y-3">
                 {visualHook && (
@@ -361,10 +361,10 @@ const AnalysisDetail = () => {
 
           {/* ── Upgrade nudge ── */}
           <div className="rounded-2xl p-4 flex items-center gap-4"
-            style={{ background: "linear-gradient(135deg,rgba(167,139,250,0.08),rgba(244,114,182,0.05))", border: "1px solid rgba(167,139,250,0.15)" }}>
+            style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.08),rgba(6,182,212,0.05))", border: "1px solid rgba(14,165,233,0.15)" }}>
             <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(167,139,250,0.12)" }}>
-              <Zap className="h-4 w-4" style={{ color: "#a78bfa" }} />
+              style={{ background: "rgba(14,165,233,0.12)" }}>
+              <Zap className="h-4 w-4" style={{ color: "#0ea5e9" }} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-white" style={jakarta}>Want deeper analysis?</p>
@@ -374,7 +374,7 @@ const AnalysisDetail = () => {
             </div>
             <button onClick={() => navigate("/pricing")}
               className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold transition-all hover:opacity-90"
-              style={{ ...jakarta, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+              style={{ ...jakarta, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
               Upgrade <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>

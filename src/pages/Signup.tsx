@@ -90,7 +90,7 @@ const Signup = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated orbs */}
-      <motion.div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['20%', '-30%', '10%'], y: ['-20%', '20%', '-10%'] }} transition={{ duration: 16, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
+      <motion.div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['20%', '-30%', '10%'], y: ['-20%', '20%', '-10%'] }} transition={{ duration: 16, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
       <motion.div className="absolute w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['-20%', '30%', '-10%'], y: ['30%', '-20%', '10%'] }} transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
       <motion.div className="absolute w-[350px] h-[350px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(180, 70%, 50%, 0.05) 0%, transparent 60%)', filter: 'blur(60px)' }} animate={{ x: ['-10%', '25%', '-20%'], y: ['15%', '-25%', '20%'] }} transition={{ duration: 14, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
 
@@ -114,11 +114,11 @@ const Signup = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, delay: 0.15 }}>
-          <Card className="w-full border-border/50 bg-card/80 backdrop-blur-md shadow-2xl shadow-purple-500/10" style={{ border: '1px solid rgba(139, 92, 246, 0.15)' }}>
+          <Card className="w-full border-border/50 bg-card/80 backdrop-blur-md shadow-2xl shadow-sky-500/10" style={{ border: '1px solid rgba(139, 92, 246, 0.15)' }}>
             <CardHeader className="text-center space-y-2">
               {planParam && (
                 <div className="mb-3 px-4 py-2.5 rounded-xl text-center text-sm font-semibold"
-                  style={{background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.25)",color:"#c084fc"}}>
+                  style={{background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.25)",color:"#c084fc"}}>
                   🎯 Starting with <span className="capitalize">{planParam}</span> plan
                 </div>
               )}
@@ -128,7 +128,7 @@ const Signup = () => {
             <CardContent className="space-y-5">
               {/* Google button */}
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="outline" className="w-full h-12 text-base font-medium border-border/50 hover:bg-muted hover:border-purple-500/30 transition-all" onClick={handleGoogleSignup} disabled={isFormDisabled}>
+                <Button variant="outline" className="w-full h-12 text-base font-medium border-border/50 hover:bg-muted hover:border-sky-500/30 transition-all" onClick={handleGoogleSignup} disabled={isFormDisabled}>
                   {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (
                     <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

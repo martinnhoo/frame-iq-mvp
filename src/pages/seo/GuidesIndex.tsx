@@ -22,7 +22,7 @@ export default function GuidesIndex() {
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Guides</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
             Learn to make ads<br />
-            <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>that actually convert</span>
+            <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>that actually convert</span>
           </h1>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", maxWidth: 500, lineHeight: 1.6 }}>
             Practical guides on creative strategy, hook writing, ad testing, and scaling.

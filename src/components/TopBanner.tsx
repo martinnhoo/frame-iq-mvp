@@ -19,8 +19,8 @@ export default function TopBanner() {
     <div
       className="relative w-full z-[60] flex items-center justify-center px-4 py-2 text-center"
       style={{
-        background: "linear-gradient(90deg, rgba(139,92,246,0.15), rgba(167,139,250,0.1), rgba(236,72,153,0.12))",
-        borderBottom: "1px solid rgba(167,139,250,0.15)",
+        background: "linear-gradient(90deg, rgba(139,92,246,0.15), rgba(14,165,233,0.1), rgba(236,72,153,0.12))",
+        borderBottom: "1px solid rgba(14,165,233,0.15)",
         backdropFilter: "blur(8px)",
       }}
     >

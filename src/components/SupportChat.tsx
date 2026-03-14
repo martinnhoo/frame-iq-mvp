@@ -119,7 +119,7 @@ export default function SupportChat() {
                   message.role === "user"
                     ? "text-white rounded-br-sm"
                     : "text-white/70 rounded-bl-sm"
-                }`} style={{ background: message.role === "user" ? "linear-gradient(135deg,#a78bfa,#f472b6)" : "rgba(255,255,255,0.06)" }}>
+                }`} style={{ background: message.role === "user" ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.06)" }}>
                   {message.content}
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default function SupportChat() {
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }} />
               <button onClick={handleSendMessage} disabled={isLoading}
                 className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", border: "none", cursor: "pointer" }}>
+                style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", border: "none", cursor: "pointer" }}>
                 <Send className="h-3.5 w-3.5 text-black" />
               </button>
             </div>
@@ -150,9 +150,9 @@ export default function SupportChat() {
       ) : (
         <button onClick={() => setIsOpen(true)}
           className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-          style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.3)", cursor: "pointer" }}
+          style={{ background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", cursor: "pointer" }}
           title="Support">
-          <MessageCircle className="h-4 w-4" style={{ color: "#a78bfa" }} />
+          <MessageCircle className="h-4 w-4" style={{ color: "#0ea5e9" }} />
         </button>
       )}
     </div>

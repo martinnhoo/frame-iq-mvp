@@ -12,7 +12,7 @@ export default function MarketPage() {
     <SeoLayout title="Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)" }}>Page not found.</p>
-        <button onClick={() => navigate("/")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← Back</button>
+        <button onClick={() => navigate("/")} style={{ color: "#0ea5e9", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← Back</button>
       </div>
     </SeoLayout>
   );

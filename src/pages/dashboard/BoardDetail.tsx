@@ -349,7 +349,7 @@ const BoardDetail = () => {
                 onClick={e => { e.stopPropagation(); generateAllImages(scenes); }}
                 disabled={Object.values(generatingImages).some(Boolean)}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all mr-2"
-                style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)" }}
+                style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.25)" }}
                 title="Generate AI reference images for all scenes"
               >
                 {Object.values(generatingImages).some(Boolean)
@@ -399,7 +399,7 @@ const BoardDetail = () => {
                             onClick={() => generateSceneImage(i, String(scene.visual_description || ""), String(scene.title || scene.scene_title || ""))}
                             disabled={generatingImages[i]}
                             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition-all"
-                            style={{ background: "rgba(167,139,250,0.08)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.15)" }}
+                            style={{ background: "rgba(14,165,233,0.08)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.15)" }}
                             title="Generate AI reference image for this scene"
                           >
                             {generatingImages[i]

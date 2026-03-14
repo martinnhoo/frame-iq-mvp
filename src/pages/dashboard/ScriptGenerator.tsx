@@ -117,7 +117,7 @@ export default function ScriptGenerator() {
   };
 
   const lineColors: Record<string, { bg: string; color: string; label: string }> = {
-    vo:       { bg: "rgba(167,139,250,0.12)", color: "#a78bfa", label: "VO" },
+    vo:       { bg: "rgba(14,165,233,0.12)", color: "#0ea5e9", label: "VO" },
     onscreen: { bg: "rgba(96,165,250,0.12)",  color: "#60a5fa", label: "ON-SCREEN" },
     visual:   { bg: "rgba(52,211,153,0.12)",  color: "#34d399", label: "VISUAL" },
   };
@@ -125,8 +125,8 @@ export default function ScriptGenerator() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-2">
-        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(167,139,250,0.15)" }}>
-          <FileText className="h-5 w-5" style={{ color: "#a78bfa" }} />
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(14,165,233,0.15)" }}>
+          <FileText className="h-5 w-5" style={{ color: "#0ea5e9" }} />
         </div>
         <div>
           <h1 className="text-xl font-bold text-foreground" style={syne}>{dt("sg_title")}</h1>
@@ -136,8 +136,8 @@ export default function ScriptGenerator() {
 
       {/* Persona context badge */}
       {personaApplied && selectedPersona && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
-          <Brain className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
+          <Brain className="h-3.5 w-3.5" style={{ color: "#0ea5e9" }} />
           <span className="text-xs text-muted-foreground" style={mono}>
             Persona <strong className="text-foreground">{selectedPersona.name}</strong> auto-applied — audience, market, angle & format pre-filled
           </span>
@@ -210,7 +210,7 @@ export default function ScriptGenerator() {
           <Textarea placeholder="Compliance rules, brand guidelines, specific messaging..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
+        <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? dt("sg_generating") : dt("sg_generate")}
         </Button>
@@ -259,7 +259,7 @@ export default function ScriptGenerator() {
 
               <div className="flex gap-2 flex-wrap">
                 {s.format && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ ...mono, color: "#a78bfa", background: "rgba(167,139,250,0.12)" }}>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ ...mono, color: "#0ea5e9", background: "rgba(14,165,233,0.12)" }}>
                     {s.format}
                   </span>
                 )}

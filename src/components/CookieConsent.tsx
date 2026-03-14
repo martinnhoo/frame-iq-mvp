@@ -59,7 +59,7 @@ const CookieConsent = () => {
               </Button>
               <Button
                 size="sm"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 text-xs"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0 text-xs"
                 onClick={accept}
               >
                 Accept all

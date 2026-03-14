@@ -86,7 +86,7 @@ const FAQ = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -98,7 +98,7 @@ const FAQ = () => {
                 <Link to="/blog" className="text-lg text-secondary hover:text-foreground">Blog</Link>
                 <Link to="/faq" className="text-lg text-foreground">FAQ</Link>
                 <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white" onClick={() => navigate("/signup")}>Get started</Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -173,7 +173,7 @@ const FAQ = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                 onClick={() => navigate("/contact")}
               >
                 Contact us

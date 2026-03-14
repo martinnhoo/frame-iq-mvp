@@ -14,11 +14,11 @@ function getInsight(score: number): { text: string; color: string } {
   if (score < 5) return { text: "Weak hook. Consider leading with a bolder claim.", color: "text-destructive" };
   if (score < 7) return { text: "Average hook. Test a pattern interrupt opening.", color: "text-yellow-400" };
   if (score < 9) return { text: "Strong hook. Above market average.", color: "text-green-400" };
-  return { text: "Viral potential. Top 10% of analyzed creatives.", color: "text-purple-400" };
+  return { text: "Viral potential. Top 10% of analyzed creatives.", color: "text-sky-400" };
 }
 
 function getScoreColor(score: number, avg: number, top25: number, top10: number): string {
-  if (score >= top10) return "text-purple-400";
+  if (score >= top10) return "text-sky-400";
   if (score >= top25) return "text-green-400";
   if (score >= avg) return "text-yellow-400";
   return "text-destructive";
@@ -41,7 +41,7 @@ export function HookBenchmarkCard({ hookScore, format }: HookBenchmarkCardProps)
   const benchmarks = [
     { label: "Market Average", value: avg, color: "bg-yellow-500" },
     { label: "Top 25%", value: top25, color: "bg-green-500" },
-    { label: "Top 10%", value: top10, color: "bg-purple-500" },
+    { label: "Top 10%", value: top10, color: "bg-sky-500" },
   ];
 
   return (
@@ -98,7 +98,7 @@ export function HookBenchmarkCard({ hookScore, format }: HookBenchmarkCardProps)
             <div className="h-2 w-2 rounded-full bg-green-500" /> Top 25%
           </span>
           <span className="flex items-center gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-purple-500" /> Top 10%
+            <div className="h-2 w-2 rounded-full bg-sky-500" /> Top 10%
           </span>
           <span className="flex items-center gap-1.5">
             <div className={`h-2 w-2 rounded-full ${scoreColor.replace('text-', 'bg-')}`} /> Your score

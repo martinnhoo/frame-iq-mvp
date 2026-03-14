@@ -45,9 +45,9 @@ interface ParsedAds {
 const PLATFORM_META: Record<string, { label: string; emoji: string; color: string; accent: string }> = {
   meta:    { label: "Meta Ads",    emoji: "📘", color: "#60a5fa", accent: "rgba(96,165,250,0.15)" },
   google:  { label: "Google Ads",  emoji: "🔍", color: "#34d399", accent: "rgba(52,211,153,0.15)" },
-  tiktok:  { label: "TikTok Ads",  emoji: "🎵", color: "#f472b6", accent: "rgba(244,114,182,0.15)" },
-  other:   { label: "Other",       emoji: "📊", color: "#a78bfa", accent: "rgba(167,139,250,0.15)" },
-  unknown: { label: "Ads Data",    emoji: "📊", color: "#a78bfa", accent: "rgba(167,139,250,0.15)" },
+  tiktok:  { label: "TikTok Ads",  emoji: "🎵", color: "#06b6d4", accent: "rgba(6,182,212,0.15)" },
+  other:   { label: "Other",       emoji: "📊", color: "#0ea5e9", accent: "rgba(14,165,233,0.15)" },
+  unknown: { label: "Ads Data",    emoji: "📊", color: "#0ea5e9", accent: "rgba(14,165,233,0.15)" },
 };
 
 const PLATFORM_INSTRUCTIONS: Record<string, string> = {
@@ -58,11 +58,11 @@ const PLATFORM_INSTRUCTIONS: Record<string, string> = {
 };
 
 const MODEL_LABELS: Record<string, { emoji: string; color: string }> = {
-  "UGC":              { emoji: "📱", color: "#a78bfa" },
+  "UGC":              { emoji: "📱", color: "#0ea5e9" },
   "Testimonial":      { emoji: "⭐", color: "#34d399" },
   "Tutorial":         { emoji: "🎓", color: "#60a5fa" },
   "Problem-Solution": { emoji: "🔧", color: "#fb923c" },
-  "Before-After":     { emoji: "✨", color: "#f472b6" },
+  "Before-After":     { emoji: "✨", color: "#06b6d4" },
   "Promo":            { emoji: "🔥", color: "#f87171" },
   "Demo":             { emoji: "📦", color: "#38bdf8" },
   "Talking-Head":     { emoji: "🎙️", color: "#fbbf24" },
@@ -456,7 +456,7 @@ function ImportCard({ imp, onDelete }: { imp: AdsImport; onDelete: (id: string) 
           {/* Actions */}
           {r.recommended_actions?.length > 0 && (
             <div className="rounded-xl p-4"
-              style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)" }}>
+              style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)" }}>
               <p className="text-[10px] text-violet-400/60 uppercase tracking-widest mb-2.5" style={mono}>Recommended Next Actions</p>
               <ol className="space-y-2">
                 {r.recommended_actions.map((a, i) => (
@@ -581,7 +581,7 @@ export default function IntelligencePage() {
         <div className="flex items-center gap-2">
           <button onClick={rebuildProfile} disabled={rebuilding}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all"
-            style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", color: "#a78bfa" }}>
+            style={{ background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9" }}>
             <RefreshCw className={`h-3 w-3 ${rebuilding ? "animate-spin" : ""}`} />
             {rebuilding ? "Rebuilding..." : "Rebuild profile"}
           </button>
@@ -602,13 +602,13 @@ export default function IntelligencePage() {
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={activeTab === tab.id
-              ? { background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)" }
+              ? { background: "rgba(14,165,233,0.12)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)" }
               : { color: "rgba(255,255,255,0.35)", border: "1px solid transparent" }}>
             <tab.icon className="h-4 w-4" />
             <span className="hidden sm:inline">{tab.label}</span>
             {tab.badge && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>{tab.badge}</span>
+                style={{ background: "rgba(14,165,233,0.2)", color: "#0ea5e9" }}>{tab.badge}</span>
             )}
           </button>
         ))}
@@ -620,9 +620,9 @@ export default function IntelligencePage() {
 
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <KpiCard label="Analyses" value={overallStats.total} icon={BarChart3} color="#a78bfa" />
+            <KpiCard label="Analyses" value={overallStats.total} icon={BarChart3} color="#0ea5e9" />
             <KpiCard label="Avg Hook Score" value={overallStats.avgScore > 0 ? `${overallStats.avgScore}/10` : "—"} icon={Target} color="#60a5fa" />
-            <KpiCard label="Top Format" value={overallStats.bestModel} icon={Brain} color="#f472b6" />
+            <KpiCard label="Top Format" value={overallStats.bestModel} icon={Brain} color="#06b6d4" />
             <KpiCard label="Viral Hooks" value={overallStats.viralHooks} icon={Zap} color="#fbbf24" />
           </div>
 
@@ -713,7 +713,7 @@ export default function IntelligencePage() {
               )}
 
               {/* AI profile */}
-              <div className="rounded-2xl p-5 space-y-4" style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
+              <div className="rounded-2xl p-5 space-y-4" style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)" }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4 text-violet-400" />
@@ -790,7 +790,7 @@ export default function IntelligencePage() {
           {/* Active persona indicator */}
           {selectedPersona && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
+              style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
               <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>

@@ -97,7 +97,7 @@ const Blog = () => {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -111,7 +111,7 @@ const Blog = () => {
                   <Link to="/blog" className="text-lg text-foreground">Blog</Link>
                   <Link to="/faq" className="text-lg text-secondary hover:text-foreground">FAQ</Link>
                   <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                  <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white" onClick={() => navigate("/signup")}>Get started</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -142,23 +142,23 @@ const Blog = () => {
                 itemType="https://schema.org/BlogPosting"
               >
                 <div
-                  className="rounded-2xl p-5 sm:p-6 h-full transition-all duration-300 group-hover:border-purple-500/30"
+                  className="rounded-2xl p-5 sm:p-6 h-full transition-all duration-300 group-hover:border-sky-500/30"
                   style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.02))', border: '1px solid rgba(139, 92, 246, 0.15)' }}
                 >
                   <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                    <span className="px-2 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}>
+                    <span className="px-2 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#0ea5e9' }}>
                       {post.category}
                     </span>
                     <span className="text-[11px] sm:text-xs text-muted-foreground">{post.date}</span>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:text-purple-400 transition-colors" itemProp="headline">{post.title}</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:text-sky-400 transition-colors" itemProp="headline">{post.title}</h2>
                   <p className="text-secondary text-sm leading-relaxed mb-3 sm:mb-4" itemProp="description">{post.description}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Clock className="w-3 h-3 mr-1" />
                       {post.readTime} read
                     </div>
-                    <span className="text-xs text-purple-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span className="text-xs text-sky-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                       Read more <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>

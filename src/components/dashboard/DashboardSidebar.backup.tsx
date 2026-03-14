@@ -22,12 +22,12 @@ const mainItems = [
 ];
 
 const toolItems = [
-  { title: "Templates",    url: "/dashboard/templates",    icon: Layers,  dot: "#f472b6" },
+  { title: "Templates",    url: "/dashboard/templates",    icon: Layers,  dot: "#06b6d4" },
   { title: "Translate",    url: "/dashboard/translate",    icon: Globe,   dot: "#10b981" },
   { title: "Pre-flight",   url: "/dashboard/preflight",    icon: Plane,   dot: "#fbbf24" },
   { title: "Hook Generator", url: "/dashboard/hooks",      icon: Cpu,     dot: "#fb923c" },
   { title: "Competitor",   url: "/dashboard/competitor",   icon: Search,  dot: "#22d3ee" },
-  { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain,   dot: "#a78bfa" },
+  { title: "Intelligence", url: "/dashboard/intelligence", icon: Brain,   dot: "#0ea5e9" },
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     free:    "text-white/45",
     creator: "text-blue-400",
     starter: "text-emerald-400",
-    studio:  "text-purple-400",
+    studio:  "text-sky-400",
     scale:   "text-amber-400",
   };
   const planColor = planColors[profile?.plan || "free"] || "text-white/45";

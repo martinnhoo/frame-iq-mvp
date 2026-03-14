@@ -167,7 +167,7 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-body whitespace-nowrap" onClick={() => navigate("/login")}>{t("nav_signin")}</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-600 hover:to-cyan-600 border-0 font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -182,7 +182,7 @@ const Index = () => {
                       <a key={link.label} href={link.href} className="text-lg text-muted-foreground hover:text-foreground transition-colors font-body">{link.label}</a>
                     )
                   )}
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
+                  <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-body whitespace-nowrap" onClick={() => navigate("/signup")}>{t("nav_get_started")}</Button>
                 </div>
               </SheetContent>
             </Sheet>
@@ -195,7 +195,7 @@ const Index = () => {
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden pt-16 pb-8 md:pt-24 md:pb-12 px-6">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.1) 0%, transparent 65%)', filter: 'blur(80px)' }} />
+          style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.1) 0%, transparent 65%)', filter: 'blur(80px)' }} />
 
         <div className="relative z-10 max-w-[1100px] mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-16">
@@ -204,7 +204,7 @@ const Index = () => {
             <div className="flex-1 min-w-0">
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                 className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold mb-8 font-body"
-                style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.25)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 <span style={{ color: 'rgba(255,255,255,0.5)' }}>147+ performance teams — BR, MX, IN, US</span>
               </motion.div>
@@ -213,7 +213,7 @@ const Index = () => {
                 className="font-display font-bold leading-[1.06] tracking-tight mb-6"
                 style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
                 Stop wasting budget<br />on ads that{" "}
-                <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                   never had a chance.
                 </span>
               </motion.h1>
@@ -228,7 +228,7 @@ const Index = () => {
                 className="flex flex-col sm:flex-row gap-3 mb-6">
                 <button onClick={() => navigate("/signup")}
                   className="font-body font-bold text-[15px] whitespace-nowrap flex items-center gap-2 justify-center"
-                  style={{ padding: "14px 28px", borderRadius: 14, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+                  style={{ padding: "14px 28px", borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
                   {t("hero_cta_primary")} <ArrowRight size={16} />
                 </button>
                 <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
@@ -250,8 +250,8 @@ const Index = () => {
             {/* RIGHT — product mock */}
             <motion.div initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, delay: 0.35 }}
               className="flex-1 min-w-0 w-full lg:max-w-[520px]"
-              style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(167,139,250,0.18)", boxShadow: "0 0 80px rgba(167,139,250,0.07), 0 32px 64px rgba(0,0,0,0.6)" }}>
-              <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(167,139,250,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.18)", boxShadow: "0 0 80px rgba(14,165,233,0.07), 0 32px 64px rgba(0,0,0,0.6)" }}>
+              <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(14,165,233,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,90,90,0.35)" }} />
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,190,50,0.35)" }} />
@@ -265,8 +265,8 @@ const Index = () => {
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   {([
                     { label: t("hero_mock_stat1"), value: "38%", color: "#34d399" },
-                    { label: t("hero_mock_stat2"), value: "7.4", color: "#a78bfa" },
-                    { label: t("hero_mock_stat3"), value: "12", color: "#f472b6" },
+                    { label: t("hero_mock_stat2"), value: "7.4", color: "#0ea5e9" },
+                    { label: t("hero_mock_stat3"), value: "12", color: "#06b6d4" },
                   ] as {label:string;value:string;color:string}[]).map(s => (
                     <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                       <p className="font-bold text-xl" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{s.value}</p>
@@ -275,23 +275,23 @@ const Index = () => {
                   ))}
                 </div>
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-sm" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}>🧠</div>
+                  <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-sm" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>🧠</div>
                   <div className="flex-1">
-                    <p className="text-[11px] font-bold mb-1" style={{ color: "#a78bfa", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>AdBrief AI · Pattern detected</p>
+                    <p className="text-[11px] font-bold mb-1" style={{ color: "#0ea5e9", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>AdBrief AI · Pattern detected</p>
                     <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Inter',sans-serif" }}>
                       Curiosity hooks outperform your avg by <span style={{ color: "#34d399", fontWeight: 600 }}>2.3×</span>. Last 3 wasted creatives all used VSL format in BR — avoid this combo.
                     </p>
                   </div>
                 </div>
-                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(244,114,182,0.2)", background: "rgba(244,114,182,0.05)" }}>
-                  <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid rgba(244,114,182,0.1)" }}>
+                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(6,182,212,0.2)", background: "rgba(6,182,212,0.05)" }}>
+                  <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid rgba(6,182,212,0.1)" }}>
                     <span className="text-sm">⚡</span>
-                    <span className="text-[11px] font-bold" style={{ color: "#f472b6", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{t("hero_mock_label")}</span>
+                    <span className="text-[11px] font-bold" style={{ color: "#06b6d4", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{t("hero_mock_label")}</span>
                   </div>
                   <div className="px-3 py-2.5 space-y-1.5">
                     {[t("hero_hook1"), t("hero_hook2"), t("hero_hook3")].map((h, i) => (
                       <div key={i} className="flex gap-2 items-start">
-                        <span className="text-[10px] mt-0.5 shrink-0" style={{ color: "rgba(244,114,182,0.5)" }}>→</span>
+                        <span className="text-[10px] mt-0.5 shrink-0" style={{ color: "rgba(6,182,212,0.5)" }}>→</span>
                         <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)", fontFamily: "'Inter',sans-serif" }}>{h}</span>
                       </div>
                     ))}
@@ -321,7 +321,7 @@ const Index = () => {
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-14">
-            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               YOUR AI GROWS WITH YOU
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-4 font-display" style={{ letterSpacing: "-0.02em" }}>
@@ -334,7 +334,7 @@ const Index = () => {
 
           <div className="relative">
             {/* Vertical connector */}
-            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px md:-translate-x-px" style={{ background: "linear-gradient(180deg, #a78bfa, #f472b6, #34d399)" }} />
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px md:-translate-x-px" style={{ background: "linear-gradient(180deg, #0ea5e9, #06b6d4, #34d399)" }} />
 
             {[
               {
@@ -342,7 +342,7 @@ const Index = () => {
                 title: "AI starts learning",
                 desc: "You upload your first ads and import performance data from Meta or TikTok. The AI starts recording everything.",
                 example: "\"5 ads uploaded. Analyzing hooks, formats, and market signals...\"",
-                color: "#a78bfa",
+                color: "#0ea5e9",
                 score: "Intelligence: 5%",
               },
               {
@@ -358,7 +358,7 @@ const Index = () => {
                 title: "Predictive scoring active",
                 desc: "50+ ads analyzed. The AI now predicts which concepts will work BEFORE you produce them. Scores from 0 to 100.",
                 example: "\"This script concept scores 84/100 — matches your top 3 winning patterns\"",
-                color: "#f472b6",
+                color: "#06b6d4",
                 score: "Intelligence: 70%",
               },
               {
@@ -403,7 +403,7 @@ const Index = () => {
       <section id="how-it-works" className="py-20 px-6 border-y border-white/[0.06]">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-14">
-            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               {t("how_label2")}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-4 font-display" style={{ letterSpacing: "-0.02em" }}>
@@ -413,8 +413,8 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {([
-              { n: "1", icon: "📥", title: t("how_s1_title"), desc: t("how_s1_desc"), result: t("how_s1_result"), color: "#a78bfa" },
-              { n: "2", icon: "🧠", title: t("how_s2_title"), desc: t("how_s2_desc"), result: t("how_s2_result"), color: "#f472b6" },
+              { n: "1", icon: "📥", title: t("how_s1_title"), desc: t("how_s1_desc"), result: t("how_s1_result"), color: "#0ea5e9" },
+              { n: "2", icon: "🧠", title: t("how_s2_title"), desc: t("how_s2_desc"), result: t("how_s2_result"), color: "#06b6d4" },
               { n: "3", icon: "⚡", title: t("how_s3_title"), desc: t("how_s3_desc"), result: t("how_s3_result"), color: "#34d399" },
             ] as {n:string;icon:string;title:string;desc:string;result:string;color:string}[]).map((step, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 }} viewport={{ once: true }}
@@ -452,13 +452,13 @@ const Index = () => {
                 label: "Pattern Detection",
                 output: "\"Your UGC ads with curiosity hooks outperform talking-head by 2.3x in BR market. Top CTR: 2.1% vs 0.9%.\"",
                 icon: "🔍",
-                color: "#a78bfa",
+                color: "#0ea5e9",
               },
               {
                 label: "Predictive Score",
                 output: "\"New concept: UGC + Social Proof + TikTok BR → Score: 87/100 — High confidence. Matches 4 of your top 5 winners.\"",
                 icon: "🎯",
-                color: "#f472b6",
+                color: "#06b6d4",
               },
               {
                 label: "Script Generation",
@@ -501,7 +501,7 @@ const Index = () => {
             <h2 className="text-2xl md:text-3xl font-bold font-display mb-6" style={{ letterSpacing: "-0.01em" }}>
               {t("prov_title1")}
               <br />
-              <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 {t("prov_title2")}
               </span>
             </h2>
@@ -526,11 +526,11 @@ const Index = () => {
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none"
-          style={{background:"radial-gradient(ellipse at 60% 50%,rgba(167,139,250,0.06),transparent 60%)"}} />
+          style={{background:"radial-gradient(ellipse at 60% 50%,rgba(14,165,233,0.06),transparent 60%)"}} />
         <div className="container mx-auto max-w-5xl relative">
           <div className="text-center mb-14">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] font-display"
-              style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              style={{background:"linear-gradient(135deg, #0ea5e9, #06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
               {t("lp_loop_label")}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-3 font-display" style={{letterSpacing:"-0.02em"}}>
@@ -541,9 +541,9 @@ const Index = () => {
 
           <div className="grid md:grid-cols-4 gap-4 mb-8">
             {([
-              { n:"01", emoji:"📋", title:t("lp_loop_step1"), desc:t("lp_loop_step1_desc"), color:"#a78bfa" },
+              { n:"01", emoji:"📋", title:t("lp_loop_step1"), desc:t("lp_loop_step1_desc"), color:"#0ea5e9" },
               { n:"02", emoji:"🎬", title:t("lp_loop_step2"), desc:t("lp_loop_step2_desc"), color:"#60a5fa" },
-              { n:"03", emoji:"📊", title:t("lp_loop_step3"), desc:t("lp_loop_step3_desc"), color:"#f472b6" },
+              { n:"03", emoji:"📊", title:t("lp_loop_step3"), desc:t("lp_loop_step3_desc"), color:"#06b6d4" },
               { n:"04", emoji:"🧠", title:t("lp_loop_step4"), desc:t("lp_loop_step4_desc"), color:"#34d399" },
             ] as {n:string;emoji:string;title:string;desc:string;color:string}[]).map((step, i) => (
               <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
@@ -583,7 +583,7 @@ const Index = () => {
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">{t("pricing_label")}</span>
             <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">Simple, transparent pricing</h2>
             <div className="mt-5 inline-flex items-center gap-3 px-5 py-3 rounded-2xl font-body"
-              style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
+              style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
               <span className="text-2xl">💡</span>
               <p className="text-sm text-white/70">
                 One production that fails = <span className="text-white font-semibold">$500+ wasted.</span>{" "}
@@ -595,10 +595,10 @@ const Index = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, index) => (
               <motion.div key={index} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} viewport={{ once: true }}>
-                <Card className={`relative h-full ${plan.highlighted ? 'border-purple-500/50 shadow-xl shadow-purple-500/10 md:-translate-y-4' : 'border-border/50'} transition-all duration-300 hover:-translate-y-2 bg-card/80 backdrop-blur-sm`}>
+                <Card className={`relative h-full ${plan.highlighted ? 'border-sky-500/50 shadow-xl shadow-sky-500/10 md:-translate-y-4' : 'border-border/50'} transition-all duration-300 hover:-translate-y-2 bg-card/80 backdrop-blur-sm`}>
                   {plan.badge && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-4 font-body">{plan.badge}</Badge>
+                      <Badge className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0 px-4 font-body">{plan.badge}</Badge>
                     </div>
                   )}
                   <CardHeader className="text-center pb-6">
@@ -623,7 +623,7 @@ const Index = () => {
                         );
                       })}
                     </ul>
-                    <Button className={`w-full font-body ${plan.highlighted ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0' : 'bg-card text-foreground hover:bg-muted border border-border'}`}
+                    <Button className={`w-full font-body ${plan.highlighted ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-600 hover:to-cyan-600 border-0' : 'bg-card text-foreground hover:bg-muted border border-border'}`}
                       onClick={() => navigate(plan.name === "Free" ? "/signup" : `/signup?plan=${plan.name.toLowerCase()}`)}>
                       {plan.cta}
                     </Button>
@@ -653,12 +653,12 @@ const Index = () => {
           <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
             className="p-12 rounded-3xl relative overflow-hidden"
             style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.12),rgba(236,72,153,0.08))", border: "1px solid rgba(139,92,246,0.18)" }}>
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%,rgba(167,139,250,0.18),transparent 60%)" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%,rgba(14,165,233,0.18),transparent 60%)" }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display" style={{ letterSpacing: "-0.02em" }}>
                 Stop testing blind.
                 <br />
-                <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                   Start knowing what works.
                 </span>
               </h2>
@@ -673,7 +673,7 @@ const Index = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/30 font-body group"
+                <Button className="relative overflow-hidden bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-400 hover:to-cyan-400 font-bold text-base h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-sky-500/30 font-body group"
                   onClick={() => navigate("/signup")}>
                   <span className="relative z-10 flex items-center gap-2">
                     Start your loop — free
@@ -741,7 +741,7 @@ const Index = () => {
       <div className="fixed bottom-0 left-0 right-0 z-40 p-4 md:hidden"
         style={{ background: "linear-gradient(to top, rgba(6,6,8,0.98) 70%, transparent)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <button className="w-full font-bold text-sm rounded-xl py-3.5 text-black font-body whitespace-nowrap"
-          style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}
+          style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}
           onClick={() => navigate("/signup")}>
           {t("hero_cta_primary")} →
         </button>

@@ -17,7 +17,7 @@ const STEPS = [
     ],
   },
   {
-    n: "02", icon: Brain, color: "#a78bfa",
+    n: "02", icon: Brain, color: "#0ea5e9",
     title: "Run Learning",
     what: "The AI parses every filename, extracts variables (editor, market, platform, hook type, format) and correlates them with your CTR and ROAS data.",
     how: "Click Run Learning on the Performance Loop page. Takes 10-30 seconds depending on data volume. Run it every time you import new data.",
@@ -29,7 +29,7 @@ const STEPS = [
     ],
   },
   {
-    n: "03", icon: TrendingUp, color: "#f472b6",
+    n: "03", icon: TrendingUp, color: "#06b6d4",
     title: "Read your patterns",
     what: "Winning patterns are combinations of variables that outperform your account average CTR by 20%+. Losing patterns are combinations to avoid.",
     how: "Patterns show on the Performance Loop page. Each pattern has CTR, ROAS, sample size, and confidence score. Higher confidence = more reliable.",
@@ -171,7 +171,7 @@ export default function LoopGuidePage() {
       {/* CTA */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button onClick={() => navigate("/dashboard/loop")}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
           <RefreshCw size={14} /> Go to Performance Loop
         </button>
         <button onClick={() => navigate("/dashboard/loop/import")}

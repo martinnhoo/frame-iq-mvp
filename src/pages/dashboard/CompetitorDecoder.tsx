@@ -30,7 +30,7 @@ const THREAT_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const HOOK_TYPE_COLORS: Record<string, string> = {
-  curiosity:        "text-purple-400 bg-purple-400/10 border-purple-400/20",
+  curiosity:        "text-sky-400 bg-sky-400/10 border-sky-400/20",
   pain_point:       "text-red-400 bg-red-400/10 border-red-400/20",
   social_proof:     "text-green-400 bg-green-400/10 border-green-400/20",
   pattern_interrupt:"text-orange-400 bg-orange-400/10 border-orange-400/20",
@@ -192,7 +192,7 @@ export default function CompetitorDecoder() {
         {/* Active persona indicator */}
         {selectedPersona && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)" }}>
+            style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
             <span className="text-base">{selectedPersona.avatar_emoji || "🎯"}</span>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-violet-400/70 font-semibold truncate">Persona: {selectedPersona.name}</p>
@@ -311,14 +311,14 @@ export default function CompetitorDecoder() {
           </div>
 
           {/* Counter strategy */}
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.05] p-5">
+          <div className="rounded-2xl border border-sky-500/20 bg-sky-500/[0.05] p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Shield className="h-4 w-4 text-purple-400" />
-              <p className="text-[10px] uppercase tracking-widest text-purple-400/60" style={mono}>Counter strategy</p>
+              <Shield className="h-4 w-4 text-sky-400" />
+              <p className="text-[10px] uppercase tracking-widest text-sky-400/60" style={mono}>Counter strategy</p>
             </div>
             <p className="text-sm text-white/60 leading-relaxed">{result.counter_strategy}</p>
             <button onClick={() => setShowCounter(!showCounter)}
-              className="flex items-center gap-1.5 mt-3 text-xs text-purple-400/50 hover:text-purple-400 transition-colors">
+              className="flex items-center gap-1.5 mt-3 text-xs text-sky-400/50 hover:text-sky-400 transition-colors">
               {showCounter ? <><ChevronUp className="h-3.5 w-3.5" /> Hide</> : <><ChevronDown className="h-3.5 w-3.5" /> Copy strategy</>}
             </button>
             {showCounter && (

@@ -209,7 +209,7 @@ const Pricing = () => {
                 <Card
                   className={`relative h-full flex flex-col transition-all duration-300 ${
                     plan.highlighted
-                      ? "border-purple-500/50 shadow-xl shadow-purple-500/15 md:scale-105 bg-card"
+                      ? "border-sky-500/50 shadow-xl shadow-sky-500/15 md:scale-105 bg-card"
                       : "border-border bg-card hover:-translate-y-1"
                   }`}
                   style={plan.highlighted ? {
@@ -218,7 +218,7 @@ const Pricing = () => {
                 >
                   {plan.badge && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                      <Badge className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0">
                         {plan.badge}
                       </Badge>
                     </div>
@@ -251,7 +251,7 @@ const Pricing = () => {
                     <Button
                       className={`w-full mt-6 ${
                         plan.highlighted
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0"
+                          ? "bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0"
                           : "bg-card text-foreground hover:bg-muted border border-border"
                       }`}
                       onClick={plan.ctaAction}
@@ -328,7 +328,7 @@ const Pricing = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                 onClick={() => navigate("/book-demo")}
               >
                 Book a demo

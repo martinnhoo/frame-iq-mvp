@@ -19,7 +19,7 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 
 const getFunnelStages = (dt: (key: any) => string) => [
   { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)" },
+  { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
   { value: "bofu", label: dt("bo_bofu"), full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
 ];
 
@@ -323,7 +323,7 @@ const NewBoard = () => {
                     </>
                   ) : hookPreview ? (
                     <>
-                      <Zap className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                      <Zap className="h-3.5 w-3.5 text-sky-400 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-white/40">Predicted hook score</span>
@@ -436,7 +436,7 @@ const NewBoard = () => {
                 Target Market
                 {selectedPersona && !marketOverridden && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto"
-                    style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa" }}>
+                    style={{ background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", color: "#0ea5e9" }}>
                     via {selectedPersona.name.split(" ")[0]}
                   </span>
                 )}
@@ -577,7 +577,7 @@ const NewBoard = () => {
 
       {/* Generate button */}
       <Button
-        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 h-14 text-base font-semibold"
+        className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0 h-14 text-base font-semibold"
         onClick={handleGenerate}
         disabled={!prompt.trim() || prompt.trim().length < 10 || generating}
       >

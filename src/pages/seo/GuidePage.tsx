@@ -15,7 +15,7 @@ export default function GuidePage() {
     <SeoLayout title="Guide Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)", marginBottom: 16 }}>Guide not found.</p>
-        <button onClick={() => navigate("/guides")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer" }}>← All guides</button>
+        <button onClick={() => navigate("/guides")} style={{ color: "#0ea5e9", background: "none", border: "none", cursor: "pointer" }}>← All guides</button>
       </div>
     </SeoLayout>
   );
@@ -41,7 +41,7 @@ export default function GuidePage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 28, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
           <button onClick={() => navigate("/guides")} style={{ color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontSize: 12 }}>Guides</button>
           <span>/</span>
-          <span style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(167,139,250,0.1)", color: "#a78bfa" }}>{guide.clusterLabel}</span>
+          <span style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(14,165,233,0.1)", color: "#0ea5e9" }}>{guide.clusterLabel}</span>
         </div>
 
         {/* Header */}
@@ -72,10 +72,10 @@ export default function GuidePage() {
         </div>
 
         {/* Inline CTA */}
-        <div style={{ borderRadius: 20, padding: "24px 28px", background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.18)", marginBottom: 56, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ borderRadius: 20, padding: "24px 28px", background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", marginBottom: 56, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
           <p style={{ ...j, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>Ready to put this into practice?</p>
           <button onClick={() => navigate(guide.ctaRoute)}
-            style={{ ...j, padding: "10px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+            style={{ ...j, padding: "10px 22px", borderRadius: 999, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
             {guide.ctaLabel}
           </button>
         </div>
@@ -88,7 +88,7 @@ export default function GuidePage() {
               {related.map(r => (
                 <div key={r.slug} onClick={() => navigate(`/guides/${r.slug}`)}
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 14, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
                   <div>
                     <p style={{ ...j, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{r.title}</p>

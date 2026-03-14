@@ -109,8 +109,8 @@ const AnalysesList = () => {
                 onClick={() => navigate(`/dashboard/analyses/${a.id}`)}
                 className="group flex items-center gap-4 p-4 rounded-2xl border border-white/[0.12] bg-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.08] transition-all cursor-pointer"
               >
-                <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <BarChart3 className="h-4 w-4 text-purple-400" />
+                <div className="h-10 w-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0">
+                  <BarChart3 className="h-4 w-4 text-sky-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-white/80 group-hover:text-white truncate transition-colors">

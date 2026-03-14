@@ -122,7 +122,7 @@ const VideoAnalysisDemo = () => (
       <div>
         <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>Creative Model</div>
         <div className="flex items-center gap-2">
-          <span className="px-2 py-1 rounded text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa' }}>Studio</span>
+          <span className="px-2 py-1 rounded text-xs font-medium" style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#0ea5e9' }}>Studio</span>
           <span style={{ color: '#fff', fontSize: '16px', fontWeight: 600 }}>Product Demo</span>
         </div>
       </div>
@@ -141,7 +141,7 @@ const VideoAnalysisDemo = () => (
     <div className="p-4 rounded-xl mb-4" style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}>
       <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '10px' }}>Hook (0–3s)</div>
       <p style={{ color: '#e5e5e5', fontSize: '14px', lineHeight: '1.6', fontFamily: '"DM Mono", monospace' }}>
-        "Slow-motion close-up of running shoe hitting wet pavement, VO: <span style={{ color: '#a78bfa' }}>'Every millisecond counts — we engineered 14 of them.'</span>"
+        "Slow-motion close-up of running shoe hitting wet pavement, VO: <span style={{ color: '#0ea5e9' }}>'Every millisecond counts — we engineered 14 of them.'</span>"
       </p>
     </div>
 
@@ -196,7 +196,7 @@ const BoardGenerationDemo = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p style={{ color: '#e5e5e5', fontSize: '13px', lineHeight: 1.5 }}>{scene.desc}</p>
-              <p style={{ color: '#a78bfa', fontSize: '12px', fontFamily: '"DM Mono", monospace', marginTop: 4 }}>{scene.vo}</p>
+              <p style={{ color: '#0ea5e9', fontSize: '12px', fontFamily: '"DM Mono", monospace', marginTop: 4 }}>{scene.vo}</p>
               <p style={{ color: '#555', fontSize: '11px', marginTop: 4, fontStyle: 'italic' }}>📝 {scene.note}</p>
             </div>
           </div>
@@ -276,9 +276,9 @@ const AutoTranslationDemo = () => (
 
 const CreativeIntelligenceDemo = () => {
   const classifications = [
-    { label: "UGC Testimonial", pct: 34, color: '#a78bfa' },
+    { label: "UGC Testimonial", pct: 34, color: '#0ea5e9' },
     { label: "Product Demo", pct: 28, color: '#60a5fa' },
-    { label: "Problem-Solution", pct: 18, color: '#f472b6' },
+    { label: "Problem-Solution", pct: 18, color: '#06b6d4' },
     { label: "Comparison", pct: 12, color: '#4ade80' },
     { label: "Listicle", pct: 8, color: '#fbbf24' },
   ];
@@ -369,7 +369,7 @@ const AIVideoGenerationDemo = () => {
           </div>
         </div>
         <div className="px-3 py-1.5 rounded-full" style={{ background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
-          <span style={{ fontSize: '12px', color: '#f472b6', fontWeight: 500 }}>● Ready to Export</span>
+          <span style={{ fontSize: '12px', color: '#06b6d4', fontWeight: 500 }}>● Ready to Export</span>
         </div>
       </div>
 
@@ -391,7 +391,7 @@ const AIVideoGenerationDemo = () => {
           {timeline.map((s) => (
             <div key={s.scene} className="flex-1 text-center">
               <div className="rounded-lg py-2 mb-1.5 relative overflow-hidden" style={{ background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
-                <div className="text-xs font-semibold" style={{ color: '#f472b6' }}>{s.label}</div>
+                <div className="text-xs font-semibold" style={{ color: '#06b6d4' }}>{s.label}</div>
                 <div className="text-[10px] mt-0.5" style={{ color: '#666' }}>{s.duration}</div>
               </div>
               <Check className="w-3 h-3 text-green-500 mx-auto" />
@@ -441,7 +441,7 @@ const APIAccessDemo = () => (
         </div>
       </div>
       <div className="px-3 py-1.5 rounded-full" style={{ background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.3)' }}>
-        <span style={{ fontSize: '12px', color: '#a78bfa', fontWeight: 500 }}>● 24/24 Complete</span>
+        <span style={{ fontSize: '12px', color: '#0ea5e9', fontWeight: 500 }}>● 24/24 Complete</span>
       </div>
     </div>
 
@@ -454,14 +454,14 @@ const APIAccessDemo = () => (
       <pre className="p-4 overflow-x-auto" style={{ background: '#0a0a0a', margin: 0 }}>
         <code style={{ fontFamily: '"DM Mono", monospace', fontSize: '12px', lineHeight: 1.8 }}>
 {`{
-  `}<span style={{ color: '#a78bfa' }}>"batch_id"</span>{`: `}<span style={{ color: '#4ade80' }}>"batch_stake_q1_2026"</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"total_ads"</span>{`: `}<span style={{ color: '#fbbf24' }}>24</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"avg_hook_score"</span>{`: `}<span style={{ color: '#fbbf24' }}>8.1</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"top_creative_model"</span>{`: `}<span style={{ color: '#4ade80' }}>"UGC Sports Promo"</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"winning_hooks"</span>{`: `}<span style={{ color: '#fbbf24' }}>3</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"underperforming"</span>{`: `}<span style={{ color: '#fbbf24' }}>6</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"recommendation"</span>{`: `}<span style={{ color: '#4ade80' }}>"Pause 6 ads, scale 3 winners"</span>{`,
-  `}<span style={{ color: '#a78bfa' }}>"markets"</span>{`: [`}<span style={{ color: '#4ade80' }}>"BR"</span>{`, `}<span style={{ color: '#4ade80' }}>"LATAM"</span>{`, `}<span style={{ color: '#4ade80' }}>"EU"</span>{`, `}<span style={{ color: '#4ade80' }}>"US"</span>{`]
+  `}<span style={{ color: '#0ea5e9' }}>"batch_id"</span>{`: `}<span style={{ color: '#4ade80' }}>"batch_stake_q1_2026"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"total_ads"</span>{`: `}<span style={{ color: '#fbbf24' }}>24</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"avg_hook_score"</span>{`: `}<span style={{ color: '#fbbf24' }}>8.1</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"top_creative_model"</span>{`: `}<span style={{ color: '#4ade80' }}>"UGC Sports Promo"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"winning_hooks"</span>{`: `}<span style={{ color: '#fbbf24' }}>3</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"underperforming"</span>{`: `}<span style={{ color: '#fbbf24' }}>6</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"recommendation"</span>{`: `}<span style={{ color: '#4ade80' }}>"Pause 6 ads, scale 3 winners"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"markets"</span>{`: [`}<span style={{ color: '#4ade80' }}>"BR"</span>{`, `}<span style={{ color: '#4ade80' }}>"LATAM"</span>{`, `}<span style={{ color: '#4ade80' }}>"EU"</span>{`, `}<span style={{ color: '#4ade80' }}>"US"</span>{`]
 }`}
         </code>
       </pre>
@@ -535,7 +535,7 @@ const FeatureDetail = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -546,7 +546,7 @@ const FeatureDetail = () => {
                 <Link to="/" className="text-lg text-secondary hover:text-foreground">Home</Link>
                 <Link to="/blog" className="text-lg text-secondary hover:text-foreground">Blog</Link>
                 <Link to="/contact" className="text-lg text-secondary hover:text-foreground">Contact</Link>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => navigate("/signup")}>Get started</Button>
+                <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white" onClick={() => navigate("/signup")}>Get started</Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -575,7 +575,7 @@ const FeatureDetail = () => {
             <div className="grid md:grid-cols-2 gap-4 mb-16">
               {feature.details.map((detail, i) => (
                 <div key={i} className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(139, 92, 246, 0.03)', border: '1px solid rgba(139, 92, 246, 0.1)' }}>
-                  <span className="text-purple-400 mt-0.5">✓</span>
+                  <span className="text-sky-400 mt-0.5">✓</span>
                   <span className="text-sm text-secondary leading-relaxed">{detail}</span>
                 </div>
               ))}
@@ -604,7 +604,7 @@ const FeatureDetail = () => {
             </div>
 
             <div className="text-center mt-16">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 px-8 py-4 h-auto text-base rounded-xl" onClick={() => navigate("/signup")}>
+              <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0 px-8 py-4 h-auto text-base rounded-xl" onClick={() => navigate("/signup")}>
                 Try {feature.title} for free <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

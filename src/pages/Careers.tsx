@@ -201,7 +201,7 @@ const Careers = () => {
 
                   <div className="pt-4 border-t border-border">
                     <Button
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0"
+                      className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                       onClick={() => window.location.href = "mailto:careers@adbrief.pro?subject=Application: " + job.title}
                     >
                       Apply Now

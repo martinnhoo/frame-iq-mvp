@@ -129,7 +129,7 @@ function PersonaDetailView({
       <label className="text-[9px] uppercase tracking-widest text-white/40">{label}</label>
       {editing ? (
         <input value={value} onChange={e => setDraft(d => ({ ...d, [field]: e.target.value }))}
-          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors" />
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-sky-500/40 transition-colors" />
       ) : (
         <p className="text-xs text-white/60">{value || "—"}</p>
       )}
@@ -144,14 +144,14 @@ function PersonaDetailView({
           value={(values || []).join("\n")}
           onChange={e => setDraft(d => ({ ...d, [field]: e.target.value.split("\n").filter(Boolean) }))}
           rows={Math.max(2, (values || []).length)}
-          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none"
+          className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-sky-500/40 transition-colors resize-none"
           placeholder="One per line"
         />
       ) : (
         <div className="space-y-1">
           {(values || []).map((v, i) => (
             <p key={i} className="text-[11px] text-white/50 flex gap-1.5">
-              <span className="text-purple-400/60 shrink-0">·</span>
+              <span className="text-sky-400/60 shrink-0">·</span>
               <span>{v}</span>
             </p>
           ))}
@@ -178,7 +178,7 @@ function PersonaDetailView({
             <button onClick={() => { setDraft(persona); setEditing(false); }}
               className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/60 transition-colors">Cancel</button>
             <button onClick={handleSave} disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium hover:bg-purple-500/30 transition-all">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/30 text-purple-300 text-xs font-medium hover:bg-sky-500/30 transition-all">
               {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Save
             </button>
           </div>
@@ -215,7 +215,7 @@ function PersonaDetailView({
           <div className="space-y-1">
             <label className="text-[9px] uppercase tracking-widest text-white/40">Bio</label>
             <textarea value={draft.bio} onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))}
-              rows={3} className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-purple-500/40 transition-colors resize-none" />
+              rows={3} className="w-full px-3 py-2 rounded-lg bg-white/[0.08] border border-white/[0.1] text-white text-xs outline-none focus:border-sky-500/40 transition-colors resize-none" />
           </div>
         ) : (
           <div className="space-y-1">
@@ -626,14 +626,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                             onClick={() => window.location.href = "/pricing"}
                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all group ${
                               isPopular
-                                ? "border-purple-500/30 bg-purple-500/5 hover:border-purple-500/50 hover:bg-purple-500/10"
+                                ? "border-sky-500/30 bg-sky-500/5 hover:border-sky-500/50 hover:bg-sky-500/10"
                                 : "border-white/[0.13] bg-white/[0.06] hover:border-white/15 hover:bg-white/[0.08]"
                             }`}
                           >
                             <div className="text-left">
                               <div className="flex items-center gap-2">
                                 <p className="text-sm font-semibold text-white">{p.label}</p>
-                                {isPopular && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/20 font-bold">POPULAR</span>}
+                                {isPopular && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/20 font-bold">POPULAR</span>}
                               </div>
                               <p className="text-xs text-white/50">{p.desc}</p>
                             </div>
@@ -699,7 +699,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <p className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    <Sparkles className="h-3.5 w-3.5 text-sky-400" />
                     Saved Personas
                   </p>
                   <p className="text-xs text-white/40 mt-0.5">Your AI audience profiles</p>

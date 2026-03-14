@@ -97,8 +97,8 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
               <div
                 className="mx-auto mb-6 w-14 h-14 rounded-2xl flex items-center justify-center"
                 style={{
-                  background: "linear-gradient(135deg, hsl(262 83% 58% / 0.2), hsl(320 80% 60% / 0.2))",
-                  border: "1px solid hsl(262 83% 58% / 0.3)",
+                  background: "linear-gradient(135deg, hsl(199 83% 58% / 0.2), hsl(320 80% 60% / 0.2))",
+                  border: "1px solid hsl(199 83% 58% / 0.3)",
                 }}
               >
                 <Sparkles className="w-7 h-7 text-accent" />
@@ -114,7 +114,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
               {/* Actions */}
               <div className="space-y-3">
                 <Button
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 border-0 h-12 text-base font-semibold rounded-xl"
+                  className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0 h-12 text-base font-semibold rounded-xl"
                   onClick={() => navigate("/signup")}
                 >
                   Sign up free

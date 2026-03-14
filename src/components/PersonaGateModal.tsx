@@ -31,7 +31,7 @@ const INTENT_COPY: Record<string, { action: string; impact: string }> = {
 const BENEFITS = [
   {
     icon: Target,
-    color: "#a78bfa",
+    color: "#0ea5e9",
     title: "Diagnóstico contextualizado",
     desc: "O AI sabe quem é seu público — e analisa o ad com esse filtro.",
   },
@@ -84,13 +84,13 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
             <div className="relative rounded-3xl overflow-hidden"
               style={{
                 background: "linear-gradient(160deg, #0e0e0e 0%, #111 100%)",
-                border: "1px solid rgba(167,139,250,0.25)",
+                border: "1px solid rgba(14,165,233,0.25)",
                 boxShadow: "0 0 80px rgba(139,92,246,0.15), 0 24px 64px rgba(0,0,0,0.6)",
               }}>
 
               {/* Ambient glow top */}
               <div className="absolute inset-x-0 top-0 h-px"
-                style={{ background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.6), transparent)" }} />
+                style={{ background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.6), transparent)" }} />
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 -translate-y-12 rounded-full blur-3xl pointer-events-none"
                 style={{ background: "rgba(139,92,246,0.18)" }} />
 
@@ -104,7 +104,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                 {/* Header */}
                 <div className="text-center space-y-2">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-2"
-                    style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.15))", border: "1px solid rgba(167,139,250,0.3)" }}>
+                    style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.15))", border: "1px solid rgba(14,165,233,0.3)" }}>
                     <span className="text-2xl">🎯</span>
                   </div>
                   <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}>
@@ -137,8 +137,8 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
 
                 {/* Example impact */}
                 <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
-                  style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.18)" }}>
-                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                  style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)" }}>
+                  <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
                   <p className="text-[11px] text-white/50 leading-snug">
                     <span className="text-purple-300 font-semibold">Com persona ativa:</span> {copy.impact}
                   </p>
@@ -149,7 +149,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                   <button
                     onClick={() => { navigate("/dashboard/persona"); onClose(); }}
                     className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm text-black transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", fontFamily: "'Syne', sans-serif" }}>
+                    style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", fontFamily: "'Syne', sans-serif" }}>
                     <Target className="w-4 h-4" />
                     Criar minha persona agora
                   </button>

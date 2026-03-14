@@ -15,7 +15,7 @@ export function CompareIndex() {
           <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
           <h1 style={{ ...j, fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
             How AdBrief compares<br />
-            <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>to other ad tools</span>
+            <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>to other ad tools</span>
           </h1>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", maxWidth: 500, lineHeight: 1.6 }}>Honest, feature-by-feature comparisons. No fluff.</p>
         </div>
@@ -24,7 +24,7 @@ export function CompareIndex() {
           {SEO_COMPARISONS.map(c => (
             <div key={c.slug} onClick={() => navigate(`/compare/${c.slug}`)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, padding: "20px 24px", borderRadius: 16, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s" }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
               <div>
                 <p style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>AdBrief vs {c.competitorName}</p>
@@ -50,7 +50,7 @@ export function CompareDetail() {
     <SeoLayout title="Comparison Not Found — AdBrief" description="" noIndex>
       <div style={{ textAlign: "center", padding: "120px 24px" }}>
         <p style={{ color: "rgba(255,255,255,0.3)" }}>Not found.</p>
-        <button onClick={() => navigate("/compare")} style={{ color: "#a78bfa", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← All comparisons</button>
+        <button onClick={() => navigate("/compare")} style={{ color: "#0ea5e9", background: "none", border: "none", cursor: "pointer", marginTop: 12 }}>← All comparisons</button>
       </div>
     </SeoLayout>
   );
@@ -78,22 +78,22 @@ export function CompareDetail() {
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, marginBottom: 40 }}>{comp.summary}</p>
 
         {/* Verdict badge */}
-        <div style={{ borderRadius: 14, padding: "14px 20px", background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.2)", marginBottom: 40 }}>
-          <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 6 }}>Verdict</p>
+        <div style={{ borderRadius: 14, padding: "14px 20px", background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 40 }}>
+          <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 6 }}>Verdict</p>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{comp.verdict}</p>
         </div>
 
         {/* Feature table */}
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 40 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(167,139,250,0.08)", padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(14,165,233,0.08)", padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Feature</span>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#a78bfa", textAlign: "center" }}>AdBrief</span>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", textAlign: "center" }}>AdBrief</span>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>{comp.competitorName}</span>
           </div>
           {comp.featureTable.map((row, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "13px 20px", borderTop: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)" }}>
               <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{row.feature}</span>
-              <span style={{ fontSize: 13, textAlign: "center", color: row.frameiq.includes("✓") ? "#34d399" : row.frameiq.includes("✗") ? "rgba(255,255,255,0.18)" : "#a78bfa", fontWeight: row.frameiq.includes("✓") ? 600 : 400 }}>{row.frameiq}</span>
+              <span style={{ fontSize: 13, textAlign: "center", color: row.frameiq.includes("✓") ? "#34d399" : row.frameiq.includes("✗") ? "rgba(255,255,255,0.18)" : "#0ea5e9", fontWeight: row.frameiq.includes("✓") ? 600 : 400 }}>{row.frameiq}</span>
               <span style={{ fontSize: 13, textAlign: "center", color: row.competitor.includes("✓") ? "#34d399" : row.competitor.includes("✗") ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.5)" }}>{row.competitor}</span>
             </div>
           ))}
@@ -101,8 +101,8 @@ export function CompareDetail() {
 
         {/* Pros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
-          <div style={{ borderRadius: 16, padding: 20, background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.15)" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#a78bfa", marginBottom: 14 }}>AdBrief strengths</p>
+          <div style={{ borderRadius: 16, padding: 20, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 14 }}>AdBrief strengths</p>
             {comp.frameiqPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                 <span style={{ color: "#34d399", flexShrink: 0 }}>✓</span>{p}
@@ -126,7 +126,7 @@ export function CompareDetail() {
             {SEO_COMPARISONS.filter(c => c.slug !== slug).map(c => (
               <button key={c.slug} onClick={() => navigate(`/compare/${c.slug}`)}
                 style={{ fontSize: 13, padding: "8px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "border-color .15s" }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.3)"}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
                 vs {c.competitorName}
               </button>

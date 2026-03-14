@@ -24,7 +24,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 3, icon: "🎯", name: "Strategist", min: 20, color: "#a78bfa",
+    n: 3, icon: "🎯", name: "Strategist", min: 20, color: "#0ea5e9",
     desc: "You think in systems. Your data starts shaping your briefs.",
     tasks: [
       "Reach 20 total actions across all tools",
@@ -34,7 +34,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 4, icon: "🎬", name: "Producer", min: 50, color: "#f472b6",
+    n: 4, icon: "🎬", name: "Producer", min: 50, color: "#06b6d4",
     desc: "You're running at volume. The loop is feeding itself.",
     tasks: [
       "Reach 50 total actions",
@@ -62,7 +62,7 @@ export default function Levels() {
     <div style={{ minHeight: "100vh", background: "#07070f", color: "#fff", ...j }}>
       {/* Ambient */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: "-10%", left: "30%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(167,139,250,0.05),transparent 70%)", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", top: "-10%", left: "30%", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle,rgba(14,165,233,0.05),transparent 70%)", filter: "blur(60px)" }} />
       </div>
 
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "60px 24px 80px", position: "relative" }}>
@@ -75,7 +75,7 @@ export default function Levels() {
           <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 10 }}>AdBrief Mastery</p>
           <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.15 }}>
             Five levels.<br />
-            <span style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               One direction.
             </span>
           </h1>
@@ -87,7 +87,7 @@ export default function Levels() {
         {/* Path */}
         <div style={{ position: "relative" }}>
           {/* vertical line */}
-          <div style={{ position: "absolute", left: 19, top: 20, bottom: 20, width: 2, background: "linear-gradient(180deg,rgba(167,139,250,0.3),rgba(244,114,182,0.1))", borderRadius: 999 }} />
+          <div style={{ position: "absolute", left: 19, top: 20, bottom: 20, width: 2, background: "linear-gradient(180deg,rgba(14,165,233,0.3),rgba(6,182,212,0.1))", borderRadius: 999 }} />
 
           {LEVELS.map((level, i) => (
             <div key={level.n} style={{ display: "flex", gap: 20, marginBottom: i < LEVELS.length - 1 ? 40 : 0, position: "relative" }}>
@@ -133,11 +133,11 @@ export default function Levels() {
         </div>
 
         {/* CTA */}
-        <div style={{ marginTop: 56, padding: "28px 24px", borderRadius: 20, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)", textAlign: "center" }}>
+        <div style={{ marginTop: 56, padding: "28px 24px", borderRadius: 20, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", textAlign: "center" }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Every action counts.</p>
           <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>Analyses, briefs, hooks, imports — all of it moves you forward.</p>
           <button onClick={() => navigate("/dashboard")}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 12, background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
             Open dashboard <ArrowRight size={14} />
           </button>
         </div>

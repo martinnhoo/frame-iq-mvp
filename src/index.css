@@ -25,7 +25,7 @@
     --muted: 224 12% 15%;
     --muted-foreground: 0 0% 62%;
 
-    --accent: 262 83% 58%;
+    --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,8 +37,8 @@
     --radius: 0.5rem;
 
     /* Brand accent variables */
-    --purple: 258 89% 66%;
-    --purple-glow: rgba(124, 58, 237, 0.18);
+    --purple: 199 89% 48%;
+    --purple-glow: rgba(14, 165, 233, 0.18);
     --coral: 0 100% 71%;
     --emerald: 160 84% 39%;
     --sidebar-w: 252px;
@@ -87,7 +87,7 @@ code, pre,
 
 /* ── Glows ───────────────────────────────────────────────────────────────────── */
 
-.glow-purple {
+.glow-blue {
   box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2), 0 0 20px rgba(124, 58, 237, 0.12), 0 0 40px rgba(124, 58, 237, 0.05);
 }
 
@@ -123,7 +123,7 @@ code, pre,
 /* ── Animated gradient text ─────────────────────────────────────────────────── */
 
 .gradient-text {
-  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #fb923c 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #0891b2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -32,9 +32,9 @@ const planMeta: Record<string, { color: string; bg: string; label: string }> = {
   free:    { color: "#ffffff40", bg: "rgba(255,255,255,0.05)", label: "Free" },
   maker:   { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Maker" },
   creator: { color: "#60a5fa",   bg: "rgba(96,165,250,0.1)",   label: "Creator" },
-  pro:     { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Pro" },
+  pro:     { color: "#0ea5e9",   bg: "rgba(14,165,233,0.1)",  label: "Pro" },
   starter: { color: "#34d399",   bg: "rgba(52,211,153,0.1)",   label: "Starter" },
-  studio:  { color: "#a78bfa",   bg: "rgba(167,139,250,0.1)",  label: "Studio" },
+  studio:  { color: "#0ea5e9",   bg: "rgba(14,165,233,0.1)",  label: "Studio" },
   scale:   { color: "#fbbf24",   bg: "rgba(251,191,36,0.1)",   label: "Scale" },
 };
 
@@ -46,8 +46,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const dt = useDashT(language);
 
   const intelligenceItems = [
-    { title: "Performance Loop", url: "/dashboard/loop",        icon: RefreshCw,     accent: "#f472b6", badge: "CORE" },
-    { title: "AdBrief AI",       url: "/dashboard/loop/ai",     icon: Brain,         accent: "#a78bfa", badge: "AI"   },
+    { title: "Performance Loop", url: "/dashboard/loop",        icon: RefreshCw,     accent: "#06b6d4", badge: "CORE" },
+    { title: "AdBrief AI",       url: "/dashboard/loop/ai",     icon: Brain,         accent: "#0ea5e9", badge: "AI"   },
     { title: "How it works",     url: "/dashboard/loop/guide",  icon: BookOpen,      accent: "#34d399" },
     { title: "Import Data",      url: "/dashboard/loop/import", icon: Upload,        accent: "#60a5fa" },
   ];
@@ -56,7 +56,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { title: dt("nav_analyses"),  url: "/dashboard/analyses",  icon: BarChart3,     accent: "#c084fc" },
     { title: dt("nav_boards"),    url: "/dashboard/boards",    icon: LayoutGrid,    accent: "#60a5fa" },
     { title: dt("nav_hooks"),     url: "/dashboard/hooks",     icon: Cpu,           accent: "#fb923c" },
-    { title: "Script",            url: "/dashboard/script",    icon: FileText,      accent: "#a78bfa" },
+    { title: "Script",            url: "/dashboard/script",    icon: FileText,      accent: "#0ea5e9" },
     { title: "Brief",             url: "/dashboard/brief",     icon: ClipboardList, accent: "#60a5fa" },
     { title: dt("nav_preflight"), url: "/dashboard/preflight", icon: Plane,         accent: "#fbbf24" },
   ];
@@ -64,7 +64,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const audienceItems = [
     { title: dt("nav_persona"),   url: "/dashboard/persona",   icon: Target, accent: "#c084fc" },
     { title: dt("nav_translate"), url: "/dashboard/translate", icon: Globe,  accent: "#10b981" },
-    { title: dt("nav_templates"), url: "/dashboard/templates", icon: Layers, accent: "#f472b6" },
+    { title: dt("nav_templates"), url: "/dashboard/templates", icon: Layers, accent: "#06b6d4" },
   ];
 
   const isActive = (url: string, end?: boolean) =>
@@ -99,7 +99,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{
             ...mono,
             color: (item as any).badge === "CORE" ? "#000" : item.accent,
-            background: (item as any).badge === "CORE" ? "linear-gradient(135deg,#a78bfa,#f472b6)" : `${item.accent}18`,
+            background: (item as any).badge === "CORE" ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : `${item.accent}18`,
             border: (item as any).badge === "CORE" ? "none" : `1px solid ${item.accent}30`,
           }}>{(item as any).badge}</span>
         )}
@@ -123,7 +123,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         <div className="px-4 pt-4 pb-2">
           <NavLink to="/dashboard/loop" onClick={onClose}
             className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-black text-sm font-bold hover:opacity-90 active:scale-[.98] transition-all"
-            style={{ ...syne, background: "linear-gradient(135deg,#a78bfa,#f472b6)" }}>
+            style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>
             <Sparkles className="h-4 w-4" /> Run Intelligence
           </NavLink>
         </div>
@@ -147,8 +147,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           {(plan === "free" || plan === "creator") && (
             <NavLink to="/pricing" onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all group"
-              style={{ background: "rgba(167,139,250,0.06)", borderColor: "rgba(167,139,250,0.15)", color: "rgba(255,255,255,0.5)" }}>
-              <Zap className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+              style={{ background: "rgba(14,165,233,0.06)", borderColor: "rgba(14,165,233,0.15)", color: "rgba(255,255,255,0.5)" }}>
+              <Zap className="h-3.5 w-3.5" style={{ color: "#0ea5e9" }} />
               <div className="flex-1">
                 <p className="text-xs font-semibold text-white" style={syne}>{dt("nav_upgrade")}</p>
                 <p className="text-[10px]" style={mono}>{dt("nav_upgrade_desc")}</p>
@@ -179,7 +179,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
                     {(plan === "free" || plan === "creator" || plan === "starter") && (
                       <button onClick={e => { e.stopPropagation(); navigate("/pricing"); }}
                         className="text-[9px] px-1.5 py-0.5 rounded-md font-bold hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg,#a78bfa,#f472b6)", color: "#000" }}>
+                        style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
                         Upgrade
                       </button>
                     )}

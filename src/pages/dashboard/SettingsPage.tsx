@@ -88,7 +88,7 @@ const SettingsPage = () => {
             </div>
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+          <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0">
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Save changes
           </Button>
