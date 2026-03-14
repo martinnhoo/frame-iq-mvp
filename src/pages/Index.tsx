@@ -160,7 +160,7 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section — Creative Performance Loop */}
       <section className="relative flex flex-col justify-center px-6 overflow-hidden pt-16 pb-16">
         {/* Background Effects */}
         <div 
@@ -168,13 +168,6 @@ const Index = () => {
           style={{
             background: 'radial-gradient(ellipse at center, hsla(262, 83%, 58%, 0.12) 0%, transparent 60%)',
             filter: 'blur(60px)',
-          }}
-        />
-        <div 
-          className="absolute top-1/3 right-0 w-[400px] h-[400px] pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.08) 0%, transparent 60%)',
-            filter: 'blur(80px)',
           }}
         />
         
@@ -196,14 +189,14 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground leading-[1.08] tracking-tight font-display"
           >
-            {t("hero_title_1")}
+            Your ads learn.
             <br />
             <span style={{
               background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-            }}>{t("hero_title_2")}</span>
+            }}>Every brief gets smarter.</span>
           </motion.h1>
           
           <motion.p 
@@ -212,41 +205,40 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-[17px] md:text-[19px] max-w-[640px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body"
           >
-            {t("hero_subtitle")}
+            AdBrief closes the loop between ad performance and creative production. Import your data → AI learns what wins → every next brief is pre-calibrated.
           </motion.p>
 
-          {/* Powered by badges */}
+          {/* Loop cycle mini-visual */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="flex flex-col items-center gap-3 mt-8 font-body"
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="flex items-center justify-center gap-2 mt-10 flex-wrap font-body"
           >
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">{t("powered_by")}</span>
-            <div className="flex items-center gap-6">
-              {/* OpenAI */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.998 5.998 0 0 0-3.998 2.9 6.042 6.042 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor" className="text-foreground/70"/>
-                </svg>
-                <span className="text-[13px] font-semibold text-foreground/80 tracking-tight">OpenAI</span>
+            {[
+              { label: "Brief", icon: "📋", color: "#a78bfa" },
+              { label: "Produce", icon: "🎬", color: "#60a5fa" },
+              { label: "Run Ads", icon: "📊", color: "#f472b6" },
+              { label: "AI Learns", icon: "🧠", color: "#34d399" },
+              { label: "Repeat", icon: "🔄", color: "#fbbf24" },
+            ].map((step, i) => (
+              <div key={step.label} className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                  style={{ background: `${step.color}10`, border: `1px solid ${step.color}25` }}>
+                  <span className="text-lg">{step.icon}</span>
+                  <span className="text-sm font-semibold" style={{ color: step.color }}>{step.label}</span>
+                </div>
+                {i < 4 && <span className="text-white/15 text-lg">→</span>}
               </div>
-              {/* Anthropic / Claude */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.304 3.541h-3.483l5.149 16.913h3.483L17.304 3.541zM6.696 3.541L1.547 20.454h3.483l1.076-3.583h5.788l1.076 3.583h3.483L11.304 3.541H6.696zM7.119 14.03L9 7.785l1.881 6.245H7.119z" fill="currentColor" className="text-foreground/70"/>
-                </svg>
-                <span className="text-[13px] font-semibold text-foreground/80 tracking-tight">Claude</span>
-              </div>
-            </div>
+            ))}
           </motion.div>
 
           {/* Pricing preview */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.28 }}
-            className="flex items-center justify-center gap-6 mt-5 font-body"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex items-center justify-center gap-6 mt-6 font-body"
           >
             <span className="text-sm text-muted-foreground">{t("lp_free_to_start")}</span>
             <span className="text-muted-foreground/30">·</span>
@@ -258,7 +250,7 @@ const Index = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
           >
             <Button 
@@ -266,7 +258,7 @@ const Index = () => {
               onClick={() => navigate("/signup")}
             >
               <span className="relative z-10 flex items-center gap-2">
-                 {t("lp_score_cta")}
+                Start your loop — free
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </span>
               <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -275,12 +267,12 @@ const Index = () => {
               variant="outline" 
               className="bg-transparent text-foreground hover:bg-white/5 text-base h-auto rounded-xl px-8 py-4 group border-white/10 font-body"
               onClick={() => {
-                const el = document.getElementById('demo-preview');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const el = document.getElementById('loop-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             >
               <Play className="w-4 h-4 mr-2 group-hover:text-purple-400 transition-colors fill-current opacity-60" />
-              {t("hero_cta_secondary")}
+              See how it works
             </Button>
           </motion.div>
 
@@ -297,7 +289,7 @@ const Index = () => {
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
-              {t("hero_check_2")}
+              Learns from YOUR data
             </span>
             <span className="hidden sm:block w-px h-4 bg-white/10" />
             <span className="flex items-center gap-2 text-xs font-medium" style={{color:"rgba(167,139,250,0.8)"}}>
@@ -305,172 +297,79 @@ const Index = () => {
               {t("lp_live_teams")}
             </span>
           </motion.div>
-          
-          {/* App Screenshot */}
-          {/* Rich Dashboard Mock */}
-          <motion.div id="demo-preview"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="relative mt-16 sm:mt-24 max-w-5xl mx-auto hidden sm:block"
-          >
-            <p className="text-center text-[11px] tracking-[3px] uppercase text-muted-foreground/30 mb-5 font-display">Live analysis output</p>
-
-            {/* Outer glow */}
-            <div className="absolute -inset-1 rounded-2xl pointer-events-none" style={{background:"linear-gradient(135deg,rgba(167,139,250,0.15),rgba(244,114,182,0.1))",filter:"blur(20px)"}} />
-
-            <div className="relative rounded-2xl overflow-hidden" style={{boxShadow:"0 50px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.2)",background:"#080808"}}>
-              {/* Browser bar */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b" style={{background:"#0e0e0e",borderColor:"rgba(255,255,255,0.06)"}}>
-                <div className="flex gap-1.5">
-                  {["#ff5f57","#febc2e","#28c840"].map(c=><div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}} />)}
-                </div>
-                <div className="flex-1 mx-8 py-1.5 px-4 rounded-lg text-center text-[11px] text-white/25" style={{background:"#111",border:"1px solid rgba(255,255,255,0.05)",fontFamily:"'DM Mono',monospace"}}>
-                  <span style={{color:"#4ade80"}}>🔒</span> app.adbrief.pro/dashboard/analyses/ugc-br-0312
-                </div>
-                <div className="w-16" />
-              </div>
-
-              {/* Dashboard layout */}
-              <div className="flex" style={{minHeight:520}}>
-                {/* Sidebar mini */}
-                <div className="w-12 border-r flex flex-col items-center py-4 gap-4" style={{background:"#060606",borderColor:"rgba(255,255,255,0.05)"}}>
-                  {[["#a78bfa","▦"],["#60a5fa","▤"],["#f472b6","◈"],["#34d399","⊞"],["#fb923c","⚡"],["#c084fc","◉"]].map(([c,s],i)=>(
-                    <div key={i} className="w-7 h-7 rounded-lg flex items-center justify-center text-[13px]"
-                      style={{background:i===0?`${c}22`:"transparent",color:i===0?c:"rgba(255,255,255,0.2)",border:i===0?`1px solid ${c}30`:"none"}}>
-                      {s}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Main content */}
-                <div className="flex-1 p-5 space-y-4 overflow-hidden">
-
-                  {/* Top: file + status */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{background:"linear-gradient(135deg,#8b5cf6,#ec4899)"}}>🎬</div>
-                      <div>
-                        <p className="text-white text-sm font-semibold" style={{fontFamily:"'Syne',sans-serif"}}>virginia_wepink_br_ugc.mp4</p>
-                        <p className="text-white/25 text-[11px]" style={{fontFamily:"'DM Mono',monospace"}}>0:28 · 9:16 · PT-BR · 14.2MB · Analyzed 2m ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-green-400" style={{background:"rgba(74,222,128,0.1)",border:"1px solid rgba(74,222,128,0.2)"}}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                        Analysis complete
-                      </div>
-                      <div className="px-3 py-1.5 rounded-full text-[11px] text-white/40 border border-white/[0.08]">
-                        Export board →
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Score row */}
-                  <div className="grid grid-cols-5 gap-3">
-                    {[
-                      {label:"Hook Score", val:"9.1", sub:"viral", color:"#4ade80", bar:91},
-                      {label:"Creative Model", val:"UGC", sub:"Influencer", color:"#a78bfa", bar:null},
-                      {label:"Hook Type", val:"Curiosity", sub:"parasocial", color:"#f472b6", bar:null},
-                      {label:"Platform Fit", val:"TikTok", sub:"Reels ✓ YT ✓", color:"#60a5fa", bar:null},
-                      {label:"Audience", val:"F 25–34", sub:"BR · Beauty", color:"#fb923c", bar:null},
-                    ].map((m,i)=>(
-                      <div key={i} className="rounded-xl p-3" style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>
-                        <p className="text-[9px] uppercase tracking-widest text-white/25 mb-1.5" style={{fontFamily:"'DM Mono',monospace"}}>{m.label}</p>
-                        <p className="text-base font-bold" style={{color:m.color,fontFamily:"'Syne',sans-serif"}}>{m.val}</p>
-                        {m.bar ? (
-                          <div className="mt-1.5 h-1 rounded-full" style={{background:"rgba(255,255,255,0.06)"}}>
-                            <div className="h-full rounded-full" style={{width:`${m.bar}%`,background:m.color}} />
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-white/25 mt-0.5">{m.sub}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Middle row: hook + transcript + suggestions */}
-                  <div className="grid grid-cols-3 gap-3">
-                    {/* Hook breakdown */}
-                    <div className="rounded-xl p-4 space-y-3" style={{background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.15)"}}>
-                      <p className="text-[9px] uppercase tracking-widest text-purple-400/50" style={{fontFamily:"'DM Mono',monospace"}}>Hook (0–3s)</p>
-                      <p className="text-white/70 text-[12px] leading-relaxed" style={{fontFamily:"'DM Mono',monospace"}}>
-                        Camera: product close-up. <span className="text-purple-300">"Vocês não estão prontos pro que eu vou contar"</span>
-                      </p>
-                      <div className="flex gap-1.5">
-                        {["Curiosity gap","Parasocial","Whisper tone"].map(t=>(
-                          <span key={t} className="text-[9px] px-2 py-0.5 rounded-full text-purple-300/70" style={{background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.2)"}}>{t}</span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Transcript snippet */}
-                    <div className="rounded-xl p-4" style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)"}}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-[9px] uppercase tracking-widest text-white/25" style={{fontFamily:"'DM Mono',monospace"}}>Transcript</p>
-                        <span className="text-[9px] text-white/20" style={{fontFamily:"'DM Mono',monospace"}}>PT-BR</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {[["00:00","Vocês não estão prontos...","#a78bfa"],["00:04","Esse perfume ficou 3 meses...","#fff4"],["00:12","A fixação é absurda, juro.","#fff4"],["00:19","Usa VIRGINIA10 e ganha 20%","#f472b6"],["00:24","[product close-up + smile]","#fff2"]].map(([t,line,c])=>(
-                          <div key={t} className="flex items-start gap-2">
-                            <span className="text-[9px] shrink-0 mt-0.5" style={{color:"rgba(255,255,255,0.2)",fontFamily:"'DM Mono',monospace"}}>{t}</span>
-                            <span className="text-[11px] leading-relaxed" style={{color:c}}>{line}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Improvement suggestions */}
-                    <div className="rounded-xl p-4" style={{background:"rgba(251,191,36,0.04)",border:"1px solid rgba(251,191,36,0.12)"}}>
-                      <p className="text-[9px] uppercase tracking-widest text-amber-400/50 mb-3" style={{fontFamily:"'DM Mono',monospace"}}>AI Suggestions</p>
-                      <div className="space-y-2.5">
-                        {[
-                          {t:"Add on-screen text at 0:00–0:03 to reinforce the hook visually",s:"high"},
-                          {t:"CTA placement at 0:19 is late — move to 0:15 for +CTR",s:"high"},
-                          {t:"Test a second version with a direct benefit hook (A/B)",s:"medium"},
-                        ].map((s,i)=>(
-                          <div key={i} className="flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{background:s.s==="high"?"#f472b6":"#fbbf24"}} />
-                            <p className="text-[11px] text-white/45 leading-relaxed">{s.t}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom: production board preview strip */}
-                  <div className="rounded-xl p-4" style={{background:"rgba(96,165,250,0.04)",border:"1px solid rgba(96,165,250,0.12)"}}>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[9px] uppercase tracking-widest text-blue-400/50" style={{fontFamily:"'DM Mono',monospace"}}>Generated production board · 4 scenes</p>
-                      <span className="text-[10px] text-blue-400/50 border border-blue-400/20 px-2 py-0.5 rounded-full">View full board →</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        {sc:"01",dur:"0:00–0:03",desc:"Product close-up. Whisper VO. No on-screen text.",vo:"'Vocês não estão prontos...'",type:"Hook"},
-                        {sc:"02",dur:"0:03–0:12",desc:"Face cam. Natural light. Casual movement.",vo:"'Ficou 3 meses esgotado...'",type:"Story"},
-                        {sc:"03",dur:"0:12–0:19",desc:"Spray on wrist. Close-up skin.",vo:"'A fixação é absurda...'",type:"Demo"},
-                        {sc:"04",dur:"0:19–0:28",desc:"Full face + product. Smile to camera.",vo:"'VIRGINIA10 → 20% off'",type:"CTA"},
-                      ].map((scene)=>(
-                        <div key={scene.sc} className="rounded-lg p-3 space-y-1.5" style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)"}}>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-bold text-white/50" style={{fontFamily:"'DM Mono',monospace"}}>SC {scene.sc}</span>
-                            <span className="text-[8px] px-1.5 py-0.5 rounded text-blue-300/60" style={{background:"rgba(96,165,250,0.1)"}}>{scene.type}</span>
-                          </div>
-                          <p className="text-[9px] text-white/25" style={{fontFamily:"'DM Mono',monospace"}}>{scene.dur}</p>
-                          <p className="text-[10px] text-white/50 leading-relaxed">{scene.desc}</p>
-                          <p className="text-[10px] text-blue-300/60 leading-relaxed italic">{scene.vo}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
+      {/* Creative Performance Loop — dedicated section */}
+      <section id="loop-section" className="py-20 px-6 relative">
+        <div className="absolute inset-0 pointer-events-none" style={{background:"radial-gradient(ellipse at 50% 30%,rgba(167,139,250,0.06),transparent 60%)"}} />
+        <div className="container mx-auto max-w-5xl relative">
+          <div className="text-center mb-14">
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{background:"linear-gradient(135deg,#a78bfa,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
+              THE CORE ENGINE
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold mt-4 font-display" style={{letterSpacing:"-0.02em"}}>
+              Creative Performance Loop
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto font-body text-base leading-relaxed">
+              The cycle that nobody closes: Brief → Editor produces → Ad runs → Data comes back → AI learns → Next brief already knows what works. Automatically.
+            </p>
+          </div>
+
+          {/* Loop steps — 5 cards */}
+          <div className="grid md:grid-cols-5 gap-3 mb-12">
+            {[
+              { n: "01", title: "Import Data", desc: "Connect your Meta, TikTok, or upload CSV. Performance data flows in.", icon: "📥", color: "#60a5fa" },
+              { n: "02", title: "Parse Creatives", desc: "AI reads your file naming convention and extracts metadata automatically.", icon: "🔍", color: "#a78bfa" },
+              { n: "03", title: "Find Patterns", desc: "AI discovers which combos win: hook type + market + platform + audience.", icon: "🧠", color: "#f472b6" },
+              { n: "04", title: "Predict & Score", desc: "Before spending, get a 0-100 score: \"78% chance to beat your avg CTR.\"", icon: "🎯", color: "#34d399" },
+              { n: "05", title: "Ship & Repeat", desc: "Every new brief is pre-calibrated. Performance feeds back. Loop gets smarter.", icon: "🔄", color: "#fbbf24" },
+            ].map((step, i) => (
+              <motion.div key={i} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.08}} viewport={{once:true}}
+                className="p-5 rounded-2xl text-center relative"
+                style={{background:`${step.color}06`,border:`1px solid ${step.color}18`}}>
+                <div className="text-3xl mb-3">{step.icon}</div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2 font-display" style={{color:`${step.color}80`}}>{step.n}</p>
+                <h3 className="text-sm font-bold mb-2 font-display text-foreground">{step.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed font-body">{step.desc}</p>
+                {i < 4 && (
+                  <div className="hidden md:block absolute top-1/2 -right-2.5 text-white/10 text-lg font-bold">→</div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Key differentiators */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { title: "Not generic — learns from YOUR data", desc: "Every pattern comes from your actual ad performance, not industry averages.", icon: "🎯", color: "#a78bfa" },
+              { title: "Closes the manual loop", desc: "No more staring at Ads Manager → extracting insights → briefing the team. It's automatic.", icon: "⚡", color: "#f472b6" },
+              { title: "Measurable ROI", desc: "Track how your avg CTR improves over time. \"Since using AdBrief, my CTR went up 34%.\"", icon: "📈", color: "#34d399" },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} transition={{delay:i*0.1}} viewport={{once:true}}
+                className="p-6 rounded-2xl"
+                style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                <span className="text-2xl">{item.icon}</span>
+                <h3 className="text-base font-bold mt-3 mb-2 font-display" style={{color:item.color}}>{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-body">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true}}
+            className="mt-12 text-center">
+            <Button
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 font-bold h-auto border-0 rounded-xl px-10 py-4 shadow-lg shadow-purple-500/20 font-body text-base group"
+              onClick={() => navigate("/signup")}
+            >
+              Start your loop — free
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </Button>
+            <p className="text-xs text-muted-foreground/40 mt-3 font-body">Import your first CSV in under 2 minutes. No credit card.</p>
+          </motion.div>
+        </div>
+      </section>
       {/* Logo ticker — brands running ads */}
       <LogoTicker />
 
