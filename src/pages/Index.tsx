@@ -189,14 +189,14 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[40px] md:text-[52px] lg:text-[64px] font-bold text-foreground leading-[1.08] tracking-tight font-display"
           >
-            Your ads learn.
+            AI that decodes
             <br />
             <span style={{
               background: "linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-            }}>Every brief gets smarter.</span>
+            }}>your winning formula.</span>
           </motion.h1>
           
           <motion.p 
@@ -205,7 +205,7 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-[17px] md:text-[19px] max-w-[640px] mx-auto mt-6 leading-relaxed text-muted-foreground font-body"
           >
-            AdBrief closes the loop between ad performance and creative production. Import your data → AI learns what wins → every next brief is pre-calibrated.
+            Upload your ads, feed your performance data. AdBrief's AI learns what works for YOUR account — hooks, formats, markets, audiences — and every tool gets smarter with every ad you run.
           </motion.p>
 
           {/* Loop cycle mini-visual */}
