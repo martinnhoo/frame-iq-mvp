@@ -2,6 +2,7 @@ import {
   BarChart3, LayoutGrid, Home,
   Plus, Globe, Brain, Layers, Plane, Cpu,
   Zap, Settings, ChevronRight, Target, FileText, ClipboardList,
+  RefreshCw, Upload,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -47,20 +48,29 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const { language } = useLanguage();
   const dt = useDashT(language);
 
-  const mainItems = [
-    { title: dt("nav_overview"),  url: "/dashboard",          icon: Home,     end: true,  accent: "#e2e8f0" },
+  // Main product: Loop
+  const loopItems = [
+    { title: dt("nav_overview"),  url: "/dashboard",              icon: Home,       end: true,  accent: "#e2e8f0" },
+    { title: "Performance Loop",  url: "/dashboard/loop",         icon: RefreshCw,              accent: "#f472b6", badge: "NEW" },
+    { title: "Import Data",       url: "/dashboard/loop/import",  icon: Upload,                 accent: "#60a5fa" },
+  ];
+
+  // Creative workspace
+  const workspaceItems = [
     { title: dt("nav_analyses"),  url: "/dashboard/analyses", icon: BarChart3,            accent: "#c084fc" },
     { title: dt("nav_boards"),    url: "/dashboard/boards",   icon: LayoutGrid,           accent: "#60a5fa" },
   ];
+
+  // AI Tools
   const toolItems = [
-    { title: dt("nav_hooks"),        url: "/dashboard/hooks",        icon: Cpu,    accent: "#fb923c", badge: "AI" },
-    { title: dt("nav_templates"),    url: "/dashboard/templates",    icon: Layers, accent: "#f472b6" },
-    { title: dt("nav_translate"),    url: "/dashboard/translate",    icon: Globe,  accent: "#10b981" },
-    { title: dt("nav_preflight"),    url: "/dashboard/preflight",    icon: Plane,  accent: "#fbbf24", badge: "AI" },
-    { title: dt("nav_intelligence"), url: "/dashboard/intelligence", icon: Brain,  accent: "#a78bfa", badge: "AI" },
-    { title: dt("nav_persona"),      url: "/dashboard/persona",      icon: Target, accent: "#c084fc" },
-    { title: "Script Generator",    url: "/dashboard/script",       icon: FileText,     accent: "#a78bfa", badge: "AI" },
-    { title: "Brief Generator",     url: "/dashboard/brief",        icon: ClipboardList, accent: "#60a5fa", badge: "AI" },
+    { title: dt("nav_hooks"),        url: "/dashboard/hooks",        icon: Cpu,           accent: "#fb923c", badge: "AI" },
+    { title: "Script Generator",     url: "/dashboard/script",       icon: FileText,      accent: "#a78bfa", badge: "AI" },
+    { title: "Brief Generator",      url: "/dashboard/brief",        icon: ClipboardList, accent: "#60a5fa", badge: "AI" },
+    { title: dt("nav_preflight"),    url: "/dashboard/preflight",    icon: Plane,         accent: "#fbbf24", badge: "AI" },
+    { title: dt("nav_intelligence"), url: "/dashboard/intelligence", icon: Brain,         accent: "#a78bfa", badge: "AI" },
+    { title: dt("nav_persona"),      url: "/dashboard/persona",      icon: Target,        accent: "#c084fc" },
+    { title: dt("nav_templates"),    url: "/dashboard/templates",    icon: Layers,        accent: "#f472b6" },
+    { title: dt("nav_translate"),    url: "/dashboard/translate",    icon: Globe,         accent: "#10b981" },
   ];
 
   const isActive = (url: string, end?: boolean) =>
@@ -74,7 +84,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     profile?.email?.charAt(0)?.toUpperCase() ||
     user?.email?.charAt(0)?.toUpperCase() || "U";
 
-  const NavItem = ({ item }: { item: typeof mainItems[0] & { badge?: string } }) => {
+  const NavItem = ({ item }: { item: typeof loopItems[0] & { badge?: string } }) => {
     const active = isActive(item.url, (item as { end?: boolean }).end);
     return (
       <NavLink
@@ -88,23 +98,24 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
         onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.38)"; }}
       >
-        {/* Left accent bar */}
         {active && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
             style={{ background: item.accent }} />
         )}
-        {/* Icon with colored bg when active */}
         <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-all"
-          style={active
-            ? { background: `${item.accent}18`, }
-            : { background: "transparent" }}>
+          style={active ? { background: `${item.accent}18` } : { background: "transparent" }}>
           <item.icon className="h-3.5 w-3.5 transition-colors"
             style={{ color: active ? item.accent : "currentColor", opacity: active ? 1 : 0.6 }} />
         </div>
         <span className="flex-1" style={syne}>{item.title}</span>
         {"badge" in item && item.badge && (
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ ...mono, color: item.accent, background: `${item.accent}18`, border: `1px solid ${item.accent}30` }}>
+            style={{
+              ...mono,
+              color: item.badge === "NEW" ? "#000" : item.accent,
+              background: item.badge === "NEW" ? "linear-gradient(135deg, #a78bfa, #f472b6)" : `${item.accent}18`,
+              border: item.badge === "NEW" ? "none" : `1px solid ${item.accent}30`,
+            }}>
             {item.badge}
           </span>
         )}
@@ -123,7 +134,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         w-[240px] shrink-0 flex flex-col
         sidebar-transition
         ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-      `} style={{ background: "#080808", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+      `} style={{ background: "#0a0a12", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Logo */}
         <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -143,21 +154,30 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
+          {/* Loop — Main Product */}
+          <div className="space-y-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-2"
+              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>LOOP</p>
+            {loopItems.map(item => <NavItem key={item.url} item={item} />)}
+          </div>
+
+          {/* Workspace */}
           <div className="space-y-0.5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-2"
               style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>{dt("nav_workspace")}</p>
-            {mainItems.map(item => <NavItem key={item.url} item={item} />)}
+            {workspaceItems.map(item => <NavItem key={item.url} item={item} />)}
           </div>
+
+          {/* AI Tools */}
           <div className="space-y-0.5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] px-3 mb-2"
-              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>{dt("nav_tools")}</p>
+              style={{ ...syne, color: "rgba(255,255,255,0.12)" }}>AI TOOLS</p>
             {toolItems.map(item => <NavItem key={item.url} item={item} />)}
           </div>
         </nav>
 
         {/* Footer */}
         <div className="shrink-0 p-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          {/* Upgrade */}
           {(plan === "free" || plan === "creator") && (
             <NavLink to="/pricing" onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all group"
@@ -171,10 +191,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             </NavLink>
           )}
 
-          {/* Language */}
           <div className="px-1"><LanguageSwitcher /></div>
 
-          {/* User card */}
           <button onClick={() => setProfileOpen(true)}
             className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-all group text-left"
             style={{ border: "1px solid rgba(255,255,255,0.05)" }}
