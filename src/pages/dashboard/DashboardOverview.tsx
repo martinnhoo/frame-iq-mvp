@@ -279,13 +279,29 @@ export default function DashboardOverview() {
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
+            {/* Animated Pro / Lite toggle */}
             <button
               onClick={switchToLite}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{ ...syne, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
-              title="Switch to simplified Lite Mode"
+              title="Switch to Lite Mode"
+              style={{
+                ...syne,
+                display: "flex", alignItems: "center",
+                background: "rgba(167,139,250,0.08)",
+                border: "1px solid rgba(167,139,250,0.22)",
+                borderRadius: 999, padding: "4px 5px 4px 10px",
+                gap: 6, cursor: "pointer", transition: "all 0.2s",
+              }}
             >
-              <Layers className="h-3 w-3" /> Lite
+              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>PRO</span>
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "flex-end",
+                width: 36, height: 20, borderRadius: 999,
+                background: "linear-gradient(135deg, #a78bfa, #f472b6)",
+                padding: "2px 3px", transition: "all 0.3s",
+              }}>
+                <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.04em" }}>LITE</span>
             </button>
             {(!profile?.plan || profile.plan === "free" || profile.plan === "creator") && (
               <button onClick={() => navigate("/pricing")}
