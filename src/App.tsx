@@ -60,12 +60,7 @@ import MarketPage      from "@/pages/seo/MarketPage";
 import AdExamplesPage  from "@/pages/seo/AdExamplesPage";
 import { AdsLibraryIndex, AdsLibraryLanding } from "@/pages/seo/AdsLibrary";
 import AdHooksPage from "@/pages/seo/AdHooksPage";
-import IndustryPage from "@/pages/seo/IndustryPage";
-import PlatformPage from "@/pages/seo/PlatformPage";
-import UseCasePage from "@/pages/seo/UseCasePage";
-import RolePage from "@/pages/seo/RolePage";
 import GlossaryPage from "@/pages/seo/GlossaryPage";
-import HookTypePage from "@/pages/seo/HookTypePage";
 import LocationPage from "@/pages/seo/LocationPage";
 
 const queryClient = new QueryClient();
