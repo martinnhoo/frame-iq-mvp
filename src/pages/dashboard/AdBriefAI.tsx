@@ -5,7 +5,7 @@ import { Send, Loader2, ChevronDown, ChevronUp, Sparkles, RotateCcw, Brain } fro
 import { supabase } from "@/integrations/supabase/client";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'DM Mono', monospace" } as const;
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 interface Block {
   type: "action" | "pattern" | "hooks" | "warning" | "insight" | "off_topic";

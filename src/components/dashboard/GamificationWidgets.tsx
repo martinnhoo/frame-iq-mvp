@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Flame, TrendingUp, TrendingDown, Zap } from "lucide-react";
 import type { DashT } from "@/i18n/dashboardTranslations";
 
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 const sans = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 interface MasteryLevel {

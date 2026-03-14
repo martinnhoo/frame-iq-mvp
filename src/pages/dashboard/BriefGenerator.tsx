@@ -13,7 +13,7 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 /** Extract market code from persona language_style like "Brazilian Portuguese" → "BR" */
 function deriveMarket(lang?: string): string | null {

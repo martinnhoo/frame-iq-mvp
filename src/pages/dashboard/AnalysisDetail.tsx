@@ -25,7 +25,7 @@ interface AnalysisData {
   recommended_platforms: string[] | null;
 }
 
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 const jakarta = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const SCORE_COLOR = (s: number) =>

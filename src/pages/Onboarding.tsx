@@ -216,7 +216,7 @@ export default function Onboarding() {
   };
 
   const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-  const mono = { fontFamily: "'DM Mono', monospace" } as const;
+  const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#060606", fontFamily: "'Outfit', system-ui, sans-serif" }}>

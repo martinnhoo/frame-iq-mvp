@@ -96,7 +96,7 @@ const VERDICT_CFG = {
   BLOCKED: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.3)", label: "NEEDS FIXING" },
 };
 
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 const jakarta = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 } as const;
 

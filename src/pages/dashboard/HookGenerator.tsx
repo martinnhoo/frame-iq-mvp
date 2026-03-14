@@ -363,11 +363,11 @@ export default function HookGenerator() {
                     <div className="border-t border-white/[0.05] px-4 pb-4 pt-3 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'DM Mono', monospace" }}>Why it works</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>Why it works</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.why}</p>
                         </div>
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'DM Mono', monospace" }}>CTA suggestion</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>CTA suggestion</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.cta_suggestion}</p>
                         </div>
                       </div>

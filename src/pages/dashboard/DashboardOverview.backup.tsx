@@ -26,7 +26,7 @@ interface IntelItem {
 }
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 const GradText = ({ children, from = "#a78bfa", to = "#f472b6" }: { children: React.ReactNode; from?: string; to?: string }) => (
   <span style={{ background: `linear-gradient(135deg, ${from}, ${to})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>

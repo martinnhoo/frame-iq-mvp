@@ -38,7 +38,7 @@ const TONES = [
 ];
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 const LangPill = ({ value, onChange, exclude = [] }: { value: string; onChange: (c: string) => void; exclude?: string[] }) => {
   const [open, setOpen] = useState(false);

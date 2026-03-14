@@ -27,7 +27,7 @@ interface IntelItem {
 }
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 const Glow = ({ color, size = 300, opacity = 0.12, top = "0%", left = "50%" }: { color: string; size?: number; opacity?: number; top?: string; left?: string }) => (
   <div className="absolute pointer-events-none rounded-full"
@@ -218,22 +218,33 @@ export default function DashboardOverview() {
   const usedPreflights = (usageDetails as any)?.preflights?.used ?? 0;
 
   const firstName = profile?.name?.split(" ")[0] || "there";
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? dt("ov_good_morning") : hour < 17 ? dt("ov_good_afternoon") : dt("ov_good_evening");
+
+  // Session greeting — generated once per login, not on page refresh
+  const SESSION_KEY = "adbrief_session_greeting";
+  const getSessionGreeting = () => {
+    const existing = sessionStorage.getItem(SESSION_KEY);
+    if (existing) return existing;
+    const pool = [
+      "Let's make something that actually converts.",
+      "Your AI is ready. Are you?",
+      "One brief away from a winner.",
+      "The best creative of your career starts here.",
+      "Let's find what works — and double down.",
+      "Build smart. Ship fast.",
+      "Your competitors are guessing. You're not.",
+      "Time to turn data into creatives.",
+      "What are we testing today?",
+      "Good data beats good luck. Always.",
+    ];
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    sessionStorage.setItem(SESSION_KEY, picked);
+    return picked;
+  };
+  const greeting = getSessionGreeting();
   const hasData = insights.totalAnalyzed > 0;
 
-  // Gamification: total actions & contextual sub-greeting
+  // Gamification: total actions
   const totalActions = (usageDetails?.analyses?.used ?? usage.analyses_count) + (usageDetails?.boards?.used ?? usage.boards_count) + ((usageDetails as any)?.hooks?.used ?? 0);
-
-  const getContextualGreeting = () => {
-    const lastAction = profile?.last_ai_action_at ? new Date(profile.last_ai_action_at as string) : null;
-    const hoursSinceLastAction = lastAction ? (Date.now() - lastAction.getTime()) / 3600000 : Infinity;
-    if (hoursSinceLastAction > 72) return dt("gm_greet_comeback");
-    if (totalActions >= 30) return dt("gm_greet_prolific");
-    if (totalActions === 0) return dt("gm_greet_new");
-    return null; // will show streak msg in widget
-  };
-  const contextGreeting = getContextualGreeting();
 
   const tools = [
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#a78bfa", badge: "AI" },
@@ -267,16 +278,13 @@ export default function DashboardOverview() {
         <div className="flex items-start justify-between gap-4 pt-2">
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
-            <p className="text-[11px] text-white/30 mb-1.5 mt-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 500, letterSpacing: "0.08em" }}>{greeting}</p>
-            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
+            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight mt-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.035em" }}>
               <span className="text-white">{firstName}, </span>
               <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 {dt("ov_lets_ship")}
               </span>
             </h1>
-            {contextGreeting && (
-              <p className="text-[13px] text-white/40 mt-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400, lineHeight: 1.5 }}>{contextGreeting}</p>
-            )}
+            <p className="text-[13px] text-white/35 mt-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 400 }}>{greeting}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             {/* Binance-style segmented toggle — PRO active */}
@@ -333,7 +341,7 @@ export default function DashboardOverview() {
             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
               <div className="text-5xl">🎬</div>
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-purple-400/60 mb-1" style={{ fontFamily: "'DM Mono', monospace" }}>Step 1 of 1</p>
+                <p className="text-[10px] uppercase tracking-widest text-purple-400/60 mb-1" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>Step 1 of 1</p>
                 <h2 className="text-lg font-extrabold text-white mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>Upload your first ad. Get a Hook Score in 60s.</h2>
                 <p className="text-sm text-white/40">Drop any video — TikTok, Reel, YouTube Short, Meta. AdBrief tells you exactly what's working and what to fix.</p>
               </div>

@@ -42,7 +42,7 @@ const HOOK_TYPE_COLORS: Record<string, string> = {
 const INDUSTRIES = ["iGaming / Betting", "E-commerce / DTC", "Finance / Fintech", "Health & Wellness", "SaaS / Tech", "Fashion / Beauty", "Food & Beverage", "Real Estate", "Education", "Other"];
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 export default function CompetitorDecoder() {
   const { selectedPersona } = useOutletContext<DashboardContext>();

@@ -12,7 +12,7 @@ interface FeedbackBarProps {
   compact?: boolean;
 }
 
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 export function FeedbackBar({
   userId,

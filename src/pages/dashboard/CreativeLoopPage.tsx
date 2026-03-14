@@ -13,7 +13,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'DM Mono', monospace" } as const;
+const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
 interface Pattern {
   id: string;

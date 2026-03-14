@@ -69,7 +69,7 @@ const MODEL_LABELS: Record<string, { emoji: string; color: string }> = {
   "General":          { emoji: "🎯", color: "#ffffff40" },
 };
 
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

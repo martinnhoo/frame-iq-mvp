@@ -26,7 +26,7 @@ interface SidebarProps {
 }
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'DM Mono', monospace" } as const;
+const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 const LIFETIME_EMAILS = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
 const planMeta: Record<string, { color: string; bg: string; label: string }> = {
   free:    { color: "#ffffff40", bg: "rgba(255,255,255,0.05)", label: "Free" },
