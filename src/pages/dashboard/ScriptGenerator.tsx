@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { FileText, Sparkles, Copy, Check } from "lucide-react";
+import { FileText, Sparkles, Copy, Check, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,36 +15,20 @@ import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 const mono = { fontFamily: "'DM Mono', monospace" } as const;
 
+function deriveMarket(lang?: string): string | null {
+  if (!lang) return null;
+  const l = lang.toLowerCase();
+  if (l.includes("brazil") || l.includes("portugu")) return "BR";
+  if (l.includes("mexic") || l.includes("spanish")) return "MX";
+  if (l.includes("india")) return "IN";
+  if (l.includes("english") && !l.includes("india")) return "US";
+  return "GLOBAL";
+}
+
 export default function ScriptGenerator() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const dt = useDashT(language);
-
-  const t = {
-    subtitle:       language === "pt" ? "Scripts de anúncio com IA para qualquer plataforma" : language === "es" ? "Scripts de anuncio con IA para cualquier plataforma" : "AI-powered ad scripts for any platform",
-    product_label:  language === "pt" ? "Produto / Serviço *" : language === "es" ? "Producto / Servicio *" : "Product / Service *",
-    product_ph:     language === "pt" ? "Descreva seu produto, serviço ou marca..." : language === "es" ? "Describe tu producto, servicio o marca..." : "Describe your product, service, or brand...",
-    offer_label:    language === "pt" ? "Oferta / CTA (opcional)" : language === "es" ? "Oferta / CTA (opcional)" : "Offer / CTA (optional)",
-    offer_ph:       language === "pt" ? "ex: 50% off no 1º mês, Teste grátis" : language === "es" ? "ej: 50% dto primer mes, Prueba gratis" : "e.g. 50% off first month, Free trial",
-    audience_label: language === "pt" ? "Público-alvo (opcional)" : language === "es" ? "Público objetivo (opcional)" : "Target Audience (optional)",
-    audience_ph:    language === "pt" ? "ex: Homens 25-35, gamers, entusiastas de fitness" : language === "es" ? "ej: Hombres 25-35, gamers, entusiastas del fitness" : "e.g. Men 25-35, gamers, fitness enthusiasts",
-    format_label:   language === "pt" ? "Formato" : language === "es" ? "Formato" : "Format",
-    market_label:   language === "pt" ? "Mercado" : language === "es" ? "Mercado" : "Market",
-    duration_label: language === "pt" ? "Duração" : language === "es" ? "Duración" : "Duration",
-    angle_label:    language === "pt" ? "Ângulo" : language === "es" ? "Ángulo" : "Angle",
-    angle_ph:       language === "pt" ? "ex: FOMO, curiosidade, prova social" : language === "es" ? "ej: FOMO, curiosidad, prueba social" : "e.g. FOMO, curiosity, social proof",
-    extra_label:    language === "pt" ? "Contexto extra (opcional)" : language === "es" ? "Contexto adicional (opcional)" : "Extra Context (optional)",
-    extra_ph:       language === "pt" ? "Regras de compliance, diretrizes de marca, mensagens específicas..." : language === "es" ? "Normas de compliance, directrices de marca, mensajes específicos..." : "Compliance rules, brand guidelines, specific messaging...",
-    generating:     language === "pt" ? "Gerando script..." : language === "es" ? "Generando script..." : "Generating script...",
-    generate:       language === "pt" ? "Gerar Script" : language === "es" ? "Generar Script" : "Generate Script",
-    copy:           language === "pt" ? "Copiar" : language === "es" ? "Copiar" : "Copy",
-    copied:         language === "pt" ? "Copiado" : language === "es" ? "Copiado" : "Copied",
-    variant:        language === "pt" ? "Variante" : language === "es" ? "Variante" : "Variant",
-    notes_prefix:   language === "pt" ? "📝 Nota:" : language === "es" ? "📝 Nota:" : "📝",
-    err_product:    language === "pt" ? "Informe o produto ou serviço" : language === "es" ? "Ingresa el producto o servicio" : "Enter a product/service description",
-    err_failed:     language === "pt" ? "Falha ao gerar script" : language === "es" ? "Error al generar script" : "Failed to generate script",
-  };
-
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [audience, setAudience] = useState("");
@@ -57,9 +41,59 @@ export default function ScriptGenerator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  const [personaApplied, setPersonaApplied] = useState(false);
+
+  // Auto-fill from active persona
+  useEffect(() => {
+    if (!selectedPersona) { setPersonaApplied(false); return; }
+    const p = selectedPersona;
+    const m = deriveMarket(p.language_style);
+    if (m) setMarket(m);
+
+    // Platform
+    if (p.best_platforms?.length) {
+      const plat = p.best_platforms[0].toLowerCase();
+      if (plat.includes("tiktok")) setPlatform("tiktok");
+      else if (plat.includes("facebook") || plat.includes("meta")) setPlatform("facebook");
+      else if (plat.includes("instagram") || plat.includes("reels")) setPlatform("instagram");
+      else if (plat.includes("youtube")) setPlatform("youtube");
+    }
+
+    // Format
+    if (p.best_formats?.length) {
+      const fmt = p.best_formats[0].toLowerCase();
+      if (fmt.includes("ugc")) setFormat("ugc");
+      else if (fmt.includes("vsl")) setFormat("vsl");
+      else if (fmt.includes("talking")) setFormat("talking_head");
+      else if (fmt.includes("demo")) setFormat("product_demo");
+    }
+
+    // Audience
+    const audienceParts = [
+      p.age ? `Age: ${p.age}` : "",
+      p.gender ? `Gender: ${p.gender}` : "",
+      p.pains?.length ? `Pain points: ${p.pains.join(", ")}` : "",
+    ].filter(Boolean);
+    if (audienceParts.length) setAudience(audienceParts.join(". "));
+
+    // Angle
+    if (p.hook_angles?.length) setAngle(p.hook_angles.slice(0, 3).join(", "));
+
+    // Extra context
+    const ctxParts = [
+      p.headline ? `Persona: ${p.name} — ${p.headline}` : `Persona: ${p.name}`,
+      p.triggers?.length ? `Purchase triggers: ${p.triggers.join(", ")}` : "",
+      p.desires?.length ? `Desires: ${p.desires.join(", ")}` : "",
+      p.cta_style ? `CTA style: ${p.cta_style}` : "",
+      p.language_style ? `Language/tone: ${p.language_style}` : "",
+    ].filter(Boolean);
+    if (ctxParts.length) setExtraContext(ctxParts.join("\n"));
+
+    setPersonaApplied(true);
+  }, [selectedPersona]);
 
   const generate = async () => {
-    if (!product.trim()) { toast.error(t.err_product); return; }
+    if (!product.trim()) { toast.error("Enter a product/service description"); return; }
     setLoading(true);
     setResult(null);
     try {
@@ -69,7 +103,7 @@ export default function ScriptGenerator() {
       if (error) throw error;
       setResult(data);
     } catch (e: any) {
-      toast.error(e.message || t.err_failed);
+      toast.error(e.message || "Failed to generate script");
     } finally {
       setLoading(false);
     }
@@ -96,30 +130,40 @@ export default function ScriptGenerator() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-foreground" style={syne}>{dt("sg_title")}</h1>
-          <p className="text-sm text-muted-foreground" style={mono}>{t.subtitle}</p>
+          <p className="text-sm text-muted-foreground" style={mono}>AI-powered ad scripts for any platform</p>
         </div>
       </div>
 
+      {/* Persona context badge */}
+      {personaApplied && selectedPersona && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
+          <Brain className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+          <span className="text-xs text-muted-foreground" style={mono}>
+            Persona <strong className="text-foreground">{selectedPersona.name}</strong> auto-applied — audience, market, angle & format pre-filled
+          </span>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.product_label}</label>
-          <Textarea placeholder={t.product_ph} value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Product / Service *</label>
+          <Textarea placeholder="Describe your product, service, or brand..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.offer_label}</label>
-            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder={t.offer_ph} />
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Offer / CTA (optional)</label>
+            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 50% off first month, Free trial" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.audience_label}</label>
-            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder={t.audience_ph} />
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "✓" : "(optional)"}</label>
+            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Men 25-35, gamers, fitness enthusiasts" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.format_label}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Format {personaApplied ? "✓" : ""}</label>
             <Select value={format} onValueChange={setFormat}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -132,7 +176,7 @@ export default function ScriptGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.market_label}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market {personaApplied ? "✓" : ""}</label>
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -145,7 +189,7 @@ export default function ScriptGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.duration_label}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Duration</label>
             <Select value={duration} onValueChange={setDuration}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -156,19 +200,19 @@ export default function ScriptGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.angle_label}</label>
-            <Input value={angle} onChange={e => setAngle(e.target.value)} placeholder={t.angle_ph} />
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Angle {personaApplied ? "✓" : ""}</label>
+            <Input value={angle} onChange={e => setAngle(e.target.value)} placeholder="e.g. FOMO, curiosity, social proof" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{t.extra_label}</label>
-          <Textarea placeholder={t.extra_ph} value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
+          <Textarea placeholder="Compliance rules, brand guidelines, specific messaging..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
         <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)" }}>
           <Sparkles className="h-4 w-4" />
-          {loading ? t.generating : t.generate}
+          {loading ? dt("sg_generating") : dt("sg_generate")}
         </Button>
       </div>
 
@@ -178,7 +222,7 @@ export default function ScriptGenerator() {
             <div key={i} className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-foreground" style={syne}>{s.title || `${t.variant} ${i + 1}`}</span>
+                  <span className="text-sm font-bold text-foreground" style={syne}>{s.title || `Variant ${i + 1}`}</span>
                   {s.hook_score != null && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ ...mono, color: s.hook_score >= 80 ? "#34d399" : s.hook_score >= 60 ? "#fbbf24" : "#f87171", background: s.hook_score >= 80 ? "rgba(52,211,153,0.12)" : s.hook_score >= 60 ? "rgba(251,191,36,0.12)" : "rgba(248,113,113,0.12)" }}>
                       Hook {s.hook_score}/100
@@ -187,7 +231,7 @@ export default function ScriptGenerator() {
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => copyScript(s, i)} className="gap-1.5">
                   {copied === i ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copied === i ? t.copied : t.copy}
+                  {copied === i ? "Copied" : dt("sg_copy")}
                 </Button>
               </div>
 
