@@ -255,10 +255,12 @@ export default function DashboardOverview() {
   if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
   if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
 
-  // Compute fatigue signal
+  // Compute fatigue signal — cross-reference intel feed signals
   const avgScore = insights.avgHookScore ?? 0;
-  const fatigue = hasData && avgScore < 5;
-  const winning = hasData && avgScore >= 7.5;
+  const hasTrendDown = intelFeed.some(f => f.id === "trend_down");
+  const hasFatigueSignal = intelFeed.some(f => f.id === "fatigue");
+  const fatigue = hasData && (avgScore < 5 || hasTrendDown || hasFatigueSignal);
+  const winning = hasData && avgScore >= 7.5 && !fatigue;
 
   return (
     <div className="min-h-full" style={{ background: "#07070f" }}>
@@ -269,7 +271,7 @@ export default function DashboardOverview() {
           <div>
             <GamificationWidgets userId={user.id} dt={dt} totalActions={totalActions} />
             <h1 className="text-2xl font-extrabold mt-3 text-white" style={{ letterSpacing: "-0.03em", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-              {firstName}, <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>sua IA está ativa.</span>
+              {firstName}, <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{dt("ov_lets_ship")}</span>
             </h1>
             <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{greeting}</p>
           </div>

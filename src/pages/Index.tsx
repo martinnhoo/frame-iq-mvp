@@ -586,8 +586,8 @@ const Index = () => {
               style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
               <span className="text-2xl">💡</span>
               <p className="text-sm text-white/70">
-                One production that fails = <span className="text-white font-semibold">$500+ wasted.</span>{" "}
-                AdBrief pays for itself <span className="text-purple-300 font-semibold">in the first bad ad it catches.</span>
+                One weak ad = <span className="text-white font-semibold">$47–$500+ burned.</span>{" "}
+                AdBrief catches it before launch. <span className="text-sky-400 font-semibold">Most users recover 10× the plan cost in week 1.</span>
               </p>
             </div>
           </div>

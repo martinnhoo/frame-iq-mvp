@@ -190,7 +190,7 @@ export default function GamificationWidgets({ userId, dt, totalActions }: Props)
                   }}
                 />
               </div>
-              <span className="text-[10px] leading-none shrink-0" style={{ ...mono, color: "rgba(255,255,255,0.25)" }}>
+              <span className="text-[10px] leading-none shrink-0" style={{ ...mono, color: "rgba(255,255,255,0.25)" }} title={`${toNext} more actions to reach ${next.label}`}>
                 {toNext} to {next.icon}
               </span>
             </div>
