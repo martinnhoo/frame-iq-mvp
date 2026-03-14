@@ -450,3 +450,453 @@ export const SEO_INDUSTRIES = [
   { slug: "food",      label: "Food & Beverage" },
   { slug: "education", label: "Education" },
 ];
+
+// ── PLATFORM ANALYZER PAGES ───────────────────────────────────
+export const SEO_PLATFORM_PAGES = [
+  {
+    slug: "tiktok-ad-analyzer",
+    platformLabel: "TikTok",
+    metaTitle: "TikTok Ad Analyzer — Free Hook Score Tool | AdBrief",
+    metaDescription: "Analyze any TikTok ad for hook strength, format fit, and CTR potential. Free AI tool. Get your TikTok hook score in 60 seconds.",
+    keywords: ["tiktok ad analyzer","tiktok hook score","analyze tiktok ads","tiktok creative analyzer"],
+    headline: "Know if your TikTok ad will convert — before you launch",
+    subheadline: "Hook score, format analysis, and 3 actionable improvements in 60 seconds. Free.",
+    intro: "TikTok's algorithm is ruthless: if your ad doesn't hook in 3 seconds, it's dead. AdBrief's TikTok Ad Analyzer scores your video for hook retention, format fit, safe zone compliance, and CTR potential. You'll know exactly what's weak before you spend a dollar on media.",
+    faqs: [
+      { q: "How do I analyze a TikTok ad?", a: "Upload your video to AdBrief. The AI scores the hook from 0–10, identifies your creative format, checks TikTok safe zones, and gives you 3 specific improvements — all in under 60 seconds." },
+      { q: "What's a good hook score for TikTok?", a: "A hook score above 7.0 is strong for TikTok. Scores of 8.0+ correlate with above-average retention and CTR. Most ads score between 4.5 and 6.5." },
+      { q: "Is the TikTok ad analyzer free?", a: "Yes. The free plan includes 3 analyses. Paid plans start at $19/mo for 20 analyses per month." },
+      { q: "Can I analyze competitor TikTok ads?", a: "Yes — upload any TikTok video and AdBrief will analyze it. You can also use the Competitor Ad Decoder for script-based analysis." },
+    ],
+  },
+  {
+    slug: "facebook-ad-analyzer",
+    platformLabel: "Facebook",
+    metaTitle: "Facebook Ad Analyzer — Free Hook Score Tool | AdBrief",
+    metaDescription: "Analyze any Facebook video ad for hook strength, format fit, and CTR potential. Free AI tool. Get your Facebook ad score in 60 seconds.",
+    keywords: ["facebook ad analyzer","facebook ad score","analyze facebook ads","meta ad analyzer"],
+    headline: "Analyze your Facebook ads before you burn budget",
+    subheadline: "Hook score, audience fit analysis, and improvement plan for any Facebook video ad. Free.",
+    intro: "Facebook advertising is still the highest-volume platform for direct response — but creative quality has never mattered more. AdBrief's Facebook Ad Analyzer scores your video for hook quality, narrative structure, and CTA effectiveness — giving you a specific improvement plan before you put media dollars behind it.",
+    faqs: [
+      { q: "How do I analyze a Facebook video ad?", a: "Upload your video to AdBrief. The AI scores the hook, identifies your creative format, checks Facebook feed placement compliance, and generates 3 specific improvements in under 60 seconds." },
+      { q: "What's a good CTR for a Facebook video ad?", a: "Average Facebook video ad CTR is 0.8–1.2%. With a strong hook (score 7.5+), CTR can reach 1.8–2.5%." },
+      { q: "Can I analyze competitor Facebook ads?", a: "Yes. Upload any video and AdBrief will analyze it. For script-based analysis of competitor ads, use the Competitor Ad Decoder tool." },
+    ],
+  },
+  {
+    slug: "instagram-reels-ad-analyzer",
+    platformLabel: "Instagram Reels",
+    metaTitle: "Instagram Reels Ad Analyzer — Free Tool | AdBrief",
+    metaDescription: "Analyze Instagram Reels ads for hook strength, vertical format fit, and CTR potential. Free AI tool by AdBrief.",
+    keywords: ["instagram reels ad analyzer","reels ad score","instagram ad analyzer","reels creative tool"],
+    headline: "Reels ads that stop the scroll — analyzed before launch",
+    subheadline: "Hook score, vertical format analysis, and improvement plan for any Instagram Reels ad. Free.",
+    intro: "Instagram Reels has become the most competitive short-form placement in the Meta ecosystem. Vertical format, sound-on viewing, and a younger audience make it different from feed — and most teams repurpose feed ads without adjusting for Reels, leaving performance on the table.",
+    faqs: [
+      { q: "How is a Reels ad different from a feed video ad?", a: "Reels are vertical (9:16), viewed sound-on, and compete with organic creator content. The hook needs to feel native. AdBrief flags non-native creative patterns specific to Reels." },
+      { q: "Is the Reels ad analyzer free?", a: "Yes. Free plan includes 3 analyses. Paid plans start at $19/mo." },
+    ],
+  },
+  {
+    slug: "youtube-ad-analyzer",
+    platformLabel: "YouTube",
+    metaTitle: "YouTube Ad Analyzer — Free Hook Score Tool | AdBrief",
+    metaDescription: "Analyze YouTube video ads for hook strength, skip-button timing, and conversion signals. Free AI tool by AdBrief.",
+    keywords: ["youtube ad analyzer","youtube ad score","analyze youtube ads","youtube pre-roll analyzer"],
+    headline: "Beat the skip button — analyze your YouTube ads first",
+    subheadline: "Hook score, skip-signal analysis, and improvement plan for YouTube pre-roll and in-stream ads. Free.",
+    intro: "YouTube advertising has a unique constraint: the skip button at 5 seconds. Your ad needs to earn attention before the viewer even has a choice. AdBrief's YouTube Ad Analyzer scores your video for hook retention in the first 5 seconds, identifies skip-risk signals, and gives you specific improvements to reduce skip rate.",
+    faqs: [
+      { q: "What's the most important factor in YouTube ads?", a: "The first 5 seconds — before the skip button appears. AdBrief specifically scores this window for hook quality and skip-risk signals." },
+      { q: "What's a good view-through rate for YouTube ads?", a: "Average view-through rate for skippable pre-roll is 25–40%. With a strong hook, VTR can reach 50–65%." },
+    ],
+  },
+];
+
+// ── INDUSTRY SOLUTION PAGES ───────────────────────────────────
+export const SEO_INDUSTRY_PAGES = [
+  {
+    slug: "ad-creative-analyzer-ecommerce",
+    industryLabel: "E-commerce & DTC",
+    metaTitle: "Ad Creative Analyzer for Ecommerce — AdBrief",
+    metaDescription: "Analyze your DTC video ads for hook strength, platform fit, and conversion signals. Built for ecommerce brands. Free to start.",
+    keywords: ["ad creative analyzer ecommerce","dtc ad analyzer","ecommerce video ad tool","shopify ad analyzer"],
+    headline: "Stop guessing why your DTC ads underperform",
+    subheadline: "AdBrief scores your ecommerce video ads for hook strength, creative format, and conversion signals — in under 60 seconds.",
+    intro: "Ecommerce advertising is the most competitive vertical in paid social. AdBrief gives DTC brands an AI-powered creative intelligence layer: upload any video, get a hook score from 0 to 10, identify the weakest part of the creative, and generate a production-ready brief to fix it.",
+    useCases: ["Score product demo ads before spending on media","Identify why your best-performing ad is starting to fatigue","Brief UGC creators with AI-generated scripts","Adapt your winning creative for TikTok, Reels, and Facebook"],
+    faqs: [{ q: "How does AdBrief help ecommerce brands?", a: "AdBrief analyzes your video ads for hook strength, creative format, and platform fit — giving you actionable improvements before you spend on media." }],
+  },
+  {
+    slug: "ad-creative-analyzer-saas",
+    industryLabel: "SaaS & Tech",
+    metaTitle: "Ad Creative Analyzer for SaaS — AdBrief",
+    metaDescription: "Analyze your SaaS video ads for hook strength and conversion signals. Score any ad in 60 seconds. Built for B2B and B2C tech teams.",
+    keywords: ["ad creative analyzer saas","saas video ad tool","b2b ad analyzer","tech company ad creative"],
+    headline: "SaaS ads that actually convert — analyzed by AI",
+    subheadline: "Hook scores, creative breakdowns, and production briefs for SaaS and tech video ads. Free to start.",
+    intro: "SaaS advertising has a unique creative challenge: you're selling something invisible. The hook has to do all the heavy lifting — and most SaaS ads start too slow, too feature-focused, and too generic. AdBrief analyzes your SaaS video ads for hook quality, narrative structure, and CTA effectiveness.",
+    useCases: ["Score screen-recording demo ads before launch","Identify whether your hook is feature-led or outcome-led","Generate pain-point-first scripts for cold audience campaigns"],
+    faqs: [{ q: "Does AdBrief work for B2B SaaS ads?", a: "Yes. AdBrief works for any video ad regardless of target audience. For B2B, it's particularly useful for analyzing LinkedIn video ads, YouTube pre-roll, and demo request campaigns." }],
+  },
+  {
+    slug: "ad-creative-analyzer-igaming",
+    industryLabel: "iGaming & Betting",
+    metaTitle: "Ad Creative Analyzer for iGaming — AdBrief",
+    metaDescription: "Analyze betting and casino video ads for hook strength and market fit. Brazil, Mexico, India markets covered. Free to start.",
+    keywords: ["igaming ad analyzer","betting ad creative tool","casino ad analyzer","sports betting ad performance"],
+    headline: "iGaming ad creative that converts across markets",
+    subheadline: "Hook scores, creative analysis, and production briefs for betting and casino brands in BR, MX, and IN markets.",
+    intro: "iGaming advertising operates in one of the most competitive and creatively demanding environments in paid social. AdBrief analyzes your betting and casino ads for hook quality, urgency mechanics, and market fit — and generates localized production briefs for your editors.",
+    useCases: ["Score urgency-based hooks before launch","Generate market-adapted scripts for BR, MX, and IN","Brief remote editors with structured production notes"],
+    faqs: [{ q: "Can it generate scripts for multiple markets?", a: "Yes. AdBrief supports market adaptation for Brazilian Portuguese, Mexican Spanish, and Hinglish (India) — the three highest-growth iGaming markets." }],
+  },
+  {
+    slug: "ad-creative-analyzer-finance",
+    industryLabel: "Finance & Fintech",
+    metaTitle: "Ad Creative Analyzer for Finance & Fintech — AdBrief",
+    metaDescription: "Analyze fintech video ads for hook strength, trust signals, and compliance-safe CTA structure. Free to start.",
+    keywords: ["fintech ad analyzer","finance video ad tool","financial services ad creative","fintech performance marketing"],
+    headline: "Finance ads that build trust and convert",
+    subheadline: "AI-powered creative analysis for fintech and financial services video ads. Hook scores, trust signal detection, and production briefs.",
+    intro: "Financial services advertising has to solve a paradox: create urgency without alarming, build trust without being boring, and convert without over-promising. AdBrief analyzes your fintech ads for hook quality, trust signal placement, and CTA structure.",
+    useCases: ["Score trust-building hooks before spending on media","Generate social proof hooks based on user outcomes","Brief your creative team with compliance-aware scripts"],
+    faqs: [{ q: "Does AdBrief work for crypto and fintech apps?", a: "Yes. AdBrief works for any video ad format, including crypto exchanges, neobanks, investment apps, and lending platforms." }],
+  },
+];
+
+// ── USE CASE PAGES ────────────────────────────────────────────
+export const SEO_USECASE_PAGES = [
+  {
+    slug: "hook-score-tool",
+    metaTitle: "Hook Score Tool — Rate Any Ad Hook 0–10 | AdBrief",
+    metaDescription: "Score your ad hook from 0 to 10 with AI. Understand what makes a strong hook and get specific improvements. Free tool by AdBrief.",
+    keywords: ["hook score tool","ad hook score","rate my ad hook","hook strength analyzer","tiktok hook score"],
+    headline: "Know your hook score before you shoot",
+    subheadline: "AI rates any ad hook from 0 to 10 with specific explanations. Free.",
+    intro: "The hook score is the single most predictive metric for ad performance. A 9.0-scoring hook on a mediocre ad consistently outperforms a polished spot with a 4.5 hook. AdBrief's Hook Score Tool rates any hook — written or from an uploaded video — from 0 to 10, explains exactly what's working and what isn't, and suggests higher-scoring alternatives.",
+    faqs: [
+      { q: "How is the hook score calculated?", a: "AdBrief's hook score (0–10) is based on: emotional trigger type, specificity of the claim, curiosity gap strength, pattern interrupt quality, platform alignment, and CTA proximity." },
+      { q: "What makes a hook score 9 or 10?", a: "A 9+ hook creates immediate unresolved tension — the viewer physically cannot scroll because their brain needs resolution. It's specific, creates a clear promise, and feels native to the platform." },
+      { q: "Is the hook score tool free?", a: "Yes. AdBrief's hook analysis is included in every video analysis on the free plan (3 analyses). Paid plans start at $19/mo." },
+    ],
+  },
+  {
+    slug: "video-ad-brief-generator",
+    metaTitle: "Video Ad Brief Generator — Free AI Tool | AdBrief",
+    metaDescription: "Generate production-ready video ad briefs with AI. Scene breakdown, VO copy, and on-screen text in seconds. Free tool by AdBrief.",
+    keywords: ["video ad brief generator","ad production brief","video creative brief","ad brief template ai"],
+    headline: "Stop briefing editors in WhatsApp messages",
+    subheadline: "AI-generated production briefs with scene breakdown, VO copy, and visual notes — ready to send. Free.",
+    intro: "Most video ad briefs are a paragraph in a WhatsApp chat. Then the editor guesses, shoots the wrong thing, and you spend two rounds of revisions fixing it. AdBrief's Video Ad Brief Generator produces a structured production brief: scene-by-scene breakdown, VO copy, on-screen text, visual notes, and editor instructions.",
+    faqs: [
+      { q: "What's included in an AI-generated video brief?", a: "AdBrief generates: scene-by-scene breakdown with timing, VO copy for each scene, on-screen text suggestions, visual/B-roll notes, editor instructions, and CTA placement guidance." },
+      { q: "How long does it take to generate a brief?", a: "Under 60 seconds. Input your product description and audience, select format and platform, and AdBrief generates the complete production brief." },
+    ],
+  },
+  {
+    slug: "pre-flight-ad-check",
+    metaTitle: "Pre-Flight Ad Check — Catch Errors Before Launch | AdBrief",
+    metaDescription: "Run a pre-flight check on any video ad before publishing. Catch hook issues, safe zone violations, and CTA problems. Free tool by AdBrief.",
+    keywords: ["pre-flight ad check","ad review tool","check ad before launch","video ad quality check"],
+    headline: "Don't publish a broken ad",
+    subheadline: "Pre-flight check catches hook issues, safe zone violations, CTA problems, and platform policy risks — before you launch.",
+    intro: "Launching an ad with a weak hook, missing CTA, or safe zone violation is expensive. AdBrief's Pre-Flight Ad Check runs a systematic review of any video ad before launch — scoring the hook, checking safe zones, validating CTA placement, and flagging any issues that will hurt performance.",
+    faqs: [
+      { q: "What does a pre-flight ad check include?", a: "AdBrief's pre-flight check covers: hook score (0–10), safe zone compliance for each platform, CTA presence and placement, creative format detection, and platform policy risk signals." },
+      { q: "Is the pre-flight check free?", a: "Yes. Pre-flight check is included in AdBrief's free plan. Paid plans include more detailed platform-specific reports." },
+    ],
+  },
+  {
+    slug: "ugc-script-generator",
+    metaTitle: "UGC Script Generator — Free AI Tool | AdBrief",
+    metaDescription: "Generate UGC ad scripts with AI. Character dialogue, narrator notes, and on-screen text for TikTok and Facebook UGC ads. Free.",
+    keywords: ["ugc script generator","ugc ad script","user generated content script","tiktok ugc script","ugc creative brief"],
+    headline: "Brief your UGC creators in 30 seconds",
+    subheadline: "AI-generated UGC scripts with character dialogue, emotional arc, and on-screen text — ready to send to creators. Free.",
+    intro: "UGC ads are the highest-performing creative format on TikTok and Facebook — but briefing UGC creators is notoriously difficult. AdBrief's UGC Script Generator produces creator-ready scripts: spoken dialogue, emotional cues, on-screen text, and a binary CTA — formatted to paste directly into a creator briefing message.",
+    faqs: [
+      { q: "What's included in a UGC ad script?", a: "AdBrief generates: opening hook line (spoken), emotional arc notes, key message points, on-screen text suggestions, visual/setting notes, and CTA line — all formatted for non-professional creators." },
+      { q: "Is the UGC script generator free?", a: "Yes. The free plan includes script generation. Paid plans add persona-specific scripts, market variations, and batch generation." },
+    ],
+  },
+];
+
+// ── ROLE PAGES ────────────────────────────────────────────────
+export const SEO_ROLE_PAGES = [
+  {
+    slug: "for-media-buyers",
+    roleLabel: "Media Buyers",
+    metaTitle: "Ad Creative Tool for Media Buyers — AdBrief",
+    metaDescription: "Media buyers: score creatives before launch, decode competitor ads, and brief editors faster. Free AI tool by AdBrief.",
+    keywords: ["ad creative tool for media buyers","media buyer creative analysis","paid media creative tool"],
+    headline: "Know which creative will convert before you buy media",
+    subheadline: "Hook scores, pre-flight checks, and competitor analysis — built for media buyers who live in dashboards.",
+    intro: "Media buyers are accountable for ROAS, but rarely control the creative. AdBrief bridges that gap: score any creative before it goes live, flag hooks that will kill CTR, decode what competitor ads are doing differently, and generate briefs that give your creative team zero room to guess.",
+    useCases: ["Score creatives before briefing your team or buying media","Run pre-flight checks on every ad before launch","Decode competitor hooks and frameworks","Identify creative fatigue signals before ROAS drops"],
+    faqs: [{ q: "How does AdBrief help media buyers specifically?", a: "AdBrief gives media buyers visibility into creative quality before launch — hook scores, format analysis, pre-flight checks, and improvement suggestions. This means you can flag a weak creative before spending budget, not after." }],
+  },
+  {
+    slug: "for-creative-directors",
+    roleLabel: "Creative Directors",
+    metaTitle: "Ad Creative Tool for Creative Directors — AdBrief",
+    metaDescription: "Creative directors: score your team's work before it goes to media, generate briefs faster, and build a creative testing system. Free.",
+    keywords: ["creative director ad tool","creative intelligence platform","ad creative scoring tool"],
+    headline: "Set a creative quality bar your team can measure",
+    subheadline: "Hook scores, production briefs, and creative frameworks — for creative directors building performance-first teams.",
+    intro: "Creative directors in performance marketing face a unique problem: subjective creative quality meets objective ROAS accountability. AdBrief gives you an objective quality layer — a hook score from 0 to 10 that your team can target, a brief format that eliminates guesswork.",
+    useCases: ["Set a hook score threshold your editors must hit before delivery","Brief editors with AI-generated production notes","Build a creative testing framework with hook-first iteration"],
+    faqs: [{ q: "How do I use AdBrief with my creative team?", a: "Set a hook score minimum (e.g., 7.0+) for all deliverables. Editors run their own pre-flight check before submitting. You review the score and AI analysis alongside the video." }],
+  },
+  {
+    slug: "for-performance-marketers",
+    roleLabel: "Performance Marketers",
+    metaTitle: "Creative Intelligence for Performance Marketers — AdBrief",
+    metaDescription: "Performance marketers: analyze creatives, score hooks, generate scripts, and run pre-flight checks. AI-powered creative intelligence. Free to start.",
+    keywords: ["creative intelligence platform","performance marketing creative tool","ad performance analyzer"],
+    headline: "Performance marketing starts with creative intelligence",
+    subheadline: "Hook scores, script generation, competitor analysis, and pre-flight checks — all in one platform.",
+    intro: "Performance marketing has a creative problem. Most teams spend more time analyzing ad account data than creative data — but the creative is what determines whether the algorithm has anything to work with. AdBrief is the creative intelligence layer for performance marketers.",
+    useCases: ["Score all creatives before adding to campaigns","Decode competitor ad frameworks and counter-brief","Generate hook variations for A/B testing"],
+    faqs: [{ q: "What is creative intelligence in performance marketing?", a: "Creative intelligence is the systematic analysis of ad creative quality — hook strength, format fit, narrative structure, CTA effectiveness — using data and AI rather than intuition." }],
+  },
+  {
+    slug: "for-agencies",
+    roleLabel: "Agencies",
+    metaTitle: "Ad Creative Tool for Agencies — AdBrief",
+    metaDescription: "Agencies: score client creatives, generate briefs, and run pre-flight checks at scale. AI creative intelligence for performance agencies. Free to start.",
+    keywords: ["ad creative tool for agencies","performance agency creative tool","agency creative intelligence"],
+    headline: "Deliver better creative work for every client",
+    subheadline: "Hook scores, production briefs, and pre-flight checks at scale — for agencies managing multiple brands.",
+    intro: "Agencies managing multiple performance accounts face a scaling problem: creative quality review doesn't scale with headcount. AdBrief gives your team a consistent creative quality process — every ad scored before it goes to media, every brief generated in a structured format.",
+    useCases: ["Score client creatives before presenting or launching","Generate briefs for client editors and UGC creators","Run pre-flight checks across multiple client accounts","Adapt winning creatives across markets (EN, PT, ES, HI)"],
+    faqs: [{ q: "Is there a team plan for agencies?", a: "Yes. AdBrief's Studio plan ($149/mo) includes unlimited analyses, script generation, and brief creation — suitable for agencies managing multiple accounts." }],
+  },
+];
+
+// ── GLOSSARY / LEARN PAGES ────────────────────────────────────
+export const SEO_LEARN_PAGES = [
+  {
+    slug: "what-is-hook-score",
+    metaTitle: "What Is a Hook Score? Ad Metric Explained | AdBrief",
+    metaDescription: "Hook score explained: what it measures, how it's calculated, what a good score looks like, and how to improve yours. By AdBrief.",
+    keywords: ["what is hook score","hook score definition","ad hook score meaning","tiktok hook score"],
+    headline: "What Is a Hook Score?",
+    subheadline: "The single most predictive creative metric for video ad performance — explained.",
+    intro: "A hook score is a numerical rating (0–10) that measures the strength of a video ad's opening seconds. It predicts how likely a creative is to retain attention in the first 3–5 seconds, which is the primary driver of CTR, completion rate, and ultimately ROAS. A hook score of 8+ correlates with above-average performance across TikTok, Facebook, and YouTube.",
+    faqs: [
+      { q: "What is a good hook score for TikTok?", a: "A hook score above 7.0 is considered strong for TikTok. Scores of 8.0+ correlate with significantly above-average retention and CTR." },
+      { q: "How is a hook score calculated?", a: "Hook scores are based on: emotional trigger type, specificity of the claim, curiosity gap strength, pattern interrupt quality, platform fit, and CTA proximity." },
+      { q: "Can I improve my hook score?", a: "Yes. Lead with the outcome instead of the product, add a specific number or claim, create a curiosity gap in the first 3 words, and use a pattern interrupt." },
+    ],
+  },
+  {
+    slug: "what-is-roas",
+    metaTitle: "What Is ROAS? Return on Ad Spend Explained | AdBrief",
+    metaDescription: "ROAS (Return on Ad Spend) explained: definition, how to calculate it, good benchmarks, and how creative quality affects ROAS. By AdBrief.",
+    keywords: ["what is roas","roas meaning advertising","return on ad spend","roas formula","good roas benchmark"],
+    headline: "What Is ROAS?",
+    subheadline: "Return on Ad Spend — the metric that determines whether your ads are actually profitable.",
+    intro: "ROAS (Return on Ad Spend) measures how much revenue you generate for every dollar spent on advertising. Formula: Revenue from ads ÷ Ad spend. A ROAS of 3.0x means you generate $3 in revenue for every $1 spent. Creative quality is the single largest controllable variable affecting ROAS in paid social.",
+    faqs: [
+      { q: "What is a good ROAS for Facebook ads?", a: "For most DTC brands with 50–60% margins, a 2.5–3.5x ROAS is profitable. Always calculate your breakeven ROAS (1 ÷ gross margin) before setting targets." },
+      { q: "How does creative affect ROAS?", a: "A weak hook reduces CTR, which increases CPM and CPL, directly compressing ROAS. Improving hook score from 5.0 to 7.5 typically reduces CPL by 30–50%." },
+    ],
+  },
+  {
+    slug: "what-is-ctr-in-advertising",
+    metaTitle: "What Is CTR in Advertising? Explained | AdBrief",
+    metaDescription: "CTR (Click-Through Rate) explained: definition, benchmarks, how to calculate it, and how to improve it. By AdBrief.",
+    keywords: ["what is ctr in advertising","ctr meaning advertising","click through rate ads","ctr benchmark facebook","tiktok ctr benchmark"],
+    headline: "What Is CTR in Advertising?",
+    subheadline: "Click-Through Rate explained — definition, benchmarks by platform, and how to improve it.",
+    intro: "CTR (Click-Through Rate) is the percentage of people who click your ad after seeing it. Calculated as (clicks ÷ impressions) × 100. Average CTR benchmarks: TikTok 0.5–1.5%, Facebook feed 0.8–1.2%, Instagram Reels 0.6–1.0%, YouTube pre-roll 0.3–0.6%. With a strong hook (score 7.5+), CTR typically reaches 1.5–2.5% across platforms.",
+    faqs: [
+      { q: "What is a good CTR for TikTok ads?", a: "A good CTR for TikTok ads is 1.0–1.5%. Above 1.5% is excellent. The primary driver of TikTok CTR is hook quality in the first 3 seconds." },
+      { q: "How do I improve my ad CTR?", a: "The fastest CTR improvement comes from improving the hook. Specifically: lead with a problem or transformation, use a specific number, create a curiosity gap, and add a pattern interrupt." },
+    ],
+  },
+  {
+    slug: "what-is-creative-fatigue",
+    metaTitle: "What Is Creative Fatigue in Ads? Explained | AdBrief",
+    metaDescription: "Creative fatigue explained: what it is, early warning signs, causes, and how to fix it before ROAS drops. By AdBrief.",
+    keywords: ["what is creative fatigue","ad creative fatigue","creative fatigue meaning","facebook ad creative fatigue"],
+    headline: "What Is Creative Fatigue?",
+    subheadline: "How to detect and fix ad creative fatigue before your ROAS collapses.",
+    intro: "Creative fatigue occurs when your target audience has been exposed to your ads so frequently that engagement drops — CTR falls, CPM rises, and ROAS deteriorates. On TikTok, fatigue typically sets in at frequency 2.5+. On Facebook, frequency 3.0+. The fastest fix is introducing new creative variations — specifically new hooks on proven concepts.",
+    faqs: [
+      { q: "What are the warning signs of ad fatigue?", a: "Key signals: CTR dropping 20%+ week-over-week, CPM increasing 30%+ vs launch week, frequency exceeding 2.5 (TikTok) or 3.0 (Facebook), ROAS falling below breakeven." },
+      { q: "How do I fix ad fatigue fast?", a: "Launch 3+ new hook variations on your proven concept immediately. The body of the ad often lasts longer than the hook, so prioritizing hook refreshes is the fastest fix." },
+    ],
+  },
+  {
+    slug: "what-is-performance-creative",
+    metaTitle: "What Is Performance Creative? Definition & Guide | AdBrief",
+    metaDescription: "Performance creative explained: what it is, how it differs from brand creative, and how to build a performance creative system. By AdBrief.",
+    keywords: ["what is performance creative","performance creative definition","performance creative advertising"],
+    headline: "What Is Performance Creative?",
+    subheadline: "The discipline that bridges creative production and paid media performance — defined.",
+    intro: "Performance creative is advertising creative designed and evaluated primarily through measurable performance metrics — CTR, CPL, ROAS, CVR — rather than aesthetic or brand criteria. The discipline has grown significantly since the iOS 14.5 privacy changes of 2021, which eliminated much of the algorithmic audience targeting advantage and made creative quality the primary lever of paid social performance.",
+    faqs: [
+      { q: "How is performance creative different from brand creative?", a: "Brand creative optimizes for awareness and sentiment. Performance creative optimizes for measurable actions — CTR, CPL, ROAS. The tone and format differ: performance creative tends to be more direct, hook-first, and UGC-native." },
+      { q: "What skills does a performance creative need?", a: "Core skills: hook writing, creative briefing, A/B test design, data interpretation, platform-specific format knowledge, UGC creator briefing, and AI tool proficiency." },
+    ],
+  },
+];
+
+// ── HOOK TYPE PAGES ───────────────────────────────────────────
+export const SEO_HOOK_TYPE_PAGES = [
+  {
+    slug: "curiosity-gap-hooks",
+    hookTypeLabel: "Curiosity Gap",
+    metaTitle: "Curiosity Gap Ad Hooks — Formula & Examples | AdBrief",
+    metaDescription: "Curiosity gap hooks explained: formula, examples, and how to write them for TikTok and Facebook ads. Free hook generator by AdBrief.",
+    keywords: ["curiosity gap hooks","curiosity hook ads","curiosity gap formula ads","tiktok curiosity hook"],
+    headline: "Curiosity Gap Hooks — The Formula Behind Every Viral Ad",
+    subheadline: "How to write a hook that the brain physically cannot ignore. With examples and a free generator.",
+    intro: "A curiosity gap hook creates an information asymmetry — you know something the viewer doesn't, and they need to watch to close the gap. The formula: [Provocative partial claim] + [Withheld resolution]. Example: 'The reason your Facebook ads stopped working (and it's not targeting)'. Curiosity gap hooks score highest on average (avg. 7.8) compared to other hook types.",
+    faqs: [
+      { q: "What is a curiosity gap hook?", a: "A curiosity gap hook creates unresolved tension by presenting a partial claim that the viewer needs to resolve. The brain experiences actual discomfort when confronted with an information gap." },
+      { q: "How do I write a curiosity gap hook?", a: "Formula: [Topic they care about] + [Withhold the punchline]. Bad: 'Here's how to improve your Facebook ads.' Good: 'The reason your Facebook ads stopped working — and it's not what you think.'" },
+    ],
+  },
+  {
+    slug: "transformation-hooks",
+    hookTypeLabel: "Transformation",
+    metaTitle: "Transformation Ad Hooks — Formula & Examples | AdBrief",
+    metaDescription: "Transformation hooks explained: the before/after formula, examples by industry, and how to write them. Free hook generator by AdBrief.",
+    keywords: ["transformation hooks ads","before after ad hooks","transformation hook formula","tiktok transformation hook"],
+    headline: "Transformation Hooks — Before & After That Actually Converts",
+    subheadline: "The most emotionally compelling ad hook type — with the formula and examples.",
+    intro: "Transformation hooks compress an entire story arc into one sentence: where you were, where you are now. 'I was $40K in debt — now I'm debt-free' triggers recognition, aspiration, and hope simultaneously. The formula: '[Where they are] → [Where they could be] [time frame]'.",
+    faqs: [
+      { q: "What makes a transformation hook work?", a: "Three elements: a relatable starting point (the viewer must recognize themselves), a specific destination, and credibility (a time frame or number that makes the transformation believable)." },
+      { q: "What industries work best with transformation hooks?", a: "Health & wellness, personal finance, ecommerce with before/after results, software with productivity transformation, and courses/education." },
+    ],
+  },
+  {
+    slug: "social-proof-hooks",
+    hookTypeLabel: "Social Proof",
+    metaTitle: "Social Proof Ad Hooks — Formula & Examples | AdBrief",
+    metaDescription: "Social proof hooks explained: how to use reviews, numbers, and endorsements as ad hooks. Examples and free generator by AdBrief.",
+    keywords: ["social proof hooks ads","social proof hook formula","ad hook social proof examples","testimonial hook ads"],
+    headline: "Social Proof Hooks — Borrow the Trust You Haven't Earned Yet",
+    subheadline: "How to use numbers, reviews, and outcomes as hooks that convert cold audiences.",
+    intro: "Social proof hooks borrow trust from crowds, customers, or credentials. Three types: (1) Quantity proof ('50,000 teams have already switched'), (2) Result proof ('92% of users see results in the first week'), (3) Authority proof ('Why Harvard researchers are recommending X').",
+    faqs: [
+      { q: "How do I write a social proof hook if I'm just starting?", a: "Use early adopter proof: 'The first 200 customers said this.' Or category proof: 'The technique used by top [industry] professionals.' Never invent or exaggerate social proof figures." },
+      { q: "What numbers make the best social proof hooks?", a: "Specific, surprising numbers outperform round numbers. '47,382 customers' is more believable than '50,000 customers.'" },
+    ],
+  },
+  {
+    slug: "fear-hooks",
+    hookTypeLabel: "Fear / Loss Aversion",
+    metaTitle: "Fear & Loss Aversion Ad Hooks — Formula | AdBrief",
+    metaDescription: "Fear and loss aversion hooks explained: how to use risk and consequence as ad hooks ethically and effectively. By AdBrief.",
+    keywords: ["fear hooks advertising","loss aversion hooks ads","risk hook ads","fear based ad hooks"],
+    headline: "Fear Hooks — Using Loss Aversion to Stop the Scroll",
+    subheadline: "How to write hooks that activate loss aversion without being manipulative.",
+    intro: "Fear hooks activate loss aversion — the psychological bias where losing something feels twice as bad as gaining something equivalent. 'You're losing $300/month by not doing this' is more compelling than 'Save $300/month' because loss framing activates a stronger response. Fear hooks must be accurate and relevant to work ethically.",
+    faqs: [
+      { q: "Is it ethical to use fear in advertising?", a: "Ethical fear hooks surface real risks that are genuinely relevant to the audience. The test: would a customer feel deceived or informed after watching the whole ad?" },
+      { q: "When should I not use a fear hook?", a: "Don't use fear hooks for products where the purchase itself is already anxiety-producing (medical, financial, major purchases). Social proof and transformation hooks typically outperform fear hooks in these contexts." },
+    ],
+  },
+];
+
+// ── MARKET / LOCATION PAGES ───────────────────────────────────
+export const SEO_MARKET_PAGES = [
+  {
+    slug: "performance-marketing-tools-brazil",
+    locationLabel: "Brazil",
+    metaTitle: "Performance Marketing Tools Brazil — AdBrief",
+    metaDescription: "AI ad creative tools for performance marketers in Brazil. Hook scoring, UGC scripts in PT-BR, and creative analysis. Free to start.",
+    keywords: ["performance marketing tools brazil","ferramentas marketing performance brasil","ad creative tool brazil"],
+    headline: "Ad creative intelligence for the Brazilian market",
+    subheadline: "Hook scoring, scripts in PT-BR, and creative analysis built for performance teams in Brazil.",
+    intro: "Brazil is one of the fastest-growing markets for paid social advertising. AdBrief supports PT-BR script generation with market-appropriate language, analyzes any ad for hook strength and platform fit, and generates production briefs for the Brazilian market.",
+    faqs: [{ q: "Does AdBrief work in Portuguese?", a: "Yes. AdBrief generates scripts and production briefs in Brazilian Portuguese (PT-BR) with Brazilian idioms and market-specific formatting." }],
+  },
+  {
+    slug: "performance-marketing-tools-mexico",
+    locationLabel: "Mexico",
+    metaTitle: "Performance Marketing Tools Mexico — AdBrief",
+    metaDescription: "AI ad creative tools for performance marketers in Mexico. Hook scoring, UGC scripts in MX Spanish, and creative analysis. Free to start.",
+    keywords: ["performance marketing tools mexico","herramientas marketing performance mexico","ad creative tool mexico"],
+    headline: "Ad creative intelligence for the Mexican market",
+    subheadline: "Hook scoring, scripts in MX Spanish, and creative analysis for performance teams in Mexico.",
+    intro: "Mexico is TikTok's second-largest market in Latin America and one of the fastest-growing for paid social advertising. AdBrief supports Mexican Spanish script generation, analyzes ads for Mexican market fit, and generates production briefs optimized for MX audiences.",
+    faqs: [{ q: "Does AdBrief support Mexican Spanish?", a: "Yes. AdBrief generates scripts and briefs in Mexican Spanish (MX) with market-appropriate language and idioms distinct from Spain Spanish." }],
+  },
+  {
+    slug: "performance-marketing-tools-india",
+    locationLabel: "India",
+    metaTitle: "Performance Marketing Tools India — AdBrief",
+    metaDescription: "AI ad creative tools for performance marketers in India. Hook scoring, Hinglish UGC scripts, and creative analysis. Free to start.",
+    keywords: ["performance marketing tools india","ad creative tool india","hinglish ad scripts","fantasy sports ad creative"],
+    headline: "Ad creative intelligence for the Indian market",
+    subheadline: "Hook scoring, Hinglish scripts, and creative analysis for performance teams in India.",
+    intro: "India's digital advertising market is growing at 20%+ annually. The Indian market has a unique creative requirement: Hinglish — the Hindi-English code-switching that dominates urban digital communication. AdBrief generates Hinglish scripts optimized for Indian digital audiences.",
+    faqs: [{ q: "Does AdBrief support Hinglish scripts?", a: "Yes. AdBrief generates Hinglish scripts (Hindi-English code-switching) optimized for Indian digital audiences — particularly valuable for fantasy sports, ecommerce, and consumer app advertising." }],
+  },
+];
+
+// ── AD EXAMPLES PAGES ─────────────────────────────────────────
+export const SEO_AD_EXAMPLES_PAGES = [
+  {
+    slug: "best-tiktok-ad-hooks-2026",
+    metaTitle: "Best TikTok Ad Hooks 2026 — Examples & Analysis | AdBrief",
+    metaDescription: "The best TikTok ad hook examples in 2026 — analyzed for what makes them work. Hook formulas, CTR data, and how to replicate them.",
+    keywords: ["best tiktok ad hooks 2026","tiktok ad hook examples","tiktok hooks that work","best performing tiktok hooks"],
+    headline: "The Best TikTok Ad Hooks in 2026",
+    subheadline: "What the highest-CTR TikTok hooks have in common — and how to write yours.",
+    intro: "The best TikTok ad hooks in 2026 share five characteristics: they create immediate unresolved tension, they're specific, they feel native to organic TikTok, they trigger an emotional response in the first 2 seconds, and they make a promise. Top hook types: transformation ('I went from X to Y in 30 days'), curiosity gap, social proof, pattern interrupt, and direct challenge ('You're doing X wrong — here's why').",
+    faqs: [
+      { q: "What makes a TikTok hook go viral?", a: "Viral TikTok hooks create immediate unresolved tension — the viewer's brain needs resolution before it can scroll away. The most viral hooks combine a specific, surprising claim with emotional stakes." },
+      { q: "How long should a TikTok ad hook be?", a: "A TikTok hook should land its core message in 2–3 seconds maximum — approximately 10–15 words spoken aloud or 5–8 words of on-screen text." },
+    ],
+  },
+  {
+    slug: "best-facebook-ad-hooks-2026",
+    metaTitle: "Best Facebook Ad Hooks 2026 — Examples & Formulas | AdBrief",
+    metaDescription: "The best Facebook video ad hook examples in 2026 — what works and how to write a hook that stops the scroll. By AdBrief.",
+    keywords: ["best facebook ad hooks 2026","facebook ad hook examples","facebook video ad hooks","best performing facebook ad hooks"],
+    headline: "The Best Facebook Ad Hooks in 2026",
+    subheadline: "What the highest-CTR Facebook video hooks have in common — with examples and formulas.",
+    intro: "Facebook ad hooks in 2026 have shifted toward authenticity and specificity. The highest-performing Facebook hooks now lead with a specific, relatable problem or a surprising data point. Facebook audiences skew older and respond more to social proof and authority hooks, while TikTok audiences respond more to pattern interrupt and curiosity gap hooks.",
+    faqs: [
+      { q: "What types of hooks work best on Facebook?", a: "Facebook's top-performing hook types in 2026: Social proof ('X reviews later, here's why everyone is switching'), problem-agitation, authority ('As a [credential], here's what I see most people getting wrong'), transformation, and curiosity." },
+      { q: "What's the biggest Facebook hook mistake in 2026?", a: "Starting with branding. 'Hi, I'm [name] from [brand]' is the fastest way to lose a Facebook viewer. Lead with the problem or the result — never the brand name." },
+    ],
+  },
+  {
+    slug: "ugc-ad-examples-2026",
+    metaTitle: "Best UGC Ad Examples 2026 — What's Working | AdBrief",
+    metaDescription: "The best UGC ad examples in 2026 — analyzed for hook type, format, and conversion signals. By AdBrief.",
+    keywords: ["ugc ad examples 2026","ugc advertising examples","best ugc ads 2026","ugc ad formats that work"],
+    headline: "The Best UGC Ad Examples in 2026",
+    subheadline: "What the highest-performing user-generated content ads look like — and the frameworks behind them.",
+    intro: "UGC ads in 2026 have evolved beyond the basic talking-head testimonial. The best examples combine authentic UGC style with strategic hook construction. Top formats: 'I tried this for X days' narrative, side-by-side comparison, the skeptic-to-believer arc, reaction hook, and tutorial format with embedded product demonstration.",
+    faqs: [
+      { q: "What makes UGC ads work in 2026?", a: "The best UGC ads combine authentic delivery (casual, phone-filmed) with strategic hook construction (specific claim, emotional trigger, curiosity gap). Pure authenticity without hook strategy underperforms." },
+      { q: "What's the ideal length for UGC ads?", a: "Optimal length: TikTok 21–34 seconds, Facebook 15–30 seconds, Instagram Reels 15–25 seconds." },
+    ],
+  },
+  {
+    slug: "ecommerce-ad-examples-2026",
+    metaTitle: "Best Ecommerce Ad Examples 2026 — DTC That Converts | AdBrief",
+    metaDescription: "The best DTC and ecommerce ad examples in 2026 — what's working across TikTok, Facebook, and Instagram. By AdBrief.",
+    keywords: ["ecommerce ad examples 2026","dtc ad examples","best ecommerce ads 2026","direct to consumer ad examples"],
+    headline: "Best Ecommerce Ad Examples in 2026",
+    subheadline: "The DTC and ecommerce ads driving the best ROAS — and why they work.",
+    intro: "Ecommerce advertising in 2026 is defined by authenticity, specificity, and speed. The DTC brands with the highest-performing ad portfolios produce 20+ creative variations per month, lead every ad with a specific transformation hook, and use a UGC-first creative strategy. The best ecommerce ad examples combine transformation hooks, social proof mid-ad, and low-friction CTAs.",
+    faqs: [
+      { q: "What ecommerce ad format converts best in 2026?", a: "UGC testimonial format with a transformation hook continues to be the highest-converting ecommerce ad format. Second: product demonstration with problem-solution narrative. Third: before/after comparison ads." },
+      { q: "How many ads should a DTC brand produce per month?", a: "Top-performing DTC brands produce 15–30 new creative variations per month. With AI brief generation and remote UGC creators, lean teams can hit this volume at low cost." },
+    ],
+  },
+];
+
+// ── PROGRAMMATIC SEO CLUSTERS ─────────────────────────────────
+

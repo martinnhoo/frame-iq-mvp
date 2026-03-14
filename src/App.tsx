@@ -50,8 +50,23 @@ import ToolPage from "@/pages/seo/ToolPage";
 import GuidesIndex from "@/pages/seo/GuidesIndex";
 import GuidePage from "@/pages/seo/GuidePage";
 import { CompareIndex, CompareDetail } from "@/pages/seo/ComparePages";
+import PlatformPage    from "@/pages/seo/PlatformPage";
+import IndustryPage    from "@/pages/seo/IndustryPage";
+import UseCasePage     from "@/pages/seo/UseCasePage";
+import RolePage        from "@/pages/seo/RolePage";
+import LearnPage       from "@/pages/seo/LearnPage";
+import HookTypePage    from "@/pages/seo/HookTypePage";
+import MarketPage      from "@/pages/seo/MarketPage";
+import AdExamplesPage  from "@/pages/seo/AdExamplesPage";
 import { AdsLibraryIndex, AdsLibraryLanding } from "@/pages/seo/AdsLibrary";
 import AdHooksPage from "@/pages/seo/AdHooksPage";
+import IndustryPage from "@/pages/seo/IndustryPage";
+import PlatformPage from "@/pages/seo/PlatformPage";
+import UseCasePage from "@/pages/seo/UseCasePage";
+import RolePage from "@/pages/seo/RolePage";
+import GlossaryPage from "@/pages/seo/GlossaryPage";
+import HookTypePage from "@/pages/seo/HookTypePage";
+import LocationPage from "@/pages/seo/LocationPage";
 
 const queryClient = new QueryClient();
 
@@ -112,8 +127,16 @@ const App = () => (
               <Route path="/guides/:slug"  element={<GuidePage />} />
 
               {/* ── SEO: Compare ── */}
-              <Route path="/compare"       element={<CompareIndex />} />
-              <Route path="/compare/:slug" element={<CompareDetail />} />
+              <Route path="/compare"           element={<CompareIndex />} />
+              <Route path="/compare/:slug"     element={<CompareDetail />} />
+              <Route path="/platform/:slug"    element={<PlatformPage />} />
+              <Route path="/solutions/:slug"   element={<IndustryPage />} />
+              <Route path="/use-case/:slug"    element={<UseCasePage />} />
+              <Route path="/for/:slug"         element={<RolePage />} />
+              <Route path="/learn/:slug"       element={<LearnPage />} />
+              <Route path="/hooks/:slug"       element={<HookTypePage />} />
+              <Route path="/markets/:slug"     element={<MarketPage />} />
+              <Route path="/examples/:slug"    element={<AdExamplesPage />} />
 
               {/* ── SEO: Ads Library ── */}
               <Route path="/ads-library"          element={<AdsLibraryIndex />} />
@@ -123,6 +146,13 @@ const App = () => (
               <Route path="/igaming-ad-examples"  element={<AdsLibraryLanding />} />
               <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
               <Route path="/best-ad-hooks"        element={<AdHooksPage />} />
+              <Route path="/solutions/:slug"     element={<IndustryPage />} />
+              <Route path="/platform/:slug"      element={<PlatformPage />} />
+              <Route path="/use-case/:slug"      element={<UseCasePage />} />
+              <Route path="/for/:slug"           element={<RolePage />} />
+              <Route path="/glossary/:slug"      element={<GlossaryPage />} />
+              <Route path="/hooks/:slug"         element={<HookTypePage />} />
+              <Route path="/markets/:slug"       element={<LocationPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
