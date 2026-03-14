@@ -52,6 +52,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const loopItems = [
     { title: dt("nav_overview"),  url: "/dashboard",              icon: Home,       end: true,  accent: "#e2e8f0" },
     { title: "Performance Loop",  url: "/dashboard/loop",         icon: RefreshCw,              accent: "#f472b6", badge: "NEW" },
+    { title: "AdBrief AI",        url: "/dashboard/loop/ai",      icon: Brain,                  accent: "#a78bfa", badge: "AI" },
     { title: "Import Data",       url: "/dashboard/loop/import",  icon: Upload,                 accent: "#60a5fa" },
   ];
 
