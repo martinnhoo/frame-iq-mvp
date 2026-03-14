@@ -200,6 +200,102 @@ export type Database = {
         }
         Relationships: []
       }
+      creative_entries: {
+        Row: {
+          aspect_ratio: string | null
+          audience_temp: string | null
+          clicks: number | null
+          client: string | null
+          conversions: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string | null
+          creative_type: string | null
+          ctr: number | null
+          date_code: string | null
+          editor: string | null
+          filename: string
+          hold_rate: number | null
+          hook_angle: string | null
+          hook_type: string | null
+          id: string
+          import_batch_id: string | null
+          impressions: number | null
+          market: string | null
+          platform: string | null
+          roas: number | null
+          source: string | null
+          spend: number | null
+          talent: string | null
+          thumb_stop_rate: number | null
+          updated_at: string | null
+          user_id: string
+          version: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          audience_temp?: string | null
+          clicks?: number | null
+          client?: string | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string | null
+          creative_type?: string | null
+          ctr?: number | null
+          date_code?: string | null
+          editor?: string | null
+          filename: string
+          hold_rate?: number | null
+          hook_angle?: string | null
+          hook_type?: string | null
+          id?: string
+          import_batch_id?: string | null
+          impressions?: number | null
+          market?: string | null
+          platform?: string | null
+          roas?: number | null
+          source?: string | null
+          spend?: number | null
+          talent?: string | null
+          thumb_stop_rate?: number | null
+          updated_at?: string | null
+          user_id: string
+          version?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          audience_temp?: string | null
+          clicks?: number | null
+          client?: string | null
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string | null
+          creative_type?: string | null
+          ctr?: number | null
+          date_code?: string | null
+          editor?: string | null
+          filename?: string
+          hold_rate?: number | null
+          hook_angle?: string | null
+          hook_type?: string | null
+          id?: string
+          import_batch_id?: string | null
+          impressions?: number | null
+          market?: string | null
+          platform?: string | null
+          roas?: number | null
+          source?: string | null
+          spend?: number | null
+          talent?: string | null
+          thumb_stop_rate?: number | null
+          updated_at?: string | null
+          user_id?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       creative_memory: {
         Row: {
           analysis_id: string | null
@@ -292,6 +388,87 @@ export type Database = {
         }
         Relationships: []
       }
+      learned_patterns: {
+        Row: {
+          avg_cpc: number | null
+          avg_ctr: number | null
+          avg_roas: number | null
+          avg_thumb_stop: number | null
+          confidence: number | null
+          created_at: string | null
+          id: string
+          insight_text: string | null
+          is_winner: boolean | null
+          last_updated: string | null
+          pattern_key: string
+          sample_size: number | null
+          user_id: string
+          variables: Json
+        }
+        Insert: {
+          avg_cpc?: number | null
+          avg_ctr?: number | null
+          avg_roas?: number | null
+          avg_thumb_stop?: number | null
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          insight_text?: string | null
+          is_winner?: boolean | null
+          last_updated?: string | null
+          pattern_key: string
+          sample_size?: number | null
+          user_id: string
+          variables?: Json
+        }
+        Update: {
+          avg_cpc?: number | null
+          avg_ctr?: number | null
+          avg_roas?: number | null
+          avg_thumb_stop?: number | null
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          insight_text?: string | null
+          is_winner?: boolean | null
+          last_updated?: string | null
+          pattern_key?: string
+          sample_size?: number | null
+          user_id?: string
+          variables?: Json
+        }
+        Relationships: []
+      }
+      nomenclature_config: {
+        Row: {
+          created_at: string | null
+          example_filename: string | null
+          fields: Json
+          id: string
+          separator: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          example_filename?: string | null
+          fields?: Json
+          id?: string
+          separator?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          example_filename?: string | null
+          fields?: Json
+          id?: string
+          separator?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       output_feedback: {
         Row: {
           comment: string | null
@@ -349,6 +526,48 @@ export type Database = {
           id?: string
           result?: Json | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      predictive_scores: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          creative_hash: string
+          id: string
+          patterns_used: Json | null
+          predicted_ctr: number | null
+          predicted_roas: number | null
+          reasoning: string | null
+          score: number | null
+          user_id: string
+          variables: Json
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          creative_hash: string
+          id?: string
+          patterns_used?: Json | null
+          predicted_ctr?: number | null
+          predicted_roas?: number | null
+          reasoning?: string | null
+          score?: number | null
+          user_id: string
+          variables?: Json
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          creative_hash?: string
+          id?: string
+          patterns_used?: Json | null
+          predicted_ctr?: number | null
+          predicted_roas?: number | null
+          reasoning?: string | null
+          score?: number | null
+          user_id?: string
+          variables?: Json
         }
         Relationships: []
       }

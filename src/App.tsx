@@ -44,6 +44,9 @@ import HookGenerator from "./pages/dashboard/HookGenerator";
 import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
 import ScriptGenerator from "./pages/dashboard/ScriptGenerator";
 import BriefGenerator from "./pages/dashboard/BriefGenerator";
+import CreativeLoopPage from "./pages/dashboard/CreativeLoopPage";
+import LoopImportPage from "./pages/dashboard/LoopImportPage";
+import LoopSettingsPage from "./pages/dashboard/LoopSettingsPage";
 import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
 import ToolPage from "@/pages/seo/ToolPage";
@@ -113,6 +116,9 @@ const App = () => (
                 <Route path="competitor" element={<CompetitorDecoder />} />
                 <Route path="script" element={<ScriptGenerator />} />
                 <Route path="brief" element={<BriefGenerator />} />
+                <Route path="loop" element={<CreativeLoopPage />} />
+                <Route path="loop/import" element={<LoopImportPage />} />
+                <Route path="loop/settings" element={<LoopSettingsPage />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />
               <Route path="/tools/:slug"   element={<ToolPage />} />
