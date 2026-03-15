@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
         .order("created_at" as any, { ascending: false }).limit(20),
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, connected_at")
-        .eq("user_id", user_id).eq("status", "active"),
+        .eq("user_id", user_id).eq("status", "active")
+        .then(r => r.error?.code === "42P01" ? { data: [], error: null } : r),
       supabase.from("ads_data_imports" as any)
         .select("platform, result, created_at" as any)
         .eq("user_id" as any, user_id)
