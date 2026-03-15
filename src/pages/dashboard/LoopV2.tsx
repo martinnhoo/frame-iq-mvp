@@ -169,7 +169,7 @@ function QuickAction({ icon: Icon, label, desc, color, onClick }: { icon: React.
         <Icon size={13} color={color} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ ...J, fontSize: 11, fontWeight: 700, color: hov ? "#fff" : "rgba(255,255,255,0.8)", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</p>
+        <p style={{ ...J, fontSize: 11, fontWeight: 700, color: hov ? "#fff" : "rgba(255,255,255,0.8)", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{label}</p>
         <p style={{ ...M, fontSize: 9, color: MUTED, letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{desc}</p>
       </div>
       <ArrowRight size={12} color={hov ? color : "rgba(255,255,255,0.15)"} style={{ flexShrink: 0, transition: "color 0.15s" }} />
@@ -179,7 +179,7 @@ function QuickAction({ icon: Icon, label, desc, color, onClick }: { icon: React.
 
 // ── Left column: Account Pulse ─────────────────────────────────────────────────
 
-function AccountPulsePanel({ pulse, loading }: { pulse: AccountPulse | null; loading: boolean }) {
+function AccountPulsePanel({ pulse, loading, onConnect }: { pulse: AccountPulse | null; loading: boolean; onConnect: () => void }) {
   const timeAgo = (ts: string) => {
     const diff = Date.now() - new Date(ts).getTime();
     const h = Math.floor(diff / 3600000);
@@ -192,7 +192,7 @@ function AccountPulsePanel({ pulse, loading }: { pulse: AccountPulse | null; loa
     <div style={{ display: "flex", flexDirection: "column", gap: 0, height: "100%" }}>
 
       {/* Header */}
-      <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${BORDER}` }}>
+      <div style={{ padding: "12px 14px 10px", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Activity size={13} color={BLUE} />
           <span style={{ ...M, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: MUTED }}>Account Pulse</span>
@@ -224,8 +224,12 @@ function AccountPulsePanel({ pulse, loading }: { pulse: AccountPulse | null; loa
             return <PlatformBadge key={p} platform={p} connected={!!imp} />;
           })}
         </div>
-        <button style={{ ...J, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", borderRadius: 8, background: "transparent", border: `1px dashed ${BORDER}`, color: MUTED, fontSize: 11, cursor: "pointer" }}>
-          <Link2 size={11} /> Connect account
+        <button
+          onClick={onConnect}
+          style={{ ...J, width: "100%", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px", borderRadius: 8, background: "transparent", border: `1px dashed ${BLUE}40`, color: BLUE, fontSize: 11, cursor: "pointer", transition: "all 0.15s" }}
+          onMouseEnter={e => { (e.currentTarget).style.background = `${BLUE}0d`; }}
+          onMouseLeave={e => { (e.currentTarget).style.background = "transparent"; }}>
+          <Link2 size={11} /> Connect ad account
         </button>
       </div>
 
@@ -336,7 +340,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
       {/* Header */}
-      <div style={{ padding: "12px 20px 10px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 20px 10px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${BLUE},${TEAL})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Brain size={13} color="#000" />
         </div>
@@ -352,7 +356,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
         {messages.map((msg, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
             {msg.role === "user" && (
@@ -397,7 +401,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 20px 16px", borderTop: `1px solid ${BORDER}` }}>
+      <div style={{ padding: "12px 20px 16px", borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end", background: SURFACE2, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "8px 8px 8px 14px", transition: "border-color 0.15s" }}
           onFocus={e => (e.currentTarget as HTMLDivElement).style.borderColor = BLUE + "50"}
           onBlur={e => (e.currentTarget as HTMLDivElement).style.borderColor = BORDER}>
@@ -441,7 +445,7 @@ function ActionsPanel({ pulse }: { pulse: AccountPulse | null }) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
       {/* Header */}
-      <div style={{ padding: "16px 16px 12px", borderBottom: `1px solid ${BORDER}` }}>
+      <div style={{ padding: "12px 14px 10px", borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Sparkles size={13} color={AMBER} />
           <span style={{ ...M, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: MUTED }}>Tools</span>
@@ -449,7 +453,7 @@ function ActionsPanel({ pulse }: { pulse: AccountPulse | null }) {
       </div>
 
       {/* Tools list */}
-      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ padding: "10px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 4, overflow: "hidden" }}>
         {tools.map(t => (
           <QuickAction key={t.route} icon={t.icon} label={t.label} desc={t.desc} color={t.color} onClick={() => navigate(t.route)} />
         ))}
@@ -494,6 +498,23 @@ export default function LoopV2() {
   const { user, profile } = useOutletContext<DashboardContext>();
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("meta-oauth", {
+        body: { action: "get_auth_url", user_id: user.id },
+      });
+      if (error) throw error;
+      // Open OAuth in same window — callback will return to dashboard
+      window.location.href = data.url;
+    } catch (e: any) {
+      console.error("OAuth error:", e);
+      setConnecting(false);
+    }
+  };
 
   const loadPulse = useCallback(async () => {
     setLoading(true);
@@ -635,11 +656,11 @@ export default function LoopV2() {
       </div>
 
       {/* Three-column layout */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "210px 1fr 210px", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "200px 1fr 220px", overflow: "hidden" }}>
 
         {/* Left — Account Pulse */}
         <div style={{ borderRight: `1px solid ${BORDER}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <AccountPulsePanel pulse={pulse} loading={loading} />
+          <AccountPulsePanel pulse={pulse} loading={loading} onConnect={handleConnect} />
         </div>
 
         {/* Center — AI Chat */}
