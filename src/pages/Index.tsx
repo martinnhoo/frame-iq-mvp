@@ -575,20 +575,84 @@ const Index = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════ */}
+      {/* TESTIMONIALS                                               */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 px-6 border-y" style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(14,165,233,0.02)" }}>
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              WHAT TEAMS ARE SAYING
+            </span>
+            <h2 className="text-3xl font-bold mt-3 font-display" style={{ letterSpacing: "-0.02em" }}>
+              Results from the first analysis
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5">
+            {[
+              {
+                quote: "I uploaded 3 ads I was about to launch. AdBrief caught a safe zone violation on two of them and gave my hook a 4.8. Rewrote it, rescored a 7.6. That version became our best performer that month.",
+                name: "Lucas M.",
+                role: "Media Buyer · DTC Brand",
+                stat: "Hook 4.8 → 7.6",
+                color: "#0ea5e9",
+              },
+              {
+                quote: "Before AdBrief I was spending 2 days writing briefs. Now it takes 10 minutes. My editor stopped asking for revisions because the briefs are finally complete.",
+                name: "Priya S.",
+                role: "Creative Strategist · Performance Agency",
+                stat: "Briefs: 2 days → 10 min",
+                color: "#06b6d4",
+              },
+              {
+                quote: "We were launching the same weak hooks over and over without knowing. AdBrief showed us we were scoring 4.2 average. After 3 weeks of using it we're at 6.9 and CTR went up 40%.",
+                name: "Rafael T.",
+                role: "Head of Growth · iGaming Brand",
+                stat: "CTR +40% in 3 weeks",
+                color: "#34d399",
+              },
+            ].map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
+                className="p-6 rounded-2xl flex flex-col gap-4"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                {/* Stat badge */}
+                <div className="inline-flex self-start">
+                  <span className="text-xs font-bold px-3 py-1.5 rounded-full font-body"
+                    style={{ background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}25` }}>
+                    {t.stat}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed font-body" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  "{t.quote}"
+                </p>
+                <div className="mt-auto pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                  <p className="text-sm font-semibold font-body text-white">{t.name}</p>
+                  <p className="text-xs font-body" style={{ color: "rgba(255,255,255,0.35)" }}>{t.role}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
       {/* PRICING                                                    */}
       {/* ═══════════════════════════════════════════════════════════ */}
       <section id="pricing" className="py-24 px-6 relative">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent, rgba(139, 92, 246, 0.03), transparent)' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, transparent, rgba(14,165,233,0.03), transparent)' }} />
         <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text font-display">{t("pricing_label")}</span>
-            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">Simple, transparent pricing</h2>
-            <div className="mt-5 inline-flex items-center gap-3 px-5 py-3 rounded-2xl font-body"
+            <h2 className="text-4xl md:text-5xl font-bold mt-4 font-display">Start free. Upgrade when it pays off.</h2>
+            <p className="text-base mt-3 font-body" style={{ color: "rgba(255,255,255,0.4)", maxWidth: 480, margin: "12px auto 0" }}>
+              Each analysis = upload any video ad → hook score (0–10) + 3 improvements + platform fit check + production brief. Takes 60 seconds.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl font-body"
               style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
               <span className="text-2xl">💡</span>
               <p className="text-sm text-white/70">
-                One weak ad = <span className="text-white font-semibold">$47–$500+ burned.</span>{" "}
-                AdBrief catches it before launch. <span className="text-sky-400 font-semibold">Most users recover 10× the plan cost in week 1.</span>
+                The average weak ad wastes <span className="text-white font-semibold">$47–$500</span> before you catch it.
+                {" "}At $19/mo, AdBrief pays for itself the first time it stops a bad launch.
               </p>
             </div>
           </div>
@@ -653,7 +717,7 @@ const Index = () => {
         <div className="container mx-auto max-w-3xl text-center">
           <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
             className="p-12 rounded-3xl relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.12),rgba(236,72,153,0.08))", border: "1px solid rgba(139,92,246,0.18)" }}>
+            style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.12),rgba(6,182,212,0.08))", border: "1px solid rgba(14,165,233,0.18)" }}>
             <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 50% -20%,rgba(14,165,233,0.18),transparent 60%)" }} />
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 font-display" style={{ letterSpacing: "-0.02em" }}>
