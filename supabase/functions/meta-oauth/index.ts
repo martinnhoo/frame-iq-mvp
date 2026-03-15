@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // ── Action: get_auth_url ──────────────────────────────────────────────────
     if (action === "get_auth_url") {
       // state encodes user_id so we can retrieve it in callback
-      const stateParam = Buffer.from(JSON.stringify({ user_id, ts: Date.now() })).toString("base64");
+      const stateParam = btoa(JSON.stringify({ user_id, ts: Date.now() }));
       
       const url = new URL("https://www.facebook.com/v19.0/dialog/oauth");
       url.searchParams.set("client_id", META_APP_ID);
