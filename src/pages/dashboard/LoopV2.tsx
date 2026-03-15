@@ -109,12 +109,12 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 
   return (
     <div style={{ marginBottom: 8 }}>
-      {block.title && <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color, marginBottom: 6 }}>{block.title}</p>}
-      {block.content && <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.7, marginBottom: block.items ? 10 : 0 }}>{block.content}</p>}
+      {block.title && <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color, marginBottom: 8 }}>{block.title}</p>}
+      {block.content && <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.75, marginBottom: block.items ? 10 : 0 }}>{block.content}</p>}
       {block.items?.map((item, i) => (
         <div key={i} style={{ display: "flex", gap: 10, marginBottom: 5, alignItems: "flex-start" }}>
           <span style={{ color, fontSize: 14, flexShrink: 0, marginTop: 2 }}>·</span>
-          <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.65 }}>{item}</p>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.7 }}>{item}</p>
         </div>
       ))}
     </div>
@@ -205,6 +205,34 @@ export default function LoopV2() {
     });
   }, []);
 
+
+  // Realtime — subscribe to new analyses appearing
+  useEffect(() => {
+    const channel = supabase
+      .channel("analyses_realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "analyses", filter: `user_id=eq.${user.id}` },
+        async (payload) => {
+          // New analysis detected — refresh pulse and notify
+          const newPulse = await loadPulse();
+          if (newPulse) {
+            setMessages(prev => [...prev, {
+              role: "assistant" as const,
+              blocks: [{
+                type: "insight" as const,
+                title: "New analysis detected",
+                content: `I just picked up a new ad analysis. Your account now has ${newPulse.totalAnalyses} total analyses. Want me to review what changed?`,
+              }],
+              ts: Date.now(),
+            }]);
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user.id, loadPulse]);
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const send = async (text: string) => {
@@ -264,7 +292,7 @@ export default function LoopV2() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: ready ? GREEN : AMBER, animation: ready ? "statusPulse 2.5s infinite" : "none" }} />
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: 400, fontFamily: F }}>
             AdBrief AI
             {hasData && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {pulse?.totalAnalyses} analyses loaded</span>}
             {pulse?.platformImports.length ? <span style={{ color: "rgba(255,255,255,0.25)" }}> · {pulse.platformImports.map(p => p.platform).join(", ")} connected</span> : null}
@@ -285,21 +313,17 @@ export default function LoopV2() {
               {msg.role === "user" && (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <div style={{ maxWidth: "76%", padding: "10px 15px", borderRadius: "16px 16px 4px 16px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>{msg.text}</p>
+                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.9)", lineHeight: 1.65, fontFamily: F }}>{msg.text}</p>
                   </div>
                 </div>
               )}
               {msg.role === "assistant" && (
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  {/* AI avatar */}
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                    <Brain size={13} color="#000" />
-                  </div>
                   <div style={{ flex: 1 }}>
                     {msg.loading ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 4 }}>
                         <Loader2 size={14} color="rgba(255,255,255,0.3)" className="animate-spin" />
-                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Thinking...</span>
+                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", fontFamily: F }}>Thinking...</span>
                       </div>
                     ) : (
                       <div>
@@ -315,13 +339,13 @@ export default function LoopV2() {
           {/* Suggestions — only when no conversation yet */}
           {!hasConversation && ready && (
             <div>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 12, fontWeight: 500, letterSpacing: "0.04em" }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", marginBottom: 14, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
                 {hasData ? "BASED ON YOUR ACCOUNT" : "SUGGESTIONS"}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} onClick={() => send(s)}
-                    style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.4, fontFamily: F, transition: "all 0.1s" }}
+                    style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 14, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.1s" }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.3)"; el.style.color = "rgba(255,255,255,0.85)"; el.style.background = "rgba(14,165,233,0.05)"; }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.55)"; el.style.background = "rgba(255,255,255,0.03)"; }}>
                     {s}
@@ -350,7 +374,7 @@ export default function LoopV2() {
               placeholder="Ask anything about your campaigns, ads, or strategy..."
               rows={1}
               autoFocus
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.6, maxHeight: 120, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 15, lineHeight: 1.65, maxHeight: 120, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
             />
             <button onClick={() => send(input)} disabled={!input.trim() || sending}
               style={{ width: 34, height: 34, borderRadius: 9, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.06)", border: "none", cursor: input.trim() && !sending ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.12s" }}>
@@ -363,7 +387,7 @@ export default function LoopV2() {
             {ACTIONS.map(a => (
               <button key={a.action} onClick={() => handleAction(a.action)}
                 disabled={a.action === "connect" && connecting}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${a.color}40`; el.style.color = a.color; el.style.background = `${a.color}0a`; }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "transparent"; }}>
                 <a.icon size={11} />

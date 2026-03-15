@@ -241,64 +241,82 @@ export default function DashboardLayout() {
           </button>
         </header>
 
-        {/* Persona context bar — always visible */}
-        <div className="sticky top-0 lg:top-0 z-20 px-4 py-2 flex items-center gap-3 border-b border-white/[0.04]"
-          style={{ background: "rgba(8,8,8,0.95)", backdropFilter: "blur(12px)" }}>
+        {/* Persona / workspace selector — premium workspace switcher */}
+        <div className="sticky top-0 lg:top-0 z-20 flex items-center gap-3 border-b"
+          style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.06)", padding: "0 20px", height: 44 }}>
           <div className="relative">
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
-              style={selectedPersona
-                ? { background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9" }
-                : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }
-              }
+              className="flex items-center gap-2.5 transition-all"
+              style={{
+                padding: "6px 12px 6px 10px",
+                borderRadius: 9,
+                background: selectedPersona ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)",
+                border: selectedPersona ? "1px solid rgba(14,165,233,0.22)" : "1px solid rgba(255,255,255,0.08)",
+                cursor: "pointer",
+              }}
             >
-              <Users className="h-3.5 w-3.5" />
-                <span>{selectedPersona ? `${selectedPersona.avatar_emoji} ${selectedPersona.name}` : dt("cm_no_persona")}</span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
+              {selectedPersona ? (
+                <>
+                  <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{selectedPersona.avatar_emoji}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "#fff", fontFamily: "'Inter', sans-serif" }}>{selectedPersona.name}</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)" }} />
+                  </span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif" }}>{dt("cm_no_persona")}</span>
+                </>
+              )}
+              <ChevronDown className="h-3.5 w-3.5" style={{ color: "rgba(255,255,255,0.3)", marginLeft: 2 }} />
             </button>
 
             {personaPickerOpen && (
-              <div className="absolute top-full left-0 mt-1 w-72 rounded-2xl overflow-hidden shadow-2xl"
-                style={{ background: "#111114", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
-                <div className="px-3 py-2.5 border-b border-white/[0.12]">
-                 <p className="text-[10px] uppercase tracking-widest text-white/50 font-mono">{dt("ov_active_persona_label")}</p>
-                   <p className="text-[11px] text-white/40 mt-0.5">{dt("ov_set_persona")}</p>
-                 </div>
+              <div className="absolute top-full left-0 mt-1.5 rounded-2xl overflow-hidden shadow-2xl"
+                style={{ width: 280, background: "#111", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
+                <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Workspace</p>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select a client or context</p>
+                </div>
                 {savedPersonas.length === 0 ? (
-                  <div className="p-4 text-center">
-                   <p className="text-xs text-white/50 mb-3">{dt("ov_no_personas_yet")}</p>
-                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
-                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs mx-auto"
-                       style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)" }}>
-                       <Sparkles className="h-3 w-3" /> {dt("ov_create_first_persona")}
-                     </button>
+                  <div style={{ padding: "16px 14px", textAlign: "center" }}>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>{dt("ov_no_personas_yet")}</p>
+                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
+                      <Sparkles className="h-3.5 w-3.5" /> Create first persona
+                    </button>
                   </div>
                 ) : (
-                  <div className="py-1 max-h-64 overflow-y-auto">
+                  <div style={{ padding: "6px", maxHeight: 280, overflowY: "auto" }}>
                     {selectedPersona && (
                       <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.08] transition-colors text-xs text-white/50">
-                         <span className="h-7 w-7 rounded-full flex items-center justify-center text-sm" style={{ background: "rgba(255,255,255,0.05)" }}>✕</span>
-                         {dt("ov_clear_persona")}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", marginBottom: 2 }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <span style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>✕</span>
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "'Inter', sans-serif" }}>{dt("ov_clear_persona")}</span>
                       </button>
                     )}
                     {savedPersonas.map(p => (
                       <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.08] transition-colors"
-                        style={selectedPersona?.id === p.id ? { background: "rgba(14,165,233,0.08)" } : {}}>
-                        <span className="h-7 w-7 rounded-full flex items-center justify-center text-base shrink-0" style={{ background: "rgba(14,165,233,0.1)" }}>{p.avatar_emoji}</span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-white truncate">{p.name}</p>
-                          <p className="text-[10px] text-white/50 truncate">{p.headline}</p>
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: selectedPersona?.id === p.id ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
+                        onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                        onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                        <span style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>{p.avatar_emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: "#fff", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
+                          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.headline || "No description"}</p>
                         </div>
-                        {selectedPersona?.id === p.id && <span className="ml-auto text-[10px] text-sky-400 shrink-0">{dt("pe_active")}</span>}
+                        {selectedPersona?.id === p.id && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
                       </button>
                     ))}
-                    <div className="px-3 py-2 border-t border-white/[0.12]">
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "8px 10px 4px", marginTop: 4 }}>
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
-                        className="text-[10px] text-white/45 hover:text-white/50 transition-colors flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> {dt("cm_manage_personas")}
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "4px 0" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
+                        <Sparkles className="h-3 w-3" /> Manage personas
                       </button>
                     </div>
                   </div>
@@ -308,12 +326,14 @@ export default function DashboardLayout() {
           </div>
 
           {selectedPersona && (
-            <div className="flex items-center gap-2 text-[10px] text-white/40 font-mono overflow-hidden">
-              <span className="hidden sm:block truncate">AI targeting: {selectedPersona.age || "—"} · {(selectedPersona.best_platforms || []).slice(0,2).join(", ") || "—"}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+              <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.28)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {[selectedPersona.age, ...(selectedPersona.best_platforms || []).slice(0, 2)].filter(Boolean).join(" · ")}
+              </span>
             </div>
           )}
 
-          {/* Close picker on outside click */}
           {personaPickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
         </div>
 
