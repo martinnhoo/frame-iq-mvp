@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       { data: personaRow },
     ] = await Promise.all([
       supabase.from("analyses")
-        .select("id, created_at, title, result, hook_strength, status")
+        .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
         .eq("user_id", user_id).eq("status", "completed")
         .order("created_at", { ascending: false }).limit(15),
       supabase.from("user_ai_profile" as any)
@@ -79,7 +79,17 @@ Deno.serve(async (req) => {
 
     const recentSummary = analyses.slice(0, 5).map((a: any) => {
       const r = a.result as any;
-      return `  - "${a.title || "untitled"}" score:${r?.hook_score ?? "—"} hook:${a.hook_strength || "—"} date:${a.created_at?.split("T")[0]}`;
+      const improvements = (r?.improvement_suggestions as string[])?.slice(0, 2).join("; ") || "";
+      return [
+        `  - "${a.title || r?.market_guess || "untitled"}"`,
+        `score:${r?.hook_score ?? "—"}`,
+        `hook_type:${r?.hook_type || a.hook_strength || "—"}`,
+        `format:${r?.format || "—"}`,
+        `market:${r?.market_guess || "—"}`,
+        r?.summary ? `summary:"${String(r.summary).slice(0, 80)}"` : "",
+        improvements ? `improvements:"${improvements}"` : "",
+        `date:${a.created_at?.split("T")[0]}`,
+      ].filter(Boolean).join(" | ");
     }).join("\n");
 
     const connectedPlatforms = connections.map((c: any) => {
