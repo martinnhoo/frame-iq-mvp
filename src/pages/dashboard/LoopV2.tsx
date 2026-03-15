@@ -318,7 +318,29 @@ export default function LoopV2() {
         ].filter(Boolean).join(" ");
       }).join("\n");
 
-      const personaCtx = selectedPersona ? `WORKSPACE: ${selectedPersona.name} | ${(selectedPersona as any).headline || ""}` : "";
+      // Fetch full persona data including result
+      let personaCtx = "";
+      if (selectedPersona) {
+        try {
+          const { data: pData } = await supabase.from("personas")
+            .select("name, headline, result").eq("id", selectedPersona.id).single();
+          if (pData) {
+            const r = (pData as any).result || {};
+            personaCtx = [
+              `ACTIVE PERSONA/CLIENT: ${pData.name}`,
+              pData.headline ? `Description: ${pData.headline}` : "",
+              r.age ? `Age: ${r.age}` : "",
+              r.preferred_market || r.market ? `Market: ${r.preferred_market || r.market}` : "",
+              r.best_platforms?.length ? `Platforms: ${r.best_platforms.join(", ")}` : "",
+              r.language_style ? `Language style: ${r.language_style}` : "",
+              r.cta_style ? `CTA style: ${r.cta_style}` : "",
+              r.pain_points?.length ? `Pain points: ${r.pain_points.slice(0, 3).join("; ")}` : "",
+              r.interests?.length ? `Interests: ${r.interests.slice(0, 3).join(", ")}` : "",
+              r.objections?.length ? `Objections: ${r.objections.slice(0, 2).join("; ")}` : "",
+            ].filter(Boolean).join("\n");
+          }
+        } catch {}
+      }
       const connectedStr = connectedPlatforms.length ? `CONNECTED: ${connectedPlatforms.join(", ")}` : "NO PLATFORMS CONNECTED";
 
       return [
@@ -345,12 +367,24 @@ export default function LoopV2() {
     ]);
     try {
       const richContext = await buildRichContext();
+      // Build conversation history (last 6 exchanges = 12 messages)
+      const history = messages
+        .filter(m => !m.loading)
+        .slice(-12)
+        .map(m => ({
+          role: m.role,
+          content: m.role === "user"
+            ? m.text || ""
+            : (m.blocks || []).map((b: any) => [b.title, b.content, ...(b.items || [])].filter(Boolean).join(" ")).join(" "),
+        }))
+        .filter(m => m.content.trim());
       const { data, error } = await supabase.functions.invoke("adbrief-ai-chat", {
         body: { 
           message: text, 
           user_id: user.id, 
           persona_id: selectedPersona?.id, 
           context: richContext,
+          history,
         },
       });
       if (error) throw error;

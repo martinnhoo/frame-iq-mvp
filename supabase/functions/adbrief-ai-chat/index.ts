@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, context, user_id, persona_id } = await req.json();
+    const { message, context, user_id, persona_id, history } = await req.json();
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
@@ -289,11 +289,27 @@ Rules:
 - Max 4 blocks per response
 - If data is missing, tell them EXACTLY what to import to get better answers`;
 
+    // Build multi-turn conversation from history
+    const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
+    if (Array.isArray(history) && history.length > 0) {
+      for (const h of history) {
+        if (h.role === "user" || h.role === "assistant") {
+          const content = String(h.content || "").trim();
+          if (content) historyMessages.push({ role: h.role, content });
+        }
+      }
+    }
+    // Always end with the current user message
+    const allMessages = [
+      ...historyMessages,
+      { role: "user" as const, content: message },
+    ];
+
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
       system: systemPrompt,
-      messages: [{ role: "user", content: message }],
+      messages: allMessages,
     });
 
     const raw = response.content[0]?.type === "text" ? response.content[0].text : "[]";
