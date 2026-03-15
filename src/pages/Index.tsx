@@ -107,9 +107,7 @@ const Index = () => {
     localStorage.setItem("adbrief_ab_cta", v);
     return v;
   })();
-  const ctaPrimary = abVariant === "a"
-    ? t("hero_cta_primary")  // "Save your next $500 in wasted budget — free"
-    : "Find what's killing your CTR — free";  // variant B
+  const ctaPrimary = "Score my first ad free →";
   // ────────────────────────────────────────────────────────────────────────
 
 
@@ -220,22 +218,22 @@ const Index = () => {
                 className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold mb-8 font-body"
                 style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.25)' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span style={{ color: 'rgba(255,255,255,0.5)' }}>147+ performance teams — BR, MX, IN, US</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>2,800+ ads analyzed · Free to start</span>
               </motion.div>
 
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="font-display font-bold leading-[1.06] tracking-tight mb-6"
                 style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
-                The AI that makes{" "}
-                <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  every ad dollar work harder.
+                Upload your ad.{" "}
+                <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                  Get a hook score in 60 seconds.
                 </span>
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-[17px] leading-relaxed font-body mb-8"
                 style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
-                AdBrief catches weak hooks before you spend. Identifies what's draining your budget. Tells you exactly what to produce next — and why it will work.
+                AdBrief analyzes any video ad for hook strength, platform fit, and conversion signals. Know exactly what's weak — before you spend a dollar on media.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
@@ -330,83 +328,72 @@ const Index = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* AI EVOLUTION TIMELINE                                      */}
+      {/* WHAT YOU GET IN 60 SECONDS                                */}
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-14">
-            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              YOUR AI GROWS WITH YOU
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              INSTANT RESULTS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-4 font-display" style={{ letterSpacing: "-0.02em" }}>
-              The more you use it, the smarter it gets.
+              Upload your ad. Get answers in 60 seconds.
             </h2>
             <p className="text-muted-foreground mt-3 max-w-xl mx-auto font-body text-base">
-              Your media buyer forgets. AdBrief never does. Every ad, every result, every pattern — permanently stored and used.
+              No setup. No CSV imports. No connecting ad accounts. Just upload any video and get a full creative breakdown immediately.
             </p>
           </div>
 
-          <div className="relative">
-            {/* Vertical connector */}
-            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px md:-translate-x-px" style={{ background: "linear-gradient(180deg, #0ea5e9, #06b6d4, #34d399)" }} />
-
+          <div className="grid md:grid-cols-2 gap-5">
             {[
               {
-                day: "Day 1",
-                title: "AI starts learning",
-                desc: "You upload your first ads and import performance data from Meta or TikTok. The AI starts recording everything.",
-                example: "\"5 ads uploaded. Analyzing hooks, formats, and market signals...\"",
-                color: "#0ea5e9",
-                score: "Intelligence: 5%",
+                emoji: "📊",
+                title: "Hook Score — 0 to 10",
+                desc: "Your hook gets rated instantly. 7.0+ is strong. Below 5.0 means your hook is losing attention before anyone clicks.",
+                example: "\"Hook score: 6.2 / 10 — curiosity gap present but resolved too early. Move the resolution to the CTA.\"",
+                color: "#a78bfa",
               },
               {
-                day: "Day 7",
-                title: "First patterns appear",
-                desc: "With 10-15 ads, the AI starts seeing patterns. Which hook types get clicks? Which markets respond better?",
-                example: "\"Pattern found: UGC + Curiosity hooks → 1.8x higher CTR in your BR campaigns\"",
-                color: "#60a5fa",
-                score: "Intelligence: 25%",
+                emoji: "🎯",
+                title: "3 Specific Improvements",
+                desc: "Not vague advice. Specific, actionable changes to your hook, narrative, and CTA — ready to brief your editor.",
+                example: "\"1. Replace the opening with a problem statement. 2. Add a specific number in the first 5 words. 3. Delay product reveal to second 8.\"",
+                color: "#f472b6",
               },
               {
-                day: "Day 30",
-                title: "Predictive scoring active",
-                desc: "50+ ads analyzed. The AI now predicts which concepts will work BEFORE you produce them. Scores from 0 to 100.",
-                example: "\"This script concept scores 84/100 — matches your top 3 winning patterns\"",
-                color: "#06b6d4",
-                score: "Intelligence: 70%",
-              },
-              {
-                day: "Day 90",
-                title: "AI masters your account",
-                desc: "Hundreds of data points. The AI knows your winning formula better than any person could. It suggests what to produce before you even ask.",
-                example: "\"Recommended: Produce 3 UGC variations with social proof hooks for TikTok BR — predicted ROAS 4.2x\"",
+                emoji: "📱",
+                title: "Platform Fit Check",
+                desc: "Is your creative optimized for TikTok? Facebook? Reels? AdBrief checks safe zones, format, and native feel for each platform.",
+                example: "\"TikTok fit: 72% — safe zone violation detected at bottom 15%. Text overlay partially hidden by UI elements.\"",
                 color: "#34d399",
-                score: "Intelligence: 95%",
               },
-            ].map((step, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
-                className={`relative flex gap-6 md:gap-12 mb-10 last:mb-0 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}>
-                {/* Dot on timeline */}
-                <div className="absolute left-6 md:left-1/2 top-2 w-3 h-3 rounded-full -translate-x-1.5 z-10 ring-4 ring-background" style={{ background: step.color }} />
-                
-                {/* Spacer for the other side */}
-                <div className="hidden md:block md:w-1/2" />
-
-                {/* Content card */}
-                <div className="ml-14 md:ml-0 md:w-1/2 p-6 rounded-2xl" style={{ background: `${step.color}06`, border: `1px solid ${step.color}18` }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-widest font-display" style={{ color: step.color }}>{step.day}</span>
-                    <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full font-body" style={{ background: `${step.color}15`, color: step.color }}>{step.score}</span>
-                  </div>
-                  <h3 className="text-lg font-bold font-display text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed font-body mb-3">{step.desc}</p>
-                  {/* Fake AI output */}
-                  <div className="px-4 py-3 rounded-xl text-xs font-mono leading-relaxed" style={{ background: `${step.color}08`, border: `1px solid ${step.color}12`, color: `${step.color}cc` }}>
-                    {step.example}
-                  </div>
+              {
+                emoji: "✍️",
+                title: "Production Brief — Ready to Send",
+                desc: "One click generates a scene-by-scene brief with VO copy and visual notes. Send to your editor without writing a single word.",
+                example: "\"SC01 (0–3s): Hook — VO: 'Most teams are doing this wrong...' | ON-SCREEN: bold white text | CUT to product at SC03\"",
+                color: "#38bdf8",
+              },
+            ].map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} viewport={{ once: true }}
+                className="p-6 rounded-2xl" style={{ background: `${item.color}06`, border: `1px solid ${item.color}18` }}>
+                <div className="text-2xl mb-3">{item.emoji}</div>
+                <h3 className="text-base font-bold font-display text-foreground mb-2" style={{ color: item.color }}>{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-body mb-4">{item.desc}</p>
+                <div className="px-4 py-3 rounded-xl text-xs font-mono leading-relaxed" style={{ background: `${item.color}08`, border: `1px solid ${item.color}12`, color: `${item.color}cc` }}>
+                  {item.example}
                 </div>
               </motion.div>
             ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <button onClick={() => window.location.href = "/signup"}
+              className="font-body font-bold text-[15px] inline-flex items-center gap-2"
+              style={{ padding: "14px 32px", borderRadius: 14, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+              Try it free — no credit card <ArrowRight size={16} />
+            </button>
+            <p className="text-xs text-white/30 mt-3 font-body">3 free analyses. Results in 60 seconds.</p>
           </div>
         </div>
       </section>
