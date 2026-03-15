@@ -277,6 +277,63 @@ export default function LoopV2() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  const buildRichContext = async (): Promise<string> => {
+    try {
+      const { data: analyses } = await supabase
+        .from("analyses")
+        .select("id, created_at, title, result, hook_strength, improvement_suggestions")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const rows = (analyses || []) as any[];
+      const scores = rows.map((r: any) => (r.result as any)?.hook_score).filter(Boolean) as number[];
+      const avg = scores.length ? (scores.reduce((a: number, b: number) => a + b) / scores.length).toFixed(1) : "—";
+
+      const hookMap: Record<string, { count: number; total: number }> = {};
+      rows.forEach((r: any) => {
+        const ht = (r.result as any)?.hook_type || r.hook_strength;
+        if (!ht) return;
+        if (!hookMap[ht]) hookMap[ht] = { count: 0, total: 0 };
+        hookMap[ht].count++;
+        hookMap[ht].total += (r.result as any)?.hook_score || 0;
+      });
+      const topHooks = Object.entries(hookMap)
+        .sort((a, b) => (b[1].total / b[1].count) - (a[1].total / a[1].count))
+        .slice(0, 3)
+        .map(([t, d]) => `${t}(avg ${(d.total/d.count).toFixed(1)}, ${d.count}x)`);
+
+      const recent = rows.slice(0, 5).map((a: any) => {
+        const r = a.result as any;
+        const imps = (r?.improvement_suggestions as string[] || a.improvement_suggestions || []).slice(0, 1).join("; ");
+        return [
+          `"${a.title || r?.market_guess || "untitled"}"`,
+          `score:${r?.hook_score ?? "—"}`,
+          `type:${r?.hook_type || a.hook_strength || "—"}`,
+          `market:${r?.market_guess || "—"}`,
+          `format:${r?.format || "—"}`,
+          r?.summary ? `"${String(r.summary).slice(0, 60)}"` : "",
+          imps ? `fix:"${imps}"` : "",
+        ].filter(Boolean).join(" ");
+      }).join("\n");
+
+      const personaCtx = selectedPersona ? `WORKSPACE: ${selectedPersona.name} | ${(selectedPersona as any).headline || ""}` : "";
+      const connectedStr = connectedPlatforms.length ? `CONNECTED: ${connectedPlatforms.join(", ")}` : "NO PLATFORMS CONNECTED";
+
+      return [
+        personaCtx,
+        connectedStr,
+        `STATS: ${rows.length} analyses | avg score ${avg}/10 | viral:${rows.filter((r: any) => r.hook_strength === "viral").length}`,
+        topHooks.length ? `TOP HOOKS: ${topHooks.join(", ")}` : "",
+        recent ? `RECENT ANALYSES:\n${recent}` : "",
+        pulse?.topMarket ? `TOP MARKET: ${pulse.topMarket}` : "",
+      ].filter(Boolean).join("\n");
+    } catch (e) {
+      return `STATS: ${pulse?.totalAnalyses || 0} analyses | avg ${pulse?.avgHookScore || "—"}/10`;
+    }
+  };
+
   const send = async (text: string) => {
     if (!text.trim() || sending) return;
     setInput("");
@@ -287,8 +344,14 @@ export default function LoopV2() {
       { role: "assistant", loading: true, ts: Date.now() + 1 },
     ]);
     try {
+      const richContext = await buildRichContext();
       const { data, error } = await supabase.functions.invoke("adbrief-ai-chat", {
-        body: { message: text, user_id: user.id, persona_id: selectedPersona?.id, context: { pulse } },
+        body: { 
+          message: text, 
+          user_id: user.id, 
+          persona_id: selectedPersona?.id, 
+          context: richContext,
+        },
       });
       if (error) throw error;
       setMessages(prev => prev.map(m =>
