@@ -35,7 +35,7 @@ export default function TopBanner() {
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
             <span className="text-green-300/80 font-semibold">Live</span>
           </span>
-          {LIVE_COUNTS.analyses.toLocaleString()} ads analyzed · {LIVE_COUNTS.teams} teams using AdBrief · <span className="text-purple-300/80 font-semibold cursor-pointer hover:underline" onClick={() => window.location.href='/signup'}>Start free →</span>
+          {LIVE_COUNTS.analyses.toLocaleString()} ads analyzed · {LIVE_COUNTS.teams} teams · <span className="text-sky-300/90 font-semibold cursor-pointer hover:underline" onClick={() => window.location.href='/signup'}>Score your first ad free →</span>
         </p>
       )}
 

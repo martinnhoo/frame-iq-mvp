@@ -619,6 +619,69 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
   );
 }
 
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+
+function FAQ() {
+  const [open, setOpen] = useState<number | null>(null);
+  const items = [
+    {
+      q: "What exactly is a 'hook score'?",
+      a: "A hook score (0–10) rates how likely your ad's opening seconds are to stop someone from scrolling. It's based on emotional trigger type, specificity of the claim, curiosity gap strength, platform fit, and pacing. A score above 7.0 is strong. Most ads score between 4 and 6 — meaning there's almost always room to improve before launch.",
+    },
+    {
+      q: "Do I need to connect my ad account?",
+      a: "No. AdBrief works without any ad account connection. Just upload a video or paste a script — no Meta, TikTok, or Google credentials needed. You keep full control of your data.",
+    },
+    {
+      q: "What does 'AI memory' mean in practice?",
+      a: "After you analyze multiple ads, AdBrief starts recognizing patterns in your account — which hook types convert best, which formats underperform, which markets respond differently. It uses this context to calibrate every new analysis and brief it generates for you. The more you use it, the more accurate and specific the output becomes.",
+    },
+    {
+      q: "Can I use AdBrief for multiple clients or brands?",
+      a: "Yes. The Pro and Studio plans are built for teams and agencies managing multiple brands. Each persona/brand profile keeps its own memory and context separate from others.",
+    },
+    {
+      q: "What's included in the free plan?",
+      a: "The free plan includes 3 full analyses — each gives you a hook score (0–10), 3 specific improvements, platform fit check, and a generated production brief. No credit card required. No time limit.",
+    },
+    {
+      q: "What video formats do you support?",
+      a: "AdBrief accepts MP4, MOV, and WebM video files up to 500MB. You can also paste a script directly (no video needed) to generate a brief or score a written hook.",
+    },
+  ];
+
+  return (
+    <section style={{ padding: "60px 24px 80px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <Pill>FAQ</Pill>
+          <h2 style={{ ...j, fontSize: "clamp(24px,3.5vw,36px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "14px 0 0" }}>
+            Common questions
+          </h2>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {items.map((item, i) => (
+            <div key={i}
+              style={{ borderRadius: 14, background: open === i ? "rgba(14,165,233,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${open === i ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.06)"}`, overflow: "hidden", transition: "all 0.15s" }}>
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                style={{ width: "100%", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 12, textAlign: "left" }}>
+                <span style={{ ...j, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>{item.q}</span>
+                <span style={{ color: open === i ? "#0ea5e9" : "rgba(255,255,255,0.3)", fontSize: 18, flexShrink: 0, transition: "transform 0.15s", transform: open === i ? "rotate(45deg)" : "none" }}>+</span>
+              </button>
+              {open === i && (
+                <div style={{ padding: "0 20px 16px" }}>
+                  <p style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.75 }}>{item.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 
 function FinalCTA({ onCTA }: { onCTA: () => void }) {
@@ -689,6 +752,7 @@ export default function IndexNew() {
       <MemorySection />
       <Testimonials />
       <Pricing onCTA={handleCTA} />
+      <FAQ />
       <FinalCTA onCTA={handleCTA} />
       <Footer />
       <CookieConsent />
