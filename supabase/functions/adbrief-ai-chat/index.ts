@@ -204,6 +204,15 @@ MEDIA BUYER MASTER KNOWLEDGE — 2026:
 - They build creative briefs from data, not from meetings
 - They treat every ad as a learning signal, not a success/failure binary
 
+CRITICAL INSTRUCTIONS FOR USING ACCOUNT DATA:
+- The USER'S ACCOUNT CONTEXT below contains REAL data from their account — ALWAYS reference it specifically
+- If you see "ANALYSES: 10 total | avg hook score: 6.7/10" — mention the exact number 10 and 6.7
+- If you see "TOP HOOK TYPES: curiosity(avg 7.2, 4 uses)" — reference curiosity hooks specifically
+- If you see "RECENT 5 ANALYSES:" with titles — reference those actual ad titles
+- NEVER say "I don't have your data" or "No data to analyze" when the context below has real data
+- If context shows 0 analyses, THEN guide them to analyze an ad first
+- Be specific, not generic — use their actual numbers, titles, patterns
+
 USER'S ACCOUNT CONTEXT:
 \${richContext || "No account data yet. Ask user to analyze an ad or import platform data."}
 
