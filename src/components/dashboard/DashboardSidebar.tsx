@@ -193,7 +193,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           onClose={() => setProfileOpen(false)}
           user={user}
           profile={profile as any}
-          onProfileUpdate={(p) => onProfileUpdate?.(p as Profile)}
+          onProfileUpdate={(p) => onProfileUpdate?.(p as unknown as Profile)}
         />
       )}
     </>

@@ -329,7 +329,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
 
 function PersonaDetailEditable({
   result: initial, activeDetail, globalPersona, setGlobalPersona,
-  onCopy, copied, onNew, onBack, onSave, dt, language,
+  onCopy, copied, onNew, onBack, onSave, dt, language, userId,
 }: {
   result: PersonaResult; activeDetail: SavedPersona | null;
   globalPersona: any; setGlobalPersona: (p: any) => void;
@@ -337,6 +337,7 @@ function PersonaDetailEditable({
   onSave: (updated: PersonaResult) => Promise<void>;
   dt: (key: any) => string;
   language: string;
+  userId: string;
 }) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
