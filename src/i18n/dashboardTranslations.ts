@@ -445,7 +445,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_success: "Done", cm_ago: "ago", cm_today: "Today", cm_yesterday: "Yesterday",
     cm_no_persona: "No persona selected", cm_active_persona: "Active persona",
     cm_manage_personas: "Manage personas", cm_clear: "Clear",
-    ov_lets_ship: "sua IA está ativa.", ov_complete_profile: "Complete your profile",
+    ov_lets_ship: "let's ship.", ov_complete_profile: "Complete your profile",
     ov_complete_profile_desc: "Create a persona so AI tools generate content tailored to your audience.",
     ov_create_persona: "Create Persona", ov_tools: "Tools",
     ov_analyze: "Analyze", ov_analyze_desc: "Hook score in 60s",

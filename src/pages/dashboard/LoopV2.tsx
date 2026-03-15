@@ -160,16 +160,16 @@ function QuickAction({ icon: Icon, label, desc, color, onClick }: { icon: React.
       onClick={onClick}
       style={{
         width: "100%", display: "flex", alignItems: "center", gap: 10,
-        padding: "10px 12px", borderRadius: 11, cursor: "pointer",
+        padding: "8px 10px", borderRadius: 10, cursor: "pointer",
         background: hov ? `${color}0d` : SURFACE,
         border: `1px solid ${hov ? color + "30" : BORDER}`,
         transition: "all 0.15s", textAlign: "left",
       }}>
-      <div style={{ width: 30, height: 30, borderRadius: 8, background: `${color}14`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon size={14} color={color} />
+      <div style={{ width: 26, height: 26, borderRadius: 7, background: `${color}14`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon size={13} color={color} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ ...J, fontSize: 12, fontWeight: 700, color: hov ? "#fff" : "rgba(255,255,255,0.8)", marginBottom: 1 }}>{label}</p>
+        <p style={{ ...J, fontSize: 11, fontWeight: 700, color: hov ? "#fff" : "rgba(255,255,255,0.8)", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</p>
         <p style={{ ...M, fontSize: 9, color: MUTED, letterSpacing: "0.04em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{desc}</p>
       </div>
       <ArrowRight size={12} color={hov ? color : "rgba(255,255,255,0.15)"} style={{ flexShrink: 0, transition: "color 0.15s" }} />
@@ -336,7 +336,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
       {/* Header */}
-      <div style={{ padding: "16px 20px 12px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "12px 20px 10px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${BLUE},${TEAL})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Brain size={13} color="#000" />
         </div>
@@ -352,7 +352,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
         {messages.map((msg, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
             {msg.role === "user" && (
@@ -383,7 +383,7 @@ function AIPanel({ pulse, user }: { pulse: AccountPulse | null; user: any }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               {QUICK_PROMPTS.map((q, i) => (
                 <button key={i} onClick={() => send(q)}
-                  style={{ ...J, padding: "9px 11px", borderRadius: 10, background: SURFACE, border: `1px solid ${BORDER}`, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "all 0.15s" }}
+                  style={{ ...J, padding: "8px 10px", borderRadius: 9, background: SURFACE, border: `1px solid ${BORDER}`, color: "rgba(255,255,255,0.55)", fontSize: 11, cursor: "pointer", textAlign: "left", lineHeight: 1.4, transition: "all 0.15s" }}
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BLUE + "40"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = BORDER; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.55)"; }}>
                   {q}
@@ -593,7 +593,7 @@ export default function LoopV2() {
   useEffect(() => { loadPulse(); }, [loadPulse]);
 
   return (
-    <div style={{ height: "calc(100vh - 60px)", display: "flex", flexDirection: "column", background: "#07080f" }}>
+    <div style={{ height: "100%", minHeight: "calc(100vh - 44px)", display: "flex", flexDirection: "column", background: "#07080f", overflow: "hidden" }}>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         .loop-chat-input:focus { outline: none; }
@@ -603,7 +603,7 @@ export default function LoopV2() {
       `}</style>
 
       {/* Top status bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(7,8,15,0.8)", backdropFilter: "blur(8px)", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 20px", borderBottom: `1px solid ${BORDER}`, background: "rgba(7,8,15,0.8)", backdropFilter: "blur(8px)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 20, height: 20, borderRadius: 6, background: `linear-gradient(135deg,${BLUE},${TEAL})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -635,7 +635,7 @@ export default function LoopV2() {
       </div>
 
       {/* Three-column layout */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "220px 1fr 200px", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "210px 1fr 210px", overflow: "hidden" }}>
 
         {/* Left — Account Pulse */}
         <div style={{ borderRight: `1px solid ${BORDER}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>

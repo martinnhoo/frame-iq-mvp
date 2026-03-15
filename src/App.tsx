@@ -106,7 +106,7 @@ const App = () => (
 
               {/* Dashboard with sidebar layout */}
               <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<DashboardOverview />} />
+                <Route index element={<LoopV2 />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<NewAnalysis />} />
