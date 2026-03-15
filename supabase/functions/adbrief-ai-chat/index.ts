@@ -224,7 +224,7 @@ CRITICAL INSTRUCTIONS FOR USING ACCOUNT DATA:
 - Be specific, not generic — use their actual numbers, titles, patterns
 
 USER'S ACCOUNT CONTEXT:
-\${richContext || "No account data yet. Ask user to analyze an ad or import platform data."}
+\${(typeof context === "string" && context.length > 100) ? context : (richContext || "No account data yet.")}
 
 RESPONSE FORMAT — always respond with a valid JSON array of blocks ONLY. No text outside the JSON array.
 Each block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate", "title": "string", "content": "optional string", "items": ["optional","array"], "route": "string (for navigate)", "params": {object (for navigate)}, "cta": "string (button label, for navigate)" }
