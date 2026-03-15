@@ -329,7 +329,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
 
 function PersonaDetailEditable({
   result: initial, activeDetail, globalPersona, setGlobalPersona,
-  onCopy, copied, onNew, onBack, onSave, dt, language,
+  onCopy, copied, onNew, onBack, onSave, dt, language, userId,
 }: {
   result: PersonaResult; activeDetail: SavedPersona | null;
   globalPersona: any; setGlobalPersona: (p: any) => void;
@@ -337,6 +337,7 @@ function PersonaDetailEditable({
   onSave: (updated: PersonaResult) => Promise<void>;
   dt: (key: any) => string;
   language: string;
+  userId: string;
 }) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -538,7 +539,7 @@ function PersonaDetailEditable({
         </div>
 
         {/* ── Connected ad platforms ── */}
-        <PersonaPlatformConnections personaId={activeDetail?.id || ""} userId={user.id} />
+        <PersonaPlatformConnections personaId={activeDetail?.id || ""} userId={userId} />
 
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.12]">
           <div>
@@ -1064,6 +1065,7 @@ CTA: ${persona.cta_style}`;
       onBack={backToList}
       dt={dt}
       language={language}
+      userId={user.id}
       onSave={async (updated) => {
         if (activeDetail) {
           const resultWithBrandKit = { ...updated, brand_kit: activeDetail.brand_kit } as any;
