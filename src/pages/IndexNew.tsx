@@ -493,7 +493,7 @@ function Testimonials() {
             From the first analysis.
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ minHeight: 200 }}>
           {items.map((t, i) => (
             <motion.div key={i} {...fadeIn(i * 0.1)}
               style={{ padding: "24px", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 14 }}>
@@ -581,7 +581,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {plans.map((plan, i) => (
-            <motion.div key={i} {...fadeIn(i * 0.08)}
+            <div key={i}
               style={{ padding: "24px 20px", borderRadius: 20, background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
               {plan.highlight && (
                 <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "3px 14px" }}>
@@ -602,7 +602,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
                 {plan.features.map(f => (
                   <div key={f} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <Check size={12} color="#0ea5e9" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ flexShrink: 0, marginTop: 2, display: "flex" }}><Check size={12} color="#0ea5e9" /></span>
                     <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
@@ -611,7 +611,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
                 style={{ ...j, width: "100%", padding: "12px", borderRadius: 12, fontSize: 13, fontWeight: 700, background: plan.highlight ? BRAND : "rgba(255,255,255,0.06)", color: plan.highlight ? "#000" : "rgba(255,255,255,0.7)", border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.1)"}`, cursor: "pointer" }}>
                 {plan.cta}
               </button>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
