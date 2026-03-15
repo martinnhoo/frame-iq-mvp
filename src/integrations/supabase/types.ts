@@ -529,6 +529,51 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_connections: {
+        Row: {
+          access_token: string
+          ad_accounts: Json | null
+          connected_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          persona_id: string | null
+          platform: string
+          refresh_token: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          ad_accounts?: Json | null
+          connected_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          persona_id?: string | null
+          platform: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          ad_accounts?: Json | null
+          connected_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          persona_id?: string | null
+          platform?: string
+          refresh_token?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       predictive_scores: {
         Row: {
           confidence: number | null
