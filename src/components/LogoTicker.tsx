@@ -27,7 +27,7 @@ export default function LogoTicker() {
           className="text-center text-[10px] uppercase tracking-[0.2em] font-medium"
           style={{ color: "rgba(255,255,255,0.15)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
-          Trusted by teams running ads on
+          Analyze ads from any platform
         </p>
       </div>
 

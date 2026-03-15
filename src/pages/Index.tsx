@@ -223,17 +223,17 @@ const Index = () => {
 
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
                 className="font-display font-bold leading-[1.06] tracking-tight mb-6"
-                style={{ fontSize: 'clamp(36px, 5vw, 58px)' }}>
-                Upload your ad.{" "}
-                <span style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  Get a hook score in 60 seconds.
+                style={{ fontSize: 'clamp(36px, 5vw, 62px)' }}>
+                Stop burning budget{" "}
+                <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                  on ads that were never going to work.
                 </span>
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-[17px] leading-relaxed font-body mb-8"
                 style={{ color: 'rgba(255,255,255,0.45)', maxWidth: 480 }}>
-                AdBrief analyzes any video ad for hook strength, platform fit, and conversion signals. Know exactly what's weak — before you spend a dollar on media.
+                AdBrief scores your ad hook from 0 to 10 in 60 seconds. Catch weak creatives before launch — not after you've spent $500 finding out the hard way.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
@@ -333,7 +333,7 @@ const Index = () => {
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-14">
-            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span className="text-xs font-semibold tracking-widest uppercase font-display" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               INSTANT RESULTS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mt-4 font-display" style={{ letterSpacing: "-0.02em" }}>
@@ -351,14 +351,14 @@ const Index = () => {
                 title: "Hook Score — 0 to 10",
                 desc: "Your hook gets rated instantly. 7.0+ is strong. Below 5.0 means your hook is losing attention before anyone clicks.",
                 example: "\"Hook score: 6.2 / 10 — curiosity gap present but resolved too early. Move the resolution to the CTA.\"",
-                color: "#a78bfa",
+                color: "#0ea5e9",
               },
               {
                 emoji: "🎯",
                 title: "3 Specific Improvements",
                 desc: "Not vague advice. Specific, actionable changes to your hook, narrative, and CTA — ready to brief your editor.",
                 example: "\"1. Replace the opening with a problem statement. 2. Add a specific number in the first 5 words. 3. Delay product reveal to second 8.\"",
-                color: "#f472b6",
+                color: "#06b6d4",
               },
               {
                 emoji: "📱",
@@ -390,7 +390,7 @@ const Index = () => {
           <div className="text-center mt-10">
             <button onClick={() => window.location.href = "/signup"}
               className="font-body font-bold text-[15px] inline-flex items-center gap-2"
-              style={{ padding: "14px 32px", borderRadius: 14, background: "linear-gradient(135deg, #a78bfa, #f472b6)", color: "#000", border: "none", cursor: "pointer" }}>
+              style={{ padding: "14px 32px", borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
               Try it free — no credit card <ArrowRight size={16} />
             </button>
             <p className="text-xs text-white/30 mt-3 font-body">3 free analyses. Results in 60 seconds.</p>
