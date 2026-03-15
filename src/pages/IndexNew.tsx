@@ -5,6 +5,7 @@ import { useState } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import TopBanner from "@/components/TopBanner";
 import { Logo } from "@/components/Logo";
+import { Helmet } from "react-helmet-async";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const BRAND_GLOW = "rgba(14,165,233,0.15)";
@@ -122,6 +123,99 @@ function Hero({ onCTA }: { onCTA: () => void }) {
                 <p style={{ ...m, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)" }}>{stat.label}</p>
               </div>
             ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Product Visual ───────────────────────────────────────────────────────────
+
+function ProductVisual() {
+  return (
+    <section style={{ padding: "0 24px 64px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        {/* Browser chrome */}
+        <motion.div {...fadeIn(0)}
+          style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.2)", boxShadow: "0 0 80px rgba(14,165,233,0.08), 0 40px 80px rgba(0,0,0,0.6)" }}>
+          {/* Top bar */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "rgba(14,165,233,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: 5 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,90,90,0.4)" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,190,0,0.4)" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(40,200,80,0.4)" }} />
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399" }} />
+              <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>adbrief.pro/dashboard</span>
+            </div>
+          </div>
+
+          {/* Dashboard content */}
+          <div style={{ background: "#08090f", padding: "20px 20px 24px" }}>
+            {/* Top row — stats */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: "Hook Score", value: "7.8", sub: "+1.4 from last", color: "#0ea5e9" },
+                { label: "Analyses this month", value: "14", sub: "6 remaining", color: "#06b6d4" },
+                { label: "Avg CTR prediction", value: "2.1%", sub: "Above benchmark", color: "#34d399" },
+              ].map((stat, i) => (
+                <div key={i} style={{ padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p style={{ ...m, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 6 }}>{stat.label}</p>
+                  <p style={{ ...j, fontSize: 24, fontWeight: 800, color: stat.color, marginBottom: 2 }}>{stat.value}</p>
+                  <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* AI Analysis result */}
+            <div style={{ padding: "16px 18px", borderRadius: 14, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 14 }}>🧠</span>
+                </div>
+                <div>
+                  <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "#0ea5e9" }}>AdBrief AI · Analysis complete</span>
+                  <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>TF-AM-250314-BR-001 · TikTok · BR Market</p>
+                </div>
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)" }}>
+                  <span style={{ ...j, fontSize: 20, fontWeight: 900, color: "#34d399" }}>7.8</span>
+                  <span style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>/10</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Improvement 1", text: "Move product reveal to second 8 — current reveal at second 3 resolves tension too early", color: "#0ea5e9" },
+                  { label: "Improvement 2", text: "Add a specific number in the first 5 words to increase hook specificity score", color: "#06b6d4" },
+                  { label: "Improvement 3", text: "Safe zone violation at bottom 12% — move text overlay up 40px for TikTok compliance", color: "#f59e0b" },
+                ].map((imp, i) => (
+                  <div key={i} style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: `1px solid ${imp.color}20` }}>
+                    <p style={{ ...m, fontSize: 9, color: imp.color, letterSpacing: "0.08em", marginBottom: 5 }}>{imp.label}</p>
+                    <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{imp.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Brief preview */}
+            <div style={{ padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ ...m, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>Generated Production Brief</span>
+                <span style={{ ...j, fontSize: 10, color: "#0ea5e9", cursor: "pointer" }}>View full brief →</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { sc: "SC01 (0–3s)", note: "Hook — VO: 'Most brands são doing this wrong...' | ON-SCREEN: bold white text center" },
+                  { sc: "SC02 (3–8s)", note: "Problem agitation — B-roll product fail scenario | No VO | Cut hard" },
+                ].map((sc, i) => (
+                  <div key={i} style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)" }}>
+                    <p style={{ ...m, fontSize: 9, color: "#0ea5e9", marginBottom: 4 }}>{sc.sc}</p>
+                    <p style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{sc.note}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -295,7 +389,7 @@ function ForWho({ onCTA }: { onCTA: () => void }) {
 
         {/* Content */}
         <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+          className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {/* Left */}
           <div style={{ padding: "32px 28px", borderRadius: 20, background: `${p.color}06`, border: `1px solid ${p.color}18` }}>
             <span style={{ fontSize: 36, display: "block", marginBottom: 16 }}>{p.emoji}</span>
@@ -331,7 +425,7 @@ function ForWho({ onCTA }: { onCTA: () => void }) {
 function MemorySection() {
   return (
     <section style={{ padding: "80px 24px" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+      <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         <motion.div {...fadeIn(0)}>
           <Pill color="#a78bfa">The memory layer</Pill>
           <h2 style={{ ...j, fontSize: "clamp(26px,3.5vw,40px)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15, margin: "16px 0 14px" }}>
@@ -399,7 +493,7 @@ function Testimonials() {
             From the first analysis.
           </h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {items.map((t, i) => (
             <motion.div key={i} {...fadeIn(i * 0.1)}
               style={{ padding: "24px", borderRadius: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 14 }}>
@@ -485,7 +579,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {plans.map((plan, i) => (
             <motion.div key={i} {...fadeIn(i * 0.08)}
               style={{ padding: "24px 20px", borderRadius: 20, background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
@@ -579,9 +673,14 @@ export default function IndexNew() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#060712", color: "#fff", ...j }}>
+      <Helmet>
+        <title>AdBrief — AI Creative Intelligence for Performance Teams</title>
+        <meta name="description" content="AdBrief analyzes your ads, generates scripts and briefs, and builds a memory of what converts in your account. Score any ad in 60 seconds. Free to start." />
+      </Helmet>
       <TopBanner />
       <Nav onCTA={handleCTA} />
       <Hero onCTA={handleCTA} />
+      <ProductVisual />
       <PlatformTicker />
       <HowItWorks />
       <Divider />
