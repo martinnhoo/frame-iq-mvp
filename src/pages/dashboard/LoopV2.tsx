@@ -67,11 +67,13 @@ const SUGGESTIONS_WITH_DATA = (pulse: AccountPulse) => [
 
 // ── Action shortcuts below input ───────────────────────────────────────────────
 const ACTIONS = [
-  { icon: Upload,     label: "Upload ad",         action: "upload",    color: BLUE  },
-  { icon: Zap,        label: "Generate hooks",     action: "hooks",     color: TEAL  },
-  { icon: FileText,   label: "Write script",       action: "script",    color: GREEN },
-  { icon: BarChart3,  label: "Analyze competitor", action: "competitor",color: PURPLE},
-  { icon: Link2,      label: "Connect Meta",       action: "connect",   color: AMBER },
+  { icon: Upload,     label: "Upload ad",         action: "upload",           color: BLUE  },
+  { icon: Zap,        label: "Generate hooks",    action: "hooks",            color: TEAL  },
+  { icon: FileText,   label: "Write script",      action: "script",           color: GREEN },
+  { icon: BarChart3,  label: "Competitor",        action: "competitor",       color: PURPLE},
+  { icon: Link2,      label: "Connect Meta",      action: "connect_meta",     color: "#60a5fa" },
+  { icon: Link2,      label: "Connect TikTok",    action: "connect_tiktok",   color: TEAL  },
+  { icon: Link2,      label: "Connect Google",    action: "connect_google",   color: GREEN },
 ];
 
 // ── AI Block renderer ──────────────────────────────────────────────────────────
@@ -123,7 +125,7 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function LoopV2() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
 
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
@@ -269,9 +271,14 @@ export default function LoopV2() {
       script:     "/dashboard/script",
       competitor: "/dashboard/competitor",
     };
-    if (action === "connect") {
+    const connectMap: Record<string, string> = {
+      connect_meta:   "meta-oauth",
+      connect_tiktok: "tiktok-oauth",
+      connect_google: "google-oauth",
+    };
+    if (connectMap[action]) {
       setConnecting(true);
-      supabase.functions.invoke("meta-oauth", { body: { action: "get_auth_url", user_id: user.id } })
+      supabase.functions.invoke(connectMap[action], { body: { action: "get_auth_url", user_id: user.id } })
         .then(({ data }) => { if (data?.url) window.location.href = data.url; })
         .finally(() => setConnecting(false));
       return;
@@ -384,14 +391,18 @@ export default function LoopV2() {
 
           {/* Quick actions row */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-            {ACTIONS.map(a => (
+            {ACTIONS.filter(a => {
+              if (!a.action.startsWith("connect_")) return true;
+              const plat = a.action.replace("connect_", "");
+              return !pulse?.platformImports.some(p => p.platform === plat);
+            }).map(a => (
               <button key={a.action} onClick={() => handleAction(a.action)}
-                disabled={a.action === "connect" && connecting}
+                disabled={connecting && a.action.startsWith("connect_")}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${a.color}40`; el.style.color = a.color; el.style.background = `${a.color}0a`; }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "transparent"; }}>
                 <a.icon size={11} />
-                {a.action === "connect" && connecting ? "Connecting..." : a.label}
+                {connecting && a.action.startsWith("connect_") ? "Connecting..." : a.label}
               </button>
             ))}
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", marginLeft: "auto" }}>

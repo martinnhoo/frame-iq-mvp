@@ -48,7 +48,7 @@ import ScriptGenerator from "./pages/dashboard/ScriptGenerator";
 import BriefGenerator from "./pages/dashboard/BriefGenerator";
 import CreativeLoopPage from "./pages/dashboard/CreativeLoopPage";
 import LoopV2 from "./pages/dashboard/LoopV2";
-import MetaOAuthCallback from "./pages/dashboard/MetaOAuthCallback";
+import OAuthCallback from "./pages/dashboard/OAuthCallback";
 import LoopImportPage from "./pages/dashboard/LoopImportPage";
 import LoopSettingsPage from "./pages/dashboard/LoopSettingsPage";
 import AdBriefAI from "./pages/dashboard/AdBriefAI";
@@ -126,7 +126,7 @@ const App = () => (
                 <Route path="brief" element={<BriefGenerator />} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="loop/v2" element={<LoopV2 />} />
-                <Route path="loop/connect/meta/callback" element={<MetaOAuthCallback />} />
+                <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
                 <Route path="loop/ai" element={<AdBriefAI />} />
