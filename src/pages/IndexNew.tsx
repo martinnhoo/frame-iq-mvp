@@ -88,13 +88,13 @@ function Hero({ onCTA }: { onCTA: () => void }) {
         </motion.h1>
 
         <motion.p {...fade(0.2)} style={{ ...j, fontSize: 18, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 560, margin: "0 auto 36px" }}>
-          AdBrief analyzes your ads, generates scripts and briefs, and builds a memory of what converts in your account — so every creative gets sharper over time.
+          Connect your Meta, TikTok, or Google Ads account. AdBrief reads your campaigns in real time and tells you exactly what's working, what's wasting budget, and what to produce next.
         </motion.p>
 
         <motion.div {...fade(0.3)} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onCTA}
             style={{ ...j, fontSize: 15, fontWeight: 800, padding: "15px 32px", borderRadius: 14, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-            Score my first ad free <ArrowRight size={16} />
+            Start free — no credit card <ArrowRight size={16} />
           </button>
           <a href="#how"
             style={{ ...j, fontSize: 15, fontWeight: 600, padding: "15px 28px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center" }}>
@@ -115,7 +115,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
           <div style={{ display: "flex", gap: 1 }}>
             {[
               { label: "Ads analyzed", value: "2,847" },
-              { label: "Avg hook score lift", value: "+2.4" },
+              { label: "Avg hook score", value: "6.9/10" },
               { label: "Teams using AdBrief", value: "147+" },
             ].map((stat, i) => (
               <div key={i} style={{ padding: "16px 28px", background: i === 1 ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: i === 0 ? "14px 0 0 14px" : i === 2 ? "0 14px 14px 0" : "0", textAlign: "center" }}>
@@ -251,8 +251,8 @@ function HowItWorks() {
     {
       n: "01",
       icon: <BarChart3 size={20} color="#0ea5e9" />,
-      title: "Upload or describe your ad",
-      desc: "Drop a video, paste a script, or describe a concept. AdBrief works with what you have — finished or not.",
+      title: "Connect your ad account or upload a video",
+      desc: "Connect Meta, TikTok, or Google Ads for real-time campaign data — or just upload a video ad to analyze it instantly.",
       output: "\"Analyzing hook type, narrative structure, and platform fit...\"",
     },
     {
@@ -272,7 +272,7 @@ function HowItWorks() {
     {
       n: "04",
       icon: <Brain size={20} color="#a78bfa" />,
-      title: "AdBrief remembers what works for you",
+      title: "AI that gets smarter with every ad",
       desc: "Every analysis builds context. After a few ads, AdBrief knows your winning hooks, formats, and markets — and uses that to make every next brief sharper.",
       output: "\"Based on your last 12 analyses: UGC + curiosity hooks convert 2.3x better for your BR audience. Applying to this brief.\"",
     },
@@ -700,7 +700,7 @@ function FinalCTA({ onCTA }: { onCTA: () => void }) {
             </p>
             <button onClick={onCTA}
               style={{ ...j, fontSize: 15, fontWeight: 800, padding: "15px 36px", borderRadius: 14, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
-              Score my first ad free <ArrowRight size={16} />
+              Start free — no credit card <ArrowRight size={16} />
             </button>
             <p style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.25)", marginTop: 14 }}>No credit card · 3 free analyses · Takes 60 seconds</p>
           </div>
