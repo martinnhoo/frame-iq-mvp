@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3 } from "lucide-react";
+import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3, Link2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
@@ -11,7 +11,96 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 import { TEMPLATES, CAT_META, type Template } from "@/pages/dashboard/TemplatesPage";
 import { getTemplateTranslation } from "@/i18n/templateTranslations";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Platform connections per persona ─────────────────────────────────────────
+
+const PLATFORMS = [
+  { id: "meta",   label: "Meta Ads",   color: "#60a5fa", fn: "meta-oauth"   },
+  { id: "tiktok", label: "TikTok Ads", color: "#06b6d4", fn: "tiktok-oauth" },
+  { id: "google", label: "Google Ads", color: "#34d399", fn: "google-oauth"  },
+];
+
+function PersonaPlatformConnections({ personaId, userId }: { personaId: string; userId: string }) {
+  const [connections, setConnections] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState<string | null>(null);
+
+  const F = "'Inter', sans-serif";
+
+  useEffect(() => {
+    if (!personaId) return;
+    supabase.from("platform_connections" as any)
+      .select("platform").eq("user_id", userId)
+      .then(({ data }) => {
+        const map: Record<string, boolean> = {};
+        (data || []).forEach((r: any) => { map[r.platform] = true; });
+        setConnections(map);
+        setLoading(false);
+      });
+  }, [personaId, userId]);
+
+  const connect = async (platform: string, fn: string) => {
+    setConnecting(platform);
+    try {
+      const { data } = await supabase.functions.invoke(fn, {
+        body: { action: "get_auth_url", user_id: userId, persona_id: personaId },
+      });
+      if (data?.url) window.location.href = data.url;
+    } catch (e) {
+      console.error(e);
+      setConnecting(null);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <div style={{ marginTop: 8, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
+        Connected Ad Accounts
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {PLATFORMS.map(p => {
+          const connected = connections[p.id];
+          return (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: connected ? `${p.color}07` : "rgba(255,255,255,0.02)", border: `1px solid ${connected ? p.color + "22" : "rgba(255,255,255,0.07)"}` }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: connected ? `${p.color}18` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {connected
+                  ? <CheckCircle2 size={14} color={p.color} />
+                  : <Link2 size={13} color="rgba(255,255,255,0.3)" />
+                }
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: connected ? "#fff" : "rgba(255,255,255,0.45)" }}>{p.label}</p>
+                <p style={{ fontFamily: F, fontSize: 11, color: connected ? `${p.color}` : "rgba(255,255,255,0.25)" }}>
+                  {connected ? "Connected" : "Not connected"}
+                </p>
+              </div>
+              {!connected && (
+                <button
+                  onClick={() => connect(p.id, p.fn)}
+                  disabled={connecting === p.id}
+                  style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 7, background: `${p.color}14`, color: p.color, border: `1px solid ${p.color}28`, cursor: "pointer", transition: "all 0.1s" }}
+                >
+                  {connecting === p.id ? "Connecting..." : "Connect"}
+                </button>
+              )}
+              {connected && (
+                <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 500 }}>
+                  Active
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.22)", marginTop: 8, lineHeight: 1.5 }}>
+        Connect ad accounts to this persona so the AI automatically loads campaign data when you switch to it.
+      </p>
+    </div>
+  );
+}
+
+
 
 // ─── Stable sub-components (outside parent to avoid re-mount on each render) ──
 
@@ -447,6 +536,9 @@ function PersonaDetailEditable({
             <EditableListField field="best_platforms" items={draft.best_platforms} color="text-purple-300" editing={editing} onChange={handleListChange} />
           </div>
         </div>
+
+        {/* ── Connected ad platforms ── */}
+        <PersonaPlatformConnections personaId={activeDetail?.id || ""} userId={user.id} />
 
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.12]">
           <div>

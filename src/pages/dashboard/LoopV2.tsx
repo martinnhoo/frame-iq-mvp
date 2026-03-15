@@ -224,7 +224,7 @@ export default function LoopV2() {
               blocks: [{
                 type: "insight" as const,
                 title: "New analysis detected",
-                content: `I just picked up a new ad analysis. Your account now has ${newPulse.totalAnalyses} total analyses. Want me to review what changed?`,
+                content: `New analysis detected — you now have ${newPulse.totalAnalyses} total${newPulse.avgHookScore ? `. Current avg hook score: ${newPulse.avgHookScore.toFixed(1)}/10` : ""}. Want me to review it?`,
               }],
               ts: Date.now(),
             }]);
@@ -302,7 +302,7 @@ export default function LoopV2() {
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: 400, fontFamily: F }}>
             AdBrief AI
             {hasData && <span style={{ color: "rgba(255,255,255,0.25)" }}> · {pulse?.totalAnalyses} analyses loaded</span>}
-            {pulse?.platformImports.length ? <span style={{ color: "rgba(255,255,255,0.25)" }}> · {pulse.platformImports.map(p => p.platform).join(", ")} connected</span> : null}
+            {pulse?.platformImports.length ? <span style={{ color: "rgba(255,255,255,0.25)" }}> · {pulse.platformImports.map(p => p.platform === "other" || p.platform === "unknown" ? "Ads" : p.platform.charAt(0).toUpperCase() + p.platform.slice(1)).join(", ")} connected</span> : null}
           </span>
         </div>
         <button onClick={() => loadPulse()} title="Refresh context"
@@ -352,7 +352,7 @@ export default function LoopV2() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} onClick={() => send(s)}
-                    style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 14, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.1s" }}
+                    style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 14, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.1s", minHeight: 52, display: "flex", alignItems: "center" }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.3)"; el.style.color = "rgba(255,255,255,0.85)"; el.style.background = "rgba(14,165,233,0.05)"; }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.55)"; el.style.background = "rgba(255,255,255,0.03)"; }}>
                     {s}
