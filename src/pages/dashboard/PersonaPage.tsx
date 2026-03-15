@@ -539,7 +539,7 @@ function PersonaDetailEditable({
         </div>
 
         {/* ── Connected ad platforms ── */}
-        <PersonaPlatformConnections personaId={activeDetail?.id || ""} userId={user.id} />
+        <PersonaPlatformConnections personaId={activeDetail?.id || ""} userId={userId} />
 
         <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.12]">
           <div>
