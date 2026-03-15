@@ -10,13 +10,103 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, context, user_id } = await req.json();
+    const { message, context, user_id, persona_id } = await req.json();
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ── Init Supabase early to fetch real data ────────────────────────────────
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Fetch real account data in parallel
+    const [
+      { data: recentAnalyses },
+      { data: aiProfile },
+      { data: creativeMemory },
+      { data: platformConns },
+      { data: adsImports },
+      { data: personaRow },
+    ] = await Promise.all([
+      supabase.from("analyses")
+        .select("id, created_at, title, result, hook_strength, status")
+        .eq("user_id", user_id).eq("status", "completed")
+        .order("created_at", { ascending: false }).limit(15),
+      supabase.from("user_ai_profile" as any)
+        .select("*").eq("user_id" as any, user_id).maybeSingle(),
+      supabase.from("creative_memory" as any)
+        .select("hook_type, hook_score, platform, notes, created_at" as any)
+        .eq("user_id" as any, user_id)
+        .order("created_at" as any, { ascending: false }).limit(20),
+      supabase.from("platform_connections" as any)
+        .select("platform, status, ad_accounts, connected_at")
+        .eq("user_id", user_id).eq("status", "active"),
+      supabase.from("ads_data_imports" as any)
+        .select("platform, result, created_at" as any)
+        .eq("user_id" as any, user_id)
+        .order("created_at" as any, { ascending: false }).limit(3),
+      persona_id
+        ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    // Build enriched context
+    const analyses = (recentAnalyses || []) as any[];
+    const memory = (creativeMemory || []) as any[];
+    const connections = (platformConns || []) as any[];
+    const imports = (adsImports || []) as any[];
+
+    const scores = analyses.map((a: any) => (a.result as any)?.hook_score).filter(Boolean) as number[];
+    const avgScore = scores.length ? (scores.reduce((a: number, b: number) => a + b) / scores.length).toFixed(1) : null;
+
+    const hookTypes: Record<string, { count: number; total: number }> = {};
+    memory.forEach((m: any) => {
+      if (!m.hook_type) return;
+      if (!hookTypes[m.hook_type]) hookTypes[m.hook_type] = { count: 0, total: 0 };
+      hookTypes[m.hook_type].count++;
+      hookTypes[m.hook_type].total += m.hook_score || 0;
+    });
+    const topHooks = Object.entries(hookTypes)
+      .sort((a, b) => (b[1].total / b[1].count) - (a[1].total / a[1].count))
+      .slice(0, 3)
+      .map(([type, d]) => `${type} (avg ${(d.total / d.count).toFixed(1)}, ${d.count} uses)`);
+
+    const recentSummary = analyses.slice(0, 5).map((a: any) => {
+      const r = a.result as any;
+      return `  - "${a.title || "untitled"}" score:${r?.hook_score ?? "—"} hook:${a.hook_strength || "—"} date:${a.created_at?.split("T")[0]}`;
+    }).join("\n");
+
+    const connectedPlatforms = connections.map((c: any) => {
+      const accounts = (c.ad_accounts as any[]) || [];
+      return `${c.platform}(${accounts.length} accounts)`;
+    });
+
+    const persona = personaRow as any;
+    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name} | ${persona.headline || ""}
+Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
+Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
+Language style: ${(persona.result as any)?.language_style || "—"}` : "";
+
+    const importInsights = imports.map((i: any) => {
+      const r = i.result as any;
+      if (!r?.summary) return "";
+      return `${i.platform} data: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook style: ${r.patterns?.best_hook_style || "?"}`;
+    }).filter(Boolean).join("\n");
+
+    const richContext = [
+      personaCtx,
+      `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
+      `ANALYSES: ${analyses.length} total | avg hook score: ${avgScore ?? "—"}/10 | viral hooks: ${analyses.filter((a: any) => a.hook_strength === "viral").length}`,
+      topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
+      recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
+      importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
+      (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
+    ].filter(Boolean).join("\n");
 
     const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
 
@@ -114,7 +204,7 @@ MEDIA BUYER MASTER KNOWLEDGE — 2026:
 - They treat every ad as a learning signal, not a success/failure binary
 
 USER'S ACCOUNT CONTEXT:
-\${context || "No data imported yet."}
+\${richContext || "No account data yet. Ask user to analyze an ad or import platform data."}
 
 RESPONSE FORMAT — always respond with a valid JSON array of blocks ONLY. No text outside the JSON array.
 Each block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate", "title": "string", "content": "optional string", "items": ["optional","array"], "route": "string (for navigate)", "params": {object (for navigate)}, "cta": "string (button label, for navigate)" }
@@ -197,12 +287,7 @@ Rules:
       blocks = [{ type: "insight", title: "Response", content: raw }];
     }
 
-    // Save insight to Supabase
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
+    // Save insight
     const insightText = blocks
       .filter((b: any) => ["insight", "pattern"].includes(b.type))
       .map((b: any) => `${b.title}: ${b.content || ""} ${(b.items || []).join(". ")}`)
