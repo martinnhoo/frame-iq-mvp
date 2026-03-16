@@ -27,22 +27,32 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
 
   const F = "'Inter', sans-serif";
 
-  const loadConnections = () => {
+  const loadConnections = async () => {
     if (!personaId) return;
-    supabase.from("platform_connections" as any)
-      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId)
-      .then(({ data }) => {
-        const map: Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }> = {};
-        (data || []).forEach((r: any) => {
-          map[r.platform] = {
-            connected: true,
-            accounts: (r.ad_accounts as any[]) || [],
-            selectedId: r.selected_account_id || null,
-          };
-        });
-        setConnections(map);
-        setLoading(false);
-      });
+    // Try with selected_account_id first, fall back without it
+    let data: any[] | null = null;
+    const { data: d1, error: e1 } = await supabase.from("platform_connections" as any)
+      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId);
+    if (!e1) {
+      data = d1;
+    } else {
+      // Column might not exist yet — query without it
+      const { data: d2 } = await supabase.from("platform_connections" as any)
+        .select("platform, ad_accounts").eq("user_id", userId);
+      data = d2;
+    }
+    const map: Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }> = {};
+    (data || []).forEach((r: any) => {
+      const accounts = (r.ad_accounts as any[]) || [];
+      map[r.platform] = {
+        connected: true,
+        accounts,
+        // If no selected_account_id, auto-select first active account
+        selectedId: r.selected_account_id || accounts.find((a: any) => a.account_status === 1)?.id || accounts[0]?.id || null,
+      };
+    });
+    setConnections(map);
+    setLoading(false);
   };
 
   useEffect(() => { loadConnections(); }, [personaId, userId]);
@@ -76,43 +86,77 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
       <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
         Connected Ad Accounts
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {PLATFORMS.map(p => {
-          const connected = connections[p.id];
+          const conn = connections[p.id];
+          const connected = !!conn;
+          const accounts = conn?.accounts || [];
+          const selectedId = conn?.selectedId || accounts[0]?.id;
+          const selectedAcc = accounts.find((a: any) => a.id === selectedId) || accounts[0];
+
           return (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: connected ? `${p.color}07` : "rgba(255,255,255,0.02)", border: `1px solid ${connected ? p.color + "22" : "rgba(255,255,255,0.07)"}` }}>
-              <div style={{ width: 28, height: 28, borderRadius: 7, background: connected ? `${p.color}18` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {connected
-                  ? <CheckCircle2 size={14} color={p.color} />
-                  : <Link2 size={13} color="rgba(255,255,255,0.3)" />
-                }
+            <div key={p.id} style={{ borderRadius: 10, overflow: "hidden", background: connected ? `${p.color}07` : "rgba(255,255,255,0.02)", border: `1px solid ${connected ? p.color + "22" : "rgba(255,255,255,0.07)"}` }}>
+              {/* Platform row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px" }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: connected ? `${p.color}18` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {connected ? <CheckCircle2 size={14} color={p.color} /> : <Link2 size={13} color="rgba(255,255,255,0.3)" />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: connected ? "#fff" : "rgba(255,255,255,0.45)" }}>{p.label}</p>
+                  <p style={{ fontFamily: F, fontSize: 11, color: connected ? p.color : "rgba(255,255,255,0.25)" }}>
+                    {connected
+                      ? selectedAcc ? `Active: ${selectedAcc.name || selectedAcc.id}` : `${accounts.length} account${accounts.length !== 1 ? "s" : ""} connected`
+                      : "Not connected"}
+                  </p>
+                </div>
+                {!connected && (
+                  <button onClick={() => connect(p.id, p.fn)} disabled={connecting === p.id}
+                    style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 7, background: `${p.color}14`, color: p.color, border: `1px solid ${p.color}28`, cursor: "pointer" }}>
+                    {connecting === p.id ? "Connecting..." : "Connect"}
+                  </button>
+                )}
+                {connected && accounts.length <= 1 && (
+                  <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 600 }}>
+                    ACTIVE
+                  </span>
+                )}
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: connected ? "#fff" : "rgba(255,255,255,0.45)" }}>{p.label}</p>
-                <p style={{ fontFamily: F, fontSize: 11, color: connected ? `${p.color}` : "rgba(255,255,255,0.25)" }}>
-                  {connected ? "Connected" : "Not connected"}
-                </p>
-              </div>
-              {!connected && (
-                <button
-                  onClick={() => connect(p.id, p.fn)}
-                  disabled={connecting === p.id}
-                  style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 7, background: `${p.color}14`, color: p.color, border: `1px solid ${p.color}28`, cursor: "pointer", transition: "all 0.1s" }}
-                >
-                  {connecting === p.id ? "Connecting..." : "Connect"}
-                </button>
-              )}
-              {connected && (connections[p.id]?.accounts?.length ?? 0) <= 1 && (
-                <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 500 }}>
-                  Active
-                </span>
+
+              {/* Account selector — only if multiple accounts */}
+              {connected && accounts.length > 1 && (
+                <div style={{ borderTop: `1px solid ${p.color}18`, padding: "8px 12px 10px" }}>
+                  <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                    Choose ad account for this persona
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {accounts.map((acc: any) => {
+                      const isSelected = acc.id === selectedId;
+                      return (
+                        <button key={acc.id} onClick={() => selectAccount(p.id, acc.id)}
+                          disabled={changingAccount === p.id}
+                          style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: isSelected ? `${p.color}14` : "rgba(255,255,255,0.03)", border: `1px solid ${isSelected ? p.color + "35" : "rgba(255,255,255,0.07)"}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.1s" }}>
+                          <div style={{ width: 7, height: 7, borderRadius: "50%", background: isSelected ? p.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontFamily: F, fontSize: 12, color: isSelected ? "#fff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                              {acc.name || acc.id}
+                            </span>
+                            <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                              {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}{acc.account_status === 1 ? " · Active" : ""}
+                            </span>
+                          </div>
+                          {isSelected && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           );
         })}
       </div>
       <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.22)", marginTop: 8, lineHeight: 1.5 }}>
-        Connect ad accounts to this persona so the AI automatically loads campaign data when you switch to it.
+        The AI uses the active account when you switch to this persona.
       </p>
     </div>
   );
