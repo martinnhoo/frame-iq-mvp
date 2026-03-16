@@ -251,8 +251,8 @@ export default function DashboardLayout() {
         </header>
 
         {/* Persona / workspace selector — premium workspace switcher */}
-        <div className="sticky top-0 lg:top-0 z-20 flex items-center gap-3 border-b"
-          style={{ background: "rgba(10,10,10,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.06)", padding: "0 20px", height: 44 }}>
+        <div className="sticky z-20 flex items-center gap-3 border-b"
+          style={{ top: 0, background: "rgba(10,10,10,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.06)", padding: "0 16px", height: 44 }}>
           <div className="relative">
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
@@ -282,8 +282,8 @@ export default function DashboardLayout() {
             </button>
 
             {personaPickerOpen && (
-              <div className="absolute top-full left-0 mt-1.5 rounded-2xl overflow-hidden shadow-2xl"
-                style={{ width: 280, background: "#111", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
+              <div className="fixed left-4 right-4 sm:absolute sm:left-0 sm:right-auto sm:top-full mt-1.5 rounded-2xl overflow-hidden shadow-2xl"
+                style={{ top: "auto", width: "auto", maxWidth: 320, background: "#111", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
                 <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Workspace</p>
                   <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select a client or context</p>
@@ -360,7 +360,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto" style={{ background: "#07070f" }}>
+        <main className="flex-1 overflow-y-auto overscroll-none" style={{ background: "#07070f" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
