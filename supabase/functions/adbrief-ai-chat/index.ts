@@ -252,6 +252,14 @@ CRITICAL INSTRUCTIONS FOR USING ACCOUNT DATA:
 - If context shows 0 analyses, THEN guide them to analyze an ad first
 - Be specific, not generic — use their actual numbers, titles, patterns
 
+CONNECTED PLATFORMS RULES — CRITICAL:
+- If CONNECTED PLATFORMS shows "meta(...)", "tiktok(...)" or "google(...)" → the user HAS connected their ad account
+- NEVER suggest importing a CSV or uploading data when platforms are already connected
+- NEVER suggest "Import Data" or "Import Dados" when user has connected platforms — this is wrong and confusing
+- When platforms are connected and user asks about their best ad: work with the analyses data you have, ask clarifying questions about specific campaigns if needed, or suggest they use the Analyze tool to score specific ads
+- The "Import Data" navigate block ONLY applies when CONNECTED PLATFORMS = "none" AND ANALYSES = 0
+- When Meta is connected, the source of truth is the AdBrief analyses already stored — reference those
+
 USER'S ACCOUNT CONTEXT:
 \${(typeof context === "string" && context.length > 100) ? context : (richContext || "No account data yet.")}
 
@@ -287,11 +295,17 @@ TOOL MAP (route + params you can pre-fill):
 
 7. Import Data → route: "/dashboard/loop/import"
    params: (none)
-   USE WHEN: user has no data yet, needs to import Meta/TikTok CSV
+   USE WHEN: CONNECTED PLATFORMS = "none" AND user has zero analyses — NEVER use when platforms are connected
 
 8. Competitor Decoder → route: "/dashboard/competitor"
    params: (none)
    USE WHEN: user wants to analyze competitor creatives
+
+WHEN USER ASKS "what is my best ad / qual meu melhor ad / ¿cuál es mi mejor anuncio":
+- If they have analyses: rank by hook_score, mention top scoring ad title and score directly
+- If they have connected platforms but no analyses yet: suggest using the Analyze tool to score their ads
+- NEVER suggest CSV import if they have connected platforms
+- Do NOT ask for more data — work with what is in context
 
 NAVIGATE BLOCK RULES:
 - Include a navigate block WHENEVER the analysis naturally leads to a tool action
