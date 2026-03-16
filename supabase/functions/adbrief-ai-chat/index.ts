@@ -1,4 +1,4 @@
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
+import Anthropic from "npm:@anthropic-ai/sdk@0.37.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
