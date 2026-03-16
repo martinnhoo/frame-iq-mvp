@@ -226,9 +226,27 @@ function ForWho({ onCTA }: { onCTA: () => void }) {
 function Pricing({ onCTA }: { onCTA: () => void }) {
   const navigate = useNavigate();
   const plans = [
-    { name: "Maker", price: "$19", desc: "/mo · Solo or freelancer", badge: null, highlight: false, action: () => navigate("/signup?plan=maker"), features: ["Connect 1 ad account (Meta, TikTok or Google)", "Unlimited AI chat with your campaign data", "Up to 3 personas or brand profiles", "Hook analysis + script generation", "AI memory up to 20 analyses"] },
-    { name: "Pro", price: "$49", desc: "/mo · Growing teams", badge: "Most popular", highlight: true, action: () => navigate("/signup?plan=pro"), features: ["Connect up to 3 ad accounts", "Unlimited AI chat with your campaign data", "Unlimited personas + brands", "Multi-market support (BR, MX, IN, EN)", "Competitor analysis", "AI memory up to 60 analyses", "Priority AI responses"] },
-    { name: "Studio", price: "$149", desc: "/mo · Agencies & teams", badge: null, highlight: false, action: () => navigate("/signup?plan=studio"), features: ["Unlimited ad account connections", "Unlimited AI chat with your campaign data", "Unlimited personas + brands", "Full account memory (no limit)", "Agency client workspace", "Bulk brief generation", "Dedicated support"] },
+    {
+      name: "Maker", price: "$19", desc: "/mo · Solo or freelancer", badge: null, highlight: false,
+      action: () => navigate("/signup?plan=maker"),
+      tag: "For freelancers and solo buyers",
+      features: ["50 AI messages / day", "1 ad account connected", "All tools unlocked", "Up to 3 personas or brands", "AI memory up to 20 analyses"],
+      limit: "50 msgs/day",
+    },
+    {
+      name: "Pro", price: "$49", desc: "/mo · Growing teams", badge: "Most popular", highlight: true,
+      action: () => navigate("/signup?plan=pro"),
+      tag: "For small agencies and growing teams",
+      features: ["200 AI messages / day", "3 ad accounts connected", "All tools unlocked", "Unlimited personas + brands", "Multi-market (BR, MX, IN, EN)", "Competitor analysis", "AI memory up to 60 analyses"],
+      limit: "200 msgs/day",
+    },
+    {
+      name: "Studio", price: "$149", desc: "/mo · Agencies & teams", badge: null, highlight: false,
+      action: () => navigate("/signup?plan=studio"),
+      tag: "For agencies managing multiple clients",
+      features: ["Unlimited AI messages", "Unlimited ad accounts", "All tools unlocked", "Unlimited personas + brands", "Full account memory", "Agency client workspace", "Dedicated support"],
+      limit: "Unlimited",
+    },
   ];
   return (
     <section id="pricing" style={{ padding: "80px 32px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
@@ -238,8 +256,11 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
           <h2 style={{ ...j, fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, letterSpacing: "-0.035em", margin: "14px 0 12px" }}>
             Start with a free day. Stay because it works.
           </h2>
-          <p style={{ ...j, fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 400, margin: "0 auto 24px" }}>
+          <p style={{ ...j, fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 460, margin: "0 auto 12px" }}>
             Every plan includes a 1-day free trial. No charge until it's over.
+          </p>
+          <p style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.25)", maxWidth: 460, margin: "0 auto 24px" }}>
+            Free accounts get 3 AI messages to try the product. Upgrade anytime.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.16)" }}>
             <span style={{ fontSize: 15 }}>💳</span>

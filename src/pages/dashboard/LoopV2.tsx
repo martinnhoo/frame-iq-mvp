@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import UpgradeWall from "@/components/UpgradeWall";
+import { isFree, chatDailyLimit } from "@/lib/planLimits";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -227,7 +229,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function LoopV2() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, profile } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const navigate = useNavigate();
 
@@ -238,6 +240,12 @@ export default function LoopV2() {
   const [sending, setSending] = useState(false);
   const [ready, setReady] = useState(false);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [showUpgradeWall, setShowUpgradeWall] = useState(false);
+  const [upgradeWallTrigger, setUpgradeWallTrigger] = useState<"chat" | "tool">("chat");
+  const [chatCount, setChatCount] = useState(() => {
+    // Load from sessionStorage — resets each browser session (not persistent)
+    return parseInt(sessionStorage.getItem("adbrief_chat_count") || "0", 10);
+  });
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -501,6 +509,12 @@ export default function LoopV2() {
   };
 
   const handleToolAction = (action: string) => {
+    // Block tool actions for free users
+    if (isFree(profile?.plan)) {
+      setUpgradeWallTrigger("tool");
+      setShowUpgradeWall(true);
+      return;
+    }
     const routes: Record<string, string> = {
       upload: "/dashboard/analyses/new",
       hooks: "/dashboard/hooks",
