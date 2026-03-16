@@ -35,7 +35,7 @@ const faqItems = [
   },
   {
     q: "How many team seats are included in each plan?",
-    a: "The Free and Creator plans include 1 seat. Studio includes 2 seats. Scale includes up to 10 seats. Enterprise plans can accommodate unlimited seats — contact us for details.",
+    a: "Maker and Pro plans include 1 seat. Studio includes unlimited seats for your agency team. Contact us for custom enterprise arrangements.",
   },
   {
     q: "Does AdBrief replace my creative agency?",
@@ -51,7 +51,7 @@ const faqItems = [
   },
   {
     q: "Do you offer a free trial?",
-    a: "Yes! Our Free plan gives you 3 analyses and 3 boards per month at no cost — no credit card required. Paid plans start at $9/mo.",
+    a: "Every paid plan includes a 1-day free trial. Card required upfront, but you are not charged for 24 hours. Cancel before the trial ends and pay nothing. Plans start at $19/mo.",
   },
   {
     q: "What languages does Auto Translation support?",
@@ -86,7 +86,7 @@ const FAQ = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 1 day</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">

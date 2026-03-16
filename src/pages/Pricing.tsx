@@ -61,39 +61,20 @@ const Pricing = () => {
 
   const plans = [
     {
-      name: "Free",
-      price: "$0",
-      period: "/mo",
-      description: "Try before you commit. No credit card.",
-      features: [
-        { text: "3 video analyses / mo", included: true },
-        { text: "3 board generations / mo", included: true },
-        { text: "3 translations / mo", included: true },
-        { text: "3 pre-flight checks / mo", included: true },
-        { text: "Templates access", included: true },
-        { text: "Hook Generator", included: false },
-        { text: "AI Intelligence", included: false },
-      ],
-      cta: "Get started free",
-      ctaAction: () => navigate("/signup"),
-      highlighted: false,
-    },
-    {
       name: "Maker",
       price: "$19",
       period: "/mo",
-      description: "For solo creators and freelancers.",
+      description: "For freelancers and solo buyers.",
       features: [
-        { text: "20 video analyses / mo", included: true },
-        { text: "20 board generations / mo", included: true },
-        { text: "100 translations / mo", included: true },
-        { text: "20 pre-flight checks / mo", included: true },
-        { text: "Hook Generator — unlimited", included: true },
-        { text: "Templates access", included: true },
-        { text: "No cooldown between actions", included: true },
-        { text: "AI Intelligence", included: false },
+        { text: "50 AI messages / day", included: true },
+        { text: "1 ad account connected", included: true },
+        { text: "All tools unlocked", included: true },
+        { text: "Hook Generator", included: true },
+        { text: "Script & Brief generator", included: true },
+        { text: "3 personas", included: true },
+        { text: "Multi-account", included: false },
       ],
-      cta: "Start Maker",
+      cta: "Start free trial",
       ctaAction: () => handleUpgrade("maker"),
       highlighted: false,
     },
@@ -101,17 +82,17 @@ const Pricing = () => {
       name: "Pro",
       price: "$49",
       period: "/mo",
-      description: "For performance teams running ads at scale.",
+      description: "For small agencies and performance teams.",
       features: [
-        { text: "60 video analyses / mo", included: true },
-        { text: "60 board generations / mo", included: true },
-        { text: "Unlimited translations", included: true },
-        { text: "60 pre-flight checks / mo", included: true },
-        { text: "Hook Generator — unlimited", included: true },
-        { text: "AI Intelligence + learning profile", included: true },
-        { text: "Persona intelligence", included: true },
+        { text: "200 AI messages / day", included: true },
+        { text: "3 ad accounts connected", included: true },
+        { text: "All tools unlocked", included: true },
+        { text: "Hook Generator", included: true },
+        { text: "Script & Brief generator", included: true },
+        { text: "Unlimited personas", included: true },
+        { text: "Multi-market support", included: true },
       ],
-      cta: "Start Pro",
+      cta: "Start free trial",
       ctaAction: () => handleUpgrade("pro"),
       highlighted: true,
       badge: "Most Popular",
@@ -120,18 +101,17 @@ const Pricing = () => {
       name: "Studio",
       price: "$149",
       period: "/mo",
-      description: "For teams that produce every day.",
+      description: "For agencies managing multiple clients.",
       features: [
-        { text: "Unlimited video analyses", included: true },
-        { text: "Unlimited board generations", included: true },
-        { text: "Unlimited translations", included: true },
-        { text: "Unlimited pre-flight checks", included: true },
-        { text: "Unlimited hooks & scripts", included: true },
-        { text: "AI Intelligence + learning profile", included: true },
-        { text: "Persona intelligence", included: true },
-        { text: "API access", included: true },
+        { text: "Unlimited AI messages", included: true },
+        { text: "Unlimited ad accounts", included: true },
+        { text: "All tools unlocked", included: true },
+        { text: "Hook Generator", included: true },
+        { text: "Script & Brief generator", included: true },
+        { text: "Unlimited personas", included: true },
+        { text: "Agency workspace", included: true },
       ],
-      cta: "Start Studio",
+      cta: "Start free trial",
       ctaAction: () => handleUpgrade("studio"),
       highlighted: false,
     },
@@ -148,7 +128,7 @@ const Pricing = () => {
     },
     {
       q: "Is there a free trial for paid plans?",
-      a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
+      a: "Yes. All paid plans come with a 1-day free trial. No charge until the trial ends. Cancel anytime.",
     },
     {
       q: "How does billing work?",
@@ -189,7 +169,7 @@ const Pricing = () => {
               Simple, transparent pricing
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Start free. Scale when you're ready. No hidden fees, no surprises.
+              1-day free trial on all plans. Card required. Cancel anytime before 24h and pay nothing.
             </p>
           </motion.div>
         </div>
@@ -351,7 +331,7 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All plans are billed monthly. All paid plans include a 3-day free trial.
+              Prices shown in USD. All plans are billed monthly. All paid plans include a 1-day free trial.
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">
