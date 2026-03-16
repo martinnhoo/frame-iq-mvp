@@ -639,7 +639,7 @@ export default function LoopV2() {
 
           {/* Tool actions — only non-connect tools */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-            {TOOLS.map(t => (
+            {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
               <button key={t.action} onClick={() => handleToolAction(t.action)}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${t.color}40`; el.style.color = t.color; el.style.background = `${t.color}0a`; }}
