@@ -575,34 +575,42 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 102px)", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
 
       {/* ── Header — clean, just platform status ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 8 }}>
 
         {/* Left: persona + status */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
           {selectedPersona ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{selectedPersona.avatar_emoji}</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{selectedPersona.name}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{selectedPersona.avatar_emoji}</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPersona.name}</span>
               {hasData && (
-                <>
-                  <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)" }} />
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-                    {pulse?.totalAnalyses} analyses
-                    {pulse?.avgHookScore && <span style={{ color: "rgba(255,255,255,0.45)", marginLeft: 4 }}>· {pulse.avgHookScore.toFixed(1)}/10</span>}
-                  </span>
-                </>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.1)", display: "inline-block" }} />
+                  {pulse?.totalAnalyses}
+                  {pulse?.avgHookScore && <span style={{ color: "rgba(255,255,255,0.45)" }}> · {pulse.avgHookScore.toFixed(1)}/10</span>}
+                </span>
               )}
             </div>
           ) : (
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>No workspace selected</span>
+            connectedPlatforms.length > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {connectedPlatforms.map(p => (
+                  <span key={p} style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 6 }}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>AdBrief AI</span>
+            )
           )}
         </div>
 
-        {/* Right: platform badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {/* Right: platform badges — hidden on mobile, visible on desktop */}
+        <div className="hidden lg:flex" style={{ alignItems: "center", gap: 6, display: "flex" }}>
           {PLATFORMS.map(p => (
             <PlatformBadge
               key={p.id}
@@ -618,11 +626,12 @@ export default function LoopV2() {
             <RefreshCw size={12} color="rgba(255,255,255,0.25)" />
           </button>
         </div>
+
       </div>
 
       {/* ── Messages ── */}
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "28px 24px 16px", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
 
           {messages.map((msg, i) => (
             <div key={i}>
@@ -681,8 +690,8 @@ export default function LoopV2() {
       )}
 
       {/* ── Input ── */}
-      <div style={{ padding: "12px 24px 16px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ maxWidth: 740, margin: "0 auto" }}>
+      <div style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
           <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s" }}
             onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.4)"; }}
             onBlurCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; }}>

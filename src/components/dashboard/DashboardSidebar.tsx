@@ -1,6 +1,6 @@
 import {
   MessageSquare, BarChart3, Zap, Search, Settings,
-  ChevronUp, Sparkles, CreditCard,
+  ChevronUp, Sparkles, CreditCard, Brain,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -50,7 +50,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
 
   const NAV = [
-    { url: "/dashboard",             label: "Loop",      icon: MessageSquare, exact: true },
+    { url: "/dashboard/loop/ai",     label: "AI",        icon: Brain,         exact: false },
     { url: "/dashboard/analyses",    label: "Analyze",   icon: BarChart3 },
     { url: "/dashboard/hooks",       label: "Hooks",     icon: Zap },
     { url: "/dashboard/competitor",  label: "Competitor",icon: Search },

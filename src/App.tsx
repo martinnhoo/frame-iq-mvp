@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/IndexNew";
@@ -107,7 +107,7 @@ const App = () => (
 
               {/* Dashboard with sidebar layout */}
               <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<LoopV2 />} />
+                <Route index element={<Navigate to="/dashboard/loop/ai" replace />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<NewAnalysis />} />

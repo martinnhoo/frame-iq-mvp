@@ -360,28 +360,9 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto pb-16 lg:pb-0" style={{ background: "#07070f" }}>
+        <main className="flex-1 overflow-auto" style={{ background: "#07070f" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
-
-        {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2"
-          style={{ background: "rgba(7,7,15,0.96)", borderTop: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(16px)" }}>
-          {[
-            { icon: "📊", label: "Analyze", url: "/dashboard/analyses/new" },
-            { icon: "⚡", label: "Hooks", url: "/dashboard/hooks" },
-            { icon: "🧠", label: "AI", url: "/dashboard/loop/ai" },
-            { icon: "☰", label: "Menu", action: () => setSidebarOpen(true) },
-          ].map(item => (
-            <button key={item.label}
-              onClick={item.action ?? (() => navigate(item.url!))}
-              className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
-              style={{ color: "rgba(255,255,255,0.4)" }}>
-              <span className="text-lg leading-none">{item.icon}</span>
-              <span className="text-[10px] font-semibold">{item.label}</span>
-            </button>
-          ))}
-        </nav>
       </div>
 
       {/* Welcome popup */}
