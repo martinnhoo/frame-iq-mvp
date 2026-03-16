@@ -385,7 +385,7 @@ export default function IndexNew() {
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", ...j }}>
       <Helmet>
         <title>AdBrief — The AI that knows your ad account</title>
-        <meta name="description" content="Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. AdBrief reads your data in real time and thinks like a senior strategist." />
+        <meta name="description" content="Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. AdBrief reads your data in real time and thinks like a senior strategist. Updated 2026-03-16." />
       </Helmet>
       <Nav onCTA={handleCTA} />
       <Hero onCTA={handleCTA} />
