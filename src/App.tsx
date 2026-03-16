@@ -51,7 +51,6 @@ import LoopV2 from "./pages/dashboard/LoopV2";
 import OAuthCallback from "./pages/dashboard/OAuthCallback";
 import LoopImportPage from "./pages/dashboard/LoopImportPage";
 import LoopSettingsPage from "./pages/dashboard/LoopSettingsPage";
-import AdBriefAI from "./pages/dashboard/AdBriefAI";
 import LoopGuidePage from "./pages/dashboard/LoopGuidePage";
 import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
@@ -114,11 +113,11 @@ const App = () => (
                 <Route path="boards" element={<ToolGate><BoardsList /></ToolGate>} />
                 <Route path="boards/new" element={<ToolGate><NewBoard /></ToolGate>} />
                 <Route path="boards/:id" element={<ToolGate><BoardDetail /></ToolGate>} />
-                <Route path="translate" element={<TranslatePage />} />
-                <Route path="intelligence" element={<IntelligencePage />} />
+                <Route path="translate" element={<ToolGate><TranslatePage /></ToolGate>} />
+                <Route path="intelligence" element={<ToolGate><IntelligencePage /></ToolGate>} />
                 <Route path="settings" element={<SettingsPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
-                <Route path="preflight" element={<PreflightCheck />} />
+                <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
+                <Route path="preflight" element={<ToolGate><PreflightCheck /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
                 <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />

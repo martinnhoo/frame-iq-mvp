@@ -30,11 +30,6 @@ const Pricing = () => {
       return;
     }
 
-    if (planKey === "scale") {
-      navigate("/book-demo");
-      return;
-    }
-
     const plan = PLANS[planKey as keyof typeof PLANS];
     if (!plan) return;
 

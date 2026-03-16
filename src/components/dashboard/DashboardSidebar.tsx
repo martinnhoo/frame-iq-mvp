@@ -119,6 +119,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             { url: "/dashboard/intelligence", label: "Insights",icon: "📊" },
           ].map(({ url, label, icon }) => {
             const active = isActive(url);
+            const locked = (plan === "free") && url !== "/dashboard/persona";
             return (
               <NavLink
                 key={url}
@@ -138,6 +139,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               >
                 <span style={{ fontSize: 13, width: 18, textAlign: "center", opacity: active ? 1 : 0.6 }}>{icon}</span>
                 {label}
+                {locked && <span style={{ marginLeft: "auto", fontSize: 9, color: "rgba(255,255,255,0.18)" }}>🔒</span>}
               </NavLink>
             );
           })}
