@@ -140,41 +140,76 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 }
 
 // ── Platform connection badge — with real logo ────────────────────────────────
-function PlatformBadge({ platform, connected, onConnect, requiresPersona }: {
+function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresPersona }: {
   platform: typeof PLATFORMS[0];
   connected: boolean;
   onConnect: () => void;
+  onDisconnect: () => void;
   requiresPersona: boolean;
 }) {
   const [hov, setHov] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const Icon = platform.icon;
+
+  if (connected) {
+    return (
+      <div style={{ position: "relative" }}>
+        <button
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => { setHov(false); }}
+          onClick={() => setMenuOpen(v => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 7,
+            padding: "7px 12px", borderRadius: 9,
+            background: hov ? `${platform.activeColor}18` : `${platform.activeColor}10`,
+            border: `1px solid ${platform.activeColor}35`,
+            cursor: "pointer", transition: "all 0.15s", fontFamily: F,
+          }}
+        >
+          <Icon active={true} />
+          <span style={{ fontSize: 12, fontWeight: 500, color: platform.activeColor }}>{platform.label}</span>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, animation: "statusPulse 2.5s infinite", flexShrink: 0 }} />
+        </button>
+        {menuOpen && (
+          <>
+            <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setMenuOpen(false)} />
+            <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100, background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden", minWidth: 160, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+              <div style={{ padding: "8px 12px 6px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: platform.activeColor }}>{platform.label}</p>
+                <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Connected</p>
+              </div>
+              <button
+                onClick={() => { setMenuOpen(false); onDisconnect(); }}
+                style={{ width: "100%", padding: "9px 12px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", fontFamily: F, fontSize: 12, color: "#f87171", display: "flex", alignItems: "center", gap: 7, transition: "background 0.1s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.08)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+              >
+                <span style={{ fontSize: 13 }}>✕</span> Disconnect
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <button
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       onClick={onConnect}
-      disabled={connected}
-      title={requiresPersona ? "Select a persona first to connect" : connected ? `${platform.label} connected` : `Connect ${platform.label}`}
+      title={requiresPersona ? "Select a persona first to connect" : `Connect ${platform.label}`}
       style={{
         display: "flex", alignItems: "center", gap: 7,
         padding: "7px 12px", borderRadius: 9,
-        background: connected
-          ? `${platform.activeColor}10`
-          : hov && !requiresPersona ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${connected ? platform.activeColor + "35" : hov && !requiresPersona ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)"}`,
-        cursor: connected ? "default" : requiresPersona ? "not-allowed" : "pointer",
-        transition: "all 0.15s", opacity: requiresPersona ? 0.45 : 1,
-        fontFamily: F,
+        background: hov && !requiresPersona ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.03)",
+        border: `1px solid ${hov && !requiresPersona ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)"}`,
+        cursor: requiresPersona ? "not-allowed" : "pointer",
+        transition: "all 0.15s", opacity: requiresPersona ? 0.45 : 1, fontFamily: F,
       }}
     >
-      <Icon active={connected} />
-      <span style={{ fontSize: 12, fontWeight: 500, color: connected ? platform.activeColor : "rgba(255,255,255,0.5)" }}>
-        {platform.label}
-      </span>
-      {connected && (
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, animation: "statusPulse 2.5s infinite", flexShrink: 0 }} />
-      )}
+      <Icon active={false} />
+      <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>{platform.label}</span>
     </button>
   );
 }
@@ -421,6 +456,23 @@ export default function LoopV2() {
     finally { setConnecting(null); }
   };
 
+  const handleDisconnect = async (platformId: string) => {
+    try {
+      await supabase.from("platform_connections" as any)
+        .delete()
+        .eq("user_id", user.id)
+        .eq("platform", platformId);
+      // Refresh pulse
+      await loadPulse();
+      // Notify in chat
+      setMessages(prev => [...prev, {
+        role: "assistant" as const,
+        blocks: [{ type: "action" as const, title: "", content: `${platformId.charAt(0).toUpperCase() + platformId.slice(1)} disconnected. You can reconnect anytime from the header.` }],
+        ts: Date.now(),
+      }]);
+    } catch (e) { console.error(e); }
+  };
+
   const handleToolAction = (action: string) => {
     const routes: Record<string, string> = {
       upload: "/dashboard/analyses/new",
@@ -473,6 +525,7 @@ export default function LoopV2() {
               platform={p}
               connected={connectedPlatforms.includes(p.id)}
               onConnect={() => handleConnect(p)}
+              onDisconnect={() => handleDisconnect(p.id)}
               requiresPersona={!selectedPersona}
             />
           ))}
