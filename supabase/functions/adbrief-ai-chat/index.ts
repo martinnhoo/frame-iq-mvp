@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, context, user_id, persona_id, history } = await req.json();
+    const { message, context, user_id, persona_id, history, user_language } = await req.json();
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
@@ -119,9 +119,38 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
     ].filter(Boolean).join("\n");
 
+
+    // Language configuration
+    const LANG_NAMES: Record<string, string> = {
+      en: "English", pt: "Portuguese (Brazilian)", es: "Spanish", fr: "French",
+      de: "German", ar: "Arabic", zh: "Chinese (Mandarin)"
+    };
+    const MARKET_LANG_MAP: Record<string, string> = {
+      BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es", PE: "es",
+      IN: "en", EN: "en", US: "en", UK: "en", FR: "fr", DE: "de"
+    };
+
+    const uiLang = (user_language as string) || "en";
+    const personaMarket = (persona?.result as any)?.preferred_market || 
+                          (persona?.result as any)?.market || "";
+    const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang;
+    const uiLangName = LANG_NAMES[uiLang] || "English";
+    const contentLangName = LANG_NAMES[contentLangCode] || "English";
+
     const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
 
-    const systemPrompt = `You are AdBrief AI — an elite media buyer and creative performance strategist built for the Andromeda era of Meta Ads. You work exclusively with ad performance data, creative briefs, hooks, scripts, audience targeting, and campaign optimization.
+    const langInstructions = `
+LANGUAGE RULES — FOLLOW STRICTLY:
+- YOUR RESPONSES (analysis, explanations, advice): Always write in ${uiLangName}
+- GENERATED CONTENT (hooks, scripts, VO copy, ad text, briefs): Always write in ${contentLangName} (this is the language the ad will run in)
+- If generating a script for a Spanish-speaking market, write the script in Spanish even if explaining it in English
+- Never mix languages within the same block
+- Market context: ${personaMarket || "unknown"} → content language: ${contentLangName}
+`;
+
+    const systemPrompt = `${langInstructions}
+
+You are AdBrief AI — an elite media buyer and creative performance strategist built for the Andromeda era of Meta Ads. You work exclusively with ad performance data, creative briefs, hooks, scripts, audience targeting, and campaign optimization.
 
 YOUR ONLY DOMAIN: paid advertising, creative performance, hooks, scripts, briefs, audience strategy, campaign data analysis, CTR/ROAS/CPMr improvement, editor performance, market strategy, Meta/TikTok algorithm optimization.
 

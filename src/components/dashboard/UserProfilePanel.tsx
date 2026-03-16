@@ -252,12 +252,17 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<PersonaRecord | null>(null);
 
+  const { setLanguage: setGlobalLanguage } = useLanguage();
+
   // Sync fields when panel opens
   useEffect(() => {
     if (open) {
       setName(profile?.name || "");
       setMarket(profile?.preferred_market || "GLOBAL");
-      setLang(profile?.preferred_language || "en");
+      const savedLang = profile?.preferred_language || "en";
+      setLang(savedLang);
+      // Apply profile language to global context (without overriding localStorage)
+      setGlobalLanguage(savedLang as any, false);
       setAvatarUrl(profile?.avatar_url || null);
       loadPersonas();
     }
@@ -300,6 +305,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
     if (!error && data) {
       onProfileUpdate(data as Profile);
+      setGlobalLanguage(lang as any, true); // persist to localStorage
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
       toast.success("Saved!");

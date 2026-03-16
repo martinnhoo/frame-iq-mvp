@@ -95,10 +95,10 @@ function Hero({ onCTA }: { onCTA: () => void }) {
 // ─── Chat Mockup ─────────────────────────────────────────────────────────────
 function ChatMockup() {
   const msgs = [
-    { role: "user", text: "What's my best performing ad right now?" },
-    { role: "ai", text: "Your top performer is the UGC curiosity hook from March 8 — CTR 3.2%, CPM R$18.40, hook score 8.1/10. It's outperforming your account average by 2.4×. The opening line 'Most brands are doing this wrong...' is driving retention past the 3-second mark." },
-    { role: "user", text: "Write me a hook in the same style for a new creative" },
-    { role: "ai", text: "Based on your top 5 converters, 3 hooks tuned for your BR audience:\n\n1. \"R$50 por dia — o erro que está queimando seu budget\"\n2. \"Você está anunciando pro público errado (e nem sabe)\"\n3. \"O único formato que ainda converte no feed saturado\"" },
+    { role: "user", text: "What's killing my ROAS this week?" },
+    { role: "ai", text: "Your top 3 ads are in creative fatigue — same visuals running for 19 days. CPM is up 34% while CTR dropped from 2.8% to 1.1%. This isn't a bid problem, it's a creative problem. Your winning pattern from February (direct question hook + social proof CTA) hasn't been tested in 3 weeks." },
+    { role: "user", text: "Write me 3 hooks using that winning pattern" },
+    { role: "ai", text: "Based on your account's top converters, 3 hooks ready to test:\n\n1. \"Still guessing which ad is wasting your budget?\"\n2. \"Every day you don't fix your hook, you're paying for clicks that don't convert.\"\n3. \"1,000 brands tested this creative format. 94% saw CPM drop in week 1.\"" },
   ];
   return (
     <section style={{ padding: "0 32px 80px" }}>
@@ -117,10 +117,10 @@ function ChatMockup() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 8px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)" }}>
                 <span style={{ fontSize: 14 }}>🎯</span>
-                <span style={{ ...j, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>Diego · Eluck MX</span>
+                <span style={{ ...j, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>Sarah · FitCore Brand</span>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
               </div>
-              <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>22 analyses · Meta connected</span>
+              <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>18 analyses · Meta connected</span>
             </div>
             {msgs.map((msg, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}

@@ -1,29 +1,60 @@
-// Language context provider – single source of truth for i18n
+// Language context — single source of truth for UI language
+// Priority: 1. localStorage 2. user profile (loaded after login) 3. browser/geo
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { Language, translations } from "./translations";
 
 type LanguageContextType = {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (lang: Language, persist?: boolean) => void;
   t: (key: string) => string;
   isRTL: boolean;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// Detect language from browser/timezone
+function detectLanguage(): Language {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const nav = navigator.language?.toLowerCase() || "";
+
+    // Timezone-based detection (most reliable)
+    if (tz.startsWith("America/Sao_Paulo") || tz.startsWith("America/Fortaleza") || 
+        tz.startsWith("America/Manaus") || tz.startsWith("America/Belem") ||
+        nav.startsWith("pt-br") || nav.startsWith("pt_br")) return "pt";
+    
+    if (tz.startsWith("America/Mexico") || tz.startsWith("America/Bogota") || 
+        tz.startsWith("America/Lima") || tz.startsWith("America/Buenos_Aires") ||
+        tz.startsWith("America/Santiago") || tz.startsWith("America/Caracas") ||
+        nav.startsWith("es")) return "es";
+    
+    if (tz.startsWith("Asia/Shanghai") || tz.startsWith("Asia/Hong_Kong") ||
+        nav.startsWith("zh")) return "zh";
+    
+    if (tz.startsWith("Europe/Paris") || nav.startsWith("fr")) return "fr";
+    if (tz.startsWith("Europe/Berlin") || nav.startsWith("de")) return "de";
+    if (tz.startsWith("Asia/Riyadh") || tz.startsWith("Asia/Dubai") || 
+        nav.startsWith("ar")) return "ar";
+  } catch {}
+  return "en";
+}
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  // Persist language choice in localStorage
   const [language, setLanguageState] = useState<Language>(() => {
     try {
       const saved = localStorage.getItem("adbrief_language");
       if (saved && ["en","pt","es","zh","fr","de","ar"].includes(saved)) return saved as Language;
     } catch {}
-    return "en";
+    return detectLanguage();
   });
 
-  const setLanguage = useCallback((lang: Language) => {
+  // Called with persist=true when user explicitly picks (saves to localStorage)
+  // Called with persist=false when loading from user profile
+  const setLanguage = useCallback((lang: Language, persist = true) => {
     setLanguageState(lang);
-    try { localStorage.setItem("adbrief_language", lang); } catch {}
+    if (persist) {
+      try { localStorage.setItem("adbrief_language", lang); } catch {}
+    }
   }, []);
 
   const t = useCallback(

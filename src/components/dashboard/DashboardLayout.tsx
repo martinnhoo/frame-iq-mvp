@@ -66,7 +66,7 @@ export interface UsageDetails {
 
 export default function DashboardLayout() {
   const [user, setUser] = useState<User | null>(null);
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const dt = useDashT(language);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
@@ -127,6 +127,15 @@ export default function DashboardLayout() {
         }
 
         setProfile(profileData);
+
+        // Sync user's preferred language from profile (without overriding explicit localStorage choice)
+        if (profileData.preferred_language) {
+          const localLang = localStorage.getItem("adbrief_language");
+          // Only apply profile lang if user hasn't explicitly set a different one
+          if (!localLang || localLang === profileData.preferred_language) {
+            setLanguage(profileData.preferred_language as any, false);
+          }
+        }
 
         // New user — redirect to onboarding (preserve checkout param)
         if (!profileData.onboarding_completed) {

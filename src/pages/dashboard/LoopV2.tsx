@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Send, Loader2, ArrowRight, Sparkles, Brain,
@@ -217,6 +218,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function LoopV2() {
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
@@ -420,6 +422,7 @@ export default function LoopV2() {
           persona_id: selectedPersona?.id, 
           context: richContext,
           history,
+          user_language: language,
         },
       });
       if (error) throw error;
