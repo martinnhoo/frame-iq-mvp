@@ -747,10 +747,10 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
   const [savingCompany, setSavingCompany] = useState(false);
 
   // Load companies
-  const loadCompanies = () => {
-    supabase.from("companies" as any).select("*").eq("user_id" as any, user.id)
-      .order("created_at" as any, { ascending: false })
-      .then(({ data }) => setCompanies((data as any[]) || []));
+  const loadCompanies = async () => {
+    const { data } = await (supabase as any).from("companies").select("*").eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setCompanies((data as any[]) || []);
   };
   useEffect(() => { if (listTab === "companies") loadCompanies(); }, [listTab]);
 
