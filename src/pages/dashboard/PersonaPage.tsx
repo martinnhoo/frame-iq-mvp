@@ -774,7 +774,7 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
     if (!companyForm.name) return;
     setSavingCompany(true);
     try {
-      await supabase.from("companies" as any).insert({ user_id: user.id, ...companyForm } as any);
+      await (supabase as any).from("companies").insert({ user_id: user.id, ...companyForm });
       setShowCompanyForm(false);
       setCompanyForm({ name: "", industry: "", website: "", description: "", instagram: "", facebook: "", tiktok: "" });
       loadCompanies();
