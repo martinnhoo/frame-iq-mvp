@@ -34,14 +34,14 @@ export default function OAuthCallback() {
       if (error) {
         setStatus("error");
         setMessage(`${pl.name} connection was cancelled.`);
-        setTimeout(() => navigate("/dashboard"), 2500);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 2500);
         return;
       }
 
       if (!code) {
         setStatus("error");
         setMessage("Invalid callback — missing code.");
-        setTimeout(() => navigate("/dashboard"), 2500);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 2500);
         return;
       }
 
@@ -77,7 +77,7 @@ export default function OAuthCallback() {
         if (accs.length === 0) {
           setStatus("success");
           setMessage(`${pl.name} connected — no ad accounts found.`);
-          setTimeout(() => navigate("/dashboard"), 2000);
+          setTimeout(() => navigate("/dashboard/loop/ai"), 2000);
           return;
         }
 
@@ -86,7 +86,7 @@ export default function OAuthCallback() {
           await saveSelectedAccount(uid, accs[0].id, pid);
           setStatus("success");
           setMessage(`${pl.name} connected with ${accs[0].name || accs[0].id}.`);
-          setTimeout(() => navigate("/dashboard"), 2000);
+          setTimeout(() => navigate("/dashboard/loop/ai"), 2000);
           return;
         }
 
@@ -98,7 +98,7 @@ export default function OAuthCallback() {
       } catch (e: any) {
         setStatus("error");
         setMessage(e.message || "Connection failed. Please try again.");
-        setTimeout(() => navigate("/dashboard"), 3500);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 3500);
       }
     };
     run();
@@ -119,7 +119,7 @@ export default function OAuthCallback() {
       setStatus("success");
       const acc = accounts.find(a => a.id === accountId);
       setMessage(`${pl.name} connected with "${acc?.name || accountId}".`);
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setTimeout(() => navigate("/dashboard/loop/ai"), 2000);
     } catch (e: any) {
       setSaving(false);
       setSelectedId(null);
@@ -190,7 +190,7 @@ export default function OAuthCallback() {
             ))}
 
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/dashboard/loop/ai")}
               style={{ marginTop: 8, padding: "10px", borderRadius: 9, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer", fontFamily: F, width: "100%" }}
             >
               Skip for now

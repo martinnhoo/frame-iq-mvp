@@ -73,7 +73,7 @@ const Signup = () => {
       }).catch(() => {}); // fire and forget
 
       // Go directly to dashboard (no email confirmation required)
-      const redirectUrl = planParam ? `/dashboard?checkout=${planParam}` : "/dashboard";
+      const redirectUrl = planParam ? `/onboarding?checkout=${planParam}` : "/onboarding";
       navigate(redirectUrl);
       setEmailLoading(false);
     }

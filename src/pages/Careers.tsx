@@ -87,7 +87,7 @@ const Careers = () => {
         </div>
       </section>
 
-      {/* Why FrameIQ */}
+      {/* Why AdBrief */}
       <section className="py-12 px-6 border-t border-border/30">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold mb-8 text-center">Why AdBrief?</h2>

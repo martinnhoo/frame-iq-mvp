@@ -22,14 +22,14 @@ export default function MetaOAuthCallback() {
       if (error) {
         setStatus("error");
         setMessage("Meta connection was cancelled or denied.");
-        setTimeout(() => navigate("/dashboard"), 3000);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 3000);
         return;
       }
 
       if (!code || !state) {
         setStatus("error");
         setMessage("Invalid callback — missing code or state.");
-        setTimeout(() => navigate("/dashboard"), 3000);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 3000);
         return;
       }
 
@@ -53,11 +53,11 @@ export default function MetaOAuthCallback() {
         setAccounts(data.ad_accounts || []);
         setMessage(`Meta connected! Found ${data.ad_accounts?.length || 0} ad account${data.ad_accounts?.length !== 1 ? "s" : ""}.`);
 
-        setTimeout(() => navigate("/dashboard"), 2500);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 2500);
       } catch (e: any) {
         setStatus("error");
         setMessage(e.message || "Connection failed. Please try again.");
-        setTimeout(() => navigate("/dashboard"), 3500);
+        setTimeout(() => navigate("/dashboard/loop/ai"), 3500);
       }
     };
 

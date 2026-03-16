@@ -28,7 +28,7 @@ export function CompareIndex() {
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
               <div>
                 <p style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>AdBrief vs {c.competitorName}</p>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{c.frameiqPrice} · vs {c.competitorPrice}</p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{c.adbriefPrice} · vs {c.competitorPrice}</p>
               </div>
               <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 18 }}>→</span>
             </div>
@@ -93,7 +93,7 @@ export function CompareDetail() {
           {comp.featureTable.map((row, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "13px 20px", borderTop: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)" }}>
               <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{row.feature}</span>
-              <span style={{ fontSize: 13, textAlign: "center", color: row.frameiq.includes("✓") ? "#34d399" : row.frameiq.includes("✗") ? "rgba(255,255,255,0.18)" : "#0ea5e9", fontWeight: row.frameiq.includes("✓") ? 600 : 400 }}>{row.frameiq}</span>
+              <span style={{ fontSize: 13, textAlign: "center", color: row.adbrief.includes("✓") ? "#34d399" : row.adbrief.includes("✗") ? "rgba(255,255,255,0.18)" : "#0ea5e9", fontWeight: row.adbrief.includes("✓") ? 600 : 400 }}>{row.adbrief}</span>
               <span style={{ fontSize: 13, textAlign: "center", color: row.competitor.includes("✓") ? "#34d399" : row.competitor.includes("✗") ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.5)" }}>{row.competitor}</span>
             </div>
           ))}
@@ -103,7 +103,7 @@ export function CompareDetail() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
           <div style={{ borderRadius: 16, padding: 20, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)" }}>
             <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 14 }}>AdBrief strengths</p>
-            {comp.frameiqPros.map(p => (
+            {comp.adbriefPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                 <span style={{ color: "#34d399", flexShrink: 0 }}>✓</span>{p}
               </div>
