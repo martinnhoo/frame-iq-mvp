@@ -20,23 +20,41 @@ const PLATFORMS = [
 ];
 
 function PersonaPlatformConnections({ personaId, userId }: { personaId: string; userId: string }) {
-  const [connections, setConnections] = useState<Record<string, boolean>>({});
+  const [connections, setConnections] = useState<Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [changingAccount, setChangingAccount] = useState<string | null>(null);
 
   const F = "'Inter', sans-serif";
 
-  useEffect(() => {
+  const loadConnections = () => {
     if (!personaId) return;
     supabase.from("platform_connections" as any)
-      .select("platform").eq("user_id", userId)
+      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId)
       .then(({ data }) => {
-        const map: Record<string, boolean> = {};
-        (data || []).forEach((r: any) => { map[r.platform] = true; });
+        const map: Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }> = {};
+        (data || []).forEach((r: any) => {
+          map[r.platform] = {
+            connected: true,
+            accounts: (r.ad_accounts as any[]) || [],
+            selectedId: r.selected_account_id || null,
+          };
+        });
         setConnections(map);
         setLoading(false);
       });
-  }, [personaId, userId]);
+  };
+
+  useEffect(() => { loadConnections(); }, [personaId, userId]);
+
+  const selectAccount = async (platform: string, accountId: string) => {
+    setChangingAccount(platform);
+    await supabase.from("platform_connections" as any)
+      .update({ selected_account_id: accountId })
+      .eq("user_id", userId).eq("platform", platform);
+    loadConnections();
+    setChangingAccount(null);
+  };
 
   const connect = async (platform: string, fn: string) => {
     setConnecting(platform);
@@ -75,7 +93,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   {connected ? "Connected" : "Not connected"}
                 </p>
               </div>
-              {!connected && (
+              {!conn?.connected && (
                 <button
                   onClick={() => connect(p.id, p.fn)}
                   disabled={connecting === p.id}
@@ -84,7 +102,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   {connecting === p.id ? "Connecting..." : "Connect"}
                 </button>
               )}
-              {connected && (
+              {conn?.connected && conn.accounts.length <= 1 && (
                 <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 500 }}>
                   Active
                 </span>
