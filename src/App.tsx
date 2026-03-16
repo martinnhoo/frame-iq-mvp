@@ -43,6 +43,7 @@ import TemplatesPage from "./pages/dashboard/TemplatesPage";
 import PreflightCheck from "./pages/dashboard/PreflightCheck";
 import PersonaPage from "./pages/dashboard/PersonaPage";
 import HookGenerator from "./pages/dashboard/HookGenerator";
+import ToolGate from "./components/ToolGate";
 import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
 import ScriptGenerator from "./pages/dashboard/ScriptGenerator";
 import BriefGenerator from "./pages/dashboard/BriefGenerator";
@@ -120,16 +121,16 @@ const App = () => (
                 <Route path="templates" element={<TemplatesPage />} />
                 <Route path="preflight" element={<PreflightCheck />} />
                 <Route path="persona" element={<PersonaPage />} />
-                <Route path="hooks" element={<HookGenerator />} />
-                <Route path="competitor" element={<CompetitorDecoder />} />
-                <Route path="script" element={<ScriptGenerator />} />
-                <Route path="brief" element={<BriefGenerator />} />
+                <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
+                <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
+                <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />
+                <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="loop/v2" element={<LoopV2 />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
-                <Route path="loop/ai" element={<AdBriefAI />} />
+                <Route path="loop/ai" element={<LoopV2 />} />
                 <Route path="loop/guide" element={<LoopGuidePage />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />

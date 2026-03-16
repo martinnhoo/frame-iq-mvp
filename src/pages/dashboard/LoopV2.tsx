@@ -575,7 +575,7 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 102px)", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
 
       {/* ── Header — clean, just platform status ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 8 }}>
@@ -732,6 +732,13 @@ export default function LoopV2() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
         textarea::placeholder { color: rgba(255,255,255,0.28); }
+        .loop-container { height: calc(100dvh - 44px); }
+        @media (max-width: 1023px) {
+          .loop-container { height: calc(100dvh - 100px); }
+        }
+        @media (max-width: 1023px) {
+          .suggestions-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   );
