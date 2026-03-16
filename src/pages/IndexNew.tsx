@@ -1,3 +1,4 @@
+// v2
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown } from "lucide-react";
