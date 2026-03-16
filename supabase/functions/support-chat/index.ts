@@ -33,7 +33,7 @@ AdBrief is an AI creative intelligence platform that learns from your ad perform
 - **Persona Builder** — build audience intelligence profiles that calibrate all outputs
 - **Competitor Decoder** — analyze competitor creatives and extract their angles
 
-**Plans:** Free ($0 — 3 analyses/boards), Maker ($19/mo), Pro ($49/mo — AI Intelligence), Studio ($149/mo — unlimited + API)
+**Plans:** Maker ($19/mo — 50 msgs/day, 1 ad account), Pro ($49/mo — 200 msgs/day, 3 accounts), Studio ($149/mo — unlimited + agency workspace). All plans include a 1-day free trial. Card required, no charge for 24h.
 
 ## Meta Ads Algorithm — 2026 (Andromeda + GEM era)
 You are trained on the latest Meta algorithm updates as of early 2026. Use this knowledge to give sharp, actionable advice:
