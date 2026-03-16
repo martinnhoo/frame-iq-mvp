@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3, Link2, CheckCircle2 } from "lucide-react";
+import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3, Link2, CheckCircle2, ChevronDown, Building2, Globe, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
@@ -24,6 +24,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
+  const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
 
   const F = "'Inter', sans-serif";
 
@@ -122,34 +123,43 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                 )}
               </div>
 
-              {/* Account selector — only if multiple accounts */}
+              {/* Account selector — collapsible, only if multiple accounts */}
               {connected && accounts.length > 1 && (
-                <div style={{ borderTop: `1px solid ${p.color}18`, padding: "8px 12px 10px" }}>
-                  <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-                    Choose ad account for this persona
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    {accounts.map((acc: any) => {
-                      const isSelected = acc.id === selectedId;
-                      return (
-                        <button key={acc.id} onClick={() => selectAccount(p.id, acc.id)}
-                          disabled={changingAccount === p.id}
-                          style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: isSelected ? `${p.color}14` : "rgba(255,255,255,0.03)", border: `1px solid ${isSelected ? p.color + "35" : "rgba(255,255,255,0.07)"}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.1s" }}>
-                          <div style={{ width: 7, height: 7, borderRadius: "50%", background: isSelected ? p.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ fontFamily: F, fontSize: 12, color: isSelected ? "#fff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
-                              {acc.name || acc.id}
-                            </span>
-                            <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
-                              {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}{acc.account_status === 1 ? " · Active" : ""}
-                            </span>
-                          </div>
-                          {isSelected && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <>
+                  <button
+                    onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "transparent", border: "none", borderTop: `1px solid ${p.color}15`, cursor: "pointer" }}>
+                    <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+                      {accounts.length} accounts available — change
+                    </span>
+                    <ChevronDown size={13} color="rgba(255,255,255,0.3)" style={{ transform: expandedPlatform === p.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {expandedPlatform === p.id && (
+                    <div style={{ borderTop: `1px solid ${p.color}10`, padding: "6px 12px 10px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {accounts.map((acc: any) => {
+                          const isSelected = acc.id === selectedId;
+                          return (
+                            <button key={acc.id} onClick={() => { selectAccount(p.id, acc.id); setExpandedPlatform(null); }}
+                              disabled={changingAccount === p.id}
+                              style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: isSelected ? `${p.color}14` : "rgba(255,255,255,0.03)", border: `1px solid ${isSelected ? p.color + "35" : "rgba(255,255,255,0.07)"}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.1s" }}>
+                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: isSelected ? p.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontFamily: F, fontSize: 12, color: isSelected ? "#fff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                                  {acc.name || acc.id}
+                                </span>
+                                <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                                  {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}
+                                </span>
+                              </div>
+                              {isSelected && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
@@ -729,6 +739,47 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [view, setView] = useState<View>("list");
+  const [listTab, setListTab] = useState<"personas" | "companies">("personas");
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [showCompanyForm, setShowCompanyForm] = useState(false);
+  const [companyForm, setCompanyForm] = useState({ name: "", industry: "", website: "", description: "", instagram: "", facebook: "", tiktok: "" });
+  const [fetchingWebsite, setFetchingWebsite] = useState(false);
+  const [savingCompany, setSavingCompany] = useState(false);
+
+  // Load companies
+  const loadCompanies = () => {
+    supabase.from("companies" as any).select("*").eq("user_id" as any, user.id)
+      .order("created_at" as any, { ascending: false })
+      .then(({ data }) => setCompanies((data as any[]) || []));
+  };
+  useEffect(() => { if (listTab === "companies") loadCompanies(); }, [listTab]);
+
+  const fetchWebsiteInfo = async (url: string) => {
+    if (!url || !url.includes(".")) return;
+    setFetchingWebsite(true);
+    try {
+      const { data } = await supabase.functions.invoke("adbrief-ai-chat", {
+        body: { message: `Extract business info from this website: ${url}. Return JSON only: { "name": "", "industry": "", "description": "" }`, user_id: user.id },
+      });
+      if (data?.blocks?.[0]?.content) {
+        try {
+          const info = JSON.parse(data.blocks[0].content.replace(/```json|```/g, "").trim());
+          setCompanyForm(prev => ({ ...prev, name: info.name || prev.name, industry: info.industry || prev.industry, description: info.description || prev.description }));
+        } catch {}
+      }
+    } catch {} finally { setFetchingWebsite(false); }
+  };
+
+  const saveCompany = async () => {
+    if (!companyForm.name) return;
+    setSavingCompany(true);
+    try {
+      await supabase.from("companies" as any).insert({ user_id: user.id, ...companyForm } as any);
+      setShowCompanyForm(false);
+      setCompanyForm({ name: "", industry: "", website: "", description: "", instagram: "", facebook: "", tiktok: "" });
+      loadCompanies();
+    } catch {} finally { setSavingCompany(false); }
+  };
   const [saved, setSaved] = useState<SavedPersona[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
   const [activeDetail, setActiveDetail] = useState<SavedPersona | null>(null);
@@ -979,23 +1030,26 @@ CTA: ${persona.cta_style}`;
     );
 
   // ── LIST VIEW ──
+  const F_COMP = "'Inter', sans-serif";
+  const INDUSTRIES = ["E-commerce","iGaming / Betting","SaaS / Software","Health & Wellness","Finance / Fintech","Education","Real Estate","Fashion / Apparel","Food & Beverage","Beauty & Cosmetics","Travel & Tourism","Fitness","Entertainment","Marketing / Agency","Consulting","Legal","Automotive","Non-profit","Media / Publishing","Crypto / Web3","Other"];
+
   if (view === "list")
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-sky-400" />
-              {dt("pe_saved")}
+              Workspaces
             </h1>
-            <p className="text-white/50 text-sm mt-1">{dt("pe_profiles_sub")}</p>
+            <p className="text-white/50 text-sm mt-1">Personas, brands and companies for your AI context</p>
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={startNew}
+              onClick={() => listTab === "personas" ? startNew() : setShowCompanyForm(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-all"
             >
-              <Plus className="h-4 w-4" /> {dt("pe_new")}
+              <Plus className="h-4 w-4" /> {listTab === "personas" ? "New Persona" : "New Company"}
             </button>
             <button
               onClick={() => {
