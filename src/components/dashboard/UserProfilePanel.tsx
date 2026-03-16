@@ -9,6 +9,7 @@ import {
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
 import Persona3DAvatar from "./Persona3DAvatar";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
