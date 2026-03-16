@@ -24,3 +24,4 @@ export function canUseTools(plan: string | null | undefined) {
 export function chatDailyLimit(plan: string | null | undefined) {
   return getPlanLimits(plan).chat_daily;
 }
+// build: Mon Mar 16 02:27:59 UTC 2026
