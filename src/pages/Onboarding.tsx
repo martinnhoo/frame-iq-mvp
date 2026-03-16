@@ -70,9 +70,9 @@ const PLAN_PRICES: Record<string, string> = {
 };
 
 const PLANS = [
-  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["10 analyses/mo", "10 boards/mo", "50 translations", "Hook Generator"],                              highlight: false, desc_key: "plan_desc_maker" },
-  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["30 analyses/mo", "30 boards/mo", "Unlimited hooks & scripts", "30 pre-flights", "AI Intelligence"],    highlight: true, desc_key: "plan_desc_pro" },
-  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access", "10 team seats"],           highlight: false, desc_key: "plan_desc_studio" },
+  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["50 AI messages/day", "1 ad account", "All tools unlocked", "3 personas"],                                  highlight: false, desc_key: "plan_desc_maker" },
+  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["200 AI messages/day", "3 ad accounts", "All tools unlocked", "Unlimited personas", "Multi-market"],      highlight: true,  desc_key: "plan_desc_pro"   },
+  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],                    highlight: false, desc_key: "plan_desc_studio" },
 ];
 
 const STEP_ORDER: Step[] = ["name", "language", "plan"];
