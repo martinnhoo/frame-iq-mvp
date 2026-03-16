@@ -427,6 +427,49 @@ export default function LoopV2() {
 
   const send = async (text: string) => {
     if (!text.trim() || sending) return;
+
+    // ── Freemium gate ────────────────────────────────────────────────────────
+    const userPlan = profile?.plan;
+
+    if (isFree(userPlan)) {
+      // Free: max 3 messages total per session
+      const FREE_LIMIT = 3;
+      const currentCount = parseInt(sessionStorage.getItem("adbrief_chat_count") || "0", 10);
+      if (currentCount >= FREE_LIMIT) {
+        setUpgradeWallTrigger("chat");
+        setShowUpgradeWall(true);
+        return;
+      }
+      const newCount = currentCount + 1;
+      sessionStorage.setItem("adbrief_chat_count", String(newCount));
+      setChatCount(newCount);
+    } else {
+      // Paid plans: check daily limit
+      const dailyLimit = chatDailyLimit(userPlan);
+      if (dailyLimit !== null) {
+        const today = new Date().toDateString();
+        const key = `adbrief_chat_daily_${today}_${userPlan}`;
+        const todayCount = parseInt(sessionStorage.getItem(key) || "0", 10);
+        if (todayCount >= dailyLimit) {
+          // Soft warning inline — no wall, just message in chat
+          const planName = userPlan === "maker" ? "Maker" : userPlan === "pro" ? "Pro" : "Studio";
+          const upgradeTarget = userPlan === "maker" ? "Pro (200/day)" : "Studio (unlimited)";
+          setMessages(prev => [...prev, {
+            role: "assistant" as const,
+            blocks: [{ 
+              type: "warning" as const, 
+              title: `Daily limit reached — ${dailyLimit} messages used`,
+              content: `You've used all ${dailyLimit} messages for today on the ${planName} plan. Your limit resets tomorrow. Upgrade to ${upgradeTarget} for more.`
+            }],
+            ts: Date.now()
+          }]);
+          return;
+        }
+        sessionStorage.setItem(key, String(todayCount + 1));
+      }
+    }
+    // ── End freemium gate ────────────────────────────────────────────────────
+
     setInput("");
     setSending(true);
     setMessages(prev => [
@@ -628,6 +671,14 @@ export default function LoopV2() {
           <div ref={bottomRef} />
         </div>
       </div>
+
+      {/* Upgrade wall */}
+      {showUpgradeWall && (
+        <UpgradeWall
+          trigger={upgradeWallTrigger}
+          onClose={() => setShowUpgradeWall(false)}
+        />
+      )}
 
       {/* ── Input ── */}
       <div style={{ padding: "12px 24px 16px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
