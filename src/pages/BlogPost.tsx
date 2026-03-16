@@ -51,7 +51,7 @@ const blogPosts: Record<string, {
       "More importantly, the insights are objective and data-driven rather than based on one person's opinion about what 'looks good.'",
       "## Getting Started",
       "Whether you're a solo Creative Strategist or leading a 20-person performance marketing team, the shift to AI-powered competitor analysis is inevitable. The teams that adopt it first gain a compounding advantage: faster insights, more tests, better creative, higher ROAS.",
-      "Start analyzing competitor ads in seconds with AdBrief's free plan — no credit card required.",
+      "Start analyzing competitor ads in seconds with AdBrief. 1-day free trial on all plans.",
     ],
   },
   "hook-framework-ctr": {
@@ -208,7 +208,7 @@ const blogPosts: Record<string, {
       "## Early Results",
       "Beta testers reported: 85% reduction in briefing time, 3x increase in concepts tested per week, 40% fewer revision rounds with editors, and editors preferred AI-generated briefs over manual ones (clearer, more specific).",
       "## Pricing",
-      "Board Generation is included in all paid plans: Studio (30 boards/month), Scale (300 boards/month), and Enterprise (unlimited). Free plan users get 3 boards/month to try it out.",
+      "Board Generation is included in all paid plans: Maker, Pro, and Studio. 1-day free trial available on all plans.",
       "## Try It Today",
       "Board Generation is live for all AdBrief users. Log in to your dashboard or start a free account to generate your first board in 30 seconds.",
     ],
@@ -582,7 +582,7 @@ const blogPosts: Record<string, {
       "## Key Takeaways",
       "1. Agencies sell time, AI sells output. You're paying for deliverables, not hours. 2. The 80/20 rule applies: AI handles 80% of the volume, humans handle the 20% that matters most. 3. Speed compounds. More variations → more data → better decisions → higher ROAS. 4. It's not for everyone. Marcus is tech-savvy and understands performance marketing deeply. Complete beginners might still need agency support.",
       "## Your Turn",
-      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with AdBrief's free plan and see how much competitive intelligence you can gather in 30 minutes.",
+      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with AdBrief's 1-day free trial and see how much competitive intelligence you can gather in 30 minutes.",
     ],
   },
   "cost-creative-strategist-vs-ai": {
@@ -727,7 +727,7 @@ const BlogPost = () => {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Get started free</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 1 day</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -805,7 +805,7 @@ const BlogPost = () => {
                   className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                   onClick={() => navigate("/signup")}
                 >
-                  Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
+                  Try free for 1 day <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 <Button
                   variant="outline"

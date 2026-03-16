@@ -53,7 +53,7 @@ const FEATURES = [
     headline: "Import your Meta data. Let the AI find your winning patterns.",
     desc: "Upload your Meta or TikTok CSV. AdBrief identifies which hook types, formats, and markets are winning in YOUR account — then calibrates every output to match.",
     bullets: ["Import Meta Ads Manager CSV", "Identifies winning hook × format × market combos", "Tracks performance by editor", "Feeds every tool with your real data"],
-    url: "/dashboard/loop",
+    url: "/dashboard/loop/ai",
     cta: "Start the loop",
   },
   {
@@ -124,7 +124,7 @@ export default function Features() {
             style={{ padding: "13px 28px", borderRadius: 14, fontSize: 15, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
             Start saving budget — free <ArrowRight size={16} />
           </button>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 10 }}>Free forever plan · No credit card · 60s to first insight</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 10 }}>1-day free trial · Cancel anytime · 60s to first insight</p>
         </div>
 
         {/* Features grid */}
@@ -173,7 +173,7 @@ export default function Features() {
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>Most users recover 10× the plan cost in the first week.</p>
           <button onClick={() => navigate("/signup")}
             style={{ padding: "13px 28px", borderRadius: 14, fontSize: 15, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
-            Start free — no credit card →
+            Try free for 1 day →
           </button>
         </div>
       </div>

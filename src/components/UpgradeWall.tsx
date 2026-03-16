@@ -1,8 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, X, Zap } from "lucide-react";
+import { ArrowRight, X, Zap, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
+
+const PRICE_IDS: Record<string, string> = {
+  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
+  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
+  studio: "price_1T9seMDr9So14Xzt0vEJNQIX",
+};
 
 interface UpgradeWallProps {
   onClose?: () => void;
@@ -50,6 +58,23 @@ const PLANS = [
 export default function UpgradeWall({ onClose, trigger = "chat", inline = false }: UpgradeWallProps) {
   const navigate = useNavigate();
   const msg = MESSAGES[trigger];
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handlePlan = async (planKey: string, fallbackUrl: string) => {
+    // Check if user is already logged in — if so go straight to checkout
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setLoadingPlan(planKey);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: { price_id: PRICE_IDS[planKey] },
+        });
+        if (!error && data?.url) { window.location.href = data.url; return; }
+      } catch {}
+      setLoadingPlan(null);
+    }
+    navigate(fallbackUrl);
+  };
 
   const content = (
     <div style={{ width: "100%", maxWidth: inline ? "100%" : 680, background: "#0a0b1a", border: "1px solid rgba(255,255,255,0.09)", borderRadius: inline ? 16 : 24, padding: inline ? "24px" : "36px 32px", boxShadow: inline ? "none" : "0 40px 100px rgba(0,0,0,0.6)", position: "relative" }}>
@@ -90,9 +115,10 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
                 </div>
               ))}
             </div>
-            <button onClick={() => navigate(plan.action)}
-              style={{ ...j, width: "100%", padding: "11px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: plan.highlight ? BRAND : "rgba(255,255,255,0.06)", color: plan.highlight ? "#000" : "rgba(255,255,255,0.6)", border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.09)"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-              Start trial <ArrowRight size={11} />
+            <button onClick={() => handlePlan(plan.name.toLowerCase(), plan.action)}
+              disabled={loadingPlan === plan.name.toLowerCase()}
+              style={{ ...j, width: "100%", padding: "11px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: plan.highlight ? BRAND : "rgba(255,255,255,0.06)", color: plan.highlight ? "#000" : "rgba(255,255,255,0.6)", border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.09)"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loadingPlan && loadingPlan !== plan.name.toLowerCase() ? 0.5 : 1 }}>
+              {loadingPlan === plan.name.toLowerCase() ? <Loader2 size={12} className="animate-spin" /> : <>Start trial <ArrowRight size={11} /></>}
             </button>
           </div>
         ))}

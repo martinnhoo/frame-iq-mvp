@@ -238,7 +238,7 @@ export const translations: Record<Language, TranslationKeys> = {
     nav_faq: "FAQ",
     nav_contact: "Contact",
     nav_signin: "Sign in",
-    nav_get_started: "Get started free",
+    nav_get_started: "Try free for 1 day",
 
     hero_badge: "The growth tool behind 147+ performance teams",
     hero_title_1: "Most of your ad budget",
@@ -332,7 +332,7 @@ export const translations: Record<Language, TranslationKeys> = {
     pricing_scale: "Scale",
     pricing_most_popular: "Most Popular",
     pricing_mo: "/mo",
-    pricing_cta_free: "Get started free",
+    pricing_cta_free: "Try free for 1 day",
     pricing_cta_trial: "Start 14-day trial",
     pricing_cta_demo: "Book a demo",
 
@@ -405,7 +405,7 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_see_plans: "See plans →",
     lp_score_cta: "Score my first ad — free",
     lp_live_teams: "147 teams analyzing ads right now · 23 in the last hour",
-    lp_objection_q1: "Is it really free?", lp_objection_a1: "Yes. 3 analyses, 3 boards, 2 pre-flight checks — no credit card. Ever.",
+    lp_objection_q1: "Is there a free trial?", lp_objection_a1: "Yes. Every paid plan includes a 1-day free trial. Card required, but no charge for 24 hours.",
     lp_objection_q2: "What formats work?", lp_objection_a2: "TikTok, Reels, YouTube Shorts, Facebook — any MP4 or MOV up to 500MB.",
     lp_objection_q3: "How fast is it?", lp_objection_a3: "First hook score and diagnosis in under 60 seconds. Production board in 90s.",
     lp_stop_guessing: "Stop guessing",

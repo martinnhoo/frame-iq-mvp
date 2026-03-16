@@ -170,7 +170,7 @@ export default function LoopGuidePage() {
 
       {/* CTA */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button onClick={() => navigate("/dashboard/loop")}
+        <button onClick={() => navigate("/dashboard/loop/ai")}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
           <RefreshCw size={14} /> Go to Performance Loop
         </button>

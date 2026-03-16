@@ -14,7 +14,7 @@ export const SEO_TOOLS = [
     description: "Generate 10 high-converting ad hooks for any product in seconds.",
     longDescription: "Describe your product and target audience, pick a platform and tone — AdBrief generates 10 proven hook formulas with predicted hook scores (0–10), platform fit tags, and CTA suggestions. Know which hook converts before you spend on production.",
     metaTitle: "Free Ad Hook Generator — AdBrief",
-    metaDescription: "Generate high-converting ad hooks for TikTok, Facebook, and Instagram in seconds. Free AI tool. No credit card required.",
+    metaDescription: "Generate high-converting ad hooks for TikTok, Facebook, and Instagram in seconds. 1-day free trial on all plans.",
     keywords: ["ad hook generator", "tiktok hook ideas", "free ad hook generator", "hook generator for ads", "tiktok ad hooks"],
     isFree: true,
     requiresAuth: false,
@@ -305,7 +305,7 @@ export const SEO_COMPARISONS = [
       { feature: "Product research",          adbrief: "✗ No",     competitor: "✓ Yes" },
       { feature: "Creative brief generator",  adbrief: "✓ Yes",    competitor: "✗ No" },
       { feature: "Influencer ad discovery",   adbrief: "✗ No",     competitor: "✓ Yes" },
-      { feature: "Free plan",                 adbrief: "✓ Yes",    competitor: "✗ No" },
+      { feature: "Free trial",                adbrief: "✓ 1 day", competitor: "✗ No" },
       { feature: "Monthly price",             adbrief: "From $19", competitor: "From $49" },
     ],
   },
@@ -320,7 +320,7 @@ export const SEO_COMPARISONS = [
     keywords: ["adbrief vs motion app", "motion app alternative", "motion app competitor", "ad creative analytics tool"],
     summary: "Motion App is a creative analytics dashboard that connects to your ad accounts and tracks performance by creative. AdBrief is an AI-powered creative analyzer that works without ad account access — upload any video and get an instant analysis. Motion is better for teams with large existing ad spend. AdBrief is better for teams who want AI-powered creative intelligence without the setup complexity.",
     verdict: "Motion for tracking performance at scale across ad accounts. AdBrief for AI-powered creative analysis before and after launch.",
-    adbriefPros: ["No ad account connection needed", "AI analysis of any video in 60s", "Hook scoring before you launch", "Script and brief generation", "Free plan — instant start"],
+    adbriefPros: ["No ad account connection needed", "AI analysis of any video in 60s", "Hook scoring before you launch", "Script and brief generation", "1-day free trial"],
     competitorPros: ["Deep ad account integration", "Creative performance tracking at scale", "Team collaboration features"],
     adbriefCons: ["No direct ad account connection", "No historical performance tracking"],
     competitorCons: ["Requires ad account access — setup time", "Starts at $99/mo", "No AI creative analysis", "No script generation"],
@@ -329,7 +329,7 @@ export const SEO_COMPARISONS = [
       { feature: "Ad account integration",    adbrief: "✗ No",     competitor: "✓ Yes" },
       { feature: "Creative analysis pre-launch", adbrief: "✓ Yes", competitor: "✗ No" },
       { feature: "Script generator",          adbrief: "✓ Yes",    competitor: "✗ No" },
-      { feature: "Free plan",                 adbrief: "✓ Yes",    competitor: "✗ No" },
+      { feature: "Free trial",                adbrief: "✓ 1 day", competitor: "✗ No" },
       { feature: "Monthly price",             adbrief: "From $19", competitor: "From $99" },
     ],
   },
@@ -465,7 +465,7 @@ export const SEO_PLATFORM_PAGES = [
     faqs: [
       { q: "How do I analyze a TikTok ad?", a: "Upload your video to AdBrief. The AI scores the hook from 0–10, identifies your creative format, checks TikTok safe zones, and gives you 3 specific improvements — all in under 60 seconds." },
       { q: "What's a good hook score for TikTok?", a: "A hook score above 7.0 is strong for TikTok. Scores of 8.0+ correlate with above-average retention and CTR. Most ads score between 4.5 and 6.5." },
-      { q: "Is the TikTok ad analyzer free?", a: "Yes. The free plan includes 3 analyses. Paid plans start at $19/mo for 20 analyses per month." },
+      { q: "Is the TikTok ad analyzer free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
       { q: "Can I analyze competitor TikTok ads?", a: "Yes — upload any TikTok video and AdBrief will analyze it. You can also use the Competitor Ad Decoder for script-based analysis." },
     ],
   },
@@ -495,7 +495,7 @@ export const SEO_PLATFORM_PAGES = [
     intro: "Instagram Reels has become the most competitive short-form placement in the Meta ecosystem. Vertical format, sound-on viewing, and a younger audience make it different from feed — and most teams repurpose feed ads without adjusting for Reels, leaving performance on the table.",
     faqs: [
       { q: "How is a Reels ad different from a feed video ad?", a: "Reels are vertical (9:16), viewed sound-on, and compete with organic creator content. The hook needs to feel native. AdBrief flags non-native creative patterns specific to Reels." },
-      { q: "Is the Reels ad analyzer free?", a: "Yes. Free plan includes 3 analyses. Paid plans start at $19/mo." },
+      { q: "Is the Reels ad analyzer free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
     ],
   },
   {
@@ -579,7 +579,7 @@ export const SEO_USECASE_PAGES = [
     faqs: [
       { q: "How is the hook score calculated?", a: "AdBrief's hook score (0–10) is based on: emotional trigger type, specificity of the claim, curiosity gap strength, pattern interrupt quality, platform alignment, and CTA proximity." },
       { q: "What makes a hook score 9 or 10?", a: "A 9+ hook creates immediate unresolved tension — the viewer physically cannot scroll because their brain needs resolution. It's specific, creates a clear promise, and feels native to the platform." },
-      { q: "Is the hook score tool free?", a: "Yes. AdBrief's hook analysis is included in every video analysis on the free plan (3 analyses). Paid plans start at $19/mo." },
+      { q: "Is the hook score tool free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
     ],
   },
   {
@@ -605,7 +605,7 @@ export const SEO_USECASE_PAGES = [
     intro: "Launching an ad with a weak hook, missing CTA, or safe zone violation is expensive. AdBrief's Pre-Flight Ad Check runs a systematic review of any video ad before launch — scoring the hook, checking safe zones, validating CTA placement, and flagging any issues that will hurt performance.",
     faqs: [
       { q: "What does a pre-flight ad check include?", a: "AdBrief's pre-flight check covers: hook score (0–10), safe zone compliance for each platform, CTA presence and placement, creative format detection, and platform policy risk signals." },
-      { q: "Is the pre-flight check free?", a: "Yes. Pre-flight check is included in AdBrief's free plan. Paid plans include more detailed platform-specific reports." },
+      { q: "Is the pre-flight check free?", a: "Every paid plan includes a 1-day free trial. Platform-specific reports included in all plans." },
     ],
   },
   {
@@ -618,7 +618,7 @@ export const SEO_USECASE_PAGES = [
     intro: "UGC ads are the highest-performing creative format on TikTok and Facebook — but briefing UGC creators is notoriously difficult. AdBrief's UGC Script Generator produces creator-ready scripts: spoken dialogue, emotional cues, on-screen text, and a binary CTA — formatted to paste directly into a creator briefing message.",
     faqs: [
       { q: "What's included in a UGC ad script?", a: "AdBrief generates: opening hook line (spoken), emotional arc notes, key message points, on-screen text suggestions, visual/setting notes, and CTA line — all formatted for non-professional creators." },
-      { q: "Is the UGC script generator free?", a: "Yes. The free plan includes script generation. Paid plans add persona-specific scripts, market variations, and batch generation." },
+      { q: "Is the UGC script generator free?", a: "Every paid plan includes a 1-day free trial. Persona-specific scripts and market variations included in all plans." },
     ],
   },
 ];

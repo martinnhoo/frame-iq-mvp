@@ -29,7 +29,6 @@ import Onboarding from "./pages/Onboarding";
 
 // Dashboard
 import DashboardLayout from "./components/dashboard/DashboardLayout";
-import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import AnalysesList from "./pages/dashboard/AnalysesList";
 import AnalysisDetail from "./pages/dashboard/AnalysisDetail";
 import NewAnalysis from "./pages/dashboard/NewAnalysis";
