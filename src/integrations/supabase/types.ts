@@ -173,6 +173,45 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          facebook: string | null
+          id: string
+          industry: string
+          instagram: string | null
+          name: string
+          tiktok: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          facebook?: string | null
+          id?: string
+          industry: string
+          instagram?: string | null
+          name: string
+          tiktok?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          facebook?: string | null
+          id?: string
+          industry?: string
+          instagram?: string | null
+          name?: string
+          tiktok?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       competitor_trackers: {
         Row: {
           created_at: string
