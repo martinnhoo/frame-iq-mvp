@@ -262,7 +262,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
             Every plan includes a 1-day free trial. No charge until it's over.
           </p>
           <p style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.25)", maxWidth: 460, margin: "0 auto 24px" }}>
-            Free accounts get 3 AI messages to try the product. Upgrade anytime.
+            Every plan starts with a 1-day free trial. Card required · Cancel before 24h and pay nothing.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.16)" }}>
             <span style={{ fontSize: 15 }}>💳</span>

@@ -148,7 +148,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         {/* Footer */}
         <div style={{ padding: "8px 8px 12px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", gap: 4 }}>
           {/* Upgrade — free users only */}
-          {(plan === "free" || plan === "creator" || plan === "starter") && (
+          {plan === "free" && (
             <button
               onClick={() => { navigate("/pricing"); onClose(); }}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.14)", cursor: "pointer", fontFamily: F, width: "100%", textAlign: "left" }}

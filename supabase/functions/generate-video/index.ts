@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       .eq('period', currentPeriod)
       .single();
 
-    const limits = { free: 0, studio: 5, scale: 300 }; // Scale gets 10/day = ~300/month
+    const limits: Record<string, number> = { free: 0, maker: 5, pro: 20, studio: 999 };
     const usageCount = usage?.videos_count || 0;
 
     // Daily AI rate limit

@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
       .eq('period', currentPeriod)
       .single();
 
-    const limits: Record<string, number> = { free: 3, studio: 30, scale: 300 };
+    const limits: Record<string, number> = { free: 0, maker: 20, pro: 60, studio: 9999 };
     const plan = profile?.plan || 'free';
     const usageCount = (usage?.boards_count as number) || 0;
     const planLimit = limits[plan] ?? 3;
