@@ -1,4 +1,3 @@
-// Plan limits — single source of truth for entire app
 export const PLAN_LIMITS = {
   free:   { chat_daily: 3,   chat_total: 3,   tools: false, ad_accounts: 0,   label: "Free"   },
   maker:  { chat_daily: 50,  chat_total: null, tools: true,  ad_accounts: 1,   label: "Maker"  },
@@ -24,4 +23,3 @@ export function canUseTools(plan: string | null | undefined) {
 export function chatDailyLimit(plan: string | null | undefined) {
   return getPlanLimits(plan).chat_daily;
 }
-// build: Mon Mar 16 02:27:59 UTC 2026
