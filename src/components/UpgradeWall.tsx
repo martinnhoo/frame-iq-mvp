@@ -1,10 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, X, Zap, Loader2 } from "lucide-react";
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
+const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const PRICE_IDS: Record<string, string> = {
   maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
