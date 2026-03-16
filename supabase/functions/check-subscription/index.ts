@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
     // Lifetime accounts — never downgrade
     const LIFETIME_ACCOUNTS: Record<string, string> = {
       "martinhovff@gmail.com": "studio",
-      "victoriafnogueira@hotmail.com": "free",
-      "isadoradblima@gmail.com": "free",
+      "victoriafnogueira@hotmail.com": "studio",
+      "isadoradblima@gmail.com": "studio",
       "denis.magalhaes10@gmail.com": "studio",
     };
     if (user.email && LIFETIME_ACCOUNTS[user.email]) {

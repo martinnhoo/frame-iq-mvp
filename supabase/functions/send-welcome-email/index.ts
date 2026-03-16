@@ -143,7 +143,7 @@ function buildHtml(t: typeof templates["en"], firstName: string, appUrl: string)
 
 <!-- CTA -->
 <tr><td style="padding-bottom:40px;text-align:center;">
-  <a href="${appUrl}/dashboard" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#000;font-size:15px;font-weight:800;text-decoration:none;border-radius:12px;letter-spacing:-0.01em;">${t.cta}</a>
+  <a href="${appUrl}/dashboard/loop/ai" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#000;font-size:15px;font-weight:800;text-decoration:none;border-radius:12px;letter-spacing:-0.01em;">${t.cta}</a>
 </td></tr>
 
 <!-- Closing -->

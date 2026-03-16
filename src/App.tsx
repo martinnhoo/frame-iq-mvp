@@ -110,10 +110,10 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/loop/ai" replace />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/:id" element={<AnalysisDetail />} />
-                <Route path="analyses/new" element={<NewAnalysis />} />
-                <Route path="boards" element={<BoardsList />} />
-                <Route path="boards/new" element={<NewBoard />} />
-                <Route path="boards/:id" element={<BoardDetail />} />
+                <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />
+                <Route path="boards" element={<ToolGate><BoardsList /></ToolGate>} />
+                <Route path="boards/new" element={<ToolGate><NewBoard /></ToolGate>} />
+                <Route path="boards/:id" element={<ToolGate><BoardDetail /></ToolGate>} />
                 <Route path="translate" element={<TranslatePage />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="settings" element={<SettingsPage />} />
