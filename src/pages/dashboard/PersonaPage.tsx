@@ -93,7 +93,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   {connected ? "Connected" : "Not connected"}
                 </p>
               </div>
-              {!conn?.connected && (
+              {!connected && (
                 <button
                   onClick={() => connect(p.id, p.fn)}
                   disabled={connecting === p.id}
