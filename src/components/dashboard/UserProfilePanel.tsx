@@ -73,10 +73,10 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; gradient: string; desc: string; price: string }> = {
-  free:    { label: "Free",    gradient: "from-white/20 to-white/5",           desc: "3 analyses · 3 boards / mo",                     price: "$0" },
-  maker:   { label: "Maker",   gradient: "from-blue-500/30 to-blue-900/10",    desc: "10 analyses · 10 boards · 50 translations / mo", price: "$19/mo" },
-  pro:     { label: "Pro",     gradient: "from-purple-500/30 to-purple-900/10", desc: "30 analyses · 30 boards · unlimited hooks",      price: "$49/mo" },
-  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",    desc: "500 analyses · 300 boards · API access",          price: "$149/mo" },
+  free:    { label: "Free",    gradient: "from-white/20 to-white/5",           desc: "3 AI messages · upgrade to unlock tools",          price: "$0" },
+  maker:   { label: "Maker",   gradient: "from-blue-500/30 to-blue-900/10",    desc: "50 AI msgs/day · 1 ad account · all tools",        price: "$19/mo" },
+  pro:     { label: "Pro",     gradient: "from-purple-500/30 to-purple-900/10", desc: "200 AI msgs/day · 3 ad accounts · all tools",     price: "$49/mo" },
+  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",    desc: "Unlimited msgs · unlimited accounts · agency",      price: "$149/mo" },
 };
 
 const TABS = [

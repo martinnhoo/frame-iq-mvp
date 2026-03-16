@@ -243,8 +243,8 @@ export default function LoopV2() {
   const [showUpgradeWall, setShowUpgradeWall] = useState(false);
   const [upgradeWallTrigger, setUpgradeWallTrigger] = useState<"chat" | "tool">("chat");
   const [chatCount, setChatCount] = useState(() => {
-    // Load from sessionStorage — resets each browser session (not persistent)
-    return parseInt(sessionStorage.getItem("adbrief_chat_count") || "0", 10);
+    // localStorage persists across sessions — user can't bypass by reopening browser
+    return parseInt(localStorage.getItem("adbrief_chat_count") || "0", 10);
   });
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -434,14 +434,14 @@ export default function LoopV2() {
     if (isFree(userPlan)) {
       // Free: max 3 messages total per session
       const FREE_LIMIT = 3;
-      const currentCount = parseInt(sessionStorage.getItem("adbrief_chat_count") || "0", 10);
+      const currentCount = parseInt(localStorage.getItem("adbrief_chat_count") || "0", 10);
       if (currentCount >= FREE_LIMIT) {
         setUpgradeWallTrigger("chat");
         setShowUpgradeWall(true);
         return;
       }
       const newCount = currentCount + 1;
-      sessionStorage.setItem("adbrief_chat_count", String(newCount));
+      localStorage.setItem("adbrief_chat_count", String(newCount));
       setChatCount(newCount);
     } else {
       // Paid plans: check daily limit
