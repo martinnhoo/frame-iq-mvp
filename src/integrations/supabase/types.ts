@@ -540,6 +540,7 @@ export type Database = {
           persona_id: string | null
           platform: string
           refresh_token: string | null
+          selected_account_id: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -554,6 +555,7 @@ export type Database = {
           persona_id?: string | null
           platform: string
           refresh_token?: string | null
+          selected_account_id?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -568,6 +570,7 @@ export type Database = {
           persona_id?: string | null
           platform?: string
           refresh_token?: string | null
+          selected_account_id?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string

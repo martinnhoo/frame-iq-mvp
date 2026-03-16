@@ -1,0 +1,1 @@
+ALTER TABLE platform_connections ADD COLUMN IF NOT EXISTS selected_account_id text;
