@@ -75,7 +75,7 @@ const PLANS = [
   { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["500 analyses/mo", "300 boards/mo", "Unlimited everything", "API access", "10 team seats"],           highlight: false, desc_key: "plan_desc_studio" },
 ];
 
-const STEP_ORDER: Step[] = ["name", "language", "source", "feature", "persona", "plan"];
+const STEP_ORDER: Step[] = ["name", "language", "plan"];
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -147,10 +147,10 @@ export default function Onboarding() {
 
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
       toast.success("Welcome to AdBrief 🚀");
-      navigate(feat?.url || "/dashboard");
+      navigate(feat?.url || "/dashboard/loop/ai");
     } catch {
       toast.error(ot("skip_setup"));
-      navigate("/dashboard");
+      navigate("/dashboard/loop/ai");
     } finally { setSaving(false); }
   };
 
@@ -179,11 +179,11 @@ export default function Onboarding() {
         window.location.href = data.url;
       } else {
         toast.error("Could not start checkout");
-        navigate("/dashboard");
+        navigate("/dashboard/loop/ai");
       }
     } catch {
       toast.error("Something went wrong");
-      navigate("/dashboard");
+      navigate("/dashboard/loop/ai");
     } finally { setSaving(false); }
   };
 
@@ -192,7 +192,7 @@ export default function Onboarding() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) await supabase.from("profiles").update({ onboarding_completed: true } as never).eq("id", session.user.id);
     } catch {}
-    navigate("/dashboard");
+    navigate("/dashboard/loop/ai");
   };
 
   // Get translated source label

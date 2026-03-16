@@ -610,7 +610,7 @@ export default function LoopV2() {
         </div>
 
         {/* Right: platform badges — hidden on mobile, visible on desktop */}
-        <div className="hidden lg:flex" style={{ alignItems: "center", gap: 6, display: "flex" }}>
+        <div className="hidden lg:flex" style={{ alignItems: "center", gap: 6 }}>
           {PLATFORMS.map(p => (
             <PlatformBadge
               key={p.id}

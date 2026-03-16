@@ -17,6 +17,23 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(profile?.name || "");
   const [saving, setSaving] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleBillingPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { portal: true },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+      else toast.error("Could not open billing portal");
+    } catch {
+      toast.error("Could not open billing portal");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -107,19 +124,25 @@ const SettingsPage = () => {
               <p className="font-medium text-foreground capitalize">{profile?.plan} Plan</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.plan === "free"
-                  ? "3 analyses, 3 boards per month. No video generation."
-                  : profile?.plan === "studio"
-                  ? "30 analyses, 30 boards, unlimited hooks & pre-flights per month."
-                  : "500 analyses, 300 boards, 50 videos per month."}
+                  ? "Limited access. Upgrade to unlock all tools."
+                  : profile?.plan === "maker"
+                  ? "50 AI messages/day · 1 ad account · All tools."
+                  : profile?.plan === "pro"
+                  ? "200 AI messages/day · 3 ad accounts · All tools."
+                  : "Unlimited messages · Unlimited accounts · Everything."}
               </p>
             </div>
             <Badge variant="outline" className="capitalize border-border text-muted-foreground">
               {profile?.plan}
             </Badge>
           </div>
-          {profile?.plan === "free" && (
+          {profile?.plan === "free" ? (
             <Button variant="outline" className="border-border" onClick={() => navigate("/pricing")}>
-              Upgrade to Studio
+              Upgrade plan
+            </Button>
+          ) : (
+            <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
+              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : "Manage billing"}
             </Button>
           )}
         </CardContent>
