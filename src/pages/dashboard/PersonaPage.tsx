@@ -102,7 +102,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   {connecting === p.id ? "Connecting..." : "Connect"}
                 </button>
               )}
-              {conn?.connected && conn.accounts.length <= 1 && (
+              {connected && (connections[p.id]?.accounts?.length ?? 0) <= 1 && (
                 <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 500 }}>
                   Active
                 </span>
