@@ -16,7 +16,6 @@ const SCOPES = [
   "ads_read",
   "ads_management", 
   "business_management",
-  "read_insights",
 ].join(",");
 
 Deno.serve(async (req) => {
