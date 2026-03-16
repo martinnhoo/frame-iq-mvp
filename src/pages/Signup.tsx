@@ -61,11 +61,22 @@ const Signup = () => {
       } else {
         toast.error(error.message);
       }
+      setEmailLoading(false);
     } else {
-      const confirmUrl = `/confirm-email?email=${encodeURIComponent(email.trim())}${planParam ? `&plan=${planParam}` : ''}`;
-      navigate(confirmUrl);
+      // Send premium welcome email in background (non-blocking)
+      supabase.functions.invoke("send-welcome-email", {
+        body: {
+          email: email.trim(),
+          first_name: name.trim().split(" ")[0],
+          language: localStorage.getItem("adbrief_language") || navigator.language?.slice(0, 2) || "en",
+        },
+      }).catch(() => {}); // fire and forget
+
+      // Go directly to dashboard (no email confirmation required)
+      const redirectUrl = planParam ? `/dashboard?checkout=${planParam}` : "/dashboard";
+      navigate(redirectUrl);
+      setEmailLoading(false);
     }
-    setEmailLoading(false);
   };
 
   const passwordStrength = () => {
