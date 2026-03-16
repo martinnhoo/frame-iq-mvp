@@ -85,30 +85,40 @@ const PLATFORMS = [
   },
 ];
 
-const SUGGESTIONS_EMPTY = [
-  "What should I focus on today?",
-  "Help me write a hook for a new campaign",
-  "What makes a high-converting ad hook?",
-  "Generate 5 hook angles for a product launch",
-  "How do I brief my video editor?",
-  "What's the difference between UGC and VSL ads?",
-];
+const SUGGESTIONS_EMPTY_BY_LANG: Record<string, string[]> = {
+  en: ["What should I focus on today?", "Help me write a hook for a new campaign", "What makes a high-converting ad hook?", "Generate 5 hook angles for a product launch", "How do I brief my video editor?", "What's the difference between UGC and VSL ads?"],
+  pt: ["No que devo focar hoje?", "Me ajude a escrever um hook para uma nova campanha", "O que faz um hook de anúncio converter bem?", "Gere 5 ângulos de hook para um lançamento", "Como faço um brief para meu editor de vídeo?", "Qual a diferença entre UGC e VSL?"],
+  es: ["¿En qué debo enfocarme hoy?", "Ayúdame a escribir un hook para una nueva campaña", "¿Qué hace que un hook de anuncio convierta bien?", "Genera 5 ángulos de hook para un lanzamiento", "¿Cómo hago un brief para mi editor de video?", "¿Cuál es la diferencia entre UGC y VSL?"],
+  fr: ["Sur quoi dois-je me concentrer aujourd'hui?", "Aidez-moi à écrire un hook pour une nouvelle campagne", "Qu'est-ce qui rend un hook publicitaire efficace?", "Générez 5 angles de hook pour un lancement", "Comment briefer mon monteur vidéo?", "Quelle est la différence entre UGC et VSL?"],
+  de: ["Worauf soll ich mich heute konzentrieren?", "Hilf mir einen Hook für eine neue Kampagne zu schreiben", "Was macht einen gut konvertierenden Ad-Hook aus?", "Erstelle 5 Hook-Winkel für einen Launch", "Wie brieffe ich meinen Video-Editor?", "Was ist der Unterschied zwischen UGC und VSL?"],
+  zh: ["今天我应该关注什么?", "帮我为新活动写一个钩子", "什么让广告钩子转化率高?", "为产品发布生成5个钩子角度", "如何向视频编辑简报?", "UGC和VSL有什么区别?"],
+  ar: ["ما الذي يجب أن أركز عليه اليوم؟", "ساعدني في كتابة hook لحملة جديدة", "ما الذي يجعل hook الإعلان يحول بشكل جيد؟", "أنشئ 5 زوايا hook لإطلاق منتج", "كيف أعطي تعليمات لمحرر الفيديو؟", "ما الفرق بين UGC و VSL؟"],
+};
 
-const SUGGESTIONS_WITH_DATA = (pulse: AccountPulse) => [
-  `Why is my hook score at ${pulse.avgHookScore?.toFixed(1) ?? "—"}?`,
-  "Which of my recent ads should I pause?",
-  `Generate hooks for my ${pulse.topMarket ?? "top"} market`,
-  "What pattern is driving my best results?",
-  "Suggest what to produce next based on my data",
-  "How do I improve my average CTR?",
-];
+const SUGGESTIONS_WITH_DATA_BY_LANG = (pulse: AccountPulse, lang: string): string[] => {
+  const score = pulse.avgHookScore?.toFixed(1) ?? "—";
+  const market = pulse.topMarket ?? "top";
+  const maps: Record<string, string[]> = {
+    en: [`Why is my hook score at ${score}?`, "Which of my recent ads should I pause?", `Generate hooks for my ${market} market`, "What pattern is driving my best results?", "Suggest what to produce next based on my data", "How do I improve my average CTR?"],
+    pt: [`Por que meu hook score está em ${score}?`, "Quais anúncios recentes devo pausar?", `Gere hooks para o meu mercado ${market}`, "Que padrão está gerando meus melhores resultados?", "O que produzir a seguir com base nos meus dados?", "Como melhoro meu CTR médio?"],
+    es: [`¿Por qué mi hook score está en ${score}?`, "¿Cuáles de mis anuncios recientes debo pausar?", `Genera hooks para mi mercado ${market}`, "¿Qué patrón está impulsando mis mejores resultados?", "¿Qué producir a continuación según mis datos?", "¿Cómo mejoro mi CTR promedio?"],
+    fr: [`Pourquoi mon hook score est à ${score}?`, "Quelles annonces récentes devrais-je mettre en pause?", `Générez des hooks pour mon marché ${market}`, "Quel pattern génère mes meilleurs résultats?", "Que produire ensuite selon mes données?", "Comment améliorer mon CTR moyen?"],
+    de: [`Warum liegt mein Hook-Score bei ${score}?`, "Welche meiner aktuellen Anzeigen soll ich pausieren?", `Erstelle Hooks für meinen ${market}-Markt`, "Welches Muster treibt meine besten Ergebnisse?", "Was als nächstes produzieren basierend auf meinen Daten?", "Wie verbessere ich meine durchschnittliche CTR?"],
+    zh: [`为什么我的钩子分数是${score}?`, "我最近哪些广告应该暂停?", `为我的${market}市场生成钩子`, "什么模式推动了我最好的结果?", "根据我的数据建议下一步生产什么?", "如何提高我的平均点击率?"],
+    ar: [`لماذا نقاط hook الخاصة بي عند ${score}؟`, "أي من إعلاناتي الأخيرة يجب أن أوقفها؟", `أنشئ hooks لسوقي ${market}`, "ما النمط الذي يحقق أفضل نتائجي؟", "ما الذي يجب إنتاجه بناءً على بياناتي؟", "كيف أحسّن متوسط CTR الخاص بي؟"],
+  };
+  return maps[lang] || maps["en"];
+};
 
-const TOOLS = [
-  { icon: Upload,    label: "Upload ad",       action: "upload",     color: BLUE   },
-  { icon: Zap,       label: "Generate hooks",  action: "hooks",      color: TEAL   },
-  { icon: FileText,  label: "Write script",    action: "script",     color: GREEN  },
-  { icon: BarChart3, label: "Competitor",      action: "competitor", color: PURPLE },
-];
+const TOOLS_BY_LANG: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
+  en: [{ icon: Upload, label: "Upload ad", action: "upload", color: BLUE }, { icon: Zap, label: "Generate hooks", action: "hooks", color: TEAL }, { icon: FileText, label: "Write script", action: "script", color: GREEN }, { icon: BarChart3, label: "Competitor", action: "competitor", color: PURPLE }],
+  pt: [{ icon: Upload, label: "Upload de anúncio", action: "upload", color: BLUE }, { icon: Zap, label: "Gerar hooks", action: "hooks", color: TEAL }, { icon: FileText, label: "Escrever roteiro", action: "script", color: GREEN }, { icon: BarChart3, label: "Concorrente", action: "competitor", color: PURPLE }],
+  es: [{ icon: Upload, label: "Subir anuncio", action: "upload", color: BLUE }, { icon: Zap, label: "Generar hooks", action: "hooks", color: TEAL }, { icon: FileText, label: "Escribir guión", action: "script", color: GREEN }, { icon: BarChart3, label: "Competidor", action: "competitor", color: PURPLE }],
+  fr: [{ icon: Upload, label: "Charger annonce", action: "upload", color: BLUE }, { icon: Zap, label: "Générer hooks", action: "hooks", color: TEAL }, { icon: FileText, label: "Écrire script", action: "script", color: GREEN }, { icon: BarChart3, label: "Concurrent", action: "competitor", color: PURPLE }],
+  de: [{ icon: Upload, label: "Anzeige hochladen", action: "upload", color: BLUE }, { icon: Zap, label: "Hooks erstellen", action: "hooks", color: TEAL }, { icon: FileText, label: "Skript schreiben", action: "script", color: GREEN }, { icon: BarChart3, label: "Konkurrent", action: "competitor", color: PURPLE }],
+  zh: [{ icon: Upload, label: "上传广告", action: "upload", color: BLUE }, { icon: Zap, label: "生成钩子", action: "hooks", color: TEAL }, { icon: FileText, label: "写脚本", action: "script", color: GREEN }, { icon: BarChart3, label: "竞争对手", action: "competitor", color: PURPLE }],
+  ar: [{ icon: Upload, label: "رفع إعلان", action: "upload", color: BLUE }, { icon: Zap, label: "إنشاء hooks", action: "hooks", color: TEAL }, { icon: FileText, label: "كتابة سكريبت", action: "script", color: GREEN }, { icon: BarChart3, label: "منافس", action: "competitor", color: PURPLE }],
+};
 
 // ── AI Block ──────────────────────────────────────────────────────────────────
 function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void }) {
@@ -232,7 +242,7 @@ export default function LoopV2() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasData = (pulse?.totalAnalyses ?? 0) > 0;
-  const suggestions = hasData && pulse ? SUGGESTIONS_WITH_DATA(pulse) : SUGGESTIONS_EMPTY;
+  const suggestions = hasData && pulse ? SUGGESTIONS_WITH_DATA_BY_LANG(pulse, language) : (SUGGESTIONS_EMPTY_BY_LANG[language] || SUGGESTIONS_EMPTY_BY_LANG["en"]);
 
   const loadPulse = useCallback(async () => {
     try {
@@ -285,7 +295,21 @@ export default function LoopV2() {
           type: p?.totalAnalyses ? "insight" : "action",
           title: "",
           content: p?.totalAnalyses
-            ? `${connectedPlatforms.length ? `${connectedPlatforms.map(pl => pl.charAt(0).toUpperCase() + pl.slice(1)).join(" & ")} connected. ` : ""}${p.totalAnalyses} ${p.totalAnalyses === 1 ? "analysis" : "analyses"}, avg hook score ${p.avgHookScore?.toFixed(1) ?? "—"}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs last week)` : ""}. What do you want to work on?`
+            ? (() => {
+          const plats = connectedPlatforms.map(pl => pl.charAt(0).toUpperCase() + pl.slice(1)).join(" & ");
+          const score = p.avgHookScore?.toFixed(1) ?? "—";
+          const delta = p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs semana anterior)` : "";
+          const greetings: Record<string, string> = {
+            en: `${plats ? plats + " connected. " : ""}${p.totalAnalyses} ${p.totalAnalyses === 1 ? "analysis" : "analyses"}, avg hook score ${score}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs last week)` : ""}. What do you want to work on?`,
+            pt: `${plats ? plats + " conectado. " : ""}${p.totalAnalyses} ${p.totalAnalyses === 1 ? "análise" : "análises"}, hook score médio ${score}/10${delta}. No que quer trabalhar?`,
+            es: `${plats ? plats + " conectado. " : ""}${p.totalAnalyses} ${p.totalAnalyses === 1 ? "análisis" : "análisis"}, hook score promedio ${score}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs semana pasada)` : ""}. ¿En qué quieres trabajar?`,
+            fr: `${plats ? plats + " connecté. " : ""}${p.totalAnalyses} analyse${p.totalAnalyses !== 1 ? "s" : ""}, score hook moyen ${score}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs semaine dernière)` : ""}. Sur quoi voulez-vous travailler?`,
+            de: `${plats ? plats + " verbunden. " : ""}${p.totalAnalyses} Analyse${p.totalAnalyses !== 1 ? "n" : ""}, durchschn. Hook-Score ${score}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs letzte Woche)` : ""}. Woran möchten Sie arbeiten?`,
+            zh: `${plats ? plats + "已连接。" : ""}${p.totalAnalyses}个分析，平均钩子得分${score}/10${p.weeklyDelta != null ? `（${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} vs上周）` : ""}。您想做什么？`,
+            ar: `${plats ? plats + " متصل. " : ""}${p.totalAnalyses} تحليل، متوسط نقاط hook ${score}/10${p.weeklyDelta != null ? ` (${p.weeklyDelta > 0 ? "↑" : "↓"}${Math.abs(p.weeklyDelta)} مقارنة بالأسبوع الماضي)` : ""}. بماذا تريد العمل؟`,
+          };
+          return greetings[language] || greetings["en"];
+        })()
             : "Connect your ad accounts and I'll analyze your campaigns in real time — or just ask me anything. Scripts, hooks, briefs, research, strategy.",
         }],
         ts: Date.now(),
