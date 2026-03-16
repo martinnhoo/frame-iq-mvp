@@ -323,12 +323,12 @@ export default function LoopV2() {
       if (selectedPersona) {
         try {
           const { data: pData } = await supabase.from("personas")
-            .select("name, headline, result").eq("id", selectedPersona.id).single();
+            .select("result").eq("id", selectedPersona.id).maybeSingle();
           if (pData) {
-            const r = (pData as any).result || {};
+            const r = (pData.result as Record<string, any>) || {};
             personaCtx = [
-              `ACTIVE PERSONA/CLIENT: ${pData.name}`,
-              pData.headline ? `Description: ${pData.headline}` : "",
+              `ACTIVE PERSONA/CLIENT: ${r.name || "Unknown"}`,
+              r.headline ? `Description: ${r.headline}` : "",
               r.age ? `Age: ${r.age}` : "",
               r.preferred_market || r.market ? `Market: ${r.preferred_market || r.market}` : "",
               r.best_platforms?.length ? `Platforms: ${r.best_platforms.join(", ")}` : "",
