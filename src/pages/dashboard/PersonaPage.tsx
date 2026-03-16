@@ -1040,9 +1040,9 @@ CTA: ${persona.cta_style}`;
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-sky-400" />
-              Workspaces
+              Personas &amp; Companies
             </h1>
-            <p className="text-white/50 text-sm mt-1">Personas, brands and companies for your AI context</p>
+            <p className="text-white/50 text-sm mt-1">Define who you're targeting. The AI uses this to answer with market context.</p>
           </div>
           <div className="flex items-center gap-2">
             <button

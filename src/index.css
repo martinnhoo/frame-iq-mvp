@@ -191,3 +191,53 @@ code, pre,
 .sidebar-transition {
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ── Mobile responsive fixes ─────────────────────────────────────────────────── */
+
+/* Hide nav links on mobile */
+@media (max-width: 640px) {
+  .nav-links { display: none !important; }
+  
+  /* Landing grids → single column */
+  .how-grid,
+  .for-who-grid,
+  .pricing-grid { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* Loop suggestions → single column on very small screens */
+  @media (max-width: 400px) {
+    .suggestions-grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* Tool pills → no wrap, scroll */
+  .tool-pills-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tool-pills-row::-webkit-scrollbar { display: none; }
+
+  /* Upgrade wall → bottom sheet on mobile */
+  .upgrade-wall-modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .upgrade-wall-plans {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Chat input - larger tap target */
+  .chat-input-area {
+    padding: 8px 12px !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Safe area for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .chat-input-sticky {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

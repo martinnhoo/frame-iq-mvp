@@ -30,13 +30,14 @@ function Nav({ onCTA }: { onCTA: () => void }) {
     <nav style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,18,0.9)", backdropFilter: "blur(20px)", padding: "0 32px" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
         <Logo size="lg" />
-        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
           {[["How it works", "#how"], ["Who it's for", "#for"], ["Pricing", "#pricing"]].map(([label, href]) => (
             <a key={href} href={href} style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => window.location.href = "/login"}
+            className="nav-links"
             style={{ ...j, fontSize: 13, padding: "8px 16px", borderRadius: 9, background: "transparent", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
             Sign in
           </button>
@@ -53,7 +54,7 @@ function Nav({ onCTA }: { onCTA: () => void }) {
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero({ onCTA }: { onCTA: () => void }) {
   return (
-    <section style={{ padding: "90px 32px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <section className="hero-section" style={{ padding: "clamp(56px,8vw,90px) clamp(16px,4vw,32px) clamp(48px,6vw,72px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.09) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 760, margin: "0 auto", position: "relative" }}>
         <motion.div {...fade(0)} style={{ marginBottom: 28 }}>
@@ -151,14 +152,14 @@ function HowItWorks() {
     { n: "03", icon: <MessageSquare size={18} color="#34d399" />, color: "#34d399", title: "Ask anything. Get real answers.", desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next. It answers with your numbers." },
   ];
   return (
-    <section id="how" style={{ padding: "80px 32px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <section id="how" style={{ padding: "clamp(48px,6vw,80px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 52 }}>
           <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>HOW IT WORKS</span>
           <h2 style={{ ...j, fontSize: "clamp(28px,4vw,46px)", fontWeight: 800, letterSpacing: "-0.035em", margin: "14px 0 12px" }}>Three steps to your AI strategy partner.</h2>
           <p style={{ ...j, fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 420, margin: "0 auto" }}>Connect once. Ask forever. No CSV uploads. No manual data entry.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
           {steps.map((step, i) => (
             <motion.div key={i} {...fadeIn(i * 0.1)} style={{ padding: "28px 24px", borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: -30, right: -10, fontSize: 72, fontWeight: 900, color: "rgba(255,255,255,0.025)", fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1, pointerEvents: "none" }}>{step.n}</div>
@@ -183,7 +184,7 @@ function ForWho({ onCTA }: { onCTA: () => void }) {
   ];
   const p = profiles[active];
   return (
-    <section id="for" style={{ padding: "80px 32px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <section id="for" style={{ padding: "clamp(48px,6vw,80px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>WHO IT'S FOR</span>
@@ -197,7 +198,7 @@ function ForWho({ onCTA }: { onCTA: () => void }) {
           ))}
         </div>
         <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+          className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
           <div style={{ padding: "32px 28px", borderRadius: 20, background: `${p.color}07`, border: `1px solid ${p.color}18` }}>
             <span style={{ fontSize: 36, display: "block", marginBottom: 16 }}>{p.emoji}</span>
             <h3 style={{ ...j, fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.25, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
@@ -250,7 +251,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
     },
   ];
   return (
-    <section id="pricing" style={{ padding: "80px 32px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+    <section id="pricing" style={{ padding: "clamp(48px,6vw,80px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div style={{ maxWidth: 940, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>PRICING</span>
@@ -268,7 +269,7 @@ function Pricing({ onCTA }: { onCTA: () => void }) {
             <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>Card required · <strong style={{ color: "#fff" }}>No charge for 24 hours</strong> · Cancel anytime</span>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ padding: "28px 24px", borderRadius: 20, background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 20, position: "relative" }}>
               {plan.badge && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "3px 14px" }}><span style={{ ...j, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#000", fontWeight: 700 }}>{plan.badge}</span></div>}
@@ -383,6 +384,14 @@ export default function IndexNew() {
   const handleCTA = () => navigate("/signup");
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", ...j }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .nav-links { display: none !important; }
+          .how-grid { grid-template-columns: 1fr !important; }
+          .for-who-grid { grid-template-columns: 1fr !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <Helmet>
         <title>AdBrief — The AI that knows your ad account</title>
         <meta name="description" content="Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. AdBrief reads your data in real time and thinks like a senior strategist. Updated 2026-03-16." />

@@ -88,26 +88,26 @@ const PLATFORMS = [
 ];
 
 const SUGGESTIONS_EMPTY_BY_LANG: Record<string, string[]> = {
-  en: ["What should I focus on today?", "Help me write a hook for a new campaign", "What makes a high-converting ad hook?", "Generate 5 hook angles for a product launch", "How do I brief my video editor?", "What's the difference between UGC and VSL ads?"],
-  pt: ["No que devo focar hoje?", "Me ajude a escrever um hook para uma nova campanha", "O que faz um hook de anúncio converter bem?", "Gere 5 ângulos de hook para um lançamento", "Como faço um brief para meu editor de vídeo?", "Qual a diferença entre UGC e VSL?"],
-  es: ["¿En qué debo enfocarme hoy?", "Ayúdame a escribir un hook para una nueva campaña", "¿Qué hace que un hook de anuncio convierta bien?", "Genera 5 ángulos de hook para un lanzamiento", "¿Cómo hago un brief para mi editor de video?", "¿Cuál es la diferencia entre UGC y VSL?"],
-  fr: ["Sur quoi dois-je me concentrer aujourd'hui?", "Aidez-moi à écrire un hook pour une nouvelle campagne", "Qu'est-ce qui rend un hook publicitaire efficace?", "Générez 5 angles de hook pour un lancement", "Comment briefer mon monteur vidéo?", "Quelle est la différence entre UGC et VSL?"],
-  de: ["Worauf soll ich mich heute konzentrieren?", "Hilf mir einen Hook für eine neue Kampagne zu schreiben", "Was macht einen gut konvertierenden Ad-Hook aus?", "Erstelle 5 Hook-Winkel für einen Launch", "Wie brieffe ich meinen Video-Editor?", "Was ist der Unterschied zwischen UGC und VSL?"],
-  zh: ["今天我应该关注什么?", "帮我为新活动写一个钩子", "什么让广告钩子转化率高?", "为产品发布生成5个钩子角度", "如何向视频编辑简报?", "UGC和VSL有什么区别?"],
-  ar: ["ما الذي يجب أن أركز عليه اليوم؟", "ساعدني في كتابة hook لحملة جديدة", "ما الذي يجعل hook الإعلان يحول بشكل جيد؟", "أنشئ 5 زوايا hook لإطلاق منتج", "كيف أعطي تعليمات لمحرر الفيديو؟", "ما الفرق بين UGC و VSL؟"],
+  en: ["Write 3 hooks for my best market", "What's killing my ROAS right now?", "Generate a UGC script for my top audience", "Which ad format should I test next?"],
+  pt: ["Escreva 3 hooks para meu melhor mercado", "O que está matando meu ROAS agora?", "Gere um roteiro UGC para meu público principal", "Qual formato de anúncio devo testar a seguir?"],
+  es: ["Escribe 3 hooks para mi mejor mercado", "¿Qué está matando mi ROAS ahora?", "Genera un guión UGC para mi audiencia principal", "¿Qué formato de anuncio debo probar a continuación?"],
+  fr: ["Écris 3 hooks pour mon meilleur marché", "Qu'est-ce qui tue mon ROAS en ce moment?", "Génère un script UGC pour mon audience principale", "Quel format publicitaire tester ensuite?"],
+  de: ["Schreib 3 Hooks für meinen besten Markt", "Was tötet gerade meinen ROAS?", "Erstelle ein UGC-Skript für mein Hauptpublikum", "Welches Anzeigenformat soll ich als nächstes testen?"],
+  zh: ["为我最好的市场写3个钩子", "什么在杀死我的ROAS？", "为我的主要受众生成UGC脚本", "我下一步应该测试哪种广告格式？"],
+  ar: ["اكتب 3 hooks لأفضل سوق لديّ", "ما الذي يقتل ROAS الخاص بي الآن؟", "أنشئ سكريبت UGC لجمهوري الرئيسي", "ما تنسيق الإعلان الذي يجب اختباره بعد ذلك؟"],
 };
 
 const SUGGESTIONS_WITH_DATA_BY_LANG = (pulse: AccountPulse, lang: string): string[] => {
   const score = pulse.avgHookScore?.toFixed(1) ?? "—";
   const market = pulse.topMarket ?? "top";
   const maps: Record<string, string[]> = {
-    en: [`Why is my hook score at ${score}?`, "Which of my recent ads should I pause?", `Generate hooks for my ${market} market`, "What pattern is driving my best results?", "Suggest what to produce next based on my data", "How do I improve my average CTR?"],
-    pt: [`Por que meu hook score está em ${score}?`, "Quais anúncios recentes devo pausar?", `Gere hooks para o meu mercado ${market}`, "Que padrão está gerando meus melhores resultados?", "O que produzir a seguir com base nos meus dados?", "Como melhoro meu CTR médio?"],
-    es: [`¿Por qué mi hook score está en ${score}?`, "¿Cuáles de mis anuncios recientes debo pausar?", `Genera hooks para mi mercado ${market}`, "¿Qué patrón está impulsando mis mejores resultados?", "¿Qué producir a continuación según mis datos?", "¿Cómo mejoro mi CTR promedio?"],
-    fr: [`Pourquoi mon hook score est à ${score}?`, "Quelles annonces récentes devrais-je mettre en pause?", `Générez des hooks pour mon marché ${market}`, "Quel pattern génère mes meilleurs résultats?", "Que produire ensuite selon mes données?", "Comment améliorer mon CTR moyen?"],
-    de: [`Warum liegt mein Hook-Score bei ${score}?`, "Welche meiner aktuellen Anzeigen soll ich pausieren?", `Erstelle Hooks für meinen ${market}-Markt`, "Welches Muster treibt meine besten Ergebnisse?", "Was als nächstes produzieren basierend auf meinen Daten?", "Wie verbessere ich meine durchschnittliche CTR?"],
-    zh: [`为什么我的钩子分数是${score}?`, "我最近哪些广告应该暂停?", `为我的${market}市场生成钩子`, "什么模式推动了我最好的结果?", "根据我的数据建议下一步生产什么?", "如何提高我的平均点击率?"],
-    ar: [`لماذا نقاط hook الخاصة بي عند ${score}؟`, "أي من إعلاناتي الأخيرة يجب أن أوقفها؟", `أنشئ hooks لسوقي ${market}`, "ما النمط الذي يحقق أفضل نتائجي؟", "ما الذي يجب إنتاجه بناءً على بياناتي؟", "كيف أحسّن متوسط CTR الخاص بي؟"],
+    en: [`What's killing my ROAS this week?`, `Write 3 hooks for my ${market} market`, "Which of my ads should I pause now?", "What should I produce next?"],
+    pt: [`O que está matando meu ROAS essa semana?`, `Escreva 3 hooks para o mercado ${market}`, "Qual anúncio devo pausar agora?", "O que produzir a seguir?"],
+    es: [`¿Qué está matando mi ROAS esta semana?`, `Escribe 3 hooks para el mercado ${market}`, "¿Qué anuncio debo pausar ahora?", "¿Qué producir a continuación?"],
+    fr: [`Qu'est-ce qui tue mon ROAS cette semaine?`, `Écris 3 hooks pour le marché ${market}`, "Quelle pub dois-je mettre en pause maintenant?", "Que produire ensuite?"],
+    de: [`Was tötet meinen ROAS diese Woche?`, `Schreib 3 Hooks für den ${market}-Markt`, "Welche Anzeige soll ich jetzt pausieren?", "Was als nächstes produzieren?"],
+    zh: [`什么在这周杀死我的ROAS？`, `为${market}市场写3个钩子`, "我现在应该暂停哪个广告？", "接下来应该制作什么？"],
+    ar: [`ما الذي يقتل ROAS هذا الأسبوع؟`, `اكتب 3 hooks لسوق ${market}`, "أي إعلان يجب إيقافه الآن؟", "ماذا أنتج بعد ذلك؟"],
   };
   return maps[lang] || maps["en"];
 };
@@ -532,10 +532,10 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: "calc(100vh - 44px)", background: "#0a0a0a", fontFamily: F }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
 
       {/* ── Header — clean, just platform status ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 8 }}>
 
         {/* Left: persona + status */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -610,14 +610,14 @@ export default function LoopV2() {
           {!hasConversation && ready && (
             <div>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 14, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                {hasData ? "Based on your account" : "Suggestions"}
+                {hasData ? (language === "pt" ? "Baseado na sua conta" : language === "es" ? "Basado en tu cuenta" : "Based on your account") : (language === "pt" ? "Sugestões" : language === "es" ? "Sugerencias" : "Suggestions")}
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} onClick={() => send(s)}
-                    style={{ padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 14, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.1s", minHeight: 52, display: "flex", alignItems: "center" }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.3)"; el.style.color = "rgba(255,255,255,0.85)"; el.style.background = "rgba(14,165,233,0.05)"; }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.55)"; el.style.background = "rgba(255,255,255,0.03)"; }}>
+                    style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.15)", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.15s", minHeight: 56, display: "flex", alignItems: "center", fontWeight: 500 }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.color = "#fff"; el.style.background = "rgba(14,165,233,0.1)"; }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.15)"; el.style.color = "rgba(255,255,255,0.7)"; el.style.background = "rgba(14,165,233,0.04)"; }}>
                     {s}
                   </button>
                 ))}

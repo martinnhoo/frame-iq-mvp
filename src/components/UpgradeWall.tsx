@@ -71,7 +71,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
       </div>
 
       {/* Plans */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+      <div className="upgrade-wall-plans" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
         {PLANS.map(plan => (
           <div key={plan.name} style={{ padding: "18px 16px", borderRadius: 14, background: plan.highlight ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
             {plan.badge && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "2px 12px" }}><span style={{ ...j, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", fontWeight: 700 }}>{plan.badge}</span></div>}
@@ -107,7 +107,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   if (inline) return content;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 0 }} className="sm:items-center sm:p-6">
       <div style={{ position: "absolute", inset: 0, background: "rgba(6,8,18,0.9)", backdropFilter: "blur(12px)" }} onClick={onClose} />
       <div style={{ position: "relative" }}>{content}</div>
     </div>
