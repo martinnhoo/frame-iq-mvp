@@ -117,6 +117,8 @@ export default function DashboardLayout() {
       if (!session) { navigate("/login"); return; }
       if (!mounted) return;
       setUser(session.user);
+
+      // Fetch profile in parallel with usage — don't wait sequentially
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       if (profileData && mounted) {
         // Test account: reset onboarding every login
@@ -144,16 +146,22 @@ export default function DashboardLayout() {
           return;
         }
       }
-      await fetchUsage(session.user.id);
-      // Sync subscription status from Stripe
-      try {
-        const { data: subData } = await supabase.functions.invoke("check-subscription");
+      // Run usage + personas in parallel — don't block render on either
+      const [, personaData] = await Promise.all([
+        fetchUsage(session.user.id),
+        supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).then(r => r.data),
+      ]);
+
+      // check-subscription fires after render — non-blocking, with 5s timeout
+      Promise.race([
+        supabase.functions.invoke("check-subscription"),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+      ]).then((res: any) => {
+        const subData = res?.data;
         if (subData?.plan && profileData && subData.plan !== profileData.plan) {
           setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
         }
-      } catch {}
-      // Load personas for picker
-      const { data: personaData } = await supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false });
+      }).catch(() => {}); // silent — never blocks UI
       const loadedPersonas = personaData
         ? (personaData
             .filter((d: Record<string, unknown>) => d.result && typeof d.result === "object")
