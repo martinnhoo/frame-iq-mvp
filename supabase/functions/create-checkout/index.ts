@@ -31,8 +31,17 @@ Deno.serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { email: user.email });
 
-    const { price_id } = await req.json();
+    const { price_id, billing } = await req.json();
     if (!price_id) throw new Error("Missing price_id");
+    
+    // Annual price IDs — created in Stripe with 20% discount, billed yearly
+    // To activate: create annual prices in Stripe, add env vars ANNUAL_PRICE_MAKER/PRO/STUDIO
+    const ANNUAL_PRICES: Record<string, string> = {
+      "price_1T9sd1Dr9So14XztT3Mqddch": Deno.env.get("ANNUAL_PRICE_MAKER") || "price_1T9sd1Dr9So14XztT3Mqddch",
+      "price_1T9sdfDr9So14XztPR3tI14Y": Deno.env.get("ANNUAL_PRICE_PRO")   || "price_1T9sdfDr9So14XztPR3tI14Y",
+      "price_1T9seMDr9So14Xzt0vEJNQIX": Deno.env.get("ANNUAL_PRICE_STUDIO") || "price_1T9seMDr9So14Xzt0vEJNQIX",
+    };
+    const effective_price_id = billing === "annual" ? (ANNUAL_PRICES[price_id] || price_id) : price_id;
     logStep("Price ID received", { price_id });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -63,7 +72,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: price_id, quantity: 1 }],
+      line_items: [{ price: effective_price_id, quantity: 1 }],
       mode: "subscription",
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`,

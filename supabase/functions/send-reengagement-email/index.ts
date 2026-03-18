@@ -99,17 +99,18 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get('APP_URL') || 'https://adbrief.pro';
 
-    // Find users who haven't performed any AI action in the last 7 days
-    // and whose account is at least 7 days old
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const eightDaysAgo = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Get inactive users: last_ai_action_at older than 7 days OR null (never used),
-    // created more than 7 days ago, not already emailed this month
-    const { data: inactiveUsers, error: queryError } = await supabase
+    // Target 1: Free users who signed up 2-3 days ago (D+2 window)
+    // Target 2: Free users who signed up 7-8 days ago and still haven't converted (D+7 window)
+    const { data: targetUsers, error: queryError } = await supabase
       .from('profiles')
-      .select('id, email, name, preferred_language, last_ai_action_at, usage_alert_flags')
-      .lt('created_at', sevenDaysAgo)
+      .select('id, email, name, preferred_language, last_ai_action_at, usage_alert_flags, plan, created_at')
+      .or(`created_at.gte.${threeDaysAgo},created_at.gte.${eightDaysAgo}`)
+      .lt('created_at', twoDaysAgo)
       .not('email', 'is', null);
 
     if (queryError) throw queryError;
@@ -119,9 +120,13 @@ Deno.serve(async (req) => {
     let sent = 0;
     let skipped = 0;
 
-    for (const user of (inactiveUsers || [])) {
-      // Skip if last activity was within 7 days
-      if (user.last_ai_action_at && new Date(user.last_ai_action_at) > new Date(sevenDaysAgo)) {
+    for (const user of (targetUsers || [])) {
+      // Only target free users — paid users don't need re-engagement
+      const plan = user.plan || 'free';
+      if (plan !== 'free') { skipped++; continue; }
+
+      // Skip if already active recently
+      if (user.last_ai_action_at && new Date(user.last_ai_action_at) > new Date(twoDaysAgo)) {
         skipped++;
         continue;
       }

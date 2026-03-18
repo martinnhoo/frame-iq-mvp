@@ -10,7 +10,7 @@ import type { Language } from "@/i18n/translations";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Step = "name" | "language" | "source" | "feature" | "persona" | "plan";
+type Step = "name" | "language" | "source" | "feature" | "persona" | "plan" | "pain_point";
 
 interface OnboardingState {
   name: string;
@@ -20,6 +20,7 @@ interface OnboardingState {
   source: string;
   sourceOther: string;
   feature: string;
+  pain_point: string;
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ const PLANS = [
   { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],                    highlight: false, desc_key: "plan_desc_studio" },
 ];
 
-const STEP_ORDER: Step[] = ["name", "language", "plan"];
+const STEP_ORDER: Step[] = ["name", "language", "pain_point", "plan"];
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ export default function Onboarding() {
   const nameRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<OnboardingState>({
     name: "", acceptedTerms: false, marketingEmails: false,
-    language: "", source: "", sourceOther: "", feature: "",
+    language: "", source: "", sourceOther: "", feature: "", pain_point: "",
   });
 
   // Use the selected onboarding language or fall back to global
@@ -124,6 +125,7 @@ export default function Onboarding() {
       onboarding_data: {
         source: state.source, sourceOther: state.sourceOther,
         feature: state.feature, marketingEmails: state.marketingEmails,
+        pain_point: state.pain_point,
         completedAt: new Date().toISOString(),
       },
     } as never).eq("id", session.user.id);
@@ -142,8 +144,18 @@ export default function Onboarding() {
           user_id: session.user.id,
           first_name: (state.name || session.user.user_metadata?.full_name || '').trim().split(' ')[0],
           language: state.language || navigator.language || 'en',
+          pain_point: state.pain_point || '',
         }
       }).catch(() => {}); // silent fail — don't block
+
+      // Save pain_point to ai_profile for personalizing first chat message
+      if (state.pain_point) {
+        supabase.from('user_ai_profile' as any).upsert({
+          user_id: session.user.id,
+          pain_point: state.pain_point,
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: 'user_id' }).catch(() => {});
+      }
 
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
       toast.success("Welcome to AdBrief 🚀");
@@ -313,6 +325,73 @@ export default function Onboarding() {
                 <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
                 <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">{ot("skip")} <ChevronRight className="h-4 w-4" /></button>
               </div>
+            </div>
+          )}
+
+          {/* ── Step: Pain Point ── */}
+          {step === "pain_point" && (
+            <div className="space-y-5">
+              <div className="text-center space-y-2">
+                <p className="text-[11px] text-white/20 uppercase tracking-[0.15em]" style={mono}>
+                  {ot("step_of")} 2 {ot("of")} {STEP_ORDER.length}
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>
+                  {state.language === "pt" ? "Qual é seu maior desafio com anúncios?" :
+                   state.language === "es" ? "¿Cuál es tu mayor desafío con anuncios?" :
+                   "What's your biggest challenge with paid ads?"}
+                </h1>
+                <p className="text-sm text-white/35">
+                  {state.language === "pt" ? "Isso personaliza sua primeira resposta da IA." :
+                   state.language === "es" ? "Esto personaliza tu primera respuesta de IA." :
+                   "This personalizes your first AI response."}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 mt-6">
+                {[
+                  { value: "roas_drop", en: "My ROAS keeps dropping and I don't know why", pt: "Meu ROAS cai e não sei por quê", es: "Mi ROAS baja y no sé por qué", emoji: "📉" },
+                  { value: "creative_fatigue", en: "My ads fatigue too fast — need fresh creative constantly", pt: "Meus anúncios fatigam rápido demais", es: "Mis anuncios se fatigan demasiado rápido", emoji: "😩" },
+                  { value: "hook_writing", en: "I struggle to write hooks that stop the scroll", pt: "Tenho dificuldade para escrever hooks que param o scroll", es: "Me cuesta escribir hooks que detengan el scroll", emoji: "✍️" },
+                  { value: "scaling", en: "I can't scale without killing performance", pt: "Não consigo escalar sem destruir a performance", es: "No puedo escalar sin destruir el rendimiento", emoji: "📈" },
+                  { value: "briefing", en: "Briefing my creative team takes too long", pt: "Briefar minha equipe criativa demora demais", es: "Hacer briefing a mi equipo creativo toma demasiado tiempo", emoji: "📋" },
+                  { value: "analysis", en: "I spend too much time analyzing data manually", pt: "Gasto muito tempo analisando dados manualmente", es: "Paso demasiado tiempo analizando datos manualmente", emoji: "🔍" },
+                ].map(opt => {
+                  const label = state.language === "pt" ? opt.pt : state.language === "es" ? opt.es : opt.en;
+                  const active = state.pain_point === opt.value;
+                  return (
+                    <button key={opt.value}
+                      onClick={() => set("pain_point", opt.value)}
+                      className="w-full text-left transition-all duration-150"
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: 12,
+                        background: active ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${active ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        display: "flex", alignItems: "center", gap: 12,
+                        color: active ? "#fff" : "rgba(255,255,255,0.6)",
+                        fontSize: 14, fontFamily: "'Inter', sans-serif",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>{opt.emoji}</span>
+                      <span style={{ lineHeight: 1.4 }}>{label}</span>
+                      {active && <span style={{ marginLeft: "auto", color: "#0ea5e9", flexShrink: 0 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setStep(STEP_ORDER[STEP_ORDER.indexOf("pain_point") + 1])}
+                disabled={!state.pain_point}
+                className="w-full py-3 rounded-xl font-bold text-sm transition-all"
+                style={{
+                  background: state.pain_point ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.06)",
+                  color: state.pain_point ? "#000" : "rgba(255,255,255,0.25)",
+                  border: "none", cursor: state.pain_point ? "pointer" : "not-allowed",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif", marginTop: 8,
+                }}
+              >
+                {state.language === "pt" ? "Continuar →" : state.language === "es" ? "Continuar →" : "Continue →"}
+              </button>
             </div>
           )}
 

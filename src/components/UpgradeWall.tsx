@@ -122,6 +122,18 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   const messages = MESSAGES[lang] || MESSAGES.en;
   const msg = messages[trigger];
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  // Track which gate triggers upgrade wall — silent, no-await
+  useState(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      (supabase as any).from("upgrade_events").insert({
+        user_id: session.user.id,
+        trigger,
+        created_at: new Date().toISOString(),
+      }).catch(() => {});
+    });
+  });
   const plans = PLANS_DATA(lang);
 
   const handlePlan = async (planKey: string, fallbackUrl: string) => {

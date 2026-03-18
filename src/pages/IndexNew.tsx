@@ -459,20 +459,39 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
 
 function Pricing({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   const navigate = useNavigate();
+  const [annual, setAnnual] = useState(false);
+
+  const annualLabel: Record<string, string> = {
+    en: "Annual", pt: "Anual", es: "Anual",
+  };
+  const monthlyLabel: Record<string, string> = {
+    en: "Monthly", pt: "Mensal", es: "Mensual",
+  };
+  const saveLabel: Record<string, string> = {
+    en: "Save 20%", pt: "Economize 20%", es: "Ahorra 20%",
+  };
+  // Detect lang from hero text
+  const lang = t.hero_h1b?.includes("anúncios") ? "pt" : t.hero_h1b?.includes("anuncios") ? "es" : "en";
+
+  const monthly = { maker: 19, pro: 49, studio: 149 };
+  const prices = annual
+    ? { maker: Math.round(monthly.maker * 0.8), pro: Math.round(monthly.pro * 0.8), studio: Math.round(monthly.studio * 0.8) }
+    : monthly;
+
   const plans = [
     {
-      name: "Maker", price: "$19", desc: "/mo", badge: null, highlight: false,
-      action: () => navigate("/signup?plan=maker"),
+      name: "Maker", price: `$${prices.maker}`, desc: "/mo", badge: null, highlight: false, annual,
+      action: () => navigate(`/signup?plan=maker${annual ? "&billing=annual" : ""}`),
       features: [t.plan_maker_f0, t.plan_maker_f1, t.plan_maker_f2, t.plan_maker_f3],
     },
     {
-      name: "Pro", price: "$49", desc: "/mo", badge: t.plan_badge_pro, highlight: true,
-      action: () => navigate("/signup?plan=pro"),
+      name: "Pro", price: `$${prices.pro}`, desc: "/mo", badge: t.plan_badge_pro, highlight: true, annual,
+      action: () => navigate(`/signup?plan=pro${annual ? "&billing=annual" : ""}`),
       features: [t.plan_pro_f0, t.plan_pro_f1, t.plan_pro_f2, t.plan_pro_f3, t.plan_pro_f4],
     },
     {
-      name: "Studio", price: "$149", desc: "/mo", badge: null, highlight: false,
-      action: () => navigate("/signup?plan=studio"),
+      name: "Studio", price: `$${prices.studio}`, desc: "/mo", badge: null, highlight: false, annual,
+      action: () => navigate(`/signup?plan=studio${annual ? "&billing=annual" : ""}`),
       features: [t.plan_studio_f0, t.plan_studio_f1, t.plan_studio_f2, t.plan_studio_f3, t.plan_studio_f4],
     },
   ];
@@ -486,6 +505,21 @@ function Pricing({ onCTA, t }: { onCTA: () => void; t: Record<string, string> })
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.16)" }}>
             <span style={{ fontSize: 15 }}>💳</span>
             <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{t.pricing_card}</span>
+          </div>
+
+          {/* Annual/Monthly toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 20 }}>
+            <span style={{ ...j, fontSize: 13, color: annual ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.7)", fontWeight: 500, transition: "color 0.15s" }}>{monthlyLabel[lang] || "Monthly"}</span>
+            <button onClick={() => setAnnual(v => !v)}
+              style={{ width: 44, height: 24, borderRadius: 12, background: annual ? BRAND : "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+              <span style={{ position: "absolute", top: 3, left: annual ? 22 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", display: "block" }} />
+            </button>
+            <span style={{ ...j, fontSize: 13, color: annual ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.35)", fontWeight: 500, transition: "color 0.15s" }}>{annualLabel[lang] || "Annual"}</span>
+            {annual && (
+              <span style={{ ...j, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "rgba(52,211,153,0.12)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }}>
+                {saveLabel[lang] || "Save 20%"}
+              </span>
+            )}
           </div>
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
@@ -502,6 +536,11 @@ function Pricing({ onCTA, t }: { onCTA: () => void; t: Record<string, string> })
                   <span style={{ ...j, fontSize: 40, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
                   <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{plan.desc}</span>
                 </div>
+                {(plan as any).annual && (
+                  <p style={{ ...j, fontSize: 10, color: "rgba(52,211,153,0.7)", marginTop: 2 }}>
+                    {lang === "pt" ? "cobrado anualmente" : lang === "es" ? "facturado anualmente" : "billed annually"}
+                  </p>
+                )}
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>

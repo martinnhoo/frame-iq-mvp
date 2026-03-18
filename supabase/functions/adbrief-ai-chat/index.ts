@@ -153,6 +153,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
+      (aiProfile as any)?.pain_point ? `USER'S #1 PAIN POINT: ${(aiProfile as any).pain_point} — always keep this front of mind when answering, especially in the first message` : "",
     ].filter(Boolean).join("\n");
 
 

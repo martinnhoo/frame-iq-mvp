@@ -23,6 +23,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
+  const billingParam = searchParams.get("billing"); // "annual" | null
   const { t } = useLanguage();
 
   const handleGoogleSignup = async () => {
