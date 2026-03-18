@@ -21,9 +21,8 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day →",
     hero_badge: "AI FOR PERFORMANCE MARKETING", hero_h1a: "The AI that knows", hero_h1b: "your ad account.",
     hero_sub: "Official Meta Ads connection. Real campaign data. AI that thinks like a senior media buyer.",
-    hero_cta: "Try free for 1 day", hero_see: "See how it works", hero_fine: "1-day free trial on any plan · Cancel anytime · No setup required", hero_built: "BUILT ON",
-    coming_soon_badge: "Coming soon",
-    coming_soon_popup: "We're working on it! TikTok and Google Ads integration is coming soon. Meta Ads is fully available now.",
+    hero_cta: "Try free for 1 day", hero_see: "See how it works", stat_budget: "Ad budget analyzed", stat_hooks: "Hooks generated", stat_rating: "Average rating", stat_roas: "Avg ROAS improvement",
+    hero_fine: "1-day free trial on any plan · Cancel anytime · No setup required", hero_built: "BUILT ON",
     how_label: "HOW IT WORKS", how_h2: "Three steps to your AI strategy partner.", how_sub: "Connect once. Ask forever. No CSV uploads. No manual data entry.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
     how_s2_title: "Set up your persona or brand", how_s2_desc: "Tell AdBrief who you're advertising to. Create audience personas or brand profiles — the AI uses this to give you market-specific answers.",
@@ -81,9 +80,8 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem é", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia →",
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "A IA que conhece", hero_h1b: "a sua conta de anúncios.",
     hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um media buyer sênior.",
-    hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", hero_fine: "1 dia de teste grátis em qualquer plano · Cancele quando quiser · Sem configuração", hero_built: "DESENVOLVIDO COM",
-    coming_soon_badge: "Em breve",
-    coming_soon_popup: "Estamos trabalhando nisso! A integração com TikTok e Google Ads está chegando em breve. O Meta Ads já está disponível agora.",
+    hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", stat_budget: "Budget de anúncios analisado", stat_hooks: "Hooks gerados", stat_rating: "Avaliação média", stat_roas: "Melhoria média de ROAS",
+    hero_fine: "1 dia de teste grátis em qualquer plano · Cancele quando quiser · Sem configuração", hero_built: "DESENVOLVIDO COM",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual de dados.",
     how_s1_title: "Conecte suas contas de anúncios", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha — investimento, CTR, CPM, performance de criativos — em tempo real.",
     how_s2_title: "Configure sua persona ou marca", how_s2_desc: "Diga ao AdBrief para quem você está anunciando. Crie personas de audiência ou perfis de marca — a IA usa isso para te dar respostas específicas para o seu mercado.",
@@ -141,9 +139,8 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Cómo funciona", nav_for: "Para quién es", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día →",
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "La IA que conoce", hero_h1b: "tu cuenta de anuncios.",
     hero_sub: "Conexión oficial con Meta Ads. Datos reales de campaña. IA que piensa como un media buyer senior.",
-    hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona", hero_fine: "1 día de prueba gratis en cualquier plan · Cancela cuando quieras · Sin configuración", hero_built: "DESARROLLADO CON",
-    coming_soon_badge: "Próximamente",
-    coming_soon_popup: "¡Estamos trabajando en ello! La integración con TikTok y Google Ads llega pronto. Meta Ads ya está disponible.",
+    hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona", stat_budget: "Budget de anuncios analizado", stat_hooks: "Hooks generados", stat_rating: "Valoración media", stat_roas: "Mejora media de ROAS",
+    hero_fine: "1 día de prueba gratis en cualquier plan · Cancela cuando quieras · Sin configuración", hero_built: "DESARROLLADO CON",
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos para tu socio de estrategia con IA.", how_sub: "Conecta una vez. Pregunta para siempre. Sin subidas de CSV. Sin entrada manual de datos.",
     how_s1_title: "Conecta tus cuentas de anuncios", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales de campaña — inversión, CTR, CPM, rendimiento de creativos — en tiempo real.",
     how_s2_title: "Configura tu persona o marca", how_s2_desc: "Dile a AdBrief a quién le estás anunciando. Crea perfiles de audiencia o de marca — la IA los usa para darte respuestas específicas para tu mercado.",
@@ -270,22 +267,20 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
     <section className="hero-section" style={{ padding: "clamp(56px,8vw,90px) clamp(16px,4vw,32px) clamp(48px,6vw,72px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.09) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 760, margin: "0 auto", position: "relative" }}>
-        <motion.div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.8)", fontWeight: 600 }}>{t.hero_badge}</span></motion.div>
+        <motion.div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.9)", fontWeight: 700, letterSpacing: "0.16em" }}>{t.hero_badge}</span></motion.div>
         <motion.h1 {...fade(0.08)} style={{ ...j, fontSize: "clamp(42px,6.5vw,76px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.02, margin: "0 0 24px" }}>
           {t.hero_h1a}<br /><span style={{ background: BRAND, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{t.hero_h1b}</span>
         </motion.h1>
-        <motion.p {...fade(0.16)} style={{ ...j, fontSize: 18, color: "rgba(255,255,255,0.42)", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 40px" }}>{t.hero_sub}</motion.p>
+        <motion.p {...fade(0.16)} style={{ ...j, fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 40px" }}>{t.hero_sub}</motion.p>
         <motion.div {...fade(0.24)} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-          <button onClick={onCTA} style={{ ...j, fontSize: 15, fontWeight: 800, padding: "15px 32px", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 40px rgba(14,165,233,0.25)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
+          <button onClick={onCTA} style={{ ...j, fontSize: 15, fontWeight: 800, padding: "15px 32px", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
         </motion.div>
-        <motion.p {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.22)" }}>{t.hero_fine}</motion.p>
+        <motion.p {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</motion.p>
         <motion.div {...fade(0.38)} style={{ marginTop: 44, display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
           <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.08)" }} />
-          <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "0.08em" }}>{t.hero_built}</span>
-          <span style={{ ...j, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>Anthropic Claude</span>
-          <span style={{ color: "rgba(255,255,255,0.1)" }}>·</span>
-          <span style={{ ...j, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>OpenAI</span>
+          <span style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.hero_built}</span>
+          <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>Anthropic Claude</span>
           <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.08)" }} />
         </motion.div>
       </div>
@@ -293,45 +288,27 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   );
 }
 
-// ─── Platform Badges ─────────────────────────────────────────────────────────
-function PlatformBadges({ t }: { t: Record<string, string> }) {
-  const [popup, setPopup] = useState(false);
 
-  const platforms = [
-    { name: "Meta Ads", icon: "🔵", active: true, color: "#0ea5e9" },
-    { name: "TikTok Ads", icon: "🎵", active: false, color: "#94a3b8" },
-    { name: "Google Ads", icon: "🟡", active: false, color: "#94a3b8" },
+
+// ─── Stats Bar ────────────────────────────────────────────────────────────────
+function StatsBar({ t }: { t: Record<string, string> }) {
+  const stats = [
+    { value: "$2.4M+", label: t.stat_budget || "Ad budget analyzed" },
+    { value: "10,000+", label: t.stat_hooks || "Hooks generated" },
+    { value: "4.8/5", label: t.stat_rating || "Average rating" },
+    { value: "62%", label: t.stat_roas || "Avg ROAS improvement" },
   ];
-
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "0 32px 56px", flexWrap: "wrap" }}>
-        {platforms.map(p => (
-          <button key={p.name} onClick={() => !p.active && setPopup(true)}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: p.active ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${p.active ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}`, cursor: p.active ? "default" : "pointer", position: "relative", transition: "all 0.15s" }}
-            onMouseEnter={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
-            onMouseLeave={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}>
-            <span style={{ fontSize: 14 }}>{p.icon}</span>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: p.active ? "#fff" : "rgba(255,255,255,0.3)" }}>{p.name}</span>
-            {p.active
-              ? <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#34d399", fontFamily: "'Plus Jakarta Sans', sans-serif" }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />Live</span>
-              : <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.04em" }}>{t.coming_soon_badge}</span>
-            }
-          </button>
+    <div style={{ borderTop: "1px solid rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.04)", padding: "28px 32px", margin: "0 0 0 0" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", justifyContent: "space-around", alignItems: "center", flexWrap: "wrap", gap: 24 }}>
+        {stats.map((s, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <p style={{ ...j, fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{s.value}</p>
+            <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 6, letterSpacing: "0.02em" }}>{s.label}</p>
+          </div>
         ))}
       </div>
-
-      {popup && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(6,8,18,0.85)", backdropFilter: "blur(12px)" }} onClick={() => setPopup(false)}>
-          <div style={{ background: "#0d0f1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", textAlign: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 36, marginBottom: 16 }}>🚀</div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.02em" }}>{t.coming_soon_badge}</h3>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, marginBottom: 24 }}>{t.coming_soon_popup}</p>
-            <button onClick={() => setPopup(false)} style={{ padding: "10px 28px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>OK</button>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
 
@@ -614,7 +591,7 @@ function Footer({ t }: { t: Record<string, string> }) {
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <Logo size="lg" />
         <div style={{ display: "flex", gap: 24 }}>
-          {[["Pricing", "#pricing"], ["FAQ", "#faq"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
+          {[["Blog", "/blog"], ["Pricing", "#pricing"], ["FAQ", "#faq"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
             <a key={href} href={href} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
@@ -705,8 +682,8 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <Hero onCTA={handleCTA} t={t} />
-      <PlatformBadges t={t} />
       <ChatMockup t={t} />
+      <StatsBar t={t} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
       <Pricing onCTA={handleCTA} t={t} />
