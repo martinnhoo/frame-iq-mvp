@@ -154,7 +154,7 @@ export default function Onboarding() {
           user_id: session.user.id,
           pain_point: state.pain_point,
           updated_at: new Date().toISOString(),
-        } as any, { onConflict: 'user_id' }).catch(() => {});
+        } as any, { onConflict: 'user_id' }).then(() => {}).catch(() => {});
       }
 
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
