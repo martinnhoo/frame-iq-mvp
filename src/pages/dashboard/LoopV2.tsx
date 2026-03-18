@@ -250,7 +250,136 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// ── Suggestion Bubble ─────────────────────────────────────────────────────────
+function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
+  suggestions: string[];
+  onSend: (s: string) => void;
+  hasData: boolean;
+  dt: (k: any) => string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const first = suggestions[0];
+  const rest = suggestions.slice(1);
+
+  // Entrance animation
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 120);
+    return () => clearTimeout(t);
+  }, []);
+
+  const moreLabel: Record<string, string> = {
+    en: "More ideas", pt: "Mais ideias", es: "Más ideas",
+    fr: "Plus d'idées", de: "Mehr Ideen", ar: "المزيد",
+  };
+
+  return (
+    <div style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(12px)",
+      transition: "opacity 0.4s ease, transform 0.4s ease",
+      maxWidth: 520,
+    }}>
+      {/* Main bubble */}
+      <button
+        onClick={() => onSend(first)}
+        style={{
+          display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "14px 18px", borderRadius: "18px 18px 18px 4px",
+          background: "rgba(14,165,233,0.06)",
+          border: "1px solid rgba(14,165,233,0.18)",
+          cursor: "pointer", textAlign: "left", width: "100%",
+          fontFamily: F, transition: "all 0.18s",
+          boxShadow: "0 2px 20px rgba(14,165,233,0.06)",
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = "rgba(14,165,233,0.11)";
+          el.style.borderColor = "rgba(14,165,233,0.35)";
+          el.style.boxShadow = "0 4px 24px rgba(14,165,233,0.12)";
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = "rgba(14,165,233,0.06)";
+          el.style.borderColor = "rgba(14,165,233,0.18)";
+          el.style.boxShadow = "0 2px 20px rgba(14,165,233,0.06)";
+        }}
+      >
+        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>💡</span>
+        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.82)", lineHeight: 1.55, fontWeight: 500 }}>{first}</span>
+      </button>
+
+      {/* Expand button */}
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "5px 12px", borderRadius: 20,
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.35)", fontSize: 11,
+            fontFamily: F, fontWeight: 500, cursor: "pointer",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.borderColor = "rgba(255,255,255,0.22)";
+            el.style.color = "rgba(255,255,255,0.6)";
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.borderColor = "rgba(255,255,255,0.1)";
+            el.style.color = "rgba(255,255,255,0.35)";
+          }}
+        >
+          <span style={{ transition: "transform 0.2s", display: "inline-block", transform: expanded ? "rotate(45deg)" : "rotate(0deg)" }}>✦</span>
+          {dt("loop_suggestions") === "Sugestões" ? "Mais ideias" : dt("loop_suggestions") === "Sugerencias" ? "Más ideas" : dt("loop_suggestions") === "Suggestions" ? "More ideas" : "More ideas"}
+        </button>
+      </div>
+
+      {/* Expanded bubbles */}
+      {expanded && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 7 }}>
+          {rest.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => onSend(s)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 10,
+                padding: "11px 16px", borderRadius: "16px 16px 16px 4px",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                cursor: "pointer", textAlign: "left", width: "100%",
+                fontFamily: F, fontWeight: 500,
+                opacity: 0,
+                animation: `bubbleIn 0.3s ease forwards`,
+                animationDelay: `${i * 0.07}s`,
+                color: hoveredIdx === i ? "#fff" : "rgba(255,255,255,0.65)",
+                transition: "color 0.15s, background 0.15s, border-color 0.15s",
+              }}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1, opacity: 0.5 }}>→</span>
+              <span style={{ fontSize: 13, lineHeight: 1.5 }}>{s}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes bubbleIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
 export default function LoopV2() {
   const { user, selectedPersona, profile } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
@@ -784,21 +913,7 @@ export default function LoopV2() {
           ))}
 
           {!hasConversation && ready && (
-            <div>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 14, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                {hasData ? dt("loop_based_account") : dt("loop_suggestions")}
-              </p>
-              <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-                {suggestions.map((s, i) => (
-                  <button key={i} onClick={() => send(s)}
-                    style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", color: "rgba(255,255,255,0.78)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.15s", minHeight: 56, display: "flex", alignItems: "center", fontWeight: 500 }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.color = "#fff"; el.style.background = "rgba(14,165,233,0.1)"; }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.15)"; el.style.color = "rgba(255,255,255,0.7)"; el.style.background = "rgba(14,165,233,0.04)"; }}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <SuggestionBubble suggestions={suggestions} onSend={send} hasData={hasData} dt={dt} />
           )}
 
           <div ref={bottomRef} />
