@@ -250,7 +250,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07070f] flex">
+    <div style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -259,16 +259,17 @@ export default function DashboardLayout() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#070710] sticky top-0 z-30">
+        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#070710] sticky top-0 z-30" style={{ flexShrink: 0 }}>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all mr-3"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            style={{ marginRight: 12, flexShrink: 0 }}
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="flex items-center gap-1.5 flex-1">
+          <div className="flex items-center gap-1.5" style={{ flex: 1, minWidth: 0 }}>
             <Logo size="sm" />
           </div>
           {/* Mobile profile shortcut */}
@@ -395,7 +396,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto overscroll-none" style={{ background: "#07070f" }}>
+        <main className="flex-1 overflow-hidden" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>

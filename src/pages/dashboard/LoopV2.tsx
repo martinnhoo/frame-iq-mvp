@@ -1117,7 +1117,7 @@ export default function LoopV2() {
           </div>
 
           {/* Tool actions — only non-connect tools */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+          <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
               <button key={t.action} onClick={() => handleToolAction(t.action)}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
@@ -1126,7 +1126,7 @@ export default function LoopV2() {
                 <t.icon size={11} /> {t.label}
               </button>
             ))}
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>{dt("loop_enter_to_send")}</span>
+            <span className="hidden lg:inline" style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>{dt("loop_enter_to_send")}</span>
           </div>
         </div>
       </div>
@@ -1149,6 +1149,7 @@ export default function LoopV2() {
           overflow-x: hidden;
           min-height: 0;
           -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
         }
         .loop-input-area {
           flex-shrink: 0;
@@ -1157,11 +1158,14 @@ export default function LoopV2() {
           background: #0d0f18;
         }
         @media (max-width: 1023px) {
-          .loop-container { height: calc(100dvh - 60px); }
+          /* Mobile: topbar (56px) + persona bar (44px) = 100px */
+          .loop-container { height: calc(100dvh - 100px); }
           .suggestions-grid { grid-template-columns: 1fr !important; }
+          .loop-tool-pills { display: none !important; }
         }
         @media (max-width: 640px) {
-          .loop-container { height: calc(100dvh - 56px); }
+          .loop-container { height: calc(100dvh - 100px); }
+          .loop-header-badges { display: none !important; }
         }
       `}</style>
     </div>

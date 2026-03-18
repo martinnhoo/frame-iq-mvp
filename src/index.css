@@ -241,3 +241,73 @@ code, pre,
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ── Dashboard mobile overhaul ──────────────────────────────────────────────── */
+
+/* Root dashboard container — full viewport, no scroll */
+@media (max-width: 1023px) {
+  /* The outer dashboard flex wrapper */
+  body, #root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Loop container: account for mobile topbar (56px) + persona bar (44px) */
+  .loop-container {
+    height: calc(100dvh - 100px) !important;
+  }
+
+  /* Only messages area scrolls */
+  .loop-messages {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Input area always anchored to bottom */
+  .loop-input-area {
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+
+  /* Hide platform badges (Meta/TikTok/Google) on mobile header */
+  .hidden.xl\\:flex {
+    display: none !important;
+  }
+
+  /* Tool pills — scrollable row on mobile */
+  .loop-tool-pills {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .loop-tool-pills::-webkit-scrollbar { display: none; }
+  
+  /* Upgrade wall → bottom sheet on mobile */
+  .upgrade-wall-plans {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile topbar logo — ensure it's never cut */
+@media (max-width: 640px) {
+  header.lg\\:hidden {
+    height: 56px !important;
+    min-height: 56px;
+    flex-shrink: 0;
+  }
+  
+  /* Persona bar on mobile — compact */
+  .persona-bar {
+    height: 44px !important;
+    overflow: hidden;
+  }
+
+  /* Input placeholder shorter on mobile */
+  .loop-input-area textarea {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+  }
+}
