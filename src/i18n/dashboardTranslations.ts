@@ -1304,7 +1304,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_disconnect: "قطع الاتصال", loop_connected: "متصل", loop_soon: "قريباً",
      loop_suggestions: "اقتراحات", loop_based_account: "بناءً على حسابك",
      loop_daily_limit: "تم بلوغ الحد اليومي", loop_daily_limit_content: "لقد استخدمت جميع رسائل {limit} لليوم في خطة {plan}. يتجدد حدك غداً. قم بالترقية إلى {upgrade} للمزيد.",
-     loop_copy: "نسخ", loop_copied: "تم النسخ!", loop_like: "مفيد", loop_dislike: "غير مفيد", loop_regenerate: "إعادة التوليد",
+     loop_copy: "نسخ", loop_copied: "تم النسخ!", loop_like: "مفيد", loop_dislike: "غير مفيد", loop_regenerate: "إعادة التوليد", loop_more_ideas: "أفكار أخرى",
     ov_welcome: "مرحباً بعودتك", ov_good_morning: "صباح الخير", ov_good_afternoon: "مساء الخير",
     ov_good_evening: "مساء النور", ov_analyses: "التحليلات", ov_boards: "اللوحات",
     ov_avg_hook: "متوسط نقاط الخطاف", ov_preflights: "الفحوصات المسبقة", ov_recent: "النشاط الأخير",
