@@ -23,9 +23,9 @@ const templates = {
   },
   pt: {
     subject: "Sua conta no AdBrief está pronta.",
-    preheader: "A AI que lê sua conta de anúncios em tempo real e pensa como um strategist sênior.",
+    preheader: "A IA que lê sua conta de anúncios em tempo real e pensa como um gestor de tráfego sênior.",
     greeting: "Oi", headline: "Bem-vindo ao AdBrief.",
-    body1: "Você agora tem acesso a uma AI que conecta com sua conta de anúncios — Meta, TikTok ou Google — e responde qualquer pergunta sobre suas campanhas com dados reais.",
+    body1: "Você agora tem acesso a uma IA que conecta com sua conta de anúncios — Meta, TikTok ou Google — e responde qualquer pergunta sobre suas campanhas com dados reais.",
     body2: "Comece em 3 passos:",
     s1t: "01 — Conecte sua conta de anúncios", s1d: "Um clique. Sem CSV, sem planilha, sem configuração. A AI lê spend, CTR, CPM e criativos em tempo real.",
     s2t: "02 — Crie uma persona", s2d: "Defina quem você está anunciando. A AI usa isso para responder com contexto do seu mercado específico.",
