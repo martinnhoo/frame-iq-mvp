@@ -1,4 +1,27 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.adbrief.pro/sitemap.xml
+# Block private/app routes from indexing
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /signup
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /callback
+
+# Allow all public SEO pages
+Allow: /tools/
+Allow: /guides/
+Allow: /compare/
+Allow: /platform/
+Allow: /solutions/
+Allow: /use-case/
+Allow: /for/
+Allow: /learn/
+Allow: /hooks/
+Allow: /markets/
+Allow: /examples/
+Allow: /blog/
+Allow: /glossary/
+
+Sitemap: https://adbrief.pro/sitemap.xml

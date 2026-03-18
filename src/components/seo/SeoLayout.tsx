@@ -56,7 +56,7 @@ const FOOTER_LINKS = {
 
 export function SeoLayout({ title, description, canonical, ogImage, children, noIndex, jsonLd }: SeoLayoutProps) {
   const navigate = useNavigate();
-  const base = "https://www.adbrief.pro";
+  const base = "https://adbrief.pro";
   const canonicalUrl = canonical ? `${base}${canonical}` : undefined;
 
   return (

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { SeoLayout } from "@/components/seo/SeoLayout";
 import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_COMPARISONS } from "@/data/seoData";
+import { findCompareBySlug } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
@@ -44,7 +45,7 @@ export function CompareIndex() {
 export function CompareDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const comp = SEO_COMPARISONS.find(c => c.slug === slug);
+  const comp = findCompareBySlug(slug!);
 
   if (!comp) return (
     <SeoLayout title="Comparison Not Found — AdBrief" description="" noIndex>

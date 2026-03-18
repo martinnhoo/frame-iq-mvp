@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { SEO_ROLE_PAGES } from "@/data/seoData";
+import { findRoleBySlug } from "@/data/seoData";
 import SeoLandingPage from "./SeoLandingPage";
 
 export default function RolePage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const page = SEO_ROLE_PAGES.find(p => p.slug === slug);
+  const page = findRoleBySlug(slug!);
   if (!page) return <div style={{textAlign:"center",padding:"120px 24px",color:"rgba(255,255,255,0.3)"}}>Page not found. <button onClick={() => navigate("/")} style={{color:"#0ea5e9",background:"none",border:"none",cursor:"pointer"}}>← Home</button></div>;
   return (
     <SeoLandingPage

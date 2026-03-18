@@ -900,3 +900,238 @@ export const SEO_AD_EXAMPLES_PAGES = [
 
 // ── PROGRAMMATIC SEO CLUSTERS ─────────────────────────────────
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPANDED SEO DATA — Added for organic reach
+// Each entry = 1 indexable page targeting a specific long-tail keyword cluster
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SEO_HOOK_TYPES_EXPANDED = [
+  { slug: "curiosity-gap-hook", title: "Curiosity Gap Hook — What It Is & How to Write It", keyword: "curiosity gap hook ads", desc: "A curiosity gap hook leaves a compelling information gap that forces viewers to keep watching. Used in 31% of top-performing Meta ads in 2025." },
+  { slug: "pain-point-hook", title: "Pain Point Hook — Target Your Audience's Biggest Problem", keyword: "pain point hook ad copy", desc: "Pain point hooks open with the viewer's exact struggle. They convert 2.4x better than generic hooks when the pain is hyper-specific." },
+  { slug: "social-proof-hook", title: "Social Proof Hook — Use Numbers to Stop the Scroll", keyword: "social proof hook ads", desc: "Social proof hooks lead with a specific number — users, results, reviews. '47,000 marketers use this tool' outperforms 'popular tool' by 3x." },
+  { slug: "before-after-hook", title: "Before After Hook — The Transformation Formula That Converts", keyword: "before after hook ad formula", desc: "Before/after hooks show transformation in 3 seconds. The contrast between problem-state and solution-state triggers emotional engagement instantly." },
+  { slug: "direct-question-hook", title: "Direct Question Hook — Ask Your Audience Exactly What They're Thinking", keyword: "direct question hook advertising", desc: "Direct question hooks start with the exact question your audience is asking. 'Still guessing which ad is wasting your budget?' stops the scroll." },
+  { slug: "contrarian-hook", title: "Contrarian Hook — Challenge What Everyone Believes", keyword: "contrarian hook copywriting", desc: "Contrarian hooks flip conventional wisdom. 'Your ROAS is lying to you' creates cognitive dissonance that forces engagement." },
+  { slug: "number-hook", title: "Number Hook — Lead With Specificity to Build Credibility", keyword: "number hook ad creative", desc: "Number hooks use a specific, surprising statistic to anchor credibility. '94% of brands see CPM drop after refreshing creative every 14 days.'" },
+  { slug: "story-hook", title: "Story Hook — Open With a Scene That Pulls Viewers In", keyword: "story hook video ad", desc: "Story hooks open mid-scene. No intro, no context — drop the viewer directly into a relatable moment." },
+  { slug: "urgency-hook", title: "Urgency Hook — Create FOMO Without Being Pushy", keyword: "urgency hook ad creative", desc: "Urgency hooks create time pressure without feeling fake. Specific deadlines ('3 spots left this quarter') outperform vague urgency ('limited time')." },
+  { slug: "fomo-hook", title: "FOMO Hook — Make Your Audience Feel Like They're Missing Out", keyword: "fomo hook advertising", desc: "FOMO hooks show what others are gaining while the viewer isn't acting. Best for B2B SaaS and performance tools." },
+  { slug: "identity-hook", title: "Identity Hook — Speak to Who Your Audience Wants to Be", keyword: "identity hook marketing", desc: "Identity hooks address who the viewer wants to become, not just what they want to have. 'For media buyers who think in systems' resonates deeper than features." },
+  { slug: "pattern-interrupt-hook", title: "Pattern Interrupt Hook — Stop the Scroll in 1 Second", keyword: "pattern interrupt hook video", desc: "Pattern interrupt hooks use unexpected visuals, audio, or text to break the scroll autopilot. The first frame is everything." },
+  { slug: "listicle-hook", title: "Listicle Hook — Use 'X Things' to Set Expectations", keyword: "listicle hook ad copy", desc: "Listicle hooks ('5 Meta ad mistakes killing your ROAS') set clear expectations. Viewers know exactly what they'll get — and stay to get it." },
+  { slug: "testimonial-hook", title: "Testimonial Hook — Lead With Someone Else's Words", keyword: "testimonial hook advertising", desc: "Testimonial hooks open with a customer's result or quote. More credible than brand-voice claims and 40% more likely to hold attention past 5 seconds." },
+  { slug: "problem-agitation-hook", title: "Problem Agitation Hook — Make the Pain Impossible to Ignore", keyword: "problem agitation solution hook", desc: "PAS hooks identify the problem, twist the knife on how bad it is, then offer the solution. One of the highest-converting direct response formulas." },
+  { slug: "how-to-hook", title: "How-To Hook — Promise a Transformation in the First Line", keyword: "how to hook ad creative", desc: "How-to hooks promise a specific skill or outcome. 'How to cut CPM by 40% without changing your bid' sets up a clear value exchange." },
+  { slug: "myth-busting-hook", title: "Myth Busting Hook — Destroy a Wrong Belief Instantly", keyword: "myth busting hook ads", desc: "Myth busting hooks challenge a belief the audience holds. 'You don't need more budget — you need better creative' is a myth bust that resonates with every frustrated media buyer." },
+  { slug: "relatability-hook", title: "Relatability Hook — Make Your Audience Feel Seen", keyword: "relatability hook social media ads", desc: "Relatability hooks mirror the viewer's exact situation back at them. The more specific and niche the situation, the higher the recognition rate." },
+];
+
+export const SEO_COMPARISONS_EXPANDED = [
+  { slug: "adbrief-vs-motion-app", competitor: "Motion App", keyword: "adbrief vs motion", desc: "AdBrief vs Motion App: AdBrief connects to your live ad account and answers questions in real time. Motion visualizes creative performance. Both tools, different jobs." },
+  { slug: "adbrief-vs-foreplay", competitor: "Foreplay", keyword: "adbrief vs foreplay", desc: "AdBrief vs Foreplay: Foreplay is a creative inspiration library. AdBrief is an AI connected to your actual ad account. One for research, one for execution decisions." },
+  { slug: "adbrief-vs-chatgpt", competitor: "ChatGPT", keyword: "adbrief vs chatgpt for ads", desc: "ChatGPT knows everything but nothing about your account. AdBrief knows your exact campaigns, ROAS, CTR, and top hooks. The difference is context." },
+  { slug: "adbrief-vs-pencil", competitor: "Pencil", keyword: "adbrief vs pencil ads", desc: "Pencil generates ad creatives automatically. AdBrief analyzes your existing performance and tells you what to create next. Generation vs intelligence." },
+  { slug: "adbrief-vs-revealbot", competitor: "Revealbot", keyword: "adbrief vs revealbot", desc: "Revealbot automates campaign rules and bidding. AdBrief gives you creative intelligence and strategy. Different layers of the stack." },
+  { slug: "adbrief-vs-madgicx", competitor: "Madgicx", keyword: "adbrief vs madgicx", desc: "Madgicx focuses on ad buying automation. AdBrief focuses on creative intelligence. If your problem is creative fatigue, not bidding, AdBrief is the answer." },
+  { slug: "adbrief-vs-triple-whale", competitor: "Triple Whale", keyword: "adbrief vs triple whale", desc: "Triple Whale is an attribution and analytics dashboard. AdBrief is a conversational AI that answers your creative strategy questions using your data." },
+  { slug: "adbrief-vs-northbeam", competitor: "Northbeam", keyword: "adbrief vs northbeam", desc: "Northbeam is attribution software for cross-channel measurement. AdBrief is an AI media buyer focused on creative intelligence and campaign Q&A." },
+  { slug: "adbrief-vs-meta-ads-manager", competitor: "Meta Ads Manager", keyword: "adbrief vs meta ads manager", desc: "Meta Ads Manager shows you data. AdBrief tells you what to do with it. One is a dashboard, the other is a senior strategist that reads the dashboard for you." },
+  { slug: "adbrief-vs-adcreative-ai", competitor: "AdCreative.ai", keyword: "adbrief vs adcreative ai", desc: "AdCreative.ai generates ad images with AI. AdBrief analyzes your real campaign performance and tells you which creative angles to pursue next." },
+  { slug: "adbrief-vs-persado", competitor: "Persado", keyword: "adbrief vs persado", desc: "Persado is enterprise-grade language optimization software. AdBrief is a real-time AI media buyer built for growth teams and agencies of all sizes." },
+  { slug: "adbrief-vs-smartly", competitor: "Smartly.io", keyword: "adbrief vs smartly io", desc: "Smartly.io is a creative automation and ad ops platform. AdBrief is creative intelligence — it tells you what's working, what's fatigued, and what to brief next." },
+];
+
+export const SEO_INDUSTRIES_EXPANDED = [
+  { slug: "fitness-supplement-ads", industry: "Fitness & Supplements", keyword: "fitness supplement facebook ads", desc: "Fitness and supplement brands on Meta face the toughest CPMs in DTC. AdBrief analyzes your hook performance and identifies exactly which angles are driving your best cost per purchase." },
+  { slug: "ecommerce-fashion-ads", industry: "Fashion & Apparel", keyword: "fashion ecommerce meta ads", desc: "Fashion ad creative has a shelf life of 10–14 days. AdBrief detects creative fatigue early and generates fresh angles before your CPM spikes." },
+  { slug: "saas-b2b-ads", industry: "SaaS & B2B Software", keyword: "saas b2b facebook ads", desc: "B2B SaaS ads on Meta require longer-form hooks and identity-based messaging. AdBrief analyzes which angles are generating qualified leads vs vanity clicks." },
+  { slug: "real-estate-ads", industry: "Real Estate", keyword: "real estate facebook ads strategy", desc: "Real estate advertisers on Meta need hyper-local creative and urgency. AdBrief tracks which property angles and market-specific hooks drive the most form fills." },
+  { slug: "finance-ads", industry: "Finance & Fintech", keyword: "finance fintech meta ads", desc: "Finance ads on Meta require tight compliance while still driving action. AdBrief helps you identify the exact value propositions that convert within platform policy." },
+  { slug: "education-ads", industry: "Education & Courses", keyword: "online course facebook ads", desc: "Course creators running ads on Meta need hooks that speak to transformation. AdBrief tracks which outcome-based hooks are driving the best cost per lead." },
+  { slug: "health-wellness-ads", industry: "Health & Wellness", keyword: "health wellness meta ads", desc: "Health and wellness brands navigate Meta's sensitive categories while maximizing reach. AdBrief identifies your winning creative patterns in this restricted vertical." },
+  { slug: "app-mobile-ads", industry: "Mobile App Marketing", keyword: "mobile app meta ads creative", desc: "App install campaigns live and die by their first 3 seconds. AdBrief analyzes hook performance across your app install campaigns and surfaces the angles with the lowest CPI." },
+  { slug: "crypto-web3-ads", industry: "Crypto & Web3", keyword: "crypto web3 meta ads", desc: "Crypto advertising on Meta requires creative that educates without triggering policy. AdBrief identifies the educational angles and social proof formats that perform in this vertical." },
+  { slug: "beauty-cosmetics-ads", industry: "Beauty & Cosmetics", keyword: "beauty cosmetics facebook ads", desc: "Beauty brands on Meta win with before/after hooks, ingredient-led hooks, and founder stories. AdBrief surfaces which creative type is outperforming in your specific account." },
+  { slug: "travel-ads", industry: "Travel & Tourism", keyword: "travel tourism facebook ads", desc: "Travel advertising on Meta is seasonal and competitive. AdBrief identifies your top-performing destination angles and helps you brief more of what converts." },
+  { slug: "food-beverage-ads", industry: "Food & Beverage", keyword: "food beverage meta ads", desc: "F&B brands on Meta win with sensory-first hooks and urgency. AdBrief tracks which product shots, recipes, and lifestyle angles are driving your best conversion rate." },
+];
+
+export const SEO_ROLES_EXPANDED = [
+  { slug: "media-buyer-ai-tool", role: "Media Buyer", keyword: "ai tool for media buyers", desc: "Media buyers who connect AdBrief to their Meta account get a real-time AI that reads their spend, CTR, and creative performance — and tells them exactly what to do next." },
+  { slug: "creative-strategist-tool", role: "Creative Strategist", keyword: "ai for creative strategists", desc: "Creative strategists use AdBrief to extract winning patterns from past performance data and turn them into high-confidence briefs. No more guessing what angle to test next." },
+  { slug: "performance-marketing-manager", role: "Performance Marketing Manager", keyword: "performance marketing manager tools", desc: "Performance marketing managers use AdBrief to track creative fatigue before it kills ROAS, and to give their team data-backed briefs instead of opinions." },
+  { slug: "freelance-media-buyer", role: "Freelance Media Buyer", keyword: "tools for freelance media buyers", desc: "Freelance media buyers managing multiple client accounts use AdBrief to scale their analysis. One AI connected to all your accounts. Ask anything." },
+  { slug: "agency-founder-tool", role: "Agency Founder", keyword: "ai tool for agency founders", desc: "Agency founders use AdBrief to give every strategist on their team access to real-time account intelligence — without hiring more analysts." },
+  { slug: "brand-manager-ads", role: "Brand Manager", keyword: "brand manager meta ads tool", desc: "Brand managers use AdBrief to align creative direction with performance data. Know which brand angles convert before committing to a full production run." },
+  { slug: "growth-marketer-tool", role: "Growth Marketer", keyword: "growth marketer ad intelligence tool", desc: "Growth marketers use AdBrief to move from data-to-decision faster. Connect your Meta account and ask what's working, what's fatigued, and what to scale." },
+  { slug: "cmo-ad-intelligence", role: "CMO", keyword: "cmo ad creative intelligence", desc: "CMOs use AdBrief to get a plain-English breakdown of what's happening in their Meta account — without waiting for a 40-slide deck from an analyst." },
+];
+
+export const SEO_USECASES_EXPANDED = [
+  { slug: "detect-creative-fatigue", usecase: "Detect Creative Fatigue", keyword: "how to detect creative fatigue meta ads", desc: "AdBrief monitors your CPMr trends and flags ads entering fatigue before CTR drops. Most brands detect fatigue 7–10 days too late. AdBrief catches it early." },
+  { slug: "brief-winning-ads", usecase: "Brief Winning Ads", keyword: "how to brief winning ads", desc: "Connect AdBrief to your Meta account. Ask what your top 3 hooks have in common. Get a brief that replicates your winners with fresh creative angles." },
+  { slug: "scale-meta-ads", usecase: "Scale Meta Ads", keyword: "how to scale meta ads creative", desc: "Scaling on Meta in 2026 is a creative problem, not a budget problem. AdBrief identifies your winning patterns and tells you exactly what to produce more of." },
+  { slug: "improve-ctr", usecase: "Improve CTR", keyword: "improve ctr meta ads creative", desc: "AdBrief identifies which hook types are driving your best CTR and which are underperforming. Ask 'what's my best CTR hook?' and get a data-backed answer." },
+  { slug: "reduce-cpm", usecase: "Reduce CPM", keyword: "reduce cpm meta ads", desc: "CPM spikes are almost always a creative problem. AdBrief detects rising CPMr trends and recommends the creative refresh that will bring CPM back down." },
+  { slug: "competitor-creative-analysis", usecase: "Competitor Creative Analysis", keyword: "how to analyze competitor ads", desc: "AdBrief decodes competitor ad creative. Upload a competitor's ad and get a hook breakdown, angle analysis, and counter-strategy tailored to your account's winning patterns." },
+  { slug: "onboard-new-clients", usecase: "Onboard New Clients", keyword: "how to onboard new ad clients", desc: "Agency teams use AdBrief to onboard new clients in hours, not weeks. Connect the account, ask AdBrief for a performance summary, and walk into the kickoff call with real answers." },
+  { slug: "report-on-creative-performance", usecase: "Report on Creative Performance", keyword: "creative performance reporting meta", desc: "AdBrief generates plain-English creative performance summaries. Stop exporting CSVs and building slides — just ask what's working and copy the answer into your report." },
+  { slug: "generate-ad-hooks", usecase: "Generate Ad Hooks", keyword: "generate ad hooks from data", desc: "AdBrief generates hooks based on your actual account data — not generic templates. The AI knows your winning angle patterns and generates variations that fit your audience." },
+  { slug: "analyze-meta-campaign", usecase: "Analyze Meta Campaign", keyword: "analyze meta ads campaign ai", desc: "Ask AdBrief anything about your Meta campaign. Which ad set is most efficient? Which creative is fatigued? What should I pause? Real answers from real data." },
+];
+
+export const SEO_MARKETS_EXPANDED = [
+  { slug: "meta-ads-brazil", market: "Brazil", keyword: "meta ads brazil strategy", desc: "Brazil is Meta's largest market in Latin America. AdBrief supports PT-BR creative briefs, Brazilian audience personas, and local platform norms for Meta campaigns targeting BR." },
+  { slug: "meta-ads-mexico", market: "Mexico", keyword: "meta ads mexico strategy", desc: "Mexico is one of the fastest-growing Meta advertising markets. AdBrief generates ES-MX briefs and analyzes creative performance for Mexican audiences." },
+  { slug: "meta-ads-india", market: "India", keyword: "meta ads india creative strategy", desc: "India's Meta ad market requires culturally specific creative and Hindi/English bilingual hooks. AdBrief supports Indian market personas and performance analysis." },
+  { slug: "meta-ads-uk", market: "United Kingdom", keyword: "meta ads uk strategy", desc: "The UK Meta ad market is highly competitive. AdBrief helps UK-based agencies and media buyers identify their winning creative patterns and brief faster." },
+  { slug: "meta-ads-usa", market: "United States", keyword: "meta ads usa strategy", desc: "The US is the most competitive Meta ad market in the world. AdBrief gives US media buyers a real-time AI strategist that knows their account and tells them what to do next." },
+  { slug: "meta-ads-australia", market: "Australia", keyword: "meta ads australia", desc: "Australian Meta advertisers operate in a unique market with specific audience behaviors. AdBrief analyzes AU account performance and generates locally-calibrated briefs." },
+  { slug: "meta-ads-canada", market: "Canada", keyword: "meta ads canada strategy", desc: "Canadian Meta ad accounts span multiple markets and languages. AdBrief tracks performance across segments and gives clear answers about what's working." },
+  { slug: "meta-ads-germany", market: "Germany", keyword: "meta ads germany strategy", desc: "German Meta advertising requires GDPR compliance and direct, benefit-led creative. AdBrief supports DE-language briefs and German market persona analysis." },
+  { slug: "meta-ads-spain", market: "Spain", keyword: "meta ads spain latin america", desc: "Spain-based agencies often serve Latin American clients. AdBrief supports ES briefs for multiple markets and tracks performance across regional campaigns." },
+  { slug: "meta-ads-colombia", market: "Colombia", keyword: "meta ads colombia", desc: "Colombia is a growing Meta market with high mobile penetration. AdBrief generates Colombia-specific briefs and tracks performance for local and regional campaigns." },
+  { slug: "meta-ads-argentina", market: "Argentina", keyword: "meta ads argentina", desc: "Argentina's Meta ad market has unique audience behaviors. AdBrief supports AR persona creation and analyzes creative performance for Argentine audiences." },
+  { slug: "meta-ads-france", market: "France", keyword: "meta ads france", desc: "French Meta advertisers require culturally nuanced creative. AdBrief supports FR-language briefs and persona analysis for campaigns targeting French audiences." },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MERGED LOOKUP HELPERS
+// Page components use these to find any slug across both original + expanded
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function findCompareBySlug(slug: string) {
+  const orig = SEO_COMPARISONS.find(c => c.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_COMPARISONS_EXPANDED.find(c => c.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    competitorName: exp.competitor,
+    adbriefPrice: "From $19/mo",
+    competitorPrice: "Varies",
+    metaTitle: `AdBrief vs ${exp.competitor} — Which Is Better for Performance Marketers?`,
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: `AdBrief vs ${exp.competitor}`,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    adbriefPros: ["Connected to your real ad account data","AI answers based on your actual campaigns","Built specifically for media buyers and agencies"],
+    competitorPros: ["Established product","Existing user base"],
+    verdict: `AdBrief gives you a real-time AI that reads your actual campaign data. ${exp.competitor} serves a different purpose in the stack. Choose based on whether you need creative intelligence or their core offering.`,
+    faqs: [
+      { q: `What's the main difference between AdBrief and ${exp.competitor}?`, a: exp.desc },
+      { q: "Does AdBrief offer a free trial?", a: "Yes. Every AdBrief plan includes a 1-day free trial. Card required, no charge for 24 hours." },
+    ],
+  };
+}
+
+export function findRoleBySlug(slug: string) {
+  const orig = SEO_ROLE_PAGES.find(r => r.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_ROLES_EXPANDED.find(r => r.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    roleLabel: exp.role,
+    metaTitle: `AdBrief for ${exp.role} — ${exp.keyword.split(' ').map((w:string) => w[0].toUpperCase() + w.slice(1)).join(' ')}`,
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: `AdBrief for ${exp.role}`,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    benefits: ["Connect to your real Meta ad account","Ask anything about your campaigns","AI answers based on actual performance data","Brief new creatives based on your winners"],
+    faqs: [
+      { q: `How does AdBrief help ${exp.role}?`, a: exp.desc },
+      { q: "How long does setup take?", a: "Under 5 minutes. Connect your Meta account via OAuth and start asking questions immediately." },
+    ],
+  };
+}
+
+export function findUseCaseBySlug(slug: string) {
+  const orig = SEO_USECASE_PAGES.find(u => u.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_USECASES_EXPANDED.find(u => u.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    metaTitle: `${exp.usecase} with AdBrief — ${exp.keyword.split(' ').map((w:string) => w[0].toUpperCase() + w.slice(1)).join(' ')}`,
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: exp.usecase,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    howItWorks: ["Connect your Meta Ads account to AdBrief","Ask your question in plain English","Get a data-backed answer based on your actual campaigns","Act on the insight immediately"],
+    faqs: [
+      { q: `How does AdBrief help you ${exp.usecase.toLowerCase()}?`, a: exp.desc },
+      { q: "Does this require technical setup?", a: "No. Connect via OAuth in under 5 minutes. No CSV uploads, no data entry." },
+    ],
+  };
+}
+
+export function findIndustryBySlug(slug: string) {
+  const orig = SEO_INDUSTRY_PAGES.find(i => i.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_INDUSTRIES_EXPANDED.find(i => i.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    industryLabel: exp.industry,
+    metaTitle: `AdBrief for ${exp.industry} Advertisers — AI Creative Intelligence`,
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: `AdBrief for ${exp.industry}`,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    painPoints: ["Creative fatigue killing ROAS","No clear pattern in what hooks convert","Briefing is slow and based on gut feeling"],
+    solution: exp.desc,
+    faqs: [
+      { q: `How does AdBrief help ${exp.industry} advertisers?`, a: exp.desc },
+      { q: "What platforms does AdBrief connect to?", a: "Meta Ads is live. TikTok and Google Ads are coming soon." },
+    ],
+  };
+}
+
+export function findMarketBySlug(slug: string) {
+  const orig = SEO_MARKET_PAGES.find(m => m.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_MARKETS_EXPANDED.find(m => m.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    locationLabel: exp.market,
+    metaTitle: `AdBrief for ${exp.market} — Meta Ads AI for Performance Marketers`,
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: `AdBrief in ${exp.market}`,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    faqs: [
+      { q: `How does AdBrief help performance marketers in ${exp.market}?`, a: exp.desc },
+      { q: "Is AdBrief available in my language?", a: "AdBrief is available in English, Portuguese (BR), and Spanish (MX). The landing page auto-detects your location." },
+    ],
+  };
+}
+
+export function findHookTypeBySlug(slug: string) {
+  const orig = SEO_HOOK_TYPE_PAGES.find(h => h.slug === slug);
+  if (orig) return orig;
+  const exp = SEO_HOOK_TYPES_EXPANDED.find(h => h.slug === slug);
+  if (!exp) return null;
+  return {
+    slug: exp.slug,
+    hookTypeLabel: exp.title,
+    metaTitle: exp.title + " | AdBrief",
+    metaDescription: exp.desc,
+    keywords: [exp.keyword],
+    headline: exp.title,
+    subheadline: exp.desc,
+    intro: exp.desc,
+    examples: ["Hook generation is available in AdBrief — connect your Meta account and ask for hooks based on your actual top performers."],
+    faqs: [
+      { q: `What is a ${exp.title.split(' —')[0]}?`, a: exp.desc },
+      { q: "How does AdBrief help generate hooks?", a: "Connect your Meta account and AdBrief generates hooks based on your actual winning creative patterns — not generic templates." },
+    ],
+  };
+}

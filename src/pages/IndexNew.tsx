@@ -619,7 +619,46 @@ export default function IndexNew() {
       <Helmet>
         <title>{titleMap[lang]}</title>
         <meta name="description" content={descMap[lang]} />
+        <link rel="canonical" href="https://adbrief.pro/" />
+        <link rel="alternate" hreflang="en" href="https://adbrief.pro/" />
+        <link rel="alternate" hreflang="pt-BR" href="https://adbrief.pro/?lang=pt" />
+        <link rel="alternate" hreflang="es" href="https://adbrief.pro/?lang=es" />
+        <link rel="alternate" hreflang="x-default" href="https://adbrief.pro/" />
+        <meta property="og:title" content={titleMap[lang]} />
+        <meta property="og:description" content={descMap[lang]} />
+        <meta property="og:url" content="https://adbrief.pro/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://adbrief.pro/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={titleMap[lang]} />
+        <meta name="twitter:description" content={descMap[lang]} />
+        <meta name="twitter:image" content="https://adbrief.pro/og-image.png" />
         <html lang={lang} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "AdBrief",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "url": "https://adbrief.pro",
+          "description": descMap["en"],
+          "offers": [
+            { "@type": "Offer", "name": "Maker", "price": "19", "priceCurrency": "USD" },
+            { "@type": "Offer", "name": "Pro", "price": "49", "priceCurrency": "USD" },
+            { "@type": "Offer", "name": "Studio", "price": "149", "priceCurrency": "USD" }
+          ],
+          "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "How does AdBrief connect to Meta Ads?", "acceptedAnswer": { "@type": "Answer", "text": "AdBrief uses official Meta Ads OAuth. Connect once and AdBrief reads your campaign data — spend, CTR, CPM, creative performance — in real time." } },
+            { "@type": "Question", "name": "What is AdBrief?", "acceptedAnswer": { "@type": "Answer", "text": "AdBrief is an AI chat for performance marketers. Connect your Meta Ads account and ask anything about your campaigns. AdBrief reads your real data and responds like a senior media buyer." } },
+            { "@type": "Question", "name": "How much does AdBrief cost?", "acceptedAnswer": { "@type": "Answer", "text": "AdBrief starts at $19/month for the Maker plan. All plans include a 1-day free trial. No charge for 24 hours, cancel anytime." } },
+            { "@type": "Question", "name": "Does AdBrief work with TikTok and Google Ads?", "acceptedAnswer": { "@type": "Answer", "text": "Meta Ads is fully available. TikTok Ads and Google Ads integrations are coming soon." } }
+          ]
+        })}</script>
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <Hero onCTA={handleCTA} t={t} />

@@ -2,11 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import SeoLandingPage from "./SeoLandingPage";
 import { SeoLayout } from "@/components/seo/SeoLayout";
 import { SEO_MARKET_PAGES } from "@/data/seoData";
+import { findMarketBySlug } from "@/data/seoData";
 
 export default function MarketPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const page = SEO_MARKET_PAGES.find(p => p.slug === slug);
+  const page = findMarketBySlug(slug!);
 
   if (!page) return (
     <SeoLayout title="Not Found — AdBrief" description="" noIndex>
