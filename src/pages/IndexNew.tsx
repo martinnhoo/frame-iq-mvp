@@ -267,7 +267,7 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
     <section className="hero-section" style={{ padding: "clamp(56px,8vw,90px) clamp(16px,4vw,32px) clamp(48px,6vw,72px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.09) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 760, margin: "0 auto", position: "relative" }}>
-        <motion.div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.9)", fontWeight: 700, letterSpacing: "0.16em" }}>{t.hero_badge}</span></motion.div>
+        <motion.div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(14,165,233,0.9)", fontWeight: 700 }}>{t.hero_badge}</span></motion.div>
         <motion.h1 {...fade(0.08)} style={{ ...j, fontSize: "clamp(42px,6.5vw,76px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.02, margin: "0 0 24px" }}>
           {t.hero_h1a}<br /><span style={{ background: BRAND, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{t.hero_h1b}</span>
         </motion.h1>

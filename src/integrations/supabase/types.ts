@@ -427,6 +427,32 @@ export type Database = {
         }
         Relationships: []
       }
+      free_usage: {
+        Row: {
+          chat_count: number
+          last_reset: string
+          user_id: string
+        }
+        Insert: {
+          chat_count?: number
+          last_reset?: string
+          user_id: string
+        }
+        Update: {
+          chat_count?: number
+          last_reset?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "free_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learned_patterns: {
         Row: {
           avg_cpc: number | null
@@ -790,6 +816,35 @@ export type Database = {
         }
         Relationships: []
       }
+      upgrade_events: {
+        Row: {
+          created_at: string
+          id: string
+          trigger: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          trigger: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          trigger?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upgrade_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage: {
         Row: {
           analyses_count: number
@@ -841,6 +896,7 @@ export type Database = {
           id: string
           industry: string | null
           last_updated: string | null
+          pain_point: string | null
           target_markets: Json | null
           top_performing_hooks: Json | null
           top_performing_models: Json | null
@@ -858,6 +914,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_updated?: string | null
+          pain_point?: string | null
           target_markets?: Json | null
           top_performing_hooks?: Json | null
           top_performing_models?: Json | null
@@ -875,6 +932,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_updated?: string | null
+          pain_point?: string | null
           target_markets?: Json | null
           top_performing_hooks?: Json | null
           top_performing_models?: Json | null
@@ -882,6 +940,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          disliked_patterns: string | null
+          liked_patterns: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          disliked_patterns?: string | null
+          liked_patterns?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          disliked_patterns?: string | null
+          liked_patterns?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       videos_generated: {
         Row: {
