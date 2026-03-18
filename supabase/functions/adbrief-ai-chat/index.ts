@@ -10,13 +10,49 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, context, user_id, persona_id, history, user_language } = await req.json();
+    const { message, context, user_id, persona_id, history, user_language, user_prefs } = await req.json();
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ── Freeze time + daily cap (server-side, Studio protection) ─────────────
+    const { data: profileRow } = await supabase
+      .from("profiles").select("plan").eq("id", user_id).maybeSingle();
+    const plan = profileRow?.plan || "free";
+
+    // Daily message counter — all plans tracked server-side
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: usageRow } = await (supabase as any)
+      .from("free_usage").select("chat_count, last_reset").eq("user_id", user_id).maybeSingle();
+    const lastReset = usageRow?.last_reset?.slice(0, 10);
+    const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
+
+    // Daily hard caps per plan
+    const DAILY_CAPS: Record<string, number> = { free: 3, maker: 50, pro: 200, studio: 500 };
+    const planKey = (["free","maker","pro","studio"].includes(plan) ? plan : { creator:"maker", starter:"pro", scale:"studio" }[plan]) || "free";
+    const cap = DAILY_CAPS[planKey] ?? 3;
+    if (dailyCount >= cap) {
+      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning", title: "Daily limit reached", content: `You've reached your daily message limit (${cap}). Your limit resets tomorrow.` }] }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Freeze time for Studio — grows with usage, max 8s at 500 msgs
+    // Formula: delay = (dailyCount / cap) * maxDelay — invisible, humanly limiting
+    if (planKey === "studio" && dailyCount > 100) {
+      const maxDelay = 8000; // 8 seconds max
+      const delay = Math.floor((dailyCount / cap) * maxDelay);
+      await new Promise(r => setTimeout(r, Math.min(delay, maxDelay)));
+    }
+
+    // Update daily counter
+    await (supabase as any).from("free_usage").upsert(
+      { user_id, chat_count: dailyCount + 1, last_reset: today },
+      { onConflict: "user_id" }
+    );
 
     // ── Init Supabase early to fetch real data ────────────────────────────────
     const supabase = createClient(
@@ -351,7 +387,7 @@ Rules:
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
-      system: systemPrompt,
+      system: systemPrompt + (user_prefs?.liked?.length || user_prefs?.disliked?.length ? `\n\nUSER STYLE PREFERENCES (learn from these):\n${user_prefs?.liked?.length ? `- Responses the user found helpful: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `- Responses the user did NOT find helpful: ${user_prefs.disliked.join(" | ")}` : ""}\nAdapt your tone, depth and format accordingly.` : ""),
       messages: allMessages,
     });
 

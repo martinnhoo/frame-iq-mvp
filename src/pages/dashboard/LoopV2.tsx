@@ -250,6 +250,135 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
   );
 }
 
+// ── Inline Tool Panel ─────────────────────────────────────────────────────────
+function InlineToolPanel({ action, prefill, onClose, onSend, language, dt }: {
+  action: string;
+  prefill: string;
+  onClose: () => void;
+  onSend: (msg: string) => void;
+  language: string;
+  dt: (k: any) => string;
+}) {
+  const [val, setVal] = useState(prefill);
+  const [platform, setPlatform] = useState("meta");
+  const [tone, setTone] = useState("direct");
+
+  const config: Record<string, {
+    icon: string; color: string;
+    title: Record<string, string>;
+    placeholder: Record<string, string>;
+    cta: Record<string, string>;
+    buildMsg: (v: string, p: string, t: string) => string;
+  }> = {
+    hooks: {
+      icon: "⚡", color: "#06b6d4",
+      title: { en: "Generate Hooks", pt: "Gerar Hooks", es: "Generar Hooks" },
+      placeholder: { en: "Describe your product, angle, or paste context from the conversation…", pt: "Descreva seu produto, ângulo, ou cole o contexto da conversa…", es: "Describe tu producto, ángulo, o pega el contexto de la conversación…" },
+      cta: { en: "Generate 5 hooks →", pt: "Gerar 5 hooks →", es: "Generar 5 hooks →" },
+      buildMsg: (v, p, t) => `Generate 5 high-converting ${t} ad hooks for ${p} based on this context: "${v}". Format each as: [Hook number]. [Hook text]. Include hook type label.`,
+    },
+    script: {
+      icon: "✍️", color: "#34d399",
+      title: { en: "Write Script", pt: "Escrever Roteiro", es: "Escribir Guión" },
+      placeholder: { en: "What's the ad about? Paste context or describe the brief…", pt: "Sobre o que é o anúncio? Cole o contexto ou descreva o brief…", es: "¿De qué trata el anuncio? Pega el contexto o describe el brief…" },
+      cta: { en: "Write script →", pt: "Escrever roteiro →", es: "Escribir guión →" },
+      buildMsg: (v, p, t) => `Write a complete ${t} video ad script for ${p}. Brief: "${v}". Format: VO (voiceover), ON-SCREEN TEXT, VISUAL NOTE for each scene. Include a strong hook in the first 3 seconds.`,
+    },
+    competitor: {
+      icon: "🔍", color: "#a78bfa",
+      title: { en: "Competitor Analysis", pt: "Análise de Concorrente", es: "Análisis de Competidor" },
+      placeholder: { en: "Paste a competitor ad URL, describe their creative, or enter their brand name…", pt: "Cole uma URL de anúncio concorrente, descreva o criativo ou escreva o nome da marca…", es: "Pega una URL de anuncio competidor, describe su creativo o escribe el nombre de la marca…" },
+      cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
+      buildMsg: (v, _p, _t) => `Analyze this competitor's ad creative and give me: 1) Hook type and formula, 2) Emotional trigger used, 3) Creative model (UGC/demo/testimonial/etc), 4) What makes it work, 5) How I can beat it with a stronger angle. Competitor info: "${v}"`,
+    },
+  };
+
+  const cfg = config[action];
+  if (!cfg) return null;
+
+  const lang = ["en","pt","es"].includes(language) ? language : "en";
+  const platforms = ["meta", "tiktok", "google"];
+  const tones: Record<string, Record<string, string>> = {
+    direct:       { en: "Direct", pt: "Direto", es: "Directo" },
+    conversational: { en: "Conversational", pt: "Conversacional", es: "Conversacional" },
+    urgent:       { en: "Urgent", pt: "Urgente", es: "Urgente" },
+    educational:  { en: "Educational", pt: "Educativo", es: "Educativo" },
+  };
+
+  const handleSubmit = () => {
+    if (!val.trim()) return;
+    onSend(cfg.buildMsg(val.trim(), platform, tone));
+    onClose();
+  };
+
+  return (
+    <div style={{
+      borderRadius: 16, overflow: "hidden",
+      border: `1px solid ${cfg.color}25`,
+      background: `linear-gradient(135deg, ${cfg.color}08 0%, rgba(13,15,24,0.95) 100%)`,
+      boxShadow: `0 8px 40px ${cfg.color}10`,
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      animation: "toolSlideIn 0.25s ease",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px 10px", borderBottom: `1px solid ${cfg.color}15` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>{cfg.icon}</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{cfg.title[lang]}</span>
+        </div>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 16, padding: 4, lineHeight: 1 }}>✕</button>
+      </div>
+
+      <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Platform + Tone pills — only for hooks/script */}
+        {action !== "competitor" && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              {platforms.map(p => (
+                <button key={p} onClick={() => setPlatform(p)}
+                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: platform === p ? cfg.color : "rgba(255,255,255,0.06)", color: platform === p ? "#000" : "rgba(255,255,255,0.4)", transition: "all 0.12s" }}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+              {Object.entries(tones).map(([k, v]) => (
+                <button key={k} onClick={() => setTone(k)}
+                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: tone === k ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)", color: tone === k ? "#fff" : "rgba(255,255,255,0.35)", transition: "all 0.12s" }}>
+                  {v[lang]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Text area */}
+        <textarea
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          placeholder={cfg.placeholder[lang]}
+          rows={3}
+          autoFocus
+          style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 13, lineHeight: 1.6, resize: "none", outline: "none", fontFamily: "inherit", caretColor: cfg.color, boxSizing: "border-box" }}
+          onFocus={e => { (e.currentTarget).style.borderColor = `${cfg.color}50`; }}
+          onBlur={e => { (e.currentTarget).style.borderColor = "rgba(255,255,255,0.1)"; }}
+          onKeyDown={e => { if (e.key === "Enter" && e.metaKey) handleSubmit(); }}
+        />
+
+        {/* Submit */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>⌘↵</span>
+          <button onClick={handleSubmit} disabled={!val.trim()}
+            style={{ padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: val.trim() ? `linear-gradient(135deg, ${cfg.color}, ${cfg.color}bb)` : "rgba(255,255,255,0.06)", color: val.trim() ? "#000" : "rgba(255,255,255,0.25)", border: "none", cursor: val.trim() ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.15s" }}>
+            {cfg.cta[lang]}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Suggestion Bubble ─────────────────────────────────────────────────────────
 function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
   suggestions: string[];
@@ -373,6 +502,10 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
         @keyframes bubbleIn {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toolSlideIn {
+          from { opacity: 0; transform: translateY(12px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>
@@ -736,19 +869,22 @@ export default function LoopV2() {
   };
 
   const handleToolAction = (action: string) => {
-    // Block tool actions for free users
     if (isFree(profile?.plan)) {
       setUpgradeWallTrigger("tool");
       setShowUpgradeWall(true);
       return;
     }
-    const routes: Record<string, string> = {
-      upload: "/dashboard/analyses/new",
-      hooks: "/dashboard/hooks",
-      script: "/dashboard/script",
-      competitor: "/dashboard/competitor",
-    };
-    if (routes[action]) navigate(routes[action]);
+    if (action === "upload") { navigate("/dashboard/analyses/new"); return; }
+    // Pre-fill tool context from last AI response + persona
+    const lastAI = [...messages].reverse().find(m => m.role === "assistant" && !m.loading);
+    const lastAIText = lastAI?.blocks?.map((b: any) => b.content || "").join(" ").slice(0, 400) || "";
+    const personaCtx = selectedPersona ? `${selectedPersona.name} — ${(selectedPersona as any).best_platforms?.join(", ") || ""}` : "";
+    setToolInput({
+      hooks: lastAIText || personaCtx,
+      script: lastAIText || personaCtx,
+      competitor: "",
+    });
+    setActiveTool(prev => prev === action ? null : action);
   };
 
   const handleFeedback = async (msgIdx: number, type: 'like' | 'dislike', blocks: any[]) => {
@@ -911,6 +1047,18 @@ export default function LoopV2() {
               )}
             </div>
           ))}
+
+          {/* ── Inline Tool Panel ── */}
+          {activeTool && (
+            <InlineToolPanel
+              action={activeTool}
+              prefill={toolInput[activeTool] || ""}
+              onClose={() => setActiveTool(null)}
+              onSend={(msg) => { setActiveTool(null); send(msg); }}
+              language={language}
+              dt={dt}
+            />
+          )}
 
           {!hasConversation && ready && (
             <SuggestionBubble suggestions={suggestions} onSend={send} hasData={hasData} dt={dt} />
