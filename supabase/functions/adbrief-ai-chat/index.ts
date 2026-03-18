@@ -1,3 +1,4 @@
+// adbrief-ai-chat v3 — deployed 202603182218
 import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
