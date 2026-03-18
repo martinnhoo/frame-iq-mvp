@@ -338,6 +338,33 @@ export type DashT = {
   gm_greet_new: string;
   gm_greet_prolific: string;
   session_greetings: string;
+  // Sidebar nav extras
+  nav_competitor: string;
+  nav_script: string;
+  nav_brief: string;
+  // LoopV2 strings
+  loop_initial_msg: string;
+  loop_thinking: string;
+  loop_enter_to_send: string;
+  loop_placeholder: string;
+  loop_placeholder_persona: string;
+  loop_select_persona: string;
+  loop_select_persona_content: string;
+  loop_something_wrong: string;
+  loop_try_again: string;
+  loop_disconnect: string;
+  loop_connected: string;
+  loop_soon: string;
+  loop_suggestions: string;
+  loop_based_account: string;
+  loop_daily_limit: string;
+  loop_daily_limit_content: string;
+  // Feedback
+  loop_copy: string;
+  loop_copied: string;
+  loop_like: string;
+  loop_dislike: string;
+  loop_regenerate: string;
 };
 
 export const dashTranslations: Record<DashLang, DashT> = {
@@ -347,6 +374,18 @@ export const dashTranslations: Record<DashLang, DashT> = {
     nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Persona",
     nav_workspace: "Workspace", nav_tools: "Tools", nav_upgrade: "Upgrade plan",
     nav_upgrade_desc: "Unlock more analyses & boards",
+    nav_competitor: "Competitor", nav_script: "Script", nav_brief: "Brief",
+    loop_initial_msg: "Connect your ad accounts and I'll analyze your campaigns in real time — or just ask me anything. Scripts, hooks, briefs, research, strategy.",
+    loop_thinking: "Thinking...", loop_enter_to_send: "Enter to send",
+    loop_placeholder: "Ask anything about your campaigns...",
+    loop_placeholder_persona: "Ask about",
+    loop_select_persona: "Select a persona first",
+    loop_select_persona_content: "To connect {platform}, select a persona (workspace) from the top bar. Each persona represents a client or brand — this keeps your ad accounts organized.",
+    loop_something_wrong: "Something went wrong", loop_try_again: "Try again.",
+    loop_disconnect: "Disconnect", loop_connected: "Connected", loop_soon: "Soon",
+    loop_suggestions: "Suggestions", loop_based_account: "Based on your account",
+    loop_daily_limit: "Daily limit reached", loop_daily_limit_content: "You've used all {limit} messages for today on the {plan} plan. Your limit resets tomorrow. Upgrade to {upgrade} for more.",
+    loop_copy: "Copy", loop_copied: "Copied!", loop_like: "Helpful", loop_dislike: "Not helpful", loop_regenerate: "Regenerate",
     ov_welcome: "Welcome back", ov_good_morning: "Good morning", ov_good_afternoon: "Good afternoon",
     ov_good_evening: "Good evening", ov_analyses: "Analyses", ov_boards: "Boards",
     ov_avg_hook: "Avg hook score", ov_preflights: "Pre-flights", ov_recent: "Recent activity",
@@ -486,6 +525,18 @@ export const dashTranslations: Record<DashLang, DashT> = {
     nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Persona",
     nav_workspace: "Área de Trabalho", nav_tools: "Ferramentas", nav_upgrade: "Fazer upgrade",
     nav_upgrade_desc: "Desbloqueie mais análises e boards",
+    nav_competitor: "Concorrente", nav_script: "Roteiro", nav_brief: "Brief",
+    loop_initial_msg: "Conecte suas contas de anúncios e analisarei suas campanhas em tempo real — ou pergunte qualquer coisa. Roteiros, hooks, briefs, pesquisa, estratégia.",
+    loop_thinking: "Pensando...", loop_enter_to_send: "Enter para enviar",
+    loop_placeholder: "Pergunte qualquer coisa sobre suas campanhas...",
+    loop_placeholder_persona: "Pergunte sobre",
+    loop_select_persona: "Selecione uma persona primeiro",
+    loop_select_persona_content: "Para conectar {platform}, selecione uma persona (workspace) na barra superior. Cada persona representa um cliente ou marca — isso mantém suas contas organizadas.",
+    loop_something_wrong: "Algo deu errado", loop_try_again: "Tente novamente.",
+    loop_disconnect: "Desconectar", loop_connected: "Conectado", loop_soon: "Em breve",
+    loop_suggestions: "Sugestões", loop_based_account: "Baseado na sua conta",
+    loop_daily_limit: "Limite diário atingido", loop_daily_limit_content: "Você usou todas as {limit} mensagens de hoje no plano {plan}. Seu limite reinicia amanhã. Faça upgrade para {upgrade} para mais.",
+    loop_copy: "Copiar", loop_copied: "Copiado!", loop_like: "Útil", loop_dislike: "Não útil", loop_regenerate: "Refazer",
     ov_welcome: "Bem-vindo de volta", ov_good_morning: "Bom dia", ov_good_afternoon: "Boa tarde",
     ov_good_evening: "Boa noite", ov_analyses: "Análises", ov_boards: "Boards",
     ov_avg_hook: "Score médio de hook", ov_preflights: "Pré-voos", ov_recent: "Atividade recente",

@@ -50,10 +50,10 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
 
   const NAV = [
-    { url: "/dashboard/loop/ai",     label: "AI",        icon: Brain,         exact: false },
-    { url: "/dashboard/analyses",    label: "Analyze",   icon: BarChart3 },
-    { url: "/dashboard/hooks",       label: "Hooks",     icon: Zap },
-    { url: "/dashboard/competitor",  label: "Competitor",icon: Search },
+    { url: "/dashboard/loop/ai",     label: "AI",             icon: Brain,    exact: false },
+    { url: "/dashboard/analyses",    label: dt.nav_analyses,  icon: BarChart3 },
+    { url: "/dashboard/hooks",       label: dt.nav_hooks,     icon: Zap },
+    { url: "/dashboard/competitor",  label: dt.nav_competitor || "Competitor", icon: Search },
   ];
 
   return (
@@ -109,14 +109,14 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
 
           {/* More tools */}
           {[
-            { url: "/dashboard/script",    label: "Script",     icon: "✍️" },
-            { url: "/dashboard/brief",     label: "Brief",      icon: "📋" },
-            { url: "/dashboard/boards",    label: "Boards",     icon: "🗂️" },
-            { url: "/dashboard/preflight", label: "Pre-flight", icon: "🛫" },
-            { url: "/dashboard/translate", label: "Translate",  icon: "🌍" },
-            { url: "/dashboard/persona",   label: "Persona",    icon: "🎯" },
-            { url: "/dashboard/templates", label: "Templates",  icon: "📐" },
-            { url: "/dashboard/intelligence", label: "Insights",icon: "📊" },
+            { url: "/dashboard/script",    label: dt.nav_script    || "Script",     icon: "✍️" },
+            { url: "/dashboard/brief",     label: dt.nav_brief     || "Brief",      icon: "📋" },
+            { url: "/dashboard/boards",    label: dt.nav_boards,                    icon: "🗂️" },
+            { url: "/dashboard/preflight", label: dt.nav_preflight,                 icon: "🛫" },
+            { url: "/dashboard/translate", label: dt.nav_translate,                 icon: "🌍" },
+            { url: "/dashboard/persona",   label: dt.nav_persona,                   icon: "🎯" },
+            { url: "/dashboard/templates", label: dt.nav_templates,                 icon: "📐" },
+            { url: "/dashboard/intelligence", label: dt.nav_intelligence,           icon: "📊" },
           ].map(({ url, label, icon }) => {
             const active = isActive(url);
             const locked = (plan === "free") && url !== "/dashboard/persona";
@@ -155,8 +155,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             >
               <Sparkles size={13} style={{ color: "#0ea5e9", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: "#fff", marginBottom: 1 }}>Upgrade plan</p>
-                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Unlock more analyses</p>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "#fff", marginBottom: 1 }}>{dt.nav_upgrade}</p>
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{dt.nav_upgrade_desc}</p>
               </div>
             </button>
           )}

@@ -3,6 +3,7 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import UpgradeWall from "@/components/UpgradeWall";
 import { isFree, chatDailyLimit } from "@/lib/planLimits";
+import { useDashT } from "@/i18n/dashboardTranslations";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -189,7 +190,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
             <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100, background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden", minWidth: 160, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
               <div style={{ padding: "8px 12px 6px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                 <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: platform.activeColor }}>{platform.label}</p>
-                <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Connected</p>
+                <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{dt("loop_connected")}</p>
               </div>
               <button
                 onClick={() => { setMenuOpen(false); onDisconnect(); }}
@@ -197,7 +198,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.08)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
-                <span style={{ fontSize: 13 }}>✕</span> Disconnect
+                <span style={{ fontSize: 13 }}>✕</span> {dt("loop_disconnect")}
               </button>
             </div>
           </>
@@ -221,7 +222,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
         >
           <Icon active={false} />
           <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>{platform.label}</span>
-          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>Soon</span>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{dt("loop_soon")}</span>
         </div>
       </div>
     );
@@ -232,7 +233,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       onClick={onConnect}
-      title={requiresPersona ? "Select a persona first to connect" : `Connect ${platform.label}`}
+      title={requiresPersona ? dt("loop_select_persona") : `Connect ${platform.label}`}
       style={{
         display: "flex", alignItems: "center", gap: 7,
         padding: "7px 12px", borderRadius: 9,
@@ -251,6 +252,11 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function LoopV2() {
   const { user, selectedPersona, profile } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
+  const [feedback, setFeedback] = useState<Record<number, 'like' | 'dislike' | null>>({});
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
   const { language } = useLanguage();
   const navigate = useNavigate();
 
@@ -339,7 +345,7 @@ export default function LoopV2() {
           };
           return greetings[language] || greetings["en"];
         })()
-            : "Connect your ad accounts and I'll analyze your campaigns in real time — or just ask me anything. Scripts, hooks, briefs, research, strategy.",
+            : dt("loop_initial_msg"),
         }],
         ts: Date.now(),
       }]);
@@ -492,8 +498,8 @@ export default function LoopV2() {
             role: "assistant" as const,
             blocks: [{ 
               type: "warning" as const, 
-              title: `Daily limit reached — ${dailyLimit} messages used`,
-              content: `You've used all ${dailyLimit} messages for today on the ${planName} plan. Your limit resets tomorrow. Upgrade to ${upgradeTarget} for more.`
+              title: dt("loop_daily_limit"),
+              content: dt("loop_daily_limit_content").replace("{limit}", String(dailyLimit)).replace("{plan}", planName).replace("{upgrade}", upgradeTarget)
             }],
             ts: Date.now()
           }]);
@@ -532,15 +538,19 @@ export default function LoopV2() {
           context: richContext,
           history,
           user_language: language,
+          user_prefs: userPrefs.liked.length || userPrefs.disliked.length ? {
+            liked: userPrefs.liked.slice(-3),
+            disliked: userPrefs.disliked.slice(-3),
+          } : undefined,
         },
       });
       if (error) throw error;
       setMessages(prev => prev.map(m =>
-        m.loading ? { role: "assistant" as const, blocks: data?.blocks || [{ type: "insight" as const, title: "", content: data?.response || "Done." }], ts: Date.now() } : m
+        m.loading ? { role: "assistant" as const, blocks: data?.blocks || [{ type: "insight" as const, title: "", content: data?.response || "✓" }], ts: Date.now() } : m
       ));
     } catch (e: any) {
       setMessages(prev => prev.map(m =>
-        m.loading ? { role: "assistant" as const, blocks: [{ type: "warning" as const, title: "Something went wrong", content: e.message || "Try again." }], ts: Date.now() } : m
+        m.loading ? { role: "assistant" as const, blocks: [{ type: "warning" as const, title: dt("loop_something_wrong"), content: e.message || dt("loop_try_again") }], ts: Date.now() } : m
       ));
     } finally {
       setSending(false);
@@ -553,7 +563,7 @@ export default function LoopV2() {
       // Prompt persona selection instead
       setMessages(prev => [...prev, {
         role: "assistant" as const,
-        blocks: [{ type: "warning" as const, title: "Select a persona first", content: `To connect ${platform.label}, select a persona (workspace) from the top bar. Each persona represents a client or brand — this keeps your ad accounts organized.` }],
+        blocks: [{ type: "warning" as const, title: dt("loop_select_persona"), content: dt("loop_select_persona_content").replace("{platform}", platform.label) }],
         ts: Date.now(),
       }]);
       return;
@@ -601,6 +611,39 @@ export default function LoopV2() {
     if (routes[action]) navigate(routes[action]);
   };
 
+  const handleFeedback = async (msgIdx: number, type: 'like' | 'dislike', blocks: any[]) => {
+    const prev = feedback[msgIdx];
+    const newVal = prev === type ? null : type;
+    setFeedback(f => ({ ...f, [msgIdx]: newVal }));
+    // Extract text content from blocks for preference learning
+    const responseText = blocks?.map((b: any) => b.content || '').join(' ').slice(0, 300);
+    if (newVal === 'like') {
+      setUserPrefs(p => ({ ...p, liked: [...p.liked.slice(-4), responseText] }));
+    } else if (newVal === 'dislike') {
+      setUserPrefs(p => ({ ...p, disliked: [...p.disliked.slice(-4), responseText] }));
+    }
+    // Persist to Supabase without extra API cost — just update a JSON column
+    try {
+      await (supabase as any).from('user_preferences').upsert(
+        { user_id: user.id, liked_patterns: JSON.stringify(userPrefs.liked), disliked_patterns: JSON.stringify(userPrefs.disliked) },
+        { onConflict: 'user_id' }
+      );
+    } catch (_) {}
+  };
+
+  const handleCopy = (msgIdx: number, blocks: any[]) => {
+    const text = blocks?.map((b: any) => [b.title, b.content, ...(b.items || [])].filter(Boolean).join('\n')).join('\n\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIdx(msgIdx);
+      setTimeout(() => setCopiedIdx(null), 2000);
+    });
+  };
+
+  const handleRegenerate = () => {
+    const lastUser = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUser?.text) send(lastUser.text);
+  };
+
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
   };
@@ -609,7 +652,7 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1, background: "#0d0f18", fontFamily: F, overflow: "hidden" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative" }}>
 
       {/* ── Header — clean, just platform status ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 8 }}>
@@ -643,8 +686,8 @@ export default function LoopV2() {
           )}
         </div>
 
-        {/* Right: platform badges — hidden on mobile, visible on desktop */}
-        <div className="hidden lg:flex" style={{ alignItems: "center", gap: 6 }}>
+        {/* Right: platform badges — desktop only, xl+ */}
+        <div className="hidden xl:flex" style={{ alignItems: "center", gap: 6, flexShrink: 0 }}>
           {PLATFORMS.map(p => (
             <PlatformBadge
               key={p.id}
@@ -664,7 +707,7 @@ export default function LoopV2() {
       </div>
 
       {/* ── Messages ── */}
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+      <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         <div style={{ maxWidth: 740, margin: "0 auto", padding: "16px 14px 12px", display: "flex", flexDirection: "column", gap: 20 }}>
 
           {messages.map((msg, i) => (
@@ -682,10 +725,45 @@ export default function LoopV2() {
                     {msg.loading ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 4 }}>
                         <Loader2 size={14} color="rgba(255,255,255,0.3)" className="animate-spin" />
-                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", fontFamily: F }}>Thinking...</span>
+                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", fontFamily: F }}>{dt("loop_thinking")}</span>
                       </div>
                     ) : (
-                      msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)
+                      <>
+                        {msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)}
+                        {/* Feedback bar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 10, opacity: 0.6 }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}>
+                          {/* Like */}
+                          <button onClick={() => handleFeedback(i, "like", msg.blocks || [])}
+                            title={dt("loop_like")}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 6, background: feedback[i] === "like" ? "rgba(52,211,153,0.12)" : "transparent", border: feedback[i] === "like" ? "1px solid rgba(52,211,153,0.3)" : "1px solid transparent", cursor: "pointer", transition: "all 0.1s", color: feedback[i] === "like" ? "#34d399" : "rgba(255,255,255,0.3)", fontSize: 13 }}>
+                            👍
+                          </button>
+                          {/* Dislike */}
+                          <button onClick={() => handleFeedback(i, "dislike", msg.blocks || [])}
+                            title={dt("loop_dislike")}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 6, background: feedback[i] === "dislike" ? "rgba(248,113,113,0.12)" : "transparent", border: feedback[i] === "dislike" ? "1px solid rgba(248,113,113,0.3)" : "1px solid transparent", cursor: "pointer", transition: "all 0.1s", color: feedback[i] === "dislike" ? "#f87171" : "rgba(255,255,255,0.3)", fontSize: 13 }}>
+                            👎
+                          </button>
+                          {/* Divider */}
+                          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", margin: "0 2px" }} />
+                          {/* Copy */}
+                          <button onClick={() => handleCopy(i, msg.blocks || [])}
+                            title={dt("loop_copy")}
+                            style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 8px", height: 26, borderRadius: 6, background: "transparent", border: "1px solid transparent", cursor: "pointer", color: copiedIdx === i ? "#34d399" : "rgba(255,255,255,0.3)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.1s" }}>
+                            {copiedIdx === i ? dt("loop_copied") : dt("loop_copy")}
+                          </button>
+                          {/* Regenerate — only on last assistant message */}
+                          {i === messages.length - 1 && (
+                            <button onClick={handleRegenerate}
+                              title={dt("loop_regenerate")}
+                              style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 8px", height: 26, borderRadius: 6, background: "transparent", border: "1px solid transparent", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.1s" }}>
+                              ↺ {dt("loop_regenerate")}
+                            </button>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -696,7 +774,7 @@ export default function LoopV2() {
           {!hasConversation && ready && (
             <div>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 14, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                {hasData ? (language === "pt" ? "Baseado na sua conta" : language === "es" ? "Basado en tu cuenta" : "Based on your account") : (language === "pt" ? "Sugestões" : language === "es" ? "Sugerencias" : "Suggestions")}
+                {hasData ? dt("loop_based_account") : dt("loop_suggestions")}
               </p>
               <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                 {suggestions.map((s, i) => (
@@ -724,7 +802,7 @@ export default function LoopV2() {
       )}
 
       {/* ── Input ── */}
-      <div style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+      <div className="loop-input-area" style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
         <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
           <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s" }}
             onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.4)"; }}
@@ -734,7 +812,7 @@ export default function LoopV2() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : "Ask anything about your campaigns..."}
+              placeholder={selectedPersona ? `${dt("loop_placeholder_persona")} ${selectedPersona.name}...` : dt("loop_placeholder")}
               rows={1}
               autoFocus
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 15, lineHeight: 1.65, maxHeight: 120, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
@@ -755,7 +833,7 @@ export default function LoopV2() {
                 <t.icon size={11} /> {t.label}
               </button>
             ))}
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>Enter to send</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>{dt("loop_enter_to_send")}</span>
           </div>
         </div>
       </div>
@@ -766,12 +844,31 @@ export default function LoopV2() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
         textarea::placeholder { color: rgba(255,255,255,0.28); }
-        .loop-container { height: calc(100dvh - 44px); }
-        @media (max-width: 1023px) {
-          .loop-container { height: calc(100dvh - 100px); }
+        .loop-container { 
+          height: calc(100dvh - 44px);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .loop-messages {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          min-height: 0;
+          -webkit-overflow-scrolling: touch;
+        }
+        .loop-input-area {
+          flex-shrink: 0;
+          position: relative;
+          z-index: 10;
+          background: #0d0f18;
         }
         @media (max-width: 1023px) {
+          .loop-container { height: calc(100dvh - 60px); }
           .suggestions-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .loop-container { height: calc(100dvh - 56px); }
         }
       `}</style>
     </div>
