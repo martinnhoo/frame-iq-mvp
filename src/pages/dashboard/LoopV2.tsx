@@ -256,9 +256,8 @@ export default function LoopV2() {
   const dt = useDashT(language);
   const [feedback, setFeedback] = useState<Record<number, 'like' | 'dislike' | null>>({});
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-  const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
-  const { language } = useLanguage();
-  const navigate = useNavigate();
+   const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
+   const navigate = useNavigate();
 
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
   const [loading, setLoading] = useState(true);
