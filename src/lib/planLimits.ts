@@ -5,10 +5,18 @@ export const PLAN_LIMITS = {
   studio: { chat_daily: null, chat_total: null, tools: true, ad_accounts: null, label: "Studio" },
 } as const;
 
+// Legacy plan aliases — users who signed up under old plan names
+const PLAN_ALIAS: Record<string, keyof typeof PLAN_LIMITS> = {
+  creator: "maker",
+  starter: "pro",
+  scale:   "studio",
+};
+
 export type PlanKey = keyof typeof PLAN_LIMITS;
 
 export function getPlanLimits(plan: string | null | undefined) {
-  const key = (plan || "free") as PlanKey;
+  const raw = plan || "free";
+  const key = (PLAN_ALIAS[raw] || raw) as PlanKey;
   return PLAN_LIMITS[key] || PLAN_LIMITS.free;
 }
 

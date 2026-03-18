@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 // ── Cost-based progressive throttle ──────────────────────────────────────────
 const _COST_PER = { analysis:(3000/1e6*3)+(800/1e6*15), board:(2500/1e6*3)+(700/1e6*15), preflight:(2000/1e6*3)+(600/1e6*15), translation:(800/1e6*3)+(400/1e6*15), hook:(1500/1e6*3)+(400/1e6*15) };
-const _PLAN_REV: Record<string,number> = { free:0, maker:19, pro:49, studio:149, creator:19, starter:49, scale:149 };
+const _PLAN_REV: Record<string,number> = { free:0, maker:19, pro:49, studio:149 };
 async function checkThrottle(sb: ReturnType<typeof createClient>, uid: string): Promise<{allowed:boolean;retry_after:number}> {
   const period = new Date().toISOString().slice(0,7);
   const [{data:prof},{data:usage}] = await Promise.all([
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
       .eq('period', currentPeriod)
       .single();
 
-    const limits: Record<string, number> = { free: 0, maker: 20, pro: 60, studio: 9999 };
+    const limits: Record<string, number> = { free: 10, maker: 50, pro: 200, studio: -1 };
     const plan = profile?.plan || 'free';
     const usageCount = (usage?.boards_count as number) || 0;
     const planLimit = limits[plan] ?? 3;

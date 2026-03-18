@@ -19,7 +19,11 @@ const COST_PER_ACTION = {
 // ── Plan revenue (monthly) ────────────────────────────────────────────────────
 const PLAN_REVENUE: Record<string, number> = {
   free: 0, maker: 19, pro: 49, studio: 149,
-  creator: 19, starter: 49, scale: 149, // legacy
+};
+
+// Legacy plan aliases — map old plan keys to current plans
+const PLAN_ALIAS: Record<string, string> = {
+  creator: "maker", starter: "pro", scale: "studio",
 };
 
 // ── Hard quantity limits (display only — throttle is cost-based) ──────────────
@@ -28,9 +32,7 @@ const PLAN_LIMITS: Record<string, { analyses: number; boards: number; translatio
   maker:   { analyses: 20, boards: 20, translations: 100, preflights: 20 },
   pro:     { analyses: 60, boards: 60, translations: -1,  preflights: 60 },
   studio:  { analyses: -1, boards: -1, translations: -1,  preflights: -1 },
-  creator: { analyses: 20, boards: 20, translations: 100, preflights: 20 },
-  starter: { analyses: 60, boards: 60, translations: -1,  preflights: 60 },
-  scale:   { analyses: -1, boards: -1, translations: -1,  preflights: -1 },
+
 };
 
 /**

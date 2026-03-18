@@ -26,13 +26,14 @@ const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 const LIFETIME = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
 
 const PLANS: Record<string, { label: string; color: string }> = {
-  free:    { label: "Free",    color: "rgba(255,255,255,0.3)" },
-  maker:   { label: "Maker",   color: "#60a5fa" },
-  creator: { label: "Creator", color: "#60a5fa" },
-  pro:     { label: "Pro",     color: "#0ea5e9" },
-  starter: { label: "Starter", color: "#34d399" },
-  studio:  { label: "Studio",  color: "#0ea5e9" },
-  scale:   { label: "Scale",   color: "#fbbf24" },
+  free:    { label: "Free",   color: "rgba(255,255,255,0.3)" },
+  maker:   { label: "Maker",  color: "#60a5fa" },
+  pro:     { label: "Pro",    color: "#0ea5e9" },
+  studio:  { label: "Studio", color: "#0ea5e9" },
+  // Legacy aliases — map old plan names gracefully
+  creator: { label: "Maker",  color: "#60a5fa" },
+  starter: { label: "Pro",    color: "#0ea5e9" },
+  scale:   { label: "Studio", color: "#0ea5e9" },
 };
 
 export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose }: SidebarProps) {

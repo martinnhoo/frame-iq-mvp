@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
 
       // Monthly translation limit
       const { data: usage } = await supabase.from('usage').select('translations_count').eq('user_id', user_id).eq('period', period).maybeSingle();
-      const limits: Record<string, number> = { free: 10, creator: 10, starter: 50, studio: 200, scale: 2000 };
+      const limits: Record<string, number> = { free: 10, maker: 50, pro: 200, studio: -1 };
       const count = usage?.translations_count || 0;
       if (count >= (limits[plan] ?? 10)) {
         return new Response(JSON.stringify({ error: 'limit_reached', plan }), {
