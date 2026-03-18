@@ -76,7 +76,7 @@ export function CompareDetail() {
         </div>
 
         <h1 style={{ ...j, fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 20, lineHeight: 1.1 }}>{comp.headline}</h1>
-        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, marginBottom: 40 }}>{comp.summary}</p>
+        <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.75, marginBottom: 40 }}>{"summary" in comp ? comp.summary : comp.intro}</p>
 
         {/* Verdict badge */}
         <div style={{ borderRadius: 14, padding: "14px 20px", background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 40 }}>
@@ -85,6 +85,7 @@ export function CompareDetail() {
         </div>
 
         {/* Feature table */}
+        {"featureTable" in comp && comp.featureTable && (
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(14,165,233,0.08)", padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Feature</span>
@@ -99,6 +100,7 @@ export function CompareDetail() {
             </div>
           ))}
         </div>
+        )}
 
         {/* Pros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>

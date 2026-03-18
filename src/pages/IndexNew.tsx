@@ -1,4 +1,4 @@
-// v3 — multilingual with IP-based language detection
+// v3
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe } from "lucide-react";
@@ -22,6 +22,8 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "AI FOR PERFORMANCE MARKETING", hero_h1a: "The AI that knows", hero_h1b: "your ad account.",
     hero_sub: "Official Meta Ads connection. Real campaign data. AI that thinks like a senior media buyer.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works", hero_fine: "1-day free trial on any plan · Cancel anytime · No setup required", hero_built: "BUILT ON",
+    coming_soon_badge: "Coming soon",
+    coming_soon_popup: "We're working on it! TikTok and Google Ads integration is coming soon. Meta Ads is fully available now.",
     how_label: "HOW IT WORKS", how_h2: "Three steps to your AI strategy partner.", how_sub: "Connect once. Ask forever. No CSV uploads. No manual data entry.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
     how_s2_title: "Set up your persona or brand", how_s2_desc: "Tell AdBrief who you're advertising to. Create audience personas or brand profiles — the AI uses this to give you market-specific answers.",
@@ -80,6 +82,8 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "A IA que conhece", hero_h1b: "a sua conta de anúncios.",
     hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um media buyer sênior.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", hero_fine: "1 dia de teste grátis em qualquer plano · Cancele quando quiser · Sem configuração", hero_built: "DESENVOLVIDO COM",
+    coming_soon_badge: "Em breve",
+    coming_soon_popup: "Estamos trabalhando nisso! A integração com TikTok e Google Ads está chegando em breve. O Meta Ads já está disponível agora.",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual de dados.",
     how_s1_title: "Conecte suas contas de anúncios", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha — investimento, CTR, CPM, performance de criativos — em tempo real.",
     how_s2_title: "Configure sua persona ou marca", how_s2_desc: "Diga ao AdBrief para quem você está anunciando. Crie personas de audiência ou perfis de marca — a IA usa isso para te dar respostas específicas para o seu mercado.",
@@ -138,6 +142,8 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "La IA que conoce", hero_h1b: "tu cuenta de anuncios.",
     hero_sub: "Conexión oficial con Meta Ads. Datos reales de campaña. IA que piensa como un media buyer senior.",
     hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona", hero_fine: "1 día de prueba gratis en cualquier plan · Cancela cuando quieras · Sin configuración", hero_built: "DESARROLLADO CON",
+    coming_soon_badge: "Próximamente",
+    coming_soon_popup: "¡Estamos trabajando en ello! La integración con TikTok y Google Ads llega pronto. Meta Ads ya está disponible.",
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos para tu socio de estrategia con IA.", how_sub: "Conecta una vez. Pregunta para siempre. Sin subidas de CSV. Sin entrada manual de datos.",
     how_s1_title: "Conecta tus cuentas de anuncios", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales de campaña — inversión, CTR, CPM, rendimiento de creativos — en tiempo real.",
     how_s2_title: "Configura tu persona o marca", how_s2_desc: "Dile a AdBrief a quién le estás anunciando. Crea perfiles de audiencia o de marca — la IA los usa para darte respuestas específicas para tu mercado.",
@@ -284,6 +290,48 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
         </motion.div>
       </div>
     </section>
+  );
+}
+
+// ─── Platform Badges ─────────────────────────────────────────────────────────
+function PlatformBadges({ t }: { t: Record<string, string> }) {
+  const [popup, setPopup] = useState(false);
+
+  const platforms = [
+    { name: "Meta Ads", icon: "🔵", active: true, color: "#0ea5e9" },
+    { name: "TikTok Ads", icon: "🎵", active: false, color: "#94a3b8" },
+    { name: "Google Ads", icon: "🟡", active: false, color: "#94a3b8" },
+  ];
+
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "0 32px 56px", flexWrap: "wrap" }}>
+        {platforms.map(p => (
+          <button key={p.name} onClick={() => !p.active && setPopup(true)}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: p.active ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${p.active ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}`, cursor: p.active ? "default" : "pointer", position: "relative", transition: "all 0.15s" }}
+            onMouseEnter={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+            onMouseLeave={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}>
+            <span style={{ fontSize: 14 }}>{p.icon}</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: p.active ? "#fff" : "rgba(255,255,255,0.3)" }}>{p.name}</span>
+            {p.active
+              ? <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#34d399", fontFamily: "'Plus Jakarta Sans', sans-serif" }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />Live</span>
+              : <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.04em" }}>{t.coming_soon_badge}</span>
+            }
+          </button>
+        ))}
+      </div>
+
+      {popup && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(6,8,18,0.85)", backdropFilter: "blur(12px)" }} onClick={() => setPopup(false)}>
+          <div style={{ background: "#0d0f1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", textAlign: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>🚀</div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.02em" }}>{t.coming_soon_badge}</h3>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, marginBottom: 24 }}>{t.coming_soon_popup}</p>
+            <button onClick={() => setPopup(false)} style={{ padding: "10px 28px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>OK</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -572,10 +620,10 @@ export default function IndexNew() {
         <title>{titleMap[lang]}</title>
         <meta name="description" content={descMap[lang]} />
         <link rel="canonical" href="https://adbrief.pro/" />
-        <link rel="alternate" hreflang="en" href="https://adbrief.pro/" />
-        <link rel="alternate" hreflang="pt-BR" href="https://adbrief.pro/?lang=pt" />
-        <link rel="alternate" hreflang="es" href="https://adbrief.pro/?lang=es" />
-        <link rel="alternate" hreflang="x-default" href="https://adbrief.pro/" />
+        <link rel="alternate" hrefLang="en" href="https://adbrief.pro/" />
+        <link rel="alternate" hrefLang="pt-BR" href="https://adbrief.pro/?lang=pt" />
+        <link rel="alternate" hrefLang="es" href="https://adbrief.pro/?lang=es" />
+        <link rel="alternate" hrefLang="x-default" href="https://adbrief.pro/" />
         <meta property="og:title" content={titleMap[lang]} />
         <meta property="og:description" content={descMap[lang]} />
         <meta property="og:url" content="https://adbrief.pro/" />
@@ -614,6 +662,7 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <Hero onCTA={handleCTA} t={t} />
+      <PlatformBadges t={t} />
       <ChatMockup t={t} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
