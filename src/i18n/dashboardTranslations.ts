@@ -1150,7 +1150,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_disconnect: "Trennen", loop_connected: "Verbunden", loop_soon: "Demnächst",
      loop_suggestions: "Vorschläge", loop_based_account: "Basierend auf Ihrem Konto",
      loop_daily_limit: "Tageslimit erreicht", loop_daily_limit_content: "Sie haben alle {limit} Nachrichten des {plan}-Plans heute verbraucht. Limit wird morgen zurückgesetzt. Upgraden Sie auf {upgrade} für mehr.",
-     loop_copy: "Kopieren", loop_copied: "Kopiert!", loop_like: "Hilfreich", loop_dislike: "Nicht hilfreich", loop_regenerate: "Neu generieren",
+     loop_copy: "Kopieren", loop_copied: "Kopiert!", loop_like: "Hilfreich", loop_dislike: "Nicht hilfreich", loop_regenerate: "Neu generieren", loop_more_ideas: "Mehr Ideen",
     ov_welcome: "Willkommen zurück", ov_good_morning: "Guten Morgen", ov_good_afternoon: "Guten Tag",
     ov_good_evening: "Guten Abend", ov_analyses: "Analysen", ov_boards: "Boards",
     ov_avg_hook: "Ø Hook-Score", ov_preflights: "Vorflug-Checks", ov_recent: "Letzte Aktivität",
