@@ -277,11 +277,24 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
         </motion.div>
         <motion.p {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</motion.p>
-        <motion.div {...fade(0.38)} style={{ marginTop: 44, display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-          <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.08)" }} />
+        <motion.div {...fade(0.38)} style={{ marginTop: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
           <span style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.hero_built}</span>
-          <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>Anthropic Claude</span>
-          <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.08)" }} />
+          <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.1)" }} />
+          {/* Anthropic logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 7, opacity: 0.55 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.827 3.636L20.454 17h-3.09l-1.364-3H7.99L6.636 17H3.545L10.173 3.636h3.654zm-1.827 3.91L9.636 12h4.727L12 7.545z" fill="white"/>
+            </svg>
+            <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: "0.01em" }}>Anthropic</span>
+          </div>
+          <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.1)" }} />
+          {/* OpenAI logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 7, opacity: 0.55 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0L4.01 14.19A4.5 4.5 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.816 2.81a4.5 4.5 0 0 1-.68 8.12v-5.679a.79.79 0 0 0-.389-.7zm2.010-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.814-2.806a4.5 4.5 0 0 1 6.680 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="white"/>
+            </svg>
+            <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: "0.01em" }}>OpenAI</span>
+          </div>
         </motion.div>
       </div>
     </section>
