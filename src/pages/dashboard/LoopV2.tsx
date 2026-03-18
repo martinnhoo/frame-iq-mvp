@@ -154,12 +154,13 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 }
 
 // ── Platform connection badge — with real logo ────────────────────────────────
-function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresPersona }: {
+function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresPersona, dt }: {
   platform: typeof PLATFORMS[0];
   connected: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
   requiresPersona: boolean;
+  dt: (key: string) => string;
 }) {
   const [hov, setHov] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
