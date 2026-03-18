@@ -84,6 +84,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checkoutPlan = searchParams.get("checkout");
+  const checkoutBilling = searchParams.get("billing"); // "annual" | null
   const { language: globalLang, setLanguage: setGlobalLanguage } = useLanguage();
   const [step, setStep] = useState<Step>("name");
   const [saving, setSaving] = useState(false);
@@ -186,7 +187,7 @@ export default function Onboarding() {
       const priceId = PLAN_PRICES[planKey];
       if (!priceId) { finish(); return; }
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { price_id: priceId }
+        body: { price_id: priceId, billing: checkoutBilling || undefined }
       });
       if (error) throw error;
       if (data?.url) {
