@@ -345,13 +345,24 @@ export default function LoopV2() {
           };
           return greetings[language] || greetings["en"];
         })()
-            : dt("loop_initial_msg"),
+            : (() => {
+              const msgs: Record<string, string> = {
+                en: "Connect your ad accounts and I'll analyze your campaigns in real time — or just ask me anything. Scripts, hooks, briefs, research, strategy.",
+                pt: "Conecte suas contas de anúncios e analisarei suas campanhas em tempo real — ou pergunte qualquer coisa. Roteiros, hooks, briefs, pesquisa, estratégia.",
+                es: "Conecta tus cuentas de anuncios y analizaré tus campañas en tiempo real — o pregunta lo que quieras. Guiones, hooks, briefs, investigación, estrategia.",
+                fr: "Connectez vos comptes publicitaires et j'analyserai vos campagnes en temps réel — ou demandez ce que vous voulez. Scripts, hooks, briefs, recherche, stratégie.",
+                de: "Verbinden Sie Ihre Anzeigenkonten und ich analysiere Ihre Kampagnen in Echtzeit — oder stellen Sie mir eine beliebige Frage.",
+                zh: "连接您的广告账户，我将实时分析您的广告活动 — 或直接问我任何问题。脚本、钩子、简报、研究、策略。",
+                ar: "اربط حسابات الإعلانات وسأحلل حملاتك في الوقت الفعلي — أو اسألني أي شيء. سكريبتات، هوكس، بريفات، بحث، استراتيجية.",
+              };
+              return msgs[language] || msgs["en"];
+            })(),
         }],
         ts: Date.now(),
       }]);
       setReady(true);
     });
-  }, []);
+  }, [language]);
 
   // Realtime
   useEffect(() => {
