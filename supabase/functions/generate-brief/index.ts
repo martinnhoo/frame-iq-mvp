@@ -10,6 +10,18 @@ Deno.serve(async (req) => {
 
   try {
     const { product, offer, objective, market, audience, competitors, extra_context, user_id } = await req.json();
+    // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
+    if (user_id) {
+      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
+      const plan = prof?.plan || 'free';
+      const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: 'plan_required', message: 'This tool requires a paid plan.' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
 
     if (!product) return new Response(JSON.stringify({ error: "Missing product" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

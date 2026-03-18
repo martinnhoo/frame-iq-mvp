@@ -368,12 +368,19 @@ Rules:
 - Max 4 blocks per response
 - If data is missing, tell them EXACTLY what to import to get better answers`;
 
-    // Build multi-turn conversation from history
+    // Build multi-turn conversation — truncate to last 8 exchanges to control costs
+    // Long AI responses (scripts, briefs) are truncated to 600 chars in history
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
-      for (const h of history) {
+      const MAX_HISTORY = 16; // 8 user + 8 assistant
+      const recent = history.slice(-MAX_HISTORY);
+      for (const h of recent) {
         if (h.role === "user" || h.role === "assistant") {
-          const content = String(h.content || "").trim();
+          let content = String(h.content || "").trim();
+          // Truncate long AI responses — keeps context without burning tokens
+          if (h.role === "assistant" && content.length > 600) {
+            content = content.slice(0, 600) + "… [truncated for context]";
+          }
           if (content) historyMessages.push({ role: h.role, content });
         }
       }

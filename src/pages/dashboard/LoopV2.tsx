@@ -753,6 +753,22 @@ export default function LoopV2() {
       // Update both server and local
       localStorage.setItem(`adbrief_chat_count_${user.id}`, String(newCount));
       setChatCount(newCount);
+      // Soft upsell warning at message 2 of 3
+      if (newCount === 2) {
+        const warn: Record<string, string> = {
+          en: "1 free message remaining. Upgrade to keep going →",
+          pt: "1 mensagem gratuita restante. Faça upgrade para continuar →",
+          es: "1 mensaje gratuito restante. Mejora tu plan para continuar →",
+        };
+        const warnText = warn[language] || warn.en;
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: "assistant" as const,
+            blocks: [{ type: "action" as const, title: "", content: warnText, cta: language === "pt" ? "Ver planos" : language === "es" ? "Ver planes" : "See plans", route: "/pricing" }],
+            ts: Date.now() + 100,
+          }]);
+        }, 800);
+      }
       await (supabase as any)
         .from("free_usage")
         .upsert({ user_id: user.id, chat_count: newCount }, { onConflict: "user_id" });
