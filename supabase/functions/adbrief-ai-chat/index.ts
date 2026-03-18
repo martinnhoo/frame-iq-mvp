@@ -18,6 +18,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Init Supabase ──────────────────────────────────────────────────────────
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     // ── Freeze time + daily cap (server-side, Studio protection) ─────────────
     const { data: profileRow } = await supabase
       .from("profiles").select("plan").eq("id", user_id).maybeSingle();
@@ -61,12 +67,6 @@ Deno.serve(async (req) => {
     await (supabase as any).from("free_usage").upsert(
       { user_id, chat_count: dailyCount + 1, last_reset: today },
       { onConflict: "user_id" }
-    );
-
-    // ── Init Supabase early to fetch real data ────────────────────────────────
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     // Fetch real account data in parallel
