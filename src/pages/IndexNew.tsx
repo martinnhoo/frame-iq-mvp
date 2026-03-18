@@ -79,7 +79,7 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem é", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia →",
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "A IA que conhece", hero_h1b: "a sua conta de anúncios.",
-    hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um media buyer sênior.",
+    hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um gestor de tráfego sênior.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", stat_budget: "Budget de anúncios analisado", stat_hooks: "Hooks gerados", stat_rating: "Avaliação média", stat_roas: "Melhoria média de ROAS",
     hero_fine: "1 dia de teste grátis em qualquer plano · Cancele quando quiser · Sem configuração", hero_built: "DESENVOLVIDO COM",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual de dados.",
