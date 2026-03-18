@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { user_id, language, first_name, email: emailOverride } = await req.json();
+    const { user_id, language, first_name, email: emailOverride, pain_point } = await req.json();
 
     let toEmail = emailOverride;
     let firstName = first_name || "there";
@@ -204,6 +204,20 @@ Deno.serve(async (req) => {
     const lang = detectLang(language);
     const t = templates[lang];
     const appUrl = Deno.env.get("APP_URL") || "https://www.adbrief.pro";
+    // Personalize subject based on pain_point from onboarding
+    const painSubjects: Record<string, Record<string, string>> = {
+      roas_drop:       { en: "Your ROAS fix starts here — AdBrief", pt: "Seu ROAS vai melhorar — AdBrief", es: "Tu ROAS mejora aquí — AdBrief" },
+      creative_fatigue:{ en: "Fresh creatives on demand — AdBrief",  pt: "Criativos frescos quando precisar — AdBrief", es: "Creativos frescos cuando los necesites — AdBrief" },
+      hook_writing:    { en: "Write hooks that stop the scroll — AdBrief", pt: "Escreva hooks que param o scroll — AdBrief", es: "Escribe hooks que detienen el scroll — AdBrief" },
+      scaling:         { en: "Scale without killing performance — AdBrief", pt: "Escale sem destruir a performance — AdBrief", es: "Escala sin destruir el rendimiento — AdBrief" },
+      briefing:        { en: "Brief your team in 30 seconds — AdBrief", pt: "Briefar sua equipe em 30 segundos — AdBrief", es: "Haz briefing en 30 segundos — AdBrief" },
+      analysis:        { en: "Your campaigns analyzed in seconds — AdBrief", pt: "Suas campanhas analisadas em segundos — AdBrief", es: "Tus campañas analizadas en segundos — AdBrief" },
+    };
+    const langCode = lang.slice(0,2);
+    if (pain_point && painSubjects[pain_point]) {
+      const subj = painSubjects[pain_point][langCode] || painSubjects[pain_point]["en"];
+      if (subj) t = { ...t, subject: subj };
+    }
     const html = buildHtml(t, firstName, appUrl);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
