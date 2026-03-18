@@ -464,7 +464,7 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
           }}
         >
           <span style={{ transition: "transform 0.2s", display: "inline-block", transform: expanded ? "rotate(45deg)" : "rotate(0deg)" }}>✦</span>
-          {dt("loop_suggestions") === "Sugestões" ? "Mais ideias" : dt("loop_suggestions") === "Sugerencias" ? "Más ideas" : dt("loop_suggestions") === "Suggestions" ? "More ideas" : "More ideas"}
+          {dt("loop_more_ideas")}
         </button>
       </div>
 

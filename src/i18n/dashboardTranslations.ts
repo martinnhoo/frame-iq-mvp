@@ -365,6 +365,7 @@ export type DashT = {
   loop_like: string;
   loop_dislike: string;
   loop_regenerate: string;
+  loop_more_ideas: string;
 };
 
 export const dashTranslations: Record<DashLang, DashT> = {
@@ -385,7 +386,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     loop_disconnect: "Disconnect", loop_connected: "Connected", loop_soon: "Soon",
     loop_suggestions: "Suggestions", loop_based_account: "Based on your account",
     loop_daily_limit: "Daily limit reached", loop_daily_limit_content: "You've used all {limit} messages for today on the {plan} plan. Your limit resets tomorrow. Upgrade to {upgrade} for more.",
-    loop_copy: "Copy", loop_copied: "Copied!", loop_like: "Helpful", loop_dislike: "Not helpful", loop_regenerate: "Regenerate",
+    loop_copy: "Copy", loop_copied: "Copied!", loop_like: "Helpful", loop_dislike: "Not helpful", loop_regenerate: "Regenerate", loop_more_ideas: "More ideas",
     ov_welcome: "Welcome back", ov_good_morning: "Good morning", ov_good_afternoon: "Good afternoon",
     ov_good_evening: "Good evening", ov_analyses: "Analyses", ov_boards: "Boards",
     ov_avg_hook: "Avg hook score", ov_preflights: "Pre-flights", ov_recent: "Recent activity",
@@ -536,7 +537,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     loop_disconnect: "Desconectar", loop_connected: "Conectado", loop_soon: "Em breve",
     loop_suggestions: "Sugestões", loop_based_account: "Baseado na sua conta",
     loop_daily_limit: "Limite diário atingido", loop_daily_limit_content: "Você usou todas as {limit} mensagens de hoje no plano {plan}. Seu limite reinicia amanhã. Faça upgrade para {upgrade} para mais.",
-    loop_copy: "Copiar", loop_copied: "Copiado!", loop_like: "Útil", loop_dislike: "Não útil", loop_regenerate: "Refazer",
+    loop_copy: "Copiar", loop_copied: "Copiado!", loop_like: "Útil", loop_dislike: "Não útil", loop_regenerate: "Refazer", loop_more_ideas: "Mais ideias",
     ov_welcome: "Bem-vindo de volta", ov_good_morning: "Bom dia", ov_good_afternoon: "Boa tarde",
     ov_good_evening: "Boa noite", ov_analyses: "Análises", ov_boards: "Boards",
     ov_avg_hook: "Score médio de hook", ov_preflights: "Pré-voos", ov_recent: "Atividade recente",
@@ -691,7 +692,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_disconnect: "Desconectar", loop_connected: "Conectado", loop_soon: "Próximamente",
      loop_suggestions: "Sugerencias", loop_based_account: "Basado en tu cuenta",
      loop_daily_limit: "Límite diario alcanzado", loop_daily_limit_content: "Has usado los {limit} mensajes de hoy del plan {plan}. Tu límite se renueva mañana. Mejora a {upgrade} para más.",
-     loop_copy: "Copiar", loop_copied: "¡Copiado!", loop_like: "Útil", loop_dislike: "No útil", loop_regenerate: "Regenerar",
+     loop_copy: "Copiar", loop_copied: "¡Copiado!", loop_like: "Útil", loop_dislike: "No útil", loop_regenerate: "Regenerar", loop_more_ideas: "Más ideas",
     ov_welcome: "Bienvenido de nuevo", ov_good_morning: "Buenos días", ov_good_afternoon: "Buenas tardes",
     ov_good_evening: "Buenas noches", ov_analyses: "Análisis", ov_boards: "Boards",
     ov_avg_hook: "Score promedio de hook", ov_preflights: "Prechecks", ov_recent: "Actividad reciente",

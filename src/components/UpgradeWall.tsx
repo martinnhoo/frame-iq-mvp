@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, X, Zap, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,8 +123,8 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   const msg = messages[trigger];
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  // Track which gate triggers upgrade wall — silent, no-await
-  useState(() => {
+  // Track which gate triggers upgrade wall — fires once on mount, silent
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
       (supabase as any).from("upgrade_events").insert({
@@ -133,7 +133,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         created_at: new Date().toISOString(),
       }).catch(() => {});
     });
-  });
+  }, [trigger]);
   const plans = PLANS_DATA(lang);
 
   const handlePlan = async (planKey: string, fallbackUrl: string) => {

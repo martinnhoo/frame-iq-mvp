@@ -35,7 +35,16 @@ Deno.serve(async (req) => {
     const planKey = (["free","maker","pro","studio"].includes(plan) ? plan : { creator:"maker", starter:"pro", scale:"studio" }[plan]) || "free";
     const cap = DAILY_CAPS[planKey] ?? 3;
     if (dailyCount >= cap) {
-      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning", title: "Daily limit reached", content: `You've reached your daily message limit (${cap}). Your limit resets tomorrow.` }] }), {
+      const limitMsgs: Record<string, {title: string, content: string}> = {
+        en: { title: "Daily limit reached", content: `You've reached your ${cap} message limit for today. Your limit resets tomorrow.` },
+        pt: { title: "Limite diário atingido", content: `Você usou todas as ${cap} mensagens de hoje. Seu limite reinicia amanhã.` },
+        es: { title: "Límite diario alcanzado", content: `Usaste todos los ${cap} mensajes de hoy. Tu límite se reinicia mañana.` },
+        fr: { title: "Limite quotidienne atteinte", content: `Vous avez utilisé vos ${cap} messages du jour. Votre limite se réinitialise demain.` },
+        de: { title: "Tageslimit erreicht", content: `Sie haben Ihre ${cap} Nachrichten für heute aufgebraucht. Ihr Limit wird morgen zurückgesetzt.` },
+      };
+      const uiLang = user_language || "en";
+      const limitMsg = limitMsgs[uiLang] || limitMsgs.en;
+      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning", title: limitMsg.title, content: limitMsg.content }] }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

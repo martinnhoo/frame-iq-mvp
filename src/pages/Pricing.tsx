@@ -21,12 +21,18 @@ const PLANS = {
 const Pricing = () => {
   const navigate = useNavigate();
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [annual, setAnnual] = useState(false);
+
+  const monthlyPrices = { maker: 19, pro: 49, studio: 149 };
+  const prices = annual
+    ? { maker: 15, pro: 39, studio: 119 }
+    : monthlyPrices;
 
   const handleUpgrade = async (planKey: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
-      navigate("/signup");
+      navigate(`/signup?plan=${planKey}${annual ? "&billing=annual" : ""}`);
       return;
     }
 
@@ -36,7 +42,7 @@ const Pricing = () => {
     setUpgrading(planKey);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { price_id: plan.price_id }
+        body: { price_id: plan.price_id, billing: annual ? "annual" : undefined }
       });
 
       if (error) throw error;
@@ -57,8 +63,8 @@ const Pricing = () => {
   const plans = [
     {
       name: "Maker",
-      price: "$19",
-      period: "/mo",
+      price: `$${prices.maker}`,
+      period: annual ? "/mo (billed annually)" : "/mo",
       description: "For freelancers and solo buyers.",
       features: [
         { text: "50 AI messages / day", included: true },
@@ -75,8 +81,8 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$49",
-      period: "/mo",
+      price: `$${prices.pro}`,
+      period: annual ? "/mo (billed annually)" : "/mo",
       description: "For small agencies and performance teams.",
       features: [
         { text: "200 AI messages / day", included: true },
@@ -94,8 +100,8 @@ const Pricing = () => {
     },
     {
       name: "Studio",
-      price: "$149",
-      period: "/mo",
+      price: `$${prices.studio}`,
+      period: annual ? "/mo (billed annually)" : "/mo",
       description: "For agencies managing multiple clients.",
       features: [
         { text: "Unlimited AI messages", included: true },
@@ -166,6 +172,28 @@ const Pricing = () => {
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               1-day free trial on all plans. Card required. Cancel anytime before 24h and pay nothing.
             </p>
+
+            {/* Annual/Monthly Toggle */}
+            <div className="flex items-center justify-center gap-3 mt-6">
+              <span className={`text-sm font-medium transition-colors ${!annual ? "text-white" : "text-white/40"}`}>Monthly</span>
+              <button
+                onClick={() => setAnnual(v => !v)}
+                className="relative w-11 h-6 rounded-full transition-colors"
+                style={{ background: annual ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.15)" }}
+              >
+                <span
+                  className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
+                  style={{ left: annual ? "22px" : "2px" }}
+                />
+              </button>
+              <span className={`text-sm font-medium transition-colors ${annual ? "text-white" : "text-white/40"}`}>Annual</span>
+              {annual && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded-md"
+                  style={{ background: "rgba(52,211,153,0.12)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }}>
+                  Save 20%
+                </span>
+              )}
+            </div>
           </motion.div>
         </div>
       </section>
@@ -326,7 +354,7 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All plans are billed monthly. All paid plans include a 1-day free trial.
+              Prices shown in USD. All paid plans include a 1-day free trial. Annual plans billed as one payment.
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">
