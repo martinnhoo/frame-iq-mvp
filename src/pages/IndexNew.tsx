@@ -335,7 +335,7 @@ function PlatformBadges({ t }: { t: Record<string, string> }) {
   );
 }
 
-
+function ChatMockup({ t }: { t: Record<string, string> }) {
   const msgs = [{ role: "user", text: t.chat_q1 }, { role: "ai", text: t.chat_a1 }, { role: "user", text: t.chat_q2 }, { role: "ai", text: t.chat_a2 }];
   return (
     <section style={{ padding: "0 32px 80px" }}>
