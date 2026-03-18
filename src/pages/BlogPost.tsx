@@ -688,6 +688,7 @@ const blogPosts: Record<string, {
       "## The Fastest Way to Diagnose Today",
       "If you're running Meta Ads and want a faster diagnostic process, AdBrief connects directly to your account and reads your real campaign data. Ask it: 'What's driving my ROAS drop this week?' and get a plain-English breakdown of which ads are fatigued, which audiences are exhausted, and what to fix first.",
       "Start with a 1-day free trial on any plan. No guessing, no CSV exports — just real answers from your real data.",
+      "**Related:** See also: [creative fatigue detection](/blog/creative-fatigue-meta-ads), [hook rate guide](/blog/what-is-hook-rate-meta-ads), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief's ROAS analysis](/use-case/analyze-meta-campaign).",
     ],
   },
 
@@ -722,6 +723,7 @@ const blogPosts: Record<string, {
       "AdBrief connects directly to your Meta Ads account and monitors creative performance continuously. Instead of manually checking frequency, hook rate, and CTR trends across every active ad, you ask: 'Which of my ads are showing fatigue signals?' and get a plain-English answer with the specific ads, the signals they're showing, and what to brief next.",
       "The creative brief generation is built directly from your account's historical winners — so the replacement creative has a higher baseline probability of performing.",
       "Try AdBrief free for 1 day on any plan. Connect your Meta account and ask about creative fatigue in your active campaigns right now.",
+      "**Related:** See also: [hook rate metric](/blog/what-is-hook-rate-meta-ads), [creative brief guide](/blog/meta-ads-creative-brief-guide), [ROAS diagnostic](/blog/meta-ads-roas-dropped), and [creative fatigue detection with AdBrief](/use-case/detect-creative-fatigue).",
     ],
   },
 
@@ -763,6 +765,7 @@ const blogPosts: Record<string, {
       "## The Faster Version of This Checklist",
       "This entire weekly workflow can be compressed significantly with the right tools. AdBrief connects to your Meta Ads account and lets you run through the entire audit in a single conversation. Ask 'What needs my attention this week?' and get a prioritized breakdown of fatigued creatives, scaling opportunities, and anomalies — in plain English, with the specific ad names and numbers.",
       "Try AdBrief for 1 day free on any plan. Run your first weekly review in under 10 minutes instead of 2 hours.",
+      "**Related:** See also: [creative fatigue signals](/blog/creative-fatigue-meta-ads), [hook rate tracking](/blog/what-is-hook-rate-meta-ads), [brief framework](/blog/meta-ads-creative-brief-guide), and [AdBrief for weekly audits](/use-case/analyze-meta-campaign).",
     ],
   },
 
@@ -808,6 +811,7 @@ const blogPosts: Record<string, {
       "The hooks above are frameworks. What makes them powerful is tailoring them to your specific audience and account's winning patterns. AdBrief connects to your Meta Ads and generates hooks based on the angles, formats, and CTR patterns that have already worked in your specific account.",
       "Instead of starting from templates, you start from proof. Ask AdBrief: 'Write 5 hooks for my next campaign based on my top performers' — and get hooks built from your winners, not someone else's.",
       "Try AdBrief free for 1 day. Connect your Meta account and generate your first data-backed hooks in under 5 minutes.",
+      "**Related:** See also: [creative brief guide](/blog/meta-ads-creative-brief-guide), [hook rate metric](/blog/what-is-hook-rate-meta-ads), [creative fatigue](/blog/creative-fatigue-meta-ads), and [AdBrief hook generator](/use-case/generate-ad-hooks).",
     ],
   },
 
@@ -841,6 +845,7 @@ const blogPosts: Record<string, {
       "The brief above requires knowing which of your ads performed best, what made them work, and what's ready to be replaced. Pulling that data manually takes an hour. AdBrief pulls it in seconds.",
       "Connect your Meta Ads account, ask 'What should I brief next based on my account's winners?', and get a structured brief with the hook, creative model, CTA logic, and specific performance data from your own campaigns — not templates.",
       "Try AdBrief free for 1 day on any plan. Generate your first data-backed brief in under 5 minutes.",
+      "**Related:** See also: [hook writing guide](/blog/how-to-write-meta-ads-hooks), [creative fatigue detection](/blog/creative-fatigue-meta-ads), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief brief generation](/use-case/brief-winning-ads).",
     ],
   },
 
@@ -878,6 +883,7 @@ const blogPosts: Record<string, {
       "Based on what's producing real ROAS improvement: use an account intelligence tool (AdBrief) as your primary interface with your campaign data. Use generative AI (Claude, GPT-4) for creative production with briefs built from your account data. Use competitor research tools periodically for inspiration, not constantly for direction.",
       "The question to ask about any AI tool: does it know my specific account, or is it giving general advice? If the answer is general advice, its value is limited.",
       "AdBrief connects to your Meta Ads and answers from your data. Try it free for 1 day on any plan — no credit card required during the trial window.",
+      "**Related:** See also: [ROAS diagnostic](/blog/meta-ads-roas-dropped), [creative fatigue guide](/blog/creative-fatigue-meta-ads), [AdBrief vs ChatGPT](/compare/adbrief-vs-chatgpt), and [AdBrief for media buyers](/for/media-buyer-ai-tool).",
     ],
   },
 
@@ -913,6 +919,7 @@ const blogPosts: Record<string, {
       "Scaling decisions are only as good as your understanding of your current account state. Before any scale, you need to know: which creatives have room to grow (low frequency, strong CTR trend), which audiences are close to exhaustion, and what your creative pipeline looks like.",
       "AdBrief connects to your Meta Ads and gives you this picture in seconds. Ask 'Which of my campaigns are ready to scale?' and get a data-backed answer — not a guess.",
       "Try AdBrief free for 1 day on any plan. Make your next scaling decision with real data behind it.",
+      "**Related:** See also: [creative fatigue](/blog/creative-fatigue-meta-ads), [hook rate monitoring](/blog/what-is-hook-rate-meta-ads), [ROAS diagnostic](/blog/meta-ads-roas-dropped), and [scaling with AdBrief](/use-case/scale-meta-ads).",
     ],
   },
 
@@ -946,6 +953,7 @@ const blogPosts: Record<string, {
       "When AdBrief connects to your Meta Ads account, it monitors hook rate trends across all your active creatives automatically. Instead of pulling custom columns and calculating trends manually, ask 'Which of my ads are showing hook rate decline?' and get a list with the specific numbers and a recommendation for what to brief next.",
       "The brief it generates is built from the hook patterns that drove your highest hook rates historically — so the replacement has a data-backed starting point.",
       "Connect your Meta Ads and run your first hook rate audit in under 5 minutes. 1-day free trial on any AdBrief plan.",
+      "**Related:** See also: [creative fatigue guide](/blog/creative-fatigue-meta-ads), [hook writing](/blog/how-to-write-meta-ads-hooks), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief creative monitoring](/use-case/detect-creative-fatigue).",
     ],
   },
 
@@ -979,6 +987,7 @@ const blogPosts: Record<string, {
       "Specifically, tools that connect to your ad account and answer performance questions in plain English (like AdBrief) are giving in-house teams the analytical depth that used to be an agency advantage.",
       "The new calculation: a solo in-house media buyer + AdBrief can do the work of a 3-person analytics team. This makes the in-house option viable at lower spend thresholds than it used to be.",
       "If you're managing Meta Ads in-house and want the analytical depth that used to require an agency, try AdBrief free for 1 day. Ask it anything about your account — it answers from your real data.",
+      "**Related:** See also: [media buyer checklist](/blog/meta-ads-media-buyer-checklist), [AI tools for media buyers](/blog/ai-tools-for-media-buyers-2026), [AdBrief for agencies](/for/agency-founder-tool), and [AdBrief for in-house teams](/for/performance-marketing-manager).",
     ],
   },
 
@@ -1026,6 +1035,7 @@ const blogPosts: Record<string, {
       "## Diagnosing Your CPM Problem Faster",
       "Running through all 7 of these reasons manually takes time. AdBrief connects to your Meta Ads account and can identify which of these factors is driving your CPM issue in a single conversation. Ask 'Why is my CPM rising?' and get a specific answer based on your actual account data — not a generic checklist.",
       "Try AdBrief free for 1 day on any plan. Diagnose your CPM problem in under 10 minutes.",
+      "**Related:** See also: [creative fatigue](/blog/creative-fatigue-meta-ads), [ROAS drop guide](/blog/meta-ads-roas-dropped), [scaling guide](/blog/meta-ads-scaling-guide), and [CPM reduction with AdBrief](/use-case/reduce-cpm).",
     ],
   },
 
