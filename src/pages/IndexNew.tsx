@@ -1,4 +1,4 @@
-// v3 — multilingual with IP-based language detection
+// v3
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe } from "lucide-react";
