@@ -620,10 +620,10 @@ export default function IndexNew() {
         <title>{titleMap[lang]}</title>
         <meta name="description" content={descMap[lang]} />
         <link rel="canonical" href="https://adbrief.pro/" />
-        <link rel="alternate" hreflang="en" href="https://adbrief.pro/" />
-        <link rel="alternate" hreflang="pt-BR" href="https://adbrief.pro/?lang=pt" />
-        <link rel="alternate" hreflang="es" href="https://adbrief.pro/?lang=es" />
-        <link rel="alternate" hreflang="x-default" href="https://adbrief.pro/" />
+        <link rel="alternate" hrefLang="en" href="https://adbrief.pro/" />
+        <link rel="alternate" hrefLang="pt-BR" href="https://adbrief.pro/?lang=pt" />
+        <link rel="alternate" hrefLang="es" href="https://adbrief.pro/?lang=es" />
+        <link rel="alternate" hrefLang="x-default" href="https://adbrief.pro/" />
         <meta property="og:title" content={titleMap[lang]} />
         <meta property="og:description" content={descMap[lang]} />
         <meta property="og:url" content="https://adbrief.pro/" />
