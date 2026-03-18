@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Init Supabase ──────────────────────────────────────────────────────────
+    // ── Init Supabase (v2) ──────────────────────────────────────────────────────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
