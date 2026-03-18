@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
+import { Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -214,11 +214,34 @@ export default function DashboardLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#070710] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-white/50" />
-          <p className="text-xs text-white/40 font-mono">{dt("ov_loading")}</p>
+      <div style={{ minHeight: "100dvh", background: "#0d0f18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        {/* Logo */}
+        <div style={{ marginBottom: 40, opacity: 0.9 }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>ad</span>
+          <span style={{ fontSize: 22, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>brief</span>
         </div>
+
+        {/* Progress bar container */}
+        <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden", marginBottom: 20 }}>
+          <div style={{
+            height: "100%",
+            background: "linear-gradient(90deg, #0ea5e9, #06b6d4)",
+            borderRadius: 99,
+            animation: "dashboardLoad 1.8s ease-in-out infinite",
+          }} />
+        </div>
+
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>
+          {dt("ov_loading")}
+        </p>
+
+        <style>{`
+          @keyframes dashboardLoad {
+            0%   { width: 0%;   margin-left: 0%; }
+            50%  { width: 60%;  margin-left: 20%; }
+            100% { width: 0%;   margin-left: 100%; }
+          }
+        `}</style>
       </div>
     );
   }
