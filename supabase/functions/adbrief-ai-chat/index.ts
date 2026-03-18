@@ -1,4 +1,4 @@
-import Anthropic from "npm:@anthropic-ai/sdk@0.27.3";
+import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -403,7 +403,7 @@ Rules:
     ];
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
+      model: "claude-sonnet-4-5-20250514",
       max_tokens: 1000,
       system: systemPrompt + (user_prefs?.liked?.length || user_prefs?.disliked?.length ? `\n\nUSER STYLE PREFERENCES (learn from these):\n${user_prefs?.liked?.length ? `- Responses the user found helpful: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `- Responses the user did NOT find helpful: ${user_prefs.disliked.join(" | ")}` : ""}\nAdapt your tone, depth and format accordingly.` : ""),
       messages: allMessages,

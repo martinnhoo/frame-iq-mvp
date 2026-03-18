@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import Anthropic from "npm:@anthropic-ai/sdk@0.27.3";
+import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       try {
         const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
         const msg = await client.messages.create({
-          model: 'claude-sonnet-4-5',
+          model: 'claude-sonnet-4-5-20250514',
           max_tokens: 512,
           messages: [{
             role: 'user',
