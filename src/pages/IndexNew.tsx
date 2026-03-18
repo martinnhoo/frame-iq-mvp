@@ -491,7 +491,11 @@ function Pricing({ onCTA, t }: { onCTA: () => void; t: Record<string, string> })
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{ padding: "28px 24px", borderRadius: 20, background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 20, position: "relative" }}>
-              {plan.badge && <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "3px 14px" }}><span style={{ ...j, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#000", fontWeight: 700 }}>{plan.badge}</span></div>}
+              {plan.badge && (
+                <div style={{ position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap" }}>
+                  <span style={{ ...j, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#000", fontWeight: 800 }}>{plan.badge}</span>
+                </div>
+              )}
               <div>
                 <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, fontWeight: 700, letterSpacing: "0.06em" }}>{plan.name.toUpperCase()}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>

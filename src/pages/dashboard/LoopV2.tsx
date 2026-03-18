@@ -141,7 +141,7 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
   return (
     <div style={{ marginBottom: 10 }}>
       {block.title && <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color, marginBottom: 6 }}>{block.title}</p>}
-      {block.content && <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.82)", lineHeight: 1.75, marginBottom: block.items ? 10 : 0 }}>{block.content}</p>}
+      {block.content && <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.88)", lineHeight: 1.75, marginBottom: block.items ? 10 : 0 }}>{block.content}</p>}
       {block.items?.map((item, i) => (
         <div key={i} style={{ display: "flex", gap: 10, marginBottom: 6, alignItems: "flex-start" }}>
           <span style={{ color, fontSize: 16, flexShrink: 0, lineHeight: 1.5 }}>·</span>
@@ -202,6 +202,27 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
             </div>
           </>
         )}
+      </div>
+    );
+  }
+
+  // Coming soon: TikTok and Google not yet available
+  if (platform.id === "tiktok" || platform.id === "google") {
+    return (
+      <div style={{ position: "relative" }}>
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 7,
+            padding: "7px 12px", borderRadius: 9,
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            cursor: "default", opacity: 0.4, fontFamily: F,
+          }}
+        >
+          <Icon active={false} />
+          <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>{platform.label}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>Soon</span>
+        </div>
       </div>
     );
   }
@@ -432,17 +453,30 @@ export default function LoopV2() {
     const userPlan = profile?.plan;
 
     if (isFree(userPlan)) {
-      // Free: max 3 messages total per session
+      // Free: max 3 messages total — stored server-side per user, not in localStorage
       const FREE_LIMIT = 3;
-      const currentCount = parseInt(localStorage.getItem("adbrief_chat_count") || "0", 10);
+      // Check Supabase for persistent count tied to user ID
+      const { data: usageRow } = await (supabase as any)
+        .from("free_usage")
+        .select("chat_count")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const serverCount = usageRow?.chat_count ?? 0;
+      // Also check localStorage as fallback / sync
+      const localCount = parseInt(localStorage.getItem(`adbrief_chat_count_${user.id}`) || "0", 10);
+      const currentCount = Math.max(serverCount, localCount);
       if (currentCount >= FREE_LIMIT) {
         setUpgradeWallTrigger("chat");
         setShowUpgradeWall(true);
         return;
       }
       const newCount = currentCount + 1;
-      localStorage.setItem("adbrief_chat_count", String(newCount));
+      // Update both server and local
+      localStorage.setItem(`adbrief_chat_count_${user.id}`, String(newCount));
       setChatCount(newCount);
+      await (supabase as any)
+        .from("free_usage")
+        .upsert({ user_id: user.id, chat_count: newCount }, { onConflict: "user_id" });
     } else {
       // Paid plans: check daily limit
       const dailyLimit = chatDailyLimit(userPlan);
@@ -575,10 +609,10 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1, background: "#0a0a0a", fontFamily: F, overflow: "hidden" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1, background: "#0d0f18", fontFamily: F, overflow: "hidden" }}>
 
       {/* ── Header — clean, just platform status ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 8 }}>
 
         {/* Left: persona + status */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
@@ -631,13 +665,13 @@ export default function LoopV2() {
 
       {/* ── Messages ── */}
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "16px 14px 12px", display: "flex", flexDirection: "column", gap: 20 }}>
 
           {messages.map((msg, i) => (
             <div key={i}>
               {msg.role === "user" && (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ maxWidth: "76%", padding: "11px 16px", borderRadius: "16px 16px 4px 16px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                  <div style={{ maxWidth: "76%", padding: "11px 16px", borderRadius: "16px 16px 4px 16px", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)" }}>
                     <p style={{ fontSize: 15, color: "rgba(255,255,255,0.9)", lineHeight: 1.65, fontFamily: F }}>{msg.text}</p>
                   </div>
                 </div>
@@ -667,7 +701,7 @@ export default function LoopV2() {
               <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} onClick={() => send(s)}
-                    style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.15)", color: "rgba(255,255,255,0.7)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.15s", minHeight: 56, display: "flex", alignItems: "center", fontWeight: 500 }}
+                    style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", color: "rgba(255,255,255,0.78)", fontSize: 13, cursor: "pointer", textAlign: "left", lineHeight: 1.5, fontFamily: F, transition: "all 0.15s", minHeight: 56, display: "flex", alignItems: "center", fontWeight: 500 }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.color = "#fff"; el.style.background = "rgba(14,165,233,0.1)"; }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.15)"; el.style.color = "rgba(255,255,255,0.7)"; el.style.background = "rgba(14,165,233,0.04)"; }}>
                     {s}
@@ -692,7 +726,7 @@ export default function LoopV2() {
       {/* ── Input ── */}
       <div style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
         <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
-          <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s" }}
+          <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s" }}
             onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.4)"; }}
             onBlurCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; }}>
             <textarea
@@ -700,7 +734,7 @@ export default function LoopV2() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={selectedPersona ? `Ask anything about ${selectedPersona.name}...` : "Ask anything about your campaigns, ads, or strategy..."}
+              placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : "Ask anything about your campaigns..."}
               rows={1}
               autoFocus
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 15, lineHeight: 1.65, maxHeight: 120, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
@@ -715,13 +749,13 @@ export default function LoopV2() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
               <button key={t.action} onClick={() => handleToolAction(t.action)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${t.color}40`; el.style.color = t.color; el.style.background = `${t.color}0a`; }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "transparent"; }}>
                 <t.icon size={11} /> {t.label}
               </button>
             ))}
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", marginLeft: "auto" }}>Enter to send</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>Enter to send</span>
           </div>
         </div>
       </div>
