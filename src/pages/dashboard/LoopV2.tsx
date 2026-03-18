@@ -531,6 +531,8 @@ export default function LoopV2() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [showUpgradeWall, setShowUpgradeWall] = useState(false);
   const [upgradeWallTrigger, setUpgradeWallTrigger] = useState<"chat" | "tool">("chat");
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [toolInput, setToolInput] = useState<Record<string, string>>({});
   const [chatCount, setChatCount] = useState(() => {
     // localStorage persists across sessions — user can't bypass by reopening browser
     return parseInt(localStorage.getItem("adbrief_chat_count") || "0", 10);

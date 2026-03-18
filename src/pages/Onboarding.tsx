@@ -150,11 +150,13 @@ export default function Onboarding() {
 
       // Save pain_point to ai_profile for personalizing first chat message
       if (state.pain_point) {
-        supabase.from('user_ai_profile' as any).upsert({
-          user_id: session.user.id,
-          pain_point: state.pain_point,
-          updated_at: new Date().toISOString(),
-        } as any, { onConflict: 'user_id' }).catch(() => {});
+        try {
+          await (supabase.from('user_ai_profile' as any) as any).upsert({
+            user_id: session.user.id,
+            pain_point: state.pain_point,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        } catch {}
       }
 
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
