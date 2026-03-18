@@ -707,6 +707,7 @@ export default function LoopV2() {
               onConnect={() => handleConnect(p)}
               onDisconnect={() => handleDisconnect(p.id)}
               requiresPersona={!selectedPersona}
+              dt={dt}
             />
           ))}
           <button onClick={() => loadPulse()}
