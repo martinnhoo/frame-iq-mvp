@@ -20,8 +20,10 @@ const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day →",
     hero_badge: "AI FOR PERFORMANCE MARKETING", hero_h1a: "The AI that knows", hero_h1b: "your ad account.",
-    hero_sub: "Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. AdBrief reads your data in real time and thinks like a senior strategist.",
+    hero_sub: "Official Meta Ads connection. Real campaign data. AI that thinks like a senior media buyer.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works", hero_fine: "1-day free trial on any plan · Cancel anytime · No setup required", hero_built: "BUILT ON",
+    coming_soon_badge: "Coming soon",
+    coming_soon_popup: "We're working on it! TikTok and Google Ads integration is coming soon. Meta Ads is fully available now.",
     how_label: "HOW IT WORKS", how_h2: "Three steps to your AI strategy partner.", how_sub: "Connect once. Ask forever. No CSV uploads. No manual data entry.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
     how_s2_title: "Set up your persona or brand", how_s2_desc: "Tell AdBrief who you're advertising to. Create audience personas or brand profiles — the AI uses this to give you market-specific answers.",
@@ -69,17 +71,19 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q5: "What's a persona in AdBrief?", faq_a5: "A persona is an audience profile that gives the AI context — who you're targeting, what market, what platform, what their objections are. The AI uses this to tailor every answer to that specific audience.",
     final_label: "START TODAY", final_h2: "Your ad account is full of insights. Start asking.", final_sub: "Connect in 2 minutes. Cancel anytime within the first day.",
     final_cta: "Try free for 1 day", final_fine: "Any plan · 1-day free trial · Cancel before 24h, pay nothing", footer_copy: "© 2026 AdBrief",
-    chat_q1: "What's killing my ROAS this week?",
-    chat_a1: "Your top 3 ads are in creative fatigue — same visuals running for 19 days. CPM is up 34% while CTR dropped from 2.8% to 1.1%. This isn't a bid problem, it's a creative problem. Your winning pattern from February (direct question hook + social proof CTA) hasn't been tested in 3 weeks.",
-    chat_q2: "Write me 3 hooks using that winning pattern",
-    chat_a2: "Based on your account's top converters, 3 hooks ready to test:\n\n1. \"Still guessing which ad is wasting your budget?\"\n2. \"Every day you don't fix your hook, you're paying for clicks that don't convert.\"\n3. \"1,000 brands tested this creative format. 94% saw CPM drop in week 1.\"",
+    chat_q1: "My fitness ads ROAS dropped 40% — what's happening?",
+    chat_a1: "FitCore's top 3 gym ads hit creative fatigue — same transformation visuals for 22 days. CPM up 41%, CTR dropped from 3.1% to 1.4%. Your January winner (before/after hook + limited-time offer) hasn't run since week 3. That's your fix.",
+    chat_q2: "Write 3 hooks for FitCore's new summer cut program",
+    chat_a2: "Based on FitCore's top converters, 3 hooks for the summer cut:\n\n1. \"Still carrying winter weight in July? FitCore's 8-week cut plan starts today.\"\n2. \"Your gym membership isn't enough. Here's what FitCore members do differently.\"\n3. \"3,200 people started FitCore's summer program this month. Most saw results in week 2.\"",
     chat_placeholder: "Ask anything about your campaigns...",
   },
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem é", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia →",
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "A IA que conhece", hero_h1b: "a sua conta de anúncios.",
-    hero_sub: "Conecte Meta, TikTok ou Google Ads. Pergunte qualquer coisa sobre suas campanhas. O AdBrief lê seus dados em tempo real e pensa como um estrategista sênior.",
+    hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um media buyer sênior.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", hero_fine: "1 dia de teste grátis em qualquer plano · Cancele quando quiser · Sem configuração", hero_built: "DESENVOLVIDO COM",
+    coming_soon_badge: "Em breve",
+    coming_soon_popup: "Estamos trabalhando nisso! A integração com TikTok e Google Ads está chegando em breve. O Meta Ads já está disponível agora.",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual de dados.",
     how_s1_title: "Conecte suas contas de anúncios", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha — investimento, CTR, CPM, performance de criativos — em tempo real.",
     how_s2_title: "Configure sua persona ou marca", how_s2_desc: "Diga ao AdBrief para quem você está anunciando. Crie personas de audiência ou perfis de marca — a IA usa isso para te dar respostas específicas para o seu mercado.",
@@ -127,17 +131,19 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q5: "O que é uma persona no AdBrief?", faq_a5: "Uma persona é um perfil de audiência que dá contexto à IA — para quem você está segmentando, qual mercado, qual plataforma, quais são as objeções. A IA usa isso para personalizar cada resposta para aquela audiência específica.",
     final_label: "COMECE HOJE", final_h2: "Sua conta de anúncios está cheia de insights. Comece a perguntar.", final_sub: "Conecte em 2 minutos. Cancele quando quiser dentro do primeiro dia.",
     final_cta: "Testar grátis por 1 dia", final_fine: "Qualquer plano · 1 dia de teste grátis · Cancele antes de 24h, não paga nada", footer_copy: "© 2026 AdBrief",
-    chat_q1: "O que está matando meu ROAS essa semana?",
-    chat_a1: "Seus 3 principais anúncios estão em fadiga criativa — mesmos visuais rodando há 19 dias. CPM subiu 34% enquanto o CTR caiu de 2,8% para 1,1%. Não é problema de lance, é problema criativo. Seu padrão vencedor de fevereiro (hook de pergunta direta + CTA de prova social) não foi testado há 3 semanas.",
-    chat_q2: "Escreva 3 hooks usando esse padrão vencedor",
-    chat_a2: "Com base nos melhores conversores da sua conta, 3 hooks prontos para testar:\n\n1. \"Ainda adivinhando qual anúncio está desperdiçando seu orçamento?\"\n2. \"Cada dia que você não corrige seu hook, está pagando por cliques que não convertem.\"\n3. \"1.000 marcas testaram esse formato criativo. 94% viram o CPM cair na semana 1.\"",
+    chat_q1: "Meu ROAS de fitness caiu 40% — o que está acontecendo?",
+    chat_a1: "Os 3 principais anúncios da FitCore estão em fadiga — mesmos visuais de transformação há 22 dias. CPM subiu 41%, CTR caiu de 3,1% para 1,4%. Seu hook vencedor de janeiro (antes/depois + oferta limitada) não roda desde a semana 3. É aí que está o problema.",
+    chat_q2: "Escreva 3 hooks para o novo programa de cutting de verão da FitCore",
+    chat_a2: "Com base nos melhores conversores da FitCore, 3 hooks para o cutting de verão:\n\n1. \"Ainda carregando o peso do inverno em julho? O programa de 8 semanas da FitCore começa hoje.\"\n2. \"Sua academia não é suficiente. Veja o que os membros da FitCore fazem de diferente.\"\n3. \"3.200 pessoas começaram o programa de verão da FitCore esse mês. A maioria viu resultado na semana 2.\"",
     chat_placeholder: "Pergunte qualquer coisa sobre suas campanhas...",
   },
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién es", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día →",
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "La IA que conoce", hero_h1b: "tu cuenta de anuncios.",
-    hero_sub: "Conecta Meta, TikTok o Google Ads. Pregunta lo que quieras sobre tus campañas. AdBrief lee tus datos en tiempo real y piensa como un estratega senior.",
+    hero_sub: "Conexión oficial con Meta Ads. Datos reales de campaña. IA que piensa como un media buyer senior.",
     hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona", hero_fine: "1 día de prueba gratis en cualquier plan · Cancela cuando quieras · Sin configuración", hero_built: "DESARROLLADO CON",
+    coming_soon_badge: "Próximamente",
+    coming_soon_popup: "¡Estamos trabajando en ello! La integración con TikTok y Google Ads llega pronto. Meta Ads ya está disponible.",
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos para tu socio de estrategia con IA.", how_sub: "Conecta una vez. Pregunta para siempre. Sin subidas de CSV. Sin entrada manual de datos.",
     how_s1_title: "Conecta tus cuentas de anuncios", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales de campaña — inversión, CTR, CPM, rendimiento de creativos — en tiempo real.",
     how_s2_title: "Configura tu persona o marca", how_s2_desc: "Dile a AdBrief a quién le estás anunciando. Crea perfiles de audiencia o de marca — la IA los usa para darte respuestas específicas para tu mercado.",
@@ -185,10 +191,10 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q5: "¿Qué es una persona en AdBrief?", faq_a5: "Una persona es un perfil de audiencia que le da contexto a la IA — a quién le estás segmentando, qué mercado, qué plataforma, cuáles son sus objeciones. La IA usa esto para personalizar cada respuesta a esa audiencia específica.",
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta de anuncios está llena de insights. Empieza a preguntar.", final_sub: "Conéctate en 2 minutos. Cancela cuando quieras dentro del primer día.",
     final_cta: "Probar gratis 1 día", final_fine: "Cualquier plan · 1 día de prueba gratis · Cancela antes de 24h, no pagas nada", footer_copy: "© 2026 AdBrief",
-    chat_q1: "¿Qué está matando mi ROAS esta semana?",
-    chat_a1: "Tus 3 principales anuncios están en fatiga creativa — los mismos visuales llevan 19 días corriendo. El CPM subió un 34% mientras el CTR cayó de 2,8% a 1,1%. No es un problema de puja, es un problema creativo. Tu patrón ganador de febrero (hook de pregunta directa + CTA de prueba social) no se ha probado en 3 semanas.",
-    chat_q2: "Escríbeme 3 hooks usando ese patrón ganador",
-    chat_a2: "Basándome en los mejores conversores de tu cuenta, 3 hooks listos para probar:\n\n1. \"¿Todavía adivinando qué anuncio está desperdiciando tu presupuesto?\"\n2. \"Cada día que no arreglas tu hook, estás pagando por clics que no convierten.\"\n3. \"1.000 marcas probaron este formato creativo. El 94% vio caer el CPM en la semana 1.\"",
+    chat_q1: "Mi ROAS de fitness bajó 40% — ¿qué está pasando?",
+    chat_a1: "Los 3 anuncios principales de FitCore están en fatiga creativa — los mismos visuales de transformación llevan 22 días. CPM subió 41%, CTR cayó de 3,1% a 1,4%. Tu hook ganador de enero (antes/después + oferta limitada) no corre desde la semana 3. Ahí está el problema.",
+    chat_q2: "Escríbeme 3 hooks para el nuevo programa de cutting de verano de FitCore",
+    chat_a2: "Basándome en los mejores conversores de FitCore, 3 hooks para el cutting de verano:\n\n1. \"¿Todavía cargando el peso del invierno en julio? El programa de 8 semanas de FitCore empieza hoy.\"\n2. \"Tu gimnasio no es suficiente. Mira lo que hacen diferente los miembros de FitCore.\"\n3. \"3.200 personas empezaron el programa de verano de FitCore este mes. La mayoría vio resultados en la semana 2.\"",
     chat_placeholder: "Pregunta lo que quieras sobre tus campañas...",
   },
 };
@@ -287,7 +293,49 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   );
 }
 
-function ChatMockup({ t }: { t: Record<string, string> }) {
+// ─── Platform Badges ─────────────────────────────────────────────────────────
+function PlatformBadges({ t }: { t: Record<string, string> }) {
+  const [popup, setPopup] = useState(false);
+
+  const platforms = [
+    { name: "Meta Ads", icon: "🔵", active: true, color: "#0ea5e9" },
+    { name: "TikTok Ads", icon: "🎵", active: false, color: "#94a3b8" },
+    { name: "Google Ads", icon: "🟡", active: false, color: "#94a3b8" },
+  ];
+
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "0 32px 56px", flexWrap: "wrap" }}>
+        {platforms.map(p => (
+          <button key={p.name} onClick={() => !p.active && setPopup(true)}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: p.active ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: `1px solid ${p.active ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}`, cursor: p.active ? "default" : "pointer", position: "relative", transition: "all 0.15s" }}
+            onMouseEnter={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+            onMouseLeave={e => { if (!p.active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}>
+            <span style={{ fontSize: 14 }}>{p.icon}</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, color: p.active ? "#fff" : "rgba(255,255,255,0.3)" }}>{p.name}</span>
+            {p.active
+              ? <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#34d399", fontFamily: "'Plus Jakarta Sans', sans-serif" }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />Live</span>
+              : <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.04em" }}>{t.coming_soon_badge}</span>
+            }
+          </button>
+        ))}
+      </div>
+
+      {popup && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "rgba(6,8,18,0.85)", backdropFilter: "blur(12px)" }} onClick={() => setPopup(false)}>
+          <div style={{ background: "#0d0f1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", maxWidth: 380, width: "100%", textAlign: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 36, marginBottom: 16 }}>🚀</div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.02em" }}>{t.coming_soon_badge}</h3>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, marginBottom: 24 }}>{t.coming_soon_popup}</p>
+            <button onClick={() => setPopup(false)} style={{ padding: "10px 28px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>OK</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
   const msgs = [{ role: "user", text: t.chat_q1 }, { role: "ai", text: t.chat_a1 }, { role: "user", text: t.chat_q2 }, { role: "ai", text: t.chat_a2 }];
   return (
     <section style={{ padding: "0 32px 80px" }}>
@@ -575,6 +623,7 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <Hero onCTA={handleCTA} t={t} />
+      <PlatformBadges t={t} />
       <ChatMockup t={t} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
