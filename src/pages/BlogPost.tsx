@@ -653,7 +653,7 @@ const blogPosts: Record<string, {
       "Run AI creative tools for 3 months. Track your output, ROAS, and the time your team spends on creative. If the numbers work — you've saved $90K/year. If you hit a ceiling, you'll have clear data to write the perfect job description for the Creative Strategist you actually need.",
       "Try AdBrief free for 14 days — no card required — and see if AI can cover your creative strategy needs. Start with the [hook score tool](/use-case/hook-score-tool), [brief generator](/use-case/video-ad-brief-generator), and [pre-flight check](/use-case/pre-flight-ad-check). creative strategy needs.",
     ],
-  },,
+  },
 
   "meta-ads-roas-dropped": {
     title: "Your Meta Ads ROAS Dropped. Here's the Exact Diagnostic Process.",
