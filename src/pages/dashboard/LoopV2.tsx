@@ -154,12 +154,13 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 }
 
 // ── Platform connection badge — with real logo ────────────────────────────────
-function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresPersona }: {
+function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresPersona, dt }: {
   platform: typeof PLATFORMS[0];
   connected: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
   requiresPersona: boolean;
+  dt: (key: string) => string;
 }) {
   const [hov, setHov] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -256,9 +257,8 @@ export default function LoopV2() {
   const dt = useDashT(language);
   const [feedback, setFeedback] = useState<Record<number, 'like' | 'dislike' | null>>({});
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-  const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
-  const { language } = useLanguage();
-  const navigate = useNavigate();
+   const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
+   const navigate = useNavigate();
 
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -707,6 +707,7 @@ export default function LoopV2() {
               onConnect={() => handleConnect(p)}
               onDisconnect={() => handleDisconnect(p.id)}
               requiresPersona={!selectedPersona}
+              dt={dt}
             />
           ))}
           <button onClick={() => loadPulse()}
