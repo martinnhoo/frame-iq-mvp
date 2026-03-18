@@ -847,7 +847,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_disconnect: "断开连接", loop_connected: "已连接", loop_soon: "即将推出",
      loop_suggestions: "建议", loop_based_account: "基于你的账户",
      loop_daily_limit: "已达每日限额", loop_daily_limit_content: "你今天已使用完 {plan} 计划的 {limit} 条消息。限额明天重置。升级到 {upgrade} 以获取更多。",
-     loop_copy: "复制", loop_copied: "已复制！", loop_like: "有帮助", loop_dislike: "没帮助", loop_regenerate: "重新生成",
+     loop_copy: "复制", loop_copied: "已复制！", loop_like: "有帮助", loop_dislike: "没帮助", loop_regenerate: "重新生成", loop_more_ideas: "更多想法",
     ov_welcome: "欢迎回来", ov_good_morning: "早上好", ov_good_afternoon: "下午好",
     ov_good_evening: "晚上好", ov_analyses: "分析次数", ov_boards: "制作板",
     ov_avg_hook: "平均钩子评分", ov_preflights: "预检次数", ov_recent: "近期活动",
