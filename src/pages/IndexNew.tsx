@@ -327,39 +327,129 @@ function StatsBar({ t }: { t: Record<string, string> }) {
 }
 
 function ChatMockup({ t }: { t: Record<string, string> }) {
-  const msgs = [{ role: "user", text: t.chat_q1 }, { role: "ai", text: t.chat_a1 }, { role: "user", text: t.chat_q2 }, { role: "ai", text: t.chat_a2 }];
+  const allMsgs = [
+    { role: "user", text: t.chat_q1 },
+    { role: "ai", text: t.chat_a1 },
+    { role: "user", text: t.chat_q2 },
+    { role: "ai", text: t.chat_a2 },
+  ];
+
+  const [visibleCount, setVisibleCount] = React.useState(0);
+  const [typing, setTyping] = React.useState(false);
+  const [started, setStarted] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  // Start animation when section enters viewport
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !started) { setStarted(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [started]);
+
+  // Sequentially reveal messages
+  React.useEffect(() => {
+    if (!started) return;
+    if (visibleCount >= allMsgs.length) return;
+    const isAi = allMsgs[visibleCount]?.role === "ai";
+    setTyping(true);
+    const delay = isAi ? 900 : 400;
+    const t = setTimeout(() => {
+      setTyping(false);
+      setVisibleCount(v => v + 1);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [started, visibleCount]);
+
+  const msgs = allMsgs.slice(0, visibleCount);
+
   return (
-    <section style={{ padding: "0 32px 80px" }}>
+    <section style={{ padding: "0 clamp(16px,4vw,32px) 80px" }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <div {...fadeIn(0)} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 100px rgba(14,165,233,0.06), 0 40px 80px rgba(0,0,0,0.5)" }}>
+        {/* Section label */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>LIVE DEMO</span>
+          <h2 style={{ ...j, fontSize: "clamp(22px,3.5vw,36px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 8px" }}>
+            {t.demo_headline || "See it answer a real question"}
+          </h2>
+          <p style={{ ...j, fontSize: 14, color: "rgba(255,255,255,0.35)", maxWidth: 380, margin: "0 auto" }}>
+            {t.demo_sub || "This is what AdBrief looks like when connected to a real Meta Ads account."}
+          </p>
+        </div>
+
+        {/* Chat window */}
+        <div ref={ref} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 80px rgba(14,165,233,0.06), 0 32px 64px rgba(0,0,0,0.5)" }}>
+          {/* Browser chrome */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <div style={{ display: "flex", gap: 6 }}>{["rgba(255,90,90,0.35)", "rgba(255,190,0,0.35)", "rgba(40,200,80,0.35)"].map((c, i) => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["rgba(255,90,90,0.35)", "rgba(255,190,0,0.35)", "rgba(40,200,80,0.35)"].map((c, i) => (
+                <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+              ))}
+            </div>
             <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6, maxWidth: 260, margin: "0 auto" }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34d399" }} />
               <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.28)" }}>adbrief.pro/dashboard/loop</span>
             </div>
           </div>
-          <div style={{ background: "#09091a", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 18 }}>
+
+          {/* Chat body */}
+          <div style={{ background: "#09091a", padding: "20px 24px", minHeight: 340, display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Persona bar */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 8px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)" }}>
-                <span style={{ fontSize: 14 }}>🎯</span><span style={{ ...j, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>Sarah · FitCore Brand</span><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
+                <span style={{ fontSize: 14 }}>🎯</span>
+                <span style={{ ...j, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>Sarah · FitCore Brand</span>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
               </div>
               <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>18 analyses · Meta connected</span>
             </div>
+
+            {/* Messages */}
             {msgs.map((msg, i) => (
-              <div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 10 }}>
-                {msg.role === "ai" && <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 13 }}>✦</div>}
-                <div style={{ maxWidth: "75%", padding: "11px 15px", borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: msg.role === "user" ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${msg.role === "user" ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}` }}>
-                  <p style={{ ...j, fontSize: 13, color: msg.role === "user" ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.65)", lineHeight: 1.6, whiteSpace: "pre-line" }}>{msg.text}</p>
+              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 10,
+                animation: "fadeSlideIn 0.3s ease forwards" }}>
+                {msg.role === "ai" && (
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 13 }}>✦</div>
+                )}
+                <div style={{ maxWidth: "78%", padding: "11px 15px",
+                  borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                  background: msg.role === "user" ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${msg.role === "user" ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}` }}>
+                  <p style={{ ...j, fontSize: 13, color: msg.role === "user" ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.7)", lineHeight: 1.65, whiteSpace: "pre-line", margin: 0 }}>{msg.text}</p>
                 </div>
               </div>
             ))}
-            <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 13, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+
+            {/* Typing indicator */}
+            {typing && (
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>✦</div>
+                <div style={{ display: "flex", gap: 5, alignItems: "center", padding: "10px 14px", borderRadius: "14px 14px 14px 4px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(14,165,233,0.6)",
+                      animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Input bar */}
+            <div style={{ marginTop: "auto", display: "flex", gap: 10, padding: "10px 14px", borderRadius: 13, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.18)", flex: 1 }}>{t.chat_placeholder}</span>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><ArrowRight size={13} color="#000" /></div>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <ArrowRight size={13} color="#000" />
+              </div>
             </div>
           </div>
         </div>
+
+        <style>{`
+          @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+        `}</style>
       </div>
     </section>
   );
