@@ -946,7 +946,7 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
 
       {/* ── Header — clean, just platform status ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 8 }}>
