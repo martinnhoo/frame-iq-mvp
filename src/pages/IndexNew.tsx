@@ -318,133 +318,221 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
 // ─── Stats Bar ────────────────────────────────────────────────────────────────
 
 function ChatMockup({ t }: { t: Record<string, string> }) {
-  const allMsgs = [
-    { role: "user", text: t.chat_q1 },
-    { role: "ai", text: t.chat_a1 },
-    { role: "user", text: t.chat_q2 },
-    { role: "ai", text: t.chat_a2 },
+  const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+
+  // Preset questions the visitor can choose from
+  const PRESETS = [
+    { label: t.demo_p1 || "Why did my ROAS drop?",         q: t.demo_p1_full || "My ROAS dropped 40% this week — what's happening?",           emoji: "📉" },
+    { label: t.demo_p2 || "Which ads to pause?",           q: t.demo_p2_full || "Which of my ads should I pause right now?",                     emoji: "⏸️" },
+    { label: t.demo_p3 || "Write me 3 hooks",              q: t.demo_p3_full || "Write 3 hooks for my best-performing market based on my data.",  emoji: "⚡" },
+    { label: t.demo_p4 || "Creative fatigue diagnosis",    q: t.demo_p4_full || "Which creatives are in fatigue right now?",                      emoji: "🔥" },
   ];
 
-  const [visibleCount, setVisibleCount] = useState(0);
-  const [typing, setTyping] = useState(false);
-  const [started, setStarted] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  // Scripted AI responses keyed to each preset
+  const RESPONSES: Record<string, string> = {
+    [PRESETS[0].q]: t.demo_r1 || "Based on your account data:
 
-  // Start animation when section enters viewport
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started) { setStarted(true); obs.disconnect(); }
-    }, { threshold: 0.3 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [started]);
+↑ CPM jumped 38% in the last 5 days — your top 3 ad sets are showing audience exhaustion. Frequency hit 4.2 on your BR-Women-25-34 set.
 
-  // Sequentially reveal messages
-  useEffect(() => {
-    if (!started) return;
-    if (visibleCount >= allMsgs.length) return;
-    const isAi = allMsgs[visibleCount]?.role === "ai";
-    setTyping(true);
-    const delay = isAi ? 900 : 400;
-    const t = setTimeout(() => {
-      setTyping(false);
-      setVisibleCount(v => v + 1);
-    }, delay);
-    return () => clearTimeout(t);
-  }, [started, visibleCount]);
+↓ Hook rate dropped from 28% → 14% on your best creative (Creative_042). Same visual, same copy, but it's been running 22 days.
 
-  const msgs = allMsgs.slice(0, visibleCount);
+Fix: Refresh the hook on Creative_042. New first-3-seconds, same offer. And expand your audience radius by 20% to reduce frequency pressure.",
+    [PRESETS[1].q]: t.demo_r2 || "3 ads to pause immediately:
+
+• Creative_038 — CPM $18.40, CTR 0.4%, no conversions in 7 days. Dead weight.
+• Ad Set BR-Men-35-44 — ROAS 0.6x, spending $240/day with no signal of recovery.
+• Creative_029 — hook rate 8%, below your 15% floor. Audience is skipping it.
+
+These 3 are burning $420/day with negative return. Kill them now.",
+    [PRESETS[2].q]: t.demo_r3 || "Based on your top converters, 3 hooks for your BR market:
+
+1. "Seu ROAS tá caindo e você ainda não sabe por quê — veja o que seus dados já estão dizendo."
+
+2. "3.200 gestores usam IA para tomar decisões de campanha em 30 segundos. Você ainda usa planilha?"
+
+3. "Antes de pausar qualquer anúncio hoje, faça essa pergunta para a IA — ela sabe o que você não sabe."",
+    [PRESETS[3].q]: t.demo_r4 || "2 creatives in active fatigue:
+
+• Creative_042 — running 22 days, frequency 3.8, CTR fell 55% from peak. Classic saturation.
+• Creative_031 — hook rate was 31% at launch, now 12%. Audience has seen it too many times.
+
+Not yet fatigued but close:
+• Creative_019 — frequency hitting 2.9, still converting but watch it this week.
+
+Recommendation: Brief new hooks for _042 and _031 this week. Same offer, new angle.",
+  };
+
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<{role: string; text: string}[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [used, setUsed] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return;
+    setUsed(true);
+    const userMsg = { role: "user", text: text.trim() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+
+    // Simulate typing delay
+    await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
+
+    // Find best matching response
+    const response = RESPONSES[text.trim()] ||
+      (text.toLowerCase().includes("roas") ? RESPONSES[PRESETS[0].q] :
+       text.toLowerCase().includes("paus") || text.toLowerCase().includes("kill") ? RESPONSES[PRESETS[1].q] :
+       text.toLowerCase().includes("hook") || text.toLowerCase().includes("escrev") || text.toLowerCase().includes("write") ? RESPONSES[PRESETS[2].q] :
+       RESPONSES[PRESETS[3].q]);
+
+    setMessages(prev => [...prev, { role: "ai", text: response }]);
+    setLoading(false);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
+
+  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
+  };
 
   return (
     <section style={{ padding: "0 clamp(16px,4vw,32px) 80px" }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        {/* Section label */}
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>LIVE DEMO</span>
-          <h2 style={{ ...j, fontSize: "clamp(22px,3.5vw,36px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 8px" }}>
-            {t.demo_headline || "See it answer a real question"}
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>
+            {t.demo_label || "TRY IT NOW — NO ACCOUNT NEEDED"}
+          </span>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(22px,3.5vw,36px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>
+            {t.demo_headline || "Ask AdBrief a real question."}
           </h2>
-          <p style={{ ...j, fontSize: 14, color: "rgba(255,255,255,0.35)", maxWidth: 380, margin: "0 auto" }}>
-            {t.demo_sub || "This is what AdBrief looks like when connected to a real Meta Ads account."}
+          <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.4)", maxWidth: 420, margin: "0 auto" }}>
+            {t.demo_sub || "This is the actual AI. We loaded it with a sample ad account so you can see exactly what it knows."}
           </p>
         </div>
 
+        {/* Preset pills */}
+        {messages.length === 0 && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
+            {PRESETS.map((p, i) => (
+              <button key={i} onClick={() => sendMessage(p.q)}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.7)", transition: "all 0.14s" }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14,165,233,0.1)"; el.style.borderColor = "rgba(14,165,233,0.3)"; el.style.color = "#fff"; }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.04)"; el.style.borderColor = "rgba(255,255,255,0.1)"; el.style.color = "rgba(255,255,255,0.7)"; }}>
+                <span>{p.emoji}</span> {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Chat window */}
-        <div ref={ref} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 80px rgba(14,165,233,0.06), 0 32px 64px rgba(0,0,0,0.5)" }}>
+        <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 80px rgba(14,165,233,0.06), 0 32px 64px rgba(0,0,0,0.5)" }}>
           {/* Browser chrome */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {["rgba(255,90,90,0.35)", "rgba(255,190,0,0.35)", "rgba(40,200,80,0.35)"].map((c, i) => (
-                <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: 5 }}>
+              {["rgba(255,90,90,0.35)","rgba(255,190,0,0.35)","rgba(40,200,80,0.35)"].map((c,i) => (
+                <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />
               ))}
             </div>
-            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6, maxWidth: 260, margin: "0 auto" }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34d399" }} />
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.28)" }}>adbrief.pro/dashboard/loop</span>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 5, padding: "3px 10px", display: "flex", alignItems: "center", gap: 6, maxWidth: 240, margin: "0 auto" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>adbrief.pro/dashboard/loop</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: "auto" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.6)", animation: "statusPulse 2s infinite" }} />
+              <span style={{ fontFamily: F, fontSize: 10, color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>
+                {t.demo_sample || "Sample account"}
+              </span>
             </div>
           </div>
 
-          {/* Chat body */}
-          <div style={{ background: "#09091a", padding: "20px 24px", minHeight: 340, display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Persona bar */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 12px 5px 8px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)" }}>
-                <span style={{ fontSize: 14 }}>🎯</span>
-                <span style={{ ...j, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>Sarah · FitCore Brand</span>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
-              </div>
-              <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>18 analyses · Meta connected</span>
+          {/* Persona bar */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 20px", background: "rgba(255,255,255,0.015)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "4px 10px 4px 7px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
+              <span style={{ fontSize: 12 }}>🎯</span>
+              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "#0ea5e9" }}>FitCore · Brazil</span>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
             </div>
+            <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Meta Ads connected · 18 campaigns</span>
+          </div>
 
-            {/* Messages */}
-            {msgs.map((msg, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 10,
-                animation: "fadeSlideIn 0.3s ease forwards" }}>
+          {/* Messages area */}
+          <div style={{ background: "#09091a", padding: "20px", minHeight: messages.length === 0 ? 120 : 240, maxHeight: 420, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}>
+            {messages.length === 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.4 }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>✦</div>
+                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", margin: 0 }}>
+                  {t.demo_placeholder_chat || "Ask me anything about your campaigns…"}
+                </p>
+              </div>
+            )}
+            {messages.map((msg, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 8, animation: "fadeSlideIn 0.25s ease" }}>
                 {msg.role === "ai" && (
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 13 }}>✦</div>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 12 }}>✦</div>
                 )}
-                <div style={{ maxWidth: "78%", padding: "11px 15px",
+                <div style={{ maxWidth: "80%", padding: "11px 14px",
                   borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                  background: msg.role === "user" ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${msg.role === "user" ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}` }}>
-                  <p style={{ ...j, fontSize: 13, color: msg.role === "user" ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.7)", lineHeight: 1.65, whiteSpace: "pre-line", margin: 0 }}>{msg.text}</p>
+                  background: msg.role === "user" ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.1))" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${msg.role === "user" ? "rgba(14,165,233,0.22)" : "rgba(255,255,255,0.07)"}` }}>
+                  <p style={{ fontFamily: F, fontSize: 13, color: msg.role === "user" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.82)", lineHeight: 1.7, whiteSpace: "pre-line", margin: 0 }}>{msg.text}</p>
                 </div>
               </div>
             ))}
-
-            {/* Typing indicator */}
-            {typing && (
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>✦</div>
-                <div style={{ display: "flex", gap: 5, alignItems: "center", padding: "10px 14px", borderRadius: "14px 14px 14px 4px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(14,165,233,0.6)",
-                      animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                  ))}
+            {loading && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12 }}>✦</div>
+                <div style={{ display: "flex", gap: 5, padding: "11px 14px", borderRadius: "14px 14px 14px 4px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  {[0,1,2].map(d => <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.6)", animation: `bounce 1.2s ease-in-out ${d*0.2}s infinite` }} />)}
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
+          </div>
 
-            {/* Input bar */}
-            <div style={{ marginTop: "auto", display: "flex", gap: 10, padding: "10px 14px", borderRadius: 13, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.18)", flex: 1 }}>{t.chat_placeholder}</span>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <ArrowRight size={13} color="#000" />
-              </div>
+          {/* Input */}
+          <div style={{ background: "#09091a", padding: "0 16px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "10px 14px", transition: "border-color 0.15s, box-shadow 0.15s" }}
+              onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.06)"; }}
+              onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.09)"; el.style.boxShadow = "none"; }}>
+              <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
+                placeholder={t.demo_input_placeholder || "Ask about your campaigns, creatives, hooks, ROAS…"}
+                rows={1} style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.6, maxHeight: 100, overflowY: "auto", fontFamily: F, caretColor: "#0ea5e9" }} />
+              <button onClick={() => sendMessage(input)} disabled={!input.trim() || loading}
+                style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: input.trim() && !loading ? "pointer" : "default", background: input.trim() && !loading ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.05)", transition: "all 0.15s", transform: input.trim() && !loading ? "scale(1)" : "scale(0.92)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke={input.trim() && !loading ? "#000" : "rgba(255,255,255,0.2)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
             </div>
           </div>
         </div>
 
+        {/* CTA after interaction */}
+        {used && (
+          <div style={{ marginTop: 20, padding: "16px 20px", borderRadius: 14, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", animation: "fadeSlideIn 0.4s ease" }}>
+            <div>
+              <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#fff", margin: 0 }}>
+                {t.demo_cta_title || "This was a sample account. Yours has real data."}
+              </p>
+              <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "3px 0 0" }}>
+                {t.demo_cta_sub || "Connect Meta Ads and ask the same questions with your actual campaigns."}
+              </p>
+            </div>
+            <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontFamily: F, fontSize: 13, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {t.demo_cta_btn || "Try with my account →"}
+            </a>
+          </div>
+        )}
+
         <style>{`
           @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+          @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+          @keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         `}</style>
       </div>
     </section>
   );
 }
+
 
 function HowItWorks({ t }: { t: Record<string, string> }) {
   const steps = [
