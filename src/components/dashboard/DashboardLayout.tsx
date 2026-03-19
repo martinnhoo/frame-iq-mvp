@@ -210,14 +210,16 @@ export default function DashboardLayout() {
       }
       if (mounted) setLoading(false);
     };
-    init();
+    // Safety timeout — if init takes >6s on mobile, force show dashboard
+    const timeout = setTimeout(() => { setLoading(false); }, 6000);
+    init().finally(() => clearTimeout(timeout));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => { if (!session) navigate("/login"); });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#0d0f18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div style={{ minHeight: "100dvh", background: "#0d0f18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "fixed", inset: 0, zIndex: 9999 }}>
         {/* Logo */}
         <div style={{ marginBottom: 40, opacity: 0.9 }}>
           <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>ad</span>
