@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
@@ -334,13 +334,13 @@ function ChatMockup({ t }: { t: Record<string, string> }) {
     { role: "ai", text: t.chat_a2 },
   ];
 
-  const [visibleCount, setVisibleCount] = React.useState(0);
-  const [typing, setTyping] = React.useState(false);
-  const [started, setStarted] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [typing, setTyping] = useState(false);
+  const [started, setStarted] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   // Start animation when section enters viewport
-  React.useEffect(() => {
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
@@ -351,7 +351,7 @@ function ChatMockup({ t }: { t: Record<string, string> }) {
   }, [started]);
 
   // Sequentially reveal messages
-  React.useEffect(() => {
+  useEffect(() => {
     if (!started) return;
     if (visibleCount >= allMsgs.length) return;
     const isAi = allMsgs[visibleCount]?.role === "ai";
