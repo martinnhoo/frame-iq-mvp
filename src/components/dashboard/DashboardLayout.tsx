@@ -261,27 +261,53 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#070710] sticky top-0 z-30" style={{ flexShrink: 0 }}>
+        {/* Mobile topbar — always visible below lg breakpoint */}
+        <header className="lg:hidden" style={{
+          height: 56, minHeight: 56, flexShrink: 0,
+          display: "flex", alignItems: "center",
+          padding: "0 16px",
+          background: "#070710",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          position: "sticky", top: 0, zIndex: 30,
+          gap: 12,
+        }}>
+          {/* Hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
-            style={{ marginRight: 12, flexShrink: 0 }}
+            style={{
+              width: 36, height: 36, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: 8, background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              cursor: "pointer", color: "rgba(255,255,255,0.7)",
+            }}
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-1.5" style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Logo centered */}
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
             <Logo size="sm" />
           </div>
-          {/* Mobile profile shortcut */}
+
+          {/* Avatar */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ring-1 ring-white/10 overflow-hidden"
-            style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.4),rgba(236,72,153,0.4))" }}
+            style={{
+              width: 36, height: 36, flexShrink: 0,
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 700,
+              background: "linear-gradient(135deg,rgba(124,58,237,0.5),rgba(236,72,153,0.5))",
+              border: "1px solid rgba(255,255,255,0.12)",
+              cursor: "pointer", overflow: "hidden",
+              color: "#fff",
+            }}
           >
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+              <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
-              <span className="text-white">{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>
+              <span>{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>
             )}
           </button>
         </header>

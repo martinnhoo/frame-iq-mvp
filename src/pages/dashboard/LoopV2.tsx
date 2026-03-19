@@ -946,7 +946,7 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
 
       {/* ── Header — clean, just platform status ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 8 }}>
@@ -1158,33 +1158,48 @@ export default function LoopV2() {
           background: #0d0f18;
         }
         @media (max-width: 1023px) {
+          /* Scrollable main, not fixed height */
           .dashboard-main {
             overflow-y: auto !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
           }
+          /* Loop: natural height */
           .loop-container {
             height: auto !important;
             min-height: calc(100dvh - 100px);
             overflow: visible !important;
+            display: flex !important;
+            flex-direction: column !important;
           }
           .loop-messages {
-            flex: none !important;
-            overflow: visible !important;
+            flex: 1 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
           }
+          /* Input sticky at bottom */
           .loop-input-area {
             position: sticky !important;
             bottom: 0 !important;
             z-index: 20 !important;
             background: #0d0f18 !important;
+            padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
           }
-          .suggestions-grid { grid-template-columns: 1fr !important; }
+          /* Hide tool pills on mobile */
           .loop-tool-pills { display: none !important; }
+          /* Suggestions single column */
+          .suggestions-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 640px) {
+          /* Hide platform badges on mobile */
           .loop-header-badges { display: none !important; }
+          /* iOS zoom fix */
           .loop-input-area textarea { font-size: 16px !important; }
-          body { overflow-x: hidden !important; }
+          /* No horizontal scroll */
+          body, .dashboard-root { overflow-x: hidden !important; }
+          /* Compact persona bar */
+          .loop-persona-bar { padding: 0 12px !important; }
         }
       `}</style>
     </div>

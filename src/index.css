@@ -194,31 +194,22 @@ code, pre,
 
 /* ── Mobile responsive fixes ─────────────────────────────────────────────────── */
 
-/* Hide nav links on mobile */
-@media (max-width: 640px) {
+/* ── Mobile nav ── */
+@media (max-width: 768px) {
   .nav-links { display: none !important; }
-  
+  .nav-mobile-cta { display: flex !important; }
+}
+
+@media (max-width: 640px) {
   /* Landing grids → single column */
   .how-grid,
   .for-who-grid,
   .pricing-grid { 
     grid-template-columns: 1fr !important; 
   }
+  .suggestions-grid { grid-template-columns: 1fr !important; }
 
-  /* Loop suggestions → single column on very small screens */
-  @media (max-width: 400px) {
-    .suggestions-grid { grid-template-columns: 1fr !important; }
-  }
-
-  /* Tool pills → no wrap, scroll */
-  .tool-pills-row {
-    flex-wrap: nowrap !important;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .tool-pills-row::-webkit-scrollbar { display: none; }
-
-  /* Upgrade wall → bottom sheet on mobile */
+  /* Upgrade wall → bottom sheet */
   .upgrade-wall-modal {
     border-radius: 20px 20px 0 0 !important;
     max-height: 90vh;
@@ -226,12 +217,6 @@ code, pre,
   }
   .upgrade-wall-plans {
     grid-template-columns: 1fr !important;
-  }
-
-  /* Chat input - larger tap target */
-  .chat-input-area {
-    padding: 8px 12px !important;
-    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
   }
 }
 

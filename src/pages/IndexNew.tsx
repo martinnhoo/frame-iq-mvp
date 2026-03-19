@@ -10,8 +10,14 @@ import { Helmet } from "react-helmet-async";
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
 const BG = "#060812";
-const fade = (delay = 0) => ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as any } });
-const fadeIn = (delay = 0) => ({ initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as any } });
+// Disable animations on mobile to prevent invisible content
+const isMobileDevice = typeof window !== "undefined" && window.innerWidth < 768;
+const fade = (delay = 0) => isMobileDevice
+  ? {}
+  : ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as any } });
+const fadeIn = (delay = 0) => isMobileDevice
+  ? {}
+  : ({ initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as any } });
 
 // ─── Types & Translations ────────────────────────────────────────────────────
 type Lang = "en" | "pt" | "es";
@@ -247,6 +253,8 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
     <nav style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,18,0.9)", backdropFilter: "blur(20px)", padding: "0 32px" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
         <Logo size="lg" />
+        {/* Mobile CTA — always visible on small screens */}
+        <button className="nav-mobile-cta" onClick={onCTA} style={{ ...j, display: "none", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 9, background: BRAND, color: "#000", border: "none", cursor: "pointer" }}>{t.nav_cta || "Try free"}</button>
         <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
           {[[t.nav_how, "#how"], [t.nav_for, "#for"], [t.nav_pricing, "#pricing"]].map(([label, href]) => (
             <a key={href} href={href} style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>{label}</a>
@@ -271,9 +279,9 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
         <motion.h1 {...fade(0.08)} style={{ ...j, fontSize: "clamp(42px,6.5vw,76px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.02, margin: "0 0 24px" }}>
           {t.hero_h1a}<br /><span style={{ background: BRAND, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{t.hero_h1b}</span>
         </motion.h1>
-        <motion.p {...fade(0.16)} style={{ ...j, fontSize: 18, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 40px" }}>{t.hero_sub}</motion.p>
-        <motion.div {...fade(0.24)} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-          <button onClick={onCTA} style={{ ...j, fontSize: 15, fontWeight: 800, padding: "15px 32px", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
+        <motion.p {...fade(0.16)} style={{ ...j, fontSize: "clamp(14px, 4vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 540, margin: "0 auto 32px" }}>{t.hero_sub}</motion.p>
+        <motion.div {...fade(0.24)} style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+          <button onClick={onCTA} style={{ ...j, fontSize: "clamp(13px,4vw,15px)", fontWeight: 800, padding: "clamp(12px,3vw,15px) clamp(20px,5vw,32px)", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
         </motion.div>
         <motion.p {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</motion.p>
