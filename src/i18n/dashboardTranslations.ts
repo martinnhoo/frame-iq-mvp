@@ -14,6 +14,7 @@ export type DashT = {
   nav_preflight: string;
   nav_intelligence: string;
   nav_persona: string;
+  nav_accounts: string;
   nav_workspace: string;
   nav_tools: string;
   nav_upgrade: string;
@@ -372,7 +373,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   en: {
     nav_overview: "Overview", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Hook Generator", nav_templates: "Templates", nav_translate: "Translate",
-    nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Persona",
+    nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Accounts",
     nav_workspace: "Workspace", nav_tools: "Tools", nav_upgrade: "Upgrade plan",
     nav_upgrade_desc: "Unlock more analyses & boards",
     nav_competitor: "Competitor", nav_script: "Script", nav_brief: "Brief",
@@ -483,7 +484,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_save: "Save", cm_cancel: "Cancel", cm_delete: "Delete", cm_edit: "Edit",
     cm_close: "Close", cm_loading: "Loading...", cm_error: "Something went wrong",
     cm_success: "Done", cm_ago: "ago", cm_today: "Today", cm_yesterday: "Yesterday",
-    cm_no_persona: "No persona selected", cm_active_persona: "Active persona",
+    cm_no_persona: "No account selected", cm_active_persona: "Active account",
     cm_manage_personas: "Manage personas", cm_clear: "Clear",
     ov_lets_ship: "let's ship.", ov_complete_profile: "Complete your profile",
     ov_complete_profile_desc: "Create a persona so AI tools generate content tailored to your audience.",
@@ -503,8 +504,8 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_see_plans: "See plans", ov_hook_trend: "Hook score trend",
     ov_loading: "Loading workspace...", ov_low_quota: "Running low on quota. Consider upgrading.",
     ov_limit_reached: "Monthly limit reached. Upgrade to continue.",
-    ov_active_persona_label: "Active Persona", ov_no_personas_yet: "No personas yet",
-    ov_create_first_persona: "Create first persona", ov_clear_persona: "Clear persona",
+    ov_active_persona_label: "Active Account", ov_no_personas_yet: "No accounts yet",
+    ov_create_first_persona: "Create first account", ov_clear_persona: "Clear account",
     bo_production_boards: "production boards", bo_create_first: "Create first board",
     bo_describe_concept: "Describe your ad concept and get scenes, scripts, and production notes",
     gm_streak: "Streak", gm_streak_days: "days", gm_streak_best: "Best", gm_streak_start: "Use a tool today to start your streak!",
@@ -523,7 +524,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   pt: {
     nav_overview: "Visão Geral", nav_analyses: "Análises", nav_boards: "Boards",
     nav_hooks: "Gerador de Hooks", nav_templates: "Templates", nav_translate: "Traduzir",
-    nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Persona",
+    nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Contas",
     nav_workspace: "Área de Trabalho", nav_tools: "Ferramentas", nav_upgrade: "Fazer upgrade",
     nav_upgrade_desc: "Desbloqueie mais análises e boards",
     nav_competitor: "Concorrente", nav_script: "Roteiro", nav_brief: "Brief",
@@ -634,7 +635,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     cm_save: "Salvar", cm_cancel: "Cancelar", cm_delete: "Excluir", cm_edit: "Editar",
     cm_close: "Fechar", cm_loading: "Carregando...", cm_error: "Algo deu errado",
     cm_success: "Pronto", cm_ago: "atrás", cm_today: "Hoje", cm_yesterday: "Ontem",
-    cm_no_persona: "Nenhuma persona selecionada", cm_active_persona: "Persona ativa",
+    cm_no_persona: "Nenhuma conta selecionada", cm_active_persona: "Persona ativa",
     cm_manage_personas: "Gerenciar personas", cm_clear: "Limpar",
     ov_lets_ship: "sua IA está ativa.", ov_complete_profile: "Complete seu perfil",
     ov_complete_profile_desc: "Crie uma persona para que as ferramentas de IA gerem conteúdo para o seu público.",

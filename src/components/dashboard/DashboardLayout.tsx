@@ -331,7 +331,9 @@ export default function DashboardLayout() {
             >
               {selectedPersona ? (
                 <>
-                  <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{selectedPersona.avatar_emoji}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0, overflow: "hidden", fontWeight: 700, color: "#0ea5e9" }}>
+                    {selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
+                  </span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: "#fff", fontFamily: "'Inter', sans-serif" }}>{selectedPersona.name}</span>
                 </>
               ) : (
@@ -339,7 +341,7 @@ export default function DashboardLayout() {
                   <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)" }} />
                   </span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif" }}>{dt("cm_no_persona")}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif" }}>{dt("cm_no_account")}</span>
                 </>
               )}
               <ChevronDown className="h-3.5 w-3.5" style={{ color: "rgba(255,255,255,0.3)", marginLeft: 2 }} />
@@ -350,14 +352,14 @@ export default function DashboardLayout() {
                 style={{ top: "auto", width: "auto", maxWidth: 320, background: "#111", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
                 <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Workspace</p>
-                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select a client or context</p>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select an ad account</p>
                 </div>
                 {savedPersonas.length === 0 ? (
                   <div style={{ padding: "16px 14px", textAlign: "center" }}>
                     <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>{dt("ov_no_personas_yet")}</p>
-                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                    <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                       style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
-                      <Sparkles className="h-3.5 w-3.5" /> Create first persona
+                      <Sparkles className="h-3.5 w-3.5" /> Add first account
                     </button>
                   </div>
                 ) : (
@@ -376,20 +378,22 @@ export default function DashboardLayout() {
                         style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: selectedPersona?.id === p.id ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
                         onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                         onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>{p.avatar_emoji}</span>
+                        <span style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700, color: "#0ea5e9", overflow: "hidden" }}>
+                          {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
+                        </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 500, color: "#fff", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
-                          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.headline || "No description"}</p>
+                          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website || p.description || "No description"}</p>
                         </div>
                         {selectedPersona?.id === p.id && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
                       </button>
                     ))}
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "8px 10px 4px", marginTop: 4 }}>
-                      <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/persona"); }}
+                      <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "4px 0" }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
-                        <Sparkles className="h-3 w-3" /> Manage personas
+                        <Sparkles className="h-3 w-3" /> Manage accounts
                       </button>
                     </div>
                   </div>
@@ -402,7 +406,7 @@ export default function DashboardLayout() {
             <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
               <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.28)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {[selectedPersona.age, ...(selectedPersona.best_platforms || []).slice(0, 2)].filter(Boolean).join(" · ")}
+                {selectedPersona.website || selectedPersona.description?.slice(0,40) || ""}
               </span>
             </div>
           )}

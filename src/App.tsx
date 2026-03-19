@@ -41,6 +41,7 @@ import SettingsPage from "./pages/dashboard/SettingsPage";
 import TemplatesPage from "./pages/dashboard/TemplatesPage";
 import PreflightCheck from "./pages/dashboard/PreflightCheck";
 import PersonaPage from "./pages/dashboard/PersonaPage";
+import AccountsPage from "./pages/dashboard/AccountsPage";
 import HookGenerator from "./pages/dashboard/HookGenerator";
 import ToolGate from "./components/ToolGate";
 import CompetitorDecoder from "./pages/dashboard/CompetitorDecoder";
@@ -119,6 +120,7 @@ const App = () => (
                 <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
                 <Route path="preflight" element={<ToolGate><PreflightCheck /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
+                <Route path="accounts" element={<AccountsPage />} />
                 <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
                 <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
                 <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />

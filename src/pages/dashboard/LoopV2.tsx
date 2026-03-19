@@ -655,7 +655,7 @@ export default function LoopV2() {
             const r = (pData.result as Record<string, any>) || {};
             personaCtx = [
               `ACTIVE PERSONA/CLIENT: ${r.name || "Unknown"}`,
-              r.headline ? `Description: ${r.headline}` : "",
+              (selectedPersona as any).description ? `Description: ${(selectedPersona as any).description}` : (r.headline ? `Description: ${r.headline}` : ""),
               r.age ? `Age: ${r.age}` : "",
               r.preferred_market || r.market ? `Market: ${r.preferred_market || r.market}` : "",
               r.best_platforms?.length ? `Platforms: ${r.best_platforms.join(", ")}` : "",
@@ -945,7 +945,7 @@ export default function LoopV2() {
     // Pre-fill tool context from last AI response + persona
     const lastAI = [...messages].reverse().find(m => m.role === "assistant" && !m.loading);
     const lastAIText = lastAI?.blocks?.map((b: any) => b.content || "").join(" ").slice(0, 400) || "";
-    const personaCtx = selectedPersona ? `${selectedPersona.name} — ${(selectedPersona as any).best_platforms?.join(", ") || ""}` : "";
+    const personaCtx = selectedPersona ? `${selectedPersona.name}${(selectedPersona as any).website ? " (" + (selectedPersona as any).website + ")" : ""}${(selectedPersona as any).description ? " — " + (selectedPersona as any).description : ""}` : "";
     setToolInput({
       hooks: lastAIText || personaCtx,
       script: lastAIText || personaCtx,
@@ -1004,7 +1004,11 @@ export default function LoopV2() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
           {selectedPersona ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{selectedPersona.avatar_emoji}</span>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", fontSize: 11, fontWeight: 700, color: "#0ea5e9" }}>
+                {(selectedPersona as any).logo_url
+                  ? <img src={(selectedPersona as any).logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
+              </span>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPersona.name}</span>
               {hasData && (
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>

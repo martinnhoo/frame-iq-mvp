@@ -115,12 +115,12 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             { url: "/dashboard/boards",    label: dt("nav_boards"),                    icon: "🗂️" },
             { url: "/dashboard/preflight", label: dt("nav_preflight"),                 icon: "🛫" },
             { url: "/dashboard/translate", label: dt("nav_translate"),                 icon: "🌍" },
-            { url: "/dashboard/persona",   label: dt("nav_persona"),                   icon: "🎯" },
+            { url: "/dashboard/accounts",  label: dt("nav_accounts") || "Accounts",     icon: "🏢" },
             { url: "/dashboard/templates", label: dt("nav_templates"),                 icon: "📐" },
             { url: "/dashboard/intelligence", label: dt("nav_intelligence"),           icon: "📊" },
           ].map(({ url, label, icon }) => {
             const active = isActive(url);
-            const locked = (plan === "free") && url !== "/dashboard/persona";
+            const locked = (plan === "free") && url !== "/dashboard/accounts";
             return (
               <NavLink
                 key={url}
