@@ -1,10 +1,9 @@
-// adbrief-ai-chat — clean rewrite — v4
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
+// adbrief-ai-chat — Lovable AI gateway — v5
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -19,13 +18,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── 1. Init Supabase FIRST — must be before any DB calls ─────────────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // ── 2. Plan + daily cap ───────────────────────────────────────────────────
+    // ── Plan + daily cap ───────────────────────────────────────────────────
     const { data: profileRow } = await supabase
       .from("profiles").select("plan").eq("id", user_id).maybeSingle();
     const plan = profileRow?.plan || "free";
@@ -53,19 +51,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Freeze time Studio
-    if (planKey === "studio" && dailyCount > 100) {
-      const delay = Math.min(Math.floor((dailyCount / cap) * 8000), 8000);
-      await new Promise(r => setTimeout(r, delay));
-    }
-
     // Update counter
     await (supabase as any).from("free_usage").upsert(
       { user_id, chat_count: dailyCount + 1, last_reset: today },
       { onConflict: "user_id" }
     );
 
-    // ── 3. Fetch account data in parallel ────────────────────────────────────
+    // ── Fetch account data in parallel ────────────────────────────────────
     const [
       { data: recentAnalyses },
       { data: aiProfile },
@@ -93,11 +85,11 @@ Deno.serve(async (req) => {
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(3),
       persona_id
-        ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
+        ? supabase.from("personas").select("name, result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
 
-    // ── 4. Build rich context ─────────────────────────────────────────────────
+    // ── Build rich context ─────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
     const memory = (creativeMemory || []) as any[];
     const connections = (platformConns || []) as any[];
@@ -137,7 +129,7 @@ Deno.serve(async (req) => {
     });
 
     const persona = personaRow as any;
-    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name} | ${persona.headline || ""}
+    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
 Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
 Language style: ${(persona.result as any)?.language_style || "—"}` : "";
@@ -159,7 +151,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       (aiProfile as any)?.pain_point ? `USER'S #1 PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
 
-    // ── 5. Language setup ─────────────────────────────────────────────────────
+    // ── Language setup ─────────────────────────────────────────────────────
     const LANG_NAMES: Record<string, string> = {
       en: "English", pt: "Portuguese (Brazilian)", es: "Spanish", fr: "French", de: "German",
     };
@@ -173,8 +165,13 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const uiLangName = LANG_NAMES[uiLang] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
-    // ── 6. Call Anthropic ─────────────────────────────────────────────────────
-    const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
+    // ── Call Lovable AI Gateway ────────────────────────────────────────────
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "AI not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const langInstructions = `LANGUAGE RULES:
 - Responses: always in ${uiLangName}
@@ -223,36 +220,60 @@ Rules:
 - If they ask for hooks, write REAL copy immediately
 - Max 4 blocks per response`;
 
-    // Build history
-    const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
+    const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
+      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `- Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `- Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
+      : "";
+
+    // Build messages array
+    const aiMessages: { role: string; content: string }[] = [
+      { role: "system", content: systemPrompt + prefStr },
+    ];
+
     if (Array.isArray(history) && history.length > 0) {
       const recent = history.slice(-16);
       for (const h of recent) {
         if (h.role === "user" || h.role === "assistant") {
           let content = String(h.content || "").trim();
           if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "… [truncated]";
-          if (content) historyMessages.push({ role: h.role, content });
+          if (content) aiMessages.push({ role: h.role, content });
         }
       }
     }
+    aiMessages.push({ role: "user", content: message });
 
-    const allMessages = [
-      ...historyMessages,
-      { role: "user" as const, content: message },
-    ];
-
-    const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
-      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `- Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `- Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
-      : "";
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250514",
-      max_tokens: 1000,
-      system: systemPrompt + prefStr,
-      messages: allMessages,
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: aiMessages,
+        max_tokens: 1200,
+      }),
     });
 
-    const raw = response.content[0]?.type === "text" ? response.content[0].text : "[]";
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      console.error("AI gateway error:", aiResponse.status, errText);
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ error: "rate_limit", blocks: [{ type: "warning", title: "Too many requests", content: "Please wait a moment and try again." }] }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: "credits_exhausted", blocks: [{ type: "warning", title: "AI credits exhausted", content: "Please add credits to continue using AI features." }] }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "ai_error", blocks: [{ type: "warning", title: "AI temporarily unavailable", content: "Please try again in a few seconds." }] }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const aiData = await aiResponse.json();
+    const raw = aiData.choices?.[0]?.message?.content || "[]";
 
     let blocks;
     try {

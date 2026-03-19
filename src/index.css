@@ -242,98 +242,72 @@ code, pre,
   }
 }
 
-/* ── Dashboard mobile ─────────────────────────────────────────────────────── */
+/* ── Dashboard mobile overhaul ──────────────────────────────────────────────── */
 
+/* Root dashboard container — full viewport, no scroll */
 @media (max-width: 1023px) {
-  /* Full screen, no horizontal scroll anywhere */
-  html, body, #root {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden !important;
+  /* The outer dashboard flex wrapper */
+  body, #root {
+    height: 100dvh;
+    overflow: hidden;
   }
 
-  /* Dashboard root — full height flex column */
-  .dashboard-root {
-    height: 100dvh !important;
-    overflow: hidden !important;
-    flex-direction: column !important;
-  }
-
-  /* Loop container fills everything below the two bars */
+  /* Loop container: account for mobile topbar (56px) + persona bar (44px) */
   .loop-container {
     height: calc(100dvh - 100px) !important;
-    min-height: 0 !important;
   }
 
-  /* Messages scroll vertically only */
+  /* Only messages area scrolls */
   .loop-messages {
-    flex: 1 !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    min-height: 0 !important;
+    overscroll-behavior: contain;
   }
 
-  /* Input pinned to bottom */
+  /* Input area always anchored to bottom */
   .loop-input-area {
     flex-shrink: 0 !important;
-    overflow: hidden !important;
+    position: relative !important;
   }
 
-  /* Tool pills scroll horizontally */
+  /* Hide platform badges (Meta/TikTok/Google) on mobile header */
+  .hidden.xl\\:flex {
+    display: none !important;
+  }
+
+  /* Tool pills — scrollable row on mobile */
   .loop-tool-pills {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
-    overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     padding-bottom: 2px;
+    gap: 6px;
+    scrollbar-width: none;
   }
   .loop-tool-pills::-webkit-scrollbar { display: none; }
-
-  /* Suggestions single column */
-  .suggestions-grid { grid-template-columns: 1fr !important; }
-
-  /* Upgrade wall single column */
-  .upgrade-wall-plans { grid-template-columns: 1fr !important; }
+  
+  /* Upgrade wall → bottom sheet on mobile */
+  .upgrade-wall-plans {
+    grid-template-columns: 1fr !important;
+  }
 }
 
-/* Small mobile (phones) */
+/* Mobile topbar logo — ensure it's never cut */
 @media (max-width: 640px) {
-  /* Topbar */
-  header.mobile-topbar {
+  header.lg\\:hidden {
     height: 56px !important;
-    min-height: 56px !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
+    min-height: 56px;
+    flex-shrink: 0;
   }
-
-  /* Persona bar compact */
+  
+  /* Persona bar on mobile — compact */
   .persona-bar {
     height: 44px !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
+    overflow: hidden;
   }
 
-  /* Font size 16px prevents iOS zoom on input focus */
-  .loop-input-area textarea,
-  .loop-input-area input {
-    font-size: 16px !important;
-  }
-
-  /* Message padding tighter on small screens */
-  .loop-messages > div {
-    padding: 12px 12px 8px !important;
-  }
-
-  /* Hide "Enter para enviar" hint on mobile */
-  .loop-enter-hint { display: none !important; }
-}
-
-/* Safe area for notched phones (iPhone X+) */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .loop-input-area {
-    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  /* Input placeholder shorter on mobile */
+  .loop-input-area textarea {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
   }
 }

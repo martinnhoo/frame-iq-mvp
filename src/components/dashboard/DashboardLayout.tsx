@@ -250,7 +250,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -261,7 +261,7 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <header className="mobile-topbar lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#070710] z-30" style={{ flexShrink: 0 }}>
+        <header className="lg:hidden h-14 flex items-center px-4 border-b border-white/[0.12] bg-[#070710] sticky top-0 z-30" style={{ flexShrink: 0 }}>
           <button
             onClick={() => setSidebarOpen(true)}
             className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
@@ -287,8 +287,8 @@ export default function DashboardLayout() {
         </header>
 
         {/* Persona / workspace selector — premium workspace switcher */}
-        <div className="persona-bar sticky z-20 flex items-center gap-3 border-b"
-          style={{ top: 0, background: "rgba(10,10,10,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.06)", padding: "0 16px", height: 44, flexShrink: 0, overflow: "hidden" }}>
+        <div className="sticky z-20 flex items-center gap-3 border-b"
+          style={{ top: 0, background: "rgba(10,10,10,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.06)", padding: "0 16px", height: 44 }}>
           <div className="relative">
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
@@ -396,7 +396,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 min-h-0" style={{ background: "#07070f", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <main className="flex-1 overflow-hidden" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>

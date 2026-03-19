@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.generate-persona]
 verify_jwt = false
+
+[functions.adbrief-ai-chat]
+verify_jwt = false
