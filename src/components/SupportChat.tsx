@@ -103,7 +103,7 @@ export default function SupportChat() {
   const placeholder = PLACEHOLDER[language] || PLACEHOLDER.en;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50 hidden lg:block">
       {isOpen ? (
         <div className="w-80 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ background: "#0e0e14", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="p-3 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
