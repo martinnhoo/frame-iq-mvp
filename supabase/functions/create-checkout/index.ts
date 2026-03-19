@@ -77,7 +77,6 @@ Deno.serve(async (req) => {
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
-      payment_method_collection: "if_required",
       subscription_data: {
         trial_period_days: 1,
         metadata: { user_id: user.id },
