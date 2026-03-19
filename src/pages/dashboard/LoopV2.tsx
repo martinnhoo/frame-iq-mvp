@@ -443,7 +443,7 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
           <span style={{ fontSize: 14 }}>✦</span>
         </div>
         <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>
-          {hasData ? (dt("loop_greeting_data") || "Your account is connected — ask me anything.") : (dt("loop_greeting_empty") || "What do you want to know about your ads?")}
+          {hasData ? (dt("loop_greeting_data") || "Your account is connected. Ask me anything.") : (dt("loop_greeting_empty") || "What do you want to know about your ads?")}
         </p>
       </div>
       {/* 2x2 grid */}
@@ -1063,10 +1063,10 @@ export default function LoopV2() {
           <span style={{ fontSize: 22, flexShrink: 0 }}>🔗</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F, margin: 0 }}>
-              {uiLang === "pt" ? "Conecte o Meta Ads para começar" : uiLang === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
+              {language === "pt" ? "Conecte o Meta Ads para começar" : language === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
             </p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: F, margin: "2px 0 0" }}>
-              {uiLang === "pt" ? "A IA usa seus dados reais de campanha para responder" : uiLang === "es" ? "La IA usa tus datos reales para responder" : "The AI uses your real campaign data to answer"}
+              {language === "pt" ? "A IA usa seus dados reais de campanha para responder" : language === "es" ? "La IA usa tus datos reales para responder" : "The AI uses your real campaign data to answer"}
             </p>
           </div>
           <button
@@ -1079,7 +1079,7 @@ export default function LoopV2() {
               whiteSpace: "nowrap",
             }}
           >
-            {uiLang === "pt" ? "Conectar →" : uiLang === "es" ? "Conectar →" : "Connect →"}
+            {language === "pt" ? "Conectar →" : language === "es" ? "Conectar →" : "Connect →"}
           </button>
         </div>
       )}
