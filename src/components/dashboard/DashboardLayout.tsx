@@ -250,7 +250,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -259,7 +259,7 @@ export default function DashboardLayout() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%" }}>
         {/* Mobile topbar */}
         {/* Mobile topbar — always visible below lg breakpoint */}
         <header className="lg:hidden" style={{
@@ -422,7 +422,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main overflow-hidden" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
