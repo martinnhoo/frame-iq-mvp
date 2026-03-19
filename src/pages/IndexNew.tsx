@@ -23,7 +23,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "AI FOR PERFORMANCE MARKETING", hero_h1a: "Stop guessing.", hero_h1b: "Your ads already know.",
     hero_sub: "Connect Meta Ads in one click. Ask anything about your campaigns. Get answers in seconds — not reports.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works", stat_budget: "Ad budget analyzed", stat_hooks: "Hooks generated", stat_rating: "Average rating", stat_roas: "Avg ROAS improvement",
-    hero_fine: "1-day free trial · Cancel anytime", hero_built: "BUILT ON",
+    hero_fine: "1-day free trial · No charge for 24h · Cancel anytime", hero_roi: "Gestores recover 5–8h/week they were losing to manual reporting.", hero_built: "BUILT ON",
     how_label: "HOW IT WORKS", how_h2: "Three steps to your AI strategy partner.", how_sub: "Connect once. Ask forever. No CSV uploads. No manual data entry. Google Ads & TikTok coming Q2 2026.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
     how_s2_title: "Set up your persona or brand", how_s2_desc: "Tell AdBrief who you're advertising to. Create audience personas or brand profiles — the AI uses this to give you market-specific answers.",
@@ -45,7 +45,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_p2_1: "Personas for each product line or audience segment",
     for_p2_2: "Company profiles with brand context baked in",
     for_p2_3: "Team-wide access to shared campaign intelligence",
-    pricing_label: "PRICING", pricing_h2: "Start with a free day. Stay because it works.", pricing_sub: "Every plan includes a 1-day free trial. No charge until it's over.",
+    pricing_label: "PRICING", pricing_h2: "Start with a free day. Stay because it works.", pricing_sub: "Every plan includes a 1-day free trial. No charge until it's over.", pricing_anchor: "For a gestor managing $5k/month in ads: AdBrief costs less than 0.4% of your budget.",
     pricing_card: "No charge for 24 hours · Cancel anytime · Refund policy available", pricing_cta: "Start free trial", pricing_note: "1-day trial · Cancel anytime",
     plan_badge_pro: "Most popular",
     plan_maker_f0: "50 AI messages / day",
@@ -84,7 +84,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "A IA que conhece", hero_h1b: "a sua conta de anúncios.",
     hero_sub: "Conexão oficial com Meta Ads. Dados reais de campanha. IA que pensa como um gestor de tráfego sênior.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona", stat_budget: "Budget de anúncios analisado", stat_hooks: "Hooks gerados", stat_rating: "Avaliação média", stat_roas: "Melhoria média de ROAS",
-    hero_fine: "1 dia de teste grátis · Cancele quando quiser", hero_built: "DESENVOLVIDO COM",
+    hero_fine: "1 dia de teste grátis · Sem cobrança por 24h · Cancele quando quiser", hero_roi: "Gestores recuperam 5–8h/semana que perdiam em relatórios manuais.", hero_built: "DESENVOLVIDO COM",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual. Google Ads & TikTok em breve.",
     how_s1_title: "Conecte suas contas de anúncios", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha — investimento, CTR, CPM, performance de criativos — em tempo real.",
     how_s2_title: "Configure sua persona ou marca", how_s2_desc: "Diga ao AdBrief para quem você está anunciando. Crie personas de audiência ou perfis de marca — a IA usa isso para te dar respostas específicas para o seu mercado.",
@@ -145,7 +145,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "IA PARA PERFORMANCE MARKETING", hero_h1a: "La IA que conoce", hero_h1b: "tu cuenta de anuncios.",
     hero_sub: "Conexión oficial con Meta Ads. Datos reales de campaña. IA que piensa como un media buyer senior.",
     hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona", stat_budget: "Budget de anuncios analizado", stat_hooks: "Hooks generados", stat_rating: "Valoración media", stat_roas: "Mejora media de ROAS",
-    hero_fine: "1 día de prueba gratis · Cancela cuando quieras", hero_built: "DESARROLLADO CON",
+    hero_fine: "1 día de prueba gratis · Sin cobro por 24h · Cancela cuando quieras", hero_roi: "Los gestores recuperan 5–8h/semana que perdían en reportes manuales.", hero_built: "DESARROLLADO CON",
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos para tu socio de estrategia con IA.", how_sub: "Conecta una vez. Pregunta para siempre. Sin subidas de CSV. Sin entrada manual de datos.",
     how_s1_title: "Conecta tus cuentas de anuncios", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales de campaña — inversión, CTR, CPM, rendimiento de creativos — en tiempo real.",
     how_s2_title: "Configura tu persona o marca", how_s2_desc: "Dile a AdBrief a quién le estás anunciando. Crea perfiles de audiencia o de marca — la IA los usa para darte respuestas específicas para tu mercado.",
@@ -190,7 +190,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "¿A qué se conecta AdBrief?", faq_a2: "Meta Ads (Facebook e Instagram), TikTok Ads y Google Ads. Una vez conectado, AdBrief lee tus datos de campaña en tiempo real y los usa para responder tus preguntas en el chat de IA.",
     faq_q3: "¿Son seguros los datos de mi cuenta de anuncios?", faq_a3: "Sí. Usamos OAuth — el mismo estándar que usan todas las principales herramientas de anuncios. Nunca almacenamos tus credenciales de inicio de sesión. Los tokens de acceso están cifrados. Puedes desconectar cualquier cuenta en cualquier momento.",
     faq_q4: "¿Puedo usar AdBrief para varios clientes?", faq_a4: "Sí. Pro soporta 3 cuentas de anuncios y personas/marcas ilimitadas. Studio soporta conexiones ilimitadas e incluye un workspace dedicado para clientes de agencia.",
-    faq_q5: "¿Qué es una persona en AdBrief?", faq_a5: "Una persona es un perfil de audiencia que le da contexto a la IA — a quién le estás segmentando, qué mercado, qué plataforma, cuáles son sus objeciones. La IA usa esto para personalizar cada respuesta a esa audiencia específica.",
+    faq_q5: "¿Qué es una persona en AdBrief?", faq_a5: "Una persona es un perfil de audiencia que le da contexto a la IA — a quién le estás segmentando, qué mercado, qué plataforma, cuáles son sus objeciones. La IA usa esto para personalizar cada respuesta a esa audiencia específica.", faq_q6: "¿Funciona con anuncios de catálogo y DPA?", faq_a6: "Sí. AdBrief lee todos los tipos de campaña de Meta — incluyendo anuncios dinámicos, campañas de catálogo y Advantage+ Shopping. Puedes preguntar sobre cualquiera de ellos en el chat.", faq_q7: "¿Qué pasa si no funciona para mí?", faq_a7: "Si no ves valor en las primeras 24 horas, cancela y no se te cobrará. Si estás en un plan de pago y sientes que el producto no entregó, escríbenos — manejamos reembolsos caso por caso. Preferimos que estés feliz.",
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta de anuncios está llena de insights. Empieza a preguntar.", final_sub: "Conéctate en 2 minutos. Cancela cuando quieras dentro del primer día.",
     final_cta: "Probar gratis 1 día", final_fine: "Cualquier plan · 1 día de prueba gratis · Cancela antes de 24h, no pagas nada", footer_copy: "© 2026 AdBrief",
     chat_q1: "Mi ROAS de fitness bajó 40% — ¿qué está pasando?",
@@ -282,7 +282,13 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
           <button onClick={onCTA} style={{ ...j, fontSize: "clamp(13px,4vw,15px)", fontWeight: 800, padding: "clamp(10px,3vw,15px) clamp(18px,5vw,32px)", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
         </div>
-        <div {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</div>
+        <div {...fade(0.25)} style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 4 }}>
+          {t.hero_roi || "Gestores recover 5–8h/week they were losing to manual reporting."}
+        </div>
+        <div {...fade(0.3)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.28)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <span style={{ opacity: 0.5 }}>🔒</span>
+          <span style={{ ...j }}>{t.hero_fine}</span>
+        </div>
         <div {...fade(0.38)} style={{ marginTop: 36, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "nowrap" }}>
           <span style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.hero_built}</span>
           <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.1)" }} />
@@ -523,7 +529,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
   );
 }
 
-function BeforeAfter({ t }: { t: Record<string, string> }) {
+function BeforeAfter({ t, onCTA }: { t: Record<string, string>; onCTA: () => void }) {
   const rows = [
     { before: t.ba_1_before || "Export CSV from Meta every Monday morning", after: t.ba_1_after || "Ask: "What should I fix this week?" — answered in 10s" },
     { before: t.ba_2_before || "Manually compare CTR across 20 ad sets", after: t.ba_2_after || "Ask: "Which ads are underperforming?" — list with data" },
@@ -561,10 +567,13 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
           ))}
         </div>
         {/* Time saved callout */}
-        <div style={{ marginTop: 28, padding: "18px 24px", borderRadius: 14, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", textAlign: "center" }}>
-          <p style={{ ...j, fontSize: 15, color: "rgba(255,255,255,0.8)", margin: 0 }}>
+        <div style={{ marginTop: 28, padding: "20px 24px", borderRadius: 14, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+          <p style={{ ...j, fontSize: 14, color: "rgba(255,255,255,0.75)", margin: 0, flex: 1 }}>
             {t.ba_callout || "Average time saved: "}<strong style={{ color: "#fff" }}>{t.ba_callout_time || "5–8 hours per week"}</strong>{t.ba_callout_2 || " on reporting, analysis, and creative decisions."}
           </p>
+          <button onClick={onCTA} style={{ ...j, fontSize: 13, fontWeight: 700, padding: "10px 22px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+            {t.ba_cta || "Stop losing time →"}
+          </button>
         </div>
       </div>
     </section>
@@ -677,7 +686,7 @@ function Pricing({ onCTA, t }: { onCTA: () => void; t: Record<string, string> })
 
 function FAQ({ t }: { t: Record<string, string> }) {
   const [open, setOpen] = useState<number | null>(null);
-  const items = [0,1,2,3,4,5].map(i => ({ q: t[`faq_q${i}`], a: t[`faq_a${i}`] }));
+  const items = [0,1,2,3,4,5,6,7].map(i => ({ q: t[`faq_q${i}`], a: t[`faq_a${i}`] })).filter(item => item.q);
   return (
     <section style={{ padding: "60px 32px 80px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
       <div style={{ maxWidth: 660, margin: "0 auto" }}>
@@ -822,7 +831,7 @@ export default function IndexNew() {
       <ChatMockup t={t} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
-      <BeforeAfter t={t} />
+      <BeforeAfter t={t} onCTA={handleCTA} />
       <Pricing onCTA={handleCTA} t={t} />
       <FAQ t={t} />
       <FinalCTA onCTA={handleCTA} t={t} />
