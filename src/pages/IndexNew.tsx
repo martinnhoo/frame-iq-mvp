@@ -10,14 +10,9 @@ import { Helmet } from "react-helmet-async";
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
 const BG = "#060812";
-// Disable animations on mobile to prevent invisible content
-const isMobileDevice = typeof window !== "undefined" && window.innerWidth < 768;
-const fade = (delay = 0) => isMobileDevice
-  ? {}
-  : ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as any } });
-const fadeIn = (delay = 0) => isMobileDevice
-  ? {}
-  : ({ initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as any } });
+// Static — no animations (better mobile compatibility)
+const fade = (_delay = 0) => ({});
+const fadeIn = (_delay = 0) => ({});
 
 // ─── Types & Translations ────────────────────────────────────────────────────
 type Lang = "en" | "pt" | "es";
@@ -275,17 +270,17 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
     <section className="hero-section" style={{ padding: "clamp(56px,8vw,90px) clamp(16px,4vw,32px) clamp(48px,6vw,72px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.09) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 760, margin: "0 auto", position: "relative" }}>
-        <motion.div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(14,165,233,0.9)", fontWeight: 700 }}>{t.hero_badge}</span></motion.div>
-        <motion.h1 {...fade(0.08)} style={{ ...j, fontSize: "clamp(42px,6.5vw,76px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.02, margin: "0 0 24px" }}>
+        <div {...fade(0)} style={{ marginBottom: 28 }}><span style={{ ...j, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(14,165,233,0.9)", fontWeight: 700 }}>{t.hero_badge}</span></div>
+        <div {...fade(0.08)} style={{ ...j, fontSize: "clamp(42px,6.5vw,76px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.02, margin: "0 0 24px" }}>
           {t.hero_h1a}<br /><span style={{ background: BRAND, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{t.hero_h1b}</span>
-        </motion.h1>
-        <motion.p {...fade(0.16)} style={{ ...j, fontSize: "clamp(14px, 4vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 540, margin: "0 auto 32px" }}>{t.hero_sub}</motion.p>
-        <motion.div {...fade(0.24)} style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+        </div>
+        <div {...fade(0.16)} style={{ ...j, fontSize: "clamp(14px, 4vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 540, margin: "0 auto 32px" }}>{t.hero_sub}</div>
+        <div {...fade(0.24)} style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
           <button onClick={onCTA} style={{ ...j, fontSize: "clamp(13px,4vw,15px)", fontWeight: 800, padding: "clamp(12px,3vw,15px) clamp(20px,5vw,32px)", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
-        </motion.div>
-        <motion.p {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</motion.p>
-        <motion.div {...fade(0.38)} style={{ marginTop: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+        </div>
+        <div {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</div>
+        <div {...fade(0.38)} style={{ marginTop: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
           <span style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.hero_built}</span>
           <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.1)" }} />
           {/* Anthropic logo */}
@@ -303,7 +298,7 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
             </svg>
             <span style={{ ...j, fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: "0.01em" }}>OpenAI</span>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -338,7 +333,7 @@ function ChatMockup({ t }: { t: Record<string, string> }) {
   return (
     <section style={{ padding: "0 32px 80px" }}>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <motion.div {...fadeIn(0)} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 100px rgba(14,165,233,0.06), 0 40px 80px rgba(0,0,0,0.5)" }}>
+        <div {...fadeIn(0)} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(14,165,233,0.15)", boxShadow: "0 0 100px rgba(14,165,233,0.06), 0 40px 80px rgba(0,0,0,0.5)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <div style={{ display: "flex", gap: 6 }}>{["rgba(255,90,90,0.35)", "rgba(255,190,0,0.35)", "rgba(40,200,80,0.35)"].map((c, i) => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}</div>
             <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6, maxWidth: 260, margin: "0 auto" }}>
@@ -354,19 +349,19 @@ function ChatMockup({ t }: { t: Record<string, string> }) {
               <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>18 analyses · Meta connected</span>
             </div>
             {msgs.map((msg, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 10 }}>
+              <div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: 10 }}>
                 {msg.role === "ai" && <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 13 }}>✦</div>}
                 <div style={{ maxWidth: "75%", padding: "11px 15px", borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: msg.role === "user" ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${msg.role === "user" ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}` }}>
                   <p style={{ ...j, fontSize: 13, color: msg.role === "user" ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.65)", lineHeight: 1.6, whiteSpace: "pre-line" }}>{msg.text}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
             <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 13, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.18)", flex: 1 }}>{t.chat_placeholder}</span>
               <div style={{ width: 28, height: 28, borderRadius: 8, background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><ArrowRight size={13} color="#000" /></div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -388,12 +383,12 @@ function HowItWorks({ t }: { t: Record<string, string> }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
           {steps.map((step, i) => (
-            <motion.div key={i} {...fadeIn(i * 0.1)} style={{ padding: "28px 24px", borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", position: "relative", overflow: "hidden" }}>
+            <div key={i} {...fadeIn(i * 0.1)} style={{ padding: "28px 24px", borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: -30, right: -10, fontSize: 72, fontWeight: 900, color: "rgba(255,255,255,0.025)", fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1, pointerEvents: "none" }}>{step.n}</div>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: `${step.color}14`, border: `1px solid ${step.color}22`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>{step.icon}</div>
               <h3 style={{ ...j, fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3 }}>{step.title}</h3>
               <p style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.7 }}>{step.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -428,7 +423,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
             </button>
           ))}
         </div>
-        <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+        <div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
           className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
           <div style={{ padding: "32px 28px", borderRadius: 20, background: `${p.color}07`, border: `1px solid ${p.color}18` }}>
             <span style={{ fontSize: 36, display: "block", marginBottom: 16 }}>{p.emoji}</span>
@@ -440,16 +435,16 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {p.points.map((point, i) => (
-              <motion.div key={point} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+              <div key={point} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
                 style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${p.color}15`, border: `1px solid ${p.color}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                   <Check size={10} color={p.color} />
                 </div>
                 <p style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{point}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -589,7 +584,7 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
   return (
     <section style={{ padding: "60px 32px 100px" }}>
       <div style={{ maxWidth: 620, margin: "0 auto", textAlign: "center" }}>
-        <motion.div {...fadeIn(0)} style={{ padding: "56px 48px", borderRadius: 28, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)", position: "relative", overflow: "hidden" }}>
+        <div {...fadeIn(0)} style={{ padding: "56px 48px", borderRadius: 28, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -80, left: "50%", transform: "translateX(-50%)", width: 500, height: 300, background: "radial-gradient(ellipse, rgba(14,165,233,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
           <div style={{ position: "relative" }}>
             <p style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", marginBottom: 16, fontWeight: 600 }}>{t.final_label}</p>
@@ -600,7 +595,7 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
             </button>
             <p style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 14 }}>{t.final_fine}</p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
