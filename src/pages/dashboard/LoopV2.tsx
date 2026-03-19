@@ -503,8 +503,6 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
   );
 }
 
-}
-
 
 export default function LoopV2() {
   const { user, selectedPersona, profile } = useOutletContext<DashboardContext>();
@@ -1222,8 +1220,6 @@ export default function LoopV2() {
           </div>
 
           {/* Tool pills */}
-          <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-          {/* Tool actions — only non-connect tools */}
           <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
               <button key={t.action} onClick={() => handleToolAction(t.action)}
