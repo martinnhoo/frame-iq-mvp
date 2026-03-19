@@ -187,7 +187,7 @@ export default function BriefGenerator() {
           <Textarea placeholder="Brand guidelines, compliance rules, past campaign learnings..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
+        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? "Generating brief..." : "Generate Creative Brief"}
         </Button>
