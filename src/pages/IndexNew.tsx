@@ -310,59 +310,6 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
 
 
 // ─── Stats Bar ────────────────────────────────────────────────────────────────
-function StatsBar({ t }: { t: Record<string, string> }) {
-  const testimonials = [
-    {
-      quote: t.testi_1 || "I asked AdBrief why my ROAS dropped. It pulled up 3 ads in creative fatigue, showed me the CPM spike, and told me which hook to relaunch. Took 40 seconds.",
-      name: "Lucas M.",
-      role: t.testi_1_role || "Media Buyer · E-commerce · Brazil",
-      result: t.testi_1_result || "ROAS +38% in 2 weeks",
-    },
-    {
-      quote: t.testi_2 || "Finally stopped exporting CSVs. I just ask what's working and it tells me — with my actual numbers. It's like having a senior strategist available at 2am.",
-      name: "Priya S.",
-      role: t.testi_2_role || "Performance Marketer · D2C · India",
-      result: t.testi_2_result || "Saved 6h/week on reporting",
-    },
-    {
-      quote: t.testi_3 || "Connected 3 client accounts in 10 minutes. Asked which creatives to kill and which to scale. The AI answered with CPM data. My clients think I'm a genius now.",
-      name: "Carlos R.",
-      role: t.testi_3_role || "Agency Owner · 12 clients · Mexico",
-      result: t.testi_3_result || "Scaled to 12 accounts without hiring",
-    },
-  ];
-
-  return (
-    <section style={{ padding: "clamp(48px,6vw,72px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-      <div style={{ maxWidth: 1060, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>{t.testi_label || "WHAT GESTORES ARE SAYING"}</span>
-          <h2 style={{ ...j, fontSize: "clamp(24px,3.5vw,36px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "12px 0 0" }}>
-            {t.testi_h2 || "Real results from real accounts."}
-          </h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-          {testimonials.map((tst, i) => (
-            <div key={i} style={{ padding: "24px", borderRadius: 16, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Result badge */}
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)", alignSelf: "flex-start" }}>
-                <span style={{ fontSize: 11 }}>↑</span>
-                <span style={{ ...j, fontSize: 11, fontWeight: 700, color: "#34d399" }}>{tst.result}</span>
-              </div>
-              {/* Quote */}
-              <p style={{ ...j, fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, fontStyle: "italic", flex: 1 }}>"{tst.quote}"</p>
-              {/* Author */}
-              <div>
-                <p style={{ ...j, fontSize: 13, fontWeight: 700, color: "#fff", margin: 0 }}>{tst.name}</p>
-                <p style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{tst.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function ChatMockup({ t }: { t: Record<string, string> }) {
   const allMsgs = [
@@ -873,7 +820,6 @@ export default function IndexNew() {
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <Hero onCTA={handleCTA} t={t} />
       <ChatMockup t={t} />
-      <StatsBar t={t} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
       <BeforeAfter t={t} />
