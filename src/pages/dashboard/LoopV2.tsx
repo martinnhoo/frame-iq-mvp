@@ -1001,6 +1001,40 @@ export default function LoopV2() {
 
       </div>
 
+      {/* ── Connect Meta Ads banner — only when not connected ── */}
+      {connectedPlatforms.length === 0 && (
+        <div style={{
+          margin: "12px 16px 0",
+          padding: "14px 16px",
+          borderRadius: 14,
+          background: "rgba(14,165,233,0.07)",
+          border: "1px solid rgba(14,165,233,0.2)",
+          display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 22, flexShrink: 0 }}>🔗</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F, margin: 0 }}>
+              {uiLang === "pt" ? "Conecte o Meta Ads para começar" : uiLang === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
+            </p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: F, margin: "2px 0 0" }}>
+              {uiLang === "pt" ? "A IA usa seus dados reais de campanha para responder" : uiLang === "es" ? "La IA usa tus datos reales para responder" : "The AI uses your real campaign data to answer"}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/dashboard/persona")}
+            style={{
+              flexShrink: 0, padding: "7px 14px", borderRadius: 9,
+              background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+              color: "#000", fontWeight: 700, fontSize: 12,
+              border: "none", cursor: "pointer", fontFamily: F,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {uiLang === "pt" ? "Conectar →" : uiLang === "es" ? "Conectar →" : "Connect →"}
+          </button>
+        </div>
+      )}
+
       {/* ── Messages ── */}
       <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         <div style={{ maxWidth: 740, margin: "0 auto", padding: "16px 14px 12px", display: "flex", flexDirection: "column", gap: 20 }}>

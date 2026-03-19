@@ -10,7 +10,7 @@ import type { Language } from "@/i18n/translations";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Step = "name" | "language" | "source" | "feature" | "persona" | "plan" | "pain_point";
+type Step = "name" | "language" | "source" | "feature" | "persona" | "plan" | "pain_point" | "connect";
 
 interface OnboardingState {
   name: string;
@@ -76,7 +76,7 @@ const PLANS = [
   { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],                    highlight: false, desc_key: "plan_desc_studio" },
 ];
 
-const STEP_ORDER: Step[] = ["name", "language", "pain_point", "plan"];
+const STEP_ORDER: Step[] = ["name", "pain_point", "plan", "connect"];
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -328,6 +328,63 @@ export default function Onboarding() {
                 <button onClick={goBack} className="text-sm text-white/20 hover:text-white/45 transition-colors">{ot("back")}</button>
                 <button onClick={goNext} className="flex items-center gap-1 text-sm text-white/25 hover:text-white/50 transition-colors">{ot("skip")} <ChevronRight className="h-4 w-4" /></button>
               </div>
+            </div>
+          )}
+
+          {/* ── Step: Connect Meta Ads ── */}
+          {step === "connect" && (
+            <div className="space-y-6">
+              <div className="text-center space-y-3">
+                <div style={{ fontSize: 40, marginBottom: 8 }}>🔗</div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>
+                  Connect your Meta Ads
+                </h1>
+                <p className="text-sm text-white/40 max-w-xs mx-auto leading-relaxed">
+                  This is where the magic happens. AdBrief reads your real campaign data to answer your questions.
+                </p>
+              </div>
+
+              <div style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: "20px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📊</div>
+                  <div>
+                    <p style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>Meta Ads (Facebook & Instagram)</p>
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Official OAuth — read-only access</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const { supabase } = await import("@/integrations/supabase/client");
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session) return;
+                      const { data } = await supabase.functions.invoke("meta-oauth", {
+                        body: { action: "get_auth_url", user_id: session.user.id },
+                      });
+                      if (data?.url) window.location.href = data.url;
+                    } catch (e) { console.error(e); }
+                  }}
+                  style={{
+                    width: "100%", padding: "12px", borderRadius: 12,
+                    background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+                    color: "#000", fontWeight: 700, fontSize: 14,
+                    border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  }}
+                >
+                  Connect Meta Ads →
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  // Skip — go to dashboard anyway
+                  navigate("/dashboard/loop/ai");
+                }}
+                className="w-full py-2 text-sm text-white/30 hover:text-white/50 transition-colors"
+              >
+                Skip for now — I'll connect later
+              </button>
             </div>
           )}
 
