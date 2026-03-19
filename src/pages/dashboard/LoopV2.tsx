@@ -434,69 +434,126 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
   hasData: boolean;
   dt: (k: any) => string;
 }) {
-  const icons = ["📊", "⚡", "✍️", "🎯"];
+  const [expanded, setExpanded] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const first = suggestions[0];
+  const rest = suggestions.slice(1);
+
+  // Entrance animation
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 120);
+    return () => clearTimeout(t);
+  }, []);
+
+  const moreLabel: Record<string, string> = {
+    en: "More ideas", pt: "Mais ideias", es: "Más ideas",
+    fr: "Plus d'idées", de: "Mehr Ideen", ar: "المزيد",
+  };
+
   return (
-    <div style={{ width: "100%", maxWidth: 640 }}>
-      {/* Greeting */}
-      <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.15))", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <span style={{ fontSize: 16 }}>✦</span>
-        </div>
-        <div>
-          <p style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: "#fff", margin: 0 }}>
-            {hasData
-              ? (dt("loop_greeting_data") || "Your account is connected. Ask me anything.")
-              : (dt("loop_greeting_empty") || "What do you want to know about your ads?")}
-          </p>
-          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: "2px 0 0" }}>
-            {dt("loop_greeting_sub") || "I'll use your real campaign data to answer."}
-          </p>
-        </div>
+    <div style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(12px)",
+      transition: "opacity 0.4s ease, transform 0.4s ease",
+      maxWidth: 520,
+    }}>
+      {/* Main bubble */}
+      <button
+        onClick={() => onSend(first)}
+        style={{
+          display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "14px 18px", borderRadius: "18px 18px 18px 4px",
+          background: "rgba(14,165,233,0.06)",
+          border: "1px solid rgba(14,165,233,0.18)",
+          cursor: "pointer", textAlign: "left", width: "100%",
+          fontFamily: F, transition: "all 0.18s",
+          boxShadow: "0 2px 20px rgba(14,165,233,0.06)",
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = "rgba(14,165,233,0.11)";
+          el.style.borderColor = "rgba(14,165,233,0.35)";
+          el.style.boxShadow = "0 4px 24px rgba(14,165,233,0.12)";
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = "rgba(14,165,233,0.06)";
+          el.style.borderColor = "rgba(14,165,233,0.18)";
+          el.style.boxShadow = "0 2px 20px rgba(14,165,233,0.06)";
+        }}
+      >
+        <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>💡</span>
+        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.82)", lineHeight: 1.55, fontWeight: 500 }}>{first}</span>
+      </button>
+
+      {/* Expand button */}
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "5px 12px", borderRadius: 20,
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.35)", fontSize: 11,
+            fontFamily: F, fontWeight: 500, cursor: "pointer",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.borderColor = "rgba(255,255,255,0.22)";
+            el.style.color = "rgba(255,255,255,0.6)";
+          }}
+          onMouseLeave={e => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.borderColor = "rgba(255,255,255,0.1)";
+            el.style.color = "rgba(255,255,255,0.35)";
+          }}
+        >
+          <span style={{ transition: "transform 0.2s", display: "inline-block", transform: expanded ? "rotate(45deg)" : "rotate(0deg)" }}>✦</span>
+          {dt("loop_more_ideas")}
+        </button>
       </div>
 
-      {/* 2x2 suggestion grid */}
-      <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {suggestions.slice(0, 4).map((s, i) => (
-          <button
-            key={i}
-            onClick={() => onSend(s)}
-            style={{
-              display: "flex", alignItems: "flex-start", gap: 10,
-              padding: "13px 14px", borderRadius: 13,
-              background: "rgba(255,255,255,0.025)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              cursor: "pointer", textAlign: "left",
-              fontFamily: F, transition: "all 0.15s",
-              animation: `fadeSlideUp 0.35s ease both`,
-              animationDelay: `${i * 0.06}s`,
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(14,165,233,0.08)";
-              el.style.borderColor = "rgba(14,165,233,0.22)";
-              el.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(255,255,255,0.025)";
-              el.style.borderColor = "rgba(255,255,255,0.07)";
-              el.style.transform = "translateY(0)";
-            }}
-          >
-            <span style={{ fontSize: 14, flexShrink: 0, opacity: 0.6, lineHeight: 1.4 }}>{icons[i]}</span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, fontWeight: 500 }}>{s}</span>
-          </button>
-        ))}
-      </div>
+      {/* Expanded bubbles */}
+      {expanded && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 7 }}>
+          {rest.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => onSend(s)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 10,
+                padding: "11px 16px", borderRadius: "16px 16px 16px 4px",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                cursor: "pointer", textAlign: "left", width: "100%",
+                fontFamily: F, fontWeight: 500,
+                opacity: 0,
+                animation: `bubbleIn 0.3s ease forwards`,
+                animationDelay: `${i * 0.07}s`,
+                color: hoveredIdx === i ? "#fff" : "rgba(255,255,255,0.65)",
+                transition: "color 0.15s, background 0.15s, border-color 0.15s",
+              }}
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1, opacity: 0.5 }}>→</span>
+              <span style={{ fontSize: 13, lineHeight: 1.5 }}>{s}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <style>{`
-        @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes bubbleIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes toolSlideIn {
           from { opacity: 0; transform: translateY(12px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>
@@ -1121,62 +1178,58 @@ export default function LoopV2() {
 
       {/* ── Messages ── */}
       <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "16px 14px 12px", display: "flex", flexDirection: "column", gap: 20 }}>
 
           {messages.map((msg, i) => (
-            <div key={i} style={{ animation: "msgIn 0.2s ease both" }}>
+            <div key={i}>
               {msg.role === "user" && (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{
-                    maxWidth: "72%", padding: "11px 16px",
-                    borderRadius: "18px 18px 4px 18px",
-                    background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.1))",
-                    border: "1px solid rgba(14,165,233,0.22)",
-                  }}>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.65, fontFamily: F, margin: 0 }}>{msg.text}</p>
+                  <div style={{ maxWidth: "76%", padding: "11px 16px", borderRadius: "16px 16px 4px 16px", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)" }}>
+                    <p style={{ fontSize: 15, color: "rgba(255,255,255,0.9)", lineHeight: 1.65, fontFamily: F }}>{msg.text}</p>
                   </div>
                 </div>
               )}
               {msg.role === "assistant" && (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{
-                    width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
-                    background: "linear-gradient(135deg, rgba(14,165,233,0.18), rgba(6,182,212,0.12))",
-                    border: "1px solid rgba(14,165,233,0.2)",
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12,
-                  }}>
-                    {msg.loading ? <Loader2 size={11} color={BLUE} className="animate-spin" /> : "✦"}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", gap: 0, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
                     {msg.loading ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 6 }}>
-                        {[0,1,2].map(d => (
-                          <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.5)", animation: `dotPulse 1.3s ease ${d*0.18}s infinite` }} />
-                        ))}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 4 }}>
+                        <Loader2 size={14} color="rgba(255,255,255,0.3)" className="animate-spin" />
+                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", fontFamily: F }}>{dt("loop_thinking")}</span>
                       </div>
                     ) : (
                       <>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 10, opacity: 0.4, transition: "opacity 0.15s" }}
+                        {msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)}
+                        {/* Feedback bar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 10, opacity: 0.6 }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "0.4"; }}>
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}>
+                          {/* Like */}
                           <button onClick={() => handleFeedback(i, "like", msg.blocks || [])}
-                            style={{ width: 28, height: 26, borderRadius: 7, background: feedback[i] === "like" ? "rgba(52,211,153,0.1)" : "transparent", border: `1px solid ${feedback[i] === "like" ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", color: feedback[i] === "like" ? GREEN : "rgba(255,255,255,0.4)", fontSize: 12, transition: "all 0.12s", display: "flex", alignItems: "center", justifyContent: "center" }}>👍</button>
-                          <button onClick={() => handleFeedback(i, "dislike", msg.blocks || [])}
-                            style={{ width: 28, height: 26, borderRadius: 7, background: feedback[i] === "dislike" ? "rgba(248,113,113,0.1)" : "transparent", border: `1px solid ${feedback[i] === "dislike" ? "rgba(248,113,113,0.3)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", color: feedback[i] === "dislike" ? RED : "rgba(255,255,255,0.4)", fontSize: 12, transition: "all 0.12s", display: "flex", alignItems: "center", justifyContent: "center" }}>👎</button>
-                          <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", margin: "0 4px" }} />
-                          <button onClick={() => handleCopy(i, msg.blocks || [])}
-                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 26, borderRadius: 7, background: copiedIdx === i ? "rgba(52,211,153,0.08)" : "transparent", border: `1px solid ${copiedIdx === i ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", color: copiedIdx === i ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.12s" }}>
-                            {copiedIdx === i ? "✓ Copied" : "Copy"}
+                            title={dt("loop_like")}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 6, background: feedback[i] === "like" ? "rgba(52,211,153,0.12)" : "transparent", border: feedback[i] === "like" ? "1px solid rgba(52,211,153,0.3)" : "1px solid transparent", cursor: "pointer", transition: "all 0.1s", color: feedback[i] === "like" ? "#34d399" : "rgba(255,255,255,0.3)", fontSize: 13 }}>
+                            👍
                           </button>
+                          {/* Dislike */}
+                          <button onClick={() => handleFeedback(i, "dislike", msg.blocks || [])}
+                            title={dt("loop_dislike")}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 6, background: feedback[i] === "dislike" ? "rgba(248,113,113,0.12)" : "transparent", border: feedback[i] === "dislike" ? "1px solid rgba(248,113,113,0.3)" : "1px solid transparent", cursor: "pointer", transition: "all 0.1s", color: feedback[i] === "dislike" ? "#f87171" : "rgba(255,255,255,0.3)", fontSize: 13 }}>
+                            👎
+                          </button>
+                          {/* Divider */}
+                          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", margin: "0 2px" }} />
+                          {/* Copy */}
+                          <button onClick={() => handleCopy(i, msg.blocks || [])}
+                            title={dt("loop_copy")}
+                            style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 8px", height: 26, borderRadius: 6, background: "transparent", border: "1px solid transparent", cursor: "pointer", color: copiedIdx === i ? "#34d399" : "rgba(255,255,255,0.3)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.1s" }}>
+                            {copiedIdx === i ? dt("loop_copied") : dt("loop_copy")}
+                          </button>
+                          {/* Regenerate — only on last assistant message */}
                           {i === messages.length - 1 && (
                             <button onClick={handleRegenerate}
-                              style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 10px", height: 26, borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 11, fontFamily: F, transition: "all 0.12s" }}
-                              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.color = "rgba(255,255,255,0.7)"; }}
-                              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.4)"; }}>
-                              ↺ Retry
+                              title={dt("loop_regenerate")}
+                              style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 8px", height: 26, borderRadius: 6, background: "transparent", border: "1px solid transparent", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.1s" }}>
+                              ↺ {dt("loop_regenerate")}
                             </button>
                           )}
                         </div>
@@ -1188,38 +1241,57 @@ export default function LoopV2() {
             </div>
           ))}
 
+          {/* ── Inline Tool Panel ── */}
           {activeTool && (
-            <InlineToolPanel action={activeTool} prefill={toolInput[activeTool] || ""} onClose={() => setActiveTool(null)} onSend={(msg) => { setActiveTool(null); send(msg); }} language={language} dt={dt} />
+            <InlineToolPanel
+              action={activeTool}
+              prefill={toolInput[activeTool] || ""}
+              onClose={() => setActiveTool(null)}
+              onSend={(msg) => { setActiveTool(null); send(msg); }}
+              language={language}
+              dt={dt}
+            />
           )}
+
           {!hasConversation && ready && (
             <SuggestionBubble suggestions={suggestions} onSend={send} hasData={hasData} dt={dt} />
           )}
+
           <div ref={bottomRef} />
         </div>
       </div>
 
-      {showUpgradeWall && <UpgradeWall trigger={upgradeWallTrigger} onClose={() => setShowUpgradeWall(false)} />}
+      {/* Upgrade wall */}
+      {showUpgradeWall && (
+        <UpgradeWall
+          trigger={upgradeWallTrigger}
+          onClose={() => setShowUpgradeWall(false)}
+        />
+      )}
 
       {/* ── Input ── */}
-      <div className="loop-input-area" style={{ padding: "12px 16px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(14px, env(safe-area-inset-bottom))", background: "#0d0f18" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "11px 14px 9px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.06)"; }}
-            onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.09)"; el.style.boxShadow = "none"; }}>
-            <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
-              placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : (dt("loop_placeholder") || "Ask anything about your campaigns...")}
-              rows={1} autoFocus
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.65, maxHeight: 140, overflowY: "auto", fontFamily: F, caretColor: BLUE }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {input.length > 200 && <span style={{ fontSize: 10, color: input.length > 800 ? AMBER : "rgba(255,255,255,0.2)", fontFamily: F }}>{input.length}</span>}
-              <button onClick={() => send(input)} disabled={!input.trim() || sending}
-                style={{ width: 32, height: 32, borderRadius: 10, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.05)", border: "none", cursor: input.trim() && !sending ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s", transform: input.trim() && !sending ? "scale(1)" : "scale(0.94)" }}>
-                {sending ? <Loader2 size={13} color="rgba(255,255,255,0.4)" className="animate-spin" /> : <Send size={13} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
-              </button>
-            </div>
+      <div className="loop-input-area" style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
+          <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 14px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s" }}
+            onFocusCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.4)"; }}
+            onBlurCapture={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder={selectedPersona ? `${dt("loop_placeholder_persona")} ${selectedPersona.name}...` : dt("loop_placeholder")}
+              rows={1}
+              autoFocus
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 15, lineHeight: 1.65, maxHeight: 120, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
+            />
+            <button onClick={() => send(input)} disabled={!input.trim() || sending}
+              style={{ width: 34, height: 34, borderRadius: 9, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.06)", border: "none", cursor: input.trim() && !sending ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.12s" }}>
+              {sending ? <Loader2 size={14} color="rgba(255,255,255,0.4)" className="animate-spin" /> : <Send size={14} color={input.trim() ? "#000" : "rgba(255,255,255,0.25)"} />}
+            </button>
           </div>
 
-          {/* Tool pills */}
+          {/* Tool actions — only non-connect tools */}
           <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
               <button key={t.action} onClick={() => handleToolAction(t.action)}
@@ -1236,8 +1308,6 @@ export default function LoopV2() {
 
       <style>{`
         @keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes dotPulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
@@ -1310,5 +1380,3 @@ export default function LoopV2() {
     </div>
   );
 }
-
-// v1773957342
