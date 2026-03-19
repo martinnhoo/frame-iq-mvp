@@ -328,48 +328,39 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       emoji: "📉",
       short: t.dq1_short || "Meu ROAS caiu 40% essa semana",
       full: t.dq1_full || "Meu ROAS de fitness caiu 40% essa semana — o que está acontecendo?",
-      answer: t.dq1_ans || `Identifiquei 3 causas simultâneas na sua conta:
-
-**Fadiga criativa acelerada** — o Creative_042 (seu maior volume) tem 22 dias rodando. A hook rate caiu de 31% → 11%. O público já decorou o anúncio.
-
-**Frequência fora de controle** — no conjunto BR-Mulheres-25-34, frequência chegou em 4.8 na semana. Cada real adicional gasto está sendo mostrado para quem já viu 5 vezes.
-
-**CPM subiu 38% sem aumento de orçamento** — isso acontece quando o algoritmo percebe que seu criativo perdeu relevância e começa a pagar mais caro para entregar.
-
-O que fazer agora: pause o Creative_042, relance o Creative_019 (seu último winner, parado há 9 dias) e quebre o conjunto de alto volume em 2 menores para desfazer a saturação.`,
+      answer: [
+        "Identifiquei 3 causas simultâneas na sua conta:",
+        "**Fadiga criativa acelerada** — o Creative_042 (seu maior volume) tem 22 dias rodando. A hook rate caiu de 31% → 11%. O público já decorou o anúncio.",
+        "**Frequência fora de controle** — no conjunto BR-Mulheres-25-34, frequência chegou em 4.8 na semana. Cada real adicional gasto está sendo mostrado para quem já viu 5 vezes.",
+        "**CPM subiu 38% sem aumento de orçamento** — isso acontece quando o algoritmo percebe que seu criativo perdeu relevância e começa a pagar mais caro para entregar.",
+        "O que fazer agora: pause o Creative_042, relance o Creative_019 (seu último winner, parado há 9 dias) e quebre o conjunto de alto volume em 2 menores para desfazer a saturação.",
+      ],
     },
     {
       id: 1,
       emoji: "⚡",
       short: t.dq2_short || "Quais anúncios pausar agora?",
       full: t.dq2_full || "Quais dos meus anúncios devo pausar imediatamente?",
-      answer: t.dq2_ans || `3 anúncios para pausar hoje — cada um por um motivo diferente:
-
-**Creative_038** — CPM de R$ 91,00, CTR 0,4%, zero conversões em 7 dias. Está gastando R$ 180/dia sem nenhum sinal de recuperação. Kill imediato.
-
-**Conjunto BR-Homens-35-44** — ROAS 0,6x, frequência 5,1. Você está pagando para irritar um público exaurido. Pausa e expande o lookalike em 2%.
-
-**Creative_029** — hook rate de 8%. Seu threshold mínimo é 15%. Isso significa que 92% das pessoas que viram esse anúncio foram embora nos primeiros 3 segundos.
-
-Esses 3 juntos estão queimando R$ 620/dia com retorno negativo. Pausar agora libera verba para o Creative_019 que tem ROAS 3,2x e está underserved.`,
+      answer: [
+        "3 anúncios para pausar hoje — cada um por um motivo diferente:",
+        "**Creative_038** — CPM de R$ 91,00, CTR 0,4%, zero conversões em 7 dias. Está gastando R$ 180/dia sem nenhum sinal de recuperação. Kill imediato.",
+        "**Conjunto BR-Homens-35-44** — ROAS 0,6x, frequência 5,1. Você está pagando para irritar um público exaurido. Pausa e expande o lookalike em 2%.",
+        "**Creative_029** — hook rate de 8%. Seu threshold mínimo é 15%. Isso significa que 92% das pessoas que viram esse anúncio foram embora nos primeiros 3 segundos.",
+        "Esses 3 juntos estão queimando R$ 620/dia com retorno negativo. Pausar agora libera verba para o Creative_019 que tem ROAS 3,2x e está underserved.",
+      ],
     },
     {
       id: 2,
       emoji: "✍️",
       short: t.dq3_short || "Escreve 3 hooks baseados nos meus dados",
       full: t.dq3_full || "Escreve 3 hooks para minha conta baseados nos meus melhores criativos",
-      answer: t.dq3_ans || `Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+), o padrão é: problema específico + número concreto + quebra de expectativa.
-
-**Hook 1 — Agitação de dor com dado:**
-"Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."
-
-**Hook 2 — Social proof com especificidade:**
-"3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."
-
-**Hook 3 — Urgência baseada em comportamento:**
-"Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."
-
-Os 3 seguem o padrão dos seus winners: nada de benefício genérico, sempre uma afirmação que a pessoa precisa parar para processar.`,
+      answer: [
+        "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+), o padrão é: problema específico + número concreto + quebra de expectativa.",
+        "**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."",
+        "**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."",
+        "**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."",
+        "Os 3 seguem o padrão dos seus winners: nada de benefício genérico, sempre uma afirmação que a pessoa precisa parar para processar.",
+      ],
     },
   ];
 
@@ -944,4 +935,4 @@ export default function IndexNew() {
     </div>
   );
 }
-// force-sync-1773963094
+// v1773963094
