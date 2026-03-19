@@ -197,7 +197,6 @@ code, pre,
 /* ── Mobile nav ── */
 @media (max-width: 768px) {
   .nav-links { display: none !important; }
-  .nav-mobile-cta { display: flex !important; }
 }
 
 @media (max-width: 640px) {

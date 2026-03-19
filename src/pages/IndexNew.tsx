@@ -248,8 +248,6 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
     <nav style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,18,0.9)", backdropFilter: "blur(20px)", padding: "0 32px" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
         <Logo size="lg" />
-        {/* Mobile CTA — always visible on small screens */}
-        <button className="nav-mobile-cta" onClick={onCTA} style={{ ...j, display: "none", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 9, background: BRAND, color: "#000", border: "none", cursor: "pointer" }}>{t.nav_cta || "Try free"}</button>
         <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
           {[[t.nav_how, "#how"], [t.nav_for, "#for"], [t.nav_pricing, "#pricing"]].map(([label, href]) => (
             <a key={href} href={href} style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>{label}</a>
