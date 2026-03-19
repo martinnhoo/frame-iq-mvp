@@ -1,9 +1,10 @@
-// adbrief-ai-chat — Lovable AI gateway — v5
+// adbrief-ai-chat v6 — Anthropic claude-sonnet-4-5-20250514
+import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -18,16 +19,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── 1. Init Supabase FIRST ────────────────────────────────────────────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // ── Plan + daily cap ───────────────────────────────────────────────────
+    // ── 2. Plan check + daily cap ─────────────────────────────────────────────
     const { data: profileRow } = await supabase
       .from("profiles").select("plan").eq("id", user_id).maybeSingle();
     const plan = profileRow?.plan || "free";
-    const planKey = (["free","maker","pro","studio"].includes(plan) ? plan : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
+    const planKey = (["free","maker","pro","studio"].includes(plan)
+      ? plan
+      : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
 
     const today = new Date().toISOString().slice(0, 10);
     const { data: usageRow } = await (supabase as any)
@@ -44,11 +48,19 @@ Deno.serve(async (req) => {
         en: { title: "Daily limit reached", content: `You've used all ${cap} messages for today. Resets tomorrow.` },
         pt: { title: "Limite diário atingido", content: `Você usou todas as ${cap} mensagens de hoje. Renova amanhã.` },
         es: { title: "Límite diario alcanzado", content: `Usaste los ${cap} mensajes de hoy. Se reinicia mañana.` },
+        fr: { title: "Limite atteinte", content: `Vous avez utilisé vos ${cap} messages du jour.` },
+        de: { title: "Tageslimit erreicht", content: `Sie haben Ihre ${cap} Nachrichten aufgebraucht.` },
       };
       const m = msgs[uiLang] || msgs.en;
       return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Studio freeze time
+    if (planKey === "studio" && dailyCount > 100) {
+      const delay = Math.min(Math.floor((dailyCount / cap) * 8000), 8000);
+      await new Promise(r => setTimeout(r, delay));
     }
 
     // Update counter
@@ -57,7 +69,7 @@ Deno.serve(async (req) => {
       { onConflict: "user_id" }
     );
 
-    // ── Fetch account data in parallel ────────────────────────────────────
+    // ── 3. Fetch account data in parallel ─────────────────────────────────────
     const [
       { data: recentAnalyses },
       { data: aiProfile },
@@ -85,11 +97,11 @@ Deno.serve(async (req) => {
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(3),
       persona_id
-        ? supabase.from("personas").select("name, result").eq("id", persona_id).maybeSingle()
+        ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
 
-    // ── Build rich context ─────────────────────────────────────────────────
+    // ── 4. Build context ──────────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
     const memory = (creativeMemory || []) as any[];
     const connections = (platformConns || []) as any[];
@@ -129,7 +141,7 @@ Deno.serve(async (req) => {
     });
 
     const persona = personaRow as any;
-    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name}
+    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name} | ${persona.headline || ""}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
 Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
 Language style: ${(persona.result as any)?.language_style || "—"}` : "";
@@ -137,144 +149,98 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const importInsights = imports.map((i: any) => {
       const r = i.result as any;
       if (!r?.summary) return "";
-      return `${i.platform} data: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook style: ${r.patterns?.best_hook_style || "?"}`;
+      return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
     }).filter(Boolean).join("\n");
 
     const richContext = [
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
-      `ANALYSES: ${analyses.length} total | avg hook score: ${avgScore ?? "—"}/10 | viral hooks: ${analyses.filter((a: any) => a.hook_strength === "viral").length}`,
+      `ANALYSES: ${analyses.length} total | avg hook score: ${avgScore ?? "—"}/10`,
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
-      (aiProfile as any)?.pain_point ? `USER'S #1 PAIN POINT: ${(aiProfile as any).pain_point}` : "",
+      (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
 
-    // ── Language setup ─────────────────────────────────────────────────────
+    // ── 5. Language ───────────────────────────────────────────────────────────
     const LANG_NAMES: Record<string, string> = {
       en: "English", pt: "Portuguese (Brazilian)", es: "Spanish", fr: "French", de: "German",
     };
     const MARKET_LANG_MAP: Record<string, string> = {
-      BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es", PE: "es",
-      IN: "en", EN: "en", US: "en", UK: "en", FR: "fr", DE: "de",
+      BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es",
+      IN: "en", US: "en", UK: "en", FR: "fr", DE: "de",
     };
     const uiLang = (user_language as string) || "en";
-    const personaMarket = (persona?.result as any)?.preferred_market || (persona?.result as any)?.market || "";
+    const personaMarket = (persona?.result as any)?.preferred_market || "";
     const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang;
     const uiLangName = LANG_NAMES[uiLang] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
-    // ── Call Lovable AI Gateway ────────────────────────────────────────────
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // ── 6. Anthropic API call ─────────────────────────────────────────────────
+    const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
 
-    const langInstructions = `LANGUAGE RULES:
+    const systemPrompt = `LANGUAGE RULES:
 - Responses: always in ${uiLangName}
 - Generated content (hooks, scripts, copy): always in ${contentLangName}
-- Market: ${personaMarket || "unknown"} → content language: ${contentLangName}
-- In Brazilian Portuguese: use "gestor de tráfego" not "media buyer"`;
+- Market: ${personaMarket || "unknown"} → content: ${contentLangName}
+- Brazilian Portuguese: use "gestor de tráfego" not "media buyer"
 
-    const systemPrompt = `${langInstructions}
-
-You are AdBrief AI — an elite performance marketing strategist. You work exclusively with ad performance data, creative briefs, hooks, scripts, audience targeting, and campaign optimization.
-
-YOUR ONLY DOMAIN: paid advertising, creative performance, hooks, scripts, briefs, audience strategy, campaign data analysis, CTR/ROAS/CPM improvement, Meta/TikTok/Google algorithm optimization.
+You are AdBrief AI — elite performance marketing strategist. Domain: paid advertising, creative performance, hooks, scripts, briefs, audience strategy, campaign data, CTR/ROAS/CPM, Meta/TikTok/Google only.
 
 META ADS 2026 — Andromeda + GEM:
-- Creative IS the targeting signal — algorithm finds audience based on creative
-- CPMr spike = creative fatigue, not a bid problem — refresh creative
-- 1-3 ad sets max, CBO, broad targeting + Advantage+
-- Format diversity: UGC, static, carousel, Reels — variety required
-- GEM: frequent edits disrupt learning — stability matters
-- 9:16 vertical first — 90% of Meta inventory is vertical
+- Creative IS the targeting signal
+- CPMr spike = creative fatigue → refresh creative, don't touch bids
+- 1-3 ad sets max, CBO, broad + Advantage+
+- Format diversity: UGC, static, carousel, Reels
+- GEM: frequent edits disrupt learning
+- 9:16 vertical first
 
-CONNECTED PLATFORMS RULE — CRITICAL:
-- If CONNECTED PLATFORMS shows "meta(...)" → user HAS their ad account connected
+CONNECTED PLATFORMS RULE:
+- If CONNECTED PLATFORMS shows any platform → user HAS their account connected
 - NEVER suggest CSV import when platforms are connected
-- Work with the analyses data already in context
 
 USER'S ACCOUNT CONTEXT:
 ${(typeof context === "string" && context.length > 100) ? context : (richContext || "No account data yet.")}
 
 RESPONSE FORMAT: valid JSON array of blocks ONLY. No text outside JSON.
-Each block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate", "title": "string", "content": "optional string", "items": ["optional array"], "route": "string (for navigate)", "params": {}, "cta": "string" }
+Block: { "type": "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate", "title": "string", "content": "optional string", "items": ["optional"], "route": "string", "params": {}, "cta": "string" }
 
-TOOL MAP (navigate blocks):
-- Hook Generator → "/dashboard/hooks" — params: product, niche, market, platform
-- Brief Generator → "/dashboard/brief" — params: product, offer, market, audience
-- Script Generator → "/dashboard/script" — params: product, offer, market, platform, angle
-- Pre-flight Check → "/dashboard/preflight"
-- Translate → "/dashboard/translate"
-- Persona Builder → "/dashboard/persona"
-- Competitor Decoder → "/dashboard/competitor"
-- Import Data → "/dashboard/loop/import" — ONLY when CONNECTED PLATFORMS = "none"
+TOOL MAP:
+- "/dashboard/hooks" — Hook Generator — params: product, niche, market, platform
+- "/dashboard/brief" — Brief Generator — params: product, offer, market, audience
+- "/dashboard/script" — Script Generator — params: product, offer, market, platform, angle
+- "/dashboard/preflight" — Pre-flight Check
+- "/dashboard/translate" — Translate
+- "/dashboard/persona" — Persona Builder
+- "/dashboard/competitor" — Competitor Decoder
+- "/dashboard/loop/import" — Import Data — ONLY when CONNECTED PLATFORMS = "none"
 
-Rules:
-- Reference THEIR actual data (titles, scores, markets) when available
-- Be brutally direct — no filler
-- If they ask for hooks, write REAL copy immediately
-- Max 4 blocks per response`;
+Rules: reference their actual data, be direct, write real hook copy, max 4 blocks.`;
 
-    const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
-      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `- Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `- Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
-      : "";
-
-    // Build messages array
-    const aiMessages: { role: string; content: string }[] = [
-      { role: "system", content: systemPrompt + prefStr },
-    ];
-
+    const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
-      const recent = history.slice(-16);
-      for (const h of recent) {
+      for (const h of history.slice(-16)) {
         if (h.role === "user" || h.role === "assistant") {
           let content = String(h.content || "").trim();
-          if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "… [truncated]";
-          if (content) aiMessages.push({ role: h.role, content });
+          if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "…";
+          if (content) historyMessages.push({ role: h.role, content });
         }
       }
     }
-    aiMessages.push({ role: "user", content: message });
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: aiMessages,
-        max_tokens: 1200,
-      }),
+    const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
+      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
+      : "";
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-5-20250514",
+      max_tokens: 1000,
+      system: systemPrompt + prefStr,
+      messages: [...historyMessages, { role: "user" as const, content: message }],
     });
 
-    if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, errText);
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "rate_limit", blocks: [{ type: "warning", title: "Too many requests", content: "Please wait a moment and try again." }] }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "credits_exhausted", blocks: [{ type: "warning", title: "AI credits exhausted", content: "Please add credits to continue using AI features." }] }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "ai_error", blocks: [{ type: "warning", title: "AI temporarily unavailable", content: "Please try again in a few seconds." }] }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const aiData = await aiResponse.json();
-    const raw = aiData.choices?.[0]?.message?.content || "[]";
-
+    const raw = response.content[0]?.type === "text" ? response.content[0].text : "[]";
     let blocks;
     try {
       blocks = JSON.parse(raw.replace(/```json|```/g, "").trim());
@@ -290,7 +256,7 @@ Rules:
       .join("\n").slice(0, 1500);
 
     if (insightText) {
-      await supabase.from("ai_user_insights" as any).upsert(
+      await (supabase as any).from("ai_user_insights").upsert(
         { user_id, summary: insightText, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
