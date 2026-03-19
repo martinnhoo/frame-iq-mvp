@@ -245,7 +245,7 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
 
 function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string, string>; lang: Lang; setLang: (l: Lang) => void }) {
   return (
-    <nav style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,18,0.9)", backdropFilter: "blur(20px)", padding: "0 32px" }}>
+    <nav style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,18,0.9)", backdropFilter: "blur(20px)", padding: "0 clamp(12px, 4vw, 32px)" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
         <Logo size="lg" />
         <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
@@ -253,10 +253,11 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
             <a key={href} href={href} style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>{label}</a>
           ))}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <LangSwitcher lang={lang} setLang={setLang} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* LangSwitcher — hidden on mobile */}
+          <span className="nav-links"><LangSwitcher lang={lang} setLang={setLang} /></span>
           <button onClick={() => window.location.href = "/login"} className="nav-links" style={{ ...j, fontSize: 13, padding: "8px 16px", borderRadius: 9, background: "transparent", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>{t.nav_signin}</button>
-          <button onClick={onCTA} style={{ ...j, fontSize: 13, fontWeight: 700, padding: "8px 20px", borderRadius: 9, background: BRAND, color: "#000", border: "none", cursor: "pointer" }}>{t.nav_cta}</button>
+          <button onClick={onCTA} style={{ ...j, fontSize: "clamp(11px,3vw,13px)", fontWeight: 700, padding: "8px clamp(12px,3vw,20px)", borderRadius: 9, background: BRAND, color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>{t.nav_cta}</button>
         </div>
       </div>
     </nav>
@@ -274,11 +275,11 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
         </div>
         <div {...fade(0.16)} style={{ ...j, fontSize: "clamp(14px, 4vw, 18px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 540, margin: "0 auto 32px" }}>{t.hero_sub}</div>
         <div {...fade(0.24)} style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
-          <button onClick={onCTA} style={{ ...j, fontSize: "clamp(13px,4vw,15px)", fontWeight: 800, padding: "clamp(12px,3vw,15px) clamp(20px,5vw,32px)", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
+          <button onClick={onCTA} style={{ ...j, fontSize: "clamp(13px,4vw,15px)", fontWeight: 800, padding: "clamp(10px,3vw,15px) clamp(18px,5vw,32px)", borderRadius: 13, background: BRAND, color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 0 60px rgba(14,165,233,0.3), 0 8px 32px rgba(14,165,233,0.15)" }}>{t.hero_cta} <ArrowRight size={16} /></button>
           <a href="#how" style={{ ...j, fontSize: 15, fontWeight: 500, padding: "15px 28px", borderRadius: 13, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{t.hero_see}</a>
         </div>
         <div {...fade(0.3)} style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t.hero_fine}</div>
-        <div {...fade(0.38)} style={{ marginTop: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+        <div {...fade(0.38)} style={{ marginTop: 36, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "nowrap" }}>
           <span style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.hero_built}</span>
           <div style={{ height: 16, width: 1, background: "rgba(255,255,255,0.1)" }} />
           {/* Anthropic logo */}
