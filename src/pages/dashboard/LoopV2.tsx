@@ -33,18 +33,24 @@ interface AccountPulse {
 }
 
 interface AIBlock {
-  type: "insight" | "action" | "warning" | "pattern" | "hooks" | "navigate" | "data";
+  type: "insight" | "action" | "warning" | "pattern" | "hooks" | "navigate" | "data" | "tool_call" | "tool_result";
   title: string; content?: string; items?: string[];
   route?: string; cta?: string; data?: Record<string, string>;
+  // tool_call specific
+  tool?: "hooks" | "script" | "brief" | "competitor" | "translate" | "preflight";
+  tool_params?: Record<string, string>;
+  // tool_result specific
+  tool_name?: string; result_items?: string[]; result_content?: string;
 }
 interface AIMessage {
   role: "user" | "assistant";
   text?: string; blocks?: AIBlock[]; ts: number; loading?: boolean;
 }
 
-const BLOCK_COLORS: Record<AIBlock["type"], string> = {
+const BLOCK_COLORS: Record<string, string> = {
   insight: GREEN, action: BLUE, warning: AMBER,
   pattern: PURPLE, hooks: TEAL, navigate: BLUE, data: "rgba(255,255,255,0.5)",
+  tool_call: TEAL, tool_result: GREEN,
 };
 
 // SVG logos for platforms — real brand icons
@@ -125,7 +131,49 @@ const TOOLS_BY_LANG: Record<string, Array<{icon: any; label: string; action: str
 
 // ── AI Block ──────────────────────────────────────────────────────────────────
 function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void }) {
-  const color = BLOCK_COLORS[block.type];
+  const color = BLOCK_COLORS[block.type] || GREEN;
+
+  // Tool result — shows output from an executed tool inline
+  if (block.type === "tool_result") {
+    const toolIcons: Record<string, string> = {
+      hooks: "⚡", script: "✍️", brief: "📋", competitor: "🔍", translate: "🌍", preflight: "🛫",
+    };
+    const icon = toolIcons[block.tool_name || ""] || "✦";
+    return (
+      <div style={{ borderRadius: 14, border: `1px solid ${GREEN}25`, background: `linear-gradient(135deg, ${GREEN}06 0%, rgba(13,15,24,0.95) 100%)`, overflow: "hidden", marginBottom: 8 }}>
+        {/* Tool result header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}15` }}>
+          <span style={{ fontSize: 14 }}>{icon}</span>
+          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: GREEN }}>{block.title}</span>
+          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: `${GREEN}15`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto" }}>GENERATED</span>
+        </div>
+        {/* Content */}
+        <div style={{ padding: "12px 14px" }}>
+          {block.result_content && (
+            <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.75, whiteSpace: "pre-line", marginBottom: block.result_items?.length ? 12 : 0 }}>{block.result_content}</p>
+          )}
+          {block.result_items?.map((item, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <span style={{ color: GREEN, fontSize: 13, fontWeight: 700, flexShrink: 0, minWidth: 20, fontFamily: F }}>{i + 1}.</span>
+              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, margin: 0 }}>{item}</p>
+            </div>
+          ))}
+          {/* Copy all button */}
+          {(block.result_items || block.result_content) && (
+            <button
+              onClick={() => {
+                const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || "");
+                navigator.clipboard.writeText(text);
+              }}
+              style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: F, cursor: "pointer" }}
+            >
+              📋 Copy all
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (block.type === "navigate") {
     return (
@@ -836,9 +884,102 @@ export default function LoopV2() {
         },
       });
       if (error) throw error;
+      const aiBlocks: AIBlock[] = data?.blocks || [{ type: "insight" as const, title: "", content: data?.response || "✓" }];
       setMessages(prev => prev.map(m =>
-        m.loading ? { role: "assistant" as const, blocks: data?.blocks || [{ type: "insight" as const, title: "", content: data?.response || "✓" }], ts: Date.now() } : m
+        m.loading ? { role: "assistant" as const, blocks: aiBlocks, ts: Date.now() } : m
       ));
+
+      // ── Auto-execute tool_call blocks ────────────────────────────────────
+      for (const block of aiBlocks) {
+        if (block.type !== "tool_call" || !block.tool) continue;
+
+        const tool = block.tool;
+        const params = block.tool_params || {};
+
+        // Add "executing" loading message
+        setMessages(prev => [...prev, { role: "assistant" as const, loading: true, ts: Date.now() + 10 }]);
+
+        try {
+          let resultBlocks: AIBlock[] = [];
+
+          if (tool === "hooks") {
+            const { data: hData } = await supabase.functions.invoke("generate-hooks", {
+              body: {
+                product: params.product || text,
+                niche: params.niche || (selectedPersona as any)?.industry || "",
+                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                platform: params.platform || "meta",
+                tone: params.tone || "direct",
+                user_id: user.id,
+                persona_id: selectedPersona?.id,
+              },
+            });
+            const hooks = hData?.hooks?.map((h: any) => h.hook_text || h.text || String(h)) || [];
+            resultBlocks = [{ type: "tool_result", tool_name: "hooks", title: "⚡ Hooks generated from your account data", result_items: hooks }];
+          }
+
+          else if (tool === "script") {
+            const { data: sData } = await supabase.functions.invoke("generate-script", {
+              body: {
+                product: params.product || text,
+                offer: params.offer || "",
+                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                platform: params.platform || "meta",
+                angle: params.angle || "",
+                user_id: user.id,
+                persona_id: selectedPersona?.id,
+              },
+            });
+            resultBlocks = [{ type: "tool_result", tool_name: "script", title: "✍️ Script generated", result_content: sData?.script || sData?.result || "" }];
+          }
+
+          else if (tool === "brief") {
+            const { data: bData } = await supabase.functions.invoke("generate-brief", {
+              body: {
+                product: params.product || text,
+                offer: params.offer || "",
+                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                audience: params.audience || "",
+                user_id: user.id,
+                persona_id: selectedPersona?.id,
+              },
+            });
+            resultBlocks = [{ type: "tool_result", tool_name: "brief", title: "📋 Brief generated", result_content: bData?.brief || bData?.result || "" }];
+          }
+
+          else if (tool === "competitor") {
+            const { data: cData } = await supabase.functions.invoke("decode-competitor", {
+              body: {
+                ad_text: params.ad_text || params.url || text,
+                industry: params.industry || "",
+                market: params.market || "",
+              },
+            });
+            const insights = cData?.insights || cData?.analysis || cData?.result || "";
+            resultBlocks = [{ type: "tool_result", tool_name: "competitor", title: "🔍 Competitor decoded", result_content: typeof insights === "string" ? insights : JSON.stringify(insights) }];
+          }
+
+          else if (tool === "translate") {
+            const { data: tData } = await supabase.functions.invoke("translate-text", {
+              body: {
+                text: params.text || text,
+                target_language: params.target_language || "en",
+                user_id: user.id,
+              },
+            });
+            resultBlocks = [{ type: "tool_result", tool_name: "translate", title: "🌍 Translation", result_content: tData?.translated_text || tData?.result || "" }];
+          }
+
+          setMessages(prev => prev.map(m =>
+            m.loading ? { role: "assistant" as const, blocks: resultBlocks, ts: Date.now() } : m
+          ));
+        } catch (toolErr: any) {
+          setMessages(prev => prev.map(m =>
+            m.loading ? { role: "assistant" as const, blocks: [{ type: "warning" as const, title: `Tool failed: ${tool}`, content: toolErr.message || "Try again" }], ts: Date.now() } : m
+          ));
+        }
+      }
+      // ── End tool execution ───────────────────────────────────────────────
     } catch (e: any) {
       setMessages(prev => prev.map(m =>
         m.loading ? { role: "assistant" as const, blocks: [{ type: "warning" as const, title: dt("loop_something_wrong"), content: e.message || dt("loop_try_again") }], ts: Date.now() } : m

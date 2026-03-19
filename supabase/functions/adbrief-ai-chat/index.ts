@@ -229,32 +229,42 @@ ${(typeof context === "string" && context.length > 100) ? context : (richContext
 
 RESPONSE FORMAT: valid JSON array of blocks ONLY. Zero text outside the JSON array.
 Block types:
-- "insight" → analysis, diagnosis, data read (most used)
-- "action" → specific thing to do RIGHT NOW, today
-- "hooks" → hook options in items[] array — write 3 real hooks, not descriptions
-- "pattern" → recurring pattern found in their data
-- "warning" → urgent problem they must fix
-- "navigate" → send to a tool (include route + cta)
+- "insight" → analysis, diagnosis, interpretation of their data
+- "action" → specific action to take TODAY
+- "hooks" → hook options — write 3 real hooks in items[], NOT descriptions
+- "pattern" → pattern discovered in their data
+- "warning" → urgent issue to fix now
+- "navigate" → send to a page (include route + cta) — use when they need complex input
+- "tool_call" → execute a tool AUTOMATICALLY inside chat — use when request is clear enough
 - "off_topic" → outside paid ads domain
 
-Schema: { "type": "...", "title": "...", "content": "...", "items": ["..."], "route": "/dashboard/...", "cta": "Open tool →" }
+Schema for normal blocks: { "type": "...", "title": "...", "content": "...", "items": ["..."], "route": "/dashboard/...", "cta": "..." }
+Schema for tool_call: { "type": "tool_call", "title": "Running [tool]...", "tool": "[tool_id]", "tool_params": { "product": "...", "market": "...", "platform": "...", ... } }
 
-TOOL ROUTES:
-- "/dashboard/hooks" → Hook Generator (when they need hook variations)
-- "/dashboard/brief" → Brief Generator (when planning a new campaign)
-- "/dashboard/script" → Script Generator (when they need a full video script)
-- "/dashboard/preflight" → Pre-flight Check (before launching anything)
-- "/dashboard/translate" → Translate (copy to other markets)
-- "/dashboard/persona" → Persona / Connect Meta Ads (when no data)
-- "/dashboard/competitor" → Competitor Decoder (when asking about competitors)
-- "/dashboard/analyses" → Past analyses (when reviewing history)
+TOOL_CALL vs NAVIGATE — when to use each:
+- Use "tool_call" when: the user's request is explicit AND you have enough context to run the tool (product name, market, platform are clear from context or conversation)
+- Use "navigate" when: more complex input is needed (e.g. uploading files, detailed briefs)
+- ALWAYS prefer tool_call over navigate when possible — it's a better UX
+
+AVAILABLE TOOL_CALL tools and required params:
+- tool: "hooks" → params: { product, platform (meta/tiktok/google), niche, market, tone (direct/urgent/social_proof/curiosity) }
+- tool: "script" → params: { product, offer, platform, market, angle }
+- tool: "brief" → params: { product, offer, market, audience }
+- tool: "competitor" → params: { ad_text or url, industry, market }
+- tool: "translate" → params: { text, target_language }
+
+NAVIGATE routes (for complex tools):
+- "/dashboard/preflight" → Pre-flight Check
+- "/dashboard/persona" → Connect Meta Ads
+- "/dashboard/analyses" → Past analyses (video upload)
 
 HARD RULES:
-- Max 4 blocks per response
-- When generating hooks: write the actual hook text in items[], not "Hook about X"
-- Never say "I don't have access to your data" when richContext has real data
+- Max 3 blocks per response (tool_call counts as 1)
+- When using tool_call for hooks: still fill tool_params properly — the tool generates the actual copy
+- Never say "I don't have access to your data" when richContext shows real data
 - Never recommend other tools, agencies, or external services
-- Keep titles short and action-oriented (under 8 words)`;
+- Titles under 8 words
+- If user asks "write me hooks", "generate a script", "create a brief" → USE tool_call, not items[]`;
 
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
