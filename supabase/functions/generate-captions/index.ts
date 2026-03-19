@@ -18,6 +18,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    const { createClient } = await import("npm:@supabase/supabase-js@2");
+    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    // ─────────────────────────────────────────────────────────────────────────
     const { files, platforms, context } = await req.json() as {
       files: Array<{ id: string; name: string; type: string; base64: string | null }>;
       platforms: Platform[];

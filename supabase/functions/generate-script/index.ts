@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+const createSvcClient = createClient;
 import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 
 const corsHeaders = {
@@ -23,6 +25,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Auth header verification (prevents user_id spoofing) ────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (!authUser) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const verified_user_id = authUser.id;
+    // ─────────────────────────────────────────────────────────────────────────
     const { product, offer, audience, format, duration, market, angle, extra_context, user_id } = await req.json();
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
     if (user_id) {

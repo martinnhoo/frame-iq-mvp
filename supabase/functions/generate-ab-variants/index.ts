@@ -7,6 +7,15 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
 
   try {
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors });
+    const { createClient } = await import('npm:@supabase/supabase-js@2');
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '');
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors });
+    // ─────────────────────────────────────────────────────────────────────────
+
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const { script, product, platform, market } = await req.json();
 
