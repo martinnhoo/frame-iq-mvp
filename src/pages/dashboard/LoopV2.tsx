@@ -1158,14 +1158,33 @@ export default function LoopV2() {
           background: #0d0f18;
         }
         @media (max-width: 1023px) {
-          /* Mobile: topbar (56px) + persona bar (44px) = 100px */
-          .loop-container { height: calc(100dvh - 100px); }
+          .dashboard-main {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .loop-container {
+            height: auto !important;
+            min-height: calc(100dvh - 100px);
+            overflow: visible !important;
+          }
+          .loop-messages {
+            flex: none !important;
+            overflow: visible !important;
+          }
+          .loop-input-area {
+            position: sticky !important;
+            bottom: 0 !important;
+            z-index: 20 !important;
+            background: #0d0f18 !important;
+          }
           .suggestions-grid { grid-template-columns: 1fr !important; }
           .loop-tool-pills { display: none !important; }
         }
         @media (max-width: 640px) {
-          .loop-container { height: calc(100dvh - 100px); }
           .loop-header-badges { display: none !important; }
+          .loop-input-area textarea { font-size: 16px !important; }
+          body { overflow-x: hidden !important; }
         }
       `}</style>
     </div>

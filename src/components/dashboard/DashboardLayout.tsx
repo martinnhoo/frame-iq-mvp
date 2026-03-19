@@ -250,7 +250,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#07070f", display: "flex", overflow: "hidden" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -396,7 +396,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-hidden" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
+        <main className="flex-1 dashboard-main overflow-hidden" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>
