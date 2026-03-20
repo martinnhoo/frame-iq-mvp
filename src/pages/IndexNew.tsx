@@ -522,87 +522,80 @@ const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
   ],
 };
 
-// ─── Streaming hook (ref-based, zero stale closures) ──────────────────────────
+// ─── Streaming hook — plays once, stays done. User clicks sidebar to change. ──
 function useStreaming(lang: Lang) {
-  const [qi, setQi] = useState(0);
-  const [phase, setPhase] = useState<'idle'|'typing'|'thinking'|'streaming'|'done'>('idle');
-  const [typedQ, setTypedQ] = useState('');
-  const [doneLines, setDoneLines] = useState<string[]>([]);
+  const [qi, setQi]               = useState(0);
+  const [phase, setPhase]         = useState<'idle'|'typing'|'thinking'|'streaming'|'done'>('idle');
+  const [typedQ, setTypedQ]       = useState('');
+  const [lines, setLines]         = useState<string[]>([]);    // all committed lines
   const [activeLine, setActiveLine] = useState('');
-  const ref = useRef({ lang, qa: DEMO_QA['en'], qi: 0, loop: true, timer: null as ReturnType<typeof setTimeout> | null });
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const qaRef = useRef(DEMO_QA[lang]);
 
-  const stop = () => { if (ref.current.timer) { clearTimeout(ref.current.timer); ref.current.timer = null; } };
+  const stop = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
 
-  const play = (idx: number) => {
+  const play = useRef((idx: number) => {
     stop();
-    ref.current.qi = idx;
+    const qa = qaRef.current[idx];
     setQi(idx);
-    const qa = ref.current.qa[idx];
-    // Always reset ALL state before playing - prevents loop accumulation
-    setPhase('idle'); setTypedQ(''); setDoneLines([]); setActiveLine('');
+    setPhase('idle');
+    setTypedQ('');
+    setLines([]);
+    setActiveLine('');
 
+    // — type question char by char —
     let ci = 0;
     const typeChar = () => {
       ci++;
       setTypedQ(qa.q.slice(0, ci));
       setPhase('typing');
       if (ci < qa.q.length) {
-        ref.current.timer = setTimeout(typeChar, ci < 4 ? 60 : Math.random() * 38 + 18);
+        timer.current = setTimeout(typeChar, ci < 3 ? 55 : Math.random() * 35 + 18);
       } else {
         setPhase('thinking');
-        ref.current.timer = setTimeout(streamLines, 950);
+        timer.current = setTimeout(streamAnswer, 900);
       }
     };
 
-    const streamLines = () => {
+    // — stream answer lines —
+    const streamAnswer = () => {
       setPhase('streaming');
-      // Reset lines fresh for this cycle
-      setDoneLines([]);
-      setActiveLine('');
       let li = 0, lci = 0;
+      const committed: string[] = [];
       const tick = () => {
         const line = qa.lines[li];
         if (lci <= line.length) {
           setActiveLine(line.slice(0, lci));
           lci++;
-          ref.current.timer = setTimeout(tick, lci < 2 ? 0 : Math.random() * 15 + 7);
+          timer.current = setTimeout(tick, lci < 2 ? 0 : Math.random() * 12 + 6);
         } else {
-          setDoneLines(prev => [...prev, line]);
+          committed.push(line);
+          setLines([...committed]);
           setActiveLine('');
           li++; lci = 0;
           if (li < qa.lines.length) {
-            ref.current.timer = setTimeout(tick, 150);
+            timer.current = setTimeout(tick, 120);
           } else {
-            setPhase('done');
-            if (ref.current.loop) {
-              const next = (idx + 1) % ref.current.qa.length;
-              ref.current.timer = setTimeout(() => play(next), 4200);
-            }
+            setPhase('done'); // stays here — no loop
           }
         }
       };
-      ref.current.timer = setTimeout(tick, 0);
+      timer.current = setTimeout(tick, 0);
     };
 
-    ref.current.timer = setTimeout(typeChar, 260);
-  };
+    timer.current = setTimeout(typeChar, 280);
+  }).current;
 
+  // Start on mount / lang change — play first question once
   useEffect(() => {
-    ref.current.lang = lang;
-    ref.current.qa = DEMO_QA[lang];
-    ref.current.loop = true;
-    stop();
-    setQi(0); setPhase('idle'); setTypedQ(''); setDoneLines([]); setActiveLine('');
-    const t = setTimeout(() => play(0), 600);
-    return () => { clearTimeout(t); stop(); };
+    qaRef.current = DEMO_QA[lang];
+    play(0);
+    return stop;
   }, [lang]);
 
-  const jump = (idx: number) => {
-    ref.current.loop = false;
-    play(idx);
-  };
+  const jump = (idx: number) => play(idx);
 
-  return { qi, phase, typedQ, doneLines, activeLine, jump };
+  return { qi, phase, typedQ, lines, activeLine, jump };
 }
 
 // ─── Render bold markdown ─────────────────────────────────────────────────────
@@ -639,12 +632,12 @@ const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const qa = DEMO_QA[lang];
-  const { qi, phase, typedQ, doneLines, activeLine, jump } = useStreaming(lang);
+  const { qi, phase, typedQ, lines, activeLine, jump } = useStreaming(lang);
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [doneLines, activeLine, phase]);
+  }, [lines, activeLine, phase]);
 
   const prevPhase = useRef<string>('idle');
   useEffect(() => {
@@ -716,7 +709,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.18, ease: [0.16,1,0.3,1] }}
-        style={{ width: '100%', maxWidth: 940, position: 'relative', overflow: 'visible' }}
+        style={{ width: '100%', maxWidth: 1020, position: 'relative', overflow: 'visible' }}
       >
         {/* Floating metric chips — left */}
         <motion.div
@@ -755,7 +748,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         </motion.div>
 
         {/* Main browser window */}
-        <div className="demo-window" style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 40px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+        <div className="demo-window" style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.22)', boxShadow: '0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(14,165,233,0.08), 0 0 60px rgba(14,165,233,0.10), inset 0 1px 0 rgba(255,255,255,0.10)' }}>
 
           {/* Browser bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -777,7 +770,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body */}
-          <div style={{ display: 'flex', background: '#0d1117', height: 360, overflow: 'hidden' }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#0d1117', height: 420, overflow: 'hidden' }} className="demo-app-body">
 
             {/* Sidebar */}
             <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
@@ -798,16 +791,23 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 <button key={i} onClick={() => jump(i)}
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9,
-                    background: qi === i ? 'rgba(14,165,233,0.08)' : 'transparent',
-                    border: `1px solid ${qi === i ? 'rgba(14,165,233,0.2)' : 'transparent'}`,
-                    cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s'
+                    background: qi === i ? 'rgba(14,165,233,0.10)' : 'transparent',
+                    border: `1px solid ${qi === i ? 'rgba(14,165,233,0.25)' : 'transparent'}`,
+                    cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s',
+                    position: 'relative',
                   }}
                   onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                   onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                   <span style={{ fontSize: 12, flexShrink: 0, opacity: qi === i ? 1 : 0.45, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
-                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4 }}>
+                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4, flex: 1 }}>
                     {item.q.slice(0,40)}{item.q.length > 40 ? '…' : ''}
                   </span>
+                  {qi === i && (phase === 'typing' || phase === 'thinking' || phase === 'streaming') && (
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 4, boxShadow: '0 0 6px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />
+                  )}
+                  {qi === i && phase === 'done' && (
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 4 }} />
+                  )}
                 </button>
               ))}
 
@@ -855,7 +855,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       {phase === 'thinking' && <Dots />}
                       {(phase === 'streaming' || phase === 'done') && (
                         <>
-                          {doneLines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === doneLines.length - 1 && !activeLine) ? '0' : '0 0 8px' }} />)}
+                          {lines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === lines.length - 1 && !activeLine) ? '0' : '0 0 8px' }} />)}
                           {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: '0' }} />}
                         </>
                       )}
@@ -1304,6 +1304,7 @@ export default function IndexNew() {
           .demo-window{animation:demo-pulse 3s ease-in-out infinite}
           @keyframes msg-pop{0%{opacity:0;transform:translateY(6px) scale(0.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
           .msg-new{animation:msg-pop 0.3s cubic-bezier(0.16,1,0.3,1) forwards}
+          @keyframes dotBounce2{0%,100%{opacity:0.5;transform:scale(0.8)}50%{opacity:1;transform:scale(1.3)}}
           @keyframes thinking-glow{0%,100%{opacity:0.5}50%{opacity:1}}
           .thinking-dot{animation:thinking-glow 1.1s ease-in-out infinite}
           @media(max-width:768px){
