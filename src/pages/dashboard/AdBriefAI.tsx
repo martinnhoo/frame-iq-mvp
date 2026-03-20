@@ -89,6 +89,30 @@ export default function AdBriefAI() {
     } catch { return []; }
   });
 
+  // Meta connection state
+  const [metaConnected, setMetaConnected] = useState<boolean | null>(null);
+  const [connectingMeta, setConnectingMeta] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("platform_connections" as any)
+      .select("platform, status")
+      .eq("user_id", user.id)
+      .eq("platform", "meta")
+      .maybeSingle()
+      .then(({ data }) => setMetaConnected(!!data));
+  }, [user?.id]);
+
+  const handleConnectMeta = async () => {
+    setConnectingMeta(true);
+    try {
+      const { data } = await supabase.functions.invoke("meta-oauth", {
+        body: { action: "get_auth_url", user_id: user.id },
+      });
+      if (data?.url) window.location.href = data.url;
+    } catch { setConnectingMeta(false); }
+  };
+
   // Persist messages to sessionStorage on change
   useEffect(() => {
     try {
@@ -246,6 +270,27 @@ export default function AdBriefAI() {
           </button>
         )}
       </div>
+
+      {/* Meta connection banner */}
+      {metaConnected === false && (
+        <div style={{ margin: "0 20px 0", padding: "14px 18px", borderRadius: 14, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.22)", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ ...j, fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 3 }}>Connect Meta Ads</p>
+            <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.45)", margin: 0 }}>The AI needs your ad account to answer with real data.</p>
+          </div>
+          <button onClick={handleConnectMeta} disabled={connectingMeta}
+            style={{ ...j, fontSize: 12, fontWeight: 700, padding: "9px 18px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: connectingMeta ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+            {connectingMeta ? <Loader2 size={12} className="animate-spin" /> : null}
+            {connectingMeta ? "Redirecting..." : "Connect Meta Ads →"}
+          </button>
+        </div>
+      )}
+      {metaConnected === true && (
+        <div style={{ margin: "0 20px 0", padding: "8px 16px", borderRadius: 10, background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.18)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 5px #34d399" }} />
+          <p style={{ ...m, fontSize: 11, color: "rgba(52,211,153,0.8)", margin: 0 }}>Meta Ads connected — AI using your real data</p>
+        </div>
+      )}
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 0" }}>

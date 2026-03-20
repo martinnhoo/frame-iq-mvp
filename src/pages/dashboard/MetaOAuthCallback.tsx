@@ -22,14 +22,14 @@ export default function MetaOAuthCallback() {
       if (error) {
         setStatus("error");
         setMessage("Meta connection was cancelled or denied.");
-        setTimeout(() => navigate("/dashboard/loop/ai"), 3000);
+        setTimeout(() => navigate("/dashboard/ai"), 3000);
         return;
       }
 
       if (!code || !state) {
         setStatus("error");
         setMessage("Invalid callback — missing code or state.");
-        setTimeout(() => navigate("/dashboard/loop/ai"), 3000);
+        setTimeout(() => navigate("/dashboard/ai"), 3000);
         return;
       }
 
@@ -43,7 +43,7 @@ export default function MetaOAuthCallback() {
         setMessage("Exchanging token with Meta...");
 
         const { data, error: fnError } = await supabase.functions.invoke("meta-oauth", {
-          body: { action: "exchange_code", code, user_id: userId },
+          body: { action: "exchange_code", code, user_id: userId, state },
         });
 
         if (fnError) throw fnError;
@@ -53,11 +53,11 @@ export default function MetaOAuthCallback() {
         setAccounts(data.ad_accounts || []);
         setMessage(`Meta connected! Found ${data.ad_accounts?.length || 0} ad account${data.ad_accounts?.length !== 1 ? "s" : ""}.`);
 
-        setTimeout(() => navigate("/dashboard/loop/ai"), 2500);
+        setTimeout(() => navigate("/dashboard/ai"), 2500);
       } catch (e: any) {
         setStatus("error");
         setMessage(e.message || "Connection failed. Please try again.");
-        setTimeout(() => navigate("/dashboard/loop/ai"), 3500);
+        setTimeout(() => navigate("/dashboard/ai"), 3500);
       }
     };
 

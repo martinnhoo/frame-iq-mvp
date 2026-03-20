@@ -8,7 +8,7 @@ const corsHeaders = {
 // Meta OAuth config
 const META_APP_ID = Deno.env.get("META_APP_ID") || "";
 const META_APP_SECRET = Deno.env.get("META_APP_SECRET") || "";
-const APP_URL = Deno.env.get("APP_URL") || "https://www.adbrief.pro";
+const APP_URL = Deno.env.get("APP_URL") || "https://adbrief.pro";
 const REDIRECT_URI = `${APP_URL}/dashboard/loop/connect/meta/callback`;
 
 // Scopes needed: read ad accounts and insights
@@ -27,12 +27,12 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const { action, code, user_id, state } = await req.json();
+    const { action, code, user_id, state, persona_id } = await req.json();
 
     // ── Action: get_auth_url ──────────────────────────────────────────────────
     if (action === "get_auth_url") {
-      // state encodes user_id so we can retrieve it in callback
-      const stateParam = btoa(JSON.stringify({ user_id, ts: Date.now() }));
+      // state encodes user_id and optional persona_id
+      const stateParam = btoa(JSON.stringify({ user_id, persona_id: persona_id || null, ts: Date.now() }));
       
       const url = new URL("https://www.facebook.com/v19.0/dialog/oauth");
       url.searchParams.set("client_id", META_APP_ID);
@@ -81,20 +81,32 @@ Deno.serve(async (req) => {
       const accountsData = await accountsRes.json();
       const adAccounts = accountsData.data || [];
 
-      // Store connection in Supabase
+      // Store connection in Supabase — persona_id optional
       const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+      
+      // Decode persona_id from state if present
+      let storedPersonaId: string | null = null;
+      try {
+        if (state) {
+          const decoded = JSON.parse(atob(state));
+          storedPersonaId = decoded.persona_id || null;
+        }
+      } catch {}
+
+      const upsertPayload: Record<string, any> = {
+        user_id,
+        platform: "meta",
+        access_token: accessToken,
+        expires_at: expiresAt,
+        ad_accounts: adAccounts,
+        status: "active",
+        connected_at: new Date().toISOString(),
+      };
+      if (storedPersonaId) upsertPayload.persona_id = storedPersonaId;
       
       const { error: upsertError } = await supabase
         .from("platform_connections" as any)
-        .upsert({
-          user_id,
-          platform: "meta",
-          access_token: accessToken,
-          expires_at: expiresAt,
-          ad_accounts: adAccounts,
-          status: "active",
-          connected_at: new Date().toISOString(),
-        }, { onConflict: "user_id,platform" });
+        .upsert(upsertPayload, { onConflict: "user_id,platform" });
 
       if (upsertError) throw upsertError;
 
