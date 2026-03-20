@@ -489,7 +489,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
                       </div>
                     </div>
                     {/* AI answer */}
-                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", className: "anim-slide" }}>
+                    <div className="anim-slide" style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12 }}>✦</div>
                       <div style={{ flex: 1 }}>
                         {current.answer.map((block, bi) => {
