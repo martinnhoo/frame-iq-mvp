@@ -356,9 +356,9 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       full: t.dq3_full || "Escreve 3 hooks para minha conta baseados nos meus melhores criativos",
       answer: [
         "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+) — padrão: problema específico + número concreto + quebra de expectativa.",
-        "**Hook 1:** "Você está pagando R$ 90 por clique e nem sabe por que — seus dados já têm a resposta."",
-        "**Hook 2:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."",
-        "**Hook 3:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."",
+        '**Hook 1:** "Você está pagando R$ 90 por clique e nem sabe por que — seus dados já têm a resposta."',
+        '**Hook 2:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."',
+        '**Hook 3:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."',
         "Os 3 seguem o padrão dos seus winners: nunca benefício genérico — sempre uma afirmação que força o usuário a parar.",
       ],
     },
@@ -477,20 +477,19 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", opacity: 0.35, gap: 10, padding: "40px 0" }}>
                     <div style={{ width: 36, height: 36, borderRadius: 11, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✦</div>
                     <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.6 }}>
-                      {t.demo_empty || "Selecione uma pergunta ao lado
-para ver a IA em ação"}
+                      {t.demo_empty || 'Selecione uma pergunta ao lado para ver a IA em ação'}
                     </p>
                   </div>
                 ) : (
                   <>
                     {/* User message */}
-                    <div style={{ display: "flex", justifyContent: "flex-end", className: "anim-fade" }}>
+                    <div className="anim-fade" style={{ display: "flex", justifyContent: "flex-end" }}>
                       <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
                         <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
                       </div>
                     </div>
                     {/* AI answer */}
-                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", className: "anim-slide" }}>
+                    <div className="anim-slide" style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12 }}>✦</div>
                       <div style={{ flex: 1 }}>
                         {current.answer.map((block, bi) => {
