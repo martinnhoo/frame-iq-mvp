@@ -26,21 +26,21 @@ const T: Record<Lang, Record<string, string>> = {
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime", hero_roi: "Gestores recover 5–8h/week they were losing to manual reporting.", hero_built: "BUILT ON",
     how_label: "HOW IT WORKS", how_h2: "Three steps to your AI strategy partner.", how_sub: "Connect once. Ask forever. No CSV uploads. No manual data entry. Google Ads & TikTok coming Q2 2026.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
-    how_s2_title: "Set up your persona or brand", how_s2_desc: "Tell AdBrief who you're advertising to. Create audience personas or brand profiles — the AI uses this to give you market-specific answers.",
+    how_s2_title: "Set up your account", how_s2_desc: "Create an account for each brand or client. Add website, description, and connect Meta Ads — the AI uses this context for every answer.",
     how_s3_title: "Ask anything. Get real answers.", how_s3_desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next. It answers with your numbers.",
     for_label: "WHO IT'S FOR", for_h2: "Built for performance teams.", for_tab0: "Agencies", for_tab1: "Media Buyers", for_tab2: "In-house Teams",
     for_h0: "Manage 10 clients like you have a full data team.", for_d0: "Your team produces 20+ creatives a week across multiple brands. AdBrief connects to each client's ad account and gives your strategists real answers — which creatives to scale, which to kill, what to brief next.",
     for_h1: "Stop flying blind on creative decisions.", for_d1: "You're accountable for ROAS but don't always control the creative. AdBrief gives you data-backed answers — which format is underperforming, what the winning hook pattern is, what to brief next.",
     for_h2b: "Your campaigns, finally speaking to each other.", for_d2: "Connect your company's ad accounts and give your whole team access to a shared AI that knows your performance history. One place to ask, one place to know.",
     for_cta: "Try free for 1 day",
-    for_p0_0: "Per-client personas with their own data context",
+    for_p0_0: "Per-client accounts with their own Meta Ads connection",
     for_p0_1: "Real-time campaign performance in the chat",
     for_p0_2: "Brief generation tuned to each brand's winners",
-    for_p0_3: "AI memory that learns each client's best hooks",
+    for_p0_3: "AI that knows each client's ad history and top hooks",
     for_p1_0: "Real spend and CTR data in every answer",
     for_p1_1: "Pattern detection across top and bottom performers",
     for_p1_2: "Competitor analysis and hook benchmarking",
-    for_p1_3: "Account memory that improves with every query",
+    for_p1_3: "AI that learns your account patterns over time",
     for_p2_0: "Connected to your real Meta/TikTok/Google data",
     for_p2_1: "Personas for each product line or audience segment",
     for_p2_2: "Company profiles with brand context baked in",
@@ -51,16 +51,16 @@ const T: Record<Lang, Record<string, string>> = {
     plan_maker_f0: "50 AI messages / day",
     plan_maker_f1: "1 ad account (Meta, TikTok or Google)",
     plan_maker_f2: "All tools unlocked (hooks, scripts, briefs)",
-    plan_maker_f3: "Up to 3 personas or brands",
+    plan_maker_f3: "Up to 3 ad accounts",
     plan_pro_f0: "200 AI messages / day",
     plan_pro_f1: "3 ad accounts connected",
     plan_pro_f2: "All tools unlocked",
-    plan_pro_f3: "Unlimited personas + brands",
+    plan_pro_f3: "Unlimited accounts + brands",
     plan_pro_f4: "Multi-market support",
     plan_studio_f0: "Unlimited AI messages",
     plan_studio_f1: "Unlimited ad accounts",
     plan_studio_f2: "All tools unlocked",
-    plan_studio_f3: "Unlimited personas + brands",
+    plan_studio_f3: "Unlimited accounts + brands",
     plan_studio_f4: "Agency client workspace",
     faq_label: "FAQ", faq_h2: "Common questions",
     faq_q0: "How does the 1-day free trial work?", faq_a0: "When you sign up for any plan, you get full access for 24 hours at no charge. If you cancel within that period, you won't be billed. If you don't cancel, your subscription starts automatically after 24 hours.",
@@ -68,7 +68,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads (Facebook & Instagram), TikTok Ads, and Google Ads. Once connected, AdBrief reads your campaign data in real time and uses it to answer your questions in the AI chat.",
     faq_q3: "Is my ad account data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your login credentials. Access tokens are encrypted at rest. You can disconnect any account at any time.",
     faq_q4: "Can I use AdBrief for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts and unlimited personas/brands. Studio supports unlimited connections and includes a dedicated agency workspace. Most agencies use one persona per brand or market.",
-    faq_q5: "What's a persona in AdBrief?", faq_a5: "A persona is an audience profile that gives the AI context — who you're targeting, what market, what platform, what their objections are. The AI uses this to tailor every answer to that specific audience.",
+    faq_q5: "What is an Account in AdBrief?", faq_a5: "An Account is a brand or client profile that connects to its own Meta Ads account. Add a name, website, and description — the AI uses this context to give you specific, relevant answers for that account.",
     faq_q6: "Does it work with catalog ads and DPA?", faq_a6: "Yes. AdBrief reads all campaign types from Meta — including dynamic ads, catalog campaigns, and Advantage+ Shopping. You can ask questions about any of them in the chat.",
     faq_q7: "What if it doesn't work for me?", faq_a7: "If you don't see value in the first 24 hours, cancel and you won't be charged. If you're on a paid plan and feel the product didn't deliver, email us — we handle refund requests case by case and we'd rather keep you happy than keep your money.",
     final_label: "START TODAY", final_h2: "Your ad account is full of insights. Start asking.", final_sub: "Connect in 2 minutes. Cancel anytime within the first day.",
@@ -87,17 +87,17 @@ const T: Record<Lang, Record<string, string>> = {
     hero_fine: "1 dia de teste grátis · Sem cobrança por 24h · Cancele quando quiser", hero_roi: "Gestores recuperam 5–8h/semana que perdiam em relatórios manuais.", hero_built: "DESENVOLVIDO COM",
     how_label: "COMO FUNCIONA", how_h2: "Três passos para seu parceiro de estratégia com IA.", how_sub: "Conecte uma vez. Pergunte para sempre. Sem uploads de CSV. Sem entrada manual. Google Ads & TikTok em breve.",
     how_s1_title: "Conecte suas contas de anúncios", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha — investimento, CTR, CPM, performance de criativos — em tempo real.",
-    how_s2_title: "Configure sua persona ou marca", how_s2_desc: "Diga ao AdBrief para quem você está anunciando. Crie personas de audiência ou perfis de marca — a IA usa isso para te dar respostas específicas para o seu mercado.",
+    how_s2_title: "Configure sua conta", how_s2_desc: "Crie uma conta para cada marca ou cliente. Adicione site, descrição e conecte o Meta Ads — a IA usa esse contexto em cada resposta.",
     how_s3_title: "Pergunte qualquer coisa. Receba respostas reais.", how_s3_desc: "Converse como no ChatGPT — mas o AdBrief conhece sua conta de verdade. Pergunte o que está funcionando, o que cortar, o que produzir a seguir. Ele responde com seus números.",
     for_label: "PARA QUEM É", for_h2: "Feito para equipes de performance.", for_tab0: "Agências", for_tab1: "Media Buyers", for_tab2: "Times Internos",
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados completo.", for_d0: "Seu time produz mais de 20 criativos por semana para várias marcas. O AdBrief conecta à conta de anúncios de cada cliente e dá respostas reais aos seus estrategistas — quais criativos escalar, quais pausar, o que briefar a seguir.",
     for_h1: "Pare de tomar decisões criativas no escuro.", for_d1: "Você é responsável pelo ROAS mas nem sempre controla o criativo. O AdBrief te dá respostas baseadas em dados — qual formato está underperformando, qual é o padrão de hook vencedor, o que briefar a seguir.",
     for_h2b: "Suas campanhas finalmente falando entre si.", for_d2: "Conecte as contas de anúncios da sua empresa e dê ao seu time inteiro acesso a uma IA compartilhada que conhece seu histórico de performance. Um lugar para perguntar, um lugar para saber.",
     for_cta: "Testar grátis por 1 dia",
-    for_p0_0: "Personas por cliente com o próprio contexto de dados",
+    for_p0_0: "Contas por cliente com conexão própria ao Meta Ads",
     for_p0_1: "Performance das campanhas em tempo real no chat",
     for_p0_2: "Geração de brief calibrada nos vencedores de cada marca",
-    for_p0_3: "Memória de IA que aprende os melhores hooks de cada cliente",
+    for_p0_3: "IA que conhece o histórico e os melhores hooks de cada cliente",
     for_p1_0: "Dados reais de investimento e CTR em cada resposta",
     for_p1_1: "Detecção de padrões entre os melhores e piores performers",
     for_p1_2: "Análise de concorrentes e benchmarking de hooks",
@@ -112,16 +112,16 @@ const T: Record<Lang, Record<string, string>> = {
     plan_maker_f0: "50 mensagens de IA / dia",
     plan_maker_f1: "1 conta de anúncios (Meta, TikTok ou Google)",
     plan_maker_f2: "Todas as ferramentas liberadas (hooks, scripts, briefs)",
-    plan_maker_f3: "Até 3 personas ou marcas",
+    plan_maker_f3: "Até 3 contas de anúncios",
     plan_pro_f0: "200 mensagens de IA / dia",
     plan_pro_f1: "3 contas de anúncios conectadas",
     plan_pro_f2: "Todas as ferramentas liberadas",
-    plan_pro_f3: "Personas e marcas ilimitadas",
+    plan_pro_f3: "Contas e marcas ilimitadas",
     plan_pro_f4: "Suporte a múltiplos mercados",
     plan_studio_f0: "Mensagens de IA ilimitadas",
     plan_studio_f1: "Contas de anúncios ilimitadas",
     plan_studio_f2: "Todas as ferramentas liberadas",
-    plan_studio_f3: "Personas e marcas ilimitadas",
+    plan_studio_f3: "Contas e marcas ilimitadas",
     plan_studio_f4: "Workspace para clientes de agência",
     faq_label: "PERGUNTAS FREQUENTES", faq_h2: "Dúvidas comuns",
     faq_q0: "Como funciona o teste grátis de 1 dia?", faq_a0: "Ao se cadastrar em qualquer plano, você tem acesso completo por 24 horas sem nenhuma cobrança. Se cancelar dentro desse período, não será cobrado. Se não cancelar, sua assinatura começa automaticamente após 24 horas.",
@@ -129,7 +129,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "O que o AdBrief conecta?", faq_a2: "Meta Ads (Facebook e Instagram), TikTok Ads e Google Ads. Ao conectar, o AdBrief lê seus dados de campanha em tempo real e os usa para responder suas perguntas no chat de IA.",
     faq_q3: "Os dados da minha conta de anúncios são seguros?", faq_a3: "Sim. Usamos OAuth — o mesmo padrão usado por todas as principais ferramentas de anúncios. Nunca armazenamos suas credenciais de login. Os tokens de acesso são criptografados. Você pode desconectar qualquer conta a qualquer momento.",
     faq_q4: "Posso usar o AdBrief para vários clientes?", faq_a4: "Sim. O Pro suporta 3 contas de anúncios e personas/marcas ilimitadas. O Studio suporta conexões ilimitadas e inclui um workspace dedicado para agências. A maioria usa uma persona por marca ou mercado.",
-    faq_q5: "O que é uma persona no AdBrief?", faq_a5: "Uma persona é um perfil de audiência que dá contexto à IA — para quem você está segmentando, qual mercado, qual plataforma, quais são as objeções. A IA usa isso para personalizar cada resposta para aquela audiência específica.",
+    faq_q5: "O que é uma Conta no AdBrief?", faq_a5: "Uma Conta é o perfil de uma marca ou cliente que conecta à própria conta do Meta Ads. Adicione nome, site e descrição — a IA usa esse contexto para te dar respostas específicas para aquela conta.",
     faq_q6: "Funciona com anúncios de catálogo e DPA?", faq_a6: "Sim. O AdBrief lê todos os tipos de campanha do Meta — incluindo anúncios dinâmicos, campanhas de catálogo e Advantage+ Shopping. Você pode perguntar sobre qualquer um deles no chat.",
     faq_q7: "E se não funcionar para mim?", faq_a7: "Se não ver valor nas primeiras 24 horas, cancele e não será cobrado. Se estiver em um plano pago e sentir que o produto não entregou, mande um e-mail — resolvemos casos de reembolso individualmente. Preferimos manter você feliz do que ficar com o seu dinheiro.",
     final_label: "COMECE HOJE", final_h2: "Sua conta de anúncios está cheia de insights. Comece a perguntar.", final_sub: "Conecte em 2 minutos. Cancele quando quiser dentro do primeiro dia.",
@@ -330,10 +330,10 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       full: t.dq1_full || "Meu ROAS de fitness caiu 40% essa semana — o que está acontecendo?",
       answer: [
         "Identifiquei 3 causas simultâneas na sua conta:",
-        "**Fadiga criativa acelerada** — o Creative_042 (seu maior volume) tem 22 dias rodando. A hook rate caiu de 31% → 11%. O público já decorou o anúncio.",
-        "**Frequência fora de controle** — no conjunto BR-Mulheres-25-34, frequência chegou em 4.8 na semana. Cada real adicional gasto está sendo mostrado para quem já viu 5 vezes.",
-        "**CPM subiu 38% sem aumento de orçamento** — isso acontece quando o algoritmo percebe que seu criativo perdeu relevância e começa a pagar mais caro para entregar.",
-        "O que fazer agora: pause o Creative_042, relance o Creative_019 (seu último winner, parado há 9 dias) e quebre o conjunto de alto volume em 2 menores para desfazer a saturação.",
+        "**Fadiga criativa acelerada** — o Creative_042 tem 22 dias rodando. A hook rate caiu de 31% para 11%. O público já decorou o anúncio.",
+        "**Frequência fora de controle** — no conjunto BR-Mulheres-25-34, frequência chegou em 4.8. Cada real gasto agora está sendo mostrado para quem já viu 5 vezes.",
+        "**CPM subiu 38%** — o algoritmo percebeu que o criativo perdeu relevância e está cobrando mais caro para entregar.",
+        "O que fazer: pause o Creative_042, relance o Creative_019 (parado há 9 dias, ROAS 3.2x) e quebre o conjunto de alto volume em 2 menores.",
       ],
     },
     {
@@ -343,10 +343,10 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       full: t.dq2_full || "Quais dos meus anúncios devo pausar imediatamente?",
       answer: [
         "3 anúncios para pausar hoje — cada um por um motivo diferente:",
-        "**Creative_038** — CPM de R$ 91,00, CTR 0,4%, zero conversões em 7 dias. Está gastando R$ 180/dia sem nenhum sinal de recuperação. Kill imediato.",
-        "**Conjunto BR-Homens-35-44** — ROAS 0,6x, frequência 5,1. Você está pagando para irritar um público exaurido. Pausa e expande o lookalike em 2%.",
-        "**Creative_029** — hook rate de 8%. Seu threshold mínimo é 15%. Isso significa que 92% das pessoas que viram esse anúncio foram embora nos primeiros 3 segundos.",
-        "Esses 3 juntos estão queimando R$ 620/dia com retorno negativo. Pausar agora libera verba para o Creative_019 que tem ROAS 3,2x e está underserved.",
+        "**Creative_038** — CPM R$ 91, CTR 0,4%, zero conversões em 7 dias. Gastando R$ 180/dia sem retorno. Kill imediato.",
+        "**Conjunto BR-Homens-35-44** — ROAS 0,6x, frequência 5,1. Você está pagando para irritar um público exaurido.",
+        "**Creative_029** — hook rate 8%. Seu threshold mínimo é 15%. 92% das pessoas foram embora nos primeiros 3 segundos.",
+        "Esses 3 queimam R$ 620/dia com retorno negativo. Pausar agora libera verba para o Creative_019 (ROAS 3,2x, underserved).",
       ],
     },
     {
@@ -355,11 +355,11 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       short: t.dq3_short || "Escreve 3 hooks baseados nos meus dados",
       full: t.dq3_full || "Escreve 3 hooks para minha conta baseados nos meus melhores criativos",
       answer: [
-        "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+), o padrão é: problema específico + número concreto + quebra de expectativa.",
-        '**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."',
-        '**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."',
-        '**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."',
-        "Os 3 seguem o padrão dos seus winners: nada de benefício genérico, sempre uma afirmação que a pessoa precisa parar para processar.",
+        "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+) — padrão: problema específico + número concreto + quebra de expectativa.",
+        "**Hook 1:** "Você está pagando R$ 90 por clique e nem sabe por que — seus dados já têm a resposta."",
+        "**Hook 2:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."",
+        "**Hook 3:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."",
+        "Os 3 seguem o padrão dos seus winners: nunca benefício genérico — sempre uma afirmação que força o usuário a parar.",
       ],
     },
   ];
@@ -373,7 +373,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
     if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
-    }, { threshold: 0.2 });
+    }, { threshold: 0.15 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -382,157 +382,148 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
 
   return (
     <section ref={ref} style={{ padding: "0 clamp(16px,4vw,32px) 80px" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 40,
+        <div style={{ textAlign: "center", marginBottom: 36,
           opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)",
-          transition: "opacity 0.6s ease, transform 0.6s ease" }}>
+          transition: "opacity 0.55s ease, transform 0.55s ease" }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600 }}>
             {t.demo_label || "EXPERIMENTE — SEM CRIAR CONTA"}
           </span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 800, letterSpacing: "-0.035em", color: "#fff", margin: "12px 0 10px" }}>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,38px)", fontWeight: 800, letterSpacing: "-0.035em", color: "#fff", margin: "10px 0 10px" }}>
             {t.demo_h2 || "Clique em uma pergunta real."}
           </h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 440, margin: "0 auto", lineHeight: 1.6 }}>
-            {t.demo_sub2 || "Veja como a IA responde com dados específicos da conta — não conselhos genéricos."}
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.38)", maxWidth: 460, margin: "0 auto", lineHeight: 1.6 }}>
+            {t.demo_sub2 || "Veja como a IA responde com dados específicos — não conselhos genéricos."}
           </p>
         </div>
 
-        {/* 3 question bubbles */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
-          {QUESTIONS.map((q, i) => {
-            const isActive = active === q.id;
-            return (
-              <button key={q.id}
-                onClick={() => setActive(isActive ? null : q.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 14,
-                  padding: "16px 20px", borderRadius: 16,
-                  background: isActive ? `linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.07))` : "rgba(255,255,255,0.025)",
-                  border: `1px solid ${isActive ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.07)"}`,
-                  cursor: "pointer", textAlign: "left", fontFamily: F,
-                  transition: "all 0.18s",
-                  transform: visible ? "translateY(0)" : "translateY(20px)",
-                  opacity: visible ? 1 : 0,
-                  transitionDelay: `${0.1 + i * 0.08}s`,
-                  boxShadow: isActive ? "0 0 40px rgba(14,165,233,0.08)" : "none",
-                }}
-                onMouseEnter={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.045)"; el.style.borderColor = "rgba(255,255,255,0.14)"; } }}
-                onMouseLeave={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.025)"; el.style.borderColor = "rgba(255,255,255,0.07)"; } }}
-              >
-                {/* Emoji bubble */}
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: isActive ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${isActive ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.08)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, transition: "all 0.18s" }}>
-                  {q.emoji}
-                </div>
+        {/* Full product mockup */}
+        <div style={{
+          borderRadius: 20, overflow: "hidden",
+          border: "1px solid rgba(14,165,233,0.18)",
+          boxShadow: "0 0 80px rgba(14,165,233,0.07), 0 32px 64px rgba(0,0,0,0.6)",
+          opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s",
+        }}>
 
-                {/* Question text */}
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: isActive ? "#fff" : "rgba(255,255,255,0.75)", margin: 0, lineHeight: 1.4, transition: "color 0.15s" }}>
-                    {q.short}
-                  </p>
-                  {isActive && (
-                    <p style={{ fontFamily: F, fontSize: 12, color: "rgba(14,165,233,0.7)", margin: "3px 0 0", fontWeight: 500 }}>
-                      {t.demo_seeing || "Vendo a resposta ↓"}
-                    </p>
-                  )}
-                </div>
-
-                {/* Arrow */}
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: isActive ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.18s", transform: isActive ? "rotate(90deg)" : "rotate(0deg)" }}>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M4 2l4 4-4 4" stroke={isActive ? "#000" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Answer panel — appears below when question is selected */}
-        {current && (
-          <div style={{
-            borderRadius: 20, overflow: "hidden",
-            border: "1px solid rgba(14,165,233,0.2)",
-            boxShadow: "0 0 60px rgba(14,165,233,0.07), 0 24px 48px rgba(0,0,0,0.4)",
-            animation: "answerSlide 0.3s ease",
-          }}>
-            {/* Browser bar */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ display: "flex", gap: 5 }}>
-                {["rgba(255,90,90,0.35)","rgba(255,190,0,0.35)","rgba(40,200,80,0.35)"].map((c,i) => (
-                  <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />
-                ))}
-              </div>
-              <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 5, padding: "3px 10px", display: "flex", alignItems: "center", gap: 6, maxWidth: 240, margin: "0 auto" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.28)" }}>adbrief.pro/dashboard/ai</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: "auto" }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(14,165,233,0.7)" }} />
-                <span style={{ fontFamily: F, fontSize: 10, color: "rgba(14,165,233,0.6)", fontWeight: 600 }}>
-                  {t.demo_sample_tag || "Conta de exemplo"}
-                </span>
-              </div>
+          {/* Browser bar */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ display: "flex", gap: 5 }}>
+              {["rgba(255,90,90,0.4)","rgba(255,190,0,0.4)","rgba(40,200,80,0.4)"].map((c,i) => (
+                <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />
+              ))}
             </div>
-
-            <div style={{ background: "#09091a", padding: "20px 24px" }}>
-              {/* Persona chip */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "4px 10px 4px 7px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
-                  <span style={{ fontSize: 12 }}>🎯</span>
-                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: BLUE }}>FitCore · Brasil</span>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
-                </div>
-                <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>Meta Ads conectado · 22 campanhas</span>
-              </div>
-
-              {/* User question */}
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-                <div style={{ maxWidth: "75%", padding: "11px 15px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
-                  <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.9)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
-                </div>
-              </div>
-
-              {/* AI answer */}
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ width: 28, height: 28, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 13 }}>✦</div>
-                <div style={{ flex: 1 }}>
-                  {(Array.isArray(current.answer) ? current.answer : (current.answer as string).split('\n\n')).map((block, bi) => {
-                    // Bold text between **
-                    const parts = block.split(/(\*\*[^*]+\*\*)/g);
-                    return (
-                      <p key={bi} style={{ fontFamily: F, fontSize: 14, color: bi === 0 ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.72)", lineHeight: 1.72, margin: bi === 0 ? "0 0 12px" : "0 0 10px" }}>
-                        {parts.map((part, pi) =>
-                          part.startsWith('**') && part.endsWith('**')
-                            ? <strong key={pi} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2,-2)}</strong>
-                            : <span key={pi}>{part}</span>
-                        )}
-                      </p>
-                    );
-                  })}
-                </div>
-              </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 5, padding: "3px 10px", display: "flex", alignItems: "center", gap: 6, maxWidth: 220, margin: "0 auto" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>adbrief.pro/dashboard/ai</span>
             </div>
-
-            {/* CTA bottom */}
-            <div style={{ padding: "14px 24px 18px", background: "rgba(14,165,233,0.04)", borderTop: "1px solid rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0 }}>
-                {t.demo_cta_note || "Isso é uma conta de exemplo. Com a sua, a IA usa seus dados reais."}
-              </p>
-              <button onClick={onCTA}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 10, background: `linear-gradient(135deg, ${BLUE}, ${TEAL})`, color: "#000", fontFamily: F, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                {t.demo_cta_btn2 || "Testar com minha conta →"}
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: "auto" }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: BLUE, opacity: 0.7 }} />
+              <span style={{ fontFamily: F, fontSize: 10, color: "rgba(14,165,233,0.6)", fontWeight: 600 }}>
+                {t.demo_sample_tag || "Conta de exemplo"}
+              </span>
             </div>
           </div>
-        )}
 
-        <style>{`
-          @keyframes answerSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
-        `}</style>
+          {/* Two-column layout: sidebar + chat */}
+          <div style={{ display: "flex", background: "#09091a", minHeight: current ? 420 : 340 }}>
+
+            {/* Left sidebar — questions */}
+            <div style={{ width: 260, borderRight: "1px solid rgba(255,255,255,0.06)", padding: "16px 12px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+              {/* Account chip */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 10, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)", marginBottom: 12 }}>
+                <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0 }}>F</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "#fff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>FitCore Brasil</p>
+                  <p style={{ fontFamily: F, fontSize: 10, color: "rgba(14,165,233,0.7)", margin: "1px 0 0" }}>Meta Ads conectado</p>
+                </div>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+              </div>
+
+              <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.25)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, padding: "0 4px" }}>
+                {t.demo_sidebar_label || "Perguntas frequentes"}
+              </p>
+
+              {QUESTIONS.map((q, i) => {
+                const isActive = active === q.id;
+                return (
+                  <button key={q.id} onClick={() => setActive(isActive ? null : q.id)}
+                    style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 10px", borderRadius: 10, background: isActive ? "rgba(14,165,233,0.1)" : "transparent", border: `1px solid ${isActive ? "rgba(14,165,233,0.25)" : "transparent"}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.14s" }}
+                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>{q.emoji}</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: isActive ? 600 : 400, color: isActive ? "#fff" : "rgba(255,255,255,0.55)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any }}>{q.short}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right: chat area */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+
+              {/* Chat header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>✦</div>
+                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#fff" }}>AdBrief AI</span>
+                <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>— {t.demo_chat_subtitle || "conectado à FitCore Brasil"}</span>
+              </div>
+
+              {/* Messages */}
+              <div style={{ flex: 1, padding: "16px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}>
+                {!current ? (
+                  /* Empty state */
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", opacity: 0.35, gap: 10, padding: "40px 0" }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 11, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✦</div>
+                    <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.6 }}>
+                      {t.demo_empty || "Selecione uma pergunta ao lado
+para ver a IA em ação"}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* User message */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", animation: "fadeSlideIn 0.25s ease" }}>
+                      <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
+                      </div>
+                    </div>
+                    {/* AI answer */}
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", animation: "answerSlide 0.3s ease" }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12 }}>✦</div>
+                      <div style={{ flex: 1 }}>
+                        {current.answer.map((block, bi) => {
+                          const parts = block.split(/(\*\*[^*]+\*\*)/g);
+                          return (
+                            <p key={bi} style={{ fontFamily: F, fontSize: 13, color: bi === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.7)", lineHeight: 1.72, margin: bi === 0 ? "0 0 10px" : "0 0 8px" }}>
+                              {parts.map((part, pi) =>
+                                part.startsWith("**") && part.endsWith("**")
+                                  ? <strong key={pi} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2,-2)}</strong>
+                                  : <span key={pi}>{part}</span>
+                              )}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* CTA bottom bar */}
+              <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                  {t.demo_cta_note || "Isso é uma conta de exemplo. Com a sua, a IA usa dados reais."}
+                </p>
+                <button onClick={onCTA}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9, background: `linear-gradient(135deg, ${BLUE}, ${TEAL})`, color: "#000", fontFamily: F, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  {t.demo_cta_btn2 || "Testar com minha conta →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -868,6 +859,9 @@ export default function IndexNew() {
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", ...j }}>
       <style>{`
+        @keyframes answerSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
         @media (max-width: 640px) {
           .nav-links { display: none !important; }
           .how-grid { grid-template-columns: 1fr !important; }
