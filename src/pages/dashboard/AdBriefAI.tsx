@@ -252,8 +252,8 @@ export default function AdBriefAI() {
         </div>
         <div>
           <p style={{fontSize:14,fontWeight:800,color:"#fff",lineHeight:1}}>{ui(lang,"title")}</p>
-          <p style={{...m,fontSize:9.5,color:contextReady?"#34d399":"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginTop:2}}>
-            {contextReady?ui(lang,"ready"):ui(lang,"loading_ctx")}
+          <p style={{...m,fontSize:9.5,color:contextReady&&metaConnected?"#34d399":contextReady?"rgba(255,189,46,0.8)":"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginTop:2}}>
+            {contextReady&&metaConnected?ui(lang,"ready"):contextReady?ui(lang,"connect_title"):ui(lang,"loading_ctx")}
           </p>
         </div>
         {messages.length>0&&(
