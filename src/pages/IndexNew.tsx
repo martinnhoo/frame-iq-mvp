@@ -660,22 +660,6 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     }
     prevPhase.current = phase;
   }, [phase]);
-    // SFX: play subtle notification when AI starts responding
-    if (phase === 'streaming' && prevPhase.current === 'thinking') {
-      try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.frequency.setValueAtTime(880, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
-        g.gain.setValueAtTime(0.12, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
-      } catch {}
-    }
-    prevPhase.current = phase;
-  }, [phase]);
 
   const ms: React.CSSProperties = { fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.8, margin: '0 0 10px', fontWeight: 400 };
   const qlabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
