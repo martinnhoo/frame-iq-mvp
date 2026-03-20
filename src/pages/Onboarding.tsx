@@ -1,3 +1,4 @@
+// Onboarding v2 — 2026-03-20
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

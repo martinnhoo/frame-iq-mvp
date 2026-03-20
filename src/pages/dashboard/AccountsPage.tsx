@@ -358,7 +358,7 @@ export default function AccountsPage() {
       )}
 
       {accounts.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(200px, 280px) 1fr", gap: 16, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(200px, 280px) 1fr", gap: 16, alignItems: "start" }} className="accounts-grid">
 
           {/* Account list */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -460,6 +460,7 @@ export default function AccountsPage() {
           )}
         </div>
       )}
+      <style>{`@media(max-width:640px){.accounts-grid{grid-template-columns:1fr!important}}`}</style>
     </div>
   );
 }

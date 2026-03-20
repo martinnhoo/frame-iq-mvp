@@ -245,7 +245,6 @@ export default function DashboardOverview() {
     { title: dt("nav_translate"),desc: dt("ov_translate_desc"), icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
     { title: dt("ov_templates"), desc: dt("ov_templates_desc"), icon: Layers,    url: "/dashboard/templates",    accent: "#06b6d4" },
     { title: dt("nav_preflight"),desc: dt("ov_preflight_desc"), icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
-    { title: dt("nav_persona"),  desc: dt("ov_persona_desc"),   icon: Target,    url: "/dashboard/persona",      accent: "#c084fc" },
     { title: "Competitor",       desc: "Decode competitor ads", icon: Brain,     url: "/dashboard/competitor",   accent: "#34d399" },
   ];
 
