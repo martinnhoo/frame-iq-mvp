@@ -19,7 +19,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
     hero_badge: "AI FOR PERFORMANCE MARKETING",
     hero_h1: "Your ads know\nmore than you think.",
-    hero_sub: "Connect Meta Ads. Ask anything. Get answers with your real data — not generic advice.",
+    hero_sub: "Connect Meta Ads. Ask anything. Get answers with your real data.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
     stat_1: "$2.4M+", stat_1_label: "Ad spend analyzed",
@@ -82,7 +82,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA PARA PERFORMANCE MARKETING",
     hero_h1: "Seus anúncios sabem\nmais do que você pensa.",
-    hero_sub: "Conecte o Meta Ads. Pergunte qualquer coisa. Receba respostas com seus dados reais — não conselhos genéricos.",
+    hero_sub: "Conecte o Meta Ads. Pergunte qualquer coisa. Receba respostas com seus dados reais.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
     stat_1: "R$12M+", stat_1_label: "Budget analisado",
@@ -654,7 +654,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     : ['Connects to Meta Ads in 1 click', 'Answers with your real data, not templates', 'Cancel within 24h, no charge'];
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,60px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,60px)', position: 'relative' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(14,165,233,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative' }}>
@@ -730,9 +730,9 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* App body */}
-              <div style={{ display: 'flex', background: '#06061a' }}>
+              <div style={{ display: 'flex', background: '#06061a' }} className="demo-app-body">
                 {/* Sidebar */}
-                <div style={{ width: 200, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '11px 7px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div className="demo-sidebar-inner" style={{ width: 200, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '11px 7px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 9px', borderRadius: 9, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 10 }}>
                     <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
                     <div style={{ minWidth: 0 }}>
@@ -763,7 +763,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     </div>
                   </div>
 
-                  <div ref={chatRef} style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 280, maxHeight: 340 }}>
+                  <div ref={chatRef} style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 200, maxHeight: 320 }}>
                     {phase !== 'idle' && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <div style={{ maxWidth: '82%', padding: '8px 11px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -1205,16 +1205,16 @@ export default function IndexNew() {
         <meta name="twitter:card" content="summary_large_image" />
         <html lang={lang} />
         <style>{`
+          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+          .cursor-blink{animation:blink 1s step-end infinite}
           @media(max-width:768px){
             .nav-links{display:none!important}
             .how-grid{grid-template-columns:1fr!important}
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
-            .demo-sidebar{display:none!important}
-            .hero-grid{grid-template-columns:1fr!important}
+            .demo-sidebar{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important;flex-direction:row!important;overflow-x:auto!important;padding:8px!important;gap:6px!important;flex-wrap:nowrap!important}
+            .hero-grid{grid-template-columns:1fr!important;gap:clamp(24px,5vw,40px)!important}.demo-app-body{flex-direction:column!important}.demo-app-body .demo-sidebar-inner{width:100%!important;max-height:100px!important;overflow-x:auto!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important}
           }
-          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-          .cursor-blink{animation:blink 1s step-end infinite}
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
