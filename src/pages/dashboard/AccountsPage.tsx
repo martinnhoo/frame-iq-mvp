@@ -280,7 +280,8 @@ function AccountForm({ account, userId, onSave, onCancel }: {
 
 export default function AccountsPage() {
   const { user } = useOutletContext<DashboardContext>();
-  const dt = useDashT("en");
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
