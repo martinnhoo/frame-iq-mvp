@@ -669,7 +669,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     : ['Connects to Meta Ads in 1 click', 'Answers from your real data', 'Cancel in 24h, no charge'];
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(80px,9vw,110px) clamp(16px,4vw,32px) clamp(40px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(64px,7vw,88px) clamp(16px,4vw,32px) clamp(32px,4vw,48px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Background glows */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(14,165,233,0.10) 0%, transparent 60%)', pointerEvents: 'none' }} />
@@ -789,7 +789,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* Messages */}
-              <div ref={chatRef} className="demo-chat" style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+              <div ref={chatRef} className="demo-chat" style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {phase !== 'idle' && (
                   <div className="msg-new" style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.18)', border: '1px solid rgba(14,165,233,0.30)' }}>
@@ -1271,7 +1271,7 @@ export default function IndexNew() {
             .demo-sidebar-inner{width:100%!important;height:56px!important;min-height:56px!important;max-height:56px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:6px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
             .demo-sidebar-inner>div:last-child{display:none!important}
             .demo-chat-panel{height:240px!important;max-height:240px!important;min-height:240px!important;overflow:hidden!important;flex:none!important}
-            .demo-chat{overflow:hidden!important;height:170px!important;max-height:170px!important;min-height:170px!important}
+            .demo-chat{overflowY:auto!important;height:170px!important;max-height:170px!important;min-height:170px!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
