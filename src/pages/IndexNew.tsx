@@ -642,6 +642,41 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [doneLines, activeLine, phase]);
 
+  const prevPhase = useRef<string>('idle');
+  useEffect(() => {
+    // SFX: play subtle ding when AI starts responding
+    if (phase === 'streaming' && prevPhase.current === 'thinking') {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
+      } catch {}
+    }
+    prevPhase.current = phase;
+  }, [phase]);
+    // SFX: play subtle notification when AI starts responding
+    if (phase === 'streaming' && prevPhase.current === 'thinking') {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
+      } catch {}
+    }
+    prevPhase.current = phase;
+  }, [phase]);
+
   const ms: React.CSSProperties = { fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.8, margin: '0 0 10px', fontWeight: 400 };
   const qlabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
   const note = lang === 'pt' ? 'Demo · Com a sua conta, usa dados reais.' : lang === 'es' ? 'Demo · Con tu cuenta, usa datos reales.' : 'Demo · With your account, uses real data.';
@@ -676,21 +711,14 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
-        style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)', maxWidth: 860, position: 'relative' }}
+        style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)', maxWidth: 860, position: 'relative', width: '100%' }}
       >
-        {/* Badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(14,165,233,0.25)', background: 'rgba(14,165,233,0.06)', marginBottom: 14 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
-          <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#0ea5e9', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-            {lang === 'pt' ? 'IA para Performance Marketing' : lang === 'es' ? 'IA para Performance Marketing' : 'AI for Performance Marketing'}
-          </span>
-        </div>
-
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(26px,3.8vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 12px', color: '#fff', whiteSpace: 'nowrap' }}>
-          {h1p[0] || h1}{h1p[1] && <> <span style={{ background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{h1p[1]}</span></>}
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(28px,4.5vw,52px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.08, margin: '0 0 14px', color: '#fff' }}>
+          <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
+          {h1p[1] && <span style={{ background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{h1p[1]}</span>}
         </h1>
 
-        <p style={{ fontFamily: F, fontSize: 'clamp(13px,1.2vw,15px)', color: 'rgba(255,255,255,0.58)', lineHeight: 1.55, margin: '0 auto', maxWidth: 480 }}>
+        <p style={{ fontFamily: F, fontSize: 'clamp(13px,1.4vw,16px)', color: 'rgba(255,255,255,0.60)', lineHeight: 1.6, margin: '0 auto', maxWidth: 480 }}>
           {t.hero_sub}
         </p>
       </motion.div>
@@ -739,7 +767,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         </motion.div>
 
         {/* Main browser window */}
-        <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 80px rgba(14,165,233,0.05), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+        <div className="demo-window" style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 40px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
 
           {/* Browser bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -823,8 +851,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               {/* Messages */}
               <div ref={chatRef} style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
                 {phase !== 'idle' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.25)' }}>
+                  <div className="msg-new" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.18)', border: '1px solid rgba(14,165,233,0.30)' }}>
                       <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0 }}>
                         {typedQ}
                         {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle' }} />}
@@ -833,7 +861,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   </div>
                 )}
                 {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                  <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                  <div className="msg-new" style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
                     <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.25), rgba(6,182,212,0.15))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 11, color: '#0ea5e9' }}>✦</div>
                     <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px 14px 14px 14px', padding: '10px 14px' }}>
                       {phase === 'thinking' && <Dots />}
@@ -870,7 +898,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)'; }}>
             {t.hero_cta} <ArrowRight size={16} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }} className="hero-proofs">
             {proofs.map((pt, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
@@ -1284,14 +1312,25 @@ export default function IndexNew() {
         <style>{`
           @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
+          @keyframes demo-pulse{0%,100%{box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 40px rgba(14,165,233,0.06),inset 0 1px 0 rgba(255,255,255,0.08)}50%{box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 80px rgba(14,165,233,0.18),0 0 120px rgba(14,165,233,0.08),inset 0 1px 0 rgba(255,255,255,0.08)}}
+          .demo-window{animation:demo-pulse 3s ease-in-out infinite}
+          @keyframes msg-pop{0%{opacity:0;transform:translateY(6px) scale(0.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
+          .msg-new{animation:msg-pop 0.3s cubic-bezier(0.16,1,0.3,1) forwards}
+          @keyframes thinking-glow{0%,100%{opacity:0.5}50%{opacity:1}}
+          .thinking-dot{animation:thinking-glow 1.1s ease-in-out infinite}
           @media(max-width:768px){
             .nav-links{display:none!important}
             .how-grid{grid-template-columns:1fr!important}
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
             .hero-float-cards{display:none!important}
-            .demo-sidebar{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important;flex-direction:row!important;overflow-x:auto!important;padding:8px!important;gap:6px!important;flex-wrap:nowrap!important}
-            .hero-grid{grid-template-columns:1fr!important;gap:clamp(24px,5vw,40px)!important}.demo-app-body{flex-direction:column!important}.demo-app-body .demo-sidebar-inner{width:100%!important;max-height:100px!important;overflow-x:auto!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important}
+            .demo-app-body{flex-direction:column!important;height:auto!important}
+            .demo-app-body .demo-sidebar-inner{width:100%!important;height:auto!important;max-height:90px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:8px!important;gap:6px!important;align-items:center!important}
+            .demo-app-body .demo-sidebar-inner>*:not(:first-child){display:none!important}
+            .demo-app-body .demo-sidebar-inner>:first-child{flex-shrink:0!important}
+          }
+          @media(max-width:480px){
+            .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
