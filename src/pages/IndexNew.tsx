@@ -599,18 +599,20 @@ function useStreaming(lang: Lang) {
 }
 
 // ─── Render bold markdown ─────────────────────────────────────────────────────
-function MdLine({ text, style }: { text: string; style: React.CSSProperties }) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return (
-    <p style={style}>
-      {parts.map((p, i) =>
-        p.startsWith('**') && p.endsWith('**')
-          ? <strong key={i} style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>{p.slice(2,-2)}</strong>
-          : <span key={i}>{p}</span>
-      )}
-    </p>
-  );
-}
+const MdLine = React.forwardRef<HTMLParagraphElement, { text: string; style: React.CSSProperties }>(
+  function MdLine({ text, style }, ref) {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <p ref={ref} style={style}>
+        {parts.map((p, i) =>
+          p.startsWith('**') && p.endsWith('**')
+            ? <strong key={i} style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>{p.slice(2,-2)}</strong>
+            : <span key={i}>{p}</span>
+        )}
+      </p>
+    );
+  }
+);
 
 // ─── Thinking dots ────────────────────────────────────────────────────────────
 function Dots() {
