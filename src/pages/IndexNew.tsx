@@ -700,13 +700,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.18, ease: [0.16,1,0.3,1] }}
-        style={{ width: '100%', maxWidth: 940, position: 'relative' }}
+        style={{ width: '100%', maxWidth: 940, position: 'relative', overflow: 'visible' }}
       >
         {/* Floating metric chips — left */}
         <motion.div
           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.7, duration: 0.6 }}
-          style={{ position: 'absolute', left: -16, top: '22%', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 10 }}
+          style={{ position: 'absolute', left: -148, top: '25%', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 10 }}
           className="hero-float-cards"
         >
           {metricCards.slice(0,2).map((m, i) => (
@@ -725,7 +725,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <motion.div
           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.85, duration: 0.6 }}
-          style={{ position: 'absolute', right: -16, top: '28%', zIndex: 10 }}
+          style={{ position: 'absolute', right: -148, top: '28%', zIndex: 10 }}
           className="hero-float-cards"
         >
           <div style={{ background: 'rgba(13,17,23,0.95)', border: `1px solid ${metricCards[2].color}30`, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(16px)', minWidth: 120, boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${metricCards[2].color}15` }}>
@@ -761,7 +761,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 380 }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#0d1117', height: 380, overflow: 'hidden' }} className="demo-app-body">
 
             {/* Sidebar */}
             <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
@@ -809,7 +809,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
 
             {/* Chat panel */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
               {/* Chat header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#0ea5e9' }}>✦</div>
@@ -821,7 +821,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* Messages */}
-              <div ref={chatRef} style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 260, maxHeight: 340 }}>
+              <div ref={chatRef} style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
                 {phase !== 'idle' && (
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.25)' }}>
