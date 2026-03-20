@@ -595,7 +595,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
             </button>
           ))}
         </div>
-        <div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+        <div key={active}
           className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
           <div style={{ padding: "32px 28px", borderRadius: 20, background: `${p.color}07`, border: `1px solid ${p.color}18` }}>
             <span style={{ fontSize: 36, display: "block", marginBottom: 16 }}>{p.emoji}</span>
