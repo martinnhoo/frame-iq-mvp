@@ -1,6 +1,6 @@
 import {
   MessageSquare, BarChart3, Zap, Search, Settings,
-  ChevronUp, Sparkles, CreditCard, Brain,
+  ChevronUp, Sparkles, CreditCard, Brain, Building2,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";

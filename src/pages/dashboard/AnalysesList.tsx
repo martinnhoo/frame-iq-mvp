@@ -70,7 +70,7 @@ export default function AnalysesList() {
 
   if (loading) return (
     <div style={{ padding: "clamp(16px,4vw,32px)", maxWidth: 900, margin: "0 auto" }}>
-      {[1,2,3].map(i => <div key={i} style={{ height: 72, background: "rgba(255,255,255,0.04)", borderRadius: 14, marginBottom: 8, animation: "pulse 1.5s infinite" }} />)}
+      {[1,2,3].map(i => <div key={i} className="animate-pulse" style={{ height: 72, background: "rgba(255,255,255,0.04)", borderRadius: 14, marginBottom: 8 }} />)}
     </div>
   );
 
@@ -164,7 +164,7 @@ export default function AnalysesList() {
                   style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "1px solid transparent", cursor: "pointer", flexShrink: 0, color: "rgba(255,255,255,0.25)", transition: "all 0.12s" }}
                   onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = "#f87171"; el.style.background = "rgba(248,113,113,0.1)"; el.style.borderColor = "rgba(248,113,113,0.2)"; }}
                   onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.25)"; el.style.background = "transparent"; el.style.borderColor = "transparent"; }}>
-                  {deleting === a.id ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : a.status === "pending" ? <XCircle size={12} /> : <Trash2 size={12} />}
+                  {deleting === a.id ? <Loader2 size={12} className="animate-spin" /> : a.status === "pending" ? <XCircle size={12} /> : <Trash2 size={12} />}
                 </button>
               </div>
             );
