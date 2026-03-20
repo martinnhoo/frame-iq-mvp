@@ -279,7 +279,7 @@ function AccountForm({ account, userId, onSave, onCancel }: {
 
 export default function AccountsPage() {
   const { user } = useOutletContext<DashboardContext>();
-  const dt = useDashT();
+  const dt = useDashT("en");
   const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
