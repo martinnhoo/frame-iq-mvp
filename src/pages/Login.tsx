@@ -53,7 +53,7 @@ const Login = () => {
         toast.error(error.message);
       }
     } else {
-      navigate("/dashboard/loop/ai");
+      navigate("/dashboard/ai");
     }
     setEmailLoading(false);
   };

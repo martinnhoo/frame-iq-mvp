@@ -51,7 +51,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
 
   const NAV = [
-    { url: "/dashboard/loop/ai",     label: "AI",             icon: Brain,     exact: false },
+    { url: "/dashboard/ai",           label: "AI",             icon: Brain,     exact: false },
     { url: "/dashboard/accounts",    label: dt("nav_accounts") || "Accounts", icon: Building2 },
     { url: "/dashboard/analyses",    label: dt("nav_analyses"),  icon: BarChart3 },
     { url: "/dashboard/hooks",       label: dt("nav_hooks"),     icon: Zap },

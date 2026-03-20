@@ -165,7 +165,7 @@ export default function Onboarding() {
       navigate(feat?.url || "/dashboard/loop/ai");
     } catch {
       toast.error(ot("skip_setup"));
-      navigate("/dashboard/loop/ai");
+      navigate("/dashboard/ai");
     } finally { setSaving(false); }
   };
 
@@ -194,11 +194,11 @@ export default function Onboarding() {
         window.location.href = data.url;
       } else {
         toast.error("Could not start checkout");
-        navigate("/dashboard/loop/ai");
+        navigate("/dashboard/ai");
       }
     } catch {
       toast.error("Something went wrong");
-      navigate("/dashboard/loop/ai");
+      navigate("/dashboard/ai");
     } finally { setSaving(false); }
   };
 
@@ -207,7 +207,7 @@ export default function Onboarding() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) await supabase.from("profiles").update({ onboarding_completed: true } as never).eq("id", session.user.id);
     } catch {}
-    navigate("/dashboard/loop/ai");
+    navigate("/dashboard/ai");
   };
 
   // Get translated source label
@@ -379,7 +379,7 @@ export default function Onboarding() {
               <button
                 onClick={() => {
                   // Skip — go to dashboard anyway
-                  navigate("/dashboard/loop/ai");
+                  navigate("/dashboard/ai");
                 }}
                 className="w-full py-2 text-sm text-white/30 hover:text-white/50 transition-colors"
               >
