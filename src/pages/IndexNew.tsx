@@ -690,11 +690,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color 0.15s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; }}>
-                {t.hero_see} &rarr;
+                {t.hero_see} →
               </a>
             </div>
 
-            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.15)', marginBottom: 18 }}>&#128274; {t.hero_fine}</p>
+            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.15)', marginBottom: 18 }}>🔒 {t.hero_fine}</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               {proofs.map((pt, i) => (
@@ -737,7 +737,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: 600, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FitCore Brasil</p>
-                      <p style={{ fontFamily: F, fontSize: 9, color: 'rgba(14,165,233,0.6)', margin: '1px 0 0' }}>Meta &#183; 22 campaigns</p>
+                      <p style={{ fontFamily: F, fontSize: 9, color: 'rgba(14,165,233,0.6)', margin: '1px 0 0' }}>Meta · 22 campaigns</p>
                     </div>
                   </div>
                   <p style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.14)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 3px', marginBottom: 2 }}>{qlabel}</p>
@@ -746,7 +746,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '7px 9px', borderRadius: 8, background: qi === i ? 'rgba(255,255,255,0.07)' : 'transparent', border: qi === i ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
                       onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
                       onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                      <span style={{ fontSize: 11, flexShrink: 0, opacity: qi === i ? 1 : 0.4, marginTop: 1 }}>{['&#x1F4C9;','&#x26A1;','&#x270D;'][i]}</span>
+                      <span style={{ fontSize: 11, flexShrink: 0, opacity: qi === i ? 1 : 0.4, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
                       <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: qi === i ? 500 : 400, color: qi === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{item.q.slice(0,38)}{item.q.length > 38 ? '...' : ''}</span>
                     </button>
                   ))}
@@ -755,7 +755,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 {/* Chat */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ width: 19, height: 19, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff' }}>&#10022;</div>
+                    <div style={{ width: 19, height: 19, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff' }}>✦</div>
                     <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
                       <div style={{ width: 4.5, height: 4.5, borderRadius: '50%', background: '#34d399' }} />
@@ -776,7 +776,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     )}
                     {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
                       <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 10, color: '#fff' }}>&#10022;</div>
+                        <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 10, color: '#fff' }}>✦</div>
                         <div style={{ flex: 1 }}>
                           {phase === 'thinking' && <Dots />}
                           {(phase === 'streaming' || phase === 'done') && (
@@ -796,7 +796,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, padding: '6px 12px', borderRadius: 7, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'opacity 0.15s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                      {ctabtn} &rarr;
+                      {ctabtn} →
                     </button>
                   </div>
                 </div>
