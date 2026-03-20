@@ -428,31 +428,28 @@ const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
     {
       q: "My ROAS dropped 40% this week. What's happening?",
       lines: [
-        "Found 3 simultaneous causes in your account:",
-        "**Creative fatigue** — Creative_042 has been running 22 days. Hook rate fell from 31% to 11%.",
-        "**Frequency 4.8x** — BR-Women-25-34 oversaturated. Every dollar reaches someone who saw it 5 times.",
-        "**CPM +38%** — algorithm detected the drop and is charging more to deliver.",
-        "Action: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days), split the saturated set.",
+        "Found 3 causes in your account:",
+        "**Creative fatigue** — Creative_042 running 22 days. Hook rate: 31% → 11%.",
+        "**Frequency 4.8x** — BR-Women-25-34 saturated. **CPM +38%** — algorithm charging more.",
+        "Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days).",
       ],
     },
     {
       q: "Which ads should I pause right now?",
       lines: [
         "3 ads to cut today:",
-        "**Creative_038** — CPM $18, CTR 0.4%, zero conversions in 7 days. Burning $180/day.",
-        "**BR-Men-35-44 set** — ROAS 0.6x, frequency 5.1. Paying to irritate an exhausted audience.",
-        "**Creative_029** — hook rate 8%. Your floor is 15%. 92% leave in the first 3 seconds.",
-        "Combined: $620/day with negative return. Pausing frees budget for Creative_019 (ROAS 3.2x).",
+        "**Creative_038** — $18 CPM, 0.4% CTR, zero conversions in 7 days. $180/day burned.",
+        "**Creative_029** — 8% hook rate (floor: 15%). 92% leave in first 3 seconds.",
+        "Pausing frees $620/day → redirect to Creative_019 (ROAS 3.2x).",
       ],
     },
     {
       q: "Write 3 hooks from my best performing creatives.",
       lines: [
-        "Based on your top 5 converters (avg hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"You are paying $90 per click and still do not know why. Your data already has the answer.\"",
-        "**Hook 2** — \"3 of your 4 highest-spend ads have ROAS below 1x right now.\"",
-        "**Hook 3** — \"Your best creative from last month has been paused 9 days. A competitor is scaling the same angle.\"",
-        "Pattern: never generic benefit — always a specific claim that forces the user to stop.",
+        "From your top converters (hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1** — \"You're paying $90/click and don't know why. Your data has the answer.\"",
+        "**Hook 2** — \"3 of your 4 top-spend ads have ROAS below 1x right now.\"",
+        "**Hook 3** — \"Your best creative is paused 9 days. A competitor is scaling it.\"",
       ],
     },
   ],
@@ -460,31 +457,28 @@ const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
     {
       q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
       lines: [
-        "Identifiquei 3 causas simultâneas na sua conta:",
-        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate caiu de 31% para 11%.",
-        "**Frequência 4.8x** — BR-Mulheres-25-34 supersaturado. Cada real vai para quem já viu 5 vezes.",
-        "**CPM +38%** — o algoritmo percebeu a queda e cobra mais caro para entregar.",
-        "Ação: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias), divida o conjunto.",
+        "Identifiquei 3 causas na sua conta:",
+        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate: 31% → 11%.",
+        "**Frequência 4.8x** — BR-Mulheres-25-34 saturado. **CPM +38%** — algoritmo cobrando mais.",
+        "Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias).",
       ],
     },
     {
       q: "Quais anúncios devo pausar agora?",
       lines: [
         "3 anúncios para cortar hoje:",
-        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias. Queima R$180/dia.",
-        "**BR-Homens-35-44** — ROAS 0,6x, frequência 5.1. Audiência exaurida.",
-        "**Creative_029** — hook rate 8%. Mínimo é 15%. 92% saem nos primeiros 3 segundos.",
-        "Total: R$620/dia com retorno negativo. Pausar libera verba para Creative_019 (ROAS 3.2x).",
+        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias.",
+        "**Creative_029** — hook rate 8% (mínimo: 15%). 92% saem em 3 segundos.",
+        "Pausar libera R$620/dia → redirecionar para Creative_019 (ROAS 3.2x).",
       ],
     },
     {
       q: "Escreve 3 hooks dos meus melhores criativos.",
       lines: [
-        "Baseado nos seus 5 top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"Você está pagando R$90 por clique e não sabe por quê. Seus dados já têm a resposta.\"",
-        "**Hook 2** — \"3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora.\"",
-        "**Hook 3** — \"Seu melhor criativo do mês passado está parado há 9 dias. O concorrente está escalando o mesmo ângulo.\"",
-        "Padrão: nunca benefício genérico — sempre uma afirmação específica que força o usuário a parar.",
+        "Dos seus top converters (hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1** — \"Você paga R$90/clique e não sabe por quê. Seus dados têm a resposta.\"",
+        "**Hook 2** — \"3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x agora.\"",
+        "**Hook 3** — \"Seu melhor criativo está parado há 9 dias. O concorrente está escalando.\"",
       ],
     },
   ],
@@ -492,31 +486,28 @@ const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
     {
       q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
       lines: [
-        "Identifiqué 3 causas simultáneas en tu cuenta:",
-        "**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate cayó de 31% a 11%.",
-        "**Frecuencia 4.8x** — BR-Mujeres-25-34 supersaturado. Cada peso va a quien ya vio 5 veces.",
-        "**CPM +38%** — el algoritmo detectó la caída y cobra más caro.",
-        "Acción: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días), divide el conjunto.",
+        "Identifiqué 3 causas en tu cuenta:",
+        "**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate: 31% → 11%.",
+        "**Frecuencia 4.8x** — BR-Mujeres-25-34 saturado. **CPM +38%** — algoritmo cobrando más.",
+        "Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días).",
       ],
     },
     {
       q: "¿Cuáles anuncios pausar ahora mismo?",
       lines: [
         "3 anuncios para cortar hoy:",
-        "**Creative_038** — CPM $18, CTR 0.4%, cero conversiones en 7 días. Quema $180/día.",
-        "**BR-Hombres-35-44** — ROAS 0.6x, frecuencia 5.1. Audiencia agotada.",
-        "**Creative_029** — hook rate 8%. Tu mínimo es 15%. 92% se van en los primeros 3 segundos.",
-        "Total: $620/día con retorno negativo. Pausar libera presupuesto para Creative_019.",
+        "**Creative_038** — $18 CPM, 0.4% CTR, cero conversiones en 7 días.",
+        "**Creative_029** — 8% hook rate (mínimo: 15%). 92% se van en 3 segundos.",
+        "Pausar libera $620/día → redirigir a Creative_019 (ROAS 3.2x).",
       ],
     },
     {
       q: "Escribe 3 hooks de mis mejores creativos.",
       lines: [
-        "Basado en tus 5 top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"Estás pagando $90 por clic y no sabes por qué. Tus datos ya tienen la respuesta.\"",
-        "**Hook 2** — \"3 de tus 4 anuncios que más gastan tienen ROAS bajo 1x ahora.\"",
-        "**Hook 3** — \"Tu mejor creativo del mes pasado lleva 9 días pausado. Un competidor escala el mismo ángulo.\"",
-        "Patrón: nunca beneficio genérico — siempre una afirmación específica que obliga a detenerse.",
+        "De tus top converters (hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1** — \"Pagas $90/clic y no sabes por qué. Tus datos tienen la respuesta.\"",
+        "**Hook 2** — \"3 de tus 4 anuncios top gastan con ROAS bajo 1x ahora.\"",
+        "**Hook 3** — \"Tu mejor creativo lleva 9 días pausado. Un competidor lo está escalando.\"",
       ],
     },
   ],
@@ -694,12 +685,12 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
         style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)', maxWidth: 860, position: 'relative', width: '100%' }}
       >
-        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(20px,3.2vw,44px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.08, margin: '0 0 10px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(22px,3.5vw,46px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 10px', color: '#fff' }}>
           <span>{h1p[0] || h1}</span>
           {h1p[1] && <span style={{ background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> {h1p[1]}</span>}
         </h1>
 
-        <p className="hero-sub" style={{ fontFamily: F, fontSize: 'clamp(11px,1.1vw,14px)', color: 'rgba(255,255,255,0.58)', lineHeight: 1.4, margin: '0 auto', maxWidth: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <p className="hero-sub" style={{ fontFamily: F, fontSize: 'clamp(12px,1.2vw,15px)', color: 'rgba(255,255,255,0.58)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560 }}>
           {t.hero_sub}
         </p>
       </motion.div>
@@ -825,7 +816,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
 
             {/* Chat panel */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+            <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
               {/* Chat header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                 <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#0ea5e9' }}>✦</div>
@@ -1313,12 +1304,14 @@ export default function IndexNew() {
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
             .hero-float-cards{display:none!important}
-            .hero-h1{white-space:normal!important;font-size:clamp(24px,7vw,36px)!important}
-            .hero-sub{white-space:normal!important;font-size:13px!important}
-            .demo-app-body{flex-direction:column!important;height:auto!important;max-height:420px!important}
-            .demo-app-body .demo-sidebar-inner{width:100%!important;height:auto!important;max-height:72px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:8px!important;gap:6px!important;align-items:center!important}
-            .demo-app-body .demo-sidebar-inner>*:not(:first-child){display:none!important}
-            .demo-app-body .demo-chat{height:280px!important;max-height:280px!important;overflow:hidden!important}
+            .hero-h1{font-size:clamp(24px,7vw,38px)!important}
+            .hero-sub{font-size:13px!important}
+            .demo-window{border-radius:14px!important}
+            .demo-app-body{flex-direction:column!important;height:auto!important;max-height:none!important}
+            .demo-sidebar-inner{width:100%!important;height:60px!important;min-height:60px!important;max-height:60px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:8px!important;gap:6px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
+            .demo-sidebar-inner>div:last-child{display:none!important}
+            .demo-chat-panel{height:260px!important;max-height:260px!important;min-height:260px!important;overflow:hidden!important}
+            .demo-chat{overflow:hidden!important;height:190px!important;max-height:190px!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
