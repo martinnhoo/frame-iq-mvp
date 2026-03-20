@@ -498,9 +498,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{ width: 28, height: 28, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 13 }}>✦</div>
                 <div style={{ flex: 1 }}>
-                  {current.answer.split('
-
-').map((block, bi) => {
+                  {(Array.isArray(current.answer) ? current.answer : (current.answer as string).split('\n\n')).map((block, bi) => {
                     // Bold text between **
                     const parts = block.split(/(\*\*[^*]+\*\*)/g);
                     return (
