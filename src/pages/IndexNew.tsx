@@ -484,13 +484,13 @@ para ver a IA em ação"}
                 ) : (
                   <>
                     {/* User message */}
-                    <div style={{ display: "flex", justifyContent: "flex-end", animation: "fadeSlideIn 0.25s ease" }}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", className: "anim-fade" }}>
                       <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
                         <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
                       </div>
                     </div>
                     {/* AI answer */}
-                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", animation: "answerSlide 0.3s ease" }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", className: "anim-slide" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 12 }}>✦</div>
                       <div style={{ flex: 1 }}>
                         {current.answer.map((block, bi) => {
@@ -858,17 +858,7 @@ export default function IndexNew() {
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", ...j }}>
-      <style>{`
-        @keyframes answerSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
-        @media (max-width: 640px) {
-          .nav-links { display: none !important; }
-          .how-grid { grid-template-columns: 1fr !important; }
-          .for-who-grid { grid-template-columns: 1fr !important; }
-          .pricing-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+
       <Helmet>
         <title>{titleMap[lang]}</title>
         <meta name="description" content={descMap[lang]} />
@@ -887,6 +877,7 @@ export default function IndexNew() {
         <meta name="twitter:description" content={descMap[lang]} />
         <meta name="twitter:image" content="https://adbrief.pro/og-image.png" />
         <html lang={lang} />
+        <style>{`@keyframes answerSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes bounce{0%,80%,100%{transform:scale(0.7);opacity:0.4}40%{transform:scale(1);opacity:1}}.anim-fade{animation:fadeSlideIn 0.25s ease}.anim-slide{animation:answerSlide 0.3s ease}@media(max-width:640px){.nav-links{display:none!important}.how-grid{grid-template-columns:1fr!important}.for-who-grid{grid-template-columns:1fr!important}.pricing-grid{grid-template-columns:1fr!important}}`}</style>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
