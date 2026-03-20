@@ -642,182 +642,257 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [doneLines, activeLine, phase]);
 
-  const ms: React.CSSProperties = { fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, margin: '0 0 8px', fontWeight: 400 };
-
-  const badge = lang === 'pt' ? 'IA PARA PERFORMANCE MARKETING' : lang === 'es' ? 'IA PARA PERFORMANCE MARKETING' : 'AI FOR PERFORMANCE MARKETING';
+  const ms: React.CSSProperties = { fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.8, margin: '0 0 10px', fontWeight: 400 };
   const qlabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
-  const note = lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo. With your account, it uses real data.';
+  const note = lang === 'pt' ? 'Demo · Com a sua conta, usa dados reais.' : lang === 'es' ? 'Demo · Con tu cuenta, usa datos reales.' : 'Demo · With your account, uses real data.';
   const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
-  const sample = lang === 'pt' ? 'Demo · Meta conectado' : lang === 'es' ? 'Demo · Meta conectado' : 'Demo · Meta connected';
   const conn = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
+
   const h1 = t.hero_h1 || '';
   const h1p = h1.split('\n');
+
   const proofs: string[] = lang === 'pt'
-    ? ['Conecta ao Meta Ads em 1 clique', 'Responde com seus dados reais', 'Cancele antes de 24h, sem cobranca']
+    ? ['Conecta ao Meta Ads em 1 clique', 'Respostas com seus dados reais', 'Cancele em 24h, sem cobrança']
     : lang === 'es'
-    ? ['Conecta Meta Ads en 1 clic', 'Responde con tus datos reales', 'Cancela antes de 24h, sin cobro']
-    : ['Connects to Meta Ads in 1 click', 'Answers with your real data, not templates', 'Cancel within 24h, no charge'];
+    ? ['Conecta Meta Ads en 1 clic', 'Responde con tus datos reales', 'Cancela en 24h, sin cobro']
+    : ['Connects to Meta Ads in 1 click', 'Answers from your real data', 'Cancel in 24h, no charge'];
+
+  // Floating metric cards that appear contextually
+  const metricCards = [
+    { label: 'ROAS', value: '3.2x', delta: '+0.8x', color: '#34d399', sub: 'Creative_019' },
+    { label: 'CPM', value: '+38%', delta: 'alert', color: '#f59e0b', sub: 'Algorithm spike' },
+    { label: 'Hook Rate', value: '11%', delta: '↓ 31%', color: '#f87171', sub: 'Creative_042' },
+  ];
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,60px)', position: 'relative' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(14,165,233,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(80px,9vw,110px) clamp(16px,4vw,32px) clamp(40px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'clamp(28px,5vw,64px)', alignItems: 'center' }} className="hero-grid">
+      {/* Background glows */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(14,165,233,0.10) 0%, transparent 60%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -100, left: '50%', transform: 'translateX(-50%)', width: 800, height: 400, background: 'radial-gradient(ellipse, rgba(14,165,233,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-          {/* ── Copy ── */}
-          <motion.div initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.75, ease: [0.16,1,0.3,1] }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.07)', marginBottom: 22 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-              <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{badge}</span>
+      {/* ── Compact headline above ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
+        style={{ textAlign: 'center', marginBottom: 'clamp(24px,4vw,40px)', maxWidth: 720, position: 'relative' }}
+      >
+        {/* Badge */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(14,165,233,0.25)', background: 'rgba(14,165,233,0.06)', marginBottom: 18 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
+          <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#0ea5e9', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+            {lang === 'pt' ? 'IA para Performance Marketing' : lang === 'es' ? 'IA para Performance Marketing' : 'AI for Performance Marketing'}
+          </span>
+        </div>
+
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(32px,4.5vw,56px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.0, margin: '0 0 16px', color: '#fff' }}>
+          <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
+          {h1p[1] && <span style={{ display: 'block', background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{h1p[1]}</span>}
+        </h1>
+
+        <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.4vw,17px)', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, margin: '0 auto 24px', maxWidth: 520 }}>
+          {t.hero_sub}
+        </p>
+
+        {/* CTAs inline */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <button onClick={onCTA}
+            style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '13px 28px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '-0.01em', transition: 'transform 0.15s, box-shadow 0.15s', boxShadow: '0 0 0 0 rgba(255,255,255,0)' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 32px rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)'; }}>
+            {t.hero_cta} <ArrowRight size={15} />
+          </button>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {proofs.map((pt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+                  <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1"/>
+                  <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.50)' }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Central Demo Window ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.18, ease: [0.16,1,0.3,1] }}
+        style={{ width: '100%', maxWidth: 940, position: 'relative' }}
+      >
+        {/* Floating metric chips — left */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          style={{ position: 'absolute', left: -16, top: '22%', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 10 }}
+          className="hero-float-cards"
+        >
+          {metricCards.slice(0,2).map((m, i) => (
+            <div key={i} style={{ background: 'rgba(13,17,23,0.95)', border: `1px solid ${m.color}30`, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(16px)', minWidth: 120, boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${m.color}15` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{m.label}</span>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: m.color, background: `${m.color}15`, padding: '1px 5px', borderRadius: 4 }}>{m.delta}</span>
+              </div>
+              <div style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: m.color, lineHeight: 1, letterSpacing: '-0.03em' }}>{m.value}</div>
+              <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>{m.sub}</div>
             </div>
+          ))}
+        </motion.div>
 
-            <h1 style={{ fontFamily: F, fontSize: 'clamp(36px,5.2vw,62px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.97, margin: '0 0 20px', color: '#fff' }}>
-              <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
-              {h1p[1] && (
-                <span style={{ display: 'block', color: 'rgba(255,255,255,0.82)' }}>
-                  {h1p[1]}
-                </span>
-              )}
-            </h1>
-
-            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.5vw,16px)', color: 'rgba(255,255,255,0.72)', lineHeight: 1.7, margin: '0 0 28px', maxWidth: 390 }}>
-              {t.hero_sub}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-              <button onClick={onCTA}
-                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 30px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-                {t.hero_cta} <ArrowRight size={15} />
-              </button>
-              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.55)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color 0.15s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; }}>
-                {t.hero_see} →
-              </a>
+        {/* Floating metric chip — right */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.85, duration: 0.6 }}
+          style={{ position: 'absolute', right: -16, top: '28%', zIndex: 10 }}
+          className="hero-float-cards"
+        >
+          <div style={{ background: 'rgba(13,17,23,0.95)', border: `1px solid ${metricCards[2].color}30`, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(16px)', minWidth: 120, boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${metricCards[2].color}15` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{metricCards[2].label}</span>
+              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: metricCards[2].color, background: `${metricCards[2].color}15`, padding: '1px 5px', borderRadius: 4 }}>{metricCards[2].delta}</span>
             </div>
+            <div style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: metricCards[2].color, lineHeight: 1, letterSpacing: '-0.03em' }}>{metricCards[2].value}</div>
+            <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>{metricCards[2].sub}</div>
+          </div>
+        </motion.div>
 
-            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.42)', marginBottom: 18 }}>🔒 {t.hero_fine}</p>
+        {/* Main browser window */}
+        <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 80px rgba(14,165,233,0.05), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-              {proofs.map((pt, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.4)" strokeWidth="1"/>
-                    <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{pt}</span>
-                </div>
+          {/* Browser bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {(['#ff5f56','#ffbd2e','#27c93f'] as string[]).map((c,i) => (
+                <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.7 }} />
               ))}
             </div>
-          </motion.div>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.07)', borderRadius: 6, padding: '4px 11px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 220, margin: '0 auto' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 4px #34d399' }} />
+              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9' }} />
+              <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(14,165,233,0.75)', fontWeight: 600 }}>
+                {lang === 'pt' ? 'Demo · Meta conectado' : lang === 'es' ? 'Demo · Meta conectado' : 'Demo · Meta connected'}
+              </span>
+            </div>
+          </div>
 
-          {/* ── Product window ── */}
-          <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, delay: 0.14, ease: [0.16,1,0.3,1] }}>
-            <div style={{ borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 60px rgba(14,165,233,0.03)' }}>
-              {/* Browser bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 13px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
-                <div style={{ display: 'flex', gap: 5 }}>
-                  {(['rgba(255,95,86,0.5)','rgba(255,189,46,0.5)','rgba(39,201,63,0.5)'] as string[]).map((c,i) => (
-                    <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />
+          {/* App body */}
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 380 }} className="demo-app-body">
+
+            {/* Sidebar */}
+            <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
+              {/* Account badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.08))', border: '1px solid rgba(14,165,233,0.2)', marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FitCore Brasil</p>
+                  <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#0ea5e9', margin: '2px 0 0' }}>Meta · 22 campaigns</p>
+                </div>
+              </div>
+
+              {/* Section label */}
+              <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 4 }}>{qlabel}</p>
+
+              {/* Questions */}
+              {qa.map((item, i) => (
+                <button key={i} onClick={() => jump(i)}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9,
+                    background: qi === i ? 'rgba(14,165,233,0.08)' : 'transparent',
+                    border: `1px solid ${qi === i ? 'rgba(14,165,233,0.2)' : 'transparent'}`,
+                    cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                  <span style={{ fontSize: 12, flexShrink: 0, opacity: qi === i ? 1 : 0.45, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
+                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4 }}>
+                    {item.q.slice(0,40)}{item.q.length > 40 ? '…' : ''}
+                  </span>
+                </button>
+              ))}
+
+              {/* Spacer + mini stats */}
+              <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[['$12.4k','Spend'],['2.1x','ROAS'],['41','Ads']].map(([v,l]) => (
+                    <div key={l} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 7, padding: '6px 6px', textAlign: 'center' }}>
+                      <div style={{ fontFamily: F, fontSize: 11, fontWeight: 800, color: '#fff' }}>{v}</div>
+                      <div style={{ fontFamily: F, fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>{l}</div>
+                    </div>
                   ))}
                 </div>
-                <div style={{ flex: 1, background: 'rgba(255,255,255,0.12)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 6, maxWidth: 195, margin: '0 auto' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
-                </div>
+              </div>
+            </div>
+
+            {/* Chat panel */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              {/* Chat header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#0ea5e9' }}>✦</div>
+                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff' }}>AdBrief AI</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                  <div style={{ width: 4.5, height: 4.5, borderRadius: '50%', background: '#0ea5e9', opacity: 0.7 }} />
-                  <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(14,165,233,0.5)', fontWeight: 700 }}>{sample}</span>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
+                  <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>{conn}</span>
                 </div>
               </div>
 
-              {/* App body */}
-              <div style={{ display: 'flex', background: '#0d1117' }} className="demo-app-body">
-                {/* Sidebar */}
-                <div className="demo-sidebar-inner" style={{ width: 200, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '11px 7px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 9px', borderRadius: 9, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 10 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: 600, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FitCore Brasil</p>
-                      <p style={{ fontFamily: F, fontSize: 9, color: '#0ea5e9', margin: '1px 0 0' }}>Meta · 22 campaigns</p>
+              {/* Messages */}
+              <div ref={chatRef} style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 260, maxHeight: 340 }}>
+                {phase !== 'idle' && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.25)' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0 }}>
+                        {typedQ}
+                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle' }} />}
+                      </p>
                     </div>
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.14)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 3px', marginBottom: 2 }}>{qlabel}</p>
-                  {qa.map((item, i) => (
-                    <button key={i} onClick={() => jump(i)}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '7px 9px', borderRadius: 8, background: qi === i ? 'rgba(255,255,255,0.07)' : 'transparent', border: qi === i ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
-                      onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                      onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                      <span style={{ fontSize: 11, flexShrink: 0, opacity: qi === i ? 1 : 0.4, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
-                      <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: qi === i ? 500 : 400, color: qi === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{item.q.slice(0,38)}{item.q.length > 38 ? '...' : ''}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Chat */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ width: 19, height: 19, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff' }}>✦</div>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
-                      <div style={{ width: 4.5, height: 4.5, borderRadius: '50%', background: '#34d399' }} />
-                      <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(52,211,153,0.6)' }}>{conn}</span>
+                )}
+                {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
+                  <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.25), rgba(6,182,212,0.15))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 11, color: '#0ea5e9' }}>✦</div>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px 14px 14px 14px', padding: '10px 14px' }}>
+                      {phase === 'thinking' && <Dots />}
+                      {(phase === 'streaming' || phase === 'done') && (
+                        <>
+                          {doneLines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === doneLines.length - 1 && !activeLine) ? '0' : '0 0 8px' }} />)}
+                          {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: '0' }} />}
+                        </>
+                      )}
                     </div>
                   </div>
+                )}
+              </div>
 
-                  <div ref={chatRef} style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 200, maxHeight: 320 }}>
-                    {phase !== 'idle' && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <div style={{ maxWidth: '82%', padding: '8px 11px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                          <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.5, margin: 0 }}>
-                            {typedQ}
-                            {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 12, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} />}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                      <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 10, color: '#fff' }}>✦</div>
-                        <div style={{ flex: 1 }}>
-                          {phase === 'thinking' && <Dots />}
-                          {(phase === 'streaming' || phase === 'done') && (
-                            <>
-                              {doneLines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === doneLines.length - 1 && !activeLine) ? '0' : '0 0 7px' }} />)}
-                              {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: '0' }} />}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ padding: '9px 13px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>{note}</p>
-                    <button onClick={onCTA}
-                      style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, padding: '6px 12px', borderRadius: 7, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'opacity 0.15s' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                      {ctabtn} →
-                    </button>
-                  </div>
-                </div>
+              {/* Input bar */}
+              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)' }}>
+                <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.28)', margin: 0, flex: 1 }}>{note}</p>
+                <button onClick={onCTA}
+                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '7px 14px', borderRadius: 8, background: '#0ea5e9', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#38bdf8'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
+                  {ctabtn} →
+                </button>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 14, opacity: 0.25 }}>
-              <span style={{ fontFamily: F, fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
-              <div style={{ width: 1, height: 11, background: 'rgba(255,255,255,0.2)' }} />
-              <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, color: '#fff' }}>Anthropic</span>
-              <div style={{ width: 1, height: 11, background: 'rgba(255,255,255,0.2)' }} />
-              <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, color: '#fff' }}>OpenAI</span>
-            </div>
-          </motion.div>
+          </div>
         </div>
-      </div>
+
+        {/* Built on strip */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16, opacity: 0.35 }}>
+          <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
+          <div style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.2)' }} />
+          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+          <div style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.2)' }} />
+          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+        </div>
+      </motion.div>
     </section>
   );
 }
@@ -1217,6 +1292,7 @@ export default function IndexNew() {
             .how-grid{grid-template-columns:1fr!important}
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
+            .hero-float-cards{display:none!important}
             .demo-sidebar{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important;flex-direction:row!important;overflow-x:auto!important;padding:8px!important;gap:6px!important;flex-wrap:nowrap!important}
             .hero-grid{grid-template-columns:1fr!important;gap:clamp(24px,5vw,40px)!important}.demo-app-body{flex-direction:column!important}.demo-app-body .demo-sidebar-inner{width:100%!important;max-height:100px!important;overflow-x:auto!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important}
           }
