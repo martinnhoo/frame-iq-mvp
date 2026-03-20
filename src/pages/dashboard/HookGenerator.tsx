@@ -56,9 +56,15 @@ const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: strin
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
+const HOOK_CAPS: Record<string, number> = {
+  free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10,
+};
+
 export default function HookGenerator() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, profile, selectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
+  const plan = (profile as any)?.plan || "free";
+  const hookCount = HOOK_CAPS[plan] ?? 3;
   const dt = useDashT(language);
 
   const [product, setProduct] = useState("");
@@ -97,7 +103,7 @@ export default function HookGenerator() {
     setExpandedIdx(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
-        body: { product, niche, market, platform, tone, user_id: user.id, count: 10,
+        body: { product, niche, market, platform, tone, user_id: user.id, count: hookCount,
           funnel_stage: funnelStage,
           persona_context: selectedPersona ? {
             name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
@@ -165,6 +171,10 @@ export default function HookGenerator() {
         <div>
           <h1 className="text-xl font-bold text-white" style={syne}>{dt("hg_title")}</h1>
           <p className="text-xs text-white/50 mt-0.5">AI-generated hooks with predicted performance scores — ready to test</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 5, padding: "3px 10px", borderRadius: 99, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
+          </div>
         </div>
       </div>
 
@@ -246,7 +256,7 @@ export default function HookGenerator() {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           style={syne}
         >
-          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating hooks...</> : <><Sparkles className="h-4 w-4" /> Generate Hooks</>}
+          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating {hookCount} hooks...</> : <><Sparkles className="h-4 w-4" /> Generate {hookCount} Hooks</>}
         </button>
       </div>
 
