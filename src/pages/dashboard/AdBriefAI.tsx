@@ -38,63 +38,86 @@ const BS: Record<string,{color:string;bg:string;border:string}> = {
 };
 
 function DashboardBlock({block}:{block:Block}) {
+  const cols = !block.metrics?.length ? 1 : block.metrics.length <= 2 ? block.metrics.length : block.metrics.length <= 4 ? 2 : 3;
   return (
-    <div style={{borderRadius:16,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(13,17,23,0.95)",overflow:"hidden",marginBottom:10}}>
-      <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:8}}>
-        <div style={{width:6,height:6,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 6px #34d399"}}/>
-        <span style={{...j,fontSize:12,fontWeight:700,color:"#fff"}}>{block.title}</span>
+    <div style={{borderRadius:18,border:"1px solid rgba(14,165,233,0.18)",background:"linear-gradient(135deg,rgba(14,165,233,0.05) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:12,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
+      {/* Header */}
+      <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:30,height:30,borderRadius:9,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <BarChart2 size={14} color="#000"/>
+        </div>
+        <div style={{flex:1}}>
+          <p style={{...j,fontSize:13,fontWeight:800,color:"#fff",lineHeight:1,marginBottom:2}}>{block.title}</p>
+          {block.content&&<p style={{...m,fontSize:10,color:"rgba(255,255,255,0.38)",margin:0,lineHeight:1.4}}>{block.content}</p>}
+        </div>
+        <span style={{...m,fontSize:8.5,color:"rgba(14,165,233,0.5)",letterSpacing:"0.14em",textTransform:"uppercase"}}>LIVE DATA</span>
       </div>
+      {/* Metrics grid */}
       {block.metrics && block.metrics.length > 0 && (
-        <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(block.metrics.length,4)},1fr)`,gap:1,background:"rgba(255,255,255,0.05)"}}>
-          {block.metrics.map((metric,i)=>(
-            <div key={i} style={{padding:"16px 18px",background:"rgba(13,17,23,0.95)"}}>
-              <p style={{...m,fontSize:10,color:"rgba(255,255,255,0.4)",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.08em"}}>{metric.label}</p>
-              <p style={{...j,fontSize:24,fontWeight:900,color:"#fff",marginBottom:4,letterSpacing:"-0.03em",lineHeight:1}}>{metric.value}</p>
-              {metric.delta&&(<div style={{display:"flex",alignItems:"center",gap:4}}>
-                {metric.trend==="up"?<TrendingUp size={11} color="#34d399"/>:metric.trend==="down"?<TrendingDown size={11} color="#f87171"/>:null}
-                <span style={{...m,fontSize:10,color:metric.trend==="up"?"#34d399":metric.trend==="down"?"#f87171":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
-              </div>)}
-            </div>
-          ))}
+        <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.04)"}}>
+          {block.metrics.map((metric,i)=>{
+            const isUp=metric.trend==="up", isDown=metric.trend==="down";
+            const mColor=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
+            return(
+              <div key={i} style={{padding:"18px 20px",background:"#080c14",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:-24,right:-24,width:90,height:90,borderRadius:"50%",background:`radial-gradient(circle,${mColor}12,transparent 65%)`,pointerEvents:"none"}}/>
+                <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.28)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:8}}>{metric.label}</p>
+                <p style={{...j,fontSize:30,fontWeight:900,color:mColor,letterSpacing:"-0.04em",lineHeight:1,marginBottom:8}}>{metric.value}</p>
+                {metric.delta&&(
+                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:6,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`}}>
+                    {isDown?<TrendingDown size={9} color="#f87171"/>:isUp?<TrendingUp size={9} color="#34d399"/>:null}
+                    <span style={{...m,fontSize:10,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
+      {/* Bar chart */}
       {block.chart&&block.chart.type==="bar"&&(
-        <div style={{padding:"16px 18px"}}>
+        <div style={{padding:"16px 18px",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
           {block.chart.labels.map((label,i)=>{
             const max=Math.max(...block.chart!.values);
             const pct=max>0?(block.chart!.values[i]/max)*100:0;
             const color=block.chart!.colors?.[i]||"#0ea5e9";
-            return(<div key={i} style={{marginBottom:10}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.65)"}}>{label}</span>
-                <span style={{...j,fontSize:11,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
+            return(
+              <div key={i} style={{marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.65)"}}>{label}</span>
+                  <span style={{...j,fontSize:11,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
+                </div>
+                <div style={{height:7,background:"rgba(255,255,255,0.05)",borderRadius:4,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${color},${color}aa)`,borderRadius:4,transition:"width 0.6s ease"}}/>
+                </div>
               </div>
-              <div style={{height:6,background:"rgba(255,255,255,0.06)",borderRadius:3,overflow:"hidden"}}>
-                <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3}}/>
-              </div>
-            </div>);
+            );
           })}
         </div>
       )}
+      {/* Table */}
       {block.table&&(
-        <div style={{overflowX:"auto"}}>
+        <div style={{overflowX:"auto",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{background:"rgba(255,255,255,0.03)"}}>
-              {block.table.headers.map((h,i)=>(
-                <th key={i} style={{...m,fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.35)",textAlign:"left",padding:"8px 16px",letterSpacing:"0.08em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>{block.table.rows.map((row,ri)=>(
-              <tr key={ri} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
-                {row.map((cell,ci)=>(
-                  <td key={ci} style={{...m,fontSize:12,color:ci===0?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.6)",padding:"10px 16px",fontWeight:ci===0?600:400}}>{cell}</td>
+            <thead>
+              <tr style={{background:"rgba(255,255,255,0.02)"}}>
+                {block.table.headers.map((h,i)=>(
+                  <th key={i} style={{...m,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"9px 16px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{h}</th>
                 ))}
               </tr>
-            ))}</tbody>
+            </thead>
+            <tbody>
+              {block.table.rows.map((row,ri)=>(
+                <tr key={ri} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                  {row.map((cell,ci)=>(
+                    <td key={ci} style={{...m,fontSize:12,color:ci===0?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.55)",padding:"11px 16px",fontWeight:ci===0?600:400}}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}
-      {block.content&&<div style={{padding:"12px 16px"}}><p style={{...m,fontSize:12,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>{block.content}</p></div>}
     </div>
   );
 }

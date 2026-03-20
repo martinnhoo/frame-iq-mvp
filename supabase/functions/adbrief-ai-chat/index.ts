@@ -34,8 +34,13 @@ Deno.serve(async (req) => {
       : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
 
     const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+    const weekKey = weekStart.toISOString().slice(0, 10);
+    const monthKey = today.slice(0, 7); // YYYY-MM
+
     const { data: usageRow } = await (supabase as any)
-      .from("free_usage").select("chat_count, last_reset").eq("user_id", user_id).maybeSingle();
+      .from("free_usage").select("chat_count, last_reset, dashboard_count, dashboard_week, dashboard_month").eq("user_id", user_id).maybeSingle();
     const lastReset = usageRow?.last_reset?.slice(0, 10);
     const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
 
@@ -57,13 +62,83 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Dashboard request detection & rate limiting ───────────────────────────
+    const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics/i.test(message);
+
+    if (isDashboardRequest) {
+      // Dashboard limits: studio=1/day, pro=3/week, maker=1/month, free=blocked
+      const dashCount = usageRow?.dashboard_count || 0;
+      const dashWeek = usageRow?.dashboard_week || "";
+      const dashMonth = usageRow?.dashboard_month || "";
+
+      const uiLang = user_language || "en";
+
+      if (planKey === "free") {
+        const msgs: Record<string, { title: string; content: string }> = {
+          en: { title: "Dashboard unavailable on free plan", content: "Real-time dashboards require Maker plan or higher. Upgrade to unlock." },
+          pt: { title: "Dashboard indisponível no plano gratuito", content: "Dashboards em tempo real exigem o plano Maker ou superior. Faça upgrade para desbloquear." },
+          es: { title: "Dashboard no disponible en plan gratuito", content: "Los dashboards en tiempo real requieren plan Maker o superior. Actualiza para desbloquear." },
+        };
+        const m = msgs[uiLang] || msgs.en;
+        return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (planKey === "maker") {
+        // 1 per month
+        if (dashMonth === monthKey && dashCount > 0) {
+          const msgs: Record<string, { title: string; content: string }> = {
+            en: { title: "Dashboard limit reached", content: "Your Maker plan includes 1 dashboard per month. Resets next month. Upgrade to Pro for 3/week." },
+            pt: { title: "Limite de dashboard atingido", content: "Seu plano Maker inclui 1 dashboard por mês. Renova no próximo mês. Faça upgrade para Pro para ter 3/semana." },
+            es: { title: "Límite de dashboard alcanzado", content: "Tu plan Maker incluye 1 dashboard por mes. Se reinicia el próximo mes. Actualiza a Pro para tener 3/semana." },
+          };
+          const m = msgs[uiLang] || msgs.en;
+          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      if (planKey === "pro") {
+        // 3 per week
+        const thisWeekCount = dashWeek === weekKey ? dashCount : 0;
+        if (thisWeekCount >= 3) {
+          const msgs: Record<string, { title: string; content: string }> = {
+            en: { title: "Weekly dashboard limit reached", content: "Your Pro plan includes 3 dashboards per week. Resets next Monday. Upgrade to Studio for 1/day." },
+            pt: { title: "Limite semanal de dashboards atingido", content: "Seu plano Pro inclui 3 dashboards por semana. Renova na próxima segunda. Faça upgrade para Studio para ter 1/dia." },
+            es: { title: "Límite semanal de dashboards alcanzado", content: "Tu plan Pro incluye 3 dashboards por semana. Se reinicia el próximo lunes. Actualiza a Studio para tener 1/día." },
+          };
+          const m = msgs[uiLang] || msgs.en;
+          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      if (planKey === "studio") {
+        // 1 per day
+        if (dashWeek === today && dashCount > 0) {
+          const msgs: Record<string, { title: string; content: string }> = {
+            en: { title: "Daily dashboard limit reached", content: "Your Studio plan includes 1 dashboard per day. Resets tomorrow." },
+            pt: { title: "Limite diário de dashboard atingido", content: "Seu plano Studio inclui 1 dashboard por dia. Renova amanhã." },
+            es: { title: "Límite diario de dashboard alcanzado", content: "Tu plan Studio incluye 1 dashboard por día. Se reinicia mañana." },
+          };
+          const m = msgs[uiLang] || msgs.en;
+          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
     // Studio freeze time
     if (planKey === "studio" && dailyCount > 100) {
       const delay = Math.min(Math.floor((dailyCount / cap) * 8000), 8000);
       await new Promise(r => setTimeout(r, delay));
     }
 
-    // Update counter
+    // Update chat counter
     await (supabase as any).from("free_usage").upsert(
       { user_id, chat_count: dailyCount + 1, last_reset: today },
       { onConflict: "user_id" }
@@ -239,7 +314,16 @@ Block types:
 - "off_topic" → outside paid ads domain
 
 Schema for normal blocks: { "type": "...", "title": "...", "content": "...", "items": ["..."], "route": "/dashboard/...", "cta": "..." }
-Schema for tool_call: { "type": "tool_call", "title": "Running [tool]...", "tool": "[tool_id]", "tool_params": { "product": "...", "market": "...", "platform": "...", ... } }
+- "dashboard" → ONLY when user explicitly asks for a dashboard/overview/panel. Returns metrics array with real numbers from their data. Use sparingly — it counts against their dashboard limit.
+
+Schema for dashboard: { "type": "dashboard", "title": "...", "content": "...", "metrics": [{ "label": "...", "value": "...", "delta": "...", "trend": "up|down|flat", "color": "#hex" }] }
+
+DASHBOARD RULES:
+- Only generate dashboard when explicitly requested ("show me a dashboard", "give me an overview", "create a report", etc.)
+- Use REAL numbers from account data — never fabricate metrics
+- Include 3-6 metrics maximum per dashboard block
+- trend "up" = green, "down" = red, "flat" = neutral
+- Always pair dashboard with an insight or action block explaining what the numbers mean
 
 TOOL_CALL vs NAVIGATE — when to use each:
 - Use "tool_call" when: the user's request is explicit AND you have enough context to run the tool (product name, market, platform are clear from context or conversation)
@@ -308,6 +392,18 @@ HARD RULES:
         { user_id, summary: insightText, updated_at: new Date().toISOString() },
         { onConflict: "user_id" }
       );
+    }
+
+    // If dashboard was generated, update dashboard counter
+    const hasDashboard = Array.isArray(blocks) && blocks.some((b: any) => b.type === "dashboard");
+    if (isDashboardRequest && hasDashboard) {
+      const newDashCount = (usageRow?.dashboard_count || 0) + 1;
+      await (supabase as any).from("free_usage").upsert({
+        user_id,
+        dashboard_count: newDashCount,
+        dashboard_week: planKey === "studio" ? today : weekKey,
+        dashboard_month: monthKey,
+      }, { onConflict: "user_id" });
     }
 
     return new Response(JSON.stringify({ blocks }), {
