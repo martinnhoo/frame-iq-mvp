@@ -483,7 +483,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
                 ) : (
                   <>
                     {/* User message */}
-                    <div style={{ display: "flex", justifyContent: "flex-end", className: "anim-fade" }}>
+                    <div className="anim-fade" style={{ display: "flex", justifyContent: "flex-end" }}>
                       <div style={{ maxWidth: "72%", padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
                         <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.92)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
                       </div>
