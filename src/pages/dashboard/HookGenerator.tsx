@@ -259,6 +259,7 @@ export default function HookGenerator() {
           {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating {hookCount} hooks...</> : <><Sparkles className="h-4 w-4" /> Generate {hookCount} Hooks</>}
         </button>
       </div>
+      </div>
 
       {/* Results */}
       {hooks.length > 0 && (
