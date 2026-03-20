@@ -1,7 +1,7 @@
 // v4 — Premium landing page rebuild
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
@@ -519,97 +519,95 @@ const DEMO_CONVERSATIONS: Record<Lang, { question: string; lines: string[] }[]> 
   ],
 };
 
-function useStreamingDemo(lang: Lang, onCTA: () => void) {
-  const convos = DEMO_CONVERSATIONS[lang];
+// ─── Streaming demo hook (ref-based, no stale closures) ──────────────────────
+function useStreamingDemo(lang: Lang) {
   const [convoIdx, setConvoIdx] = useState(0);
   const [phase, setPhase] = useState<'idle'|'typing-q'|'thinking'|'streaming'|'done'>('idle');
   const [typedQ, setTypedQ] = useState('');
   const [visibleLines, setVisibleLines] = useState<string[]>([]);
   const [streamingLine, setStreamingLine] = useState('');
-  const [streamLineIdx, setStreamLineIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(0);
-  const [manualConvo, setManualConvo] = useState<number | null>(null);
-  const [hasInteracted, setHasInteracted] = useState(false);
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stateRef = useRef({ lang, hasInteracted: false });
+  stateRef.current.lang = lang;
 
-  const clear = () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  const stopAll = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  };
 
-  const runConvo = useCallback((idx: number) => {
-    const convo = DEMO_CONVERSATIONS[lang][idx];
+  const runConvoRef = useRef<(idx: number) => void>((_idx: number) => {});
+
+  runConvoRef.current = (idx: number) => {
+    const convo = DEMO_CONVERSATIONS[stateRef.current.lang][idx];
+    stopAll();
     setConvoIdx(idx);
     setPhase('idle');
     setTypedQ('');
     setVisibleLines([]);
     setStreamingLine('');
-    setStreamLineIdx(0);
-    setCharIdx(0);
 
-    // Step 1: type the question
     let qi = 0;
     const typeQ = () => {
-      if (qi <= convo.question.length) {
-        setTypedQ(convo.question.slice(0, qi));
-        setPhase('typing-q');
-        qi++;
-        timerRef.current = setTimeout(typeQ, qi < 8 ? 60 : Math.random() * 40 + 25);
+      qi++;
+      setTypedQ(convo.question.slice(0, qi));
+      setPhase('typing-q');
+      if (qi < convo.question.length) {
+        timerRef.current = setTimeout(typeQ, qi < 5 ? 55 : Math.random() * 38 + 20);
       } else {
-        // Step 2: thinking dots
         setPhase('thinking');
-        timerRef.current = setTimeout(() => {
-          // Step 3: stream lines one by one
-          setPhase('streaming');
-          let li = 0;
-          let ci = 0;
-          const streamChar = () => {
-            const line = convo.lines[li];
-            if (ci <= line.length) {
-              setStreamingLine(line.slice(0, ci));
-              setStreamLineIdx(li);
-              ci++;
-              timerRef.current = setTimeout(streamChar, ci < 3 ? 0 : Math.random() * 18 + 8);
-            } else {
-              setVisibleLines(prev => [...prev, line]);
-              setStreamingLine('');
-              li++;
-              ci = 0;
-              if (li < convo.lines.length) {
-                timerRef.current = setTimeout(streamChar, 180);
-              } else {
-                setPhase('done');
-                if (!hasInteracted) {
-                  timerRef.current = setTimeout(() => {
-                    const next = (idx + 1) % DEMO_CONVERSATIONS[lang].length;
-                    setVisibleLines([]);
-                    setStreamingLine('');
-                    runConvo(next);
-                  }, 4200);
-                }
-              }
-            }
-          };
-          timerRef.current = setTimeout(streamChar, 0);
-        }, 1100);
+        timerRef.current = setTimeout(startStream, 1000);
       }
     };
-    timerRef.current = setTimeout(typeQ, 320);
-  }, [lang, hasInteracted]);
+
+    const startStream = () => {
+      setPhase('streaming');
+      let li = 0;
+      let ci = 0;
+      const tick = () => {
+        const line = convo.lines[li];
+        if (ci <= line.length) {
+          setStreamingLine(line.slice(0, ci));
+          ci++;
+          timerRef.current = setTimeout(tick, ci < 2 ? 0 : Math.random() * 16 + 8);
+        } else {
+          setVisibleLines(prev => [...prev, line]);
+          setStreamingLine('');
+          li++;
+          ci = 0;
+          if (li < convo.lines.length) {
+            timerRef.current = setTimeout(tick, 160);
+          } else {
+            setPhase('done');
+            if (!stateRef.current.hasInteracted) {
+              timerRef.current = setTimeout(() => {
+                const nextIdx = (idx + 1) % DEMO_CONVERSATIONS[stateRef.current.lang].length;
+                runConvoRef.current(nextIdx);
+              }, 4000);
+            }
+          }
+        }
+      };
+      timerRef.current = setTimeout(tick, 0);
+    };
+
+    timerRef.current = setTimeout(typeQ, 280);
+  };
 
   useEffect(() => {
-    const t = setTimeout(() => runConvo(0), 800);
-    return () => { clearTimeout(t); clear(); };
+    stateRef.current.hasInteracted = false;
+    const t = setTimeout(() => runConvoRef.current(0), 700);
+    return () => { clearTimeout(t); stopAll(); };
   }, [lang]);
 
   const jumpTo = (idx: number) => {
-    clear();
-    setHasInteracted(true);
-    setManualConvo(idx);
-    runConvo(idx);
+    stateRef.current.hasInteracted = true;
+    runConvoRef.current(idx);
   };
 
-  return { convoIdx, phase, typedQ, visibleLines, streamingLine, streamLineIdx, jumpTo };
+  return { convoIdx, phase, typedQ, visibleLines, streamingLine, jumpTo };
 }
 
-function renderLine(text: string, style: React.CSSProperties) {
+function renderLine(text: string, style: React.CSSProperties): React.ReactElement {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <p style={style}>
@@ -628,8 +626,8 @@ function ThinkingDots() {
       {[0,1,2].map(i => (
         <motion.div
           key={i}
-          style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }}
-          animate={{ opacity: [0.25, 0.9, 0.25], scale: [0.8, 1.1, 0.8] }}
+          style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }}
+          animate={{ opacity: [0.25, 1, 0.25], scale: [0.8, 1.15, 0.8] }}
           transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
         />
       ))}
@@ -639,34 +637,37 @@ function ThinkingDots() {
 
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const convos = DEMO_CONVERSATIONS[lang];
-  const { convoIdx, phase, typedQ, visibleLines, streamingLine, streamLineIdx, jumpTo } = useStreamingDemo(lang, onCTA);
+  const { convoIdx, phase, typedQ, visibleLines, streamingLine, jumpTo } = useStreamingDemo(lang);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll chat
   useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [visibleLines, streamingLine, phase]);
 
-  const msgStyle: React.CSSProperties = { fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.62)', lineHeight: 1.78, margin: '0 0 8px', fontWeight: 400 };
+  const msgStyle: React.CSSProperties = {
+    fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.6)',
+    lineHeight: 1.78, margin: '0 0 8px', fontWeight: 400,
+  };
 
+  const h1 = t.hero_h1;
+  const h1Parts = h1.indexOf('\n') >= 0 ? h1.split('\n') : [h1];
   const badgeLabel = lang === 'pt' ? 'IA PARA PERFORMANCE MARKETING' : lang === 'es' ? 'IA PARA PERFORMANCE MARKETING' : 'AI FOR PERFORMANCE MARKETING';
-  const h1 = lang === 'pt' ? t.hero_h1 : lang === 'es' ? t.hero_h1 : t.hero_h1;
-  const ctaTxt = t.hero_cta;
-  const fineTxt = t.hero_fine;
-  const seeTxt = t.hero_see;
   const sampleLabel = lang === 'pt' ? 'Conta demo · Meta conectado' : lang === 'es' ? 'Cuenta demo · Meta conectado' : 'Demo account · Meta connected';
   const questLabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
+  const demoNote = lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo account. With yours, real data.';
+  const demoCTA = lang === 'pt' ? 'Usar com minha conta' : lang === 'es' ? 'Usar con mi cuenta' : 'Use with my account';
+  const connectedTxt = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
+  const proofPoints: string[] = [
+    lang === 'pt' ? 'Conecta ao Meta Ads em 1 clique' : lang === 'es' ? 'Conecta Meta Ads en 1 clic' : 'Connects to Meta Ads in 1 click',
+    lang === 'pt' ? 'Responde com seus dados reais' : lang === 'es' ? 'Responde con tus datos reales' : 'Answers with your real data, not templates',
+    lang === 'pt' ? 'Cancele antes de 24h, sem cobranca' : lang === 'es' ? 'Cancela antes de 24h, sin cobro' : 'Cancel within 24h, no charge',
+  ];
 
   return (
     <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,56px)', position: 'relative', overflow: 'hidden' }}>
-      {/* Background gradient */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(14,165,233,0.07) 0%, transparent 55%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,8,0.5))', pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative' }}>
-        {/* Two-column: copy left, product right */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 'clamp(32px,5vw,72px)', alignItems: 'center' }} className="hero-grid">
 
           {/* Left: copy */}
@@ -676,55 +677,53 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{badgeLabel}</span>
             </div>
 
-            <h1 style={{ fontFamily: F, fontSize: 'clamp(38px,5.5vw,64px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.98, margin: '0 0 22px', color: '#fff', whiteSpace: 'pre-line' }}>
-              {h1.split('\n').map((line, i) => (
-                <span key={i} style={{ display: 'block' }}>
-                  {i === 1
-                    ? <span style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{line}</span>
-                    : line}
+            <h1 style={{ fontFamily: F, fontSize: 'clamp(38px,5.5vw,64px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.98, margin: '0 0 22px', color: '#fff' }}>
+              <span style={{ display: 'block' }}>{h1Parts[0]}</span>
+              {h1Parts.length > 1 && (
+                <span style={{ display: 'block', background: 'linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.82), rgba(255,255,255,0.5))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {h1Parts[1]}
                 </span>
-              ))}
+              )}
             </h1>
 
-            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.6vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, margin: '0 0 36px', maxWidth: 400 }}>
+            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.6vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, margin: '0 0 32px', maxWidth: 400 }}>
               {t.hero_sub}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
               <button onClick={onCTA}
-                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 32px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s, opacity 0.15s' }}
+                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 32px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-                {ctaTxt} <ArrowRight size={15} />
+                {t.hero_cta} <ArrowRight size={15} />
               </button>
-              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
-                {seeTxt} →
+              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.32)', textDecoration: 'none', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.32)'; }}>
+                {t.hero_see} →
               </a>
             </div>
 
-            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 20 }}>🔒 {fineTxt}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, paddingTop: 22, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-              {([
-                lang === 'pt' ? 'Conecta ao Meta Ads em 1 clique' : lang === 'es' ? 'Conecta Meta Ads en 1 clic' : 'Connects to Meta Ads in 1 click',
-                lang === 'pt' ? 'Responde com seus dados reais, não genéricos' : lang === 'es' ? 'Responde con tus datos reales, no genéricos' : 'Answers with your real data, not generic advice',
-                lang === 'pt' ? 'Cancele antes de 24h, sem cobrança' : lang === 'es' ? 'Cancela antes de 24h, sin cobro' : 'Cancel within 24h, no charge',
-              ] as string[]).map((point, i) => (
+            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.16)', marginBottom: 20 }}>
+              {'\u{1F512}'} {t.hero_fine}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {proofPoints.map((point, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.4)" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>{point}</span>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.35)" strokeWidth="1"/>
+                    <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)' }}>{point}</span>
                 </div>
               ))}
             </div>
-
-
           </motion.div>
 
           {/* Right: live product */}
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16,1,0.3,1] }}>
-            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 0 0 1px rgba(255,255,255,0.02), 0 32px 80px rgba(0,0,0,0.7), 0 0 80px rgba(14,165,233,0.04)' }}>
-              {/* Browser bar */}
+            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 0 0 1px rgba(255,255,255,0.02), 0 32px 80px rgba(0,0,0,0.7)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', gap: 5 }}>
                   {(['rgba(255,95,86,0.45)','rgba(255,189,46,0.45)','rgba(39,201,63,0.45)'] as string[]).map((c,i) => (
@@ -741,11 +740,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 </div>
               </div>
 
-              {/* App layout */}
               <div style={{ display: 'flex', background: '#06061a', minHeight: 380 }}>
-                {/* Sidebar */}
                 <div style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {/* Account */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 12 }}>
                     <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
                     <div>
@@ -760,51 +756,41 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       onMouseEnter={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
                       onMouseLeave={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                       <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1, opacity: convoIdx === i ? 1 : 0.4 }}>{['📉','⚡','✍️'][i]}</span>
-                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: convoIdx === i ? 500 : 400, color: convoIdx === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.45 }}>{c.question.slice(0,42)}{c.question.length > 42 ? '…' : ''}</span>
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: convoIdx === i ? 500 : 400, color: convoIdx === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.45 }}>{c.question.slice(0,42)}{c.question.length > 42 ? '...' : ''}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Chat */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  {/* Header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff' }}>✦</div>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff' }}>✶</div>
                     <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
                       <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-                      <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(52,211,153,0.6)' }}>
-                        {lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected'}
-                      </span>
+                      <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(52,211,153,0.6)' }}>{connectedTxt}</span>
                     </div>
                   </div>
 
-                  {/* Messages */}
                   <div ref={chatRef} style={{ flex: 1, padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* User question */}
-                    {(phase !== 'idle') && (
+                    {phase !== 'idle' && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <div style={{ maxWidth: '80%', padding: '9px 12px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
                           <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.55, margin: 0 }}>
                             {typedQ}
-                            {phase === 'typing-q' && (
-                              <span style={{ display: 'inline-block', width: 2, height: 13, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} className="cursor-blink" />
-                            )}
+                            {phase === 'typing-q' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} />}
                           </p>
                         </div>
                       </div>
                     )}
-
-                    {/* AI thinking / response */}
                     {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
                       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✦</div>
+                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✶</div>
                         <div style={{ flex: 1 }}>
                           {phase === 'thinking' && <ThinkingDots />}
                           {(phase === 'streaming' || phase === 'done') && (
                             <>
-                              {visibleLines.map((line, i) => renderLine(line, { ...msgStyle, margin: i === visibleLines.length - 1 && !streamingLine ? '0' : '0 0 8px' }))}
-                              {streamingLine && renderLine(streamingLine, { ...msgStyle, margin: 0 })}
+                              {visibleLines.map((line, i) => renderLine(line, { ...msgStyle, margin: (i === visibleLines.length - 1 && !streamingLine) ? '0' : '0 0 8px' }))}
+                              {streamingLine && renderLine(streamingLine, { ...msgStyle, margin: '0' })}
                             </>
                           )}
                         </div>
@@ -812,24 +798,20 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     )}
                   </div>
 
-                  {/* Bottom bar */}
                   <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
-                      {lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo account. With yours, it uses real data.'}
-                    </p>
+                    <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>{demoNote}</p>
                     <button onClick={onCTA}
                       style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 8, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                      {lang === 'pt' ? 'Usar com minha conta →' : lang === 'es' ? 'Usar con mi cuenta →' : 'Use with my account →'}
+                      {demoCTA} →
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Built on */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 18, opacity: 0.3 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 16, opacity: 0.28 }}>
               <span style={{ fontFamily: F, fontSize: 9.5, color: '#fff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>BUILT ON</span>
               <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)' }} />
               <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
@@ -842,6 +824,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     </section>
   );
 }
+
 
 // ─── Tools ─────────────────────────────────────────────────────────────────────
 function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
