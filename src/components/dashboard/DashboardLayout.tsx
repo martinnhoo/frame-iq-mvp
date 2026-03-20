@@ -225,32 +225,87 @@ export default function DashboardLayout() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100dvh", background: "#0d0f18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif", position: "fixed", inset: 0, zIndex: 9999 }}>
-        {/* Logo */}
-        <div style={{ marginBottom: 40, opacity: 0.9 }}>
-          <span style={{ fontSize: 22, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>ad</span>
-          <span style={{ fontSize: 22, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>brief</span>
-        </div>
+      <div style={{
+        minHeight: "100dvh", background: "#0a0d16", position: "fixed", inset: 0, zIndex: 9999,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        overflow: "hidden",
+      }}>
+        {/* Background radial glow */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", width: 600, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -40%)", width: 300, height: 300, background: "radial-gradient(ellipse, rgba(6,182,212,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-        {/* Progress bar container */}
-        <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden", marginBottom: 20 }}>
-          <div style={{
-            height: "100%",
-            background: "linear-gradient(90deg, #0ea5e9, #06b6d4)",
-            borderRadius: 99,
-            animation: "dashboardLoad 1.8s ease-in-out infinite",
-          }} />
-        </div>
+        {/* Grid dots bg */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)", backgroundSize: "32px 32px", pointerEvents: "none" }} />
 
-        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>
-          {dt("ov_loading")}
-        </p>
+        {/* Center content */}
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
+
+          {/* Logo mark */}
+          <div style={{ position: "relative" }}>
+            {/* Outer ring pulse */}
+            <div style={{ position: "absolute", inset: -16, borderRadius: "50%", border: "1px solid rgba(14,165,233,0.15)", animation: "ringPulse 2s ease-in-out infinite" }} />
+            <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px solid rgba(14,165,233,0.10)", animation: "ringPulse 2s ease-in-out infinite 0.4s" }} />
+            {/* Icon container */}
+            <div style={{
+              width: 56, height: 56, borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))",
+              border: "1px solid rgba(14,165,233,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 40px rgba(14,165,233,0.15)",
+            }}>
+              <span style={{ fontSize: 22, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ab</span>
+            </div>
+          </div>
+
+          {/* Wordmark */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div>
+              <span style={{ fontSize: 28, fontWeight: 700, color: "#fff", letterSpacing: "-0.04em" }}>ad</span>
+              <span style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
+            </div>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", margin: 0 }}>
+              {dt("ov_loading")}
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ width: 180, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
+            <div style={{
+              height: "100%",
+              background: "linear-gradient(90deg, #0ea5e9, #34d399, #0ea5e9)",
+              backgroundSize: "200% 100%",
+              borderRadius: 99,
+              animation: "loadBar 1.6s ease-in-out infinite",
+            }} />
+          </div>
+
+          {/* Animated dots */}
+          <div style={{ display: "flex", gap: 5 }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{
+                width: 4, height: 4, borderRadius: "50%",
+                background: "rgba(14,165,233,0.5)",
+                animation: `dotBounce 1.2s ease-in-out infinite`,
+                animationDelay: `${i * 0.2}s`,
+              }} />
+            ))}
+          </div>
+        </div>
 
         <style>{`
-          @keyframes dashboardLoad {
-            0%   { width: 0%;   margin-left: 0%; }
-            50%  { width: 60%;  margin-left: 20%; }
-            100% { width: 0%;   margin-left: 100%; }
+          @keyframes loadBar {
+            0%   { width: 0%;  margin-left: 0%; background-position: 0% 0%; }
+            50%  { width: 55%; margin-left: 20%; background-position: 100% 0%; }
+            100% { width: 0%;  margin-left: 100%; }
+          }
+          @keyframes ringPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50%       { opacity: 0.2; transform: scale(1.08); }
+          }
+          @keyframes dotBounce {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50%       { transform: translateY(-5px); opacity: 1; }
           }
         `}</style>
       </div>
