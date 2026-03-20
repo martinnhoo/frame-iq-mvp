@@ -21,8 +21,8 @@ const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
     hero_badge: "AI FOR PERFORMANCE MARKETING",
-    hero_h1: "Your ads know\nmore than you think.",
-    hero_sub: "Connect Meta Ads. Ask anything. Get answers with your real data.",
+    hero_h1: "Stop burning budget.\nStart scaling what works.",
+    hero_sub: "Connect Meta Ads. Ask the AI what's draining your money — and exactly what to scale.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
     stat_1: "$2.4M+", stat_1_label: "Ad spend analyzed",
@@ -84,8 +84,8 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA PARA PERFORMANCE MARKETING",
-    hero_h1: "Seus anúncios sabem\nmais do que você pensa.",
-    hero_sub: "Conecte o Meta Ads. Pergunte qualquer coisa. Receba respostas com seus dados reais.",
+    hero_h1: "Pare de queimar verba.\nEscale o que funciona.",
+    hero_sub: "Conecte o Meta Ads. Pergunte à IA o que está drenando seu dinheiro — e o que escalar agora.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
     stat_1: "R$12M+", stat_1_label: "Budget analisado",
@@ -147,8 +147,8 @@ const T: Record<Lang, Record<string, string>> = {
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
     hero_badge: "IA PARA PERFORMANCE MARKETING",
-    hero_h1: "Tus anuncios saben\nmás de lo que crees.",
-    hero_sub: "Conecta Meta Ads. Pregunta lo que quieras. Recibe respuestas con tus datos reales.",
+    hero_h1: "Deja de quemar presupuesto.\nEscala lo que funciona.",
+    hero_sub: "Conecta Meta Ads. Pregunta a la IA qué está drenando tu dinero — y qué escalar ahora.",
     hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona",
     hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
@@ -664,13 +664,6 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     ? ['Conecta Meta Ads en 1 clic', 'Responde con tus datos reales', 'Cancela en 24h, sin cobro']
     : ['Connects to Meta Ads in 1 click', 'Answers from your real data', 'Cancel in 24h, no charge'];
 
-  // Floating metric cards that appear contextually
-  const metricCards = [
-    { label: 'ROAS', value: '3.2x', delta: '+0.8x', color: '#34d399', sub: 'Creative_019' },
-    { label: 'CPM', value: '+38%', delta: 'alert', color: '#f59e0b', sub: 'Algorithm spike' },
-    { label: 'Hook Rate', value: '11%', delta: '↓ 31%', color: '#f87171', sub: 'Creative_042' },
-  ];
-
   return (
     <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(80px,9vw,110px) clamp(16px,4vw,32px) clamp(40px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
 
@@ -702,44 +695,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         transition={{ duration: 0.9, delay: 0.18, ease: [0.16,1,0.3,1] }}
         style={{ width: '100%', maxWidth: 1020, position: 'relative', overflow: 'visible' }}
       >
-        {/* Floating metric chips — left */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-          style={{ position: 'absolute', left: -148, top: '25%', display: 'flex', flexDirection: 'column', gap: 8, zIndex: 10 }}
-          className="hero-float-cards"
-        >
-          {metricCards.slice(0,2).map((m, i) => (
-            <div key={i} style={{ background: 'rgba(13,17,23,0.95)', border: `1px solid ${m.color}30`, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(16px)', minWidth: 120, boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${m.color}15` }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{m.label}</span>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: m.color, background: `${m.color}15`, padding: '1px 5px', borderRadius: 4 }}>{m.delta}</span>
-              </div>
-              <div style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: m.color, lineHeight: 1, letterSpacing: '-0.03em' }}>{m.value}</div>
-              <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>{m.sub}</div>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Floating metric chip — right */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.85, duration: 0.6 }}
-          style={{ position: 'absolute', right: -148, top: '28%', zIndex: 10 }}
-          className="hero-float-cards"
-        >
-          <div style={{ background: 'rgba(13,17,23,0.95)', border: `1px solid ${metricCards[2].color}30`, borderRadius: 12, padding: '10px 14px', backdropFilter: 'blur(16px)', minWidth: 120, boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${metricCards[2].color}15` }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{metricCards[2].label}</span>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: metricCards[2].color, background: `${metricCards[2].color}15`, padding: '1px 5px', borderRadius: 4 }}>{metricCards[2].delta}</span>
-            </div>
-            <div style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: metricCards[2].color, lineHeight: 1, letterSpacing: '-0.03em' }}>{metricCards[2].value}</div>
-            <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>{metricCards[2].sub}</div>
-          </div>
-        </motion.div>
-
         {/* Main browser window */}
-        <div className="demo-window" style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.22)', boxShadow: '0 40px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(14,165,233,0.08), 0 0 60px rgba(14,165,233,0.10), inset 0 1px 0 rgba(255,255,255,0.10)' }}>
+        <div className="demo-window" style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.18)' }}>
 
           {/* Browser bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1291,8 +1248,7 @@ export default function IndexNew() {
         <style>{`
           @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
-          @keyframes demo-pulse{0%,100%{box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 40px rgba(14,165,233,0.06),inset 0 1px 0 rgba(255,255,255,0.08)}50%{box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 80px rgba(14,165,233,0.18),0 0 120px rgba(14,165,233,0.08),inset 0 1px 0 rgba(255,255,255,0.08)}}
-          .demo-window{animation:demo-pulse 3s ease-in-out infinite}
+          .demo-window{box-shadow:0 40px 120px rgba(0,0,0,0.65),0 0 60px rgba(14,165,233,0.09),0 0 0 1px rgba(14,165,233,0.14),inset 0 1px 0 rgba(255,255,255,0.09)}
           @keyframes msg-pop{0%{opacity:0;transform:translateY(6px) scale(0.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
           .msg-new{animation:msg-pop 0.3s cubic-bezier(0.16,1,0.3,1) forwards}
           @keyframes dotBounce2{0%,100%{opacity:0.5;transform:scale(0.8)}50%{opacity:1;transform:scale(1.3)}}
