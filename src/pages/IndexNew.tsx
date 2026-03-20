@@ -375,27 +375,26 @@ const TOOLS_DATA = [
 function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string, string>; lang: Lang; setLang: (l: Lang) => void }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 32);
+    const fn = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
-
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      transition: 'background 0.4s, border-color 0.4s, backdrop-filter 0.4s',
-      background: scrolled ? 'rgba(5,5,8,0.85)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(20px) saturate(1.8)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(1.8)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
+      background: scrolled ? 'rgba(5,5,8,0.88)' : 'rgba(5,5,8,0.0)',
+      backdropFilter: scrolled ? 'blur(24px) saturate(1.6)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(24px) saturate(1.6)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+      transition: 'background 0.5s, border-color 0.5s, backdrop-filter 0.5s',
     }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', height: 64, padding: '0 clamp(16px,4vw,32px)' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 62, padding: '0 clamp(16px,4vw,32px)' }}>
         <Logo size="lg" />
-        <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 36, marginLeft: 48, flex: 1 }}>
+        <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, marginLeft: 44 }}>
           {([[t.nav_how,'#how'],[t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
-            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color 0.15s', letterSpacing: '-0.01em' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.9)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)'; }}>
+            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.38)', textDecoration: 'none', transition: 'color 0.15s', letterSpacing: '-0.01em' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.38)'; }}>
               {label}
             </a>
           ))}
@@ -403,14 +402,14 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
           <LangSwitcher lang={lang} setLang={setLang} />
           <button className="nav-links" onClick={() => window.location.href = '/login'}
-            style={{ fontFamily: F, fontSize: 13, padding: '8px 18px', borderRadius: 10, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.15s' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.75)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+            style={{ fontFamily: F, fontSize: 13, padding: '8px 16px', borderRadius: 9, background: 'transparent', color: 'rgba(255,255,255,0.38)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.7)'; el.style.borderColor = 'rgba(255,255,255,0.14)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.38)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
             {t.nav_signin}
           </button>
           <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
             {t.nav_cta}
           </button>
@@ -420,239 +419,411 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
   );
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
+// ─── Live Demo Hero (immersive — product IS the hero) ─────────────────────────
+const DEMO_CONVERSATIONS: Record<Lang, { question: string; lines: string[] }[]> = {
+  en: [
+    {
+      question: "My ROAS dropped 40% this week. What's happening?",
+      lines: [
+        "I found 3 simultaneous causes in your account:",
+        "**Creative fatigue** — Creative_042 has been running 22 days. Hook rate fell from 31% to 11%. The audience has memorized the ad.",
+        "**Frequency 4.8x** — the BR-Women-25-34 set is oversaturated. Every dollar now goes to someone who has seen it 5 times.",
+        "**CPM +38%** — the algorithm detected the relevance drop and is charging more to deliver.",
+        "Action: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days), split the saturated set into 2.",
+      ],
+    },
+    {
+      question: "Which of my ads should I pause immediately?",
+      lines: [
+        "3 ads to cut today — each for a different reason:",
+        "**Creative_038** — CPM $18, CTR 0.4%, zero conversions in 7 days. Burning $180/day with no return.",
+        "**BR-Men-35-44 ad set** — ROAS 0.6x, frequency 5.1. You are paying to irritate an exhausted audience.",
+        "**Creative_029** — hook rate 8%. Your floor is 15%. 92% of users left in the first 3 seconds.",
+        "Combined burn: $620/day negative return. Pausing now frees budget for Creative_019 (ROAS 3.2x, underserved).",
+      ],
+    },
+    {
+      question: "Write 3 hooks based on my best performing creatives.",
+      lines: [
+        "Based on your top 5 converters (avg hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1 —** \"You are paying $90 per click and still do not know why — your data already has the answer.\"",
+        "**Hook 2 —** \"3 of your 4 highest-spend ads have ROAS below 1x right now. Find out which one is worth keeping.\"",
+        "**Hook 3 —** \"Your best creative from last month has been paused for 9 days. A competitor is scaling the same angle.\"",
+        "Pattern from your winners: never a generic benefit — always a specific claim that forces the user to stop.",
+      ],
+    },
+  ],
+  pt: [
+    {
+      question: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
+      lines: [
+        "Identifiquei 3 causas simultâneas na sua conta:",
+        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate caiu de 31% para 11%. O público decorou o anúncio.",
+        "**Frequência 4.8x** — conjunto BR-Mulheres-25-34 supersaturado. Cada real vai para quem já viu 5 vezes.",
+        "**CPM +38%** — o algoritmo percebeu a queda de relevância e cobra mais caro para entregar.",
+        "Ação: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias), divida o conjunto saturado em 2.",
+      ],
+    },
+    {
+      question: "Quais dos meus anúncios devo pausar imediatamente?",
+      lines: [
+        "3 anúncios para cortar hoje — cada um por um motivo diferente:",
+        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias. Queima R$180/dia sem retorno.",
+        "**BR-Homens-35-44** — ROAS 0,6x, frequência 5.1. Você está pagando para irritar audiência exaurida.",
+        "**Creative_029** — hook rate 8%. Seu mínimo é 15%. 92% saem nos primeiros 3 segundos.",
+        "Total: R$620/dia com retorno negativo. Pausar libera verba para Creative_019 (ROAS 3.2x, underserved).",
+      ],
+    },
+    {
+      question: "Escreve 3 hooks baseados nos meus melhores criativos.",
+      lines: [
+        "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+):",
+        "**Hook 1 —** \"Você está pagando R$90 por clique e ainda não sabe por quê — seus dados já têm a resposta.\"",
+        "**Hook 2 —** \"3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual vale manter.\"",
+        "**Hook 3 —** \"Seu melhor criativo do mês passado está parado há 9 dias. O concorrente está escalando o mesmo ângulo.\"",
+        "Padrão dos winners: nunca benefício genérico — sempre uma afirmação específica que força o usuário a parar.",
+      ],
+    },
+  ],
+  es: [
+    {
+      question: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
+      lines: [
+        "Identifiqué 3 causas simultáneas en tu cuenta:",
+        "**Fatiga creativa** — Creative_042 lleva 22 días corriendo. Hook rate cayó de 31% a 11%. La audiencia memorizó el anuncio.",
+        "**Frecuencia 4.8x** — conjunto BR-Mujeres-25-34 supersaturado. Cada peso va a quien ya vio el anuncio 5 veces.",
+        "**CPM +38%** — el algoritmo detectó la caída de relevancia y cobra más caro para entregar.",
+        "Acción: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días), divide el conjunto saturado en 2.",
+      ],
+    },
+    {
+      question: "¿Cuáles de mis anuncios debo pausar inmediatamente?",
+      lines: [
+        "3 anuncios para cortar hoy — cada uno por un motivo diferente:",
+        "**Creative_038** — CPM $18, CTR 0.4%, cero conversiones en 7 días. Quema $180/día sin retorno.",
+        "**BR-Hombres-35-44** — ROAS 0.6x, frecuencia 5.1. Pagas para irritar una audiencia agotada.",
+        "**Creative_029** — hook rate 8%. Tu mínimo es 15%. 92% se fueron en los primeros 3 segundos.",
+        "Total: $620/día con retorno negativo. Pausar libera presupuesto para Creative_019 (ROAS 3.2x).",
+      ],
+    },
+    {
+      question: "Escribe 3 hooks basados en mis mejores creativos.",
+      lines: [
+        "Basado en tus 5 top converters (hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1 —** \"Estás pagando $90 por clic y todavía no sabes por qué — tus datos ya tienen la respuesta.\"",
+        "**Hook 2 —** \"3 de tus 4 anuncios que más gastan tienen ROAS bajo 1x ahora. Encuentra cuál vale mantener.\"",
+        "**Hook 3 —** \"Tu mejor creativo del mes pasado lleva 9 días pausado. Un competidor está escalando el mismo ángulo.\"",
+        "Patrón de tus ganadores: nunca beneficio genérico — siempre una afirmación específica que obliga al usuario a detenerse.",
+      ],
+    },
+  ],
+};
+
+function useStreamingDemo(lang: Lang, onCTA: () => void) {
+  const convos = DEMO_CONVERSATIONS[lang];
+  const [convoIdx, setConvoIdx] = useState(0);
+  const [phase, setPhase] = useState<'idle'|'typing-q'|'thinking'|'streaming'|'done'>('idle');
+  const [typedQ, setTypedQ] = useState('');
+  const [visibleLines, setVisibleLines] = useState<string[]>([]);
+  const [streamingLine, setStreamingLine] = useState('');
+  const [streamLineIdx, setStreamLineIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [manualConvo, setManualConvo] = useState<number | null>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clear = () => { if (timerRef.current) clearTimeout(timerRef.current); };
+
+  const runConvo = useCallback((idx: number) => {
+    const convo = DEMO_CONVERSATIONS[lang][idx];
+    setConvoIdx(idx);
+    setPhase('idle');
+    setTypedQ('');
+    setVisibleLines([]);
+    setStreamingLine('');
+    setStreamLineIdx(0);
+    setCharIdx(0);
+
+    // Step 1: type the question
+    let qi = 0;
+    const typeQ = () => {
+      if (qi <= convo.question.length) {
+        setTypedQ(convo.question.slice(0, qi));
+        setPhase('typing-q');
+        qi++;
+        timerRef.current = setTimeout(typeQ, qi < 8 ? 60 : Math.random() * 40 + 25);
+      } else {
+        // Step 2: thinking dots
+        setPhase('thinking');
+        timerRef.current = setTimeout(() => {
+          // Step 3: stream lines one by one
+          setPhase('streaming');
+          let li = 0;
+          let ci = 0;
+          const streamChar = () => {
+            const line = convo.lines[li];
+            if (ci <= line.length) {
+              setStreamingLine(line.slice(0, ci));
+              setStreamLineIdx(li);
+              ci++;
+              timerRef.current = setTimeout(streamChar, ci < 3 ? 0 : Math.random() * 18 + 8);
+            } else {
+              setVisibleLines(prev => [...prev, line]);
+              setStreamingLine('');
+              li++;
+              ci = 0;
+              if (li < convo.lines.length) {
+                timerRef.current = setTimeout(streamChar, 180);
+              } else {
+                setPhase('done');
+                if (!hasInteracted) {
+                  timerRef.current = setTimeout(() => {
+                    const next = (idx + 1) % DEMO_CONVERSATIONS[lang].length;
+                    setVisibleLines([]);
+                    setStreamingLine('');
+                    runConvo(next);
+                  }, 4200);
+                }
+              }
+            }
+          };
+          timerRef.current = setTimeout(streamChar, 0);
+        }, 1100);
+      }
+    };
+    timerRef.current = setTimeout(typeQ, 320);
+  }, [lang, hasInteracted]);
+
+  useEffect(() => {
+    const t = setTimeout(() => runConvo(0), 800);
+    return () => { clearTimeout(t); clear(); };
+  }, [lang]);
+
+  const jumpTo = (idx: number) => {
+    clear();
+    setHasInteracted(true);
+    setManualConvo(idx);
+    runConvo(idx);
+  };
+
+  return { convoIdx, phase, typedQ, visibleLines, streamingLine, streamLineIdx, jumpTo };
+}
+
+function renderLine(text: string, style: React.CSSProperties) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
-    <section style={{ paddingTop: 'clamp(120px,14vw,180px)', paddingBottom: 'clamp(40px,6vw,80px)', position: 'relative', overflow: 'hidden', textAlign: 'center', padding: 'clamp(120px,14vw,180px) clamp(16px,4vw,32px) clamp(40px,6vw,80px)' }}>
-      {/* Noise texture overlay */}
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.03\'/%3E%3C/svg%3E")', pointerEvents: 'none', opacity: 0.4 }} />
-      {/* Radial glow */}
-      <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', width: '70vw', height: '50vw', maxWidth: 900, maxHeight: 600, background: 'radial-gradient(ellipse 60% 50%, rgba(14,165,233,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
-
-      <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative' }}>
-        {/* Eyebrow */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 28 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399' }} />
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{t.hero_badge}</span>
-          </div>
-        </motion.div>
-
-        {/* H1 */}
-        <motion.h1
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.85, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontFamily: F, fontSize: 'clamp(44px,7.5vw,88px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.97, margin: '0 0 28px', color: '#fff', whiteSpace: 'pre-line' }}
-        >
-          {t.hero_h1}
-        </motion.h1>
-
-        {/* Sub */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontFamily: F, fontSize: 'clamp(15px,2vw,18px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 40px', fontWeight: 400 }}
-        >
-          {t.hero_sub}
-        </motion.p>
-
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 14 }}
-        >
-          <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 'clamp(13px,2vw,15px)', fontWeight: 800, padding: '15px clamp(24px,4vw,40px)', borderRadius: 13, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', transition: 'transform 0.18s, opacity 0.18s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-            {t.hero_cta} <ArrowRight size={15} />
-          </button>
-          <a href="#how"
-            style={{ fontFamily: F, fontSize: 14, fontWeight: 500, padding: '15px 28px', borderRadius: 13, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', transition: 'color 0.18s, border-color 0.18s' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.7)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
-            {t.hero_see}
-          </a>
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.45 }}
-          style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)', letterSpacing: '-0.005em' }}
-        >
-          🔒 {t.hero_fine}
-        </motion.p>
-
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0, maxWidth: 640, margin: '56px auto 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 40 }}
-        >
-          {([['stat_1','stat_1_label'],['stat_2','stat_2_label'],['stat_3','stat_3_label'],['stat_4','stat_4_label']] as [string,string][]).map(([k,lk]) => (
-            <AnimatedStat key={k} value={t[k]} label={t[lk]} />
-          ))}
-        </motion.div>
-      </div>
-    </section>
+    <p style={style}>
+      {parts.map((part, i) =>
+        part.startsWith('**') && part.endsWith('**')
+          ? <strong key={i} style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600 }}>{part.slice(2,-2)}</strong>
+          : <span key={i}>{part}</span>
+      )}
+    </p>
   );
 }
 
-// ─── Product Demo ─────────────────────────────────────────────────────────────
-function ProductDemo({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
-  const [active, setActive] = useState<number | null>(null);
-  const [animKey, setAnimKey] = useState(0);
-  const answers = DEMO_ANSWERS[lang];
+function ThinkingDots() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '10px 0' }}>
+      {[0,1,2].map(i => (
+        <motion.div
+          key={i}
+          style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }}
+          animate={{ opacity: [0.25, 0.9, 0.25], scale: [0.8, 1.1, 0.8] }}
+          transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
+}
 
-  const QS = [
-    { emoji: '📉', short: t.demo_q1_short, full: t.demo_q1_full },
-    { emoji: '⚡', short: t.demo_q2_short, full: t.demo_q2_full },
-    { emoji: '✍️', short: t.demo_q3_short, full: t.demo_q3_full },
-  ];
+function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
+  const convos = DEMO_CONVERSATIONS[lang];
+  const { convoIdx, phase, typedQ, visibleLines, streamingLine, streamLineIdx, jumpTo } = useStreamingDemo(lang, onCTA);
+  const chatRef = useRef<HTMLDivElement>(null);
 
-  const selectQ = (id: number) => {
-    if (active === id) { setActive(null); return; }
-    setActive(id);
-    setAnimKey(k => k + 1);
-  };
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [visibleLines, streamingLine, phase]);
 
-  const current = active !== null ? QS[active] : null;
-  const currentAnswer = active !== null ? answers[active] : null;
+  const msgStyle: React.CSSProperties = { fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.62)', lineHeight: 1.78, margin: '0 0 8px', fontWeight: 400 };
+
+  const badgeLabel = lang === 'pt' ? 'IA PARA PERFORMANCE MARKETING' : lang === 'es' ? 'IA PARA PERFORMANCE MARKETING' : 'AI FOR PERFORMANCE MARKETING';
+  const h1 = lang === 'pt' ? t.hero_h1 : lang === 'es' ? t.hero_h1 : t.hero_h1;
+  const ctaTxt = t.hero_cta;
+  const fineTxt = t.hero_fine;
+  const seeTxt = t.hero_see;
+  const sampleLabel = lang === 'pt' ? 'Conta demo · Meta conectado' : lang === 'es' ? 'Cuenta demo · Meta conectado' : 'Demo account · Meta connected';
+  const questLabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
 
   return (
-    <section id="demo" style={{ padding: '0 clamp(16px,4vw,32px) clamp(64px,8vw,120px)' }}>
-      <div style={{ maxWidth: 1020, margin: '0 auto' }}>
-        {/* Label */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{t.demo_label}</span>
-        </div>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(80px,10vw,120px) clamp(16px,4vw,40px) clamp(40px,6vw,80px)', position: 'relative', overflow: 'hidden' }}>
+      {/* Background gradient */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(14,165,233,0.07) 0%, transparent 55%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,8,0.5))', pointerEvents: 'none' }} />
 
-        {/* Product window */}
-        <div style={{ borderRadius: 22, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 40px 120px rgba(0,0,0,0.7)' }}>
-          {/* Browser chrome */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', gap: 5.5 }}>
-              {(['rgba(255,95,86,0.5)','rgba(255,189,46,0.5)','rgba(39,201,63,0.5)'] as string[]).map((c, i) => (
-                <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
+      <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative' }}>
+        {/* Two-column: copy left, product right */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 'clamp(32px,5vw,72px)', alignItems: 'center' }} className="hero-grid">
+
+          {/* Left: copy */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.07)', marginBottom: 24 }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
+              <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{badgeLabel}</span>
+            </div>
+
+            <h1 style={{ fontFamily: F, fontSize: 'clamp(38px,5.5vw,64px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.98, margin: '0 0 22px', color: '#fff', whiteSpace: 'pre-line' }}>
+              {h1}
+            </h1>
+
+            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.6vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, margin: '0 0 36px', maxWidth: 400 }}>
+              {t.hero_sub}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={onCTA}
+                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 32px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s, opacity 0.15s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
+                {ctaTxt} <ArrowRight size={15} />
+              </button>
+              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
+                {seeTxt} →
+              </a>
+            </div>
+
+            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 20 }}>🔒 {fineTxt}</p>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '14px 24px', marginTop: 36, paddingTop: 28, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {([['stat_1','stat_1_label'],['stat_2','stat_2_label'],['stat_3','stat_3_label'],['stat_4','stat_4_label']] as [string,string][]).map(([k,lk]) => (
+                <AnimatedStat key={k} value={t[k]} label={t[lk]} />
               ))}
             </div>
-            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3.5px 12px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 230, margin: '0 auto' }}>
-              <div style={{ width: 5.5, height: 5.5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
-              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontFamily: "'SF Mono','DM Mono',monospace", letterSpacing: '-0.01em' }}>adbrief.pro/ai</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', opacity: 0.7 }} />
-              <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(14,165,233,0.55)', fontWeight: 600, letterSpacing: '0.02em' }}>{t.demo_sample}</span>
-            </div>
-          </div>
+          </motion.div>
 
-          {/* Two-column layout */}
-          <div style={{ display: 'flex', background: '#07071a' }}>
-            {/* Sidebar */}
-            <div className="demo-sidebar" style={{ width: 256, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* Account chip */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', borderRadius: 11, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.12)', marginBottom: 14 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff', margin: 0 }}>FitCore Brasil</p>
-                  <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(14,165,233,0.65)', margin: '1px 0 0' }}>Meta Ads · 22 campaigns</p>
+          {/* Right: live product */}
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16,1,0.3,1] }}>
+            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 0 0 1px rgba(255,255,255,0.02), 0 32px 80px rgba(0,0,0,0.7), 0 0 80px rgba(14,165,233,0.04)' }}>
+              {/* Browser bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  {(['rgba(255,95,86,0.45)','rgba(255,189,46,0.45)','rgba(39,201,63,0.45)'] as string[]).map((c,i) => (
+                    <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />
+                  ))}
                 </div>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.5)', flexShrink: 0 }} />
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 6, maxWidth: 200, margin: '0 auto' }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9' }} />
+                  <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(14,165,233,0.55)', fontWeight: 700 }}>{sampleLabel}</span>
+                </div>
               </div>
 
-              <p style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 5px', marginBottom: 3 }}>
-                {lang === 'pt' ? 'Perguntas' : lang === 'es' ? 'Preguntas' : 'Questions'}
-              </p>
+              {/* App layout */}
+              <div style={{ display: 'flex', background: '#06061a', minHeight: 380 }}>
+                {/* Sidebar */}
+                <div style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {/* Account */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 12 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
+                    <div>
+                      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: '#fff', margin: 0 }}>FitCore Brasil</p>
+                      <p style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(14,165,233,0.6)', margin: '1px 0 0' }}>Meta · 22 campaigns</p>
+                    </div>
+                  </div>
+                  <p style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 3 }}>{questLabel}</p>
+                  {convos.map((c, i) => (
+                    <button key={i} onClick={() => jumpTo(i)}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9, background: convoIdx === i ? 'rgba(255,255,255,0.07)' : 'transparent', border: convoIdx === i ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
+                      onMouseEnter={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1, opacity: convoIdx === i ? 1 : 0.4 }}>{['📉','⚡','✍️'][i]}</span>
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: convoIdx === i ? 500 : 400, color: convoIdx === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.45 }}>{c.question.slice(0,42)}{c.question.length > 42 ? '…' : ''}</span>
+                    </button>
+                  ))}
+                </div>
 
-              {QS.map((q, i) => {
-                const isAct = active === i;
-                return (
-                  <button key={i} onClick={() => selectQ(i)}
-                    style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 11px', borderRadius: 10, background: isAct ? 'rgba(255,255,255,0.06)' : 'transparent', border: isAct ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.14s' }}
-                    onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                    onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                    <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, opacity: isAct ? 1 : 0.5 }}>{q.emoji}</span>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: isAct ? 500 : 400, color: isAct ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.38)', lineHeight: 1.45 }}>{q.short}</span>
-                  </button>
-                );
-              })}
+                {/* Chat */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff' }}>✦</div>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
+                      <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(52,211,153,0.6)' }}>
+                        {lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected'}
+                      </span>
+                    </div>
+                  </div>
 
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', marginTop: 12, paddingTop: 12, paddingLeft: 5 }}>
-                <p style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.1)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>AI Chat</p>
+                  {/* Messages */}
+                  <div ref={chatRef} style={{ flex: 1, padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* User question */}
+                    {(phase !== 'idle') && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div style={{ maxWidth: '80%', padding: '9px 12px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                          <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.55, margin: 0 }}>
+                            {typedQ}
+                            {phase === 'typing-q' && (
+                              <span style={{ display: 'inline-block', width: 2, height: 13, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} className="cursor-blink" />
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* AI thinking / response */}
+                    {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✦</div>
+                        <div style={{ flex: 1 }}>
+                          {phase === 'thinking' && <ThinkingDots />}
+                          {(phase === 'streaming' || phase === 'done') && (
+                            <>
+                              {visibleLines.map((line, i) => renderLine(line, { ...msgStyle, margin: i === visibleLines.length - 1 && !streamingLine ? '0' : '0 0 8px' }))}
+                              {streamingLine && renderLine(streamingLine, { ...msgStyle, margin: 0 })}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom bar */}
+                  <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+                      {lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo account. With yours, it uses real data.'}
+                    </p>
+                    <button onClick={onCTA}
+                      style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 8, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                      {lang === 'pt' ? 'Usar com minha conta →' : lang === 'es' ? 'Usar con mi cuenta →' : 'Use with my account →'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Chat area */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              {/* Chat header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff', flexShrink: 0 }}>✦</div>
-                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
-                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>— {t.demo_connected}</span>
-              </div>
-
-              {/* Messages */}
-              <div style={{ flex: 1, padding: '18px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', minHeight: 320, maxHeight: 400 }}>
-                {!current ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10, opacity: 0.28, paddingTop: 40 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✦</div>
-                    <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>{t.demo_empty}</p>
-                  </div>
-                ) : (
-                  <div key={animKey} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div style={{ maxWidth: '72%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6, margin: 0 }}>{current.full}</p>
-                      </div>
-                    </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ width: 24, height: 24, borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✦</div>
-                      <div style={{ flex: 1 }}>
-                        {currentAnswer!.map((block, bi) => {
-                          const parts = block.split(/(\*\*[^*]+\*\*)/g);
-                          return (
-                            <p key={bi} style={{ fontFamily: F, fontSize: 13, color: bi === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)', lineHeight: 1.75, margin: bi === 0 ? '0 0 10px' : '0 0 8px', fontWeight: 400 }}>
-                              {parts.map((part, pi) =>
-                                part.startsWith('**') && part.endsWith('**')
-                                  ? <strong key={pi} style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600 }}>{part.slice(2,-2)}</strong>
-                                  : <span key={pi}>{part}</span>
-                              )}
-                            </p>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer bar */}
-              <div style={{ padding: '11px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)', margin: 0, letterSpacing: '-0.005em' }}>{t.demo_cta_note}</p>
-                <button onClick={onCTA}
-                  style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: '8px 18px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                  {t.demo_cta_btn}
-                </button>
-              </div>
+            {/* Built on */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 18, opacity: 0.3 }}>
+              <span style={{ fontFamily: F, fontSize: 9.5, color: '#fff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>BUILT ON</span>
+              <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)' }} />
+              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+              <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)' }} />
+              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
             </div>
-          </div>
-        </div>
-
-        {/* Built on */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, marginTop: 28, opacity: 0.35 }}>
-          <span style={{ fontFamily: F, fontSize: 10, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }} />
-          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: '#fff' }}>Anthropic</span>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }} />
-          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -666,35 +837,32 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   return (
     <Section id="tools">
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: 'clamp(28px,4vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '14px 0 12px', color: '#fff' }}>{t.tools_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.3)', maxWidth: 380, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
+        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase' }}>{t.tools_label}</span>
+          <h2 style={{ fontFamily: F, fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '12px 0 10px', color: '#fff' }}>{t.tools_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.28)', maxWidth: 360, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 8 }}>
           {TOOLS_DATA.map(tool => {
             const isOpen = open === tool.id;
             return (
               <div key={tool.id}
                 onClick={() => setOpen(isOpen ? null : tool.id)}
-                style={{ borderRadius: 16, background: isOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
+                style={{ borderRadius: 14, background: isOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
                 onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.03)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}}
                 onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.02)'; el.style.borderColor = 'rgba(255,255,255,0.05)'; }}}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 18px' }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.6)', flexShrink: 0 }}>{tool.icon}</div>
-                  <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', margin: 0, flex: 1 }}>{tool.name[lang]}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>{tool.icon}</div>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0, flex: 1 }}>{tool.name[lang]}</p>
                   <div style={{ color: 'rgba(255,255,255,0.2)', transition: 'transform 0.18s', transform: isOpen ? 'rotate(45deg)' : 'none', flexShrink: 0 }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
                   </div>
                 </div>
-                {/* Expandable */}
                 <AnimatePresence>
                   {isOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}>
-                      <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '14px 0 0' }}>{tool.desc[lang]}</p>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}>
+                      <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.42)', lineHeight: 1.7, margin: '12px 0 0' }}>{tool.desc[lang]}</p>
                       </div>
                     </motion.div>
                   )}
@@ -1074,8 +1242,7 @@ export default function IndexNew() {
         })}</script>
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
-      <Hero onCTA={handleCTA} t={t} />
-      <ProductDemo onCTA={handleCTA} t={t} lang={lang} />
+      <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
       <Tools t={t} lang={lang} />
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
