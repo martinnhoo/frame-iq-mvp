@@ -624,10 +624,10 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
 
 function BeforeAfter({ t, onCTA }: { t: Record<string, string>; onCTA: () => void }) {
   const rows = [
-    { before: t.ba_1_before || "Export CSV from Meta every Monday morning", after: t.ba_1_after || "Ask: "What should I fix this week?" — answered in 10s" },
-    { before: t.ba_2_before || "Manually compare CTR across 20 ad sets", after: t.ba_2_after || "Ask: "Which ads are underperforming?" — list with data" },
-    { before: t.ba_3_before || "Guess why ROAS dropped, change 3 things at once", after: t.ba_3_after || "Ask: "Why did ROAS drop?" — specific hypothesis + fix" },
-    { before: t.ba_4_before || "Write hooks from scratch, no data", after: t.ba_4_after || "Ask: "Write 5 hooks based on my top converters"" },
+    { before: t.ba_1_before || "Export CSV from Meta every Monday morning", after: t.ba_1_after || 'Ask: "What should I fix this week?" — answered in 10s' },
+    { before: t.ba_2_before || "Manually compare CTR across 20 ad sets", after: t.ba_2_after || 'Ask: "Which ads are underperforming?" — list with data' },
+    { before: t.ba_3_before || "Guess why ROAS dropped, change 3 things at once", after: t.ba_3_after || 'Ask: "Why did ROAS drop?" — specific hypothesis + fix' },
+    { before: t.ba_4_before || "Write hooks from scratch, no data", after: t.ba_4_after || 'Ask: "Write 5 hooks based on my top converters"' },
   ];
   return (
     <section style={{ padding: "clamp(48px,6vw,72px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
