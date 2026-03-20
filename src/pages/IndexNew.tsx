@@ -675,13 +675,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             <h1 style={{ fontFamily: F, fontSize: 'clamp(36px,5.2vw,62px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.97, margin: '0 0 20px', color: '#fff' }}>
               <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
               {h1p[1] && (
-                <span style={{ display: 'block', background: 'linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.78) 50%, rgba(255,255,255,0.45) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                <span style={{ display: 'block', color: 'rgba(255,255,255,0.82)' }}>
                   {h1p[1]}
                 </span>
               )}
             </h1>
 
-            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.5vw,16px)', color: 'rgba(255,255,255,0.36)', lineHeight: 1.7, margin: '0 0 28px', maxWidth: 390 }}>
+            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.5vw,16px)', color: 'rgba(255,255,255,0.72)', lineHeight: 1.7, margin: '0 0 28px', maxWidth: 390 }}>
               {t.hero_sub}
             </p>
 
@@ -699,7 +699,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </a>
             </div>
 
-            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.15)', marginBottom: 18 }}>🔒 {t.hero_fine}</p>
+            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.42)', marginBottom: 18 }}>🔒 {t.hero_fine}</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
               {proofs.map((pt, i) => (
@@ -831,7 +831,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
     <Section id="tools">
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 52 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase' }}>{t.tools_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase' }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '12px 0 10px', color: '#fff' }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.55)', maxWidth: 360, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
@@ -841,9 +841,9 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
             return (
               <div key={tool.id}
                 onClick={() => setOpen(isOpen ? null : tool.id)}
-                style={{ borderRadius: 14, background: isOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.12)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
-                onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.03)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}}
-                onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.02)'; el.style.borderColor = 'rgba(255,255,255,0.12)'; }}}>
+                style={{ borderRadius: 14, background: isOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
+                onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.07)'; el.style.borderColor = 'rgba(255,255,255,0.18)'; }}}
+                onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.05)'; el.style.borderColor = 'rgba(255,255,255,0.12)'; }}}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.72)', flexShrink: 0 }}>{tool.icon}</div>
                   <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0, flex: 1 }}>{tool.name[lang]}</p>
@@ -855,7 +855,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                   {isOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}>
                       <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.42)', lineHeight: 1.7, margin: '12px 0 0' }}>{tool.desc[lang]}</p>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, margin: '12px 0 0' }}>{tool.desc[lang]}</p>
                       </div>
                     </motion.div>
                   )}
@@ -921,7 +921,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
             <button key={i} onClick={() => setActive(i)} style={{
               fontFamily: F, fontSize: 13, fontWeight: 600, padding: "10px 22px", borderRadius: 999, cursor: "pointer", transition: "all 0.2s",
               background: active === i ? `${pr.color}10` : "rgba(255,255,255,0.12)",
-              color: active === i ? pr.color : "rgba(255,255,255,0.3)",
+              color: active === i ? pr.color : "rgba(255,255,255,0.62)",
               border: `1px solid ${active === i ? pr.color + "28" : "rgba(255,255,255,0.12)"}`,
             }}>
               {pr.emoji} {pr.label}
@@ -931,7 +931,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
         <AnimatePresence mode="wait">
           <motion.div key={active} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-            <div style={{ padding: "36px 30px", borderRadius: 22, background: `${p.color}05`, border: `1px solid ${p.color}12` }}>
+            <div style={{ padding: "36px 30px", borderRadius: 22, background: `${p.color}12`, border: `1px solid ${p.color}25` }}>
               <span style={{ fontSize: 40, display: "block", marginBottom: 20 }}>{p.emoji}</span>
               <h3 style={{ fontFamily: F, fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginBottom: 28 }}>{p.desc}</p>
@@ -1051,18 +1051,18 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
                 </div>
               )}
               <div>
-                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 8, fontWeight: 700, letterSpacing: "0.06em" }}>{plan.name.toUpperCase()}</p>
+                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 8, fontWeight: 700, letterSpacing: "0.06em" }}>{plan.name.toUpperCase()}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                   <span style={{ fontFamily: F, fontSize: 44, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
-                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.25)" }}>{plan.desc}</span>
+                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{plan.desc}</span>
                 </div>
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
                 {plan.features.map(f => (
                   <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <Check size={13} color="rgba(255,255,255,0.3)" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.45 }}>{f}</span>
+                    <Check size={13} color="rgba(255,255,255,0.55)" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.45 }}>{f}</span>
                   </div>
                 ))}
               </div>
