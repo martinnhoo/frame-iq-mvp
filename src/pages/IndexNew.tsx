@@ -477,8 +477,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", opacity: 0.35, gap: 10, padding: "40px 0" }}>
                     <div style={{ width: 36, height: 36, borderRadius: 11, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✦</div>
                     <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.6 }}>
-                      {t.demo_empty || "Selecione uma pergunta ao lado
-para ver a IA em ação"}
+                      {t.demo_empty || 'Selecione uma pergunta ao lado para ver a IA em ação'}
                     </p>
                   </div>
                 ) : (
