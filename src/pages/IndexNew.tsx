@@ -631,17 +631,21 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   }, [lines, activeLine, phase]);
 
   const prevPhase = useRef<string>('idle');
+  const firstPlay = useRef(true);
   useEffect(() => {
-    // SFX: play subtle ding when AI starts responding
+    // SFX: play subtle ding when AI starts streaming — both on first mount and on suggestion change
     if (phase === 'streaming' && prevPhase.current === 'thinking') {
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.connect(g); g.connect(ctx.destination);
+        // Slightly softer on first play to not startle
+        const vol = firstPlay.current ? 0.08 : 0.12;
+        firstPlay.current = false;
         o.frequency.setValueAtTime(880, ctx.currentTime);
         o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
-        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.setValueAtTime(vol, ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
         o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
       } catch {}

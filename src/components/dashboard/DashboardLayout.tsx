@@ -174,10 +174,13 @@ export default function DashboardLayout() {
       }
       const loadedPersonas = personaData
         ? (personaData
-            .filter((d: Record<string, unknown>) => d.result && typeof d.result === "object")
+            .filter((d: Record<string, unknown>) => d.name)
             .map((d: Record<string, unknown>) => ({
               id: d.id as string,
-              ...(d.result as object),
+              name: d.name as string,
+              logo_url: (d.logo_url ?? (d.result as any)?.logo_url ?? null) as string | null,
+              website: ((d as any).website ?? (d.result as any)?.website ?? null) as string | null,
+              description: ((d as any).description ?? (d.result as any)?.description ?? null) as string | null,
             })) as ActivePersona[])
         : [];
       setSavedPersonas(loadedPersonas);
@@ -272,11 +275,12 @@ export default function DashboardLayout() {
           {/* Progress bar */}
           <div style={{ width: 180, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
             <div style={{
-              height: "100%",
-              background: "linear-gradient(90deg, #0ea5e9, #34d399, #0ea5e9)",
-              backgroundSize: "200% 100%",
+              position: "absolute", left: 0, top: 0,
+              width: "45%", height: "100%",
+              background: "linear-gradient(90deg, transparent, #0ea5e9, #34d399, #0ea5e9, transparent)",
               borderRadius: 99,
-              animation: "loadBar 1.6s ease-in-out infinite",
+              animation: "loadBar 1.8s ease-in-out infinite",
+              willChange: "transform",
             }} />
           </div>
 
@@ -288,6 +292,7 @@ export default function DashboardLayout() {
                 background: "rgba(14,165,233,0.5)",
                 animation: `dotBounce 1.2s ease-in-out infinite`,
                 animationDelay: `${i * 0.2}s`,
+                willChange: "transform, opacity",
               }} />
             ))}
           </div>
@@ -295,9 +300,8 @@ export default function DashboardLayout() {
 
         <style>{`
           @keyframes loadBar {
-            0%   { width: 0%;  margin-left: 0%; background-position: 0% 0%; }
-            50%  { width: 55%; margin-left: 20%; background-position: 100% 0%; }
-            100% { width: 0%;  margin-left: 100%; }
+            0%   { transform: translateX(-120%); }
+            100% { transform: translateX(500%); }
           }
           @keyframes ringPulse {
             0%, 100% { opacity: 0.6; transform: scale(1); }
@@ -409,15 +413,21 @@ export default function DashboardLayout() {
             </button>
 
             {personaPickerOpen && (
-              <div className="fixed left-4 right-4 sm:absolute sm:left-0 sm:right-auto sm:top-full mt-1.5 rounded-2xl overflow-hidden shadow-2xl"
-                style={{ top: "auto", width: "auto", maxWidth: 320, background: "#111", border: "1px solid rgba(255,255,255,0.1)", zIndex: 99999 }}>
+              <div
+                style={{
+                  position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 99999,
+                  width: 280, maxWidth: "calc(100vw - 32px)",
+                  background: "#111827", border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 14, overflow: "hidden",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
+                }}>
                 <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Workspace</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Account</p>
                   <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select an ad account</p>
                 </div>
                 {savedPersonas.length === 0 ? (
                   <div style={{ padding: "16px 14px", textAlign: "center" }}>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>{dt("ov_no_personas_yet")}</p>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>No accounts yet</p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                       style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
                       <Sparkles className="h-3.5 w-3.5" /> Add first account

@@ -2,11 +2,290 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Check, Loader2, ChevronRight, Zap } from "lucide-react";
+import { ArrowRight, Check, Loader2, ChevronRight, Zap, Shield, Eye, Zap as ZapIcon, BarChart3, Brain, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useObT } from "@/i18n/onboardingTranslations";
 import type { Language } from "@/i18n/translations";
+
+// ── Connect Meta Step — Tutorial Obsessivo ─────────────────────────────────────
+function ConnectMetaStep({ lang, onConnect, onSkip }: { lang: string; onConnect: () => Promise<void>; onSkip: () => void }) {
+  const [step, setStep] = useState<0|1|2|3>(0); // 0=why, 1=how, 2=what, 3=connect
+  const [connecting, setConnecting] = useState(false);
+  const [animIn, setAnimIn] = useState(true);
+  const L = {
+    pt: {
+      progress: "Último passo",
+      skip: "Pular por agora",
+      connect_btn: "Conectar Meta Ads",
+      connecting: "Redirecionando...",
+      next: "Entendi →",
+      // Step 0
+      s0_tag: "POR QUÊ ISSO IMPORTA",
+      s0_title: "Sem dados reais, a IA chuta.",
+      s0_body: "O AdBrief não é como o ChatGPT — ele não dá respostas genéricas. Ele lê sua conta e responde com os seus números. Sem a conexão, ele não sabe o que está matando seu ROAS.",
+      s0_before: "Com ChatGPT genérico",
+      s0_before_ex: "\"Tente testar novos criativos e ajustar seu público-alvo...\"",
+      s0_after: "Com AdBrief + seus dados",
+      s0_after_ex: "\"Creative_042 tem hook rate de 8% — 3× abaixo do seu histórico. CPM subiu 38%. Pause agora.\"",
+      // Step 1
+      s1_tag: "COMO FUNCIONA",
+      s1_title: "OAuth oficial. Você sempre tem controle.",
+      s1_body: "A conexão usa o login oficial do Meta — o mesmo que você usa para dar acesso a uma agência. A gente só lê. Nunca escreve, nunca gasta, nunca publica nada sem você confirmar.",
+      s1_items: ["Acesso somente leitura por padrão", "Você revoga quando quiser no Meta Business", "Nunca armazenamos sua senha", "Certificado SSL + criptografia em repouso"],
+      // Step 2
+      s2_tag: "O QUE A IA VÊ",
+      s2_title: "Ela aprende como você pensa sobre performance.",
+      s2_body: "Com cada pergunta que você faz, o AdBrief calibra o que importa pra você — e responde mais rápido nas próximas vezes.",
+      s2_items: [
+        { icon: "📊", label: "Métricas de campanha", desc: "ROAS, CPM, CTR, CPA em tempo real" },
+        { icon: "🎬", label: "Performance por criativo", desc: "Hook rate, retenção, score de cada ad" },
+        { icon: "🧠", label: "Padrões históricos", desc: "O que funcionou nos últimos 90 dias" },
+        { icon: "💸", label: "Verba e orçamento", desc: "Onde o dinheiro está indo e o que cortar" },
+      ],
+      // Step 3
+      s3_tag: "PRONTO PARA CONECTAR",
+      s3_title: "Conecte agora e receba sua primeira análise em segundos.",
+      s3_body: "Após conectar, a IA vai carregar seus dados e te dar a primeira pergunta sugerida baseada no que encontrou na sua conta.",
+    },
+    en: {
+      progress: "Last step",
+      skip: "Skip for now",
+      connect_btn: "Connect Meta Ads",
+      connecting: "Redirecting...",
+      next: "Got it →",
+      s0_tag: "WHY THIS MATTERS",
+      s0_title: "Without real data, the AI is just guessing.",
+      s0_body: "AdBrief isn't like ChatGPT — it doesn't give generic answers. It reads your account and responds with your actual numbers. Without the connection, it doesn't know what's killing your ROAS.",
+      s0_before: "With generic ChatGPT",
+      s0_before_ex: "\"Try testing new creatives and adjusting your target audience...\"",
+      s0_after: "With AdBrief + your data",
+      s0_after_ex: "\"Creative_042 has 8% hook rate — 3× below your average. CPM spiked 38%. Pause it now.\"",
+      s1_tag: "HOW IT WORKS",
+      s1_title: "Official OAuth. You're always in control.",
+      s1_body: "The connection uses Meta's official login — the same way you give access to an agency. We only read. We never write, spend, or publish anything without your confirmation.",
+      s1_items: ["Read-only access by default", "Revoke anytime in Meta Business", "We never store your password", "SSL + encryption at rest"],
+      s2_tag: "WHAT THE AI SEES",
+      s2_title: "It learns how you think about performance.",
+      s2_body: "With every question you ask, AdBrief calibrates what matters to you — and gets faster on the next round.",
+      s2_items: [
+        { icon: "📊", label: "Campaign metrics", desc: "ROAS, CPM, CTR, CPA in real time" },
+        { icon: "🎬", label: "Creative performance", desc: "Hook rate, retention, score per ad" },
+        { icon: "🧠", label: "Historical patterns", desc: "What worked in the last 90 days" },
+        { icon: "💸", label: "Budget & spend", desc: "Where money is going and what to cut" },
+      ],
+      s3_tag: "READY TO CONNECT",
+      s3_title: "Connect now and get your first analysis in seconds.",
+      s3_body: "After connecting, the AI will load your data and give you the first suggested question based on what it found in your account.",
+    },
+    es: {
+      progress: "Último paso",
+      skip: "Saltar por ahora",
+      connect_btn: "Conectar Meta Ads",
+      connecting: "Redirigiendo...",
+      next: "Entendido →",
+      s0_tag: "POR QUÉ IMPORTA",
+      s0_title: "Sin datos reales, la IA adivina.",
+      s0_body: "AdBrief no es como ChatGPT — no da respuestas genéricas. Lee tu cuenta y responde con tus números reales. Sin la conexión, no sabe qué está matando tu ROAS.",
+      s0_before: "Con ChatGPT genérico",
+      s0_before_ex: "\"Intenta probar nuevos creativos y ajustar tu audiencia...\"",
+      s0_after: "Con AdBrief + tus datos",
+      s0_after_ex: "\"Creative_042 tiene hook rate de 8% — 3× bajo tu promedio. CPM subió 38%. Pausalo ahora.\"",
+      s1_tag: "CÓMO FUNCIONA",
+      s1_title: "OAuth oficial. Tú siempre tienes el control.",
+      s1_body: "La conexión usa el login oficial de Meta — igual que cuando das acceso a una agencia. Solo leemos. Nunca escribimos, gastamos, ni publicamos nada sin tu confirmación.",
+      s1_items: ["Acceso solo lectura por defecto", "Revocar cuando quieras en Meta Business", "Nunca guardamos tu contraseña", "SSL + cifrado en reposo"],
+      s2_tag: "QUÉ VE LA IA",
+      s2_title: "Aprende cómo piensas sobre performance.",
+      s2_body: "Con cada pregunta que haces, AdBrief calibra lo que importa para ti — y responde más rápido la próxima vez.",
+      s2_items: [
+        { icon: "📊", label: "Métricas de campaña", desc: "ROAS, CPM, CTR, CPA en tiempo real" },
+        { icon: "🎬", label: "Performance por creativo", desc: "Hook rate, retención, score por ad" },
+        { icon: "🧠", label: "Patrones históricos", desc: "Lo que funcionó en los últimos 90 días" },
+        { icon: "💸", label: "Presupuesto y gasto", desc: "Dónde va el dinero y qué cortar" },
+      ],
+      s3_tag: "LISTO PARA CONECTAR",
+      s3_title: "Conecta ahora y recibe tu primer análisis en segundos.",
+      s3_body: "Después de conectar, la IA cargará tus datos y te dará la primera pregunta sugerida basada en lo que encontró en tu cuenta.",
+    },
+  };
+  const t = L[lang as keyof typeof L] || L.en;
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+
+  const goTo = (n: 0|1|2|3) => {
+    setAnimIn(false);
+    setTimeout(() => { setStep(n); setAnimIn(true); }, 180);
+  };
+
+  return (
+    <div style={{ fontFamily: F }}>
+      {/* Progress dots */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+        {[0,1,2,3].map(i => (
+          <button key={i} onClick={() => goTo(i as 0|1|2|3)}
+            style={{ width: i === step ? 24 : 7, height: 7, borderRadius: 4, background: i === step ? "#0ea5e9" : i < step ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.12)", border: "none", cursor: "pointer", transition: "all 0.3s", padding: 0 }}/>
+        ))}
+      </div>
+
+      {/* Card */}
+      <div style={{ opacity: animIn ? 1 : 0, transform: animIn ? "translateY(0)" : "translateY(12px)", transition: "all 0.22s ease" }}>
+
+        {/* ── Slide 0: Por que importa ── */}
+        {step === 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: M, fontSize: 10, color: "#0ea5e9", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>{t.s0_tag}</p>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 12 }}>{t.s0_title}</h2>
+              <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360, margin: "0 auto" }}>{t.s0_body}</p>
+            </div>
+
+            {/* Before/After */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(248,113,113,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9 }}>✕</div>
+                  <span style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(248,113,113,0.8)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t.s0_before}</span>
+                </div>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, fontStyle: "italic", margin: 0 }}>{t.s0_before_ex}</p>
+              </div>
+              <div style={{ background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 14, padding: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(52,211,153,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9 }}>✓</div>
+                  <span style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#34d399", textTransform: "uppercase", letterSpacing: "0.08em" }}>{t.s0_after}</span>
+                </div>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, fontStyle: "italic", margin: 0 }}>{t.s0_after_ex}</p>
+              </div>
+            </div>
+
+            <button onClick={() => goTo(1)}
+              style={{ width: "100%", padding: "13px", borderRadius: 12, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {t.next}
+            </button>
+          </div>
+        )}
+
+        {/* ── Slide 1: Segurança ── */}
+        {step === 1 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: M, fontSize: 10, color: "#0ea5e9", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>{t.s1_tag}</p>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 12 }}>{t.s1_title}</h2>
+              <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360, margin: "0 auto" }}>{t.s1_body}</p>
+            </div>
+
+            {/* Flow visual */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                {[
+                  { icon: "🔐", label: lang === "pt" ? "Seu login Meta" : lang === "es" ? "Tu login Meta" : "Your Meta login" },
+                  null,
+                  { icon: "🔒", label: "OAuth 2.0" },
+                  null,
+                  { icon: "📊", label: "AdBrief" },
+                ].map((item, i) =>
+                  item === null ? (
+                    <div key={i} style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(14,165,233,0.4), rgba(14,165,233,0.2))", margin: "0 4px" }} />
+                  ) : (
+                    <div key={i} style={{ textAlign: "center", flexShrink: 0 }}>
+                      <div style={{ fontSize: 22, marginBottom: 4 }}>{item.icon}</div>
+                      <p style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.4)", margin: 0 }}>{item.label}</p>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {t.s1_items.map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)", borderRadius: 10 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(52,211,153,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Check size={10} color="#34d399" />
+                  </div>
+                  <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => goTo(2)}
+              style={{ width: "100%", padding: "13px", borderRadius: 12, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {t.next}
+            </button>
+          </div>
+        )}
+
+        {/* ── Slide 2: O que a IA vê ── */}
+        {step === 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: M, fontSize: 10, color: "#0ea5e9", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>{t.s2_tag}</p>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 12 }}>{t.s2_title}</h2>
+              <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360, margin: "0 auto" }}>{t.s2_body}</p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {t.s2_items.map((item, i) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 13px" }}>
+                  <div style={{ fontSize: 20, marginBottom: 8 }}>{item.icon}</div>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{item.label}</p>
+                  <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => goTo(3)}
+              style={{ width: "100%", padding: "13px", borderRadius: 12, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {t.next}
+            </button>
+          </div>
+        )}
+
+        {/* ── Slide 3: Conectar ── */}
+        {step === 3 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontFamily: M, fontSize: 10, color: "#0ea5e9", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>{t.s3_tag}</p>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 12 }}>{t.s3_title}</h2>
+              <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360, margin: "0 auto" }}>{t.s3_body}</p>
+            </div>
+
+            {/* What happens next visual */}
+            <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 16, padding: "16px 18px" }}>
+              {[
+                { n: "1", text: lang === "pt" ? "Clica em conectar abaixo" : lang === "es" ? "Haz clic en conectar abajo" : "Click connect below", done: false },
+                { n: "2", text: lang === "pt" ? "Autoriza no login do Meta (leva 30s)" : lang === "es" ? "Autoriza en el login de Meta (30s)" : "Authorize in Meta login (takes 30s)", done: false },
+                { n: "3", text: lang === "pt" ? "Voltamos para cá automaticamente" : lang === "es" ? "Volvemos aquí automáticamente" : "We redirect you back automatically", done: false },
+                { n: "4", text: lang === "pt" ? "A IA carrega sua conta e começa" : lang === "es" ? "La IA carga tu cuenta y empieza" : "AI loads your account and starts", done: false },
+              ].map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <span style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{item.n}</span>
+                  </div>
+                  <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.65)", margin: 0, lineHeight: 1.5 }}>{item.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={async () => { setConnecting(true); await onConnect(); }}
+              disabled={connecting}
+              style={{ width: "100%", padding: "15px", borderRadius: 13, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", fontWeight: 800, fontSize: 15, border: "none", cursor: connecting ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, letterSpacing: "-0.01em", boxShadow: "0 0 32px rgba(14,165,233,0.25)" }}>
+              {connecting ? <Loader2 size={16} className="animate-spin" /> : <span style={{ fontSize: 18 }}>🔗</span>}
+              {connecting ? t.connecting : t.connect_btn}
+            </button>
+
+            <button onClick={onSkip}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, fontFamily: M, padding: "4px 0" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.2)"; }}>
+              {t.skip}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -331,61 +610,18 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* ── Step: Connect Meta Ads ── */}
+          {/* ── Step: Connect Meta Ads — Tutorial Obsessivo ── */}
           {step === "connect" && (
-            <div className="space-y-6">
-              <div className="text-center space-y-3">
-                <div style={{ fontSize: 40, marginBottom: 8 }}>🔗</div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white" style={{ ...syne, letterSpacing: "-0.03em" }}>
-                  Connect your Meta Ads
-                </h1>
-                <p className="text-sm text-white/40 max-w-xs mx-auto leading-relaxed">
-                  This is where the magic happens. AdBrief reads your real campaign data to answer your questions.
-                </p>
-              </div>
-
-              <div style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 16, padding: "20px 20px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📊</div>
-                  <div>
-                    <p style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>Meta Ads (Facebook & Instagram)</p>
-                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Official OAuth — read-only access</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      const { supabase } = await import("@/integrations/supabase/client");
-                      const { data: { session } } = await supabase.auth.getSession();
-                      if (!session) return;
-                      const { data } = await supabase.functions.invoke("meta-oauth", {
-                        body: { action: "get_auth_url", user_id: session.user.id },
-                      });
-                      if (data?.url) window.location.href = data.url;
-                    } catch (e) { console.error(e); }
-                  }}
-                  style={{
-                    width: "100%", padding: "12px", borderRadius: 12,
-                    background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
-                    color: "#000", fontWeight: 700, fontSize: 14,
-                    border: "none", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  }}
-                >
-                  Connect Meta Ads →
-                </button>
-              </div>
-
-              <button
-                onClick={() => {
-                  // Skip — go to dashboard anyway
-                  navigate("/dashboard/ai");
-                }}
-                className="w-full py-2 text-sm text-white/30 hover:text-white/50 transition-colors"
-              >
-                Skip for now — I'll connect later
-              </button>
-            </div>
+            <ConnectMetaStep lang={activeLang} onConnect={async () => {
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+                const { data } = await supabase.functions.invoke("meta-oauth", {
+                  body: { action: "get_auth_url", user_id: session.user.id },
+                });
+                if (data?.url) window.location.href = data.url;
+              } catch (e) { console.error(e); }
+            }} onSkip={() => navigate("/dashboard/ai")} />
           )}
 
           {/* ── Step: Pain Point ── */}
