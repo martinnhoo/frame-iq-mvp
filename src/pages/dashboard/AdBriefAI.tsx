@@ -16,9 +16,11 @@ const UI: Record<string, Record<string, string>> = {
 function ui(lang: string, key: string): string { return (UI[lang] || UI.en)[key] || UI.en[key] || key; }
 
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"confirm_action";
   title: string; content?: string; items?: string[]; route?: string; params?: Record<string,string>; cta?: string;
   tool?: string; tool_params?: Record<string,string>;
+  // meta_action fields
+  meta_action?: string; target_id?: string; target_type?: string; target_name?: string; value?: string;
   metrics?: { label:string; value:string; delta?:string; trend?:"up"|"down"|"neutral" }[];
   table?: { headers:string[]; rows:string[][] };
   chart?: { type:"bar"|"comparison"; labels:string[]; values:number[]; colors?:string[] };
@@ -26,16 +28,67 @@ interface Block {
 interface AIMessage { role:"user"|"assistant"; blocks?: Block[]; userText?:string; ts:number; }
 
 const BS: Record<string,{color:string;bg:string;border:string}> = {
-  action:   {color:"#0ea5e9",bg:"rgba(14,165,233,0.06)",border:"rgba(14,165,233,0.18)"},
-  pattern:  {color:"#60a5fa",bg:"rgba(96,165,250,0.06)",border:"rgba(96,165,250,0.18)"},
-  hooks:    {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",border:"rgba(6,182,212,0.18)"},
-  warning:  {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",border:"rgba(251,191,36,0.18)"},
-  insight:  {color:"#34d399",bg:"rgba(52,211,153,0.06)",border:"rgba(52,211,153,0.18)"},
-  off_topic:{color:"rgba(255,255,255,0.3)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.07)"},
-  navigate: {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",border:"rgba(14,165,233,0.2)"},
-  tool_call:{color:"#a78bfa",bg:"rgba(167,139,250,0.06)",border:"rgba(167,139,250,0.2)"},
-  dashboard:{color:"#34d399",bg:"rgba(13,17,23,0.9)",border:"rgba(255,255,255,0.1)"},
+  action:         {color:"#0ea5e9",bg:"rgba(14,165,233,0.06)",border:"rgba(14,165,233,0.18)"},
+  pattern:        {color:"#60a5fa",bg:"rgba(96,165,250,0.06)",border:"rgba(96,165,250,0.18)"},
+  hooks:          {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",border:"rgba(6,182,212,0.18)"},
+  warning:        {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",border:"rgba(251,191,36,0.18)"},
+  insight:        {color:"#34d399",bg:"rgba(52,211,153,0.06)",border:"rgba(52,211,153,0.18)"},
+  off_topic:      {color:"rgba(255,255,255,0.3)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.07)"},
+  navigate:       {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",border:"rgba(14,165,233,0.2)"},
+  tool_call:      {color:"#a78bfa",bg:"rgba(167,139,250,0.06)",border:"rgba(167,139,250,0.2)"},
+  dashboard:      {color:"#34d399",bg:"rgba(13,17,23,0.9)",border:"rgba(255,255,255,0.1)"},
+  meta_action:    {color:"#fb923c",bg:"rgba(251,146,60,0.07)",border:"rgba(251,146,60,0.22)"},
+  confirm_action: {color:"#34d399",bg:"rgba(52,211,153,0.06)",border:"rgba(52,211,153,0.22)"},
 };
+
+// ── Confirm action block (meta actions with confirm/cancel) ───────────────────
+function ConfirmActionBlock({block,onConfirm,onCancel,lang}:{block:Block;onConfirm:(b:Block)=>void;onCancel:()=>void;lang:string}) {
+  const [executing,setExecuting]=useState(false);
+  const [done,setDone]=useState<string|null>(null);
+  const labels:Record<string,Record<string,string>>={
+    en:{pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate",confirm:"Confirm",cancel:"Cancel",executing:"Executing...",done:"Done"},
+    pt:{pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",confirm:"Confirmar",cancel:"Cancelar",executing:"Executando...",done:"Concluído"},
+    es:{pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar",confirm:"Confirmar",cancel:"Cancelar",executing:"Ejecutando...",done:"Listo"},
+  };
+  const L=labels[lang]||labels.en;
+  const actionIcon:Record<string,string>={pause:"⏸",enable:"▶",update_budget:"💰",publish:"🚀",duplicate:"📋",list_campaigns:"📋"};
+  const icon=actionIcon[block.meta_action||""]||"⚡";
+
+  if(done) return(
+    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.07)",padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:16}}>✓</span>
+      <p style={{...j,fontSize:12,fontWeight:600,color:"#34d399",margin:0}}>{done}</p>
+    </div>
+  );
+
+  return(
+    <div style={{borderRadius:14,border:"1px solid rgba(251,146,60,0.25)",background:"rgba(251,146,60,0.06)",marginBottom:10,overflow:"hidden"}}>
+      <div style={{padding:"12px 16px",display:"flex",alignItems:"flex-start",gap:10}}>
+        <span style={{fontSize:18,flexShrink:0,marginTop:1}}>{icon}</span>
+        <div style={{flex:1}}>
+          <p style={{...j,fontSize:13,fontWeight:700,color:"#fb923c",marginBottom:4}}>{block.title}</p>
+          {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.6)",margin:0,lineHeight:1.5}}>{block.content}</p>}
+        </div>
+      </div>
+      <div style={{padding:"0 16px 14px",display:"flex",gap:8}}>
+        <button onClick={async()=>{
+          setExecuting(true);
+          await onConfirm(block);
+          setDone(`${L[block.meta_action as string]||L.done} — ${block.target_name||block.target_id}`);
+          setExecuting(false);
+        }} disabled={executing}
+          style={{...j,fontSize:12,fontWeight:700,padding:"8px 18px",borderRadius:9,background:"linear-gradient(135deg,#fb923c,#f97316)",color:"#000",border:"none",cursor:executing?"wait":"pointer",display:"flex",alignItems:"center",gap:6}}>
+          {executing?<Loader2 size={11} className="animate-spin"/>:null}
+          {executing?L.executing:`${L.confirm} — ${L[block.meta_action as string]||"Execute"}`}
+        </button>
+        <button onClick={onCancel}
+          style={{...m,fontSize:12,padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>
+          {L.cancel}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function DashboardBlock({block}:{block:Block}) {
   const cols = !block.metrics?.length ? 1 : block.metrics.length <= 2 ? block.metrics.length : block.metrics.length <= 4 ? 2 : 3;
@@ -217,6 +270,24 @@ export default function AdBriefAI() {
 
   const handleNavigate=(route:string,params?:Record<string,string>)=>{if(!params||Object.keys(params).length===0){navigate(route);return;}navigate(`${route}?${new URLSearchParams(params).toString()}`);};
 
+  const executeMetaAction=async(block:Block)=>{
+    const p=block.tool_params||{};
+    const{data,error}=await supabase.functions.invoke("meta-actions",{
+      body:{action:block.meta_action||p.meta_action,user_id:user.id,target_id:block.target_id||p.target_id,target_type:block.target_type||p.target_type,value:block.value||p.value}
+    });
+    if(error||data?.error){
+      setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:"Falha na ação",content:data?.error||error?.message||"Tente novamente."}],ts:Date.now()}]);
+      return;
+    }
+    // If it returns campaigns list, show as table
+    if(data?.campaigns){
+      const rows=(data.campaigns as any[]).map((c:any)=>[ c.name, c.effective_status||c.status, c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—", c.id ]);
+      setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"dashboard",title:lang==="pt"?"Suas campanhas":"Your campaigns",table:{headers:[lang==="pt"?"Nome":"Name",lang==="pt"?"Status":"Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}}],ts:Date.now()}]);
+      return;
+    }
+    setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"insight",title:"✓ "+(data?.message||"Concluído"),content:""}],ts:Date.now()}]);
+  };
+
   const send=async(text?:string)=>{
     const msg=(text??input).trim();
     if(!msg||loading||!contextReady)return;
@@ -230,7 +301,23 @@ export default function AdBriefAI() {
         setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:lang==="pt"?"Não foi possível obter resposta":"Couldn't get a response",content:error?.message||"Try again."}],ts:Date.now()}]);
         return;
       }
-      const blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
+      let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
+      // Convert tool_call with meta_action into meta_action confirm blocks
+      blocks=blocks.map(b=>{
+        if(b.type==="tool_call"&&b.tool_params?.meta_action){
+          const p=b.tool_params;
+          return{
+            ...b,
+            type:"meta_action" as const,
+            meta_action:p.meta_action,
+            target_id:p.target_id,
+            target_type:p.target_type,
+            target_name:p.target_name,
+            value:p.value,
+          };
+        }
+        return b;
+      });
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:Date.now()}]);
     }catch(e:any){
       setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:"Connection error",content:e?.message||"Network error."}],ts:Date.now()}]);
@@ -326,7 +413,13 @@ export default function AdBriefAI() {
                   </div>
                   <span style={{...m,fontSize:9.5,color:"rgba(255,255,255,0.2)",letterSpacing:"0.12em",textTransform:"uppercase"}}>ADBRIEF AI</span>
                 </div>
-                {msg.blocks?.map((b,bi)=><BlockCard key={bi} block={b} onNavigate={handleNavigate} lang={lang}/>)}
+                {msg.blocks?.map((b,bi)=>
+                  b.type==="meta_action"
+                    ? <ConfirmActionBlock key={bi} block={b} lang={lang}
+                        onConfirm={executeMetaAction}
+                        onCancel={()=>{}}/>
+                    : <BlockCard key={bi} block={b} onNavigate={handleNavigate} lang={lang}/>
+                )}
               </div>
             )}
           </div>
