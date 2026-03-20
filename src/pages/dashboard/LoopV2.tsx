@@ -815,7 +815,7 @@ export default function LoopV2() {
               body: {
                 product: params.product || text,
                 niche: params.niche || (selectedPersona as any)?.industry || "",
-                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                market: params.market || (selectedPersona as any)?.preferred_market || "",
                 platform: params.platform || "meta",
                 tone: params.tone || "direct",
                 user_id: user.id,
@@ -831,7 +831,7 @@ export default function LoopV2() {
               body: {
                 product: params.product || text,
                 offer: params.offer || "",
-                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                market: params.market || (selectedPersona as any)?.preferred_market || "",
                 platform: params.platform || "meta",
                 angle: params.angle || "",
                 user_id: user.id,
@@ -846,7 +846,7 @@ export default function LoopV2() {
               body: {
                 product: params.product || text,
                 offer: params.offer || "",
-                market: params.market || (selectedPersona?.result as any)?.preferred_market || "",
+                market: params.market || (selectedPersona as any)?.preferred_market || "",
                 audience: params.audience || "",
                 user_id: user.id,
                 persona_id: selectedPersona?.id,

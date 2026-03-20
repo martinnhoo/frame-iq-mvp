@@ -156,7 +156,7 @@ export type DashT = {
   sg_title: string; sg_generate: string; sg_generating: string; sg_product: string; sg_copy: string;
   br_title: string; br_generate: string; br_generating: string; br_copy: string;
   na_title: string; na_upload: string; na_analyze: string; na_analyzing: string;
-  cm_generate: string; cm_copy: string; cm_copied: string; cm_back: string; cm_product: string;
+  cm_generate: string; cm_copy: string; cm_copied: string; cm_back: string; cm_product: string; cm_no_account: string;
 
   // Pre-flight
   pf_title: string;
@@ -373,7 +373,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   en: {
     nav_overview: "Overview", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Hook Generator", nav_templates: "Templates", nav_translate: "Translate",
-    nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Accounts",
+    nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Accounts", nav_accounts: "Accounts",
     nav_workspace: "Workspace", nav_tools: "Tools", nav_upgrade: "Upgrade plan",
     nav_upgrade_desc: "Unlock more analyses & boards",
     nav_competitor: "Competitor", nav_script: "Script", nav_brief: "Brief",
@@ -421,7 +421,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     sg_title: "Script Generator", sg_generate: "Generate Script", sg_generating: "Generating...", sg_product: "Product / Brand", sg_copy: "Copy",
     br_title: "Brief Generator", br_generate: "Generate Brief", br_generating: "Generating...", br_copy: "Copy",
     na_title: "New Analysis", na_upload: "Upload Video", na_analyze: "Analyze", na_analyzing: "Analyzing...",
-    cm_generate: "Generate", cm_copy: "Copy", cm_copied: "Copied", cm_back: "Back", cm_product: "Product / Brand",
+    cm_generate: "Generate", cm_copy: "Copy", cm_copied: "Copied", cm_back: "Back", cm_product: "Product / Brand", cm_no_account: "No account selected",
     pf_title: "Pre-flight Check", pf_subtitle: "AI analysis — compliance · hook · structure · platform fit",
     pf_script: "Script", pf_video: "Video", pf_script_label: "Script",
     pf_script_ph: "Paste your ad script here...", pf_hook_label: "Hook (0-3s)", pf_cta_label: "CTA",
@@ -524,7 +524,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   pt: {
     nav_overview: "Visão Geral", nav_analyses: "Análises", nav_boards: "Boards",
     nav_hooks: "Gerador de Hooks", nav_templates: "Templates", nav_translate: "Traduzir",
-    nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Contas",
+    nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Contas", nav_accounts: "Contas",
     nav_workspace: "Área de Trabalho", nav_tools: "Ferramentas", nav_upgrade: "Fazer upgrade",
     nav_upgrade_desc: "Desbloqueie mais análises e boards",
     nav_competitor: "Concorrente", nav_script: "Roteiro", nav_brief: "Brief",
@@ -673,13 +673,13 @@ export const dashTranslations: Record<DashLang, DashT> = {
     sg_title: "Gerador de Script", sg_generate: "Gerar Script", sg_generating: "Gerando...", sg_product: "Produto / Marca", sg_copy: "Copiar",
     br_title: "Gerador de Brief", br_generate: "Gerar Brief", br_generating: "Gerando...", br_copy: "Copiar",
     na_title: "Nova Análise", na_upload: "Fazer Upload", na_analyze: "Analisar", na_analyzing: "Analisando...",
-    cm_generate: "Gerar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Voltar", cm_product: "Produto / Marca",
+    cm_generate: "Gerar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Voltar", cm_product: "Produto / Marca", cm_no_account: "Nenhuma conta selecionada",
   },
 
   es: {
     nav_overview: "Resumen", nav_analyses: "Análisis", nav_boards: "Boards",
     nav_hooks: "Generador de Hooks", nav_templates: "Plantillas", nav_translate: "Traducir",
-    nav_preflight: "Precheck", nav_intelligence: "Inteligencia", nav_persona: "Persona",
+    nav_preflight: "Precheck", nav_intelligence: "Inteligencia", nav_persona: "Persona", nav_accounts: "Accounts",
     nav_workspace: "Área de Trabajo", nav_tools: "Herramientas", nav_upgrade: "Mejorar plan",
      nav_upgrade_desc: "Desbloquea más análisis y boards",
      nav_competitor: "Competidor", nav_script: "Guion", nav_brief: "Brief",
@@ -828,13 +828,13 @@ export const dashTranslations: Record<DashLang, DashT> = {
     sg_title: "Generador de Script", sg_generate: "Generar Script", sg_generating: "Generando...", sg_product: "Producto / Marca", sg_copy: "Copiar",
     br_title: "Generador de Brief", br_generate: "Generar Brief", br_generating: "Generando...", br_copy: "Copiar",
     na_title: "Nuevo Análisis", na_upload: "Subir Video", na_analyze: "Analizar", na_analyzing: "Analizando...",
-    cm_generate: "Generar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Volver", cm_product: "Producto / Marca",
+    cm_generate: "Generar", cm_copy: "Copiar", cm_copied: "Copiado", cm_back: "Volver", cm_product: "Producto / Marca", cm_no_account: "Sin cuenta seleccionada",
   },
 
   zh: {
     nav_overview: "概览", nav_analyses: "分析", nav_boards: "制作板",
     nav_hooks: "钩子生成器", nav_templates: "模板", nav_translate: "翻译",
-    nav_preflight: "预检", nav_intelligence: "智能分析", nav_persona: "用户画像",
+    nav_preflight: "预检", nav_intelligence: "智能分析", nav_persona: "用户画像", nav_accounts: "账户",
     nav_workspace: "工作区", nav_tools: "工具", nav_upgrade: "升级方案",
      nav_upgrade_desc: "解锁更多分析和制作板",
      nav_competitor: "竞争对手", nav_script: "脚本", nav_brief: "简报",
@@ -881,7 +881,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     hg_score: "评分", hg_type: "类型", hg_strength: "强度",
     hg_feedback_up: "明白了 — 多来这类 👍", hg_feedback_down: "已记录 — 减少此类 👎",
     hg_empty: "生成钩子后结果将显示在这里",
-    sg_title: "脚本生成器", sg_generate: "生成脚本", sg_generating: "生成中...", sg_product: "产品/品牌", sg_copy: "复制", br_title: "Brief生成器", br_generate: "生成Brief", br_generating: "生成中...", br_copy: "复制", na_title: "新分析", na_upload: "上传视频", na_analyze: "分析", na_analyzing: "分析中...", cm_generate: "生成", cm_copy: "复制", cm_copied: "已复制", cm_back: "返回", cm_product: "产品/品牌",
+    sg_title: "脚本生成器", sg_generate: "生成脚本", sg_generating: "生成中...", sg_product: "产品/品牌", sg_copy: "复制", br_title: "Brief生成器", br_generate: "生成Brief", br_generating: "生成中...", br_copy: "复制", na_title: "新分析", na_upload: "上传视频", na_analyze: "分析", na_analyzing: "分析中...", cm_generate: "生成", cm_copy: "复制", cm_copied: "已复制", cm_back: "返回", cm_product: "产品/品牌", cm_no_account: "未选择账户",
     pf_title: "预检", pf_subtitle: "AI分析 — 合规 · 钩子 · 结构 · 平台适配",
     pf_script: "脚本", pf_video: "视频", pf_script_label: "脚本",
     pf_script_ph: "在此粘贴您的广告脚本...", pf_hook_label: "钩子（0-3秒）", pf_cta_label: "行动号召",
@@ -986,7 +986,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   fr: {
     nav_overview: "Tableau de bord", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Générateur de hooks", nav_templates: "Modèles", nav_translate: "Traduire",
-    nav_preflight: "Pré-vol", nav_intelligence: "Intelligence", nav_persona: "Persona",
+    nav_preflight: "Pré-vol", nav_intelligence: "Intelligence", nav_persona: "Persona", nav_accounts: "Comptes",
     nav_workspace: "Espace de travail", nav_tools: "Outils", nav_upgrade: "Mettre à niveau",
      nav_upgrade_desc: "Débloquez plus d'analyses et de boards",
      nav_competitor: "Concurrent", nav_script: "Script", nav_brief: "Brief",
@@ -1033,7 +1033,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     hg_score: "Score", hg_type: "Type", hg_strength: "Force",
     hg_feedback_up: "Compris — plus comme ça 👍", hg_feedback_down: "Noté — moins de ce type 👎",
     hg_empty: "Générez des hooks pour voir les résultats ici",
-    sg_title: "Générateur de Script", sg_generate: "Générer Script", sg_generating: "Génération...", sg_product: "Produit / Marque", sg_copy: "Copier", br_title: "Générateur de Brief", br_generate: "Générer Brief", br_generating: "Génération...", br_copy: "Copier", na_title: "Nouvelle Analyse", na_upload: "Importer Vidéo", na_analyze: "Analyser", na_analyzing: "Analyse...", cm_generate: "Générer", cm_copy: "Copier", cm_copied: "Copié", cm_back: "Retour", cm_product: "Produit / Marque",
+    sg_title: "Générateur de Script", sg_generate: "Générer Script", sg_generating: "Génération...", sg_product: "Produit / Marque", sg_copy: "Copier", br_title: "Générateur de Brief", br_generate: "Générer Brief", br_generating: "Génération...", br_copy: "Copier", na_title: "Nouvelle Analyse", na_upload: "Importer Vidéo", na_analyze: "Analyser", na_analyzing: "Analyse...", cm_generate: "Générer", cm_copy: "Copier", cm_copied: "Copié", cm_back: "Retour", cm_product: "Produit / Marque", cm_no_account: "Aucun compte sélectionné",
     pf_title: "Check pré-vol", pf_subtitle: "Analyse IA — conformité · hook · structure · plateforme",
     pf_script: "Script", pf_video: "Vidéo", pf_script_label: "Script",
     pf_script_ph: "Collez votre script ici...", pf_hook_label: "Hook (0-3s)", pf_cta_label: "CTA",
@@ -1137,7 +1137,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   de: {
     nav_overview: "Übersicht", nav_analyses: "Analysen", nav_boards: "Boards",
     nav_hooks: "Hook-Generator", nav_templates: "Vorlagen", nav_translate: "Übersetzen",
-    nav_preflight: "Vorflug-Check", nav_intelligence: "Intelligenz", nav_persona: "Persona",
+    nav_preflight: "Vorflug-Check", nav_intelligence: "Intelligenz", nav_persona: "Persona", nav_accounts: "Konten",
     nav_workspace: "Arbeitsbereich", nav_tools: "Tools", nav_upgrade: "Plan upgraden",
      nav_upgrade_desc: "Mehr Analysen und Boards freischalten",
      nav_competitor: "Wettbewerber", nav_script: "Skript", nav_brief: "Brief",
@@ -1285,13 +1285,13 @@ export const dashTranslations: Record<DashLang, DashT> = {
     sg_title: "Skript-Generator", sg_generate: "Skript generieren", sg_generating: "Wird generiert...", sg_product: "Produkt / Marke", sg_copy: "Kopieren",
     br_title: "Brief-Generator", br_generate: "Brief generieren", br_generating: "Wird generiert...", br_copy: "Kopieren",
     na_title: "Neue Analyse", na_upload: "Video hochladen", na_analyze: "Analysieren", na_analyzing: "Analysiere...",
-    cm_generate: "Generieren", cm_copy: "Kopieren", cm_copied: "Kopiert", cm_back: "Zurück", cm_product: "Produkt / Marke",
+    cm_generate: "Generieren", cm_copy: "Kopieren", cm_copied: "Kopiert", cm_back: "Zurück", cm_product: "Produkt / Marke", cm_no_account: "Kein Konto ausgewählt",
   },
 
   ar: {
     nav_overview: "نظرة عامة", nav_analyses: "التحليلات", nav_boards: "اللوحات",
     nav_hooks: "مولّد الخطافات", nav_templates: "القوالب", nav_translate: "ترجمة",
-    nav_preflight: "الفحص المسبق", nav_intelligence: "الذكاء الإبداعي", nav_persona: "الشخصية",
+    nav_preflight: "الفحص المسبق", nav_intelligence: "الذكاء الإبداعي", nav_persona: "الشخصية", nav_accounts: "الحسابات",
     nav_workspace: "مساحة العمل", nav_tools: "الأدوات", nav_upgrade: "ترقية الخطة",
      nav_upgrade_desc: "احصل على المزيد من التحليلات واللوحات",
      nav_competitor: "المنافس", nav_script: "النص", nav_brief: "الموجز",
@@ -1439,7 +1439,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     sg_title: "مولّد النصوص", sg_generate: "توليد نص", sg_generating: "جاري التوليد...", sg_product: "المنتج / العلامة", sg_copy: "نسخ",
     br_title: "مولّد الإحاطة", br_generate: "توليد إحاطة", br_generating: "جاري التوليد...", br_copy: "نسخ",
     na_title: "تحليل جديد", na_upload: "رفع فيديو", na_analyze: "تحليل", na_analyzing: "جاري التحليل...",
-    cm_generate: "توليد", cm_copy: "نسخ", cm_copied: "تم النسخ", cm_back: "رجوع", cm_product: "المنتج / العلامة",
+    cm_generate: "توليد", cm_copy: "نسخ", cm_copied: "تم النسخ", cm_back: "رجوع", cm_product: "المنتج / العلامة", cm_no_account: "لم يتم تحديد حساب",
   },
 };
 

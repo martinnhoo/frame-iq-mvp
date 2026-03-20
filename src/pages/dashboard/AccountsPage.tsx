@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, CheckCircle2, Link2, ChevronDown, Globe, Upload, Building2, Loader2, Save, Edit3, X } from "lucide-react";
 import { toast } from "sonner";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const F = "'Inter', sans-serif";
 const BLUE = "#0ea5e9";
@@ -279,7 +280,8 @@ function AccountForm({ account, userId, onSave, onCancel }: {
 
 export default function AccountsPage() {
   const { user } = useOutletContext<DashboardContext>();
-  const dt = useDashT();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
   const navigate = useNavigate();
 
   const [accounts, setAccounts] = useState<Account[]>([]);

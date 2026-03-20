@@ -356,9 +356,9 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       full: t.dq3_full || "Escreve 3 hooks para minha conta baseados nos meus melhores criativos",
       answer: [
         "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+), o padrão é: problema específico + número concreto + quebra de expectativa.",
-        "**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."",
-        "**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."",
-        "**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."",
+        '**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."',
+        '**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."',
+        '**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."',
         "Os 3 seguem o padrão dos seus winners: nada de benefício genérico, sempre uma afirmação que a pessoa precisa parar para processar.",
       ],
     },
@@ -498,9 +498,7 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <div style={{ width: 28, height: 28, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1, fontSize: 13 }}>✦</div>
                 <div style={{ flex: 1 }}>
-                  {current.answer.split('
-
-').map((block, bi) => {
+                  {(Array.isArray(current.answer) ? current.answer : (current.answer as string).split('\n\n')).map((block, bi) => {
                     // Bold text between **
                     const parts = block.split(/(\*\*[^*]+\*\*)/g);
                     return (
@@ -597,7 +595,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
             </button>
           ))}
         </div>
-        <div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+        <div key={active}
           className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
           <div style={{ padding: "32px 28px", borderRadius: 20, background: `${p.color}07`, border: `1px solid ${p.color}18` }}>
             <span style={{ fontSize: 36, display: "block", marginBottom: 16 }}>{p.emoji}</span>
@@ -609,7 +607,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {p.points.map((point, i) => (
-              <div key={point} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+              <div key={point}
                 style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${p.color}15`, border: `1px solid ${p.color}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                   <Check size={10} color={p.color} />
@@ -626,10 +624,10 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
 
 function BeforeAfter({ t, onCTA }: { t: Record<string, string>; onCTA: () => void }) {
   const rows = [
-    { before: t.ba_1_before || "Export CSV from Meta every Monday morning", after: t.ba_1_after || "Ask: "What should I fix this week?" — answered in 10s" },
-    { before: t.ba_2_before || "Manually compare CTR across 20 ad sets", after: t.ba_2_after || "Ask: "Which ads are underperforming?" — list with data" },
-    { before: t.ba_3_before || "Guess why ROAS dropped, change 3 things at once", after: t.ba_3_after || "Ask: "Why did ROAS drop?" — specific hypothesis + fix" },
-    { before: t.ba_4_before || "Write hooks from scratch, no data", after: t.ba_4_after || "Ask: "Write 5 hooks based on my top converters"" },
+    { before: t.ba_1_before || "Export CSV from Meta every Monday morning", after: t.ba_1_after || 'Ask: "What should I fix this week?" — answered in 10s' },
+    { before: t.ba_2_before || "Manually compare CTR across 20 ad sets", after: t.ba_2_after || 'Ask: "Which ads are underperforming?" — list with data' },
+    { before: t.ba_3_before || "Guess why ROAS dropped, change 3 things at once", after: t.ba_3_after || 'Ask: "Why did ROAS drop?" — specific hypothesis + fix' },
+    { before: t.ba_4_before || "Write hooks from scratch, no data", after: t.ba_4_after || 'Ask: "Write 5 hooks based on my top converters"' },
   ];
   return (
     <section style={{ padding: "clamp(48px,6vw,72px) clamp(16px,4vw,32px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
