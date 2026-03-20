@@ -51,7 +51,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
 
   const NAV = [
-    { url: "/dashboard/loop/ai",     label: "AI",             icon: Brain,    exact: false },
+    { url: "/dashboard/loop/ai",     label: "AI",             icon: Brain,     exact: false },
+    { url: "/dashboard/accounts",    label: dt("nav_accounts") || "Accounts", icon: Building2 },
     { url: "/dashboard/analyses",    label: dt("nav_analyses"),  icon: BarChart3 },
     { url: "/dashboard/hooks",       label: dt("nav_hooks"),     icon: Zap },
     { url: "/dashboard/competitor",  label: dt("nav_competitor") || "Competitor", icon: Search },
@@ -115,7 +116,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             { url: "/dashboard/boards",    label: dt("nav_boards"),                    icon: "🗂️" },
             { url: "/dashboard/preflight", label: dt("nav_preflight"),                 icon: "🛫" },
             { url: "/dashboard/translate", label: dt("nav_translate"),                 icon: "🌍" },
-            { url: "/dashboard/accounts",  label: dt("nav_accounts") || "Accounts",     icon: "🏢" },
+            
             { url: "/dashboard/templates", label: dt("nav_templates"),                 icon: "📐" },
             { url: "/dashboard/intelligence", label: dt("nav_intelligence"),           icon: "📊" },
           ].map(({ url, label, icon }) => {

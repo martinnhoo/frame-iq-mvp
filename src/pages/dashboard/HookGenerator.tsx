@@ -73,7 +73,6 @@ export default function HookGenerator() {
     const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
   }, []);
   const [tone, setTone] = useState("Aggressive / Urgent");
-  const [count, setCount] = useState(10);
   const [funnelStage, setFunnelStage] = useState("tofu");
   const [showPersonaWarning, setShowPersonaWarning] = useState(false);
   const [pendingGenerate, setPendingGenerate] = useState(false);
@@ -98,7 +97,7 @@ export default function HookGenerator() {
     setExpandedIdx(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
-        body: { product, niche, market, platform, tone, user_id: user.id, count,
+        body: { product, niche, market, platform, tone, user_id: user.id, count: 10,
           funnel_stage: funnelStage,
           persona_context: selectedPersona ? {
             name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
@@ -171,23 +170,24 @@ export default function HookGenerator() {
 
       {/* Input form */}
       <div className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] p-5 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
+        <div className="space-y-4">
+          <div>
             <label className="block text-xs text-white/50 mb-2">{dt("hg_product")} <span className="text-white/15">*</span></label>
             <input
               value={product}
               onChange={e => setProduct(e.target.value)}
               onKeyDown={e => e.key === "Enter" && generate()}
-              placeholder='e.g. "An online casino with fast payouts" or "A weight-loss supplement"'
+              placeholder='e.g. "FitCore — fitness supplements for men 25-35" or "A B2B SaaS for HR teams"'
               className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.15] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/20 transition-colors"
             />
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-white/50 mb-2">{dt("hg_style")}</label>
+            <label className="block text-xs text-white/50 mb-2">Niche / Industry</label>
             <input
               value={niche}
               onChange={e => setNiche(e.target.value)}
-              placeholder='e.g. "iGaming", "Health & Wellness"'
+              placeholder='e.g. "Fitness", "SaaS", "E-commerce"'
               className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.15] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/20 transition-colors"
             />
           </div>
@@ -219,17 +219,7 @@ export default function HookGenerator() {
               {TONES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-white/50 mb-2">How many hooks</label>
-            <div className="flex gap-1.5">
-              {[5, 10, 15].map(n => (
-                <button key={n} onClick={() => setCount(n)}
-                  className={`flex-1 py-3 rounded-xl text-sm border font-mono transition-all ${count === n ? "bg-white text-black border-white font-bold" : "border-white/[0.13] text-white/55 hover:border-white/15"}`}>
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
+
         </div>
 
         {/* Funnel stage */}
@@ -256,7 +246,7 @@ export default function HookGenerator() {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           style={syne}
         >
-          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating {count} hooks...</> : <><Sparkles className="h-4 w-4" /> Generate {count} Hooks</>}
+          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating hooks...</> : <><Sparkles className="h-4 w-4" /> Generate Hooks</>}
         </button>
       </div>
 

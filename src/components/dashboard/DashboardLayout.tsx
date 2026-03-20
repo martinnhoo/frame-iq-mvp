@@ -267,7 +267,7 @@ export default function DashboardLayout() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%" }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
         {/* Mobile topbar */}
         {/* Mobile topbar — always visible below lg breakpoint */}
         <header className="lg:hidden" style={{
@@ -434,7 +434,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#07070f", display: "flex", flexDirection: "column" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "#07070f", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>

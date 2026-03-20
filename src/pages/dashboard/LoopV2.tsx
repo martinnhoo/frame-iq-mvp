@@ -442,8 +442,8 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
         <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <span style={{ fontSize: 14 }}>✦</span>
         </div>
-        <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "#fff", margin: 0 }}>
-          {hasData ? (dt("loop_greeting_data") || "Your account is connected. Ask me anything.") : (dt("loop_greeting_empty") || "What do you want to know about your ads?")}
+        <p style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.7)", margin: 0 }}>
+          {hasData ? "Your account is connected. Ask me anything." : "What do you want to know about your ads?"}
         </p>
       </div>
       {/* 2x2 grid */}
