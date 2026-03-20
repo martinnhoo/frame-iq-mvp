@@ -572,25 +572,37 @@ export type Database = {
           answers: Json | null
           brand_kit: Json | null
           created_at: string | null
+          description: string | null
           id: string
+          logo_url: string | null
+          name: string | null
           result: Json | null
           user_id: string
+          website: string | null
         }
         Insert: {
           answers?: Json | null
           brand_kit?: Json | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          logo_url?: string | null
+          name?: string | null
           result?: Json | null
           user_id: string
+          website?: string | null
         }
         Update: {
           answers?: Json | null
           brand_kit?: Json | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          logo_url?: string | null
+          name?: string | null
           result?: Json | null
           user_id?: string
+          website?: string | null
         }
         Relationships: []
       }
