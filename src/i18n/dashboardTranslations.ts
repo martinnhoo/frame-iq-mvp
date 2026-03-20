@@ -156,7 +156,7 @@ export type DashT = {
   sg_title: string; sg_generate: string; sg_generating: string; sg_product: string; sg_copy: string;
   br_title: string; br_generate: string; br_generating: string; br_copy: string;
   na_title: string; na_upload: string; na_analyze: string; na_analyzing: string;
-  cm_generate: string; cm_copy: string; cm_copied: string; cm_back: string; cm_product: string;
+  cm_generate: string; cm_copy: string; cm_copied: string; cm_back: string; cm_product: string; cm_no_account: string;
 
   // Pre-flight
   pf_title: string;
