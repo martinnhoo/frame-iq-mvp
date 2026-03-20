@@ -382,19 +382,19 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: scrolled ? 'rgba(5,5,8,0.88)' : 'rgba(5,5,8,0.0)',
-      backdropFilter: scrolled ? 'blur(24px) saturate(1.6)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(24px) saturate(1.6)' : 'none',
+      background: scrolled ? 'rgba(5,5,8,0.9)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(20px)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
       borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-      transition: 'background 0.5s, border-color 0.5s, backdrop-filter 0.5s',
+      transition: 'background 0.4s, border-color 0.4s',
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 62, padding: '0 clamp(16px,4vw,32px)' }}>
         <Logo size="lg" />
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, marginLeft: 44 }}>
           {([[t.nav_how,'#how'],[t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
-            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.38)', textDecoration: 'none', transition: 'color 0.15s', letterSpacing: '-0.01em' }}
+            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.4)', textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.38)'; }}>
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'; }}>
               {label}
             </a>
           ))}
@@ -402,13 +402,13 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
           <LangSwitcher lang={lang} setLang={setLang} />
           <button className="nav-links" onClick={() => window.location.href = '/login'}
-            style={{ fontFamily: F, fontSize: 13, padding: '8px 16px', borderRadius: 9, background: 'transparent', color: 'rgba(255,255,255,0.38)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.15s' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.7)'; el.style.borderColor = 'rgba(255,255,255,0.14)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.38)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+            style={{ fontFamily: F, fontSize: 13, padding: '8px 16px', borderRadius: 9, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.7)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
             {t.nav_signin}
           </button>
           <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
+            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
             {t.nav_cta}
@@ -419,215 +419,207 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
   );
 }
 
-// ─── Live Demo Hero (immersive — product IS the hero) ─────────────────────────
-const DEMO_CONVERSATIONS: Record<Lang, { question: string; lines: string[] }[]> = {
+// ─── Demo conversations data ──────────────────────────────────────────────────
+const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
   en: [
     {
-      question: "My ROAS dropped 40% this week. What's happening?",
+      q: "My ROAS dropped 40% this week. What's happening?",
       lines: [
-        "I found 3 simultaneous causes in your account:",
-        "**Creative fatigue** — Creative_042 has been running 22 days. Hook rate fell from 31% to 11%. The audience has memorized the ad.",
-        "**Frequency 4.8x** — the BR-Women-25-34 set is oversaturated. Every dollar now goes to someone who has seen it 5 times.",
-        "**CPM +38%** — the algorithm detected the relevance drop and is charging more to deliver.",
-        "Action: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days), split the saturated set into 2.",
+        "Found 3 simultaneous causes in your account:",
+        "**Creative fatigue** — Creative_042 has been running 22 days. Hook rate fell from 31% to 11%.",
+        "**Frequency 4.8x** — BR-Women-25-34 oversaturated. Every dollar reaches someone who saw it 5 times.",
+        "**CPM +38%** — algorithm detected the drop and is charging more to deliver.",
+        "Action: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days), split the saturated set.",
       ],
     },
     {
-      question: "Which of my ads should I pause immediately?",
+      q: "Which ads should I pause right now?",
       lines: [
-        "3 ads to cut today — each for a different reason:",
-        "**Creative_038** — CPM $18, CTR 0.4%, zero conversions in 7 days. Burning $180/day with no return.",
-        "**BR-Men-35-44 ad set** — ROAS 0.6x, frequency 5.1. You are paying to irritate an exhausted audience.",
-        "**Creative_029** — hook rate 8%. Your floor is 15%. 92% of users left in the first 3 seconds.",
-        "Combined burn: $620/day negative return. Pausing now frees budget for Creative_019 (ROAS 3.2x, underserved).",
+        "3 ads to cut today:",
+        "**Creative_038** — CPM $18, CTR 0.4%, zero conversions in 7 days. Burning $180/day.",
+        "**BR-Men-35-44 set** — ROAS 0.6x, frequency 5.1. Paying to irritate an exhausted audience.",
+        "**Creative_029** — hook rate 8%. Your floor is 15%. 92% leave in the first 3 seconds.",
+        "Combined: $620/day with negative return. Pausing frees budget for Creative_019 (ROAS 3.2x).",
       ],
     },
     {
-      question: "Write 3 hooks based on my best performing creatives.",
+      q: "Write 3 hooks from my best performing creatives.",
       lines: [
         "Based on your top 5 converters (avg hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1 —** \"You are paying $90 per click and still do not know why — your data already has the answer.\"",
-        "**Hook 2 —** \"3 of your 4 highest-spend ads have ROAS below 1x right now. Find out which one is worth keeping.\"",
-        "**Hook 3 —** \"Your best creative from last month has been paused for 9 days. A competitor is scaling the same angle.\"",
-        "Pattern from your winners: never a generic benefit — always a specific claim that forces the user to stop.",
+        "**Hook 1** — \"You are paying $90 per click and still do not know why. Your data already has the answer.\"",
+        "**Hook 2** — \"3 of your 4 highest-spend ads have ROAS below 1x right now.\"",
+        "**Hook 3** — \"Your best creative from last month has been paused 9 days. A competitor is scaling the same angle.\"",
+        "Pattern: never generic benefit — always a specific claim that forces the user to stop.",
       ],
     },
   ],
   pt: [
     {
-      question: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
+      q: "Meu ROAS caiu 40% essa semana. O que esta acontecendo?",
       lines: [
-        "Identifiquei 3 causas simultâneas na sua conta:",
-        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate caiu de 31% para 11%. O público decorou o anúncio.",
-        "**Frequência 4.8x** — conjunto BR-Mulheres-25-34 supersaturado. Cada real vai para quem já viu 5 vezes.",
-        "**CPM +38%** — o algoritmo percebeu a queda de relevância e cobra mais caro para entregar.",
-        "Ação: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias), divida o conjunto saturado em 2.",
+        "Identifiquei 3 causas simultaneas na sua conta:",
+        "**Fadiga criativa** — Creative_042 roda ha 22 dias. Hook rate caiu de 31% para 11%.",
+        "**Frequencia 4.8x** — BR-Mulheres-25-34 supersaturado. Cada real vai para quem ja viu 5 vezes.",
+        "**CPM +38%** — o algoritmo percebeu a queda e cobra mais caro para entregar.",
+        "Acao: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias), divida o conjunto.",
       ],
     },
     {
-      question: "Quais dos meus anúncios devo pausar imediatamente?",
+      q: "Quais anuncios devo pausar agora?",
       lines: [
-        "3 anúncios para cortar hoje — cada um por um motivo diferente:",
-        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias. Queima R$180/dia sem retorno.",
-        "**BR-Homens-35-44** — ROAS 0,6x, frequência 5.1. Você está pagando para irritar audiência exaurida.",
-        "**Creative_029** — hook rate 8%. Seu mínimo é 15%. 92% saem nos primeiros 3 segundos.",
-        "Total: R$620/dia com retorno negativo. Pausar libera verba para Creative_019 (ROAS 3.2x, underserved).",
+        "3 anuncios para cortar hoje:",
+        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversoes em 7 dias. Queima R$180/dia.",
+        "**BR-Homens-35-44** — ROAS 0,6x, frequencia 5.1. Audiencia exaurida.",
+        "**Creative_029** — hook rate 8%. Minimo e 15%. 92% saem nos primeiros 3 segundos.",
+        "Total: R$620/dia com retorno negativo. Pausar libera verba para Creative_019 (ROAS 3.2x).",
       ],
     },
     {
-      question: "Escreve 3 hooks baseados nos meus melhores criativos.",
+      q: "Escreve 3 hooks dos meus melhores criativos.",
       lines: [
-        "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+):",
-        "**Hook 1 —** \"Você está pagando R$90 por clique e ainda não sabe por quê — seus dados já têm a resposta.\"",
-        "**Hook 2 —** \"3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual vale manter.\"",
-        "**Hook 3 —** \"Seu melhor criativo do mês passado está parado há 9 dias. O concorrente está escalando o mesmo ângulo.\"",
-        "Padrão dos winners: nunca benefício genérico — sempre uma afirmação específica que força o usuário a parar.",
+        "Baseado nos seus 5 top converters (hook rate 34%, ROAS 3.1x+):",
+        "**Hook 1** — \"Voce esta pagando R$90 por clique e nao sabe por que. Seus dados ja tem a resposta.\"",
+        "**Hook 2** — \"3 dos seus 4 anuncios que mais gastam tem ROAS abaixo de 1x agora.\"",
+        "**Hook 3** — \"Seu melhor criativo do mes passado esta parado ha 9 dias. O concorrente esta escalando o mesmo angulo.\"",
+        "Padrao: nunca beneficio generico — sempre uma afirmacao especifica que forca o usuario a parar.",
       ],
     },
   ],
   es: [
     {
-      question: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
+      q: "Mi ROAS bajo 40% esta semana. Que esta pasando?",
       lines: [
-        "Identifiqué 3 causas simultáneas en tu cuenta:",
-        "**Fatiga creativa** — Creative_042 lleva 22 días corriendo. Hook rate cayó de 31% a 11%. La audiencia memorizó el anuncio.",
-        "**Frecuencia 4.8x** — conjunto BR-Mujeres-25-34 supersaturado. Cada peso va a quien ya vio el anuncio 5 veces.",
-        "**CPM +38%** — el algoritmo detectó la caída de relevancia y cobra más caro para entregar.",
-        "Acción: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días), divide el conjunto saturado en 2.",
+        "Identifique 3 causas simultaneas en tu cuenta:",
+        "**Fatiga creativa** — Creative_042 lleva 22 dias. Hook rate cayo de 31% a 11%.",
+        "**Frecuencia 4.8x** — BR-Mujeres-25-34 supersaturado. Cada peso va a quien ya vio 5 veces.",
+        "**CPM +38%** — el algoritmo detecto la caida y cobra mas caro.",
+        "Accion: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 dias), divide el conjunto.",
       ],
     },
     {
-      question: "¿Cuáles de mis anuncios debo pausar inmediatamente?",
+      q: "Cuales anuncios pausar ahora mismo?",
       lines: [
-        "3 anuncios para cortar hoy — cada uno por un motivo diferente:",
-        "**Creative_038** — CPM $18, CTR 0.4%, cero conversiones en 7 días. Quema $180/día sin retorno.",
-        "**BR-Hombres-35-44** — ROAS 0.6x, frecuencia 5.1. Pagas para irritar una audiencia agotada.",
-        "**Creative_029** — hook rate 8%. Tu mínimo es 15%. 92% se fueron en los primeros 3 segundos.",
-        "Total: $620/día con retorno negativo. Pausar libera presupuesto para Creative_019 (ROAS 3.2x).",
+        "3 anuncios para cortar hoy:",
+        "**Creative_038** — CPM $18, CTR 0.4%, cero conversiones en 7 dias. Quema $180/dia.",
+        "**BR-Hombres-35-44** — ROAS 0.6x, frecuencia 5.1. Audiencia agotada.",
+        "**Creative_029** — hook rate 8%. Tu minimo es 15%. 92% se van en los primeros 3 segundos.",
+        "Total: $620/dia con retorno negativo. Pausar libera presupuesto para Creative_019.",
       ],
     },
     {
-      question: "Escribe 3 hooks basados en mis mejores creativos.",
+      q: "Escribe 3 hooks de mis mejores creativos.",
       lines: [
         "Basado en tus 5 top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1 —** \"Estás pagando $90 por clic y todavía no sabes por qué — tus datos ya tienen la respuesta.\"",
-        "**Hook 2 —** \"3 de tus 4 anuncios que más gastan tienen ROAS bajo 1x ahora. Encuentra cuál vale mantener.\"",
-        "**Hook 3 —** \"Tu mejor creativo del mes pasado lleva 9 días pausado. Un competidor está escalando el mismo ángulo.\"",
-        "Patrón de tus ganadores: nunca beneficio genérico — siempre una afirmación específica que obliga al usuario a detenerse.",
+        "**Hook 1** — \"Estas pagando $90 por clic y no sabes por que. Tus datos ya tienen la respuesta.\"",
+        "**Hook 2** — \"3 de tus 4 anuncios que mas gastan tienen ROAS bajo 1x ahora.\"",
+        "**Hook 3** — \"Tu mejor creativo del mes pasado lleva 9 dias pausado. Un competidor escala el mismo angulo.\"",
+        "Patron: nunca beneficio generico — siempre una afirmacion especifica que obliga a detenerse.",
       ],
     },
   ],
 };
 
-// ─── Streaming demo hook (ref-based, no stale closures) ──────────────────────
-function useStreamingDemo(lang: Lang) {
-  const [convoIdx, setConvoIdx] = useState(0);
-  const [phase, setPhase] = useState<'idle'|'typing-q'|'thinking'|'streaming'|'done'>('idle');
+// ─── Streaming hook (ref-based, zero stale closures) ──────────────────────────
+function useStreaming(lang: Lang) {
+  const [qi, setQi] = useState(0);
+  const [phase, setPhase] = useState<'idle'|'typing'|'thinking'|'streaming'|'done'>('idle');
   const [typedQ, setTypedQ] = useState('');
-  const [visibleLines, setVisibleLines] = useState<string[]>([]);
-  const [streamingLine, setStreamingLine] = useState('');
+  const [doneLines, setDoneLines] = useState<string[]>([]);
+  const [activeLine, setActiveLine] = useState('');
+  const ref = useRef({ lang, qa: DEMO_QA['en'], qi: 0, loop: true, timer: null as ReturnType<typeof setTimeout> | null });
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stateRef = useRef({ lang, hasInteracted: false });
-  stateRef.current.lang = lang;
+  const stop = () => { if (ref.current.timer) { clearTimeout(ref.current.timer); ref.current.timer = null; } };
 
-  const stopAll = () => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-  };
+  const play = (idx: number) => {
+    stop();
+    ref.current.qi = idx;
+    setQi(idx);
+    const qa = ref.current.qa[idx];
+    setPhase('idle'); setTypedQ(''); setDoneLines([]); setActiveLine('');
 
-  const runConvoRef = useRef<(idx: number) => void>((_idx: number) => {});
-
-  runConvoRef.current = (idx: number) => {
-    const convo = DEMO_CONVERSATIONS[stateRef.current.lang][idx];
-    stopAll();
-    setConvoIdx(idx);
-    setPhase('idle');
-    setTypedQ('');
-    setVisibleLines([]);
-    setStreamingLine('');
-
-    let qi = 0;
-    const typeQ = () => {
-      qi++;
-      setTypedQ(convo.question.slice(0, qi));
-      setPhase('typing-q');
-      if (qi < convo.question.length) {
-        timerRef.current = setTimeout(typeQ, qi < 5 ? 55 : Math.random() * 38 + 20);
+    let ci = 0;
+    const typeChar = () => {
+      ci++;
+      setTypedQ(qa.q.slice(0, ci));
+      setPhase('typing');
+      if (ci < qa.q.length) {
+        ref.current.timer = setTimeout(typeChar, ci < 4 ? 60 : Math.random() * 38 + 18);
       } else {
         setPhase('thinking');
-        timerRef.current = setTimeout(startStream, 1000);
+        ref.current.timer = setTimeout(streamLines, 950);
       }
     };
 
-    const startStream = () => {
+    const streamLines = () => {
       setPhase('streaming');
-      let li = 0;
-      let ci = 0;
+      let li = 0, lci = 0;
       const tick = () => {
-        const line = convo.lines[li];
-        if (ci <= line.length) {
-          setStreamingLine(line.slice(0, ci));
-          ci++;
-          timerRef.current = setTimeout(tick, ci < 2 ? 0 : Math.random() * 16 + 8);
+        const line = qa.lines[li];
+        if (lci <= line.length) {
+          setActiveLine(line.slice(0, lci));
+          lci++;
+          ref.current.timer = setTimeout(tick, lci < 2 ? 0 : Math.random() * 15 + 7);
         } else {
-          setVisibleLines(prev => [...prev, line]);
-          setStreamingLine('');
-          li++;
-          ci = 0;
-          if (li < convo.lines.length) {
-            timerRef.current = setTimeout(tick, 160);
+          setDoneLines(prev => [...prev, line]);
+          setActiveLine('');
+          li++; lci = 0;
+          if (li < qa.lines.length) {
+            ref.current.timer = setTimeout(tick, 150);
           } else {
             setPhase('done');
-            if (!stateRef.current.hasInteracted) {
-              timerRef.current = setTimeout(() => {
-                const nextIdx = (idx + 1) % DEMO_CONVERSATIONS[stateRef.current.lang].length;
-                runConvoRef.current(nextIdx);
-              }, 4000);
+            if (ref.current.loop) {
+              const next = (idx + 1) % ref.current.qa.length;
+              ref.current.timer = setTimeout(() => play(next), 3800);
             }
           }
         }
       };
-      timerRef.current = setTimeout(tick, 0);
+      ref.current.timer = setTimeout(tick, 0);
     };
 
-    timerRef.current = setTimeout(typeQ, 280);
+    ref.current.timer = setTimeout(typeChar, 260);
   };
 
   useEffect(() => {
-    stateRef.current.hasInteracted = false;
-    const t = setTimeout(() => runConvoRef.current(0), 700);
-    return () => { clearTimeout(t); stopAll(); };
+    ref.current.lang = lang;
+    ref.current.qa = DEMO_QA[lang];
+    ref.current.loop = true;
+    stop();
+    setQi(0); setPhase('idle'); setTypedQ(''); setDoneLines([]); setActiveLine('');
+    const t = setTimeout(() => play(0), 600);
+    return () => { clearTimeout(t); stop(); };
   }, [lang]);
 
-  const jumpTo = (idx: number) => {
-    stateRef.current.hasInteracted = true;
-    runConvoRef.current(idx);
+  const jump = (idx: number) => {
+    ref.current.loop = false;
+    play(idx);
   };
 
-  return { convoIdx, phase, typedQ, visibleLines, streamingLine, jumpTo };
+  return { qi, phase, typedQ, doneLines, activeLine, jump };
 }
 
-function renderLine(text: string, style: React.CSSProperties): React.ReactElement {
+// ─── Render bold markdown ─────────────────────────────────────────────────────
+function MdLine({ text, style }: { text: string; style: React.CSSProperties }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <p style={style}>
-      {parts.map((part, i) =>
-        part.startsWith('**') && part.endsWith('**')
-          ? <strong key={i} style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600 }}>{part.slice(2,-2)}</strong>
-          : <span key={i}>{part}</span>
+      {parts.map((p, i) =>
+        p.startsWith('**') && p.endsWith('**')
+          ? <strong key={i} style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>{p.slice(2,-2)}</strong>
+          : <span key={i}>{p}</span>
       )}
     </p>
   );
 }
 
-function ThinkingDots() {
+// ─── Thinking dots ────────────────────────────────────────────────────────────
+function Dots() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '10px 0' }}>
+    <div style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
       {[0,1,2].map(i => (
-        <motion.div
-          key={i}
+        <motion.div key={i}
           style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }}
-          animate={{ opacity: [0.25, 1, 0.25], scale: [0.8, 1.15, 0.8] }}
+          animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.1, 0.8] }}
           transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: 'easeInOut' }}
         />
       ))}
@@ -635,162 +627,162 @@ function ThinkingDots() {
   );
 }
 
+// ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
-  const convos = DEMO_CONVERSATIONS[lang];
-  const { convoIdx, phase, typedQ, visibleLines, streamingLine, jumpTo } = useStreamingDemo(lang);
+  const qa = DEMO_QA[lang];
+  const { qi, phase, typedQ, doneLines, activeLine, jump } = useStreaming(lang);
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [visibleLines, streamingLine, phase]);
+  }, [doneLines, activeLine, phase]);
 
-  const msgStyle: React.CSSProperties = {
-    fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.6)',
-    lineHeight: 1.78, margin: '0 0 8px', fontWeight: 400,
-  };
+  const ms: React.CSSProperties = { fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.58)', lineHeight: 1.75, margin: '0 0 8px', fontWeight: 400 };
 
-  const h1 = t.hero_h1;
-  const h1Parts = h1.indexOf('\n') >= 0 ? h1.split('\n') : [h1];
-  const badgeLabel = lang === 'pt' ? 'IA PARA PERFORMANCE MARKETING' : lang === 'es' ? 'IA PARA PERFORMANCE MARKETING' : 'AI FOR PERFORMANCE MARKETING';
-  const sampleLabel = lang === 'pt' ? 'Conta demo · Meta conectado' : lang === 'es' ? 'Cuenta demo · Meta conectado' : 'Demo account · Meta connected';
-  const questLabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
-  const demoNote = lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo account. With yours, real data.';
-  const demoCTA = lang === 'pt' ? 'Usar com minha conta' : lang === 'es' ? 'Usar con mi cuenta' : 'Use with my account';
-  const connectedTxt = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
-  const proofPoints: string[] = [
-    lang === 'pt' ? 'Conecta ao Meta Ads em 1 clique' : lang === 'es' ? 'Conecta Meta Ads en 1 clic' : 'Connects to Meta Ads in 1 click',
-    lang === 'pt' ? 'Responde com seus dados reais' : lang === 'es' ? 'Responde con tus datos reales' : 'Answers with your real data, not templates',
-    lang === 'pt' ? 'Cancele antes de 24h, sem cobranca' : lang === 'es' ? 'Cancela antes de 24h, sin cobro' : 'Cancel within 24h, no charge',
-  ];
+  const badge = lang === 'pt' ? 'IA PARA PERFORMANCE MARKETING' : lang === 'es' ? 'IA PARA PERFORMANCE MARKETING' : 'AI FOR PERFORMANCE MARKETING';
+  const qlabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
+  const note = lang === 'pt' ? 'Conta demo. Com a sua, usa dados reais.' : lang === 'es' ? 'Cuenta demo. Con la tuya, usa datos reales.' : 'Demo. With your account, it uses real data.';
+  const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
+  const sample = lang === 'pt' ? 'Demo · Meta conectado' : lang === 'es' ? 'Demo · Meta conectado' : 'Demo · Meta connected';
+  const conn = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
+  const h1 = t.hero_h1 || '';
+  const h1p = h1.split('\n');
+  const proofs: string[] = lang === 'pt'
+    ? ['Conecta ao Meta Ads em 1 clique', 'Responde com seus dados reais', 'Cancele antes de 24h, sem cobranca']
+    : lang === 'es'
+    ? ['Conecta Meta Ads en 1 clic', 'Responde con tus datos reales', 'Cancela antes de 24h, sin cobro']
+    : ['Connects to Meta Ads in 1 click', 'Answers with your real data, not templates', 'Cancel within 24h, no charge'];
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,56px)', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(14,165,233,0.07) 0%, transparent 55%)', pointerEvents: 'none' }} />
+    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,60px)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 55% at 50% -10%, rgba(14,165,233,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 'clamp(32px,5vw,72px)', alignItems: 'center' }} className="hero-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'clamp(28px,5vw,64px)', alignItems: 'center' }} className="hero-grid">
 
-          {/* Left: copy */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.07)', marginBottom: 24 }}>
+          {/* ── Copy ── */}
+          <motion.div initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.75, ease: [0.16,1,0.3,1] }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.07)', marginBottom: 22 }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-              <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{badgeLabel}</span>
+              <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{badge}</span>
             </div>
 
-            <h1 style={{ fontFamily: F, fontSize: 'clamp(38px,5.5vw,64px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.98, margin: '0 0 22px', color: '#fff' }}>
-              <span style={{ display: 'block' }}>{h1Parts[0]}</span>
-              {h1Parts.length > 1 && (
-                <span style={{ display: 'block', background: 'linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.82), rgba(255,255,255,0.5))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  {h1Parts[1]}
+            <h1 style={{ fontFamily: F, fontSize: 'clamp(36px,5.2vw,62px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.97, margin: '0 0 20px', color: '#fff' }}>
+              <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
+              {h1p[1] && (
+                <span style={{ display: 'block', background: 'linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.78) 50%, rgba(255,255,255,0.45) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {h1p[1]}
                 </span>
               )}
             </h1>
 
-            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.6vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, margin: '0 0 32px', maxWidth: 400 }}>
+            <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.5vw,16px)', color: 'rgba(255,255,255,0.36)', lineHeight: 1.7, margin: '0 0 28px', maxWidth: 390 }}>
               {t.hero_sub}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
               <button onClick={onCTA}
-                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 32px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s' }}
+                style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '14px 30px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '-0.015em', alignSelf: 'flex-start', transition: 'transform 0.15s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
                 {t.hero_cta} <ArrowRight size={15} />
               </button>
-              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.32)', textDecoration: 'none', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+              <a href="#how" style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, transition: 'color 0.15s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.32)'; }}>
-                {t.hero_see} →
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; }}>
+                {t.hero_see} &rarr;
               </a>
             </div>
 
-            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.16)', marginBottom: 20 }}>
-              {'\u{1F512}'} {t.hero_fine}
-            </p>
+            <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.15)', marginBottom: 18 }}>&#128274; {t.hero_fine}</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-              {proofPoints.map((point, i) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {proofs.map((pt, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.35)" strokeWidth="1"/>
+                    <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.4)" strokeWidth="1"/>
                     <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)' }}>{point}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{pt}</span>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Right: live product */}
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16,1,0.3,1] }}>
-            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 0 0 1px rgba(255,255,255,0.02), 0 32px 80px rgba(0,0,0,0.7)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* ── Product window ── */}
+          <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.85, delay: 0.14, ease: [0.16,1,0.3,1] }}>
+            <div style={{ borderRadius: 18, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 60px rgba(14,165,233,0.03)' }}>
+              {/* Browser bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 13px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', gap: 5 }}>
-                  {(['rgba(255,95,86,0.45)','rgba(255,189,46,0.45)','rgba(39,201,63,0.45)'] as string[]).map((c,i) => (
+                  {(['rgba(255,95,86,0.5)','rgba(255,189,46,0.5)','rgba(39,201,63,0.5)'] as string[]).map((c,i) => (
                     <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />
                   ))}
                 </div>
-                <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 6, maxWidth: 200, margin: '0 auto' }}>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 6, maxWidth: 195, margin: '0 auto' }}>
                   <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9' }} />
-                  <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(14,165,233,0.55)', fontWeight: 700 }}>{sampleLabel}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
+                  <div style={{ width: 4.5, height: 4.5, borderRadius: '50%', background: '#0ea5e9', opacity: 0.7 }} />
+                  <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(14,165,233,0.5)', fontWeight: 700 }}>{sample}</span>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', background: '#06061a', minHeight: 380 }}>
-                <div style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 12 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
-                    <div>
-                      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: '#fff', margin: 0 }}>FitCore Brasil</p>
-                      <p style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(14,165,233,0.6)', margin: '1px 0 0' }}>Meta · 22 campaigns</p>
+              {/* App body */}
+              <div style={{ display: 'flex', background: '#06061a' }}>
+                {/* Sidebar */}
+                <div style={{ width: 200, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '11px 7px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 9px', borderRadius: 9, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.1)', marginBottom: 10 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: 600, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FitCore Brasil</p>
+                      <p style={{ fontFamily: F, fontSize: 9, color: 'rgba(14,165,233,0.6)', margin: '1px 0 0' }}>Meta &#183; 22 campaigns</p>
                     </div>
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 3 }}>{questLabel}</p>
-                  {convos.map((c, i) => (
-                    <button key={i} onClick={() => jumpTo(i)}
-                      style={{ display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9, background: convoIdx === i ? 'rgba(255,255,255,0.07)' : 'transparent', border: convoIdx === i ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
-                      onMouseEnter={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                      onMouseLeave={e => { if (convoIdx !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                      <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1, opacity: convoIdx === i ? 1 : 0.4 }}>{['📉','⚡','✍️'][i]}</span>
-                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: convoIdx === i ? 500 : 400, color: convoIdx === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.45 }}>{c.question.slice(0,42)}{c.question.length > 42 ? '...' : ''}</span>
+                  <p style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.14)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 3px', marginBottom: 2 }}>{qlabel}</p>
+                  {qa.map((item, i) => (
+                    <button key={i} onClick={() => jump(i)}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '7px 9px', borderRadius: 8, background: qi === i ? 'rgba(255,255,255,0.07)' : 'transparent', border: qi === i ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
+                      onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      <span style={{ fontSize: 11, flexShrink: 0, opacity: qi === i ? 1 : 0.4, marginTop: 1 }}>{['&#x1F4C9;','&#x26A1;','&#x270D;'][i]}</span>
+                      <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: qi === i ? 500 : 400, color: qi === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{item.q.slice(0,38)}{item.q.length > 38 ? '...' : ''}</span>
                     </button>
                   ))}
                 </div>
 
+                {/* Chat */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#fff' }}>✶</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ width: 19, height: 19, borderRadius: 6, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff' }}>&#10022;</div>
                     <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399' }} />
-                      <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(52,211,153,0.6)' }}>{connectedTxt}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
+                      <div style={{ width: 4.5, height: 4.5, borderRadius: '50%', background: '#34d399' }} />
+                      <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(52,211,153,0.6)' }}>{conn}</span>
                     </div>
                   </div>
 
-                  <div ref={chatRef} style={{ flex: 1, padding: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div ref={chatRef} style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 280, maxHeight: 340 }}>
                     {phase !== 'idle' && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <div style={{ maxWidth: '80%', padding: '9px 12px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                          <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.55, margin: 0 }}>
+                        <div style={{ maxWidth: '82%', padding: '8px 11px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                          <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.5, margin: 0 }}>
                             {typedQ}
-                            {phase === 'typing-q' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} />}
+                            {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 12, background: '#fff', marginLeft: 1, verticalAlign: 'middle' }} />}
                           </p>
                         </div>
                       </div>
                     )}
                     {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                        <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✶</div>
+                      <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 10, color: '#fff' }}>&#10022;</div>
                         <div style={{ flex: 1 }}>
-                          {phase === 'thinking' && <ThinkingDots />}
+                          {phase === 'thinking' && <Dots />}
                           {(phase === 'streaming' || phase === 'done') && (
                             <>
-                              {visibleLines.map((line, i) => renderLine(line, { ...msgStyle, margin: (i === visibleLines.length - 1 && !streamingLine) ? '0' : '0 0 8px' }))}
-                              {streamingLine && renderLine(streamingLine, { ...msgStyle, margin: '0' })}
+                              {doneLines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === doneLines.length - 1 && !activeLine) ? '0' : '0 0 7px' }} />)}
+                              {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: '0' }} />}
                             </>
                           )}
                         </div>
@@ -798,25 +790,25 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     )}
                   </div>
 
-                  <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.2)', margin: 0 }}>{demoNote}</p>
+                  <div style={{ padding: '9px 13px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>{note}</p>
                     <button onClick={onCTA}
-                      style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 8, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
+                      style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, padding: '6px 12px', borderRadius: 7, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'opacity 0.15s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                      {demoCTA} →
+                      {ctabtn} &rarr;
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 16, opacity: 0.28 }}>
-              <span style={{ fontFamily: F, fontSize: 9.5, color: '#fff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>BUILT ON</span>
-              <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)' }} />
-              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
-              <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.2)' }} />
-              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 14, opacity: 0.25 }}>
+              <span style={{ fontFamily: F, fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
+              <div style={{ width: 1, height: 11, background: 'rgba(255,255,255,0.2)' }} />
+              <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+              <div style={{ width: 1, height: 11, background: 'rgba(255,255,255,0.2)' }} />
+              <span style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, color: '#fff' }}>OpenAI</span>
             </div>
           </motion.div>
         </div>
