@@ -18,7 +18,7 @@ const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
     hero_badge: "AI FOR PERFORMANCE MARKETING",
-    hero_h1: "Your ads already\nknow the answer.",
+    hero_h1: "Your ads know\nmore than you think.",
     hero_sub: "Connect Meta Ads. Ask anything. Get answers with your real data — not generic advice.",
     hero_cta: "Try free for 1 day", hero_see: "See how it works",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
@@ -81,7 +81,7 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA PARA PERFORMANCE MARKETING",
-    hero_h1: "Seus anúncios já\nsabem a resposta.",
+    hero_h1: "Seus anúncios sabem\nmais do que você pensa.",
     hero_sub: "Conecte o Meta Ads. Pergunte qualquer coisa. Receba respostas com seus dados reais — não conselhos genéricos.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
@@ -144,7 +144,7 @@ const T: Record<Lang, Record<string, string>> = {
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
     hero_badge: "IA PARA PERFORMANCE MARKETING",
-    hero_h1: "Tus anuncios ya\nsaben la respuesta.",
+    hero_h1: "Tus anuncios saben\nmás de lo que crees.",
     hero_sub: "Conecta Meta Ads. Pregunta lo que quieras. Recibe respuestas con tus datos reales.",
     hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona",
     hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
@@ -328,7 +328,7 @@ function Section({ children, id, className = "", noPadding = false }: { children
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className={className}
-      style={noPadding ? {} : { padding: "clamp(64px,8vw,120px) clamp(16px,4vw,32px)" }}
+      style={noPadding ? {} : { padding: "clamp(32px,5vw,72px) clamp(16px,4vw,32px)" }}
     >
       {children}
     </motion.section>
@@ -660,7 +660,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   const questLabel = lang === 'pt' ? 'PERGUNTAS' : lang === 'es' ? 'PREGUNTAS' : 'QUESTIONS';
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(80px,10vw,120px) clamp(16px,4vw,40px) clamp(40px,6vw,80px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(72px,9vw,100px) clamp(16px,4vw,40px) clamp(32px,5vw,56px)', position: 'relative', overflow: 'hidden' }}>
       {/* Background gradient */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(14,165,233,0.07) 0%, transparent 55%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(5,5,8,0.5))', pointerEvents: 'none' }} />
@@ -677,7 +677,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
 
             <h1 style={{ fontFamily: F, fontSize: 'clamp(38px,5.5vw,64px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 0.98, margin: '0 0 22px', color: '#fff', whiteSpace: 'pre-line' }}>
-              {h1}
+              {h1.split('\n').map((line, i) => (
+                <span key={i} style={{ display: 'block' }}>
+                  {i === 1
+                    ? <span style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.55) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{line}</span>
+                    : line}
+                </span>
+              ))}
             </h1>
 
             <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.6vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, margin: '0 0 36px', maxWidth: 400 }}>
@@ -699,13 +705,20 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
 
             <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 20 }}>🔒 {fineTxt}</p>
-
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '14px 24px', marginTop: 36, paddingTop: 28, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-              {([['stat_1','stat_1_label'],['stat_2','stat_2_label'],['stat_3','stat_3_label'],['stat_4','stat_4_label']] as [string,string][]).map(([k,lk]) => (
-                <AnimatedStat key={k} value={t[k]} label={t[lk]} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24, paddingTop: 22, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              {([
+                lang === 'pt' ? 'Conecta ao Meta Ads em 1 clique' : lang === 'es' ? 'Conecta Meta Ads en 1 clic' : 'Connects to Meta Ads in 1 click',
+                lang === 'pt' ? 'Responde com seus dados reais, não genéricos' : lang === 'es' ? 'Responde con tus datos reales, no genéricos' : 'Answers with your real data, not generic advice',
+                lang === 'pt' ? 'Cancele antes de 24h, sem cobrança' : lang === 'es' ? 'Cancela antes de 24h, sin cobro' : 'Cancel within 24h, no charge',
+              ] as string[]).map((point, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.4)" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>{point}</span>
+                </div>
               ))}
             </div>
+
+
           </motion.div>
 
           {/* Right: live product */}
@@ -1223,7 +1236,10 @@ export default function IndexNew() {
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
             .demo-sidebar{display:none!important}
+            .hero-grid{grid-template-columns:1fr!important}
           }
+          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+          .cursor-blink{animation:blink 1s step-end infinite}
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
