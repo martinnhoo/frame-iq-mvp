@@ -615,9 +615,9 @@ const MdLine = React.forwardRef<HTMLParagraphElement, { text: string; style: Rea
 );
 
 // ─── Thinking dots ────────────────────────────────────────────────────────────
-function Dots() {
+const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
   return (
-    <div style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
+    <div ref={ref} style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
       {[0,1,2].map(i => (
         <motion.div key={i}
           style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }}
@@ -627,7 +627,7 @@ function Dots() {
       ))}
     </div>
   );
-}
+});
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
