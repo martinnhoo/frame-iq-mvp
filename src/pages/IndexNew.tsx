@@ -676,45 +676,23 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.16,1,0.3,1] }}
-        style={{ textAlign: 'center', marginBottom: 'clamp(24px,4vw,40px)', maxWidth: 720, position: 'relative' }}
+        style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)', maxWidth: 860, position: 'relative' }}
       >
         {/* Badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(14,165,233,0.25)', background: 'rgba(14,165,233,0.06)', marginBottom: 18 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(14,165,233,0.25)', background: 'rgba(14,165,233,0.06)', marginBottom: 14 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
           <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#0ea5e9', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
             {lang === 'pt' ? 'IA para Performance Marketing' : lang === 'es' ? 'IA para Performance Marketing' : 'AI for Performance Marketing'}
           </span>
         </div>
 
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(32px,4.5vw,56px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.0, margin: '0 0 16px', color: '#fff' }}>
-          <span style={{ display: 'block' }}>{h1p[0] || h1}</span>
-          {h1p[1] && <span style={{ display: 'block', background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{h1p[1]}</span>}
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(26px,3.8vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 12px', color: '#fff', whiteSpace: 'nowrap' }}>
+          {h1p[0] || h1}{h1p[1] && <> <span style={{ background: 'linear-gradient(90deg, #0ea5e9 0%, #34d399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{h1p[1]}</span></>}
         </h1>
 
-        <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.4vw,17px)', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, margin: '0 auto 24px', maxWidth: 520 }}>
+        <p style={{ fontFamily: F, fontSize: 'clamp(13px,1.2vw,15px)', color: 'rgba(255,255,255,0.58)', lineHeight: 1.55, margin: '0 auto', maxWidth: 480 }}>
           {t.hero_sub}
         </p>
-
-        {/* CTAs inline */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 15, fontWeight: 800, padding: '13px 28px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, letterSpacing: '-0.01em', transition: 'transform 0.15s, box-shadow 0.15s', boxShadow: '0 0 0 0 rgba(255,255,255,0)' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 32px rgba(255,255,255,0.15)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)'; }}>
-            {t.hero_cta} <ArrowRight size={15} />
-          </button>
-          <div style={{ display: 'flex', gap: 16 }}>
-            {proofs.map((pt, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
-                  <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1"/>
-                  <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.50)' }}>{pt}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </motion.div>
 
       {/* ── Central Demo Window ── */}
@@ -884,13 +862,32 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
         </div>
 
-        {/* Built on strip */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16, opacity: 0.35 }}>
-          <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
-          <div style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.2)' }} />
-          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
-          <div style={{ width: 1, height: 10, background: 'rgba(255,255,255,0.2)' }} />
-          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+        {/* CTA + proofs abaixo da janela */}
+        <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <button onClick={onCTA}
+            style={{ fontFamily: F, fontSize: 16, fontWeight: 800, padding: '15px 36px', borderRadius: 13, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.01em', transition: 'transform 0.15s, box-shadow 0.15s', boxShadow: '0 0 0 0 rgba(255,255,255,0)' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 40px rgba(255,255,255,0.18)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)'; }}>
+            {t.hero_cta} <ArrowRight size={16} />
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {proofs.map((pt, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+                  <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1"/>
+                  <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, opacity: 0.3, marginTop: 2 }}>
+            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
+            <div style={{ width: 1, height: 9, background: 'rgba(255,255,255,0.3)' }} />
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+            <div style={{ width: 1, height: 9, background: 'rgba(255,255,255,0.3)' }} />
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+          </div>
         </div>
       </motion.div>
     </section>
