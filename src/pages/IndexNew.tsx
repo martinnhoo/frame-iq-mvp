@@ -375,37 +375,45 @@ const TOOLS_DATA = [
 function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string, string>; lang: Lang; setLang: (l: Lang) => void }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+    const fn = () => setScrolled(window.scrollY > 32);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
   }, []);
 
   return (
     <nav style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-      borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
-      background: scrolled ? "rgba(5,5,8,0.85)" : "transparent",
-      backdropFilter: scrolled ? "blur(24px) saturate(1.2)" : "none",
-      transition: "all 0.3s ease",
-      padding: "0 clamp(16px, 4vw, 40px)",
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+      transition: 'background 0.4s, border-color 0.4s, backdrop-filter 0.4s',
+      background: scrolled ? 'rgba(5,5,8,0.85)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(20px) saturate(1.8)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(1.8)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
     }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+      <div style={{ maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', height: 64, padding: '0 clamp(16px,4vw,32px)' }}>
         <Logo size="lg" />
-        <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: 32 }}>
-          {[[t.nav_how, "#how"], [t.nav_for, "#for"], [t.nav_pricing, "#pricing"]].map(([label, href]) => (
-            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", transition: "color 0.2s", fontWeight: 500 }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
+        <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 36, marginLeft: 48, flex: 1 }}>
+          {([[t.nav_how,'#how'],[t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
+            <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.45)', textDecoration: 'none', transition: 'color 0.15s', letterSpacing: '-0.01em' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.9)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)'; }}>
               {label}
             </a>
           ))}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="nav-links"><LangSwitcher lang={lang} setLang={setLang} /></span>
-          <button onClick={() => window.location.href = "/login"} className="nav-links"
-            style={{ fontFamily: F, fontSize: 13, padding: "8px 16px", borderRadius: 10, background: "transparent", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontWeight: 500 }}>{t.nav_signin}</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+          <LangSwitcher lang={lang} setLang={setLang} />
+          <button className="nav-links" onClick={() => window.location.href = '/login'}
+            style={{ fontFamily: F, fontSize: 13, padding: '8px 18px', borderRadius: 10, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.75)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+            {t.nav_signin}
+          </button>
           <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: "clamp(11px,2.5vw,13px)", fontWeight: 700, padding: "9px clamp(14px,3vw,22px)", borderRadius: 10, background: "#fff", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{t.nav_cta}</button>
+            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+            {t.nav_cta}
+          </button>
         </div>
       </div>
     </nav>
@@ -415,55 +423,58 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   return (
-    <section style={{ paddingTop: "clamp(120px,16vw,200px)", paddingBottom: "clamp(60px,8vw,100px)", position: "relative", overflow: "hidden" }}>
-      {/* Ambient glow */}
-      <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: 1000, height: 600, background: "radial-gradient(ellipse 70% 50%, rgba(14,165,233,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 80, right: "15%", width: 300, height: 300, background: "radial-gradient(circle, rgba(6,182,212,0.04) 0%, transparent 70%)", pointerEvents: "none" }} />
+    <section style={{ paddingTop: 'clamp(120px,14vw,180px)', paddingBottom: 'clamp(40px,6vw,80px)', position: 'relative', overflow: 'hidden', textAlign: 'center', padding: 'clamp(120px,14vw,180px) clamp(16px,4vw,32px) clamp(40px,6vw,80px)' }}>
+      {/* Noise texture overlay */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.03\'/%3E%3C/svg%3E")', pointerEvents: 'none', opacity: 0.4 }} />
+      {/* Radial glow */}
+      <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', width: '70vw', height: '50vw', maxWidth: 900, maxHeight: 600, background: 'radial-gradient(ellipse 60% 50%, rgba(14,165,233,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
-      <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", position: "relative", padding: "0 clamp(16px,4vw,32px)" }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 999, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 32 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 8px rgba(52,211,153,0.4)" }} />
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}>{t.hero_badge}</span>
+      <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative' }}>
+        {/* Eyebrow */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', marginBottom: 28 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399' }} />
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{t.hero_badge}</span>
           </div>
         </motion.div>
 
+        {/* H1 */}
         <motion.h1
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontFamily: F, fontSize: "clamp(40px,7vw,80px)", fontWeight: 900, letterSpacing: "-0.045em", lineHeight: 1.0, margin: "0 0 24px", color: "#fff", whiteSpace: "pre-line" }}
+          transition={{ duration: 0.85, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          style={{ fontFamily: F, fontSize: 'clamp(44px,7.5vw,88px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.97, margin: '0 0 28px', color: '#fff', whiteSpace: 'pre-line' }}
         >
           {t.hero_h1}
         </motion.h1>
 
+        {/* Sub */}
         <motion.p
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontFamily: F, fontSize: "clamp(15px,2vw,19px)", color: "rgba(255,255,255,0.4)", lineHeight: 1.65, maxWidth: 520, margin: "0 auto 40px", fontWeight: 400 }}
+          transition={{ duration: 0.7, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          style={{ fontFamily: F, fontSize: 'clamp(15px,2vw,18px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 40px', fontWeight: 400 }}
         >
           {t.hero_sub}
         </motion.p>
 
+        {/* CTAs */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 14 }}
         >
           <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: "clamp(14px,2.5vw,16px)", fontWeight: 800, padding: "16px 36px", borderRadius: 14, background: "#fff", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, letterSpacing: "-0.01em", boxShadow: "0 0 60px rgba(255,255,255,0.08), 0 1px 2px rgba(255,255,255,0.1)", transition: "transform 0.2s, box-shadow 0.2s" }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 80px rgba(255,255,255,0.12), 0 4px 12px rgba(255,255,255,0.1)"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 60px rgba(255,255,255,0.08), 0 1px 2px rgba(255,255,255,0.1)"; }}
-          >
-            {t.hero_cta} <ArrowRight size={16} />
+            style={{ fontFamily: F, fontSize: 'clamp(13px,2vw,15px)', fontWeight: 800, padding: '15px clamp(24px,4vw,40px)', borderRadius: 13, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, letterSpacing: '-0.015em', transition: 'transform 0.18s, opacity 0.18s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
+            {t.hero_cta} <ArrowRight size={15} />
           </button>
           <a href="#how"
-            style={{ fontFamily: F, fontSize: 14, fontWeight: 500, padding: "16px 28px", borderRadius: 14, background: "transparent", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textDecoration: "none", display: "flex", alignItems: "center", transition: "border-color 0.2s, color 0.2s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
-          >
+            style={{ fontFamily: F, fontSize: 14, fontWeight: 500, padding: '15px 28px', borderRadius: 13, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', transition: 'color 0.18s, border-color 0.18s' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.7)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}>
             {t.hero_see}
           </a>
         </motion.div>
@@ -471,27 +482,24 @@ function Hero({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+          style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)', letterSpacing: '-0.005em' }}
         >
-          <span style={{ opacity: 0.6 }}>🔒</span> {t.hero_fine}
+          🔒 {t.hero_fine}
         </motion.p>
-      </div>
 
-      {/* Stats strip */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        style={{ maxWidth: 700, margin: "64px auto 0", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, padding: "0 clamp(16px,4vw,32px)" }}
-      >
-        {[["stat_1", "stat_1_label"], ["stat_2", "stat_2_label"], ["stat_3", "stat_3_label"], ["stat_4", "stat_4_label"]].map(([k, lk], i) => (
-          <React.Fragment key={k}>
-            {i > 0 && <div style={{ display: "none" }} />}
-            <AnimatedStat value={t[k]} label={t[lk]} />
-          </React.Fragment>
-        ))}
-      </motion.div>
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0, maxWidth: 640, margin: '56px auto 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 40 }}
+        >
+          {([['stat_1','stat_1_label'],['stat_2','stat_2_label'],['stat_3','stat_3_label'],['stat_4','stat_4_label']] as [string,string][]).map(([k,lk]) => (
+            <AnimatedStat key={k} value={t[k]} label={t[lk]} />
+          ))}
+        </motion.div>
+      </div>
     </section>
   );
 }
@@ -503,9 +511,9 @@ function ProductDemo({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, 
   const answers = DEMO_ANSWERS[lang];
 
   const QS = [
-    { emoji: "📉", short: t.demo_q1_short, full: t.demo_q1_full },
-    { emoji: "⚡", short: t.demo_q2_short, full: t.demo_q2_full },
-    { emoji: "✍️", short: t.demo_q3_short, full: t.demo_q3_full },
+    { emoji: '📉', short: t.demo_q1_short, full: t.demo_q1_full },
+    { emoji: '⚡', short: t.demo_q2_short, full: t.demo_q2_full },
+    { emoji: '✍️', short: t.demo_q3_short, full: t.demo_q3_full },
   ];
 
   const selectQ = (id: number) => {
@@ -518,89 +526,101 @@ function ProductDemo({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, 
   const currentAnswer = active !== null ? answers[active] : null;
 
   return (
-    <Section id="demo">
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "rgba(14,165,233,0.6)" }}>{t.demo_label}</span>
+    <section id="demo" style={{ padding: '0 clamp(16px,4vw,32px) clamp(64px,8vw,120px)' }}>
+      <div style={{ maxWidth: 1020, margin: '0 auto' }}>
+        {/* Label */}
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{t.demo_label}</span>
         </div>
 
         {/* Product window */}
-        <div style={{ borderRadius: 24, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 0 120px rgba(14,165,233,0.04), 0 40px 80px rgba(0,0,0,0.6)", background: "#08081a" }}>
+        <div style={{ borderRadius: 22, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 40px 120px rgba(0,0,0,0.7)' }}>
           {/* Browser chrome */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", background: "rgba(255,255,255,0.015)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {["rgba(255,96,96,0.35)","rgba(255,190,0,0.35)","rgba(40,200,80,0.35)"].map((c, i) => (
-                <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', gap: 5.5 }}>
+              {(['rgba(255,95,86,0.5)','rgba(255,189,46,0.5)','rgba(39,201,63,0.5)'] as string[]).map((c, i) => (
+                <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
               ))}
             </div>
-            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "4px 12px", display: "flex", alignItems: "center", gap: 6, maxWidth: 240, margin: "0 auto" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "'DM Mono', monospace" }}>adbrief.pro/ai</span>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3.5px 12px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 230, margin: '0 auto' }}>
+              <div style={{ width: 5.5, height: 5.5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', fontFamily: "'SF Mono','DM Mono',monospace", letterSpacing: '-0.01em' }}>adbrief.pro/ai</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', opacity: 0.7 }} />
+              <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(14,165,233,0.55)', fontWeight: 600, letterSpacing: '0.02em' }}>{t.demo_sample}</span>
             </div>
           </div>
 
-          {/* Layout */}
-          <div style={{ display: "flex", minHeight: 420 }}>
+          {/* Two-column layout */}
+          <div style={{ display: 'flex', background: '#07071a' }}>
             {/* Sidebar */}
-            <div className="demo-sidebar" style={{ width: 260, flexShrink: 0, borderRight: "1px solid rgba(255,255,255,0.04)", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <div className="demo-sidebar" style={{ width: 256, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.04)', padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Account chip */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.1)", marginBottom: 16 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.15))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, color: "#fff", flexShrink: 0 }}>F</div>
-                <div>
-                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "#fff", margin: 0 }}>FitCore Brasil</p>
-                  <p style={{ fontFamily: F, fontSize: 10, color: "rgba(14,165,233,0.6)", margin: "2px 0 0" }}>Meta Ads · 22 campaigns</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 11px', borderRadius: 11, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.12)', marginBottom: 14 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff', margin: 0 }}>FitCore Brasil</p>
+                  <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(14,165,233,0.65)', margin: '1px 0 0' }}>Meta Ads · 22 campaigns</p>
                 </div>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.5)', flexShrink: 0 }} />
               </div>
 
-              <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.15)", letterSpacing: "0.1em", textTransform: "uppercase", padding: "0 4px", marginBottom: 4 }}>
-                {lang === "pt" ? "Perguntas exemplo" : lang === "es" ? "Preguntas ejemplo" : "Example questions"}
+              <p style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 5px', marginBottom: 3 }}>
+                {lang === 'pt' ? 'Perguntas' : lang === 'es' ? 'Preguntas' : 'Questions'}
               </p>
 
               {QS.map((q, i) => {
                 const isAct = active === i;
                 return (
                   <button key={i} onClick={() => selectQ(i)}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", borderRadius: 11, background: isAct ? "rgba(14,165,233,0.08)" : "transparent", border: isAct ? "1px solid rgba(14,165,233,0.18)" : "1px solid transparent", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.15s" }}
-                    onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
-                    onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = isAct ? "rgba(14,165,233,0.08)" : "transparent"; }}>
-                    <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{q.emoji}</span>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: isAct ? 600 : 400, color: isAct ? "#fff" : "rgba(255,255,255,0.45)", lineHeight: 1.45 }}>{q.short}</span>
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 11px', borderRadius: 10, background: isAct ? 'rgba(255,255,255,0.06)' : 'transparent', border: isAct ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.14s' }}
+                    onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                    onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, opacity: isAct ? 1 : 0.5 }}>{q.emoji}</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: isAct ? 500 : 400, color: isAct ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.38)', lineHeight: 1.45 }}>{q.short}</span>
                   </button>
                 );
               })}
+
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', marginTop: 12, paddingTop: 12, paddingLeft: 5 }}>
+                <p style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.1)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>AI Chat</p>
+              </div>
             </div>
 
-            {/* Chat */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0, color: "#0ea5e9" }}>✦</div>
-                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#fff" }}>AdBrief AI</span>
-                <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.18)" }}>— {t.demo_connected}</span>
+            {/* Chat area */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              {/* Chat header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#fff', flexShrink: 0 }}>✦</div>
+                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: '#fff' }}>AdBrief AI</span>
+                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>— {t.demo_connected}</span>
               </div>
 
-              <div style={{ flex: 1, padding: "18px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
+              {/* Messages */}
+              <div style={{ flex: 1, padding: '18px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', minHeight: 320, maxHeight: 400 }}>
                 {!current ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12, opacity: 0.3 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#0ea5e9" }}>✦</div>
-                    <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>{t.demo_empty}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10, opacity: 0.28, paddingTop: 40 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✦</div>
+                    <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>{t.demo_empty}</p>
                   </div>
                 ) : (
-                  <div key={animKey} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} style={{ display: "flex", justifyContent: "flex-end" }}>
-                      <div style={{ maxWidth: "74%", padding: "11px 15px", borderRadius: "16px 16px 4px 16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.9)", lineHeight: 1.6, margin: 0 }}>{current.full}</p>
+                  <div key={animKey} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div style={{ maxWidth: '72%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6, margin: 0 }}>{current.full}</p>
                       </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.12 }} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ width: 26, height: 26, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontSize: 12, color: "#0ea5e9" }}>✦</div>
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                      <div style={{ width: 24, height: 24, borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, fontSize: 11, color: '#fff' }}>✦</div>
                       <div style={{ flex: 1 }}>
                         {currentAnswer!.map((block, bi) => {
                           const parts = block.split(/(\*\*[^*]+\*\*)/g);
                           return (
-                            <p key={bi} style={{ fontFamily: F, fontSize: 13, color: bi === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.65)", lineHeight: 1.75, margin: bi === 0 ? "0 0 10px" : "0 0 8px" }}>
+                            <p key={bi} style={{ fontFamily: F, fontSize: 13, color: bi === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)', lineHeight: 1.75, margin: bi === 0 ? '0 0 10px' : '0 0 8px', fontWeight: 400 }}>
                               {parts.map((part, pi) =>
-                                part.startsWith("**") && part.endsWith("**")
-                                  ? <strong key={pi} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
+                                part.startsWith('**') && part.endsWith('**')
+                                  ? <strong key={pi} style={{ color: 'rgba(255,255,255,0.92)', fontWeight: 600 }}>{part.slice(2,-2)}</strong>
                                   : <span key={pi}>{part}</span>
                               )}
                             </p>
@@ -612,10 +632,13 @@ function ProductDemo({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, 
                 )}
               </div>
 
-              <div style={{ padding: "12px 18px", borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0 }}>{t.demo_cta_note}</p>
+              {/* Footer bar */}
+              <div style={{ padding: '11px 18px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)', margin: 0, letterSpacing: '-0.005em' }}>{t.demo_cta_note}</p>
                 <button onClick={onCTA}
-                  style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "8px 18px", borderRadius: 10, background: "#fff", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: '8px 18px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                   {t.demo_cta_btn}
                 </button>
               </div>
@@ -624,47 +647,67 @@ function ProductDemo({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, 
         </div>
 
         {/* Built on */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 32, opacity: 0.4 }}>
-          <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.12em", textTransform: "uppercase" }}>BUILT ON</span>
-          <div style={{ height: 14, width: 1, background: "rgba(255,255,255,0.1)" }} />
-          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "#fff" }}>Anthropic</span>
-          <div style={{ height: 14, width: 1, background: "rgba(255,255,255,0.1)" }} />
-          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "#fff" }}>OpenAI</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, marginTop: 28, opacity: 0.35 }}>
+          <span style={{ fontFamily: F, fontSize: 10, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }} />
+          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.15)' }} />
+          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Tools ─────────────────────────────────────────────────────────────────────
+function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
+  const [open, setOpen] = useState<string | null>(null);
+
+  return (
+    <Section id="tools">
+      <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' }}>{t.tools_label}</span>
+          <h2 style={{ fontFamily: F, fontSize: 'clamp(28px,4vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '14px 0 12px', color: '#fff' }}>{t.tools_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.3)', maxWidth: 380, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+          {TOOLS_DATA.map(tool => {
+            const isOpen = open === tool.id;
+            return (
+              <div key={tool.id}
+                onClick={() => setOpen(isOpen ? null : tool.id)}
+                style={{ borderRadius: 16, background: isOpen ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
+                onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.03)'; el.style.borderColor = 'rgba(255,255,255,0.08)'; }}}
+                onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.02)'; el.style.borderColor = 'rgba(255,255,255,0.05)'; }}}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 18px' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.6)', flexShrink: 0 }}>{tool.icon}</div>
+                  <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', margin: 0, flex: 1 }}>{tool.name[lang]}</p>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', transition: 'transform 0.18s', transform: isOpen ? 'rotate(45deg)' : 'none', flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                  </div>
+                </div>
+                {/* Expandable */}
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}>
+                      <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: '14px 0 0' }}>{tool.desc[lang]}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </div>
     </Section>
   );
 }
 
-// ─── Tools ────────────────────────────────────────────────────────────────────
-function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
-  return (
-    <Section id="tools">
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "rgba(14,165,233,0.6)" }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.tools_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.3)", maxWidth: 400, margin: "0 auto" }}>{t.tools_sub}</p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-          {TOOLS_DATA.map(tool => (
-            <div key={tool.id} style={{
-              padding: "24px", borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-              transition: "border-color 0.3s, background 0.3s", cursor: "default",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = tool.color + "30"; e.currentTarget.style.background = tool.color + "06"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
-            >
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: tool.color + "12", border: "1px solid " + tool.color + "20", display: "flex", alignItems: "center", justifyContent: "center", color: tool.color, marginBottom: 16 }}>{tool.icon}</div>
-              <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>{tool.name[lang]}</p>
-              <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, margin: 0 }}>{tool.desc[lang]}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
 function HowItWorks({ t }: { t: Record<string, string> }) {
