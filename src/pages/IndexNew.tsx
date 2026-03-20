@@ -607,7 +607,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {p.points.map((point, i) => (
-              <div key={point} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+              <div key={point}
                 style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 18px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${p.color}15`, border: `1px solid ${p.color}28`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                   <Check size={10} color={p.color} />

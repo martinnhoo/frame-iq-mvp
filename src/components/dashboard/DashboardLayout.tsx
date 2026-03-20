@@ -26,6 +26,12 @@ export interface ActivePersona {
   cta_style: string;
   bio: string;
   brand_kit?: { logo_data_url?: string; file_name?: string; uploaded_at?: string };
+  logo_url?: string;
+  website?: string;
+  description?: string;
+  preferred_market?: string;
+  industry?: string;
+  [key: string]: unknown;
 }
 
 export interface DashboardContext {
