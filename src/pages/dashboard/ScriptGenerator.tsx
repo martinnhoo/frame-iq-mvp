@@ -157,17 +157,17 @@ export default function ScriptGenerator() {
       <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Product / Service *</label>
-          <Textarea placeholder="Describe your product, service, or brand..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
+          <Textarea placeholder={language === "pt" ? "Descreva seu produto, serviço ou marca..." : language === "es" ? "Describe tu producto, servicio o marca..." : "Describe your product, service, or brand..."} value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Offer / CTA (optional)</label>
-            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 50% off first month, Free trial" />
+            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder={language === "pt" ? "ex: 50% de desconto no primeiro mês, Trial grátis" : language === "es" ? "ej: 50% descuento primer mes, Prueba gratis" : "e.g. 50% off first month, Free trial"} />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "✓" : "(optional)"}</label>
-            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Men 25-35, gamers, fitness enthusiasts" />
+            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder={language === "pt" ? "ex: Homens 25-35, jogadores, entusiastas de fitness" : language === "es" ? "ej: Hombres 25-35, jugadores, entusiastas de fitness" : "e.g. Men 25-35, gamers, fitness enthusiasts"} />
           </div>
         </div>
 
@@ -211,13 +211,13 @@ export default function ScriptGenerator() {
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Angle {personaApplied ? "✓" : ""}</label>
-            <Input value={angle} onChange={e => setAngle(e.target.value)} placeholder="e.g. FOMO, curiosity, social proof" />
+            <Input value={angle} onChange={e => setAngle(e.target.value)} placeholder={language === "pt" ? "ex: FOMO, curiosidade, prova social" : language === "es" ? "ej: FOMO, curiosidad, prueba social" : "e.g. FOMO, curiosity, social proof"} />
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
-          <Textarea placeholder="Compliance rules, brand guidelines, specific messaging..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
+          <Textarea placeholder={language === "pt" ? "Regras de compliance, diretrizes da marca, mensagens específicas..." : language === "es" ? "Reglas de cumplimiento, directrices de marca..." : "Compliance rules, brand guidelines, specific messaging..."} value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
         <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>

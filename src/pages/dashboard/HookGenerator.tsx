@@ -4,7 +4,6 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
-import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
@@ -80,8 +79,6 @@ export default function HookGenerator() {
   }, []);
   const [tone, setTone] = useState("Aggressive / Urgent");
   const [funnelStage, setFunnelStage] = useState("tofu");
-  const [showPersonaWarning, setShowPersonaWarning] = useState(false);
-  const [pendingGenerate, setPendingGenerate] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [hooks, setHooks] = useState<Hook[]>([]);
@@ -91,13 +88,7 @@ export default function HookGenerator() {
   const [feedback, setFeedback] = useState<Record<number, "up" | "down">>({});
 
   const generate = async () => {
-    if (!product.trim()) { toast.error("Describe your product first"); return; }
-    // Warn if no persona selected
-    if (!selectedPersona && !pendingGenerate) {
-      setShowPersonaWarning(true);
-      return;
-    }
-    setPendingGenerate(false);
+    if (!product.trim()) { toast.error(language === "pt" ? "Descreva seu produto primeiro" : language === "es" ? "Describe tu producto primero" : "Describe your product first"); return; }
     setLoading(true);
     setHooks([]);
     setExpandedIdx(null);
@@ -157,12 +148,6 @@ export default function HookGenerator() {
 
   return (
     <div className="page-enter p-5 lg:p-6 max-w-5xl mx-auto space-y-6">
-      <PersonaWarningModal
-        open={showPersonaWarning}
-        onClose={() => setShowPersonaWarning(false)}
-        toolName="Hook Generator"
-        onContinue={() => { setShowPersonaWarning(false); setPendingGenerate(true); setTimeout(generate, 50); }}
-      />
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
@@ -170,7 +155,7 @@ export default function HookGenerator() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-white" style={syne}>{dt("hg_title")}</h1>
-          <p className="text-xs text-white/50 mt-0.5">AI-generated hooks with predicted performance scores — ready to test</p>
+          <p className="text-xs text-white/50 mt-0.5">{language === "pt" ? "Hooks gerados por IA com score de performance previsto" : language === "es" ? "Hooks generados por IA con puntaje de rendimiento previsto" : "AI-generated hooks with predicted performance scores — ready to test"}</p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 5, padding: "3px 10px", borderRadius: 99, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
             <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
             <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
@@ -187,17 +172,17 @@ export default function HookGenerator() {
               value={product}
               onChange={e => setProduct(e.target.value)}
               onKeyDown={e => e.key === "Enter" && generate()}
-              placeholder='e.g. "FitCore — fitness supplements for men 25-35" or "A B2B SaaS for HR teams"'
+              placeholder={language === "pt" ? 'ex: "FitCore — suplementos fitness para homens 25-35"' : language === "es" ? 'ej: "FitCore — suplementos fitness para hombres 25-35"' : 'e.g. "FitCore — fitness supplements for men 25-35"'}
               className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.15] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/20 transition-colors"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-white/50 mb-2">Niche / Industry</label>
+            <label className="block text-xs text-white/50 mb-2">{language === "pt" ? "Nicho / Segmento" : language === "es" ? "Nicho / Segmento" : "Niche / Industry"}</label>
             <input
               value={niche}
               onChange={e => setNiche(e.target.value)}
-              placeholder='e.g. "Fitness", "SaaS", "E-commerce"'
+              placeholder={language === "pt" ? '"Fitness", "SaaS", "E-commerce"' : language === "es" ? '"Fitness", "SaaS", "E-commerce"' : '"Fitness", "SaaS", "E-commerce"'}
               className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/[0.15] text-white placeholder:text-white/40 text-sm outline-none focus:border-white/20 transition-colors"
             />
           </div>
@@ -256,7 +241,9 @@ export default function HookGenerator() {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           style={syne}
         >
-          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating {hookCount} hooks...</> : <><Sparkles className="h-4 w-4" /> Generate {hookCount} Hooks</>}
+          {loading
+            ? <><Loader2 className="h-4 w-4 animate-spin" /> {language === "pt" ? `Gerando ${hookCount} hooks...` : language === "es" ? `Generando ${hookCount} hooks...` : `Generating ${hookCount} hooks...`}</>
+            : <><Sparkles className="h-4 w-4" /> {language === "pt" ? `Gerar ${hookCount} Hooks` : language === "es" ? `Generar ${hookCount} Hooks` : `Generate ${hookCount} Hooks`}</>}
         </button>
       </div>
       </div>
@@ -268,7 +255,7 @@ export default function HookGenerator() {
           <div className="flex items-center gap-4 p-4 rounded-2xl border border-white/[0.13] bg-[#0a0a0a]">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-white/50" />
-              <span className="text-xs text-white/40">Avg predicted score</span>
+              <span className="text-xs text-white/40">{language === "pt" ? "Score médio previsto" : language === "es" ? "Puntaje promedio previsto" : "Avg predicted score"}</span>
               <span className={`text-sm font-bold font-mono ${avgScore >= 8 ? "text-green-400" : avgScore >= 6.5 ? "text-yellow-400" : "text-white/60"}`}>
                 {avgScore.toFixed(1)}/10
               </span>
@@ -279,14 +266,8 @@ export default function HookGenerator() {
               <span className="text-white/40 mx-1">·</span>
               <span className="text-blue-400 font-semibold">{highCount} high</span>
             </div>
-            {mockMode && (
-              <>
-                <div className="h-4 w-px bg-white/[0.08]" />
-                <span className="text-[10px] text-yellow-400/60 font-mono">mock mode — add ANTHROPIC_API_KEY</span>
-              </>
-            )}
             <button onClick={generate} disabled={loading} className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/[0.15] text-white/40 text-xs hover:text-white transition-all">
-              <RefreshCw className="h-3 w-3" /> Regenerate
+              <RefreshCw className="h-3 w-3" /> {language === "pt" ? "Regenerar" : language === "es" ? "Regenerar" : "Regenerate"}
             </button>
           </div>
 
@@ -300,9 +281,7 @@ export default function HookGenerator() {
 
               return (
                 <div key={idx} className="rounded-2xl border border-white/[0.13] bg-[#0a0a0a] overflow-hidden hover:border-white/[0.12] transition-all">
-                  {/* Main row */}
                   <div className="flex items-start gap-4 p-4">
-                    {/* Score ring */}
                     <div className="shrink-0 text-center w-12">
                       <div className={`text-lg font-bold font-mono ${strength.color}`} style={syne}>
                         {hook.predicted_score.toFixed(1)}
@@ -326,64 +305,37 @@ export default function HookGenerator() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Feedback */}
-                      <button
-                        onClick={() => sendFeedback(hook, idx, "up")}
-                        disabled={!!feedback[idx]}
-                        title="More like this"
-                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${
-                          feedback[idx] === "up"
-                            ? "bg-green-500/20 border-green-500/40 text-green-400"
-                            : "bg-white/[0.05] border-white/[0.13] text-white/40 hover:text-green-400 hover:border-green-400/30"
-                        }`}
-                      >
+                      <button onClick={() => sendFeedback(hook, idx, "up")} disabled={!!feedback[idx]}
+                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${feedback[idx] === "up" ? "bg-green-500/20 border-green-500/40 text-green-400" : "bg-white/[0.05] border-white/[0.13] text-white/40 hover:text-green-400 hover:border-green-400/30"}`}>
                         <ThumbsUp className="h-3 w-3" />
                       </button>
-                      <button
-                        onClick={() => sendFeedback(hook, idx, "down")}
-                        disabled={!!feedback[idx]}
-                        title="Fewer of this type"
-                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${
-                          feedback[idx] === "down"
-                            ? "bg-red-500/20 border-red-500/40 text-red-400"
-                            : "bg-white/[0.05] border-white/[0.13] text-white/40 hover:text-red-400 hover:border-red-400/30"
-                        }`}
-                      >
+                      <button onClick={() => sendFeedback(hook, idx, "down")} disabled={!!feedback[idx]}
+                        className={`h-8 w-8 rounded-xl border flex items-center justify-center transition-all ${feedback[idx] === "down" ? "bg-red-500/20 border-red-500/40 text-red-400" : "bg-white/[0.05] border-white/[0.13] text-white/40 hover:text-red-400 hover:border-red-400/30"}`}>
                         <ThumbsDown className="h-3 w-3" />
                       </button>
-                      <button
-                        onClick={() => copy(hook, idx)}
-                        className="h-8 w-8 rounded-xl bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.1] transition-all"
-                      >
+                      <button onClick={() => copy(hook, idx)} className="h-8 w-8 rounded-xl bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.1] transition-all">
                         {copiedIdx === idx ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                       </button>
-                      <button
-                        onClick={() => setExpandedIdx(expanded ? null : idx)}
-                        className="h-8 w-8 rounded-xl bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.1] transition-all"
-                      >
+                      <button onClick={() => setExpandedIdx(expanded ? null : idx)} className="h-8 w-8 rounded-xl bg-white/[0.05] border border-white/[0.13] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.1] transition-all">
                         {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Expanded detail */}
                   {expanded && (
                     <div className="border-t border-white/[0.05] px-4 pb-4 pt-3 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>Why it works</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', sans-serif" }}>{language === "pt" ? "Por que funciona" : language === "es" ? "Por qué funciona" : "Why it works"}</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.why}</p>
                         </div>
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>CTA suggestion</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', sans-serif" }}>{language === "pt" ? "Sugestão de CTA" : language === "es" ? "Sugerencia de CTA" : "CTA suggestion"}</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.cta_suggestion}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => copy(hook, idx)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.13] text-white/40 text-xs hover:border-white/15 hover:text-white/70 transition-all"
-                      >
-                        {copiedIdx === idx ? <><Check className="h-3.5 w-3.5 text-green-400" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> {dt("hg_copy")}</>}
+                      <button onClick={() => copy(hook, idx)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.13] text-white/40 text-xs hover:border-white/15 hover:text-white/70 transition-all">
+                        {copiedIdx === idx ? <><Check className="h-3.5 w-3.5 text-green-400" /> {language === "pt" ? "Copiado!" : "¡Copiado!"}</> : <><Copy className="h-3.5 w-3.5" /> {dt("hg_copy")}</>}
                       </button>
                     </div>
                   )}
@@ -394,12 +346,11 @@ export default function HookGenerator() {
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && hooks.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/[0.13] py-16 text-center space-y-3">
           <div className="text-4xl">⚡</div>
-          <p className="text-white/50 text-sm font-medium">Describe your product and hit generate</p>
-          <p className="text-white/15 text-xs">AI generates hooks with predicted scores, psychological breakdown, and CTA suggestions</p>
+          <p className="text-white/50 text-sm font-medium">{language === "pt" ? "Descreva seu produto e clique em gerar" : language === "es" ? "Describe tu producto y haz clic en generar" : "Describe your product and hit generate"}</p>
+          <p className="text-white/15 text-xs">{language === "pt" ? "A IA gera hooks com scores previstos, análise psicológica e sugestões de CTA" : language === "es" ? "La IA genera hooks con puntajes previstos, análisis psicológico y sugerencias de CTA" : "AI generates hooks with predicted scores, psychological breakdown, and CTA suggestions"}</p>
         </div>
       )}
     </div>

@@ -323,7 +323,10 @@ If user says "pause" without specifying which → use list_campaigns first to sh
 ABSOLUTE RULES:
 - Max 2 blocks. Never ask questions if you have data. No generic lists.
 - Titles under 6 words. Content under 2 sentences.
-- If asked "write hooks/script/brief" → USE tool_call immediately, no explanations first.`;
+- If asked "write hooks/script/brief" → USE tool_call immediately, no explanations first.
+- ZERO markdown inside JSON strings. No ** bold **, no # headers, no bullet points with *.
+- items[] = plain text only, no numbering like "1.", no "**Gancho 1:**" prefixes.
+- Write hooks and content as clean, direct text — no formatting symbols whatsoever.`;
 
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {

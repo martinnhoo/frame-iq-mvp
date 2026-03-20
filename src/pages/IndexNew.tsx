@@ -1268,10 +1268,13 @@ export default function IndexNew() {
             .hero-sub{font-size:13px!important}
             .demo-window{border-radius:14px!important}
             .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
-            .demo-sidebar-inner{width:100%!important;height:56px!important;min-height:56px!important;max-height:56px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:6px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
+            .demo-sidebar-inner{width:100%!important;height:52px!important;min-height:52px!important;max-height:52px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:5px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
             .demo-sidebar-inner>div:last-child{display:none!important}
+            .demo-sidebar-inner button{width:auto!important;flex-shrink:0!important;padding:5px 10px!important;border-radius:20px!important}
+            .demo-sidebar-inner button span:last-of-type{display:none!important}
+            .demo-sidebar-inner button span:first-of-type{font-size:16px!important;opacity:1!important;margin:0!important}
             .demo-chat-panel{height:240px!important;max-height:240px!important;min-height:240px!important;overflow:hidden!important;flex:none!important}
-            .demo-chat{overflowY:auto!important;height:170px!important;max-height:170px!important;min-height:170px!important}
+            .demo-chat{overflow-y:auto!important;height:170px!important;max-height:170px!important;min-height:170px!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}

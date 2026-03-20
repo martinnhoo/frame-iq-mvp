@@ -422,15 +422,21 @@ export default function DashboardLayout() {
                   boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
                 }}>
                 <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>Account</p>
-                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>Select an ad account</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
+                    {dt("cm_no_account")}
+                  </p>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2, fontFamily: "'Inter', sans-serif" }}>
+                    {language === "pt" ? "Selecione uma conta de anúncios" : language === "es" ? "Selecciona una cuenta de anuncios" : "Select an ad account"}
+                  </p>
                 </div>
                 {savedPersonas.length === 0 ? (
                   <div style={{ padding: "16px 14px", textAlign: "center" }}>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>No accounts yet</p>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>
+                      {language === "pt" ? "Nenhuma conta ainda" : language === "es" ? "Sin cuentas aún" : "No accounts yet"}
+                    </p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                       style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
-                      <Sparkles className="h-3.5 w-3.5" /> Add first account
+                      <Sparkles className="h-3.5 w-3.5" /> {language === "pt" ? "Criar primeira conta" : language === "es" ? "Crear primera cuenta" : "Add first account"}
                     </button>
                   </div>
                 ) : (
@@ -441,7 +447,9 @@ export default function DashboardLayout() {
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                         <span style={{ width: 30, height: 30, borderRadius: 7, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>✕</span>
-                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "'Inter', sans-serif" }}>{dt("ov_clear_persona")}</span>
+                        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontFamily: "'Inter', sans-serif" }}>
+                          {language === "pt" ? "Limpar conta ativa" : language === "es" ? "Limpiar cuenta activa" : "Clear active account"}
+                        </span>
                       </button>
                     )}
                     {savedPersonas.map(p => (
@@ -464,7 +472,7 @@ export default function DashboardLayout() {
                         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "4px 0" }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
-                        <Sparkles className="h-3 w-3" /> Manage accounts
+                        <Sparkles className="h-3 w-3" /> {language === "pt" ? "Gerenciar contas" : language === "es" ? "Gestionar cuentas" : "Manage accounts"}
                       </button>
                     </div>
                   </div>

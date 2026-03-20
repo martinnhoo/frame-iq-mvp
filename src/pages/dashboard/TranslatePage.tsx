@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
-import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
@@ -602,18 +601,31 @@ const AdaptMode = ({ userId }: { userId: string }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TranslatePage = () => {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
   const [mode, setMode] = useState<"transcribe" | "adapt">("transcribe");
-  const [showPersonaWarning, setShowPersonaWarning] = useState(!selectedPersona);
+
+  const L: Record<string, Record<string,string>> = {
+    pt: { title: "Traduzir & Transcrever", sub: "Extraia o roteiro de qualquer vídeo · Adapte qualquer texto para qualquer mercado",
+          tab1: "Vídeo → Transcrição", tab2: "Roteiro → Mercados",
+          b1t: "Solte qualquer vídeo — receba o roteiro completo", b2t: "Cole seu roteiro — adapte para qualquer mercado",
+          b1d: "Faça upload de um anúncio concorrente, seu próprio vídeo ou um clip de referência. A IA extrai a transcrição no idioma original e traduz para o idioma de destino.",
+          b2d: "A IA não só traduz — reescreve hooks, adapta frases de urgência, referências culturais e gírias para seu roteiro realmente converter. Selecione até 6 mercados de uma vez." },
+    es: { title: "Traducir & Transcribir", sub: "Extrae el guión de cualquier video · Adapta cualquier texto a cualquier mercado",
+          tab1: "Video → Transcripción", tab2: "Guión → Mercados",
+          b1t: "Sube cualquier video — recibe el guión completo", b2t: "Pega tu guión — adáptalo a cualquier mercado",
+          b1d: "Sube un anuncio de competidor, tu propio video o un clip de referencia. La IA extrae la transcripción en el idioma original y la traduce al idioma destino.",
+          b2d: "La IA no solo traduce — reescribe hooks, adapta frases de urgencia y referencias culturales para que tu guión realmente convierta. Selecciona hasta 6 mercados a la vez." },
+    en: { title: "Translate & Transcribe", sub: "Drop a video to extract the script · Adapt any text for any market",
+          tab1: "Video → Transcript", tab2: "Script → Markets",
+          b1t: "Drop any video — get the full script", b2t: "Paste your script — adapt it for any market",
+          b1d: "Upload a competitor ad, your own footage, or a reference clip. AI extracts the transcript in the original language, then translates to your target language.",
+          b2d: "AI doesn't just translate — it rewrites hooks, adapts urgency phrases, cultural references, and slang so your script actually converts. Select up to 6 markets at once." },
+  };
+  const t = L[language] || L.en;
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-5">
-      <PersonaWarningModal
-        open={showPersonaWarning && !selectedPersona}
-        onClose={() => setShowPersonaWarning(false)}
-        onContinue={() => setShowPersonaWarning(false)}
-        toolName="Translate & Transcribe"
-      />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -621,16 +633,16 @@ const TranslatePage = () => {
           <Globe className="h-5 w-5" style={{ color: "#34d399" }} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white" style={syne}>Translate &amp; Transcribe</h1>
-          <p className="text-xs text-white/50">Drop a video to extract the script · Adapt any text for any market</p>
+          <h1 className="text-xl font-bold text-white" style={syne}>{t.title}</h1>
+          <p className="text-xs text-white/50">{t.sub}</p>
         </div>
       </div>
 
       {/* Mode tabs */}
       <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
         {([
-          { id: "transcribe" as const, icon: <Video className="h-4 w-4" />, label: "Video → Transcript" },
-          { id: "adapt" as const, icon: <Languages className="h-4 w-4" />, label: "Script → Markets" },
+          { id: "transcribe" as const, icon: <Video className="h-4 w-4" />, label: t.tab1 },
+          { id: "adapt" as const, icon: <Languages className="h-4 w-4" />, label: t.tab2 },
         ]).map(tab => (
           <button key={tab.id} onClick={() => setMode(tab.id)}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
@@ -650,16 +662,16 @@ const TranslatePage = () => {
           <>
             <Mic className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#0ea5e9" }} />
             <div>
-              <p className="text-sm font-bold text-white" style={syne}>Drop any video — get the full script</p>
-              <p className="text-xs text-white/40 mt-0.5 leading-relaxed">Upload a competitor ad, your own footage, or a reference clip. AI extracts the transcript in the original language, then translates it to your target language — perfect for briefing editors.</p>
+              <p className="text-sm font-bold text-white" style={syne}>{t.b1t}</p>
+              <p className="text-xs text-white/40 mt-0.5 leading-relaxed">{t.b1d}</p>
             </div>
           </>
         ) : (
           <>
             <Wand2 className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#34d399" }} />
             <div>
-              <p className="text-sm font-bold text-white" style={syne}>Paste your script — adapt it for any market</p>
-              <p className="text-xs text-white/40 mt-0.5 leading-relaxed">AI doesn't just translate — it rewrites hooks, adapts urgency phrases, cultural references, and slang so your script actually converts. Select up to 6 markets at once.</p>
+              <p className="text-sm font-bold text-white" style={syne}>{t.b2t}</p>
+              <p className="text-xs text-white/40 mt-0.5 leading-relaxed">{t.b2d}</p>
             </div>
           </>
         )}

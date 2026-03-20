@@ -132,7 +132,7 @@ const App = () => (
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
-                <Route path="loop/ai" element={<LoopV2 />} />
+                <Route path="loop/ai" element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="loop/guide" element={<LoopGuidePage />} />
               </Route>              {/* ── SEO: Tools ── */}
               <Route path="/tools"         element={<ToolsIndex />} />
