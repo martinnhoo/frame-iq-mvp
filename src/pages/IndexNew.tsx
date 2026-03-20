@@ -761,7 +761,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body */}
-          <div style={{ display: 'flex', background: '#0d1117', height: 420, overflow: 'hidden' }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 420, maxHeight: 420, overflow: 'hidden' }} className="demo-app-body">
 
             {/* Sidebar */}
             <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
@@ -1307,11 +1307,11 @@ export default function IndexNew() {
             .hero-h1{font-size:clamp(24px,7vw,38px)!important}
             .hero-sub{font-size:13px!important}
             .demo-window{border-radius:14px!important}
-            .demo-app-body{flex-direction:column!important;height:auto!important;max-height:none!important}
-            .demo-sidebar-inner{width:100%!important;height:60px!important;min-height:60px!important;max-height:60px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:8px!important;gap:6px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
+            .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
+            .demo-sidebar-inner{width:100%!important;height:56px!important;min-height:56px!important;max-height:56px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:6px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
             .demo-sidebar-inner>div:last-child{display:none!important}
-            .demo-chat-panel{height:260px!important;max-height:260px!important;min-height:260px!important;overflow:hidden!important}
-            .demo-chat{overflow:hidden!important;height:190px!important;max-height:190px!important}
+            .demo-chat-panel{height:240px!important;max-height:240px!important;min-height:240px!important;overflow:hidden!important;flex:none!important}
+            .demo-chat{overflow:hidden!important;height:170px!important;max-height:170px!important;min-height:170px!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
