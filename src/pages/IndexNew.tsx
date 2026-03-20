@@ -356,9 +356,9 @@ function ChatMockup({ t, onCTA }: { t: Record<string, string>; onCTA: () => void
       full: t.dq3_full || "Escreve 3 hooks para minha conta baseados nos meus melhores criativos",
       answer: [
         "Baseado nos seus 5 top converters (hook rate médio 34%, ROAS 3.1x+), o padrão é: problema específico + número concreto + quebra de expectativa.",
-        "**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."",
-        "**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."",
-        "**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."",
+        '**Hook 1 — Agitação de dor com dado:** "Você está pagando R$ 90 por clique e nem sabe por quê — seus dados já têm a resposta."',
+        '**Hook 2 — Social proof com especificidade:** "3 dos seus 4 anúncios que mais gastam têm ROAS abaixo de 1x agora. Veja qual o único que vale manter."',
+        '**Hook 3 — Urgência baseada em comportamento:** "Seu melhor criativo do mês passado está parado há 9 dias. Enquanto isso, o concorrente rodando o mesmo ângulo está escalando."',
         "Os 3 seguem o padrão dos seus winners: nada de benefício genérico, sempre uma afirmação que a pessoa precisa parar para processar.",
       ],
     },
