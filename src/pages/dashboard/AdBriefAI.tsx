@@ -1,123 +1,222 @@
+// AdBrief AI — unified v4
+// Design: LoopV2 clean + AdBriefAI power (meta actions, dashboards, tool_call)
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { Send, Loader2, ChevronDown, ChevronUp, Sparkles, RotateCcw, Brain, ArrowRight, TrendingUp, TrendingDown, BarChart2, AlertTriangle, Zap } from "lucide-react";
+import {
+  Send, Loader2, Sparkles, RotateCcw, Brain,
+  ThumbsUp, ThumbsDown, Copy, RefreshCw,
+  Upload, Zap, FileText, BarChart3, X,
+  TrendingUp, TrendingDown, AlertTriangle, BarChart2
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
+const F = "'Plus Jakarta Sans', sans-serif";
+const M = "'Inter', sans-serif";
+const j = { fontFamily: F } as const;
+const m = { fontFamily: M } as const;
 
-const UI: Record<string, Record<string, string>> = {
-  en: { title:"AdBrief AI", ready:"● READY — account data loaded", loading_ctx:"○ Loading your data...", connect_title:"Connect Meta Ads", connect_sub:"The AI needs your ad account to answer with real data.", connect_btn:"Connect Meta Ads →", connecting:"Redirecting...", connected:"Meta Ads connected — AI using your real data", empty_title:"Ask me anything about your ads.", empty_sub:"I have your campaign data, patterns, and metrics. Direct answers — no fluff.", placeholder:"Ask about your campaigns, hooks, performance...", footer:"Strictly ad performance & creative intelligence", clear:"Clear", open_tool:"Open tool →", running:"Running", q1:"What's killing my ROAS right now?", q2:"Which hook type is winning in my account?", q3:"My CTR dropped 40% — diagnose it.", q4:"Write 3 hooks based on my winning creatives.", q5:"Which market should I double down on?", q6:"What should I produce next week?" },
-  pt: { title:"AdBrief AI", ready:"● PRONTO — dados da conta carregados", loading_ctx:"○ Carregando seus dados...", connect_title:"Conectar Meta Ads", connect_sub:"A IA precisa da sua conta de anúncios para responder com dados reais.", connect_btn:"Conectar Meta Ads →", connecting:"Redirecionando...", connected:"Meta Ads conectado — IA usando seus dados reais", empty_title:"Pergunte qualquer coisa sobre seus anúncios.", empty_sub:"Tenho seus dados de campanha, padrões e métricas. Respostas diretas — sem enrolação.", placeholder:"Pergunte sobre campanhas, hooks, performance...", footer:"Somente performance de anúncios e inteligência criativa", clear:"Limpar", open_tool:"Abrir ferramenta →", running:"Executando", q1:"O que está matando meu ROAS agora?", q2:"Qual tipo de hook está ganhando na minha conta?", q3:"Meu CTR caiu 40% — diagnostique.", q4:"Escreva 3 hooks baseados nos meus criativos vencedores.", q5:"Em qual mercado devo dobrar a aposta?", q6:"O que devo produzir semana que vem?" },
-  es: { title:"AdBrief AI", ready:"● LISTO — datos de cuenta cargados", loading_ctx:"○ Cargando tus datos...", connect_title:"Conectar Meta Ads", connect_sub:"La IA necesita tu cuenta de anuncios para responder con datos reales.", connect_btn:"Conectar Meta Ads →", connecting:"Redirigiendo...", connected:"Meta Ads conectado — IA usando tus datos reales", empty_title:"Pregunta lo que quieras sobre tus anuncios.", empty_sub:"Tengo tus datos de campaña, patrones y métricas. Respuestas directas — sin rodeos.", placeholder:"Pregunta sobre campañas, hooks, rendimiento...", footer:"Solo inteligencia de rendimiento publicitario", clear:"Limpiar", open_tool:"Abrir herramienta →", running:"Ejecutando", q1:"¿Qué está matando mi ROAS ahora mismo?", q2:"¿Qué tipo de hook está ganando en mi cuenta?", q3:"Mi CTR cayó 40% — diagnostícalo.", q4:"Escribe 3 hooks basados en mis creativos ganadores.", q5:"¿En qué mercado debería doblar la apuesta?", q6:"¿Qué debería producir la próxima semana?" },
+// ── Platforms ──────────────────────────────────────────────────────────────────
+const PLATFORMS = [
+  { id: "meta",   label: "Meta Ads",   fn: "meta-oauth",   color: "#60a5fa",
+    Icon: ({ active }: { active: boolean }) => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "#60a5fa" : "rgba(255,255,255,0.3)"}>
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+      </svg>
+    )},
+  { id: "tiktok", label: "TikTok Ads", fn: "tiktok-oauth", color: "#06b6d4", soon: true,
+    Icon: ({ active }: { active: boolean }) => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "#06b6d4" : "rgba(255,255,255,0.3)"}>
+        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.72a4.85 4.85 0 0 1-1.01-.03z"/>
+      </svg>
+    )},
+  { id: "google", label: "Google Ads", fn: "google-oauth", color: "#34d399", soon: true,
+    Icon: ({ active }: { active: boolean }) => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "#34d399" : "rgba(255,255,255,0.3)"}>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.01 14.93A7.987 7.987 0 0 1 12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8c2.15 0 4.1.86 5.53 2.24l-2.31 2.31A4.974 4.974 0 0 0 12 8c-2.76 0-5 2.24-5 5s2.24 5 5 5c2.1 0 3.89-1.3 4.64-3.14H12v-3h8.01c.1.58.16 1.18.16 1.82 0 1.86-.51 3.61-1.4 5.11l.24.14z"/>
+      </svg>
+    )},
+];
+
+// ── i18n ───────────────────────────────────────────────────────────────────────
+const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
+  en: [
+    { icon: Upload, label: "Upload ad",      action: "upload",     color: "#60a5fa" },
+    { icon: Zap,    label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
+    { icon: FileText, label: "Write script", action: "script",     color: "#34d399" },
+    { icon: BarChart3, label: "Competitor",  action: "competitor", color: "#a78bfa" },
+  ],
+  pt: [
+    { icon: Upload, label: "Upload anúncio",  action: "upload",     color: "#60a5fa" },
+    { icon: Zap,    label: "Gerar hooks",     action: "hooks",      color: "#06b6d4" },
+    { icon: FileText, label: "Escrever roteiro", action: "script",  color: "#34d399" },
+    { icon: BarChart3, label: "Concorrente",  action: "competitor", color: "#a78bfa" },
+  ],
+  es: [
+    { icon: Upload, label: "Subir anuncio",   action: "upload",     color: "#60a5fa" },
+    { icon: Zap,    label: "Generar hooks",   action: "hooks",      color: "#06b6d4" },
+    { icon: FileText, label: "Escribir guión", action: "script",   color: "#34d399" },
+    { icon: BarChart3, label: "Competidor",   action: "competitor", color: "#a78bfa" },
+  ],
 };
-function ui(lang: string, key: string): string { return (UI[lang] || UI.en)[key] || UI.en[key] || key; }
 
+const SUGG: Record<string, string[]> = {
+  pt: ["O que está matando meu ROAS agora?", "Qual anúncio devo pausar hoje?", "Escreva 3 hooks dos meus top criativos", "O que produzir semana que vem?"],
+  es: ["¿Qué está matando mi ROAS ahora?", "¿Qué anuncio pausar hoy?", "Escribe 3 hooks de mis mejores creativos", "¿Qué producir la próxima semana?"],
+  en: ["What's killing my ROAS right now?", "Which ad should I pause today?", "Write 3 hooks from my best creatives", "What should I produce next week?"],
+};
+
+// ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"confirm_action";
-  title: string; content?: string; items?: string[]; route?: string; params?: Record<string,string>; cta?: string;
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action";
+  title: string; content?: string; items?: string[];
+  route?: string; params?: Record<string,string>; cta?: string;
   tool?: string; tool_params?: Record<string,string>;
-  // meta_action fields
   meta_action?: string; target_id?: string; target_type?: string; target_name?: string; value?: string;
-  metrics?: { label:string; value:string; delta?:string; trend?:"up"|"down"|"neutral" }[];
+  metrics?: { label:string; value:string; delta?:string; trend?:"up"|"down"|"flat" }[];
   table?: { headers:string[]; rows:string[][] };
-  chart?: { type:"bar"|"comparison"; labels:string[]; values:number[]; colors?:string[] };
+  chart?: { type:"bar"; labels:string[]; values:number[]; colors?:string[] };
 }
-interface AIMessage { role:"user"|"assistant"; blocks?: Block[]; userText?:string; ts:number; }
+interface AIMessage {
+  role: "user"|"assistant";
+  blocks?: Block[];
+  userText?: string;
+  ts: number;
+  id: number;
+}
 
 const BS: Record<string,{color:string;bg:string;border:string}> = {
-  action:         {color:"#0ea5e9",bg:"rgba(14,165,233,0.06)",border:"rgba(14,165,233,0.18)"},
-  pattern:        {color:"#60a5fa",bg:"rgba(96,165,250,0.06)",border:"rgba(96,165,250,0.18)"},
-  hooks:          {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",border:"rgba(6,182,212,0.18)"},
-  warning:        {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",border:"rgba(251,191,36,0.18)"},
-  insight:        {color:"#34d399",bg:"rgba(52,211,153,0.06)",border:"rgba(52,211,153,0.18)"},
-  off_topic:      {color:"rgba(255,255,255,0.3)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.07)"},
-  navigate:       {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",border:"rgba(14,165,233,0.2)"},
-  tool_call:      {color:"#a78bfa",bg:"rgba(167,139,250,0.06)",border:"rgba(167,139,250,0.2)"},
-  dashboard:      {color:"#34d399",bg:"rgba(13,17,23,0.9)",border:"rgba(255,255,255,0.1)"},
-  meta_action:    {color:"#fb923c",bg:"rgba(251,146,60,0.07)",border:"rgba(251,146,60,0.22)"},
-  confirm_action: {color:"#34d399",bg:"rgba(52,211,153,0.06)",border:"rgba(52,211,153,0.22)"},
+  action:      {color:"#60a5fa",bg:"rgba(96,165,250,0.06)",  border:"rgba(96,165,250,0.16)"},
+  pattern:     {color:"#a78bfa",bg:"rgba(167,139,250,0.06)", border:"rgba(167,139,250,0.16)"},
+  hooks:       {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",   border:"rgba(6,182,212,0.16)"},
+  warning:     {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",  border:"rgba(251,191,36,0.16)"},
+  insight:     {color:"#34d399",bg:"rgba(52,211,153,0.06)",  border:"rgba(52,211,153,0.16)"},
+  off_topic:   {color:"rgba(255,255,255,0.25)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.06)"},
+  navigate:    {color:"#60a5fa",bg:"rgba(96,165,250,0.04)",  border:"rgba(96,165,250,0.18)"},
+  tool_call:   {color:"#a78bfa",bg:"rgba(167,139,250,0.06)", border:"rgba(167,139,250,0.18)"},
+  dashboard:   {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",  border:"rgba(14,165,233,0.15)"},
+  meta_action: {color:"#fb923c",bg:"rgba(251,146,60,0.06)",  border:"rgba(251,146,60,0.2)"},
 };
 
-// ── Confirm action block (meta actions with confirm/cancel) ───────────────────
-function ConfirmActionBlock({block,onConfirm,onCancel,lang}:{block:Block;onConfirm:(b:Block)=>void;onCancel:()=>void;lang:string}) {
-  const [executing,setExecuting]=useState(false);
-  const [done,setDone]=useState<string|null>(null);
-  const labels:Record<string,Record<string,string>>={
-    en:{pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate",confirm:"Confirm",cancel:"Cancel",executing:"Executing...",done:"Done"},
-    pt:{pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",confirm:"Confirmar",cancel:"Cancelar",executing:"Executando...",done:"Concluído"},
-    es:{pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar",confirm:"Confirmar",cancel:"Cancelar",executing:"Ejecutando...",done:"Listo"},
+// ── InlineToolPanel (from LoopV2) ──────────────────────────────────────────────
+function InlineToolPanel({ action, onClose, onSend, lang }: {
+  action: string; onClose: () => void; onSend: (msg: string) => void; lang: string;
+}) {
+  const [val, setVal] = useState("");
+  const [platform, setPlatform] = useState("meta");
+  const [tone, setTone] = useState("direct");
+
+  const config: Record<string, any> = {
+    hooks: {
+      icon: "⚡", color: "#06b6d4",
+      title: { en: "Generate Hooks", pt: "Gerar Hooks", es: "Generar Hooks" },
+      placeholder: { en: "Describe product, angle, or paste context…", pt: "Descreva o produto, ângulo, ou cole o contexto…", es: "Describe el producto, ángulo, o pega el contexto…" },
+      cta: { en: "Generate 5 hooks →", pt: "Gerar 5 hooks →", es: "Generar 5 hooks →" },
+      buildMsg: (v: string, p: string, t: string) => `Generate 5 high-converting ${t} ad hooks for ${p}: "${v}". Format: [N]. [Hook text]. Include hook type label.`,
+    },
+    script: {
+      icon: "✍️", color: "#34d399",
+      title: { en: "Write Script", pt: "Escrever Roteiro", es: "Escribir Guión" },
+      placeholder: { en: "What's the ad about? Paste brief or context…", pt: "Sobre o que é o anúncio? Cole o brief ou contexto…", es: "¿De qué trata el anuncio? Pega el brief o contexto…" },
+      cta: { en: "Write script →", pt: "Escrever roteiro →", es: "Escribir guión →" },
+      buildMsg: (v: string, p: string, t: string) => `Write a complete ${t} video ad script for ${p}: "${v}". Format per scene: VO | ON-SCREEN | VISUAL. Strong hook in first 3s.`,
+    },
+    competitor: {
+      icon: "🔍", color: "#a78bfa",
+      title: { en: "Competitor Analysis", pt: "Análise de Concorrente", es: "Análisis de Competidor" },
+      placeholder: { en: "Paste competitor URL, describe their ad, or enter brand name…", pt: "Cole URL do concorrente, descreva o criativo, ou escreva a marca…", es: "Pega URL del competidor, describe su anuncio, o escribe la marca…" },
+      cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
+      buildMsg: (v: string) => `Analyze this competitor: "${v}". Give: 1) Hook type & formula, 2) Emotional trigger, 3) Creative model, 4) What makes it work, 5) How to beat it.`,
+    },
   };
-  const L=labels[lang]||labels.en;
-  const actionIcon:Record<string,string>={pause:"⏸",enable:"▶",update_budget:"💰",publish:"🚀",duplicate:"📋",list_campaigns:"📋"};
-  const icon=actionIcon[block.meta_action||""]||"⚡";
+  const cfg = config[action];
+  if (!cfg) return null;
+  const l = ["en","pt","es"].includes(lang) ? lang : "en";
+  const tones = ["direct","conversational","urgent","educational"];
+  const toneLabels: Record<string,Record<string,string>> = {
+    direct:{en:"Direct",pt:"Direto",es:"Directo"},
+    conversational:{en:"Conversational",pt:"Conversacional",es:"Conversacional"},
+    urgent:{en:"Urgent",pt:"Urgente",es:"Urgente"},
+    educational:{en:"Educational",pt:"Educativo",es:"Educativo"},
+  };
+  const submit = () => { if(val.trim()){onSend(cfg.buildMsg(val.trim(),platform,tone));onClose();}};
 
-  if(done) return(
-    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.3)",background:"rgba(52,211,153,0.07)",padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
-      <span style={{fontSize:16}}>✓</span>
-      <p style={{...j,fontSize:12,fontWeight:600,color:"#34d399",margin:0}}>{done}</p>
-    </div>
-  );
-
-  return(
-    <div style={{borderRadius:14,border:"1px solid rgba(251,146,60,0.25)",background:"rgba(251,146,60,0.06)",marginBottom:10,overflow:"hidden"}}>
-      <div style={{padding:"12px 16px",display:"flex",alignItems:"flex-start",gap:10}}>
-        <span style={{fontSize:18,flexShrink:0,marginTop:1}}>{icon}</span>
-        <div style={{flex:1}}>
-          <p style={{...j,fontSize:13,fontWeight:700,color:"#fb923c",marginBottom:4}}>{block.title}</p>
-          {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.6)",margin:0,lineHeight:1.5}}>{block.content}</p>}
+  return (
+    <div style={{borderRadius:16,overflow:"hidden",border:`1px solid ${cfg.color}22`,background:`linear-gradient(135deg,${cfg.color}07 0%,rgba(10,12,20,0.98) 100%)`,margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px 10px",borderBottom:`1px solid ${cfg.color}15`}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:15}}>{cfg.icon}</span>
+          <span style={{...j,fontSize:13,fontWeight:700,color:"#fff"}}>{cfg.title[l]}</span>
         </div>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",cursor:"pointer",fontSize:15,display:"flex",padding:4}}>
+          <X size={14}/>
+        </button>
       </div>
-      <div style={{padding:"0 16px 14px",display:"flex",gap:8}}>
-        <button onClick={async()=>{
-          setExecuting(true);
-          await onConfirm(block);
-          setDone(`${L[block.meta_action as string]||L.done} — ${block.target_name||block.target_id}`);
-          setExecuting(false);
-        }} disabled={executing}
-          style={{...j,fontSize:12,fontWeight:700,padding:"8px 18px",borderRadius:9,background:"linear-gradient(135deg,#fb923c,#f97316)",color:"#000",border:"none",cursor:executing?"wait":"pointer",display:"flex",alignItems:"center",gap:6}}>
-          {executing?<Loader2 size={11} className="animate-spin"/>:null}
-          {executing?L.executing:`${L.confirm} — ${L[block.meta_action as string]||"Execute"}`}
-        </button>
-        <button onClick={onCancel}
-          style={{...m,fontSize:12,padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.4)",cursor:"pointer"}}>
-          {L.cancel}
-        </button>
+      <div style={{padding:"12px 16px 14px",display:"flex",flexDirection:"column",gap:10}}>
+        {action!=="competitor"&&(
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+            <div style={{display:"flex",gap:4}}>
+              {["meta","tiktok","google"].map(p=>(
+                <button key={p} onClick={()=>setPlatform(p)}
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.05)",color:platform===p?"#000":"rgba(255,255,255,0.4)",transition:"all 0.1s"}}>
+                  {p.charAt(0).toUpperCase()+p.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div style={{width:1,height:16,background:"rgba(255,255,255,0.08)"}}/>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+              {tones.map(t=>(
+                <button key={t} onClick={()=>setTone(t)}
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:tone===t?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.1s"}}>
+                  {toneLabels[t][l]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <textarea value={val} onChange={e=>setVal(e.target.value)} placeholder={cfg.placeholder[l]} rows={3} autoFocus
+          style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"10px 12px",color:"#fff",fontSize:13,lineHeight:1.6,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box"}}
+          onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}45`;}}
+          onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
+          onKeyDown={e=>{if(e.key==="Enter"&&e.metaKey)submit();}}
+        />
+        <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
+          <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
+          <button onClick={submit} disabled={!val.trim()}
+            style={{padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?`linear-gradient(135deg,${cfg.color},${cfg.color}bb)`:"rgba(255,255,255,0.05)",color:val.trim()?"#000":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s"}}>
+            {cfg.cta[l]}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
+// ── Dashboard block ────────────────────────────────────────────────────────────
 function DashboardBlock({block}:{block:Block}) {
-  const cols = !block.metrics?.length ? 1 : block.metrics.length <= 2 ? block.metrics.length : block.metrics.length <= 4 ? 2 : 3;
+  const cols = !block.metrics?.length ? 1 : block.metrics.length<=2 ? block.metrics.length : block.metrics.length<=4 ? 2 : 3;
   return (
-    <div style={{borderRadius:18,border:"1px solid rgba(14,165,233,0.18)",background:"linear-gradient(135deg,rgba(14,165,233,0.05) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:12,boxShadow:"0 8px 32px rgba(0,0,0,0.3)"}}>
-      {/* Header */}
-      <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:30,height:30,borderRadius:9,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          <BarChart2 size={14} color="#000"/>
+    <div style={{borderRadius:16,border:"1px solid rgba(14,165,233,0.15)",background:"linear-gradient(135deg,rgba(14,165,233,0.04) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:10,boxShadow:"0 4px 24px rgba(0,0,0,0.25)"}}>
+      <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:9}}>
+        <div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <BarChart2 size={12} color="#000"/>
         </div>
-        <div style={{flex:1}}>
-          <p style={{...j,fontSize:13,fontWeight:800,color:"#fff",lineHeight:1,marginBottom:2}}>{block.title}</p>
-          {block.content&&<p style={{...m,fontSize:10,color:"rgba(255,255,255,0.38)",margin:0,lineHeight:1.4}}>{block.content}</p>}
-        </div>
-        <span style={{...m,fontSize:8.5,color:"rgba(14,165,233,0.5)",letterSpacing:"0.14em",textTransform:"uppercase"}}>LIVE DATA</span>
+        <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
+        <span style={{...m,fontSize:8,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
       </div>
-      {/* Metrics grid */}
-      {block.metrics && block.metrics.length > 0 && (
+      {block.metrics && block.metrics.length>0 && (
         <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.04)"}}>
           {block.metrics.map((metric,i)=>{
-            const isUp=metric.trend==="up", isDown=metric.trend==="down";
-            const mColor=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
+            const isUp=metric.trend==="up",isDown=metric.trend==="down";
+            const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
             return(
-              <div key={i} style={{padding:"18px 20px",background:"#080c14",position:"relative",overflow:"hidden"}}>
-                <div style={{position:"absolute",top:-24,right:-24,width:90,height:90,borderRadius:"50%",background:`radial-gradient(circle,${mColor}12,transparent 65%)`,pointerEvents:"none"}}/>
-                <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.28)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:8}}>{metric.label}</p>
-                <p style={{...j,fontSize:30,fontWeight:900,color:mColor,letterSpacing:"-0.04em",lineHeight:1,marginBottom:8}}>{metric.value}</p>
+              <div key={i} style={{padding:"16px 18px",background:"#08090f",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
+                <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
+                <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
                 {metric.delta&&(
-                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:6,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.08)"}`}}>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.07)"}`}}>
                     {isDown?<TrendingDown size={9} color="#f87171"/>:isUp?<TrendingUp size={9} color="#34d399"/>:null}
                     <span style={{...m,fontSize:10,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
                   </div>
@@ -127,165 +226,232 @@ function DashboardBlock({block}:{block:Block}) {
           })}
         </div>
       )}
-      {/* Bar chart */}
       {block.chart&&block.chart.type==="bar"&&(
-        <div style={{padding:"16px 18px",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+        <div style={{padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
           {block.chart.labels.map((label,i)=>{
             const max=Math.max(...block.chart!.values);
             const pct=max>0?(block.chart!.values[i]/max)*100:0;
             const color=block.chart!.colors?.[i]||"#0ea5e9";
             return(
-              <div key={i} style={{marginBottom:12}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.65)"}}>{label}</span>
+              <div key={i} style={{marginBottom:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.6)"}}>{label}</span>
                   <span style={{...j,fontSize:11,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
                 </div>
-                <div style={{height:7,background:"rgba(255,255,255,0.05)",borderRadius:4,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${color},${color}aa)`,borderRadius:4,transition:"width 0.6s ease"}}/>
+                <div style={{height:6,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${color},${color}99)`,borderRadius:3}}/>
                 </div>
               </div>
             );
           })}
         </div>
       )}
-      {/* Table */}
       {block.table&&(
-        <div style={{overflowX:"auto",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+        <div style={{overflowX:"auto",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead>
-              <tr style={{background:"rgba(255,255,255,0.02)"}}>
-                {block.table.headers.map((h,i)=>(
-                  <th key={i} style={{...m,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"9px 16px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>{h}</th>
+            <thead><tr style={{background:"rgba(255,255,255,0.02)"}}>
+              {block.table.headers.map((h,i)=>(
+                <th key={i} style={{...m,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{block.table.rows.map((row,ri)=>(
+              <tr key={ri} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                {row.map((cell,ci)=>(
+                  <td key={ci} style={{...m,fontSize:12,color:ci===0?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.5)",padding:"10px 14px",fontWeight:ci===0?600:400}}>{cell}</td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {block.table.rows.map((row,ri)=>(
-                <tr key={ri} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                  {row.map((cell,ci)=>(
-                    <td key={ci} style={{...m,fontSize:12,color:ci===0?"rgba(255,255,255,0.9)":"rgba(255,255,255,0.55)",padding:"11px 16px",fontWeight:ci===0?600:400}}>{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
+            ))}</tbody>
           </table>
+        </div>
+      )}
+      {block.content&&<div style={{padding:"10px 16px"}}><p style={{...m,fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.65,margin:0}}>{block.content}</p></div>}
+    </div>
+  );
+}
+
+// ── Confirm action block ───────────────────────────────────────────────────────
+function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Block)=>Promise<void>;lang:string}) {
+  const [state, setState] = useState<"idle"|"running"|"done"|"cancelled">("idle");
+  const [result, setResult] = useState("");
+  const L: Record<string,Record<string,string>> = {
+    en:{confirm:"Confirm",cancel:"Cancel",running:"Executing...",done:"Done",
+        pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate"},
+    pt:{confirm:"Confirmar",cancel:"Cancelar",running:"Executando...",done:"Concluído",
+        pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar"},
+    es:{confirm:"Confirmar",cancel:"Cancelar",running:"Ejecutando...",done:"Listo",
+        pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar"},
+  };
+  const t=L[lang]||L.en;
+  const actionLabel=t[block.meta_action as string]||block.meta_action||"Execute";
+  const icons: Record<string,string>={pause:"⏸",enable:"▶",update_budget:"💰",publish:"🚀",duplicate:"📋"};
+  const icon=icons[block.meta_action||""]||"⚡";
+
+  if(state==="done") return(
+    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+      <span>✓</span>
+      <p style={{...j,fontSize:12,fontWeight:600,color:"#34d399",margin:0}}>{result}</p>
+    </div>
+  );
+  if(state==="cancelled") return null;
+
+  return(
+    <div style={{borderRadius:14,border:"1px solid rgba(251,146,60,0.22)",background:"rgba(251,146,60,0.05)",marginBottom:10,overflow:"hidden"}}>
+      <div style={{padding:"12px 16px",display:"flex",alignItems:"flex-start",gap:10}}>
+        <span style={{fontSize:18,flexShrink:0}}>{icon}</span>
+        <div style={{flex:1}}>
+          <p style={{...j,fontSize:13,fontWeight:700,color:"#fb923c",marginBottom:4}}>{block.title}</p>
+          {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.55)",margin:0,lineHeight:1.5}}>{block.content}</p>}
+        </div>
+      </div>
+      <div style={{padding:"0 16px 14px",display:"flex",gap:8}}>
+        <button onClick={async()=>{
+          setState("running");
+          await onConfirm(block);
+          setResult(`${actionLabel} — ${block.target_name||block.target_id||"OK"}`);
+          setState("done");
+        }} disabled={state==="running"}
+          style={{...j,fontSize:12,fontWeight:700,padding:"8px 16px",borderRadius:9,background:"linear-gradient(135deg,#fb923c,#f97316)",color:"#000",border:"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6}}>
+          {state==="running"?<Loader2 size={11} className="animate-spin"/>:null}
+          {state==="running"?t.running:`${t.confirm} — ${actionLabel}`}
+        </button>
+        <button onClick={()=>setState("cancelled")}
+          style={{...m,fontSize:12,padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"rgba(255,255,255,0.38)",cursor:"pointer"}}>
+          {t.cancel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Block card ────────────────────────────────────────────────────────────────
+function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
+  const s=BS[block.type]||BS.insight;
+  const [open,setOpen]=useState(true);
+  const ICONS: Record<string,string>={action:"🎯",pattern:"📊",hooks:"⚡",warning:"⚠️",insight:"📈",navigate:"→",tool_call:"⚡",off_topic:"🚫"};
+
+  if(block.type==="navigate") return(
+    <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 14px"}}>
+      <p style={{...j,fontSize:12,fontWeight:700,color:s.color,marginBottom:5}}>{block.title}</p>
+      {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.6,marginBottom:10}}>{block.content}</p>}
+      <button onClick={()=>onNavigate(block.route!,block.params)}
+        style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"rgba(96,165,250,0.15)",color:s.color,border:`1px solid ${s.border}`,cursor:"pointer"}}>
+        {block.cta||"Open →"}
+      </button>
+    </div>
+  );
+
+  return(
+    <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
+      <button onClick={()=>setOpen(o=>!o)}
+        style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:"none",border:"none",cursor:"pointer"}}>
+        <span style={{fontSize:14,flexShrink:0}}>{ICONS[block.type]||"•"}</span>
+        <span style={{...j,flex:1,fontSize:12,fontWeight:700,color:s.color,textAlign:"left"}}>{block.title}</span>
+        <span style={{...m,fontSize:10,color:s.color,opacity:0.6}}>{open?"▲":"▼"}</span>
+      </button>
+      {open&&(
+        <div style={{padding:"0 14px 12px"}}>
+          {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.68)",lineHeight:1.7,marginBottom:block.items?.length?8:0}}>{block.content}</p>}
+          {block.items?.map((item,i)=>(
+            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.05)"}}>
+              <span style={{color:s.color,fontSize:11,marginTop:2,flexShrink:0,fontWeight:700}}>{i+1}.</span>
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.78)",lineHeight:1.6}}>{item}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-function BlockCard({block,onNavigate,lang}:{block:Block;onNavigate?:(r:string,p?:Record<string,string>)=>void;lang:string}) {
-  const s=BS[block.type]||BS.insight;
-  const [open,setOpen]=useState(true);
-  if(block.type==="dashboard") return <DashboardBlock block={block}/>;
-  if(block.type==="navigate") return (
-    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"14px 16px"}}>
-      <p style={{...j,fontSize:12,fontWeight:700,color:s.color,marginBottom:6}}>{block.title}</p>
-      {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.65,marginBottom:12}}>{block.content}</p>}
-      <button onClick={()=>onNavigate?.(block.route!,block.params)}
-        style={{display:"inline-flex",alignItems:"center",gap:8,padding:"9px 16px",borderRadius:10,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",color:"#000",fontSize:12,fontWeight:700,cursor:"pointer",border:"none",...j}}>
-        {block.cta||ui(lang,"open_tool")} <ArrowRight size={13}/>
-      </button>
-    </div>
-  );
-  if(block.type==="tool_call") return (
-    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
-      <Loader2 size={13} color={s.color} className="animate-spin"/>
-      <span style={{...j,fontSize:12,color:s.color,fontWeight:600}}>{ui(lang,"running")} {block.tool}...</span>
-    </div>
-  );
-  const ICON_MAP: Record<string,React.ReactNode> = {action:<Zap size={12}/>,pattern:<BarChart2 size={12}/>,hooks:<Sparkles size={12}/>,warning:<AlertTriangle size={12}/>,insight:<Brain size={12}/>};
-  return (
-    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
-      <button onClick={()=>setOpen(o=>!o)} style={{width:"100%",display:"flex",alignItems:"center",gap:8,padding:"11px 14px",background:"none",border:"none",cursor:"pointer"}}>
-        <span style={{color:s.color,display:"flex"}}>{ICON_MAP[block.type]||<Sparkles size={12}/>}</span>
-        <span style={{...j,flex:1,fontSize:12,fontWeight:700,color:s.color,textAlign:"left"}}>{block.title}</span>
-        {open?<ChevronUp size={13} color={s.color}/>:<ChevronDown size={13} color={s.color}/>}
-      </button>
-      {open&&<div style={{padding:"0 14px 12px"}}>
-        {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.75,marginBottom:block.items?.length?10:0}}>{block.content}</p>}
-        {block.items?.map((item,i)=>(
-          <div key={i} style={{display:"flex",gap:10,marginBottom:8,padding:"8px 10px",borderRadius:8,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)"}}>
-            <span style={{color:s.color,fontSize:11,marginTop:1,flexShrink:0,fontWeight:700}}>{i+1}.</span>
-            <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.82)",lineHeight:1.6}}>{item}</span>
-          </div>
-        ))}
-      </div>}
-    </div>
-  );
-}
-
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdBriefAI() {
   const {user}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
-  const lang=language||"en";
+  const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
-  const SK="adbrief_ai_v3";
-  const [messages,setMessages]=useState<AIMessage[]>(()=>{try{const s=sessionStorage.getItem(SK);return s?JSON.parse(s):[]}catch{return []}});
+  const SK="adbrief_ai_v4";
+
+  const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(sessionStorage.getItem(SK)||"[]")}catch{return[]}});
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
-  const [metaConnected,setMetaConnected]=useState<boolean|null>(null);
-  const [connectingMeta,setConnectingMeta]=useState(false);
+  const [connections,setConnections]=useState<string[]>([]);
+  const [connectingId,setConnectingId]=useState<string|null>(null);
+  const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
+  const [copiedId,setCopiedId]=useState<number|null>(null);
+  const [activeTool,setActiveTool]=useState<string|null>(null);
+  const [msgCounter,setMsgCounter]=useState(0);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
+  // Load connections
   useEffect(()=>{
     if(!user?.id)return;
-    supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).eq("platform","meta").maybeSingle()
-      .then(({data})=>setMetaConnected(!!data));
+    supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id)
+      .then(({data})=>setConnections((data||[]).filter((c:any)=>c.status==="active").map((c:any)=>c.platform)));
   },[user?.id]);
 
-  const handleConnectMeta=async()=>{
-    setConnectingMeta(true);
-    try{const{data}=await supabase.functions.invoke("meta-oauth",{body:{action:"get_auth_url",user_id:user.id}});if(data?.url)window.location.href=data.url;}
-    catch{setConnectingMeta(false);}
-  };
-
-  useEffect(()=>{try{sessionStorage.setItem(SK,JSON.stringify(messages.slice(-30)))}catch{}},[messages]);
-
+  // Load context
   useEffect(()=>{
     if(!user?.id)return;
     (async()=>{
       const[analysesRes,patternsRes,personaRes,entriesRes,savedRes]=await Promise.all([
         supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200),
-        (supabase as any).from("learned_patterns").select("pattern_key,variables,avg_ctr,avg_cpc,avg_roas,confidence,is_winner,insight_text,sample_size").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
+        (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
         (supabase as any).from("personas").select("name,result").eq("user_id",user.id).eq("is_active",true).single(),
-        (supabase as any).from("creative_entries").select("filename,market,editor,platform,creative_type,ctr,roas,spend,clicks,impressions,import_batch_id").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
+        (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
         (supabase as any).from("ai_user_insights").select("summary").eq("user_id",user.id).single(),
       ]);
-      const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as Record<string,any>||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??"?"} | type:${r.hook_type??"?"} | market:${r.market_guess??"?"} | strength:${a.hook_strength??"?"} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
-      const patterns=(patternsRes.data||[]).map((p:any)=>`${p.is_winner?"✓WIN":"✗LOSE"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)??"?"} | ROAS:${p.avg_roas?.toFixed(2)??"?"} | conf:${p.confidence} | n:${p.sample_size}`).join("\n");
-      const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result as Record<string,any>||{};return`Name:${personaRes.data.name} | Age:${r.age_range??"?"} | Pain:${(r.pain_points||[]).slice(0,3).join(", ")} | Platforms:${(r.platforms||[]).join("+")}`})();
+      const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
+      const patterns=(patternsRes.data||[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
+      const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result as any||{};return`Name:${personaRes.data.name}|Age:${r.age_range}|Pain:${(r.pain_points||[]).slice(0,3).join(",")}|Platforms:${(r.platforms||[]).join("+")}`})();
       const entries=entriesRes.data||[];
-      const byEditor:Record<string,{ctr:number[],roas:number[],count:number}>={};
-      entries.forEach((e:any)=>{if(e.editor){if(!byEditor[e.editor])byEditor[e.editor]={ctr:[],roas:[],count:0};byEditor[e.editor].count++;if(e.ctr)byEditor[e.editor].ctr.push(e.ctr);if(e.roas)byEditor[e.editor].roas.push(e.roas);}});
-      const editorSummary=Object.entries(byEditor).map(([ed,d])=>{const avgCtr=d.ctr.length?(d.ctr.reduce((a,b)=>a+b,0)/d.ctr.length).toFixed(3):"?";const avgRoas=d.roas.length?(d.roas.reduce((a,b)=>a+b,0)/d.roas.length).toFixed(2):"?";return`Editor:${ed} | creatives:${d.count} | avgCTR:${avgCtr} | avgROAS:${avgRoas}`;}).join("\n");
-      setContext(`=== ACTIVE PERSONA ===\n${persona}\n\n=== ALL ANALYSES (${(analysesRes.data||[]).length} total) ===\n${analyses||"None yet"}\n\n=== LEARNED PATTERNS ===\n${patterns||"No patterns yet"}\n\n=== EDITOR PERFORMANCE ===\n${editorSummary||"No data"}\n\n=== SAVED INSIGHTS ===\n${savedRes.data?.summary||"None yet"}`);
+      const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
+      entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
+      const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
+      setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}\n\n=== INSIGHTS ===\n${savedRes.data?.summary||"None"}`);
       setContextReady(true);
     })();
   },[user?.id]);
 
-  const handleNavigate=(route:string,params?:Record<string,string>)=>{if(!params||Object.keys(params).length===0){navigate(route);return;}navigate(`${route}?${new URLSearchParams(params).toString()}`);};
+  useEffect(()=>{try{sessionStorage.setItem(SK,JSON.stringify(messages.slice(-30)))}catch{}},[messages]);
+
+  const handleConnect=async(id:string,fn:string)=>{
+    setConnectingId(id);
+    try{const{data}=await supabase.functions.invoke(fn,{body:{action:"get_auth_url",user_id:user.id}});if(data?.url)window.location.href=data.url;}
+    catch{setConnectingId(null);}
+  };
 
   const executeMetaAction=async(block:Block)=>{
-    const p=block.tool_params||{};
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action||p.meta_action,user_id:user.id,target_id:block.target_id||p.target_id,target_type:block.target_type||p.target_type,value:block.value||p.value}
+      body:{action:block.meta_action,user_id:user.id,target_id:block.target_id,target_type:block.target_type,value:block.value}
     });
     if(error||data?.error){
-      setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:"Falha na ação",content:data?.error||error?.message||"Tente novamente."}],ts:Date.now()}]);
+      const id=Date.now();
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha",content:data?.error||error?.message||"Tente novamente."}]}]);
       return;
     }
-    // If it returns campaigns list, show as table
     if(data?.campaigns){
-      const rows=(data.campaigns as any[]).map((c:any)=>[ c.name, c.effective_status||c.status, c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—", c.id ]);
-      setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"dashboard",title:lang==="pt"?"Suas campanhas":"Your campaigns",table:{headers:[lang==="pt"?"Nome":"Name",lang==="pt"?"Status":"Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}}],ts:Date.now()}]);
-      return;
+      const rows=(data.campaigns as any[]).map((c:any)=>[c.name,c.effective_status||c.status,c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
+      const id=Date.now();
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"dashboard",title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}}]}]);
     }
-    setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"insight",title:"✓ "+(data?.message||"Concluído"),content:""}],ts:Date.now()}]);
+  };
+
+  const handleNavigate=(route:string,params?:Record<string,string>)=>{
+    navigate(params&&Object.keys(params).length?`${route}?${new URLSearchParams(params)}`:`${route}`);
+  };
+
+  const handleCopy=(id:number,blocks:Block[])=>{
+    const text=blocks.map(b=>[b.title,b.content,...(b.items||[])].filter(Boolean).join("\n")).join("\n\n");
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(()=>setCopiedId(null),2000);
+  };
+
+  const handleFeedback=(id:number,type:"like"|"dislike",blocks:Block[])=>{
+    setFeedback(f=>({...f,[id]:f[id]===type?null:type}));
   };
 
   const send=async(text?:string)=>{
@@ -293,170 +459,220 @@ export default function AdBriefAI() {
     if(!msg||loading||!contextReady)return;
     setInput("");
     if(textareaRef.current)textareaRef.current.style.height="auto";
-    setMessages(prev=>[...prev,{role:"user",userText:msg,ts:Date.now()}]);
+    setActiveTool(null);
+    const uid=Date.now();
+    setMsgCounter(c=>c+1);
+    setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid}]);
     setLoading(true);
     try{
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,user_language:lang}});
-      if(error||!data?.blocks){
-        setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:lang==="pt"?"Não foi possível obter resposta":"Couldn't get a response",content:error?.message||"Try again."}],ts:Date.now()}]);
-        return;
-      }
+      const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,user_language:lang,history}});
+      if(error||!data?.blocks)throw new Error(error?.message||"No response");
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
-      // Convert tool_call with meta_action into meta_action confirm blocks
+      // Convert tool_call with meta_action → meta_action block
       blocks=blocks.map(b=>{
         if(b.type==="tool_call"&&b.tool_params?.meta_action){
           const p=b.tool_params;
-          return{
-            ...b,
-            type:"meta_action" as const,
-            meta_action:p.meta_action,
-            target_id:p.target_id,
-            target_type:p.target_type,
-            target_name:p.target_name,
-            value:p.value,
-          };
+          return{...b,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }
         return b;
       });
-      setMessages(prev=>[...prev,{role:"assistant",blocks,ts:Date.now()}]);
+      const aid=Date.now()+1;
+      setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
     }catch(e:any){
-      setMessages(prev=>[...prev,{role:"assistant",blocks:[{type:"warning",title:"Connection error",content:e?.message||"Network error."}],ts:Date.now()}]);
+      const eid=Date.now()+1;
+      setMessages(prev=>[...prev,{role:"assistant",ts:eid,id:eid,blocks:[{type:"warning",title:lang==="pt"?"Erro de conexão":"Connection error",content:e?.message||"Network error."}]}]);
     }finally{
       setLoading(false);
-      setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:"smooth"}),100);
+      setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:"smooth"}),80);
     }
   };
 
-  const handleKey=(e:React.KeyboardEvent)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}};
-  const QUICK=[ui(lang,"q1"),ui(lang,"q2"),ui(lang,"q3"),ui(lang,"q4"),ui(lang,"q5"),ui(lang,"q6")];
+  const SUGGS=SUGG[lang]||SUGG.en;
+  const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
+  const hasData=connections.length>0;
+  const metaConn=connections.includes("meta");
 
-  return (
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#080c14",...j,overflow:"hidden"}}>
-      {/* Header */}
-      <div style={{padding:"14px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-        <div style={{width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 20px rgba(14,165,233,0.2)"}}>
-          <Brain size={15} color="#000"/>
+  const LABEL: Record<string,Record<string,string>>={
+    pt:{clear:"Limpar",placeholder:"Pergunte sobre campanhas, hooks, performance...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    es:{clear:"Limpiar",placeholder:"Pregunta sobre campañas, hooks, rendimiento...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
+    en:{clear:"Clear",placeholder:"Ask about campaigns, hooks, performance...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+  };
+  const L=LABEL[lang]||LABEL.en;
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#07080e",...j,overflow:"hidden"}}>
+
+      {/* ── Header ── */}
+      <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        {/* Logo premium */}
+        <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(14,165,233,0.25)",flexShrink:0}}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-        <div>
-          <p style={{fontSize:14,fontWeight:800,color:"#fff",lineHeight:1}}>{ui(lang,"title")}</p>
-          <p style={{...m,fontSize:9.5,color:contextReady&&metaConnected?"#34d399":contextReady?"rgba(255,189,46,0.8)":"rgba(255,255,255,0.3)",letterSpacing:"0.1em",marginTop:2}}>
-            {contextReady&&metaConnected?ui(lang,"ready"):contextReady?ui(lang,"connect_title"):ui(lang,"loading_ctx")}
+        <div style={{flex:1,minWidth:0}}>
+          <p style={{fontSize:13,fontWeight:800,color:"#fff",lineHeight:1,letterSpacing:"-0.01em"}}>AdBrief AI</p>
+          <p style={{...m,fontSize:9,color:contextReady&&metaConn?"#34d399":contextReady?"#fbbf24":"rgba(255,255,255,0.25)",letterSpacing:"0.08em",marginTop:2}}>
+            {contextReady&&metaConn?`● ${lang==="pt"?"Pronto — dados reais":lang==="es"?"Listo — datos reales":"Ready — live data"}`:contextReady?`○ ${lang==="pt"?"Conecte o Meta Ads":lang==="es"?"Conecta Meta Ads":"Connect Meta Ads"}`:`○ ${lang==="pt"?"Carregando...":lang==="es"?"Cargando...":"Loading..."}`}
           </p>
+        </div>
+        {/* Platform pills */}
+        <div style={{display:"flex",gap:5,alignItems:"center"}}>
+          {PLATFORMS.map(p=>{
+            const active=connections.includes(p.id);
+            return(
+              <button key={p.id} onClick={()=>!p.soon&&!active&&handleConnect(p.id,p.fn)} disabled={!!p.soon||connectingId===p.id}
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,border:`1px solid ${active?`${p.color}35`:"rgba(255,255,255,0.07)"}`,background:active?`${p.color}10`:"transparent",cursor:p.soon||active?"default":"pointer",transition:"all 0.15s"}}>
+                <p.Icon active={active}/>
+                <span style={{...m,fontSize:10,fontWeight:600,color:active?p.color:"rgba(255,255,255,0.3)"}}>
+                  {connectingId===p.id?L.connecting:p.soon?L.soon:p.label.replace(" Ads","")}
+                </span>
+                {active&&<div style={{width:5,height:5,borderRadius:"50%",background:p.color,boxShadow:`0 0 4px ${p.color}`}}/>}
+              </button>
+            );
+          })}
         </div>
         {messages.length>0&&(
           <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);}}
-            style={{marginLeft:"auto",background:"none",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,cursor:"pointer",color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center",gap:5,fontSize:11,padding:"5px 10px",...m}}>
-            <RotateCcw size={11}/> {ui(lang,"clear")}
+            style={{background:"none",border:"1px solid rgba(255,255,255,0.07)",borderRadius:7,cursor:"pointer",color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center",gap:4,fontSize:11,padding:"5px 9px",...m,flexShrink:0}}>
+            <RotateCcw size={10}/> {L.clear}
           </button>
         )}
       </div>
 
-      {/* Meta banner */}
-      {metaConnected===false&&(
-        <div style={{margin:"12px 24px 0",padding:"12px 16px",borderRadius:12,background:"rgba(14,165,233,0.07)",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-          <div style={{flex:1}}>
-            <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",marginBottom:2}}>{ui(lang,"connect_title")}</p>
-            <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.4)",margin:0}}>{ui(lang,"connect_sub")}</p>
-          </div>
-          <button onClick={handleConnectMeta} disabled={connectingMeta}
-            style={{...j,fontSize:11,fontWeight:700,padding:"8px 16px",borderRadius:9,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",color:"#000",border:"none",cursor:connectingMeta?"wait":"pointer",display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-            {connectingMeta?<Loader2 size={11} className="animate-spin"/>:null}
-            {connectingMeta?ui(lang,"connecting"):ui(lang,"connect_btn")}
-          </button>
-        </div>
-      )}
-      {metaConnected===true&&(
-        <div style={{margin:"12px 24px 0",padding:"7px 14px",borderRadius:9,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.15)",display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
-          <div style={{width:5,height:5,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 5px #34d399"}}/>
-          <p style={{...m,fontSize:10.5,color:"rgba(52,211,153,0.75)",margin:0}}>{ui(lang,"connected")}</p>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 24px 0"}}>
+      {/* ── Messages ── */}
+      <div style={{flex:1,overflowY:"auto",padding:"16px 20px 8px"}}>
         {messages.length===0&&(
-          <div style={{maxWidth:620,margin:"0 auto",paddingTop:16}}>
-            <div style={{marginBottom:24,padding:"18px 22px",borderRadius:16,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <Brain size={13} color="#000"/>
-                </div>
-                <p style={{fontSize:13,fontWeight:800,color:"#fff"}}>{ui(lang,"empty_title")}</p>
+          <div style={{maxWidth:620,margin:"16px auto 0"}}>
+            {/* Greeting */}
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+              <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <Sparkles size={13} color="rgba(14,165,233,0.8)"/>
               </div>
-              <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.7}}>{ui(lang,"empty_sub")}</p>
+              <p style={{...j,fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",margin:0}}>
+                {hasData
+                  ? lang==="pt"?"Conta conectada. Pergunte qualquer coisa.":lang==="es"?"Cuenta conectada. Pregunta lo que quieras.":"Account connected. Ask me anything."
+                  : lang==="pt"?"O que você quer saber sobre seus anúncios?":lang==="es"?"¿Qué quieres saber sobre tus anuncios?":"What do you want to know about your ads?"}
+              </p>
             </div>
+            {/* Suggestions 2x2 */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {QUICK.map(q=>(
-                <button key={q} onClick={()=>send(q)}
-                  style={{padding:"11px 14px",borderRadius:11,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",color:"rgba(255,255,255,0.6)",fontSize:12,cursor:"pointer",textAlign:"left",...m,lineHeight:1.5,transition:"all 0.15s"}}
-                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.color="#fff";}}
-                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.03)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.color="rgba(255,255,255,0.6)";}}>
-                  {q}
+              {SUGGS.map((s,i)=>(
+                <button key={i} onClick={()=>send(s)}
+                  style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:12,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
+                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.transform="translateY(-1px)";}}
+                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.025)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.transform="translateY(0)";}}>
+                  <span style={{fontSize:13,opacity:0.5,flexShrink:0}}>{["📊","⚡","✍️","🎯"][i]}</span>
+                  <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.5,fontWeight:500}}>{s}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
-        {messages.map((msg,i)=>(
-          <div key={i} style={{maxWidth:680,margin:"0 auto 20px"}}>
+
+        {/* Inline tool panel */}
+        {activeTool&&activeTool!=="upload"&&(
+          <div style={{maxWidth:620,margin:"0 auto 4px"}}>
+            <InlineToolPanel action={activeTool} onClose={()=>setActiveTool(null)} onSend={send} lang={lang}/>
+          </div>
+        )}
+
+        {messages.map((msg)=>(
+          <div key={msg.id} style={{maxWidth:680,margin:"0 auto 14px"}}>
             {msg.role==="user"?(
-              <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4}}>
-                <div style={{padding:"10px 14px",borderRadius:"14px 14px 3px 14px",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.2)",fontSize:13,color:"rgba(255,255,255,0.88)",...j,maxWidth:"82%",lineHeight:1.5}}>
+              <div style={{display:"flex",justifyContent:"flex-end"}}>
+                <div style={{padding:"10px 14px",borderRadius:"14px 14px 4px 14px",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.2)",fontSize:13,color:"rgba(255,255,255,0.85)",...j,maxWidth:"82%",lineHeight:1.55}}>
                   {msg.userText}
                 </div>
               </div>
             ):(
               <div>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
-                  <div style={{width:20,height:20,borderRadius:6,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <Sparkles size={10} color="#000"/>
+                {/* AI label */}
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:7}}>
+                  <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <Sparkles size={8} color="#fff"/>
                   </div>
-                  <span style={{...m,fontSize:9.5,color:"rgba(255,255,255,0.2)",letterSpacing:"0.12em",textTransform:"uppercase"}}>ADBRIEF AI</span>
+                  <span style={{...m,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em"}}>ADBRIEF AI</span>
                 </div>
+                {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>
-                  b.type==="meta_action"
-                    ? <ConfirmActionBlock key={bi} block={b} lang={lang}
-                        onConfirm={executeMetaAction}
-                        onCancel={()=>{}}/>
-                    : <BlockCard key={bi} block={b} onNavigate={handleNavigate} lang={lang}/>
+                  b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
+                  b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
+                  <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
+                {/* 👍 👎 Copy Retry row */}
+                <div style={{display:"flex",alignItems:"center",gap:5,marginTop:5}}>
+                  <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
+                    <ThumbsUp size={11}/>
+                  </button>
+                  <button onClick={()=>handleFeedback(msg.id,"dislike",msg.blocks||[])}
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="dislike"?"rgba(248,113,113,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="dislike"?"rgba(248,113,113,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="dislike"?"#f87171":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
+                    <ThumbsDown size={11}/>
+                  </button>
+                  <button onClick={()=>handleCopy(msg.id,msg.blocks||[])}
+                    style={{display:"flex",alignItems:"center",gap:4,height:24,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.35)",fontSize:10,...m,transition:"all 0.12s"}}>
+                    <Copy size={10}/>{copiedId===msg.id?"✓":"Copy"}
+                  </button>
+                  <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
+                    style={{display:"flex",alignItems:"center",gap:4,height:24,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.35)",fontSize:10,...m,transition:"all 0.12s"}}>
+                    <RefreshCw size={10}/>Retry
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ))}
+
         {loading&&(
-          <div style={{maxWidth:680,margin:"0 auto 20px",display:"flex",gap:8,alignItems:"center"}}>
-            <div style={{width:20,height:20,borderRadius:6,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Sparkles size={10} color="#000"/>
+          <div style={{maxWidth:680,margin:"0 auto 14px",display:"flex",gap:7,alignItems:"center"}}>
+            <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Sparkles size={8} color="#fff"/>
             </div>
-            <div style={{display:"flex",gap:4,alignItems:"center"}}>
-              {[0,1,2].map(d=>(
-                <div key={d} style={{width:5,height:5,borderRadius:"50%",background:"#0ea5e9",opacity:0.6,animation:`aipulse 1.2s ease-in-out ${d*0.2}s infinite`}}/>
-              ))}
+            <div style={{display:"flex",gap:3}}>
+              {[0,1,2].map(d=><div key={d} style={{width:5,height:5,borderRadius:"50%",background:"#0ea5e9",animation:`pulse 1.2s ease-in-out ${d*0.2}s infinite`}}/>)}
             </div>
           </div>
         )}
-        <div ref={bottomRef} style={{height:20}}/>
+        <div ref={bottomRef} style={{height:8}}/>
       </div>
 
-      {/* Input */}
-      <div style={{padding:"12px 24px 18px",borderTop:"1px solid rgba(255,255,255,0.06)",flexShrink:0}}>
-        <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:10,alignItems:"flex-end"}}>
-          <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={handleKey}
-            placeholder={ui(lang,"placeholder")} rows={1}
-            style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:13,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:43,maxHeight:120}}
-            onInput={e=>{const el=e.target as HTMLTextAreaElement;el.style.height="auto";el.style.height=Math.min(el.scrollHeight,120)+"px";}}
-            onFocus={e=>{(e.target as HTMLElement).style.borderColor="rgba(14,165,233,0.35)";}}
-            onBlur={e=>{(e.target as HTMLElement).style.borderColor="rgba(255,255,255,0.09)";}}
+      {/* ── Input area ── */}
+      <div style={{padding:"8px 20px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
+        {/* Toolbar */}
+        <div style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px"}}>
+          {TOOLS.map(tool=>(
+            <button key={tool.action} onClick={()=>tool.action==="upload"?send(`Upload an ad`):setActiveTool(a=>a===tool.action?null:tool.action)}
+              style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,background:activeTool===tool.action?`${tool.color}15`:"rgba(255,255,255,0.03)",border:`1px solid ${activeTool===tool.action?`${tool.color}30`:"rgba(255,255,255,0.06)"}`,cursor:"pointer",transition:"all 0.13s",...m}}>
+              <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
+              <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
+            </button>
+          ))}
+        </div>
+        {/* Input */}
+        <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
+          <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+            placeholder={L.placeholder} rows={1}
+            style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:13,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}}
+            onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
+            onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
+            onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
           />
           <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-            style={{width:43,height:43,borderRadius:11,background:input.trim()&&!loading?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-            {loading?<Loader2 size={16} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()?"#000":"rgba(255,255,255,0.2)"}/>}
+            style={{width:42,height:42,borderRadius:11,background:input.trim()&&!loading?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+            {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>
-        <p style={{...m,fontSize:10,color:"rgba(255,255,255,0.15)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{ui(lang,"footer")}</p>
+        <p style={{...m,fontSize:9.5,color:"rgba(255,255,255,0.12)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{L.footer}</p>
       </div>
-      <style>{`@keyframes aipulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}`}</style>
+
+      <style>{`
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
+        @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+      `}</style>
     </div>
   );
 }
