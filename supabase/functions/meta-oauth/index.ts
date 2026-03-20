@@ -8,7 +8,8 @@ const corsHeaders = {
 // Meta OAuth config
 const META_APP_ID = Deno.env.get("META_APP_ID") || "";
 const META_APP_SECRET = Deno.env.get("META_APP_SECRET") || "";
-const APP_URL = Deno.env.get("APP_URL") || "https://adbrief.pro";
+// Always use non-www URL — www.adbrief.pro has SSL cipher mismatch with Facebook OAuth
+const APP_URL = "https://adbrief.pro";
 const REDIRECT_URI = `${APP_URL}/dashboard/loop/connect/meta/callback`;
 
 // Scopes needed: read ad accounts and insights
