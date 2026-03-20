@@ -1,4 +1,4 @@
-// v5 — Immersive streaming demo
+// v6 — forwardRef fix
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
@@ -602,23 +602,25 @@ function useStreaming(lang: Lang) {
 }
 
 // ─── Render bold markdown ─────────────────────────────────────────────────────
-function MdLine({ text, style }: { text: string; style: React.CSSProperties }) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return (
-    <p style={style}>
-      {parts.map((p, i) =>
-        p.startsWith('**') && p.endsWith('**')
-          ? <strong key={i} style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>{p.slice(2,-2)}</strong>
-          : <span key={i}>{p}</span>
-      )}
-    </p>
-  );
-}
+const MdLine = React.forwardRef<HTMLParagraphElement, { text: string; style: React.CSSProperties }>(
+  function MdLine({ text, style }, ref) {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <p ref={ref} style={style}>
+        {parts.map((p, i) =>
+          p.startsWith('**') && p.endsWith('**')
+            ? <strong key={i} style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>{p.slice(2,-2)}</strong>
+            : <span key={i}>{p}</span>
+        )}
+      </p>
+    );
+  }
+);
 
 // ─── Thinking dots ────────────────────────────────────────────────────────────
-function Dots() {
+const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
   return (
-    <div style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
+    <div ref={ref} style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
       {[0,1,2].map(i => (
         <motion.div key={i}
           style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }}
@@ -628,7 +630,7 @@ function Dots() {
       ))}
     </div>
   );
-}
+});
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
