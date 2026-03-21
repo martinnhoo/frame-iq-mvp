@@ -320,9 +320,15 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 }
 
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
-function Section({ children, id, className = "", noPadding = false }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean }) {
+function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
+  const bgMap = {
+    default: "transparent",
+    subtle:  "rgba(255,255,255,0.012)",
+    dark:    "rgba(0,0,0,0.25)",
+    accent:  "rgba(14,165,233,0.025)",
+  };
   return (
     <motion.section
       ref={ref}
@@ -331,7 +337,7 @@ function Section({ children, id, className = "", noPadding = false }: { children
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className={className}
-      style={noPadding ? {} : { padding: "clamp(32px,5vw,72px) clamp(16px,4vw,32px)" }}
+      style={noPadding ? { background: bgMap[bg] } : { padding: "clamp(32px,5vw,72px) clamp(16px,4vw,32px)", background: bgMap[bg] }}
     >
       {children}
     </motion.section>
@@ -423,105 +429,127 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
 }
 
 // ─── Demo conversations data ──────────────────────────────────────────────────
+// ─── Industries for demo ──────────────────────────────────────────────────────
+const INDUSTRIES_DEMO = [
+  { id: "igaming",  emoji: "🎰", label: { pt: "iGaming",     es: "iGaming",     en: "iGaming"    }, color: "#a78bfa", initial: "E" },
+  { id: "ecomm",    emoji: "🛍️", label: { pt: "E-commerce",  es: "E-commerce",  en: "E-commerce" }, color: "#0ea5e9", initial: "L" },
+  { id: "fitness",  emoji: "💪", label: { pt: "Fitness",     es: "Fitness",     en: "Fitness"    }, color: "#34d399", initial: "F" },
+  { id: "finance",  emoji: "💸", label: { pt: "Finanças",    es: "Finanzas",    en: "Finance"    }, color: "#fbbf24", initial: "W" },
+  { id: "saas",     emoji: "⚡", label: { pt: "SaaS / Tech", es: "SaaS / Tech", en: "SaaS / Tech"}, color: "#60a5fa", initial: "S" },
+];
+
+const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: string; campaigns: string }>> = {
+  igaming:  { pt:{name:"Eluck Brasil",   meta:"Meta · 18 campanhas"}, es:{name:"Eluck MX",      meta:"Meta · 22 campañas"},    en:{name:"BetCore US",   meta:"Meta · 31 campaigns"} } as any,
+  ecomm:    { pt:{name:"Loja Verde",     meta:"Meta · 41 campanhas"}, es:{name:"ModaRápida MX", meta:"Meta · 38 campañas"},    en:{name:"ShopFlow",     meta:"Meta · 29 campaigns"} } as any,
+  fitness:  { pt:{name:"FitCore Brasil", meta:"Meta · 22 campanhas"}, es:{name:"FitMex",        meta:"Meta · 17 campañas"},    en:{name:"FitCore US",   meta:"Meta · 22 campaigns"} } as any,
+  finance:  { pt:{name:"WealthBR",       meta:"Meta · 14 campanhas"}, es:{name:"FinMex Pro",    meta:"Meta · 11 campañas"},    en:{name:"WealthApp",    meta:"Meta · 19 campaigns"} } as any,
+  saas:     { pt:{name:"StartupAI",      meta:"Meta · 9 campanhas"},  es:{name:"TechStart MX",  meta:"Meta · 8 campañas"},     en:{name:"SaaSBoost",    meta:"Meta · 12 campaigns"} } as any,
+};
+
+const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines: string[] }>>> = {
+  igaming: {
+    pt: [
+      { q: "Meu ROAS caiu 40% essa semana. O que aconteceu?", lines: ["Identifiquei 3 causas na sua conta:","**Fadiga criativa** — Ad_042 roda há 22 dias. Hook rate: 31% → 11%.","**Frequência 4.8x** — BR-Homens-25-34 saturado. CPM +38%.","Fix: pause Ad_042, relance Ad_019 (ROAS 3.2x, parado 9 dias)."] },
+      { q: "Quais anúncios devo pausar agora?", lines: ["3 anúncios para cortar hoje:","**Ad_038** — CPM R$91, CTR 0,4%, zero depósitos em 7 dias.","**Ad_029** — hook rate 8%. 92% saem em 3 segundos.","Pausar libera R$620/dia → redirecionar para Ad_019 (ROAS 3.2x)."] },
+      { q: "Escreve 3 hooks para o meu melhor público de iGaming.", lines: ["Dos seus top converters (hook rate 34%):", '"Você apostou R$50 e perdeu? Veja o que os vencedores fazem diferente."', '"Esse app pagou R$847 pra mim essa semana só apostando no celular."', '"Por que 92% dos apostadores perdem? Essa estratégia muda tudo."'] },
+    ],
+    es: [
+      { q: "Mi ROAS bajó 40% esta semana. ¿Qué pasó?", lines: ["Identifiqué 3 causas en tu cuenta:","**Fatiga creativa** — Ad_042 lleva 22 días. Hook rate: 31% → 11%.","**Frecuencia 4.8x** — MX-Hombres-25-34 saturado. CPM +38%.","Fix: pausa Ad_042, relanza Ad_019 (ROAS 3.2x, pausado 9 días)."] },
+      { q: "¿Cuáles anuncios pausar ahora mismo?", lines: ["3 anuncios para cortar hoy:","**Ad_038** — $18 CPM, 0.4% CTR, cero depósitos en 7 días.","**Ad_029** — 8% hook rate. 92% se van en 3 segundos.","Pausar libera $620/día → redirigir a Ad_019 (ROAS 3.2x)."] },
+      { q: "Escribe 3 hooks para mi mejor público de iGaming.", lines: ["De tus top converters (hook rate 34%):","\"¿Apostaste $50 y perdiste? Mira lo que hacen diferente los ganadores.\"","\"Esta app me pagó $847 esta semana solo apostando en el celular.\"","\"¿Por qué el 92% de apostadores pierde? Esta estrategia cambia todo.\""] },
+    ],
+    en: [
+      { q: "My ROAS dropped 40% this week. What happened?", lines: ["Found 3 causes in your account:","**Creative fatigue** — Ad_042 running 22 days. Hook rate: 31% → 11%.","**Frequency 4.8x** — US-Men-25-34 saturated. CPM +38%.","Fix: pause Ad_042, relaunch Ad_019 (ROAS 3.2x, paused 9 days)."] },
+      { q: "Which ads should I pause right now?", lines: ["3 ads to cut today:","**Ad_038** — $18 CPM, 0.4% CTR, zero deposits in 7 days.","**Ad_029** — 8% hook rate. 92% leave in first 3 seconds.","Pausing frees $620/day → redirect to Ad_019 (ROAS 3.2x)."] },
+      { q: "Write 3 hooks for my best iGaming audience.", lines: ["From your top converters (hook rate 34%):","\"You bet $50 and lost? See what winners do differently.\"","\"This app paid me $847 last week just betting on my phone.\"","\"Why do 92% of bettors lose? This strategy changes everything.\""] },
+    ],
+  },
+  ecomm: {
+    pt: [
+      { q: "Quais produtos estão com ROAS abaixo do esperado?", lines: ["Analisei 41 campanhas. 3 categorias críticas:","**Calçados femininos** — ROAS 0.8x, CPM R$48. Pausar hoje.","**Bolsas premium** — CTR 0.3%. Criativo muito genérico.","**Recomendação:** escale Eletrônicos (ROAS 4.1x, margem boa)."] },
+      { q: "Qual anúncio devo escalar agora?", lines: ["Ad_Eletro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Está com orçamento R$80/dia. Pode ir para R$300 sem risco.","Público BR-Homens-30-45 tem espaço — frequência ainda em 1.2x.","Recomendo +R$200/dia por 3 dias e monitore o CPM."] },
+      { q: "Escreve 3 hooks de e-commerce para o público BR.", lines: ["Baseado nos seus top converters:","\"Frete grátis hoje? Descubra as 3 marcas que ainda oferecem.\"","\"Todo mundo comprou isso essa semana — e ainda não chegou pra você.\"","\"R$150 de desconto só até meia-noite. 847 pessoas compraram hoje.\""] },
+    ],
+    es: [
+      { q: "¿Qué productos tienen ROAS por debajo de lo esperado?", lines: ["Analicé 38 campañas. 3 categorías críticas:","**Calzado femenino** — ROAS 0.8x, CPM $48. Pausar hoy.","**Bolsos premium** — CTR 0.3%. Creativo muy genérico.","**Recomendación:** escala Electrónica (ROAS 4.1x, buen margen)."] },
+      { q: "¿Cuál anuncio escalar ahora?", lines: ["Ad_Electro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Presupuesto actual $80/día. Puede ir a $300 sin riesgo.","Público MX-Hombres-30-45 tiene espacio — frecuencia en 1.2x.","Recomiendo +$200/día por 3 días y monitorea el CPM."] },
+      { q: "Escribe 3 hooks de e-commerce para México.", lines: ["Basado en tus top converters:","\"¿Envío gratis hoy? Descubre las 3 marcas que aún lo ofrecen.\"","\"Todo México compró esto esta semana — y todavía no llegó a ti.\"","\"$150 de descuento solo hasta medianoche. 847 personas compraron hoy.\""] },
+    ],
+    en: [
+      { q: "Which products have ROAS below target?", lines: ["Analyzed 29 campaigns. 3 critical categories:","**Women's shoes** — ROAS 0.8x, $48 CPM. Pause today.","**Premium bags** — CTR 0.3%. Creative too generic.","**Recommendation:** scale Electronics (ROAS 4.1x, good margin)."] },
+      { q: "Which ad should I scale right now?", lines: ["Ad_Electro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Current budget $80/day. Can go to $300 safely.","US-Men-30-45 has room — frequency still at 1.2x.","Recommend +$200/day for 3 days and monitor CPM."] },
+      { q: "Write 3 e-commerce hooks for the US market.", lines: ["From your top converters:","\"Free shipping today? Discover the 3 brands still offering it.\"","\"Everyone bought this week — and it hasn't reached you yet.\"","\"$150 off until midnight only. 847 people bought today.\""] },
+    ],
+  },
+  fitness: {
+    pt: [
+      { q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?", lines: ["Identifiquei 3 causas na sua conta:","**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate: 31% → 11%.","**Frequência 4.8x** — BR-Mulheres-25-34 saturado. CPM +38%.","Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias)."] },
+      { q: "Quais anúncios devo pausar agora?", lines: ["3 anúncios para cortar hoje:","**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias.","**Creative_029** — hook rate 8%. 92% saem em 3 segundos.","Pausar libera R$620/dia → redirecionar para Creative_019 (ROAS 3.2x)."] },
+      { q: "Escreve 3 hooks dos meus melhores criativos de fitness.", lines: ["Dos seus top converters (hook rate 34%, ROAS 3.1x+):","\"Você paga R$90/clique e não sabe por quê. Seus dados têm a resposta.\"","\"3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x agora.\"","\"Seu melhor criativo está parado há 9 dias. O concorrente está escalando.\""] },
+    ],
+    es: [
+      { q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?", lines: ["Identifiqué 3 causas en tu cuenta:","**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate: 31% → 11%.","**Frecuencia 4.8x** — MX-Mujeres-25-34 saturado. CPM +38%.","Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días)."] },
+      { q: "¿Cuáles anuncios pausar ahora mismo?", lines: ["3 anuncios para cortar hoy:","**Creative_038** — $18 CPM, 0.4% CTR, cero conversiones en 7 días.","**Creative_029** — 8% hook rate. 92% se van en 3 segundos.","Pausar libera $620/día → redirigir a Creative_019 (ROAS 3.2x)."] },
+      { q: "Escribe 3 hooks de fitness para México.", lines: ["De tus top converters (hook rate 34%):","\"Pagás $90/clic y no sabés por qué. Tus datos tienen la respuesta.\"","\"3 de tus 4 anuncios top gastan con ROAS bajo 1x ahora.\"","\"Tu mejor creativo lleva 9 días pausado. Un competidor lo está escalando.\""] },
+    ],
+    en: [
+      { q: "My ROAS dropped 40% this week. What's happening?", lines: ["Found 3 causes in your account:","**Creative fatigue** — Creative_042 running 22 days. Hook rate: 31% → 11%.","**Frequency 4.8x** — US-Women-25-34 saturated. CPM +38%.","Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days)."] },
+      { q: "Which ads should I pause right now?", lines: ["3 ads to cut today:","**Creative_038** — $18 CPM, 0.4% CTR, zero conversions in 7 days.","**Creative_029** — 8% hook rate. 92% leave in first 3 seconds.","Pausing frees $620/day → redirect to Creative_019 (ROAS 3.2x)."] },
+      { q: "Write 3 hooks from my best fitness creatives.", lines: ["From your top converters (hook rate 34%, ROAS 3.1x+):","\"You're paying $90/click and don't know why. Your data has the answer.\"","\"3 of your 4 top-spend ads have ROAS below 1x right now.\"","\"Your best creative is paused 9 days. A competitor is scaling it.\""] },
+    ],
+  },
+  finance: {
+    pt: [
+      { q: "Meu CPL está 3x acima do esperado. Por quê?", lines: ["Analisei 14 campanhas. Problema claro:","**Landing page** — taxa de clique pós-lead caiu 68% vs semana passada.","**Público frio** — BR-Todos-18-65 gastando R$340/dia sem retorno.","Recomendação: pause público amplo, escale BR-Homens-35-55 (CPL R$12)."] },
+      { q: "Qual anúncio de finanças está performando melhor?", lines: ["Ad_Invest_03 está destruindo tudo:","ROAS 5.1x, CPL R$9.40, hook rate 41% — muito acima da conta.","Público: BR-Homens-35-55, renda alta. Frequência 1.8x — tem espaço.","Escale para R$500/dia. Potencial de R$2.500 de retorno/dia."] },
+      { q: "Escreve 3 hooks de finanças que convertem.", lines: ["Baseado nos seus melhores anúncios:","\"O Banco Central mudou as regras e 94% dos brasileiros não sabem ainda.\"","\"Esse tipo de investimento rendeu 180% em 2024 — e você nunca ouviu falar.\"","\"Quanto você perdeu esse mês por não saber isso sobre o CDI?\""] },
+    ],
+    es: [
+      { q: "Mi CPL está 3x por encima del esperado. ¿Por qué?", lines: ["Analicé 11 campañas. Problema claro:","**Landing page** — tasa de conversión post-lead cayó 68%.","**Público frío** — MX-Todos-18-65 gastando $340/día sin retorno.","Recomendación: pausa público amplio, escala MX-Hombres-35-55 (CPL $12)."] },
+      { q: "¿Qué anuncio de finanzas está rindiendo mejor?", lines: ["Ad_Invest_03 está dominando:","ROAS 5.1x, CPL $9.40, hook rate 41% — muy por encima de la cuenta.","Público: MX-Hombres-35-55, ingreso alto. Frecuencia 1.8x — hay espacio.","Escala a $500/día. Potencial de $2,500 de retorno/día."] },
+      { q: "Escribe 3 hooks de finanzas que conviertan.", lines: ["Basado en tus mejores anuncios:","\"El Banco de México cambió las reglas y el 94% de los mexicanos no lo sabe.\"","\"Este tipo de inversión rindió 180% en 2024 — y nunca lo escuchaste.\"","\"¿Cuánto perdiste este mes por no saber esto sobre los CETES?\""] },
+    ],
+    en: [
+      { q: "My CPL is 3x above target. Why?", lines: ["Analyzed 19 campaigns. Clear problem:","**Landing page** — post-lead click rate dropped 68% vs last week.","**Cold audience** — US-All-18-65 spending $340/day with no return.","Recommendation: pause broad, scale US-Men-35-55 (CPL $12)."] },
+      { q: "Which finance ad is performing best?", lines: ["Ad_Invest_03 is dominating:","ROAS 5.1x, CPL $9.40, hook rate 41% — far above account average.","Audience: US-Men-35-55, high income. Frequency 1.8x — room to grow.","Scale to $500/day. Potential $2,500 return/day."] },
+      { q: "Write 3 finance hooks that convert.", lines: ["Based on your top ads:","\"The Fed changed the rules and 94% of Americans don't know yet.\"","\"This investment type returned 180% in 2024 — you've never heard of it.\"","\"How much did you lose this month by not knowing this about yield?\""] },
+    ],
+  },
+  saas: {
+    pt: [
+      { q: "Meu CAC de SaaS está muito alto. O que fazer?", lines: ["Analisei 9 campanhas. Diagnóstico:","**Trial → paid** — conversão de 2.1% (benchmark: 8%). Problema no onboarding.","**Anúncios** — 3 campanhas com CPL R$180+. Pausar imediatamente.","Foque em remarketing de trial (CPL R$23, conversão 14x maior)."] },
+      { q: "Qual campanha de SaaS devo escalar?", lines: ["Campanha_Remarketing_Trial está pronta pra escalar:","CPL R$23, trial-to-paid 11%, ROAS 6.8x — melhor da conta.","Orçamento atual R$40/dia. Pode ir para R$200 sem saturar.","Público: visitou pricing page + usou feature X. Expanda lookalike 1%."] },
+      { q: "Escreve 3 hooks de SaaS para gestores.", lines: ["Dos seus top ads (hook rate 38%):","\"Seu time gasta 3 horas por dia em tarefas que essa IA faz em 4 minutos.\"","\"Testei 12 ferramentas de gestão. Só uma reduziu meu CAC em 60%.\"","\"Por que empresas como a sua ainda pagam R$8k/mês por algo que custa R$49?\""] },
+    ],
+    es: [
+      { q: "Mi CAC de SaaS está muy alto. ¿Qué hacer?", lines: ["Analicé 8 campañas. Diagnóstico:","**Trial → paid** — conversión de 2.1% (benchmark: 8%). Problema en el onboarding.","**Anuncios** — 3 campañas con CPL $180+. Pausar inmediatamente.","Enfócate en remarketing de trial (CPL $23, conversión 14x mayor)."] },
+      { q: "¿Qué campaña de SaaS escalar?", lines: ["Campaña_Remarketing_Trial lista para escalar:","CPL $23, trial-to-paid 11%, ROAS 6.8x — mejor de la cuenta.","Presupuesto actual $40/día. Puede ir a $200 sin saturar.","Público: visitó pricing page + usó feature X. Expande lookalike 1%."] },
+      { q: "Escribe 3 hooks de SaaS para gerentes.", lines: ["De tus top ads (hook rate 38%):","\"Tu equipo gasta 3 horas al día en tareas que esta IA hace en 4 minutos.\"","\"Probé 12 herramientas de gestión. Solo una redujo mi CAC un 60%.\"","\"¿Por qué empresas como la tuya pagan $8k/mes por algo que cuesta $49?\""] },
+    ],
+    en: [
+      { q: "My SaaS CAC is way too high. What should I do?", lines: ["Analyzed 12 campaigns. Diagnosis:","**Trial → paid** — 2.1% conversion (benchmark: 8%). Onboarding issue.","**Ads** — 3 campaigns with CPL $180+. Pause immediately.","Focus on trial remarketing (CPL $23, 14x higher conversion)."] },
+      { q: "Which SaaS campaign should I scale?", lines: ["Campaign_Remarketing_Trial is ready to scale:","CPL $23, trial-to-paid 11%, ROAS 6.8x — best in account.","Current budget $40/day. Can go to $200 without saturating.","Audience: visited pricing page + used feature X. Expand lookalike 1%."] },
+      { q: "Write 3 SaaS hooks for managers.", lines: ["From your top ads (hook rate 38%):","\"Your team spends 3 hours a day on tasks this AI handles in 4 minutes.\"","\"I tested 12 management tools. Only one reduced my CAC by 60%.\"","\"Why do companies like yours still pay $8k/month for something that costs $49?\""] },
+    ],
+  },
+};
+
+// Keep DEMO_QA as alias for backward compat (uses fitness industry)
 const DEMO_QA: Record<Lang, Array<{ q: string; lines: string[] }>> = {
-  en: [
-    {
-      q: "My ROAS dropped 40% this week. What's happening?",
-      lines: [
-        "Found 3 causes in your account:",
-        "**Creative fatigue** — Creative_042 running 22 days. Hook rate: 31% → 11%.",
-        "**Frequency 4.8x** — BR-Women-25-34 saturated. **CPM +38%** — algorithm charging more.",
-        "Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days).",
-      ],
-    },
-    {
-      q: "Which ads should I pause right now?",
-      lines: [
-        "3 ads to cut today:",
-        "**Creative_038** — $18 CPM, 0.4% CTR, zero conversions in 7 days. $180/day burned.",
-        "**Creative_029** — 8% hook rate (floor: 15%). 92% leave in first 3 seconds.",
-        "Pausing frees $620/day → redirect to Creative_019 (ROAS 3.2x).",
-      ],
-    },
-    {
-      q: "Write 3 hooks from my best performing creatives.",
-      lines: [
-        "From your top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"You're paying $90/click and don't know why. Your data has the answer.\"",
-        "**Hook 2** — \"3 of your 4 top-spend ads have ROAS below 1x right now.\"",
-        "**Hook 3** — \"Your best creative is paused 9 days. A competitor is scaling it.\"",
-      ],
-    },
-  ],
-  pt: [
-    {
-      q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
-      lines: [
-        "Identifiquei 3 causas na sua conta:",
-        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate: 31% → 11%.",
-        "**Frequência 4.8x** — BR-Mulheres-25-34 saturado. **CPM +38%** — algoritmo cobrando mais.",
-        "Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias).",
-      ],
-    },
-    {
-      q: "Quais anúncios devo pausar agora?",
-      lines: [
-        "3 anúncios para cortar hoje:",
-        "**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias.",
-        "**Creative_029** — hook rate 8% (mínimo: 15%). 92% saem em 3 segundos.",
-        "Pausar libera R$620/dia → redirecionar para Creative_019 (ROAS 3.2x).",
-      ],
-    },
-    {
-      q: "Escreve 3 hooks dos meus melhores criativos.",
-      lines: [
-        "Dos seus top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"Você paga R$90/clique e não sabe por quê. Seus dados têm a resposta.\"",
-        "**Hook 2** — \"3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x agora.\"",
-        "**Hook 3** — \"Seu melhor criativo está parado há 9 dias. O concorrente está escalando.\"",
-      ],
-    },
-  ],
-  es: [
-    {
-      q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
-      lines: [
-        "Identifiqué 3 causas en tu cuenta:",
-        "**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate: 31% → 11%.",
-        "**Frecuencia 4.8x** — BR-Mujeres-25-34 saturado. **CPM +38%** — algoritmo cobrando más.",
-        "Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días).",
-      ],
-    },
-    {
-      q: "¿Cuáles anuncios pausar ahora mismo?",
-      lines: [
-        "3 anuncios para cortar hoy:",
-        "**Creative_038** — $18 CPM, 0.4% CTR, cero conversiones en 7 días.",
-        "**Creative_029** — 8% hook rate (mínimo: 15%). 92% se van en 3 segundos.",
-        "Pausar libera $620/día → redirigir a Creative_019 (ROAS 3.2x).",
-      ],
-    },
-    {
-      q: "Escribe 3 hooks de mis mejores creativos.",
-      lines: [
-        "De tus top converters (hook rate 34%, ROAS 3.1x+):",
-        "**Hook 1** — \"Pagas $90/clic y no sabes por qué. Tus datos tienen la respuesta.\"",
-        "**Hook 2** — \"3 de tus 4 anuncios top gastan con ROAS bajo 1x ahora.\"",
-        "**Hook 3** — \"Tu mejor creativo lleva 9 días pausado. Un competidor lo está escalando.\"",
-      ],
-    },
-  ],
+  pt: DEMO_QA_BY_INDUSTRY.fitness.pt,
+  es: DEMO_QA_BY_INDUSTRY.fitness.es,
+  en: DEMO_QA_BY_INDUSTRY.fitness.en,
 };
 
 // ─── Streaming hook — plays once, stays done. User clicks sidebar to change. ──
-function useStreaming(lang: Lang) {
+function useStreaming(lang: Lang, externalQa?: Array<{ q: string; lines: string[] }>) {
   const [qi, setQi]               = useState(0);
   const [phase, setPhase]         = useState<'idle'|'typing'|'thinking'|'streaming'|'done'>('idle');
   const [typedQ, setTypedQ]       = useState('');
   const [lines, setLines]         = useState<string[]>([]);    // all committed lines
   const [activeLine, setActiveLine] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const qaRef = useRef(DEMO_QA[lang]);
+  const qaRef = useRef(externalQa || DEMO_QA[lang]);
 
   const stop = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
 
@@ -577,12 +605,12 @@ function useStreaming(lang: Lang) {
     timer.current = setTimeout(typeChar, 280);
   }).current;
 
-  // Start on mount / lang change — play first question once
+  // Start on mount / lang change / industry change — play first question once
   useEffect(() => {
-    qaRef.current = DEMO_QA[lang];
+    qaRef.current = externalQa || DEMO_QA[lang];
     play(0);
     return stop;
-  }, [lang]);
+  }, [lang, externalQa]);
 
   const jump = (idx: number) => play(idx);
 
@@ -622,8 +650,11 @@ const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
-  const qa = DEMO_QA[lang];
-  const { qi, phase, typedQ, lines, activeLine, jump } = useStreaming(lang);
+  const [activeIndustry, setActiveIndustry] = React.useState('fitness');
+  const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
+  const account = INDUSTRY_ACCOUNTS[activeIndustry]?.[lang] || INDUSTRY_ACCOUNTS.fitness[lang];
+  const qa = DEMO_QA_BY_INDUSTRY[activeIndustry]?.[lang] || DEMO_QA_BY_INDUSTRY.fitness[lang];
+  const { qi, phase, typedQ, lines, activeLine, jump } = useStreaming(lang, qa);
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -726,12 +757,35 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
             {/* Sidebar */}
             <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
-              {/* Account badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: 'linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.08))', border: '1px solid rgba(14,165,233,0.2)', marginBottom: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#000', flexShrink: 0 }}>F</div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>FitCore Brasil</p>
-                  <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#0ea5e9', margin: '2px 0 0' }}>Meta · 22 campaigns</p>
+              {/* Industry selector — clickable */}
+              <div style={{ marginBottom: 10 }}>
+                <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 6 }}>
+                  {lang === 'pt' ? 'SEGMENTO' : lang === 'es' ? 'SEGMENTO' : 'INDUSTRY'}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {INDUSTRIES_DEMO.map(ind => {
+                    const isAct = ind.id === activeIndustry;
+                    const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
+                    return (
+                      <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9, background: isAct ? `${ind.color}14` : 'transparent', border: `1px solid ${isAct ? ind.color + '35' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.14s' }}
+                        onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                        onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 7, background: isAct ? `${ind.color}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
+                          {ind.emoji}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontFamily: F, fontSize: 11, fontWeight: isAct ? 700 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.45)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {ind.label[lang] || ind.label.en}
+                          </p>
+                          {isAct && acc && (
+                            <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: ind.color, margin: '1px 0 0' }}>{acc.meta}</p>
+                          )}
+                        </div>
+                        {isAct && <div style={{ width: 5, height: 5, borderRadius: '50%', background: ind.color, flexShrink: 0, marginLeft: 'auto', boxShadow: `0 0 5px ${ind.color}` }} />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -781,8 +835,9 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
               {/* Chat header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#0ea5e9' }}>✦</div>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: `linear-gradient(135deg, ${industry.color}40, ${industry.color}20)`, border: `1px solid ${industry.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✦</div>
                 <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff' }}>AdBrief AI</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>· {account?.name || 'FitCore Brasil'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
                   <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
                   <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>{conn}</span>
@@ -880,7 +935,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const [open, setOpen] = useState<string | null>(null);
 
   return (
-    <Section id="tools">
+    <Section id="tools" bg="subtle">
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 52 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase' }}>{t.tools_label}</span>
@@ -930,7 +985,7 @@ function HowItWorks({ t }: { t: Record<string, string> }) {
     { n: "03", icon: <MessageSquare size={20} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc },
   ];
   return (
-    <Section id="how">
+    <Section id="how" bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.how_label}</span>
@@ -962,7 +1017,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
   ];
   const p = profiles[active];
   return (
-    <Section id="for">
+    <Section id="for" bg="subtle">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.for_label}</span>
@@ -1017,7 +1072,7 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
     { before: t.ba_4_before, after: t.ba_4_after },
   ];
   return (
-    <Section>
+    <Section bg="dark">
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.ba_label}</span>
@@ -1072,7 +1127,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
   ];
 
   return (
-    <Section id="pricing">
+    <Section id="pricing" bg="accent">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.pricing_label}</span>
@@ -1139,7 +1194,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
   const [open, setOpen] = useState<number | null>(null);
   const items = [0,1,2,3,4,5,6,7].map(i => ({ q: t[`faq_q${i}`], a: t[`faq_a${i}`] })).filter(item => item.q);
   return (
-    <Section>
+    <Section bg="dark">
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.faq_label}</span>
@@ -1172,7 +1227,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   return (
-    <Section>
+    <Section bg="subtle">
       <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
         <div style={{ padding: "72px 48px", borderRadius: 32, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.12)", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: 500, height: 300, background: "radial-gradient(ellipse, rgba(14,165,233,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />

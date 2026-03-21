@@ -46,18 +46,21 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
     { icon: Zap,    label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
     { icon: FileText, label: "Write script", action: "script",     color: "#34d399" },
     { icon: BarChart3, label: "Competitor",  action: "competitor", color: "#a78bfa" },
+    { icon: BarChart2, label: "Dashboard",   action: "dashboard",  color: "#0ea5e9" },
   ],
   pt: [
     { icon: Upload, label: "Upload anúncio",  action: "upload",     color: "#60a5fa" },
     { icon: Zap,    label: "Gerar hooks",     action: "hooks",      color: "#06b6d4" },
     { icon: FileText, label: "Escrever roteiro", action: "script",  color: "#34d399" },
     { icon: BarChart3, label: "Concorrente",  action: "competitor", color: "#a78bfa" },
+    { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
   ],
   es: [
     { icon: Upload, label: "Subir anuncio",   action: "upload",     color: "#60a5fa" },
     { icon: Zap,    label: "Generar hooks",   action: "hooks",      color: "#06b6d4" },
     { icon: FileText, label: "Escribir guión", action: "script",   color: "#34d399" },
     { icon: BarChart3, label: "Competidor",   action: "competitor", color: "#a78bfa" },
+    { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
   ],
 };
 
@@ -274,48 +277,76 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   const [state, setState] = useState<"idle"|"running"|"done"|"cancelled">("idle");
   const [result, setResult] = useState("");
   const L: Record<string,Record<string,string>> = {
-    en:{confirm:"Confirm",cancel:"Cancel",running:"Executing...",done:"Done",
-        pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate"},
-    pt:{confirm:"Confirmar",cancel:"Cancelar",running:"Executando...",done:"Concluído",
-        pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar"},
-    es:{confirm:"Confirmar",cancel:"Cancelar",running:"Ejecutando...",done:"Listo",
-        pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar"},
+    en:{
+      sure:"Are you sure you want to proceed with the action:",
+      confirm:"Yes, proceed",cancel:"Cancel",running:"Executing...",done:"Done ✓",
+      pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate",
+      warning:"This action will be logged and cannot be undone.",
+    },
+    pt:{
+      sure:"Tem certeza que deseja prosseguir com a ação:",
+      confirm:"Sim, prosseguir",cancel:"Cancelar",running:"Executando...",done:"Concluído ✓",
+      pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",
+      warning:"Esta ação será registrada e não pode ser desfeita.",
+    },
+    es:{
+      sure:"¿Estás seguro de que deseas proceder con la acción:",
+      confirm:"Sí, proceder",cancel:"Cancelar",running:"Ejecutando...",done:"Completado ✓",
+      pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar",
+      warning:"Esta acción quedará registrada y no se puede deshacer.",
+    },
   };
   const t=L[lang]||L.en;
   const actionLabel=t[block.meta_action as string]||block.meta_action||"Execute";
+  const target=block.target_name||block.target_id||"";
   const icons: Record<string,string>={pause:"⏸",enable:"▶",update_budget:"💰",publish:"🚀",duplicate:"📋"};
   const icon=icons[block.meta_action||""]||"⚡";
 
   if(state==="done") return(
-    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"12px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
-      <span>✓</span>
-      <p style={{...j,fontSize:12,fontWeight:600,color:"#34d399",margin:0}}>{result}</p>
+    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"14px 16px",marginBottom:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+        <span style={{fontSize:16}}>✅</span>
+        <p style={{...j,fontSize:13,fontWeight:700,color:"#34d399",margin:0}}>{t.done}</p>
+      </div>
+      <p style={{...m,fontSize:12,color:"rgba(52,211,153,0.7)",margin:0}}>{result}</p>
     </div>
   );
   if(state==="cancelled") return null;
 
   return(
-    <div style={{borderRadius:14,border:"1px solid rgba(251,146,60,0.22)",background:"rgba(251,146,60,0.05)",marginBottom:10,overflow:"hidden"}}>
-      <div style={{padding:"12px 16px",display:"flex",alignItems:"flex-start",gap:10}}>
-        <span style={{fontSize:18,flexShrink:0}}>{icon}</span>
-        <div style={{flex:1}}>
-          <p style={{...j,fontSize:13,fontWeight:700,color:"#fb923c",marginBottom:4}}>{block.title}</p>
-          {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.55)",margin:0,lineHeight:1.5}}>{block.content}</p>}
+    <div style={{borderRadius:16,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.04)",marginBottom:10,overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{padding:"14px 16px 10px",borderBottom:"1px solid rgba(251,146,60,0.12)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+          <span style={{fontSize:20}}>{icon}</span>
+          <p style={{...j,fontSize:13,fontWeight:800,color:"#fb923c",margin:0}}>{block.title}</p>
         </div>
+        {/* Clear confirmation question */}
+        <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.8)",lineHeight:1.5,margin:"0 0 4px"}}>
+          {t.sure}
+        </p>
+        <p style={{...j,fontSize:14,fontWeight:700,color:"#fff",margin:0}}>
+          {actionLabel}{target?` — ${target}`:""}
+          {block.value?<span style={{color:"#fb923c"}}> → {block.value}</span>:null}
+        </p>
       </div>
-      <div style={{padding:"0 16px 14px",display:"flex",gap:8}}>
+      {/* Warning */}
+      <div style={{padding:"8px 16px",background:"rgba(251,146,60,0.06)",borderBottom:"1px solid rgba(251,146,60,0.08)"}}>
+        <p style={{...m,fontSize:11,color:"rgba(251,146,60,0.6)",margin:0}}>⚠️ {t.warning}</p>
+      </div>
+      {/* Buttons */}
+      <div style={{padding:"12px 16px",display:"flex",gap:8}}>
         <button onClick={async()=>{
           setState("running");
           await onConfirm(block);
-          setResult(`${actionLabel} — ${block.target_name||block.target_id||"OK"}`);
+          setResult(`${actionLabel}${target?` — ${target}`:""} executado com sucesso`);
           setState("done");
         }} disabled={state==="running"}
-          style={{...j,fontSize:12,fontWeight:700,padding:"8px 16px",borderRadius:9,background:"linear-gradient(135deg,#fb923c,#f97316)",color:"#000",border:"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6}}>
-          {state==="running"?<Loader2 size={11} className="animate-spin"/>:null}
-          {state==="running"?t.running:`${t.confirm} — ${actionLabel}`}
+          style={{...j,fontSize:13,fontWeight:700,padding:"10px 20px",borderRadius:10,background:state==="running"?"rgba(251,146,60,0.3)":"linear-gradient(135deg,#fb923c,#f97316)",color:state==="running"?"#fb923c":"#000",border:state==="running"?"1px solid rgba(251,146,60,0.3)":"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6,flex:1,justifyContent:"center"}}>
+          {state==="running"?<><Loader2 size={13} className="animate-spin"/>{t.running}</>:t.confirm}
         </button>
         <button onClick={()=>setState("cancelled")}
-          style={{...m,fontSize:12,padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",color:"rgba(255,255,255,0.38)",cursor:"pointer"}}>
+          style={{...m,fontSize:12,padding:"10px 16px",borderRadius:10,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontWeight:500}}>
           {t.cancel}
         </button>
       </div>
@@ -427,6 +458,22 @@ export default function AdBriefAI() {
     const{data,error}=await supabase.functions.invoke("meta-actions",{
       body:{action:block.meta_action,user_id:user.id,target_id:block.target_id,target_type:block.target_type,value:block.value}
     });
+
+    // ── Audit log — registra toda ação executada ──
+    const actionRecord={
+      user_id:user.id,
+      action:block.meta_action,
+      target_id:block.target_id||null,
+      target_type:block.target_type||null,
+      target_name:block.target_name||null,
+      value:block.value||null,
+      title:block.title,
+      success:!(error||data?.error),
+      error_msg:data?.error||error?.message||null,
+      executed_at:new Date().toISOString(),
+    };
+    supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{}).catch(()=>{});
+
     if(error||data?.error){
       const id=Date.now();
       setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha",content:data?.error||error?.message||"Tente novamente."}]}]);
@@ -642,14 +689,21 @@ export default function AdBriefAI() {
       {/* ── Input area ── */}
       <div style={{padding:"8px 20px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
         {/* Toolbar */}
-        <div style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px"}}>
-          {TOOLS.map(tool=>(
-            <button key={tool.action} onClick={()=>tool.action==="upload"?send(`Upload an ad`):setActiveTool(a=>a===tool.action?null:tool.action)}
-              style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,background:activeTool===tool.action?`${tool.color}15`:"rgba(255,255,255,0.03)",border:`1px solid ${activeTool===tool.action?`${tool.color}30`:"rgba(255,255,255,0.06)"}`,cursor:"pointer",transition:"all 0.13s",...m}}>
-              <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
-              <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
-            </button>
-          ))}
+        <div style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",flexWrap:"wrap"}}>
+          {TOOLS.map(tool=>{
+            const dashMsg=lang==="pt"?"Gere um dashboard com as métricas principais da minha conta agora":lang==="es"?"Genera un dashboard con las métricas principales de mi cuenta ahora":"Generate a dashboard with my account's main metrics now";
+            return(
+              <button key={tool.action} onClick={()=>{
+                if(tool.action==="upload") send("Upload an ad");
+                else if(tool.action==="dashboard") send(dashMsg);
+                else setActiveTool(a=>a===tool.action?null:tool.action);
+              }}
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,background:activeTool===tool.action||tool.action==="dashboard"&&loading?`${tool.color}15`:"rgba(255,255,255,0.03)",border:`1px solid ${activeTool===tool.action?`${tool.color}30`:"rgba(255,255,255,0.06)"}`,cursor:"pointer",transition:"all 0.13s",...m}}>
+                <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
+                <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
+              </button>
+            );
+          })}
         </div>
         {/* Input */}
         <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
