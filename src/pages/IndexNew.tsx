@@ -1357,14 +1357,14 @@ export default function IndexNew() {
   const handleCTA = () => navigate("/signup");
 
   const titleMap: Record<Lang, string> = {
-    en: "AdBrief — The AI that knows your ad account",
-    pt: "AdBrief — A IA que conhece a sua conta de anúncios",
-    es: "AdBrief — La IA que conoce tu cuenta de anuncios",
+    en: "AdBrief — Ask Your Meta Ads Anything. Get Real Answers.",
+    pt: "AdBrief — Pergunte tudo sobre sua conta de anúncios. IA com dados reais.",
+    es: "AdBrief — Pregunta todo sobre tu cuenta de anuncios. IA con datos reales.",
   };
   const descMap: Record<Lang, string> = {
-    en: "Connect Meta, TikTok or Google Ads. Ask anything. AdBrief reads your data in real time.",
-    pt: "Conecte Meta, TikTok ou Google Ads. Pergunte qualquer coisa. O AdBrief lê seus dados em tempo real.",
-    es: "Conecta Meta, TikTok o Google Ads. Pregunta lo que quieras. AdBrief lee tus datos en tiempo real.",
+    en: "Connect Meta Ads and ask anything. AdBrief reads your real account data and answers like a senior media buyer — ROAS, hooks, what to pause, what to scale. 1-day free trial.",
+    pt: "Conecte o Meta Ads e pergunte qualquer coisa. O AdBrief lê sua conta real e responde como um especialista — ROAS, hooks, o que pausar, o que escalar. Teste grátis por 1 dia.",
+    es: "Conecta Meta Ads y pregunta lo que quieras. AdBrief lee tu cuenta real y responde como un experto — ROAS, hooks, qué pausar, qué escalar. Prueba gratis 1 día.",
   };
 
   if (!ready) return <div style={{ minHeight: "100vh", background: BG }} />;
