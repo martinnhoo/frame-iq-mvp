@@ -10,10 +10,31 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const F = "'Inter', sans-serif";
 const BLUE = "#0ea5e9";
 
+const PLATFORM_ICONS: Record<string, React.ReactNode> = {
+  meta: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="#1877F2"/>
+    </svg>
+  ),
+  tiktok: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.88a8.18 8.18 0 004.77 1.52V7.01a4.85 4.85 0 01-1-.32z" fill="#fff"/>
+    </svg>
+  ),
+  google: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  ),
+};
+
 const PLATFORMS = [
-  { id: "meta",   label: "Meta Ads",   color: "#60a5fa", fn: "meta-oauth"   },
-  { id: "tiktok", label: "TikTok Ads", color: "#06b6d4", fn: "tiktok-oauth", soon: true },
-  { id: "google", label: "Google Ads", color: "#34d399", fn: "google-oauth",  soon: true },
+  { id: "meta",   label: "Meta Ads",   color: "#1877F2", fn: "meta-oauth"   },
+  { id: "tiktok", label: "TikTok Ads", color: "#fff",    fn: "tiktok-oauth", soon: true },
+  { id: "google", label: "Google Ads", color: "#4285F4", fn: "google-oauth",  soon: true },
 ];
 
 interface Account {
@@ -28,27 +49,36 @@ interface Account {
 
 // ─── Platform Connections per Account ────────────────────────────────────────
 
-function AccountPlatformConnections({ accountId, userId }: { accountId: string; userId: string }) {
-  const [connections, setConnections] = useState<Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }>>({});
+function AccountPlatformConnections({ accountId, userId, language = "pt" }: { accountId: string; userId: string; language?: string }) {
+  const [connections, setConnections] = useState<Record<string, { connected: boolean; accounts: any[]; selectedId: string | null; isGlobal?: boolean }>>({});
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
 
+  const TL: Record<string, Record<string,string>> = {
+    pt: { not_connected: "Não conectado", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Em breve", active: "Ativo", accounts_switch: "contas — trocar" },
+    es: { not_connected: "Sin conectar", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Próximamente", active: "Activo", accounts_switch: "cuentas — cambiar" },
+    en: { not_connected: "Not connected", connect_btn: "Connect", connecting: "Connecting…", coming_soon: "Coming soon", active: "Active", accounts_switch: "accounts — switch" },
+  };
+  const tl = TL[language] || TL.en;
+
   const load = async () => {
     if (!accountId) return;
-    const { data } = await supabase.from("platform_connections" as any)
-      .select("platform, ad_accounts, selected_account_id")
-      .eq("user_id", userId)
-      .eq("persona_id", accountId);
     const map: Record<string, any> = {};
-    (data || []).forEach((r: any) => {
+    // 1. Global connections (persona_id IS NULL) as fallback
+    const { data: global } = await supabase.from("platform_connections" as any)
+      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId).is("persona_id", null);
+    (global || []).forEach((r: any) => {
       const accs = (r.ad_accounts as any[]) || [];
-      map[r.platform] = {
-        connected: true,
-        accounts: accs,
-        selectedId: r.selected_account_id || accs[0]?.id || null,
-      };
+      map[r.platform] = { connected: true, accounts: accs, selectedId: r.selected_account_id || accs[0]?.id || null, isGlobal: true };
+    });
+    // 2. Account-specific connections override global
+    const { data: specific } = await supabase.from("platform_connections" as any)
+      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId).eq("persona_id", accountId);
+    (specific || []).forEach((r: any) => {
+      const accs = (r.ad_accounts as any[]) || [];
+      map[r.platform] = { connected: true, accounts: accs, selectedId: r.selected_account_id || accs[0]?.id || null, isGlobal: false };
     });
     setConnections(map);
     setLoading(false);
@@ -82,7 +112,7 @@ function AccountPlatformConnections({ accountId, userId }: { accountId: string; 
   if (loading) return <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}><Loader2 size={14} color="rgba(255,255,255,0.3)" className="animate-spin" /></div>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {PLATFORMS.map(p => {
         const conn = connections[p.id];
         const connected = !!conn;
@@ -91,55 +121,55 @@ function AccountPlatformConnections({ accountId, userId }: { accountId: string; 
         const selAcc = accs.find((a: any) => a.id === selId) || accs[0];
 
         return (
-          <div key={p.id} style={{ borderRadius: 12, background: connected ? `${p.color}07` : "rgba(255,255,255,0.025)", border: `1px solid ${connected ? p.color + "25" : "rgba(255,255,255,0.07)"}`, overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: connected ? `${p.color}15` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {connected ? <CheckCircle2 size={15} color={p.color} /> : <Link2 size={14} color="rgba(255,255,255,0.25)" />}
+          <div key={p.id} style={{ borderRadius: 10, background: connected ? `${p.color}08` : "rgba(255,255,255,0.02)", border: `1px solid ${connected ? p.color + "20" : "rgba(255,255,255,0.07)"}`, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px" }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: connected ? `${p.color}15` : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {PLATFORM_ICONS[p.id]}
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: connected ? "#fff" : "rgba(255,255,255,0.45)", margin: 0 }}>
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: connected ? "#fff" : "rgba(255,255,255,0.4)", margin: 0 }}>
                   {p.label}
-                  {(p as any).soon && <span style={{ marginLeft: 7, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.06em", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "1px 5px" }}>SOON</span>}
+                  {(p as any).soon && <span style={{ marginLeft: 7, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.06em", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "1px 5px" }}>SOON</span>}
                 </p>
-                <p style={{ fontFamily: F, fontSize: 11, color: connected ? p.color : "rgba(255,255,255,0.25)", margin: "2px 0 0" }}>
-                  {connected ? (selAcc ? `Active: ${selAcc.name || selAcc.id}` : `${accs.length} account(s)`) : "Not connected"}
+                <p style={{ fontFamily: F, fontSize: 11, color: connected ? `${p.color}cc` : "rgba(255,255,255,0.22)", margin: "2px 0 0" }}>
+                  {connected ? (selAcc ? selAcc.name || selAcc.id : `${accs.length} ${tl.accounts_switch}`) : tl.not_connected}
                 </p>
               </div>
-              {!connected && !((p as any).soon) && (
+              {!connected && !(p as any).soon && (
                 <button onClick={() => connect(p.id, p.fn)} disabled={connecting === p.id}
-                  style={{ fontFamily: F, fontSize: 12, fontWeight: 600, padding: "7px 14px", borderRadius: 8, background: `${p.color}15`, color: p.color, border: `1px solid ${p.color}30`, cursor: "pointer", flexShrink: 0 }}>
-                  {connecting === p.id ? "Connecting…" : "Connect"}
+                  style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, background: "#0ea5e9", color: "#000", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                  {connecting === p.id ? tl.connecting : tl.connect_btn}
                 </button>
               )}
               {!connected && (p as any).soon && (
-                <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>Coming soon</span>
+                <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{tl.coming_soon}</span>
               )}
               {connected && accs.length <= 1 && (
-                <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: `${p.color}12`, color: p.color, border: `1px solid ${p.color}22`, letterSpacing: "0.06em" }}>ACTIVE</span>
+                <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: `${p.color}12`, color: p.color, border: `1px solid ${p.color}22`, letterSpacing: "0.06em" }}>{tl.active.toUpperCase()}</span>
               )}
             </div>
 
             {connected && accs.length > 1 && (
               <>
                 <button onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 14px", background: "transparent", border: "none", borderTop: `1px solid ${p.color}15`, cursor: "pointer" }}>
-                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{accs.length} accounts available — switch</span>
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 13px", background: "transparent", border: "none", borderTop: `1px solid ${p.color}12`, cursor: "pointer" }}>
+                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{accs.length} {tl.accounts_switch}</span>
                   <ChevronDown size={12} color="rgba(255,255,255,0.3)" style={{ transform: expandedPlatform === p.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </button>
                 {expandedPlatform === p.id && (
-                  <div style={{ borderTop: `1px solid ${p.color}10`, padding: "8px 14px 10px", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ borderTop: `1px solid ${p.color}10`, padding: "8px 13px 10px", display: "flex", flexDirection: "column", gap: 4 }}>
                     {accs.map((acc: any) => {
                       const isSel = acc.id === selId;
                       return (
                         <button key={acc.id} onClick={() => { selectAccount(p.id, acc.id); setExpandedPlatform(null); }}
                           disabled={changingAccount === p.id}
                           style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: isSel ? `${p.color}14` : "rgba(255,255,255,0.03)", border: `1px solid ${isSel ? p.color + "35" : "rgba(255,255,255,0.07)"}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" }}>
-                          <div style={{ width: 7, height: 7, borderRadius: "50%", background: isSel ? p.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: isSel ? p.color : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
                           <div style={{ flex: 1 }}>
                             <p style={{ fontFamily: F, fontSize: 12, fontWeight: isSel ? 600 : 400, color: isSel ? "#fff" : "rgba(255,255,255,0.6)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{acc.name || acc.id}</p>
                             <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", margin: "1px 0 0" }}>{acc.id}{acc.currency ? ` · ${acc.currency}` : ""}</p>
                           </div>
-                          {isSel && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
+                          {isSel && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>{tl.active.toUpperCase()}</span>}
                         </button>
                       );
                     })}
@@ -464,7 +494,7 @@ export default function AccountsPage() {
                     {/* Platform connections */}
                     <div>
                       <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Ad account connections</p>
-                      <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} />
+                      <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} language={lang} />
                     </div>
 
                     {/* Chat shortcut */}

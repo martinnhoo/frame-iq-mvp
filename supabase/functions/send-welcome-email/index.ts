@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
     }
 
     const lang = detectLang(language);
-    const t = templates[lang];
+    let t = { ...templates[lang] };
     const appUrl = Deno.env.get("APP_URL") || "https://www.adbrief.pro";
     // Personalize subject based on pain_point from onboarding
     const painSubjects: Record<string, Record<string, string>> = {
