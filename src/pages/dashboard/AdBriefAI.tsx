@@ -502,8 +502,13 @@ export default function AdBriefAI() {
   };
 
   const send=async(text?:string)=>{
-    const msg=(text??input).trim();
+    let msg=(text??input).trim();
     if(!msg||loading||!contextReady)return;
+    // If dashboard tool is active, prefix with dashboard intent
+    if(activeTool==="dashboard"&&!text){
+      const prefix=lang==="pt"?"[DASHBOARD] ":lang==="es"?"[DASHBOARD] ":"[DASHBOARD] ";
+      msg=prefix+msg;
+    }
     setInput("");
     if(textareaRef.current)textareaRef.current.style.height="auto";
     setActiveTool(null);
@@ -540,10 +545,12 @@ export default function AdBriefAI() {
   const hasData=connections.length>0;
   const metaConn=connections.includes("meta");
 
+  const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
+
   const LABEL: Record<string,Record<string,string>>={
-    pt:{clear:"Limpar",placeholder:"Pergunte sobre campanhas, hooks, performance...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
-    es:{clear:"Limpiar",placeholder:"Pregunta sobre campañas, hooks, rendimiento...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:"Ask about campaigns, hooks, performance...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte sobre campanhas, hooks, performance...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta sobre campañas, hooks, rendimiento...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
+    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask about campaigns, hooks, performance...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -691,14 +698,17 @@ export default function AdBriefAI() {
         {/* Toolbar */}
         <div style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",flexWrap:"wrap"}}>
           {TOOLS.map(tool=>{
-            const dashMsg=lang==="pt"?"Gere um dashboard com as métricas principais da minha conta agora":lang==="es"?"Genera un dashboard con las métricas principales de mi cuenta ahora":"Generate a dashboard with my account's main metrics now";
+            const isDashActive = activeTool==="dashboard";
             return(
               <button key={tool.action} onClick={()=>{
                 if(tool.action==="upload") send("Upload an ad");
-                else if(tool.action==="dashboard") send(dashMsg);
+                else if(tool.action==="dashboard") setActiveTool(a=>a==="dashboard"?null:"dashboard");
                 else setActiveTool(a=>a===tool.action?null:tool.action);
               }}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,background:activeTool===tool.action||tool.action==="dashboard"&&loading?`${tool.color}15`:"rgba(255,255,255,0.03)",border:`1px solid ${activeTool===tool.action?`${tool.color}30`:"rgba(255,255,255,0.06)"}`,cursor:"pointer",transition:"all 0.13s",...m}}>
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,
+                  background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.03)",
+                  border:`1px solid ${activeTool===tool.action?`${tool.color}35`:"rgba(255,255,255,0.06)"}`,
+                  cursor:"pointer",transition:"all 0.13s",...m}}>
                 <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
                 <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
               </button>
