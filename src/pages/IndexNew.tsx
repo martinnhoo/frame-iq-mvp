@@ -648,7 +648,45 @@ const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
   );
 });
 
-// ─── Suggestion Bubble — active question + collapsible others ─────────────────
+// ─── Inline suggestions — appear in chat after AI responds ───────────────────
+function InlineSuggestions({ qa, qi, jump, lang, industry }: {
+  qa: Array<{q:string;lines:string[]}>; qi: number;
+  jump: (i:number) => void; lang: string;
+  industry: typeof INDUSTRIES_DEMO[0];
+}) {
+  const [visible, setVisible] = React.useState(false);
+  const label = lang === 'pt' ? 'Perguntar também:' : lang === 'es' ? 'Preguntar también:' : 'Ask next:';
+  const icons = ['📉','⚡','✍️'];
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 320);
+    return () => clearTimeout(t);
+  }, [qi]);
+
+  if (!visible) return null;
+
+  const others = qa.map((item, i) => ({ item, i })).filter(({ i }) => i !== qi);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingLeft: 36, animation: 'toolSlideIn 0.22s ease' }}>
+      <p style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em', margin: '0 0 3px', fontWeight: 500 }}>{label}</p>
+      {others.map(({ item, i }) => (
+        <button key={i} onClick={() => { setVisible(false); jump(i); }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.07)`, cursor: 'pointer', textAlign: 'left', transition: 'all 0.13s', fontFamily: F }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `${industry.color}10`; el.style.borderColor = `${industry.color}30`; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.03)'; el.style.borderColor = 'rgba(255,255,255,0.07)'; }}>
+          <span style={{ fontSize: 14, flexShrink: 0 }}>{icons[i]}</span>
+          <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.58)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
+            {item.q.slice(0, 52)}{item.q.length > 52 ? '…' : ''}
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, color: industry.color, flexShrink: 0, opacity: 0.7 }}>→</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Suggestion Bubble — kept for mobile pills only ───────────────────────────
 function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
   qa: Array<{q:string; lines:string[]}>; qi: number; phase: string;
   jump: (i:number) => void; lang: string;
@@ -720,22 +758,32 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   const prevPhase = useRef<string>('idle');
   const firstPlay = useRef(true);
   useEffect(() => {
-    // SFX: play subtle ding when AI starts streaming — both on first mount and on suggestion change
-    if (phase === 'streaming' && prevPhase.current === 'thinking') {
+    const playTone = (freq1: number, freq2: number, vol: number, dur: number, delay = 0) => {
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const o = ctx.createOscillator();
         const g = ctx.createGain();
+        o.type = 'sine';
         o.connect(g); g.connect(ctx.destination);
-        // Slightly softer on first play to not startle
-        const vol = firstPlay.current ? 0.08 : 0.12;
-        firstPlay.current = false;
-        o.frequency.setValueAtTime(880, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
-        g.gain.setValueAtTime(vol, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.18);
+        o.frequency.setValueAtTime(freq1, ctx.currentTime + delay);
+        o.frequency.exponentialRampToValueAtTime(freq2, ctx.currentTime + delay + dur * 0.3);
+        g.gain.setValueAtTime(0.001, ctx.currentTime + delay);
+        g.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+        o.start(ctx.currentTime + delay);
+        o.stop(ctx.currentTime + delay + dur);
       } catch {}
+    };
+
+    // Soft "thinking" ping when AI starts
+    if (phase === 'thinking' && prevPhase.current === 'typing') {
+      playTone(660, 780, firstPlay.current ? 0.04 : 0.07, 0.15);
+      firstPlay.current = false;
+    }
+    // Pleasant 2-note "done" when response finishes
+    if (phase === 'done' && prevPhase.current === 'streaming') {
+      playTone(880, 1050, 0.06, 0.18, 0);
+      playTone(1100, 1200, 0.04, 0.14, 0.12);
     }
     prevPhase.current = phase;
   }, [phase]);
@@ -809,119 +857,111 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 420, maxHeight: 420, overflow: 'hidden' }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#0a0c10', minHeight: 420, maxHeight: 420, overflow: 'hidden' }} className="demo-app-body">
 
-            {/* Sidebar */}
-            <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
-              {/* Industry selector — clickable */}
-              <div style={{ marginBottom: 10 }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 6 }}>
-                  {lang === 'pt' ? 'SEGMENTO' : lang === 'es' ? 'SEGMENTO' : 'INDUSTRY'}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {INDUSTRIES_DEMO.map(ind => {
-                    const isAct = ind.id === activeIndustry;
-                    const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
-                    return (
-                      <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9, background: isAct ? `${ind.color}14` : 'transparent', border: `1px solid ${isAct ? ind.color + '35' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.14s' }}
-                        onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                        onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                        <div style={{ width: 26, height: 26, borderRadius: 7, background: isAct ? `${ind.color}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
-                          {ind.emoji}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ fontFamily: F, fontSize: 11, fontWeight: isAct ? 700 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.45)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {ind.label[lang] || ind.label.en}
-                          </p>
-                          {isAct && acc && (
-                            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: ind.color, margin: '1px 0 0' }}>{acc.meta}</p>
-                          )}
-                        </div>
-                        {isAct && <div style={{ width: 5, height: 5, borderRadius: '50%', background: ind.color, flexShrink: 0, marginLeft: 'auto', boxShadow: `0 0 5px ${ind.color}` }} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Active question bubble + collapsible suggestions */}
-              <SuggestionBubble qa={qa} qi={qi} phase={phase} jump={jump} lang={lang} industry={industry} />
-
-              {/* Spacer + mini stats */}
-              <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ display: 'flex', gap: 5 }}>
-                  {[['$12.4k','Spend'],['2.1x','ROAS'],['41','Ads']].map(([v,l]) => (
-                    <div key={l} style={{ flex: 1, background: 'rgba(255,255,255,0.03)', borderRadius: 7, padding: '5px 4px', textAlign: 'center' }}>
-                      <div style={{ fontFamily: F, fontSize: 11, fontWeight: 800, color: '#fff' }}>{v}</div>
-                      <div style={{ fontFamily: F, fontSize: 8, color: 'rgba(255,255,255,0.28)' }}>{l}</div>
+            {/* Sidebar — ONLY industries */}
+            <div className="demo-sidebar-inner" style={{ width: 180, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', padding: '14px 8px', display: 'flex', flexDirection: 'column', gap: 2, background: 'rgba(0,0,0,0.2)' }}>
+              <p style={{ fontFamily: F, fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 6px', marginBottom: 8 }}>
+                {lang === 'pt' ? 'Segmento' : lang === 'es' ? 'Segmento' : 'Industry'}
+              </p>
+              {INDUSTRIES_DEMO.map(ind => {
+                const isAct = ind.id === activeIndustry;
+                const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
+                return (
+                  <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 8px', borderRadius: 10, background: isAct ? `${ind.color}12` : 'transparent', border: `1px solid ${isAct ? ind.color + '30' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: isAct ? `${ind.color}18` : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0, transition: 'all 0.15s' }}>
+                      {ind.emoji}
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p style={{ fontFamily: F, fontSize: 11.5, fontWeight: isAct ? 700 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.4)', margin: 0, letterSpacing: '-0.01em' }}>
+                        {ind.label[lang] || ind.label.en}
+                      </p>
+                      {isAct && acc && (
+                        <p style={{ fontFamily: F, fontSize: 9, color: ind.color, margin: '1px 0 0', opacity: 0.8 }}>{acc.meta}</p>
+                      )}
+                    </div>
+                    {isAct && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ind.color, flexShrink: 0, boxShadow: `0 0 6px ${ind.color}` }} />}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Chat panel */}
             <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+
               {/* Chat header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: `linear-gradient(135deg, ${industry.color}40, ${industry.color}20)`, border: `1px solid ${industry.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✦</div>
-                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff' }}>AdBrief AI</span>
-                <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>· {account?.name || 'FitCore Brasil'}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 7, background: `linear-gradient(135deg, ${industry.color}35, ${industry.color}15)`, border: `1px solid ${industry.color}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: industry.color }}>✦</div>
+                <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>AdBrief AI</span>
+                <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 2 }}>· {account?.name}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399', animation: 'pulse 2s ease-in-out infinite' }} />
                   <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>{conn}</span>
                 </div>
               </div>
 
-              {/* Mobile suggestion pills — only visible on mobile */}
-              <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
-                {qa.slice(0,3).map((item, i) => (
-                  <button key={i} onClick={() => jump(i)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? 'rgba(14,165,233,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? 'rgba(14,165,233,0.35)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', fontFamily: F, fontSize: 11, color: qi === i ? '#0ea5e9' : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400, transition: 'all 0.15s' }}>
-                    <span style={{ fontSize: 13 }}>{['📉','⚡','✍️'][i]}</span>
-                    {item.q.slice(0, 22)}{item.q.length > 22 ? '…' : ''}
-                  </button>
-                ))}
-              </div>
-
               {/* Messages */}
-              <div ref={chatRef} className="demo-chat" style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div ref={chatRef} className="demo-chat" style={{ flex: 1, padding: '16px 18px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+                {/* User message */}
                 {phase !== 'idle' && (
-                  <div className="msg-new" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ maxWidth: '78%', padding: '10px 14px', borderRadius: '14px 14px 3px 14px', background: 'rgba(14,165,233,0.18)', border: '1px solid rgba(14,165,233,0.30)' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ maxWidth: '76%', padding: '11px 15px', borderRadius: '16px 16px 4px 16px', background: 'linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.15))', border: '1px solid rgba(14,165,233,0.25)', backdropFilter: 'blur(4px)' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0, fontWeight: 500, letterSpacing: '-0.01em' }}>
                         {typedQ}
-                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle' }} />}
+                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
                       </p>
                     </div>
                   </div>
                 )}
+
+                {/* AI message */}
                 {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                  <div className="msg-new" style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.25), rgba(6,182,212,0.15))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 11, color: '#0ea5e9' }}>✦</div>
-                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '3px 14px 14px 14px', padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 8, background: `linear-gradient(135deg, ${industry.color}25, ${industry.color}10)`, border: `1px solid ${industry.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 12, color: industry.color }}>✦</div>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px 16px 16px 16px', padding: '12px 15px' }}>
                       {phase === 'thinking' && <Dots />}
                       {(phase === 'streaming' || phase === 'done') && (
                         <>
-                          {lines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: (i === lines.length - 1 && !activeLine) ? '0' : '0 0 8px' }} />)}
-                          {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: '0' }} />}
+                          {lines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, fontSize: 13, margin: (i === lines.length - 1 && !activeLine) ? '0' : '0 0 7px' }} />)}
+                          {activeLine && <MdLine text={activeLine} style={{ ...ms, fontSize: 13, margin: '0' }} />}
                         </>
                       )}
                     </div>
                   </div>
                 )}
+
+                {/* Suggestion chips — appear after response is done */}
+                {phase === 'done' && (
+                  <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />
+                )}
               </div>
 
               {/* Input bar */}
-              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)' }}>
-                <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.28)', margin: 0, flex: 1 }}>{note}</p>
+              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)', margin: 0, flex: 1, letterSpacing: '-0.01em' }}>{note}</p>
+                </div>
                 <button onClick={onCTA}
-                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '7px 14px', borderRadius: 8, background: '#0ea5e9', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#38bdf8'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
+                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '8px 16px', borderRadius: 9, background: `linear-gradient(135deg, ${industry.color}, ${industry.color}cc)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em', boxShadow: `0 0 16px ${industry.color}30` }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                   {ctabtn} →
                 </button>
+              </div>
+
+              {/* Mobile suggestion pills */}
+              <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
+                {qa.slice(0,3).map((item, i) => (
+                  <button key={i} onClick={() => jump(i)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? `${industry.color}20` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color + '40' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', fontFamily: F, fontSize: 11, color: qi === i ? industry.color : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400, transition: 'all 0.15s' }}>
+                    <span style={{ fontSize: 13 }}>{['📉','⚡','✍️'][i]}</span>
+                    {item.q.slice(0, 22)}{item.q.length > 22 ? '…' : ''}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
