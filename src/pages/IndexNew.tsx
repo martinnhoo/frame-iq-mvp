@@ -648,6 +648,62 @@ const Dots = React.forwardRef<HTMLDivElement>(function Dots(_props, ref) {
   );
 });
 
+// ─── Suggestion Bubble — active question + collapsible others ─────────────────
+function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
+  qa: Array<{q:string; lines:string[]}>; qi: number; phase: string;
+  jump: (i:number) => void; lang: string;
+  industry: typeof INDUSTRIES_DEMO[0];
+}) {
+  const [open, setOpen] = React.useState(false);
+  const sugLabel = lang === 'pt' ? 'sugestões' : lang === 'es' ? 'sugerencias' : 'suggestions';
+  const icons = ['📉','⚡','✍️'];
+  const activeQ = qa[qi];
+  const isLive = phase === 'typing' || phase === 'thinking' || phase === 'streaming';
+
+  return (
+    <div style={{ marginTop: 4, marginBottom: 4 }}>
+      {/* Active question bubble */}
+      <div style={{ position: 'relative', padding: '10px 12px 10px 10px', borderRadius: 11, background: `${industry.color}12`, border: `1px solid ${industry.color}28`, transition: 'all 0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{icons[qi]}</span>
+          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1.45, margin: 0, flex: 1 }}>
+            {activeQ?.q.slice(0,52)}{activeQ?.q.length > 52 ? '…' : ''}
+          </p>
+          {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3, boxShadow: '0 0 5px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />}
+          {phase === 'done' && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 3 }} />}
+        </div>
+      </div>
+
+      {/* Suggestions toggle */}
+      <button onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 8px', marginTop: 5, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', width: '100%' }}>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+        <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+          {open ? '↑' : '↓'} {sugLabel}
+        </span>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+      </button>
+
+      {/* Collapsible other questions */}
+      {open && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, animation: 'toolSlideIn 0.18s ease' }}>
+          {qa.map((item, i) => i === qi ? null : (
+            <button key={i} onClick={() => { jump(i); setOpen(false); }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.12s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}>
+              <span style={{ fontSize: 12, flexShrink: 0, opacity: 0.55, marginTop: 1 }}>{icons[i]}</span>
+              <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                {item.q.slice(0,42)}{item.q.length > 42 ? '…' : ''}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
@@ -759,7 +815,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(255,255,255,0.015)' }}>
               {/* Industry selector — clickable */}
               <div style={{ marginBottom: 10 }}>
-                <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 6 }}>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 6 }}>
                   {lang === 'pt' ? 'SEGMENTO' : lang === 'es' ? 'SEGMENTO' : 'INDUSTRY'}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -779,7 +835,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                             {ind.label[lang] || ind.label.en}
                           </p>
                           {isAct && acc && (
-                            <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: ind.color, margin: '1px 0 0' }}>{acc.meta}</p>
+                            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: ind.color, margin: '1px 0 0' }}>{acc.meta}</p>
                           )}
                         </div>
                         {isAct && <div style={{ width: 5, height: 5, borderRadius: '50%', background: ind.color, flexShrink: 0, marginLeft: 'auto', boxShadow: `0 0 5px ${ind.color}` }} />}
@@ -789,42 +845,16 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 </div>
               </div>
 
-              {/* Section label */}
-              <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px', marginBottom: 4 }}>{qlabel}</p>
-
-              {/* Questions */}
-              {qa.map((item, i) => (
-                <button key={i} onClick={() => jump(i)}
-                  className="demo-sidebar-btn"
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9,
-                    background: qi === i ? 'rgba(14,165,233,0.10)' : 'transparent',
-                    border: `1px solid ${qi === i ? 'rgba(14,165,233,0.25)' : 'transparent'}`,
-                    cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s',
-                    position: 'relative',
-                  }}
-                  onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                  onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                  <span className="demo-q-emoji" style={{ fontSize: 12, flexShrink: 0, opacity: qi === i ? 1 : 0.45, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
-                  <span className="demo-q-text" style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4, flex: 1 }}>
-                    {item.q.slice(0,40)}{item.q.length > 40 ? '…' : ''}
-                  </span>
-                  {qi === i && (phase === 'typing' || phase === 'thinking' || phase === 'streaming') && (
-                    <div className="demo-q-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 4, boxShadow: '0 0 6px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />
-                  )}
-                  {qi === i && phase === 'done' && (
-                    <div className="demo-q-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 4 }} />
-                  )}
-                </button>
-              ))}
+              {/* Active question bubble + collapsible suggestions */}
+              <SuggestionBubble qa={qa} qi={qi} phase={phase} jump={jump} lang={lang} industry={industry} />
 
               {/* Spacer + mini stats */}
-              <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', gap: 5 }}>
                   {[['$12.4k','Spend'],['2.1x','ROAS'],['41','Ads']].map(([v,l]) => (
-                    <div key={l} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 7, padding: '6px 6px', textAlign: 'center' }}>
+                    <div key={l} style={{ flex: 1, background: 'rgba(255,255,255,0.03)', borderRadius: 7, padding: '5px 4px', textAlign: 'center' }}>
                       <div style={{ fontFamily: F, fontSize: 11, fontWeight: 800, color: '#fff' }}>{v}</div>
-                      <div style={{ fontFamily: F, fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>{l}</div>
+                      <div style={{ fontFamily: F, fontSize: 8, color: 'rgba(255,255,255,0.28)' }}>{l}</div>
                     </div>
                   ))}
                 </div>
