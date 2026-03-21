@@ -107,7 +107,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_s2_title: "Configure sua conta", how_s2_desc: "Crie uma conta para cada marca. Adicione site, descrição e conecte o Meta Ads — a IA usa esse contexto.",
     how_s3_title: "Pergunte qualquer coisa.", how_s3_desc: "Converse como no ChatGPT — mas o AdBrief conhece sua conta. Pergunte o que funciona, o que cortar, o que produzir.",
     for_label: "PARA QUEM", for_h2: "Feito para equipes de performance.",
-    for_tab0: "Agências", for_tab1: "Media Buyers", for_tab2: "Times Internos",
+    for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
     for_h2b: "Suas campanhas finalmente conectadas.", for_d2: "Conecte as contas e dê ao time acesso a uma IA que conhece seu histórico de performance.",
