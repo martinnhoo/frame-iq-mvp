@@ -21,29 +21,29 @@ interface UpgradeWallProps {
 
 const MESSAGES: Record<string, Record<string, { icon: string; title: string; sub: string }>> = {
   en: {
-    chat:    { icon: "💬", title: "You've used your 3 free messages.", sub: "Upgrade to keep the conversation going — your AI strategy partner is waiting." },
+    chat:    { icon: "💬", title: "You've used your 3 free messages.", sub: "Upgrade to keep asking — your data is connected, now let's actually use it." },
     tool:    { icon: "⚡", title: "This tool requires a paid plan.", sub: "Upgrade to unlock all tools — hooks, scripts, briefs, competitor analysis and more." },
-    account: { icon: "🔗", title: "Connect ad accounts with a paid plan.", sub: "Upgrade to connect Meta Ads and get AI answers from your real campaign data." },
+    account: { icon: "🔗", title: "Connect your Meta Ads account.", sub: "Connect once and the AI reads your real data. Free plan includes 3 messages to try it." },
   },
   pt: {
-    chat:    { icon: "💬", title: "Você usou suas 3 mensagens gratuitas.", sub: "Faça upgrade para continuar — seu parceiro de estratégia em IA está esperando." },
+    chat:    { icon: "💬", title: "Você usou suas 3 mensagens gratuitas.", sub: "Faça upgrade para continuar — seus dados já estão conectados, agora é hora de usar." },
     tool:    { icon: "⚡", title: "Esta ferramenta requer um plano pago.", sub: "Faça upgrade para desbloquear todas as ferramentas — hooks, roteiros, briefs, análise de concorrentes e mais." },
-    account: { icon: "🔗", title: "Conecte contas de anúncios com um plano pago.", sub: "Faça upgrade para conectar o Meta Ads e receber respostas de IA baseadas nos seus dados reais." },
+    account: { icon: "🔗", title: "Conecte sua conta do Meta Ads.", sub: "Conecte uma vez e a IA lê seus dados reais. O plano gratuito inclui 3 mensagens para testar." },
   },
   es: {
-    chat:    { icon: "💬", title: "Has usado tus 3 mensajes gratuitos.", sub: "Mejora tu plan para seguir — tu socio de estrategia con IA te está esperando." },
+    chat:    { icon: "💬", title: "Has usado tus 3 mensajes gratuitos.", sub: "Mejora tu plan para seguir — tus datos ya están conectados, ahora úsalos." },
     tool:    { icon: "⚡", title: "Esta herramienta requiere un plan de pago.", sub: "Mejora tu plan para desbloquear todas las herramientas — hooks, guiones, briefs, análisis de competidores y más." },
-    account: { icon: "🔗", title: "Conecta cuentas de anuncios con un plan de pago.", sub: "Mejora tu plan para conectar Meta Ads y obtener respuestas de IA basadas en tus datos reales." },
+    account: { icon: "🔗", title: "Conecta tu cuenta de Meta Ads.", sub: "Conecta una vez y la IA lee tus datos reales. El plan gratuito incluye 3 mensajes para probarlo." },
   },
   fr: {
-    chat:    { icon: "💬", title: "Vous avez utilisé vos 3 messages gratuits.", sub: "Passez à un plan supérieur pour continuer — votre partenaire stratégique IA vous attend." },
+    chat:    { icon: "💬", title: "Vous avez utilisé vos 3 messages gratuits.", sub: "Passez à un plan supérieur pour continuer — vos données sont connectées, maintenant utilisez-les." },
     tool:    { icon: "⚡", title: "Cet outil nécessite un abonnement payant.", sub: "Passez à un plan supérieur pour débloquer tous les outils." },
-    account: { icon: "🔗", title: "Connectez des comptes publicitaires avec un abonnement payant.", sub: "Passez à un plan supérieur pour connecter Meta Ads et obtenir des réponses IA basées sur vos données." },
+    account: { icon: "🔗", title: "Connectez votre compte Meta Ads.", sub: "Connectez une fois et l'IA lit vos données réelles. Le plan gratuit inclut 3 messages d'essai." },
   },
   de: {
-    chat:    { icon: "💬", title: "Sie haben Ihre 3 kostenlosen Nachrichten verwendet.", sub: "Upgraden Sie, um fortzufahren — Ihr KI-Strategiepartner wartet." },
+    chat:    { icon: "💬", title: "Sie haben Ihre 3 kostenlosen Nachrichten verwendet.", sub: "Upgraden Sie, um fortzufahren — Ihre Daten sind verbunden, jetzt nutzen Sie sie." },
     tool:    { icon: "⚡", title: "Dieses Tool erfordert einen bezahlten Plan.", sub: "Upgraden Sie, um alle Tools freizuschalten." },
-    account: { icon: "🔗", title: "Verbinden Sie Anzeigenkonten mit einem bezahlten Plan.", sub: "Upgraden Sie, um Meta Ads zu verbinden und KI-Antworten aus Ihren echten Daten zu erhalten." },
+    account: { icon: "🔗", title: "Verbinden Sie Ihr Meta Ads-Konto.", sub: "Einmal verbinden und die KI liest Ihre echten Daten. Kostenloser Plan beinhaltet 3 Testnachrichten." },
   },
 };
 

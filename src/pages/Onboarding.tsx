@@ -366,19 +366,19 @@ const PLAN_PRICES: Record<string, string> = {
 const PLANS_DATA = (lang: string) => {
   const f = {
     pt: {
-      maker:  ["50 mensagens IA/dia", "1 conta de anúncios", "Todas as ferramentas", "3 contas"],
-      pro:    ["200 mensagens IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"],
+      maker:  ["50 mensagens IA/dia", "1 conta de anúncios", "Ferramentas básicas", "1 workspace"],
+      pro:    ["200 mensagens IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Multi-mercado"],
       studio: ["Mensagens ilimitadas", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência"],
     },
     es: {
-      maker:  ["50 mensajes IA/día", "1 cuenta de anuncios", "Todas las herramientas", "3 cuentas"],
-      pro:    ["200 mensajes IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Cuentas ilimitadas", "Multi-mercado"],
+      maker:  ["50 mensajes IA/día", "1 cuenta de anuncios", "Herramientas básicas", "1 workspace"],
+      pro:    ["200 mensajes IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Multi-mercado"],
       studio: ["Mensajes ilimitados", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia"],
     },
     en: {
-      maker:  ["50 AI messages/day", "1 ad account", "All tools unlocked", "3 accounts"],
-      pro:    ["200 AI messages/day", "3 ad accounts", "All tools unlocked", "Unlimited accounts", "Multi-market"],
-      studio: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],
+      maker:  ["50 AI messages/day", "1 ad account", "Basic tools", "1 workspace"],
+      pro:    ["200 AI messages/day", "3 ad accounts", "All tools", "Multi-market"],
+      studio: ["Unlimited messages", "Unlimited accounts", "All tools", "Agency workspace"],
     },
   };
   const l = (f as any)[lang] || f.en;

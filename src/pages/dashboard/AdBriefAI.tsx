@@ -9,8 +9,9 @@ import {
   Upload, Zap, FileText, BarChart3, X,
   TrendingUp, TrendingDown, AlertTriangle, BarChart2
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/i18n/LanguageContext";
+import UpgradeWall from "@/components/UpgradeWall";
+
+
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
@@ -419,6 +420,7 @@ export default function AdBriefAI() {
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
   const [msgCounter,setMsgCounter]=useState(0);
+  const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
@@ -543,6 +545,9 @@ export default function AdBriefAI() {
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,user_language:lang,history}});
       if(error||!data?.blocks)throw new Error(error?.message||"No response");
+
+      // Show upgrade popup on daily limit
+      if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
 
       // Strip all markdown from text fields
       const stripMd=(s:string)=>String(s)
@@ -812,6 +817,12 @@ export default function AdBriefAI() {
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
       `}</style>
+
+      {showUpgradeWall&&(
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>
+        </div>
+      )}
     </div>
   );
 }

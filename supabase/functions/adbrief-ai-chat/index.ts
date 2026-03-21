@@ -65,27 +65,13 @@ Deno.serve(async (req) => {
     // ── Dashboard request detection & rate limiting ───────────────────────────
     const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics/i.test(message);
 
-    if (isDashboardRequest) {
-      // Dashboard limits: studio=1/day, pro=3/week, maker=1/month, free=blocked
+    if (isDashboardRequest && planKey !== "free") {
+      // Dashboard limits for paid plans only: studio=unlimited, pro=3/week, maker=1/month
       const dashCount = usageRow?.dashboard_count || 0;
       const dashWeek = usageRow?.dashboard_week || "";
       const dashMonth = usageRow?.dashboard_month || "";
 
       const uiLang = user_language || "en";
-
-      if (planKey === "free") {
-        const msgs: Record<string, { title: string; content: string }> = {
-          en: { title: "Dashboard unavailable on free plan", content: "Real-time dashboards require Maker plan or higher. Upgrade to unlock." },
-          pt: { title: "Dashboard indisponível no plano gratuito", content: "Dashboards em tempo real exigem o plano Maker ou superior. Faça upgrade para desbloquear." },
-          es: { title: "Dashboard no disponible en plan gratuito", content: "Los dashboards en tiempo real requieren plan Maker o superior. Actualiza para desbloquear." },
-        };
-        const m = msgs[uiLang] || msgs.en;
-        return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      if (planKey === "maker") {
         // 1 per month
         if (dashMonth === monthKey && dashCount > 0) {
           const msgs: Record<string, { title: string; content: string }> = {
