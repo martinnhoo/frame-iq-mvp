@@ -940,15 +940,16 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 )}
               </div>
 
-              {/* Input bar */}
-              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)', margin: 0, flex: 1, letterSpacing: '-0.01em' }}>{note}</p>
+              {/* Input bar — CTA principal */}
+              <div className="demo-cta-bar" style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.25)', flexShrink: 0 }}>
+                <div className="demo-note" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                  <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.18)', margin: 0, flex: 1, letterSpacing: '-0.01em', fontStyle: 'italic' }}>{note}</p>
                 </div>
-                <button onClick={onCTA}
-                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '8px 16px', borderRadius: 9, background: `linear-gradient(135deg, ${industry.color}, ${industry.color}cc)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em', boxShadow: `0 0 16px ${industry.color}30` }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                <button onClick={onCTA} className="demo-cta-btn"
+                  style={{ fontFamily: F, fontSize: 12, fontWeight: 800, padding: '10px 20px', borderRadius: 10, background: `linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.92) 100%)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.02em', boxShadow: '0 0 24px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.3)' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-1px)'; el.style.boxShadow = '0 0 32px rgba(255,255,255,0.25), 0 6px 20px rgba(0,0,0,0.4)'; }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 24px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.3)'; }}>
                   {ctabtn} →
                 </button>
               </div>
@@ -967,14 +968,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
         </div>
 
-        {/* CTA + proofs abaixo da janela */}
-        <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 16, fontWeight: 800, padding: '15px 36px', borderRadius: 13, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 9, letterSpacing: '-0.01em', transition: 'transform 0.15s, box-shadow 0.15s', boxShadow: '0 0 0 0 rgba(255,255,255,0)' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-2px)'; el.style.boxShadow = '0 8px 40px rgba(255,255,255,0.18)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(0)'; el.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)'; }}>
-            {t.hero_cta} <ArrowRight size={16} />
-          </button>
+        {/* Proofs abaixo da janela — sem botão branco grande */}
+        <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }} className="hero-proofs">
             {proofs.map((pt, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -982,16 +977,16 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   <circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1"/>
                   <path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{pt}</span>
+                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{pt}</span>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, opacity: 0.3, marginTop: 2 }}>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: '#fff', letterSpacing: '0.14em', textTransform: 'uppercase' }}>BUILT ON</span>
-            <div style={{ width: 1, height: 9, background: 'rgba(255,255,255,0.3)' }} />
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>Anthropic</span>
-            <div style={{ width: 1, height: 9, background: 'rgba(255,255,255,0.3)' }} />
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: '#fff' }}>OpenAI</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, opacity: 0.25, marginTop: 2 }}>
+            <span style={{ fontFamily: F, fontSize: 9, fontWeight: 600, color: '#fff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>BUILT ON</span>
+            <div style={{ width: 1, height: 8, background: 'rgba(255,255,255,0.3)' }} />
+            <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#fff' }}>Anthropic</span>
+            <div style={{ width: 1, height: 8, background: 'rgba(255,255,255,0.3)' }} />
+            <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: '#fff' }}>OpenAI</span>
           </div>
         </div>
       </motion.div>
@@ -1407,13 +1402,16 @@ export default function IndexNew() {
             .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
             .demo-sidebar-inner{display:none!important}
             .demo-mobile-pills{display:flex!important}
-            .demo-chat-panel{height:320px!important;max-height:320px!important;min-height:320px!important;flex:none!important;overflow:hidden!important}
-            .demo-chat{overflow-y:auto!important;height:210px!important;max-height:210px!important;padding:14px!important}
+            .demo-chat-panel{height:380px!important;max-height:380px!important;min-height:380px!important;flex:none!important;overflow:hidden!important}
+            .demo-chat{overflow-y:auto!important;height:260px!important;max-height:260px!important;padding:14px 16px!important}
+            .demo-cta-bar{padding:14px!important}
+            .demo-cta-btn{font-size:13px!important;padding:12px 20px!important;width:100%!important}
+            .demo-note{display:none!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
-            .demo-chat-panel{height:280px!important;max-height:280px!important;min-height:280px!important}
-            .demo-chat{height:190px!important;max-height:190px!important}
+            .demo-chat-panel{height:340px!important;max-height:340px!important;min-height:340px!important}
+            .demo-chat{height:230px!important;max-height:230px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
