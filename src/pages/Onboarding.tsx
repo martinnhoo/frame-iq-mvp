@@ -442,7 +442,7 @@ export default function Onboarding() {
 
       const feat = FEATURES_STATIC.find(f => f.value === state.feature);
       toast.success("Welcome to AdBrief 🚀");
-      navigate(feat?.url || "/dashboard/loop/ai");
+      navigate(feat?.url || "/dashboard/ai");
     } catch {
       toast.error(ot("skip_setup"));
       navigate("/dashboard/ai");

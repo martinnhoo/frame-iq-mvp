@@ -170,7 +170,7 @@ export default function LoopGuidePage() {
 
       {/* CTA */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button onClick={() => navigate("/dashboard/loop/ai")}
+        <button onClick={() => navigate("/dashboard/ai")}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
           <RefreshCw size={14} /> Go to Performance Loop
         </button>
@@ -178,7 +178,7 @@ export default function LoopGuidePage() {
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer" }}>
           <Upload size={14} /> Import Data
         </button>
-        <button onClick={() => navigate("/dashboard/loop/ai")}
+        <button onClick={() => navigate("/dashboard/ai")}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer" }}>
           <Brain size={14} /> Ask AdBrief AI
         </button>

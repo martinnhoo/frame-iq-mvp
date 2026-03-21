@@ -181,7 +181,7 @@ export default function LoopImportPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
-      <button onClick={() => navigate("/dashboard/loop/ai")} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors" style={m}>
+      <button onClick={() => navigate("/dashboard/ai")} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors" style={m}>
         <ArrowLeft size={14} /> Back to Loop
       </button>
 
@@ -274,7 +274,7 @@ export default function LoopImportPage() {
             <span style={{ ...m, fontSize: 12, color: "#34d399" }}>✓ {results.parsed} parsed</span>
             {results.skipped > 0 && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>⚠ {results.skipped} skipped</span>}
           </div>
-          <Button onClick={() => navigate("/dashboard/loop/ai")} className="gap-2"
+          <Button onClick={() => navigate("/dashboard/ai")} className="gap-2"
             style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
             Go to Loop → Run Learning
           </Button>

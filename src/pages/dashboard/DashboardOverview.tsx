@@ -309,7 +309,7 @@ export default function DashboardOverview() {
               {([
                 { n: 1, icon: "🎬", title: "Analyze your first ad", desc: "Upload any video — AdBrief scores the hook, flags what's costing you budget, tells you exactly what to fix.", cta: "Analyze now →", url: "/dashboard/analyses/new", done: usedAnalyses > 0 },
                 { n: 2, icon: "⚡", title: "Generate hooks before producing", desc: "Test 10 hook angles in 30s. Each gets a predicted CTR score. Never produce a weak hook again.", cta: "Generate hooks →", url: "/dashboard/hooks", done: false },
-                { n: 3, icon: "🧠", title: "Ask AdBrief AI what to fix", desc: "Your AI already knows your account. Ask it what's wasting budget and what to produce next.", cta: "Ask AI →", url: "/dashboard/loop/ai", done: false },
+                { n: 3, icon: "🧠", title: "Ask AdBrief AI what to fix", desc: "Your AI already knows your account. Ask it what's wasting budget and what to produce next.", cta: "Ask AI →", url: "/dashboard/ai", done: false },
               ] as {n:number;icon:string;title:string;desc:string;cta:string;url:string;done:boolean}[]).map(step => (
                 <button key={step.n} onClick={() => navigate(step.url)}
                   className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors">
@@ -350,7 +350,7 @@ export default function DashboardOverview() {
               <p className="text-xs font-bold text-emerald-400">Strong creative account</p>
               <p className="text-[11px] text-emerald-400/60 mt-0.5">Avg hook score {avgScore.toFixed(1)}/10 — above 7.5. Andromeda is learning your winning patterns. Scale what's working.</p>
             </div>
-            <button onClick={() => navigate("/dashboard/loop/ai")} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black" style={{ background: "linear-gradient(135deg,#34d399,#10b981)" }}>Ask AI what to scale →</button>
+            <button onClick={() => navigate("/dashboard/ai")} className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-black" style={{ background: "linear-gradient(135deg,#34d399,#10b981)" }}>Ask AI what to scale →</button>
           </div>
         )}
 
@@ -364,7 +364,7 @@ export default function DashboardOverview() {
                 <Brain size={14} style={{ color: "#0ea5e9" }} />
                 <span className="text-xs font-bold text-white/70">Intelligence Feed</span>
               </div>
-              <button onClick={() => navigate("/dashboard/loop/ai")} className="text-[11px] text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
+              <button onClick={() => navigate("/dashboard/ai")} className="text-[11px] text-sky-400/60 hover:text-sky-400 transition-colors flex items-center gap-1">
                 Ask AI <ArrowRight size={11} />
               </button>
             </div>
@@ -442,7 +442,7 @@ export default function DashboardOverview() {
             {[
               { label: "Generate hooks", icon: Zap, url: "/dashboard/hooks", color: "#fb923c" },
               { label: "Create brief", icon: Wand2, url: "/dashboard/brief", color: "#60a5fa" },
-              { label: "Ask AdBrief AI", icon: Brain, url: "/dashboard/loop/ai", color: "#0ea5e9" },
+              { label: "Ask AdBrief AI", icon: Brain, url: "/dashboard/ai", color: "#0ea5e9" },
             ].map(a => (
               <button key={a.label} onClick={() => navigate(a.url)}
                 className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all hover:bg-white/[0.04]"

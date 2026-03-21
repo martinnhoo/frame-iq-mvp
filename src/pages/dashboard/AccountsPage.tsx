@@ -472,7 +472,7 @@ export default function AccountsPage() {
                       <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0 }}>
                         Ready to ask the AI about this account?
                       </p>
-                      <button onClick={() => navigate("/dashboard/loop/ai")}
+                      <button onClick={() => navigate("/dashboard/ai")}
                         style={{ fontFamily: F, fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 8, background: `linear-gradient(135deg, ${BLUE}, #06b6d4)`, color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                         Open AI chat →
                       </button>

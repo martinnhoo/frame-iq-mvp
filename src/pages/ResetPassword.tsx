@@ -51,7 +51,7 @@ const ResetPassword = () => {
     if (password !== confirmPassword) { toast.error(t("reset_no_match")); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) { toast.error(error.message); } else { setSuccess(true); setTimeout(() => navigate("/dashboard/loop/ai"), 3000); }
+    if (error) { toast.error(error.message); } else { setSuccess(true); setTimeout(() => navigate("/dashboard/ai"), 3000); }
     setLoading(false);
   };
 

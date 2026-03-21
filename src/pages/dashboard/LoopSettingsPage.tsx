@@ -123,7 +123,7 @@ export default function LoopSettingsPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
-      <button onClick={() => navigate("/dashboard/loop/ai")} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors" style={m}>
+      <button onClick={() => navigate("/dashboard/ai")} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors" style={m}>
         <ArrowLeft size={14} /> Back to Loop
       </button>
 

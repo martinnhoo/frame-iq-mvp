@@ -214,7 +214,7 @@ function DashboardBlock({block}:{block:Block}) {
             const isUp=metric.trend==="up",isDown=metric.trend==="down";
             const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
             return(
-              <div key={i} style={{padding:"16px 18px",background:"#08090f",position:"relative",overflow:"hidden"}}>
+              <div key={i} style={{padding:"16px 18px",background:"#13161f",position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
                 <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
                 <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
@@ -555,7 +555,7 @@ export default function AdBriefAI() {
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#07080e",...j,overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0f1117",...j,overflow:"hidden"}}>
 
       {/* ── Header ── */}
       <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>

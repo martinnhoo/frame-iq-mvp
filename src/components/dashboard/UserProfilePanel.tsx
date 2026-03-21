@@ -526,23 +526,6 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 )}
                 {saved ? "Saved!" : "Save changes"}
               </button>
-
-              {/* Onboarding answers */}
-              {profile?.onboarding_data && Object.keys(profile.onboarding_data).length > 0 && (
-                <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-3">Setup answers</p>
-                  <div className="space-y-2">
-                    {Object.entries(profile.onboarding_data).map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between gap-3">
-                        <span className="text-xs text-white/45 capitalize shrink-0">{k.replace(/_/g, " ")}</span>
-                        <span className="text-xs text-white/50 text-right truncate">
-                          {Array.isArray(v) ? (v as string[]).join(", ") : String(v)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

@@ -43,7 +43,7 @@ const FEATURES = [
     headline: "Ask your AI what's wasting budget and what to produce next.",
     desc: "AdBrief AI knows your account — your patterns, your winners, your fatigue signals. Ask it anything. It responds with data-backed actions, not generic tips.",
     bullets: ["Full account context in every response", "Detects creative fatigue before CTR drops", "Links directly to tools with pre-filled context", "Knows Meta Andromeda 2026 rules"],
-    url: "/dashboard/loop/ai",
+    url: "/dashboard/ai",
     cta: "Ask AdBrief AI",
   },
   {
@@ -53,7 +53,7 @@ const FEATURES = [
     headline: "Import your Meta data. Let the AI find your winning patterns.",
     desc: "Upload your Meta or TikTok CSV. AdBrief identifies which hook types, formats, and markets are winning in YOUR account — then calibrates every output to match.",
     bullets: ["Import Meta Ads Manager CSV", "Identifies winning hook × format × market combos", "Tracks performance by editor", "Feeds every tool with your real data"],
-    url: "/dashboard/loop/ai",
+    url: "/dashboard/ai",
     cta: "Start the loop",
   },
   {
