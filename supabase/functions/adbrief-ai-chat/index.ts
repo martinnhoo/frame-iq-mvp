@@ -1,4 +1,4 @@
-// adbrief-ai-chat v6 — Anthropic claude-sonnet-4-5-20250514
+// adbrief-ai-chat v7 — system prompt fix, dashboard sem negar acesso — Anthropic claude-sonnet-4-5-20250514
 import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
