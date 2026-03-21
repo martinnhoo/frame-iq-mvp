@@ -279,33 +279,49 @@ function AccountForm({ account, userId, onSave, onCancel }: {
 // ─── Main AccountsPage ────────────────────────────────────────────────────────
 
 export default function AccountsPage() {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, setSelectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const dt = useDashT(language);
   const navigate = useNavigate();
+
+  const L: Record<string, Record<string,string>> = {
+    pt: { title: "Contas", sub: "Cada conta conecta à sua própria conta de anúncios. A IA usa a ativa no chat.", new_btn: "Nova conta", new_label: "Nova conta", no_accounts: "Nenhuma conta ainda", no_accounts_sub: "Crie uma conta para conectar o Meta Ads e começar a usar o chat de IA.", create_first: "Criar primeira conta", your_accounts: "Suas contas", unnamed: "Conta sem nome", delete_confirm: "Excluir esta conta? Isso não pode ser desfeito.", deleted: "Conta excluída", set_active: "Usar no chat", active: "Ativa no chat" },
+    es: { title: "Cuentas", sub: "Cada cuenta conecta a su propia cuenta de anuncios. La IA usa la activa en el chat.", new_btn: "Nueva cuenta", new_label: "Nueva cuenta", no_accounts: "Sin cuentas aún", no_accounts_sub: "Crea una cuenta para conectar Meta Ads y empezar a usar el chat de IA.", create_first: "Crear primera cuenta", your_accounts: "Tus cuentas", unnamed: "Cuenta sin nombre", delete_confirm: "¿Eliminar esta cuenta? Esta acción no se puede deshacer.", deleted: "Cuenta eliminada", set_active: "Usar en chat", active: "Activa en chat" },
+    en: { title: "Accounts", sub: "Each account connects to its own ad account. The AI uses the active one in the chat.", new_btn: "New account", new_label: "New account", no_accounts: "No accounts yet", no_accounts_sub: "Create an account to connect Meta Ads and start using the AI chat.", create_first: "Create first account", your_accounts: "Your accounts", unnamed: "Unnamed account", delete_confirm: "Delete this account? This cannot be undone.", deleted: "Account deleted", set_active: "Use in chat", active: "Active in chat" },
+  };
+  const t = L[language] || L.en;
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // activeId synced with global selectedPersona
+  const activeId = selectedPersona?.id ?? null;
+  const setActiveId = (id: string | null) => {
+    const acc = accounts.find(a => a.id === id);
+    setSelectedPersona(acc ? { ...acc } as any : null);
+  };
 
   const load = async () => {
     const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
     setAccounts((data || []) as Account[]);
     setLoading(false);
-    if (data?.length && !activeId) setActiveId((data[0] as any).id);
+    // Auto-select first if nothing active yet
+    if (data?.length && !selectedPersona) {
+      setSelectedPersona({ ...(data[0] as any) });
+    }
   };
 
   useEffect(() => { load(); }, [user.id]);
 
   const deleteAccount = async (id: string) => {
-    if (!confirm("Delete this account? This cannot be undone.")) return;
+    if (!confirm(t.delete_confirm)) return;
     setDeleting(id);
     await supabase.from("personas").delete().eq("id", id);
-    toast.success("Account deleted");
-    if (activeId === id) setActiveId(null);
+    toast.success(t.deleted);
+    if (activeId === id) setSelectedPersona(null);
     load();
     setDeleting(null);
   };
@@ -324,13 +340,13 @@ export default function AccountsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: F, fontSize: "clamp(20px,3vw,26px)", fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>Accounts</h1>
-          <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Each account connects to its own ad account. The AI uses the active one in the chat.</p>
+          <h1 style={{ fontFamily: F, fontSize: "clamp(20px,3vw,26px)", fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>{t.title}</h1>
+          <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{t.sub}</p>
         </div>
         {!creating && (
           <button onClick={() => { setCreating(true); setEditingId(null); }}
             style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: F, fontSize: 13, fontWeight: 600, padding: "9px 18px", borderRadius: 10, background: `linear-gradient(135deg, ${BLUE}, #06b6d4)`, color: "#000", border: "none", cursor: "pointer" }}>
-            <Plus size={14} /> New account
+            <Plus size={14} /> {t.new_btn}
           </button>
         )}
       </div>
@@ -339,7 +355,7 @@ export default function AccountsPage() {
       {creating && (
         <div style={{ marginBottom: 24, padding: "24px", borderRadius: 16, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.2)" }}>
           <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: BLUE, marginBottom: 20, display: "flex", alignItems: "center", gap: 6 }}>
-            <Plus size={13} /> New account
+            <Plus size={13} /> {t.new_label}
           </p>
           <AccountForm userId={user.id} onSave={acc => { setCreating(false); load(); setActiveId(acc.id); }} onCancel={() => setCreating(false)} />
         </div>
@@ -348,11 +364,11 @@ export default function AccountsPage() {
       {accounts.length === 0 && !creating && (
         <div style={{ textAlign: "center", padding: "60px 20px", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.1)" }}>
           <Building2 size={32} color="rgba(255,255,255,0.15)" style={{ margin: "0 auto 14px" }} />
-          <p style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>No accounts yet</p>
-          <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Create an account to connect Meta Ads and start using the AI chat.</p>
+          <p style={{ fontFamily: F, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{t.no_accounts}</p>
+          <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>{t.no_accounts_sub}</p>
           <button onClick={() => setCreating(true)}
             style={{ fontFamily: F, fontSize: 13, fontWeight: 600, padding: "10px 22px", borderRadius: 10, background: `linear-gradient(135deg, ${BLUE}, #06b6d4)`, color: "#000", border: "none", cursor: "pointer" }}>
-            Create first account
+            {t.create_first}
           </button>
         </div>
       )}
@@ -362,7 +378,7 @@ export default function AccountsPage() {
 
           {/* Account list */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Your accounts</p>
+            <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.your_accounts}</p>
             {accounts.map(acc => {
               const isActive = acc.id === activeId;
               return (
@@ -377,13 +393,16 @@ export default function AccountsPage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontFamily: F, fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? "#fff" : "rgba(255,255,255,0.6)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {acc.name || "Unnamed account"}
+                      {acc.name || t.unnamed}
                     </p>
                     {acc.website && (
                       <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.28)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{acc.website}</p>
                     )}
                   </div>
-                  {isActive && <div style={{ width: 7, height: 7, borderRadius: "50%", background: BLUE, flexShrink: 0 }} />}
+                  {isActive
+                    ? <div style={{ width: 7, height: 7, borderRadius: "50%", background: BLUE, flexShrink: 0, boxShadow: `0 0 6px ${BLUE}` }} />
+                    : <div style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", flexShrink: 0, opacity: 0, transition: "opacity 0.12s" }} className="set-active-hint">→</div>
+                  }
                 </button>
               );
             })}
@@ -401,7 +420,12 @@ export default function AccountsPage() {
                     : (activeAccount.name?.charAt(0)?.toUpperCase() || "A")}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h2 style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff", margin: 0 }}>{activeAccount.name || "Unnamed account"}</h2>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <h2 style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff", margin: 0 }}>{activeAccount.name || t.unnamed}</h2>
+                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: BLUE, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.25)", borderRadius: 20, padding: "2px 8px", letterSpacing: "0.05em" }}>
+                      ● {t.active}
+                    </span>
+                  </div>
                   {activeAccount.website && (
                     <a href={activeAccount.website.startsWith("http") ? activeAccount.website : `https://${activeAccount.website}`} target="_blank" rel="noopener noreferrer"
                       style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}
@@ -414,7 +438,7 @@ export default function AccountsPage() {
                 <div style={{ display: "flex", gap: 6 }}>
                   <button onClick={() => setEditingId(editingId === activeAccount.id ? null : activeAccount.id)}
                     style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: F, fontSize: 12, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
-                    <Edit3 size={11} /> {editingId === activeAccount.id ? "Cancel" : "Edit"}
+                    <Edit3 size={11} /> {editingId === activeAccount.id ? (language === "pt" ? "Cancelar" : language === "es" ? "Cancelar" : "Cancel") : (language === "pt" ? "Editar" : language === "es" ? "Editar" : "Edit")}
                   </button>
                   <button onClick={() => deleteAccount(activeAccount.id)} disabled={deleting === activeAccount.id}
                     style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: F, fontSize: 12, padding: "7px 10px", borderRadius: 8, background: "transparent", color: "rgba(248,113,113,0.5)", border: "1px solid rgba(248,113,113,0.15)", cursor: "pointer" }}>
