@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       const accountsData = await accountsRes.json();
       const adAccounts = accountsData.data || [];
 
-      // Store connection in Supabase — persona_id optional
+      // Store connection in Supabase — scoped per user + platform + persona_id
       const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
       
       // Decode persona_id from state if present
@@ -98,17 +98,27 @@ Deno.serve(async (req) => {
       const upsertPayload: Record<string, any> = {
         user_id,
         platform: "meta",
+        persona_id: storedPersonaId, // always include — null means "global user connection"
         access_token: accessToken,
         expires_at: expiresAt,
         ad_accounts: adAccounts,
         status: "active",
         connected_at: new Date().toISOString(),
       };
-      if (storedPersonaId) upsertPayload.persona_id = storedPersonaId;
       
-      const { error: upsertError } = await supabase
+      // Try upsert with persona_id isolation first
+      // onConflict: user_id,platform,persona_id — each account gets its own row
+      let { error: upsertError } = await supabase
         .from("platform_connections" as any)
-        .upsert(upsertPayload, { onConflict: "user_id,platform" });
+        .upsert(upsertPayload, { onConflict: "user_id,platform,persona_id" });
+
+      // Fallback to old constraint if new one doesn't exist yet
+      if (upsertError?.code === "23505" || upsertError?.message?.includes("unique")) {
+        const fallback = await supabase
+          .from("platform_connections" as any)
+          .upsert(upsertPayload, { onConflict: "user_id,platform" });
+        upsertError = fallback.error;
+      }
 
       if (upsertError) throw upsertError;
 

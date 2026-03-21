@@ -47,7 +47,8 @@ function ConnectMetaStep({ lang, onConnect, onSkip }: { lang: string; onConnect:
       // Step 3
       s3_tag: "PRONTO PARA CONECTAR",
       s3_title: "Conecte agora e receba sua primeira análise em segundos.",
-      s3_body: "Após conectar, a IA vai carregar seus dados e te dar a primeira pergunta sugerida baseada no que encontrou na sua conta.",
+      s3_body: "A conexão Meta fica salva na sua conta AdBrief — só você tem acesso. Se você gerencia múltiplos clientes, conecte uma conta por vez em Contas.",
+      s3_note: "🔒 Cada conta de anúncios fica isolada — apenas você vê os dados dela.",
     },
     en: {
       progress: "Last step",
@@ -75,9 +76,11 @@ function ConnectMetaStep({ lang, onConnect, onSkip }: { lang: string; onConnect:
         { icon: "🧠", label: "Historical patterns", desc: "What worked in the last 90 days" },
         { icon: "💸", label: "Budget & spend", desc: "Where money is going and what to cut" },
       ],
+      // Step 3
       s3_tag: "READY TO CONNECT",
       s3_title: "Connect now and get your first analysis in seconds.",
-      s3_body: "After connecting, the AI will load your data and give you the first suggested question based on what it found in your account.",
+      s3_body: "Your Meta connection is saved to your AdBrief account — only you can access it. Managing multiple clients? Connect one account at a time from Accounts.",
+      s3_note: "🔒 Each ad account is isolated — only you see its data.",
     },
     es: {
       progress: "Último paso",
@@ -105,9 +108,11 @@ function ConnectMetaStep({ lang, onConnect, onSkip }: { lang: string; onConnect:
         { icon: "🧠", label: "Patrones históricos", desc: "Lo que funcionó en los últimos 90 días" },
         { icon: "💸", label: "Presupuesto y gasto", desc: "Dónde va el dinero y qué cortar" },
       ],
+      // Step 3
       s3_tag: "LISTO PARA CONECTAR",
       s3_title: "Conecta ahora y recibe tu primer análisis en segundos.",
-      s3_body: "Después de conectar, la IA cargará tus datos y te dará la primera pregunta sugerida basada en lo que encontró en tu cuenta.",
+      s3_body: "Tu conexión Meta queda guardada en tu cuenta AdBrief — solo tú tienes acceso. ¿Gestionas múltiples clientes? Conecta una cuenta a la vez desde Cuentas.",
+      s3_note: "🔒 Cada cuenta de anuncios es aislada — solo tú ves sus datos.",
     },
   };
   const t = L[lang as keyof typeof L] || L.en;
@@ -250,13 +255,21 @@ function ConnectMetaStep({ lang, onConnect, onSkip }: { lang: string; onConnect:
               <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360, margin: "0 auto" }}>{t.s3_body}</p>
             </div>
 
+            {/* Privacy note — per-user isolation */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.18)" }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
+              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(52,211,153,0.85)", margin: 0, lineHeight: 1.5 }}>
+                {(t as any).s3_note || "Each ad account connection is private — only you can access it."}
+              </p>
+            </div>
+
             {/* What happens next visual */}
             <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 16, padding: "16px 18px" }}>
               {[
-                { n: "1", text: lang === "pt" ? "Clica em conectar abaixo" : lang === "es" ? "Haz clic en conectar abajo" : "Click connect below", done: false },
-                { n: "2", text: lang === "pt" ? "Autoriza no login do Meta (leva 30s)" : lang === "es" ? "Autoriza en el login de Meta (30s)" : "Authorize in Meta login (takes 30s)", done: false },
-                { n: "3", text: lang === "pt" ? "Voltamos para cá automaticamente" : lang === "es" ? "Volvemos aquí automáticamente" : "We redirect you back automatically", done: false },
-                { n: "4", text: lang === "pt" ? "A IA carrega sua conta e começa" : lang === "es" ? "La IA carga tu cuenta y empieza" : "AI loads your account and starts", done: false },
+                { n: "1", text: lang === "pt" ? "Clica em conectar abaixo" : lang === "es" ? "Haz clic en conectar abajo" : "Click connect below" },
+                { n: "2", text: lang === "pt" ? "Autoriza no login do Meta (leva 30s)" : lang === "es" ? "Autoriza en el login de Meta (30s)" : "Authorize in Meta login (takes 30s)" },
+                { n: "3", text: lang === "pt" ? "Voltamos para cá automaticamente" : lang === "es" ? "Volvemos aquí automáticamente" : "We redirect you back automatically" },
+                { n: "4", text: lang === "pt" ? "A IA carrega só os dados da sua conta" : lang === "es" ? "La IA carga solo los datos de tu cuenta" : "AI loads only your account's data" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 0", borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                   <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
