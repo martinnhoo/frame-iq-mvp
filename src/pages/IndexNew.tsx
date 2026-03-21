@@ -741,6 +741,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               {/* Questions */}
               {qa.map((item, i) => (
                 <button key={i} onClick={() => jump(i)}
+                  className="demo-sidebar-btn"
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 7, padding: '8px 10px', borderRadius: 9,
                     background: qi === i ? 'rgba(14,165,233,0.10)' : 'transparent',
@@ -750,15 +751,15 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   }}
                   onMouseEnter={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                   onMouseLeave={e => { if (qi !== i) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                  <span style={{ fontSize: 12, flexShrink: 0, opacity: qi === i ? 1 : 0.45, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
-                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4, flex: 1 }}>
+                  <span className="demo-q-emoji" style={{ fontSize: 12, flexShrink: 0, opacity: qi === i ? 1 : 0.45, marginTop: 1 }}>{['📉','⚡','✍️'][i]}</span>
+                  <span className="demo-q-text" style={{ fontFamily: F, fontSize: 11, fontWeight: qi === i ? 600 : 400, color: qi === i ? '#fff' : 'rgba(255,255,255,0.42)', lineHeight: 1.4, flex: 1 }}>
                     {item.q.slice(0,40)}{item.q.length > 40 ? '…' : ''}
                   </span>
                   {qi === i && (phase === 'typing' || phase === 'thinking' || phase === 'streaming') && (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 4, boxShadow: '0 0 6px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />
+                    <div className="demo-q-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 4, boxShadow: '0 0 6px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />
                   )}
                   {qi === i && phase === 'done' && (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 4 }} />
+                    <div className="demo-q-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 4 }} />
                   )}
                 </button>
               ))}
@@ -1270,9 +1271,10 @@ export default function IndexNew() {
             .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
             .demo-sidebar-inner{width:100%!important;height:52px!important;min-height:52px!important;max-height:52px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:5px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
             .demo-sidebar-inner>div:last-child{display:none!important}
-            .demo-sidebar-inner button{width:auto!important;flex-shrink:0!important;padding:5px 10px!important;border-radius:20px!important}
-            .demo-sidebar-inner button span:last-of-type{display:none!important}
-            .demo-sidebar-inner button span:first-of-type{font-size:16px!important;opacity:1!important;margin:0!important}
+            .demo-sidebar-btn{width:auto!important;flex-shrink:0!important;padding:6px 12px!important;border-radius:22px!important;align-items:center!important;gap:0!important}
+            .demo-q-text{display:none!important}
+            .demo-q-dot{display:none!important}
+            .demo-q-emoji{font-size:18px!important;opacity:1!important;margin:0!important}
             .demo-chat-panel{height:240px!important;max-height:240px!important;min-height:240px!important;overflow:hidden!important;flex:none!important}
             .demo-chat{overflow-y:auto!important;height:170px!important;max-height:170px!important;min-height:170px!important}
           }
