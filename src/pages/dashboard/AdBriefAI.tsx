@@ -402,7 +402,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdBriefAI() {
-  const {user}=useOutletContext<DashboardContext>();
+  const {user,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
