@@ -1,4 +1,4 @@
-// v6 — forwardRef fix
+// v7 — mobile demo sidebar pills fix 2026-03-21
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
