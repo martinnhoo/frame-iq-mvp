@@ -42,7 +42,10 @@ const PLATFORMS = [
     )},
 ];
 
-// ── i18n ───────────────────────────────────────────────────────────────────────
+// Inline icons for use in JSX buttons
+const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
+  meta: <svg width="16" height="10" viewBox="0 0 36 18" fill="none"><path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#fff"/></svg>,
+};
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
     { icon: Upload, label: "Upload ad",      action: "upload",     color: "#60a5fa" },
@@ -419,12 +422,22 @@ export default function AdBriefAI() {
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
-  // Load connections
+  // Load connections — scoped to active account (persona)
   useEffect(()=>{
-    if(!user?.id)return;
-    supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id)
-      .then(({data})=>setConnections((data||[]).filter((c:any)=>c.status==="active").map((c:any)=>c.platform)));
-  },[user?.id]);
+    if(!user?.id){setConnections([]);return;}
+    const pid=selectedPersona?.id||null;
+    // Load both specific connections (for this account) and global (persona_id=null)
+    Promise.all([
+      supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).is("persona_id",null),
+      pid ? supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).eq("persona_id",pid) : Promise.resolve({data:[]}),
+    ]).then(([globalRes,specificRes])=>{
+      const specific=((specificRes as any).data||[]).filter((c:any)=>c.status==="active").map((c:any)=>c.platform);
+      const global=((globalRes as any).data||[]).filter((c:any)=>c.status==="active").map((c:any)=>c.platform);
+      // Specific overrides global. If specific exists for a platform, use it. If only global, show global.
+      const merged=[...new Set([...specific,...(pid?[]:global)])];
+      setConnections(merged);
+    });
+  },[user?.id,selectedPersona?.id]);
 
   // Load context
   useEffect(()=>{
@@ -530,15 +543,39 @@ export default function AdBriefAI() {
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,user_language:lang,history}});
       if(error||!data?.blocks)throw new Error(error?.message||"No response");
+
+      // Strip all markdown from text fields
+      const stripMd=(s:string)=>String(s)
+        .replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1")
+        .replace(/#+\s/g,"").replace(/^\d+\.\s/gm,"").replace(/^[-*]\s/gm,"").trim();
+
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
-      // Convert tool_call with meta_action → meta_action block
+      const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
+
       blocks=blocks.map(b=>{
-        if(b.type==="tool_call"&&b.tool_params?.meta_action){
-          const p=b.tool_params;
-          return{...b,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
+        // Clean all text
+        const c={...b,
+          title:b.title?stripMd(b.title):b.title,
+          content:b.content?stripMd(b.content):b.content,
+          items:b.items?.map((it:string)=>stripMd(it)),
+        };
+        // Upgrade insight→dashboard when requested and no dashboard block exists
+        if(isDashReq&&(c.type==="insight"||c.type==="action")&&!blocks.some(bb=>bb.type==="dashboard")){
+          const metrics=(c.items||[]).slice(0,6).map((it:string)=>{
+            const m=it.match(/^([^:]+):\s*(.+)$/);
+            if(m)return{label:m[1].trim().slice(0,30),value:m[2].trim().slice(0,20),delta:"",trend:"flat" as const};
+            return{label:it.slice(0,30),value:"—",delta:"",trend:"flat" as const};
+          });
+          if(metrics.length>0)return{...c,type:"dashboard" as const,metrics,items:undefined};
         }
-        return b;
+        // Convert meta_action tool_call
+        if(c.type==="tool_call"&&c.tool_params?.meta_action){
+          const p=c.tool_params;
+          return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
+        }
+        return c;
       });
+
       const aid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
     }catch(e:any){
@@ -610,29 +647,57 @@ export default function AdBriefAI() {
       <div style={{flex:1,overflowY:"auto",padding:"16px 20px 8px"}}>
         {messages.length===0&&(
           <div style={{maxWidth:620,margin:"16px auto 0"}}>
-            {/* Greeting */}
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-              <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <Sparkles size={13} color="rgba(14,165,233,0.8)"/>
+            {!hasData ? (
+              /* ── No account connected — force connect ── */
+              <div style={{textAlign:"center",padding:"32px 20px"}}>
+                <div style={{width:52,height:52,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+                  <Sparkles size={22} color="#0ea5e9"/>
+                </div>
+                <h3 style={{...j,fontSize:17,fontWeight:800,color:"#fff",margin:"0 0 8px",letterSpacing:"-0.02em"}}>
+                  {lang==="pt"?"Conecte o Meta Ads para começar":lang==="es"?"Conecta Meta Ads para empezar":"Connect Meta Ads to start"}
+                </h3>
+                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.45)",lineHeight:1.6,margin:"0 0 22px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>
+                  {lang==="pt"?"A IA só responde com os seus dados reais. Sem a conexão, você recebe respostas genéricas que não ajudam.":lang==="es"?"La IA solo responde con tus datos reales. Sin la conexión recibes respuestas genéricas que no sirven.":"The AI only works with your real data. Without connection, you get generic answers that don't help."}
+                </p>
+                {selectedPersona ? (
+                  <button onClick={()=>handleConnect("meta","meta-oauth")}
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"11px 22px",borderRadius:11,background:"linear-gradient(135deg,#1877F2,#0ea5e9)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.01em",boxShadow:"0 0 24px rgba(14,165,233,0.25)"}}>
+                    {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
+                  </button>
+                ) : (
+                  <button onClick={()=>navigate("/dashboard/accounts")}
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"11px 22px",borderRadius:11,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.01em"}}>
+                    {lang==="pt"?"Criar conta primeiro →":lang==="es"?"Crear cuenta primero →":"Create account first →"}
+                  </button>
+                )}
+                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:14}}>
+                  {lang==="pt"?"Leva 30 segundos · só leitura · cancele quando quiser":lang==="es"?"30 segundos · solo lectura · cancela cuando quieras":"30 seconds · read-only · cancel anytime"}
+                </p>
               </div>
-              <p style={{...j,fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",margin:0}}>
-                {hasData
-                  ? lang==="pt"?"Conta conectada. Pergunte qualquer coisa.":lang==="es"?"Cuenta conectada. Pregunta lo que quieras.":"Account connected. Ask me anything."
-                  : lang==="pt"?"O que você quer saber sobre seus anúncios?":lang==="es"?"¿Qué quieres saber sobre tus anuncios?":"What do you want to know about your ads?"}
-              </p>
-            </div>
-            {/* Suggestions 2x2 */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              {SUGGS.map((s,i)=>(
-                <button key={i} onClick={()=>send(s)}
-                  style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:12,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
-                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.transform="translateY(-1px)";}}
-                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.025)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.transform="translateY(0)";}}>
-                  <span style={{fontSize:13,opacity:0.5,flexShrink:0}}>{["📊","⚡","✍️","🎯"][i]}</span>
-                  <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.5,fontWeight:500}}>{s}</span>
-                </button>
-              ))}
-            </div>
+            ) : (
+              /* ── Connected — show suggestions ── */
+              <>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+                  <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Sparkles size={13} color="rgba(14,165,233,0.8)"/>
+                  </div>
+                  <p style={{...j,fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",margin:0}}>
+                    {lang==="pt"?"Conta conectada. Pergunte qualquer coisa.":lang==="es"?"Cuenta conectada. Pregunta lo que quieras.":"Account connected. Ask me anything."}
+                  </p>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {SUGGS.map((s,i)=>(
+                    <button key={i} onClick={()=>send(s)}
+                      style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:12,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
+                      onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.transform="translateY(-1px)";}}
+                      onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.025)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.transform="translateY(0)";}}>
+                      <span style={{fontSize:13,opacity:0.5,flexShrink:0}}>{["📊","⚡","✍️","🎯"][i]}</span>
+                      <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.5,fontWeight:500}}>{s}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -735,9 +800,9 @@ export default function AdBriefAI() {
             onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
             onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
           />
-          <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-            style={{width:42,height:42,borderRadius:11,background:input.trim()&&!loading?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-            {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()?"#fff":"rgba(255,255,255,0.2)"}/>}
+          <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady||!hasData}
+            style={{width:42,height:42,borderRadius:11,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+            {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>
         <p style={{...m,fontSize:9.5,color:"rgba(255,255,255,0.12)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{L.footer}</p>
