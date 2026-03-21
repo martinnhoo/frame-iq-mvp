@@ -780,13 +780,24 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             {/* Chat panel */}
             <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
               {/* Chat header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
                 <div style={{ width: 22, height: 22, borderRadius: 7, background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(6,182,212,0.2))', border: '1px solid rgba(14,165,233,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#0ea5e9' }}>✦</div>
                 <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff' }}>AdBrief AI</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
                   <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
                   <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>{conn}</span>
                 </div>
+              </div>
+
+              {/* Mobile suggestion pills — only visible on mobile */}
+              <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
+                {qa.slice(0,3).map((item, i) => (
+                  <button key={i} onClick={() => jump(i)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? 'rgba(14,165,233,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? 'rgba(14,165,233,0.35)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', fontFamily: F, fontSize: 11, color: qi === i ? '#0ea5e9' : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400, transition: 'all 0.15s' }}>
+                    <span style={{ fontSize: 13 }}>{['📉','⚡','✍️'][i]}</span>
+                    {item.q.slice(0, 22)}{item.q.length > 22 ? '…' : ''}
+                  </button>
+                ))}
               </div>
 
               {/* Messages */}
@@ -1267,19 +1278,17 @@ export default function IndexNew() {
             .hero-float-cards{display:none!important}
             .hero-h1{font-size:clamp(24px,7vw,38px)!important}
             .hero-sub{font-size:13px!important}
-            .demo-window{border-radius:14px!important}
+            .demo-window{border-radius:16px!important;border:1px solid rgba(14,165,233,0.22)!important;box-shadow:0 0 40px rgba(14,165,233,0.08)!important}
             .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
-            .demo-sidebar-inner{width:100%!important;height:52px!important;min-height:52px!important;max-height:52px!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,0.08)!important;flex-direction:row!important;flex-wrap:nowrap!important;padding:6px 8px!important;gap:5px!important;align-items:center!important;background:rgba(255,255,255,0.02)!important}
-            .demo-sidebar-inner>div:last-child{display:none!important}
-            .demo-sidebar-btn{width:auto!important;flex-shrink:0!important;padding:6px 12px!important;border-radius:22px!important;align-items:center!important;gap:0!important}
-            .demo-q-text{display:none!important}
-            .demo-q-dot{display:none!important}
-            .demo-q-emoji{font-size:18px!important;opacity:1!important;margin:0!important}
-            .demo-chat-panel{height:240px!important;max-height:240px!important;min-height:240px!important;overflow:hidden!important;flex:none!important}
-            .demo-chat{overflow-y:auto!important;height:170px!important;max-height:170px!important;min-height:170px!important}
+            .demo-sidebar-inner{display:none!important}
+            .demo-mobile-pills{display:flex!important}
+            .demo-chat-panel{height:320px!important;max-height:320px!important;min-height:320px!important;flex:none!important;overflow:hidden!important}
+            .demo-chat{overflow-y:auto!important;height:210px!important;max-height:210px!important;padding:14px!important}
           }
           @media(max-width:480px){
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
+            .demo-chat-panel{height:280px!important;max-height:280px!important;min-height:280px!important}
+            .demo-chat{height:190px!important;max-height:190px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
