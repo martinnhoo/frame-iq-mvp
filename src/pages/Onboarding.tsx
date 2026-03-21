@@ -363,11 +363,31 @@ const PLAN_PRICES: Record<string, string> = {
   studio: "price_1T9seMDr9So14Xzt0vEJNQIX",
 };
 
-const PLANS = [
-  { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: ["50 AI messages/day", "1 ad account", "All tools unlocked", "3 personas"],                                  highlight: false, desc_key: "plan_desc_maker" },
-  { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: ["200 AI messages/day", "3 ad accounts", "All tools unlocked", "Unlimited personas", "Multi-market"],      highlight: true,  desc_key: "plan_desc_pro"   },
-  { key: "studio", label: "Studio", price: "$149", period: "/mo", features: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],                    highlight: false, desc_key: "plan_desc_studio" },
-];
+const PLANS_DATA = (lang: string) => {
+  const f = {
+    pt: {
+      maker:  ["50 mensagens IA/dia", "1 conta de anúncios", "Todas as ferramentas", "3 contas"],
+      pro:    ["200 mensagens IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"],
+      studio: ["Mensagens ilimitadas", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência"],
+    },
+    es: {
+      maker:  ["50 mensajes IA/día", "1 cuenta de anuncios", "Todas las herramientas", "3 cuentas"],
+      pro:    ["200 mensajes IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Cuentas ilimitadas", "Multi-mercado"],
+      studio: ["Mensajes ilimitados", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia"],
+    },
+    en: {
+      maker:  ["50 AI messages/day", "1 ad account", "All tools unlocked", "3 accounts"],
+      pro:    ["200 AI messages/day", "3 ad accounts", "All tools unlocked", "Unlimited accounts", "Multi-market"],
+      studio: ["Unlimited messages", "Unlimited accounts", "All tools unlocked", "Agency workspace"],
+    },
+  };
+  const l = (f as any)[lang] || f.en;
+  return [
+    { key: "maker",  label: "Maker",  price: "$19",  period: "/mo", features: l.maker,  highlight: false, desc_key: "plan_desc_maker" },
+    { key: "pro",    label: "Pro",    price: "$49",  period: "/mo", features: l.pro,    highlight: true,  desc_key: "plan_desc_pro"   },
+    { key: "studio", label: "Studio", price: "$149", period: "/mo", features: l.studio, highlight: false, desc_key: "plan_desc_studio" },
+  ];
+};
 
 const STEP_ORDER: Step[] = ["name", "pain_point", "plan", "connect"];
 
@@ -715,7 +735,7 @@ export default function Onboarding() {
                 <p className="text-xs text-white/20 mt-1">🎉 {ot("plan_trial_note")}</p>
               </div>
               <div className="space-y-2.5">
-                {PLANS.map(plan => (
+                {PLANS_DATA(activeLang).map(plan => (
                   <div key={plan.key} className="relative rounded-2xl border p-4"
                     style={{ borderColor: plan.highlight ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.07)", background: plan.highlight ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)" }}>
                     {plan.highlight && (
