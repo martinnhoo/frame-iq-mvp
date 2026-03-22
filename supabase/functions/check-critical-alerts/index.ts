@@ -74,12 +74,28 @@ Deno.serve(async (req) => {
         const d2 = new Date(now.getTime() - 2 * 86400000).toISOString().split("T")[0];
 
         // Fetch current + previous 24h
-        const fields = "ad_id,ad_name,campaign_name,adset_name,spend,ctr,cpc,cpm,frequency,actions,impressions";
-        const [r1, r2] = await Promise.all([
+        const fields = "ad_id,ad_name,campaign_name,adset_name,spend,ctr,cpc,cpm,frequency,actions,action_values,website_purchase_roas,video_play_actions,video_thruplay_watched_actions,impressions";
+        const [r1, r2, rCamps] = await Promise.all([
           fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=40&access_token=${token}`),
           fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d2}","until":"${yesterday}"}&sort=spend_descending&limit=40&access_token=${token}`),
+          fetch(`https://graph.facebook.com/v19.0/${account.id}/campaigns?fields=name,objective&limit=50&access_token=${token}`),
         ]);
-        const [d1, d0] = await Promise.all([r1.json(), r2.json()]);
+        const [d1, d0, dCamps] = await Promise.all([r1.json(), r2.json(), rCamps.json()]);
+
+        // Objective map
+        const objMap: Record<string, string> = {};
+        ((dCamps?.data || []) as any[]).forEach((c: any) => { if (c.name) objMap[c.name] = c.objective || ''; });
+
+        // Get primary KPI per objective
+        const getPrimaryKpi = (obj: string) => {
+          const o = (obj || '').toUpperCase();
+          if (o.includes('PURCHASE') || o.includes('SALES'))   return 'roas';
+          if (o.includes('LEAD'))                               return 'cpl';
+          if (o.includes('APP'))                                return 'cpi';
+          if (o.includes('VIDEO'))                              return 'thruplay';
+          if (o.includes('REACH') || o.includes('BRAND'))      return 'cpm';
+          return 'ctr';
+        };
         if (d1.error) continue;
 
         const curr: any[] = d1.data || [];
@@ -94,6 +110,19 @@ Deno.serve(async (req) => {
           const a = (ad.actions || []) as any[];
           const c = a.find((x: any) => ["purchase","lead","complete_registration","app_install"].includes(x.action_type));
           return c ? parseFloat(c.value || "0") : 0;
+        };
+        const getRoas = (ad: any) => {
+          const arr = (ad.website_purchase_roas || []) as any[];
+          if (arr[0]?.value) return parseFloat(arr[0].value);
+          const vals = (ad.action_values || []) as any[];
+          const pv = vals.find((a: any) => a.action_type === "purchase");
+          const spend = parseFloat(ad.spend || "0");
+          return pv && spend > 0 ? parseFloat(pv.value || "0") / spend : null;
+        };
+        const getThruPlayRate = (ad: any) => {
+          const plays = parseFloat(((ad.video_play_actions || [])[0])?.value || "0");
+          const thru  = parseFloat(((ad.video_thruplay_watched_actions || [])[0])?.value || "0");
+          return plays > 0 ? thru / plays : null;
         };
 
         // Load learned patterns for this user — to detect repeated failure patterns
@@ -122,40 +151,70 @@ Deno.serve(async (req) => {
           const spend   = parseN(ad.spend);
           const freq    = parseN(ad.frequency);
           const conv    = getConv(ad);
+          const roas    = getRoas(ad);
+          const thru    = getThruPlayRate(ad);
           const prevAd  = prevMap[adId];
           const prevCtr = prevAd ? parseN(prevAd.ctr) : null;
+          const prevRoas = prevAd ? getRoas(prevAd) : null;
           const adName  = (ad.ad_name || "Sem nome").slice(0, 55);
           const camp    = (ad.campaign_name || "").slice(0, 45);
+          const objective = objMap[ad.campaign_name] || "";
+          const primaryKpi = getPrimaryKpi(objective);
 
           const push = (type: string, detail: string, urgency: "🔴" | "🟡") => {
             const dedup = `${weekKey}_${adId}_${type.replace(/\s/g, "_")}`;
             if (!flags[dedup]) alerts.push({ type, ad: adName, campaign: camp, detail, urgency, dedup_key: dedup });
           };
 
-          // ─── CRITICAL SIGNALS ──────────────────────────────────────────────
+          // ─── CRITICAL SIGNALS — KPI-AWARE ──────────────────────────────────
 
-          // 🔴 Frequência crítica — audiência queimada
+          // 🔴 Frequência crítica — universal, qualquer objetivo
           if (freq >= T.FREQ_CRITICAL) {
             push("FADIGA_CRITICA",
-              `Frequência ${freq.toFixed(1)}x — esse público já viu esse anúncio demais. ` +
-              `Pause hoje e substitua o criativo. Continuar vai só aumentar o CPM.`,
+              `Frequência ${freq.toFixed(1)}x — audiência esgotada. Pause hoje e troque o criativo.`,
               "🔴");
           }
 
-          // 🔴 CTR colapsou em 24h — apenas se tinha CTR relevante antes
-          if (prevCtr !== null && prevCtr >= T.CTR_DROP_MIN && ctr < prevCtr * ((100 - T.CTR_DROP_PCT) / 100)) {
+          // 🔴 ROAS colapsou — campanha de conversão
+          if (primaryKpi === 'roas' && roas !== null && roas < 0.8 && spend > 40) {
+            push("ROAS_CRITICO",
+              `ROAS ${roas.toFixed(2)}x — cada R$1 gasto retorna menos de R$0,80. ` +
+              `Campanha não está se pagando. Revise criativo e oferta.`,
+              "🔴");
+          }
+
+          // 🔴 ROAS caiu > 40% vs ontem
+          if (primaryKpi === 'roas' && roas !== null && prevRoas !== null && prevRoas > 1.0 && roas < prevRoas * 0.6) {
+            const drop = Math.round(((prevRoas - roas) / prevRoas) * 100);
+            push("ROAS_COLAPSOU",
+              `ROAS caiu ${drop}% em 24h: ${prevRoas.toFixed(2)}x → ${roas.toFixed(2)}x. ` +
+              `Criativo perdendo força ou audiência saturando.`,
+              "🔴");
+          }
+
+          // 🔴 CTR colapsou — campanha de tráfego/leads
+          if ((primaryKpi === 'ctr' || primaryKpi === 'cpl') &&
+              prevCtr !== null && prevCtr >= T.CTR_DROP_MIN && ctr < prevCtr * ((100 - T.CTR_DROP_PCT) / 100)) {
             const drop = Math.round(((prevCtr - ctr) / prevCtr) * 100);
             push("CTR_COLAPSOU",
               `CTR caiu ${drop}% em 24h: ${(prevCtr*100).toFixed(2)}% → ${(ctr*100).toFixed(2)}%. ` +
-              `Pode ser fadiga ou mudança no algoritmo. Cheque a frequência e o copy.`,
+              `Cheque frequência e copy.`,
               "🔴");
           }
 
-          // 🔴 Spend alto sem nenhuma conversão
-          if (spend >= T.SPEND_NO_CONV && conv === 0) {
+          // 🔴 ThruPlay rate baixo — campanha de vídeo
+          if (primaryKpi === 'thruplay' && thru !== null && thru < 0.10 && spend > 20) {
+            push("RETENCAO_VIDEO_BAIXA",
+              `Só ${(thru*100).toFixed(1)}% assistiram o vídeo até o fim. ` +
+              `Hook ou ritmo do vídeo fraco. Teste versão mais curta ou novo hook.`,
+              "🔴");
+          }
+
+          // 🔴 Spend alto sem nenhuma conversão — campanhas com objetivo de conversão
+          if (['roas','cpl','cpi'].includes(primaryKpi) && spend >= T.SPEND_NO_CONV && conv === 0) {
             push("SPEND_SEM_RETORNO",
               `R$${spend.toFixed(0)} gastos hoje sem uma única conversão. ` +
-              `Ou a oferta não está convertendo, ou o público errado. Pause e revise.`,
+              `Pause e revise oferta, criativo ou público.`,
               "🔴");
           }
 
@@ -190,18 +249,27 @@ Deno.serve(async (req) => {
 
           // ─── OPPORTUNITY SIGNAL ────────────────────────────────────────────
 
-          // 🟡 CTR alto com budget baixo — oportunidade de escala
-          if (ctr >= T.SCALE_CTR && spend >= T.SCALE_SPEND_MIN && spend <= T.SCALE_SPEND_MAX) {
-            // Cross-check with winners: if similar pattern performed well before, confidence is higher
+          // 🟡 KPI bom com budget baixo — oportunidade de escala (KPI-aware)
+          const isScaleOpp = (() => {
+            if (spend < T.SCALE_SPEND_MIN || spend > T.SCALE_SPEND_MAX) return false;
+            if (primaryKpi === 'roas')    return roas !== null && roas >= 2.0;
+            if (primaryKpi === 'cpl')     return conv > 0 && (spend/conv) < 30;
+            if (primaryKpi === 'thruplay') return thru !== null && thru >= 0.20;
+            return ctr >= T.SCALE_CTR; // default: traffic
+          })();
+          if (isScaleOpp) {
+            const kpiStr = primaryKpi === 'roas' ? `ROAS ${roas?.toFixed(2)}x`
+              : primaryKpi === 'cpl' ? `CPL R$${(spend/conv).toFixed(0)}`
+              : primaryKpi === 'thruplay' ? `ThruPlay ${((thru||0)*100).toFixed(1)}%`
+              : `CTR ${(ctr*100).toFixed(2)}%`;
             const confirmedByPattern = winnerPatterns.some((p: any) => {
               const vars = (p.variables as any) || {};
-              const adsetMatch = vars.adset && ad.adset_name && vars.adset.toLowerCase().includes(ad.adset_name.slice(0, 10).toLowerCase());
-              return adsetMatch || (p.avg_ctr && p.avg_ctr > T.SCALE_CTR * 0.8);
+              return vars.adset && ad.adset_name && vars.adset.toLowerCase().includes(ad.adset_name.slice(0, 10).toLowerCase());
             });
             push("OPORTUNIDADE_ESCALA",
-              `CTR ${(ctr*100).toFixed(2)}% com apenas R$${spend.toFixed(0)} de budget hoje. ` +
-              (confirmedByPattern ? `Padrão similar já performou bem na sua conta antes. ` : ``) +
-              `Vale aumentar o budget em 20-30% e monitorar o CPM.`,
+              `${kpiStr} com apenas R$${spend.toFixed(0)} de budget hoje. ` +
+              (confirmedByPattern ? `Padrão similar já performou bem na sua conta. ` : ``) +
+              `Aumente o budget em 20-30% e monitore.`,
               "🟡");
           }
         }
@@ -328,4 +396,4 @@ Deno.serve(async (req) => {
     });
   }
 });
-// redeploy 202603262500
+// redeploy 202603270100

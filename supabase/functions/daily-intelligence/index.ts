@@ -94,17 +94,72 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   const fields = [
     'ad_id', 'ad_name', 'adset_name', 'campaign_name',
     'spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm', 'reach', 'frequency',
-    'actions', 'cost_per_action_type', 'video_play_actions', 'video_avg_time_watched_actions',
+    'actions', 'action_values', 'cost_per_action_type',
+    'video_play_actions', 'video_avg_time_watched_actions', 'video_p25_watched_actions',
+    'video_p75_watched_actions', 'video_thruplay_watched_actions',
+    'website_purchase_roas', 'canvas_avg_view_percent',
     'date_start', 'date_stop'
   ].join(',');
 
-  const [wk1Res, wk2Res, ydRes] = await Promise.all([
+  const [wk1Res, wk2Res, ydRes, campsRes] = await Promise.all([
     fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d7}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
     fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d14}","until":"${d7}"}&sort=spend_descending&limit=50&access_token=${token}`),
     fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=20&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v19.0/${account.id}/campaigns?fields=id,name,objective,optimization_goal&limit=50&access_token=${token}`),
   ]);
 
-  const [wk1, wk2, yd] = await Promise.all([wk1Res.json(), wk2Res.json(), ydRes.json()]);
+  const [wk1, wk2, yd, campsData] = await Promise.all([wk1Res.json(), wk2Res.json(), ydRes.json(), campsRes.json()]);
+
+  // Build campaign → objective map
+  const campObjectiveMap: Record<string, string> = {};
+  ((campsData?.data || []) as any[]).forEach((c: any) => {
+    if (c.name) campObjectiveMap[c.name] = c.objective || 'OUTCOME_TRAFFIC';
+  });
+
+  // KPI definition per campaign objective
+  // Each objective has a PRIMARY KPI and SECONDARY KPIs
+  const getKpiConfig = (objective: string): {
+    primary: string; primaryLabel: string;
+    secondary: string[]; winnerThreshold: Record<string, number>;
+  } => {
+    const o = (objective || '').toUpperCase();
+    if (o.includes('PURCHASE') || o.includes('CONVERSIONS') || o.includes('OUTCOME_SALES')) return {
+      primary: 'roas', primaryLabel: 'ROAS',
+      secondary: ['cpa', 'ctr', 'cpc'],
+      winnerThreshold: { roas: 2.0, cpa: 50, ctr: 0.01 },
+    };
+    if (o.includes('LEAD') || o.includes('OUTCOME_LEADS')) return {
+      primary: 'cpl', primaryLabel: 'CPL',
+      secondary: ['ctr', 'conv_rate', 'cpc'],
+      winnerThreshold: { cpl: 20, ctr: 0.012, conv_rate: 0.05 },
+    };
+    if (o.includes('APP') || o.includes('MOBILE_APP')) return {
+      primary: 'cpi', primaryLabel: 'CPI',
+      secondary: ['ctr', 'cpc', 'cpm'],
+      winnerThreshold: { cpi: 8, ctr: 0.01 },
+    };
+    if (o.includes('VIDEO') || o.includes('VIDEO_VIEWS')) return {
+      primary: 'thruplay_rate', primaryLabel: 'ThruPlay%',
+      secondary: ['hook_rate', 'hold_rate', 'cpm'],
+      winnerThreshold: { thruplay_rate: 0.15, hook_rate: 0.25 },
+    };
+    if (o.includes('REACH') || o.includes('BRAND') || o.includes('AWARENESS')) return {
+      primary: 'cpm', primaryLabel: 'CPM',
+      secondary: ['frequency', 'reach', 'impressions'],
+      winnerThreshold: { cpm: 15 },
+    };
+    if (o.includes('ENGAGEMENT') || o.includes('POST_ENGAGEMENT')) return {
+      primary: 'engagement_rate', primaryLabel: 'Eng%',
+      secondary: ['ctr', 'cpc', 'cpm'],
+      winnerThreshold: { engagement_rate: 0.03, ctr: 0.015 },
+    };
+    // Default: traffic / link clicks
+    return {
+      primary: 'ctr', primaryLabel: 'CTR',
+      secondary: ['cpc', 'cpm', 'frequency'],
+      winnerThreshold: { ctr: 0.018, cpc: 2.0 },
+    };
+  };
   if (wk1.error) throw new Error(`Meta: ${wk1.error.message}`);
 
   const curr: any[] = wk1.data || [];
@@ -135,24 +190,82 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
     const impressions = parseN(ad.impressions);
     const frequency = parseN(ad.frequency);
     const prevCtr = p ? parseN(p.ctr) : null;
-    const prevSpend = p ? parseN(p.spend) : null;
     const conversions = getConversions(ad);
     const video = getVideoRetention(ad);
-    const roas = conversions > 0 && spend > 0 ? (conversions * 30) / spend : null; // estimate: avg order R$30
 
-    // Fatigue signals
+    // REAL ROAS from Meta (not estimate)
+    const purchaseRoasArr = (ad.website_purchase_roas || []) as any[];
+    const realRoas = purchaseRoasArr.length ? parseN(purchaseRoasArr[0]?.value) : null;
+    // Fallback: estimate from action_values if purchase ROAS not available
+    const actionValues = (ad.action_values || []) as any[];
+    const purchaseValue = actionValues.find((a: any) => a.action_type === 'purchase')?.value;
+    const roas = realRoas || (purchaseValue && spend > 0 ? parseN(purchaseValue) / spend : null);
+
+    // CPA / CPL
+    const cpa = conversions > 0 && spend > 0 ? spend / conversions : null;
+
+    // Video KPIs
+    const videoPlays = parseN((ad.video_play_actions || [])[0]?.value);
+    const thruPlays = parseN((ad.video_thruplay_watched_actions || [])[0]?.value);
+    const hookRate = impressions > 0 ? videoPlays / impressions : null;          // % that hit play
+    const thruPlayRate = videoPlays > 0 ? thruPlays / videoPlays : null;         // % that watched full
+    const avgWatch = parseN((ad.video_avg_time_watched_actions || [])[0]?.value);
+
+    // Engagement
+    const engagements = (ad.actions || []).find((a: any) => a.action_type === 'post_engagement');
+    const engagementRate = impressions > 0 && engagements ? parseN(engagements.value) / impressions : null;
+
+    // Campaign objective → pick the right KPI
+    const objective = campObjectiveMap[ad.campaign_name] || 'OUTCOME_TRAFFIC';
+    const kpiCfg = getKpiConfig(objective);
+
+    // KPI-aware winner/loser detection (no longer CTR-only)
+    const kpiValue = (() => {
+      switch (kpiCfg.primary) {
+        case 'roas':       return roas;
+        case 'cpl':        return cpa;   // CPL = CPA for leads
+        case 'cpi':        return cpa;   // CPI = CPA for app installs
+        case 'thruplay_rate': return thruPlayRate;
+        case 'hook_rate':  return hookRate;
+        case 'cpm':        return parseN(ad.cpm);
+        case 'engagement_rate': return engagementRate;
+        default:           return ctr;
+      }
+    })();
+
+    const threshold = kpiCfg.winnerThreshold[kpiCfg.primary] ?? 0;
+
+    // For cost KPIs (lower = better): cpa, cpl, cpi, cpm, cpc
+    const costKpis = ['cpa', 'cpl', 'cpi', 'cpm', 'cpc'];
+    const isPrimaryGood = kpiValue !== null
+      ? (costKpis.includes(kpiCfg.primary)
+          ? kpiValue <= threshold
+          : kpiValue >= threshold)
+      : false;
+
+    const prevKpi = p ? (() => {
+      if (kpiCfg.primary === 'roas') {
+        const pRoas = (p.website_purchase_roas || [])[0]?.value;
+        return pRoas ? parseN(pRoas) : null;
+      }
+      return p.ctr ? parseN(p.ctr) : null;
+    })() : null;
+
     const isFatigued = frequency > 3.5 || (prevCtr !== null && prevCtr > 0 && ctr / prevCtr < 0.7);
-    const isScalable = ctr > 0.02 && spend > 10 && (!prevCtr || ctr >= prevCtr * 0.9);
-    const needsPause = (ctr < 0.005 && spend > 20) || (cpc > 5 && conversions === 0 && spend > 30);
+    const isScalable = isPrimaryGood && spend > 10 && (prevKpi === null || kpiValue! >= prevKpi * 0.85);
+    const needsPause = (!isPrimaryGood && spend > 20 && conversions === 0 && ctr < 0.005)
+      || (roas !== null && roas < 0.5 && spend > 50)
+      || (cpa !== null && cpa > 200 && spend > 40);
     const deltaCtr = prevCtr !== null ? ((ctr - prevCtr) / Math.max(prevCtr, 0.001) * 100) : null;
 
     return {
       id: ad.ad_id, name: ad.ad_name || 'Sem nome',
       adset: ad.adset_name, campaign: ad.campaign_name,
+      objective, kpiPrimary: kpiCfg.primary, kpiLabel: kpiCfg.primaryLabel, kpiValue,
       spend, ctr, cpc, cpm: parseN(ad.cpm), impressions, frequency,
-      conversions, roas,
+      conversions, roas, cpa,
+      hookRate, thruPlayRate, avgWatch, engagementRate,
       prevCtr, deltaCtr,
-      videoPlays: video.plays, avgWatch: video.avg_watch,
       isFatigued, isScalable, needsPause,
       trend: deltaCtr === null ? 'new' : deltaCtr > 5 ? 'up' : deltaCtr < -5 ? 'down' : 'stable',
     };
@@ -189,17 +302,17 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         sample_size: n + 1,
         avg_ctr: ((ex.avg_ctr || 0) * n + ad.ctr) / (n + 1),
         avg_roas: ad.roas || ex.avg_roas,
-        is_winner: ad.ctr > 0.018,
+        is_winner: ad.isScalable,
         confidence: Math.min(1, (n + 1) / 14),
-        insight_text: `"${ad.name.slice(0, 45)}": CTR ${(ad.ctr*100).toFixed(2)}% (${ad.trend}) | ${ad.spend.toFixed(0)} spend`,
+        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} (${ad.trend}) | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}`,
         last_updated: new Date().toISOString(),
         variables: { ...vars, history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset, frequency: ad.frequency }
       }).eq('id', ex.id);
     } else {
       await sb.from('learned_patterns').insert({
-        user_id, pattern_key: key, is_winner: ad.ctr > 0.018, sample_size: 1,
+        user_id, pattern_key: key, is_winner: ad.isScalable, sample_size: 1,
         avg_ctr: ad.ctr, avg_roas: ad.roas || null, confidence: 0.07,
-        insight_text: `"${ad.name.slice(0, 45)}": CTR ${(ad.ctr*100).toFixed(2)}% | ${ad.spend.toFixed(0)} spend`,
+        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}`,
         variables: { history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset }
       });
     }
@@ -222,7 +335,13 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         new_ads_this_week: newAds.length,
         top3: enriched.slice(0, 3).map((a: any) => ({
           name: a.name.slice(0, 40),
+          objective: a.objective,
+          primary_kpi: `${a.kpiLabel}: ${a.kpiValue !== null ? a.kpiValue.toFixed(2) : '—'}`,
           ctr_pct: (a.ctr * 100).toFixed(2),
+          cpa: a.cpa ? `R$${a.cpa.toFixed(0)}` : null,
+          roas: a.roas ? a.roas.toFixed(2) : null,
+          hook_rate: a.hookRate ? `${(a.hookRate * 100).toFixed(1)}%` : null,
+          thruplay_rate: a.thruPlayRate ? `${(a.thruPlayRate * 100).toFixed(1)}%` : null,
           spend: a.spend.toFixed(0),
           conversions: a.conversions,
           trend: a.trend,
@@ -310,4 +429,4 @@ Analise os dados da conta e retorne JSON com:
     insight: aiInsight.slice(0, 80),
   };
 }
-// redeploy 202603261700
+// redeploy 202603270100
