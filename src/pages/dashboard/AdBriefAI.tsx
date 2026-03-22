@@ -666,6 +666,22 @@ export default function AdBriefAI() {
           });
           if(metrics.length>0)return{...c,type:"dashboard" as const,metrics,items:undefined};
         }
+        // Intercept empty hooks block (AI returned {type:"hooks", items:[]}) — execute generate-hooks
+        if(c.type==="hooks" && (!c.items || c.items.length === 0)){
+          const countMatch=msg.match(/(\d+)\s+hooks?/i);
+          const params={
+            product:"iGaming", niche:"iGaming",
+            market:lang.toUpperCase()||"BR",
+            platform:"Meta Feed",
+            tone:"Aggressive / Urgent",
+            count:countMatch?parseInt(countMatch[1]):5,
+            context:msg,
+            user_id:user.id,
+            persona_id:selectedPersona?.id||null,
+          };
+          return{...c,type:"tool_call" as const,_pendingTool:"generate-hooks",_toolParams:params};
+        }
+
         // Convert meta_action tool_call — read-only: execute immediately, destructive: show confirm
         if(c.type==="tool_call"&&c.tool_params?.meta_action){
           const p=c.tool_params;

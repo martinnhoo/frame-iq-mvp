@@ -53,7 +53,8 @@ Deno.serve(async (req) => {
       bofu: "BOTTOM OF FUNNEL (hot audience) — hooks must trigger CONVERSION. The person is ready to decide. Lead with urgency, specific offer, risk reversal, or final push.",
     };
 
-    if (!product) return new Response(JSON.stringify({ error: 'Missing product' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    // Fallback: if no product, use niche or a safe default — never fail
+    const effectiveProduct = product || niche || 'iGaming';
 
     // ── Cost-based throttle check ──
     if (user_id) {
@@ -125,7 +126,7 @@ ${userContext}
 ${persona_context ? `\nACTIVE AUDIENCE PERSONA — write every hook FOR THIS SPECIFIC PERSON:\n- Name: ${persona_context.name} (${persona_context.age}, ${persona_context.gender})\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- Best platforms: ${persona_context.best_platforms?.join(', ')}\n- Proven hook angles for this persona: ${persona_context.hook_angles?.join(' | ')}\nEvery hook must resonate specifically with this person's psychology, not a generic audience.\n` : ''}
 FUNNEL STAGE: ${FUNNEL_CONTEXT[funnel_stage] || FUNNEL_CONTEXT.tofu}
 Generate ${effectiveCount} unique, high-converting hook variations for:
-- Product/Service: ${product}
+- Product/Service: ${effectiveProduct}
 - Niche/Industry: ${niche || 'general'}
 - Target Market: ${market || 'global'}
 - Primary Platform: ${platform || 'TikTok/Reels'}
