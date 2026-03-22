@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import { toast } from "sonner";
 import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useDashT } from "@/i18n/dashboardTranslations";
 import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
   ChevronDown, Clock, BarChart2, Zap, Shield, MessageSquare,
@@ -197,6 +199,8 @@ const Select = ({ value, onChange, options }: {
 
 export default function PreflightCheck() {
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const t = useDashT(language);
 
   const [script, setScript] = useState("");
   const [hook, setHook] = useState("");
@@ -232,8 +236,8 @@ export default function PreflightCheck() {
   };
 
   const run = async () => {
-    if (inputMode === "script" && !script.trim()) { toast.error("Paste your script first"); return; }
-    if (inputMode === "video" && !videoFile) { toast.error("Drop a video file first"); return; }
+    if (inputMode === "script" && !script.trim()) { toast.error(t("pf_toast_no_script")); return; }
+    if (inputMode === "video" && !videoFile) { toast.error(t("pf_toast_no_video")); return; }
 
     // Warn if no persona selected
     if (!selectedPersona && !pendingRun) {
@@ -307,7 +311,7 @@ export default function PreflightCheck() {
       if (data.transcribed_from_video && (data as { transcript?: string }).transcript) {
         setScript((data as { transcript?: string }).transcript || "");
       }
-      toast.success("Pre-flight complete");
+      toast.success(t("pf_toast_done"));
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -341,10 +345,10 @@ export default function PreflightCheck() {
                 style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)" }}>
                 <Plane className="h-4 w-4" style={{ color: "#fbbf24" }} />
               </div>
-              Pre-flight Check
+              {t("pf_title")}
             </h1>
             <p className="text-white/50 text-xs mt-1" style={mono}>
-              AI analysis of your script — compliance · hook · structure · platform fit
+              {t("pf_subtitle")}
             </p>
           </div>
           {result && verdictCfg && (
@@ -364,8 +368,8 @@ export default function PreflightCheck() {
           {/* Mode toggle */}
           <div className="flex items-center gap-1 p-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
             {[
-              { mode: "script" as const, label: "Script", icon: <FileText className="h-3.5 w-3.5" /> },
-              { mode: "video" as const,  label: "Video",  icon: <FileVideo className="h-3.5 w-3.5" /> },
+              { mode: "script" as const, label: t("pf_script"), icon: <FileText className="h-3.5 w-3.5" /> },
+              { mode: "video" as const,  label: t("pf_video"),  icon: <FileVideo className="h-3.5 w-3.5" /> },
             ].map(({ mode, label, icon }) => (
               <button key={mode} onClick={() => setInputMode(mode)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -376,7 +380,7 @@ export default function PreflightCheck() {
               </button>
             ))}
             <span className="ml-2 text-[10px] text-white/40" style={mono}>
-              {inputMode === "video" ? "Whisper transcribes audio → Claude analyzes" : "Paste script → Claude analyzes"}
+              {inputMode === "video" ? "Whisper → Claude" : t("pf_script") + " → Claude"}
             </span>
           </div>
 
@@ -384,7 +388,7 @@ export default function PreflightCheck() {
             /* Script mode */
             <div className="p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Script *</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_script_label")} *</label>
                 <span className="text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
                   {wordCount}w · ~{estimatedSeconds}s
                 </span>
@@ -392,7 +396,7 @@ export default function PreflightCheck() {
               <textarea
                 value={script}
                 onChange={e => setScript(e.target.value)}
-                placeholder={"VO: Você sabia que...\n[ON SCREEN: 3x mais rápido]\nVO: Jogue agora e ganhe..."}
+                placeholder={{t("pf_script_ph")}}
                 rows={7}
                 className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-colors leading-relaxed"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
@@ -409,7 +413,7 @@ export default function PreflightCheck() {
                   <FileVideo className="h-5 w-5 shrink-0" style={{ color: "#34d399" }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate" style={mono}>{videoFile.name}</p>
-                    <p className="text-[10px] text-white/50" style={mono}>{(videoFile.size / 1024 / 1024).toFixed(1)} MB · Audio will be transcribed with Whisper</p>
+                    <p className="text-[10px] text-white/50" style={mono}>{(videoFile.size / 1024 / 1024).toFixed(1)} MB · Whisper</p>
                   </div>
                   <button onClick={() => setVideoFile(null)} className="h-6 w-6 rounded-lg flex items-center justify-center text-white/50 hover:text-white transition-colors">
                     <X className="h-3.5 w-3.5" />
@@ -429,8 +433,8 @@ export default function PreflightCheck() {
                   <input id="pf-video-input" type="file" accept="video/*" className="hidden"
                     onChange={e => e.target.files?.[0] && setVideoFile(e.target.files[0])} />
                   <Upload className="h-7 w-7 mb-3" style={{ color: "rgba(255,255,255,0.2)" }} />
-                  <p className="text-sm font-medium text-white/60">Drop your video here</p>
-                  <p className="text-[11px] text-white/45 mt-1" style={mono}>MP4, MOV, AVI, WebM · Audio extracted + analyzed</p>
+                  <p className="text-sm font-medium text-white/60">{t("pf_drop_video")}</p>
+                  <p className="text-[11px] text-white/45 mt-1" style={mono}>{t("pf_drop_sub")}</p>
                   <div className="flex items-center gap-2 mt-3 text-[10px]" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>
                     <span className="px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.05)" }}>Whisper AI</span>
                     <span>→</span>
@@ -447,9 +451,9 @@ export default function PreflightCheck() {
           {/* Hook + CTA row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Hook (0–3s) <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_hook_label")} <span className="text-white/15">{t("pf_optional")}</span></label>
               <input value={hook} onChange={e => setHook(e.target.value)}
-                placeholder="First line the viewer hears..."
+                placeholder={t("pf_hook_ph")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
                 onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(14,165,233,0.35)"; }}
@@ -457,9 +461,9 @@ export default function PreflightCheck() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>CTA <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_cta_label")} <span className="text-white/15">{t("pf_optional")}</span></label>
               <input value={cta} onChange={e => setCta(e.target.value)}
-                placeholder="e.g. Jogue agora, acesse o link..."
+                placeholder={t("pf_cta_ph")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
                 onFocus={e => { (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(6,182,212,0.35)"; }}
@@ -471,20 +475,20 @@ export default function PreflightCheck() {
           {/* Config grid */}
           <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Platform</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_platform")}</label>
               <Select value={platform} onChange={setPlatform} options={PLATFORMS} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Market</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_market")}</label>
               <Select value={market} onChange={setMarket} options={MARKETS} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Duration</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_duration")}</label>
               <Select value={duration} onChange={setDuration}
                 options={DURATIONS.map(d => ({ value: d, label: `${d}s` }))} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Format</label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_format")}</label>
               <Select value={format} onChange={setFormat}
                 options={FORMATS.map(f => ({ value: f, label: f }))} />
             </div>
@@ -493,17 +497,17 @@ export default function PreflightCheck() {
           {/* Product + compliance */}
           <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Product / Brand <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_product")} <span className="text-white/15">{t("pf_optional")}</span></label>
               <input value={product} onChange={e => setProduct(e.target.value)}
-                placeholder="e.g. Afun Bet, iGaming app..."
+                placeholder={t("pf_product_ph")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>Compliance notes <span className="text-white/15">optional</span></label>
+              <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_compliance_label")} <span className="text-white/15">{t("pf_optional")}</span></label>
               <input value={complianceNotes} onChange={e => setComplianceNotes(e.target.value)}
-                placeholder="e.g. NL platform, avoid 'casino'..."
+                placeholder={t("pf_compliance_ph")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}
               />
@@ -512,12 +516,12 @@ export default function PreflightCheck() {
 
           {/* Funnel Stage */}
           <div className="px-4 pb-2">
-            <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2">Funnel Stage</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2">{t("pf_funnel")}</p>
             <div className="grid grid-cols-3 gap-1.5">
               {[
-                { id: "tofu", label: "ToFu", desc: "Awareness", color: "#60a5fa" },
-                { id: "mofu", label: "MoFu", desc: "Consideration", color: "#0ea5e9" },
-                { id: "bofu", label: "BoFu", desc: "Conversion", color: "#34d399" },
+                { id: "tofu", label: "ToFu", desc: t("pf_tofu").split(" · ")[1] || "Awareness", color: "#60a5fa" },
+                { id: "mofu", label: "MoFu", desc: t("pf_mofu").split(" · ")[1] || "Consideration", color: "#0ea5e9" },
+                { id: "bofu", label: "BoFu", desc: t("pf_bofu").split(" · ")[1] || "Conversion", color: "#34d399" },
               ].map(f => (
                 <button key={f.id} onClick={() => setFunnelStage(f.id)}
                   className="py-2 rounded-lg text-xs font-medium border transition-all"
@@ -537,8 +541,8 @@ export default function PreflightCheck() {
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
               style={{ ...syne, background: "linear-gradient(135deg, #fbbf24, #f59e0b)", color: "#000" }}>
               {loading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> {inputMode === "video" ? "Transcribing + analyzing..." : "Analyzing script..."}</>
-                : <><Plane className="h-4 w-4" /> Run Pre-flight Check</>}
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> {inputMode === "video" ? t("pf_transcribing") : t("pf_running")}</>
+                : <><Plane className="h-4 w-4" /> {t("pf_run")}</>}
             </button>
           </div>
         </div>
@@ -556,9 +560,9 @@ export default function PreflightCheck() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-bold text-white" style={syne}>
-                    {result.verdict === "READY" ? "Looking good — ready to produce" :
-                     result.verdict === "BLOCKED" ? "A few things to fix first" :
-                     "Almost there — check the suggestions below"}
+                    {result.verdict === "READY" ? t("pf_verdict_ready") :
+                     result.verdict === "BLOCKED" ? t("pf_verdict_blocked") :
+                     t("pf_verdict_review")}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold border"
                     style={{ color: verdictCfg!.color, background: verdictCfg!.bg, borderColor: verdictCfg!.border, ...mono }}>
@@ -568,10 +572,10 @@ export default function PreflightCheck() {
                 <p className="text-xs text-white/40" style={mono}>{result.verdict_reason}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-[10px] flex items-center gap-1" style={{ ...mono, color: "rgba(255,255,255,0.25)" }}>
-                    <Clock className="h-3 w-3" />{result.reading_time_seconds}s read · {result.word_count}w
+                    <Clock className="h-3 w-3" />{result.reading_time_seconds}{t("pf_read")} · {result.word_count}{t("pf_words")}
                   </span>
                   <span className="text-[10px] flex items-center gap-1" style={{ ...mono, color: "rgba(255,255,255,0.25)" }}>
-                    <BarChart2 className="h-3 w-3" />Hook {result.estimated_hook_score}/10
+                    <BarChart2 className="h-3 w-3" />{t("pf_hook_score")} {result.estimated_hook_score}/10
                   </span>
                 </div>
               </div>
@@ -598,7 +602,7 @@ export default function PreflightCheck() {
               {/* Strengths */}
               {result.strengths?.length > 0 && (
                 <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(52,211,153,0.15)" }}>
-                  <SectionHeader label="Strengths" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+                  <SectionHeader label={t("pf_strengths")} icon={<TrendingUp className="h-3.5 w-3.5" />} />
                   <div className="p-4 space-y-2">
                     {result.strengths.map((s, i) => (
                       <div key={i} className="flex items-start gap-2.5">
@@ -613,7 +617,7 @@ export default function PreflightCheck() {
               {/* Top Fixes */}
               {result.top_fixes?.length > 0 && (
                 <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(251,191,36,0.15)" }}>
-                  <SectionHeader label="Top Suggestions" icon={<Zap className="h-3.5 w-3.5" />} />
+                  <SectionHeader label={t("pf_suggestions")} icon={<Zap className="h-3.5 w-3.5" />} />
                   <div className="p-4 space-y-2">
                     {result.top_fixes.map((fix, i) => (
                       <div key={i} className="flex items-start gap-2.5">
@@ -629,7 +633,7 @@ export default function PreflightCheck() {
 
             {/* Hook Analysis */}
             <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(14,165,233,0.15)" }}>
-              <SectionHeader label="Hook Analysis" icon={<Sparkles className="h-3.5 w-3.5" />} />
+              <SectionHeader label={t("pf_hook_analysis")} icon={<Sparkles className="h-3.5 w-3.5" />} />
               <div className="p-4 space-y-4">
                 <div className="flex items-start gap-4">
                   {/* Score circle */}
@@ -660,7 +664,7 @@ export default function PreflightCheck() {
                   <div className="rounded-xl p-3" style={{ background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.2)" }}>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#0ea5e9" }}>
-                        <ArrowRight className="h-3 w-3 inline mr-1" />Suggested rewrite
+                        <ArrowRight className="h-3 w-3 inline mr-1" />{t("pf_suggested_rewrite")}
                       </p>
                       <CopyBtn text={result.hook_analysis.rewrite} />
                     </div>
@@ -672,7 +676,7 @@ export default function PreflightCheck() {
 
             {/* Structure */}
             <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <SectionHeader label="Script Structure" icon={<BarChart2 className="h-3.5 w-3.5" />} />
+              <SectionHeader label={t("pf_structure")} icon={<BarChart2 className="h-3.5 w-3.5" />} />
               <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
                 {result.structure.map((row, i) => (
                   <div key={i} className="flex items-start gap-3 px-4 py-3">
@@ -686,7 +690,7 @@ export default function PreflightCheck() {
 
             {/* CTA Check */}
             <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <SectionHeader label="CTA Check" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+              <SectionHeader label={t("pf_cta_check")} icon={<MessageSquare className="h-3.5 w-3.5" />} />
               <div className="p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
@@ -706,7 +710,7 @@ export default function PreflightCheck() {
                 {result.cta_check.suggestion && (
                   <div className="rounded-xl p-3" style={{ background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.2)" }}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#06b6d4" }}>Suggested CTA</p>
+                      <p className="text-[10px] uppercase tracking-[0.15em]" style={{ ...mono, color: "#06b6d4" }}>{t("pf_suggested_cta")}</p>
                       <CopyBtn text={result.cta_check.suggestion} />
                     </div>
                     <p className="text-sm text-white/80" style={mono}>"{result.cta_check.suggestion}"</p>
@@ -718,7 +722,7 @@ export default function PreflightCheck() {
             {/* Compliance */}
             {result.compliance?.length > 0 && (
               <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <SectionHeader label={`Compliance · ${market}`} icon={<Shield className="h-3.5 w-3.5" />} />
+                <SectionHeader label={`${t("pf_compliance")} · ${market}`} icon={<Shield className="h-3.5 w-3.5" />} />
                 <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
                   {result.compliance.map((row, i) => (
                     <div key={i} className="flex items-start gap-3 px-4 py-3">
@@ -733,7 +737,7 @@ export default function PreflightCheck() {
 
             {/* Platform Fit */}
             <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <SectionHeader label="Platform Fit" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+              <SectionHeader label={t("pf_platform_fit")} icon={<TrendingUp className="h-3.5 w-3.5" />} />
               <div className="p-4 space-y-3">
                 {/* Primary */}
                 <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)" }}>
@@ -745,7 +749,7 @@ export default function PreflightCheck() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-semibold text-white" style={mono}>{result.platform_fit.primary.platform}</span>
                       <StatusBadge status={result.platform_fit.primary.status} />
-                      <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ ...mono, background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>PRIMARY</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ ...mono, background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>{t("pf_primary")}</span>
                     </div>
                     <p className="text-xs text-white/40" style={mono}>{result.platform_fit.primary.detail}</p>
                   </div>
@@ -753,7 +757,7 @@ export default function PreflightCheck() {
                 {/* Crosspost */}
                 {result.platform_fit.crosspost?.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-[10px] uppercase tracking-[0.15em] px-1" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>Crosspost</p>
+                    <p className="text-[10px] uppercase tracking-[0.15em] px-1" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>{t("pf_crosspost")}</p>
                     {result.platform_fit.crosspost.map((p, i) => (
                       <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
                         <span className="text-xs font-medium w-28 shrink-0" style={{ ...mono, color: "rgba(255,255,255,0.4)" }}>{p.platform}</span>
@@ -772,7 +776,7 @@ export default function PreflightCheck() {
                 <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-3.5 w-3.5 text-white/50" />
-                    <span className="text-[10px] uppercase tracking-[0.2em]" style={{ ...mono, color: "rgba(255,255,255,0.3)" }}>Language Review</span>
+                    <span className="text-[10px] uppercase tracking-[0.2em]" style={{ ...mono, color: "rgba(255,255,255,0.3)" }}>{t("pf_language_review")}</span>
                   </div>
                   <StatusBadge status={result.language_check.status} />
                 </div>
@@ -792,7 +796,7 @@ export default function PreflightCheck() {
                   </div>
                 ) : (
                   <div className="px-4 py-3">
-                    <p className="text-xs text-white/50" style={mono}>No language issues found</p>
+                    <p className="text-xs text-white/50" style={mono}>{t("pf_no_issues")}</p>
                   </div>
                 )}
               </div>
@@ -802,7 +806,7 @@ export default function PreflightCheck() {
             <button onClick={run} disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", ...syne }}>
-              <RefreshCw className="h-3.5 w-3.5" /> Run again
+              <RefreshCw className="h-3.5 w-3.5" /> {t("pf_run_again")}
             </button>
 
           </div>

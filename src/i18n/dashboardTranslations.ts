@@ -179,6 +179,40 @@ export type DashT = {
   pf_tofu: string;
   pf_mofu: string;
   pf_bofu: string;
+  pf_platform: string;
+  pf_market: string;
+  pf_duration: string;
+  pf_format: string;
+  pf_product: string;
+  pf_product_ph: string;
+  pf_compliance_label: string;
+  pf_compliance_ph: string;
+  pf_optional: string;
+  pf_hook_ph: string;
+  pf_cta_ph: string;
+  pf_transcribing: string;
+  pf_drop_video: string;
+  pf_drop_sub: string;
+  pf_verdict_ready: string;
+  pf_verdict_review: string;
+  pf_verdict_blocked: string;
+  pf_toast_done: string;
+  pf_toast_no_script: string;
+  pf_toast_no_video: string;
+  pf_run_again: string;
+  pf_strengths: string;
+  pf_suggestions: string;
+  pf_crosspost: string;
+  pf_platform_fit: string;
+  pf_language_review: string;
+  pf_cta_check: string;
+  pf_no_issues: string;
+  pf_suggested_rewrite: string;
+  pf_suggested_cta: string;
+  pf_primary: string;
+  pf_words: string;
+  pf_read: string;
+  pf_hook_score: string;
 
   // Intelligence
   intel_title: string;
@@ -429,6 +463,21 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "REVIEW", pf_blocked: "BLOCKED", pf_compliance: "Compliance",
     pf_hook_analysis: "Hook Analysis", pf_structure: "Structure", pf_funnel: "Funnel Stage",
     pf_tofu: "ToFu · Awareness", pf_mofu: "MoFu · Consideration", pf_bofu: "BoFu · Conversion",
+    pf_platform: "Platform", pf_market: "Market", pf_duration: "Duration", pf_format: "Format",
+    pf_product: "Product / Brand", pf_product_ph: "e.g. Afun Bet, iGaming app...",
+    pf_compliance_label: "Compliance notes", pf_compliance_ph: "e.g. avoid 'casino', NL platform...",
+    pf_optional: "optional", pf_hook_ph: "First line the viewer hears...", pf_cta_ph: "e.g. Play now, tap the link...",
+    pf_transcribing: "Transcribing + analyzing...",
+    pf_drop_video: "Drop your video here", pf_drop_sub: "MP4, MOV, AVI, WebM · Audio extracted + analyzed",
+    pf_verdict_ready: "Looking good — ready to produce",
+    pf_verdict_review: "Almost there — check the suggestions below",
+    pf_verdict_blocked: "A few things to fix first",
+    pf_toast_done: "Pre-flight complete", pf_toast_no_script: "Paste your script first", pf_toast_no_video: "Drop a video file first",
+    pf_run_again: "Run again", pf_strengths: "Strengths", pf_suggestions: "Top Suggestions",
+    pf_crosspost: "Crosspost", pf_platform_fit: "Platform Fit", pf_language_review: "Language Review",
+    pf_cta_check: "CTA Check", pf_no_issues: "No language issues found",
+    pf_suggested_rewrite: "Suggested rewrite", pf_suggested_cta: "Suggested CTA",
+    pf_primary: "PRIMARY", pf_words: "w", pf_read: "s read", pf_hook_score: "Hook",
     intel_title: "Intelligence", intel_subtitle: "Patterns from your creative data",
     intel_no_data: "No signals yet", intel_no_data_sub: "Generate hooks or run an analysis to start building creative intelligence",
     intel_signals: "signals", intel_top_model: "Top model", intel_avg_score: "Avg score",
@@ -578,6 +627,21 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "REVISAR", pf_blocked: "BLOQUEADO", pf_compliance: "Conformidade",
     pf_hook_analysis: "Análise de Hook", pf_structure: "Estrutura", pf_funnel: "Etapa do Funil",
     pf_tofu: "ToFu · Consciência", pf_mofu: "MoFu · Consideração", pf_bofu: "BoFu · Conversão",
+    pf_platform: "Plataforma", pf_market: "Mercado", pf_duration: "Duração", pf_format: "Formato",
+    pf_product: "Produto / Marca", pf_product_ph: "ex: Afun Bet, app de iGaming...",
+    pf_compliance_label: "Notas de conformidade", pf_compliance_ph: "ex: evitar 'cassino', plataforma NL...",
+    pf_optional: "opcional", pf_hook_ph: "Primeira linha que o espectador ouve...", pf_cta_ph: "ex: Jogue agora, acesse o link...",
+    pf_transcribing: "Transcrevendo + analisando...",
+    pf_drop_video: "Solte seu vídeo aqui", pf_drop_sub: "MP4, MOV, AVI, WebM · Áudio extraído + analisado",
+    pf_verdict_ready: "Tudo certo — pronto para produzir",
+    pf_verdict_review: "Quase lá — veja as sugestões abaixo",
+    pf_verdict_blocked: "Alguns pontos para corrigir antes",
+    pf_toast_done: "Pré-voo concluído", pf_toast_no_script: "Cole seu script primeiro", pf_toast_no_video: "Solte um arquivo de vídeo primeiro",
+    pf_run_again: "Rodar novamente", pf_strengths: "Pontos Fortes", pf_suggestions: "Principais Sugestões",
+    pf_crosspost: "Crosspost", pf_platform_fit: "Adequação à Plataforma", pf_language_review: "Revisão de Linguagem",
+    pf_cta_check: "Análise do CTA", pf_no_issues: "Nenhum problema de linguagem encontrado",
+    pf_suggested_rewrite: "Reescrita sugerida", pf_suggested_cta: "CTA sugerido",
+    pf_primary: "PRINCIPAL", pf_words: "pal", pf_read: "s leitura", pf_hook_score: "Hook",
     intel_title: "Inteligência", intel_subtitle: "Padrões dos seus dados criativos",
     intel_no_data: "Nenhum sinal ainda",
     intel_no_data_sub: "Gere hooks ou rode uma análise para começar a construir inteligência criativa",
@@ -733,6 +797,21 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "REVISAR", pf_blocked: "BLOQUEADO", pf_compliance: "Cumplimiento",
     pf_hook_analysis: "Análisis de Hook", pf_structure: "Estructura", pf_funnel: "Etapa del Embudo",
     pf_tofu: "ToFu · Conciencia", pf_mofu: "MoFu · Consideración", pf_bofu: "BoFu · Conversión",
+    pf_platform: "Plataforma", pf_market: "Mercado", pf_duration: "Duración", pf_format: "Formato",
+    pf_product: "Producto / Marca", pf_product_ph: "ej: Afun Bet, app de iGaming...",
+    pf_compliance_label: "Notas de cumplimiento", pf_compliance_ph: "ej: evitar 'casino', plataforma NL...",
+    pf_optional: "opcional", pf_hook_ph: "Primera línea que escucha el espectador...", pf_cta_ph: "ej: Juega ahora, toca el enlace...",
+    pf_transcribing: "Transcribiendo + analizando...",
+    pf_drop_video: "Suelta tu video aquí", pf_drop_sub: "MP4, MOV, AVI, WebM · Audio extraído + analizado",
+    pf_verdict_ready: "Todo listo — listo para producir",
+    pf_verdict_review: "Casi listo — revisa las sugerencias",
+    pf_verdict_blocked: "Algunos puntos a corregir primero",
+    pf_toast_done: "Precheck completado", pf_toast_no_script: "Pega tu guión primero", pf_toast_no_video: "Suelta un video primero",
+    pf_run_again: "Ejecutar de nuevo", pf_strengths: "Puntos Fuertes", pf_suggestions: "Principales Sugerencias",
+    pf_crosspost: "Crosspost", pf_platform_fit: "Ajuste de Plataforma", pf_language_review: "Revisión de Idioma",
+    pf_cta_check: "Análisis del CTA", pf_no_issues: "No se encontraron problemas de idioma",
+    pf_suggested_rewrite: "Reescritura sugerida", pf_suggested_cta: "CTA sugerido",
+    pf_primary: "PRINCIPAL", pf_words: "pal", pf_read: "s lectura", pf_hook_score: "Hook",
     intel_title: "Inteligencia", intel_subtitle: "Patrones de tus datos creativos",
     intel_no_data: "Sin señales aún",
     intel_no_data_sub: "Genera hooks o ejecuta un análisis para comenzar a construir inteligencia creativa",
@@ -889,6 +968,19 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "需审查", pf_blocked: "已阻止", pf_compliance: "合规性",
     pf_hook_analysis: "钩子分析", pf_structure: "结构", pf_funnel: "漏斗阶段",
     pf_tofu: "认知阶段", pf_mofu: "考量阶段", pf_bofu: "转化阶段",
+    pf_platform: "平台", pf_market: "市场", pf_duration: "时长", pf_format: "格式",
+    pf_product: "产品/品牌", pf_product_ph: "例：Afun Bet、iGaming应用...",
+    pf_compliance_label: "合规备注", pf_compliance_ph: "例：避免"赌场"等词...",
+    pf_optional: "可选", pf_hook_ph: "观众听到的第一句话...", pf_cta_ph: "例：立即游戏，点击链接...",
+    pf_transcribing: "转录中 + 分析中...",
+    pf_drop_video: "将视频拖放到此处", pf_drop_sub: "MP4、MOV、AVI、WebM · 提取音频并分析",
+    pf_verdict_ready: "一切就绪 — 可以制作", pf_verdict_review: "即将完成 — 查看建议", pf_verdict_blocked: "需要先修复几处问题",
+    pf_toast_done: "预检完成", pf_toast_no_script: "请先粘贴脚本", pf_toast_no_video: "请先上传视频",
+    pf_run_again: "再次运行", pf_strengths: "优点", pf_suggestions: "主要建议",
+    pf_crosspost: "跨平台", pf_platform_fit: "平台适配", pf_language_review: "语言审查",
+    pf_cta_check: "CTA检查", pf_no_issues: "未发现语言问题",
+    pf_suggested_rewrite: "建议改写", pf_suggested_cta: "建议CTA",
+    pf_primary: "主要", pf_words: "字", pf_read: "秒阅读", pf_hook_score: "钩子",
     intel_title: "智能分析", intel_subtitle: "来自您创意数据的规律",
     intel_no_data: "暂无信号",
     intel_no_data_sub: "生成钩子或运行分析以开始构建创意智能",
@@ -1041,6 +1133,19 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "À REVOIR", pf_blocked: "BLOQUÉ", pf_compliance: "Conformité",
     pf_hook_analysis: "Analyse du hook", pf_structure: "Structure", pf_funnel: "Étape du funnel",
     pf_tofu: "ToFu · Notoriété", pf_mofu: "MoFu · Considération", pf_bofu: "BoFu · Conversion",
+    pf_platform: "Plateforme", pf_market: "Marché", pf_duration: "Durée", pf_format: "Format",
+    pf_product: "Produit / Marque", pf_product_ph: "ex : Afun Bet, app iGaming...",
+    pf_compliance_label: "Notes de conformité", pf_compliance_ph: "ex : éviter 'casino', plateforme NL...",
+    pf_optional: "optionnel", pf_hook_ph: "Première ligne entendue par le spectateur...", pf_cta_ph: "ex : Jouez maintenant, cliquez ici...",
+    pf_transcribing: "Transcription + analyse...",
+    pf_drop_video: "Déposez votre vidéo ici", pf_drop_sub: "MP4, MOV, AVI, WebM · Audio extrait + analysé",
+    pf_verdict_ready: "Tout est bon — prêt à produire", pf_verdict_review: "Presque — vérifiez les suggestions", pf_verdict_blocked: "Quelques points à corriger d'abord",
+    pf_toast_done: "Check pré-vol terminé", pf_toast_no_script: "Collez votre script d'abord", pf_toast_no_video: "Déposez une vidéo d'abord",
+    pf_run_again: "Relancer", pf_strengths: "Points forts", pf_suggestions: "Principales suggestions",
+    pf_crosspost: "Crosspost", pf_platform_fit: "Compatibilité plateforme", pf_language_review: "Révision linguistique",
+    pf_cta_check: "Analyse CTA", pf_no_issues: "Aucun problème linguistique détecté",
+    pf_suggested_rewrite: "Réécriture suggérée", pf_suggested_cta: "CTA suggéré",
+    pf_primary: "PRINCIPAL", pf_words: "mots", pf_read: "s lecture", pf_hook_score: "Hook",
     intel_title: "Intelligence", intel_subtitle: "Tendances de vos données créatives",
     intel_no_data: "Aucun signal", intel_no_data_sub: "Générez des hooks ou lancez une analyse",
     intel_signals: "signaux", intel_top_model: "Meilleur modèle", intel_avg_score: "Score moyen",
@@ -1191,6 +1296,19 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "ÜBERPRÜFEN", pf_blocked: "BLOCKIERT", pf_compliance: "Compliance",
     pf_hook_analysis: "Hook-Analyse", pf_structure: "Struktur", pf_funnel: "Funnel-Phase",
     pf_tofu: "ToFu · Bewusstsein", pf_mofu: "MoFu · Überlegung", pf_bofu: "BoFu · Konversion",
+    pf_platform: "Plattform", pf_market: "Markt", pf_duration: "Dauer", pf_format: "Format",
+    pf_product: "Produkt / Marke", pf_product_ph: "z.B. Afun Bet, iGaming-App...",
+    pf_compliance_label: "Compliance-Hinweise", pf_compliance_ph: "z.B. kein 'Casino', NL-Plattform...",
+    pf_optional: "optional", pf_hook_ph: "Erste Zeile, die der Zuschauer hört...", pf_cta_ph: "z.B. Jetzt spielen, Link klicken...",
+    pf_transcribing: "Transkribiere + analysiere...",
+    pf_drop_video: "Video hier ablegen", pf_drop_sub: "MP4, MOV, AVI, WebM · Audio extrahiert + analysiert",
+    pf_verdict_ready: "Alles gut — bereit zur Produktion", pf_verdict_review: "Fast fertig — Vorschläge prüfen", pf_verdict_blocked: "Einige Punkte zuerst beheben",
+    pf_toast_done: "Vorflug-Check abgeschlossen", pf_toast_no_script: "Bitte Skript einfügen", pf_toast_no_video: "Bitte Video ablegen",
+    pf_run_again: "Erneut ausführen", pf_strengths: "Stärken", pf_suggestions: "Top-Vorschläge",
+    pf_crosspost: "Crosspost", pf_platform_fit: "Plattformeignung", pf_language_review: "Sprachprüfung",
+    pf_cta_check: "CTA-Prüfung", pf_no_issues: "Keine Sprachprobleme gefunden",
+    pf_suggested_rewrite: "Vorgeschlagene Umformulierung", pf_suggested_cta: "Vorgeschlagener CTA",
+    pf_primary: "PRIMÄR", pf_words: "W", pf_read: "s Lesezeit", pf_hook_score: "Hook",
     intel_title: "Intelligenz", intel_subtitle: "Muster aus Ihren Kreativdaten",
     intel_no_data: "Noch keine Signale", intel_no_data_sub: "Hooks generieren oder Analyse starten",
     intel_signals: "Signale", intel_top_model: "Top-Modell", intel_avg_score: "Ø Score",
@@ -1345,6 +1463,19 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_review: "يحتاج مراجعة", pf_blocked: "محظور", pf_compliance: "الامتثال",
     pf_hook_analysis: "تحليل الخطاف", pf_structure: "البنية", pf_funnel: "مرحلة القمع",
     pf_tofu: "الوعي", pf_mofu: "التفكير", pf_bofu: "التحويل",
+    pf_platform: "المنصة", pf_market: "السوق", pf_duration: "المدة", pf_format: "التنسيق",
+    pf_product: "المنتج / العلامة", pf_product_ph: "مثال: Afun Bet...",
+    pf_compliance_label: "ملاحظات الامتثال", pf_compliance_ph: "مثال: تجنب كلمة 'كازينو'...",
+    pf_optional: "اختياري", pf_hook_ph: "أول جملة يسمعها المشاهد...", pf_cta_ph: "مثال: العب الآن، اضغط الرابط...",
+    pf_transcribing: "جارٍ النسخ + التحليل...",
+    pf_drop_video: "أفلت الفيديو هنا", pf_drop_sub: "MP4، MOV، AVI، WebM · استخراج الصوت + التحليل",
+    pf_verdict_ready: "كل شيء جيد — جاهز للإنتاج", pf_verdict_review: "تقريباً — راجع الاقتراحات", pf_verdict_blocked: "بعض النقاط تحتاج إصلاحاً",
+    pf_toast_done: "اكتمل الفحص", pf_toast_no_script: "الصق النص أولاً", pf_toast_no_video: "أفلت ملف فيديو أولاً",
+    pf_run_again: "تشغيل مجدداً", pf_strengths: "نقاط القوة", pf_suggestions: "أهم الاقتراحات",
+    pf_crosspost: "نشر متعدد", pf_platform_fit: "ملاءمة المنصة", pf_language_review: "مراجعة اللغة",
+    pf_cta_check: "فحص CTA", pf_no_issues: "لا توجد مشكلات لغوية",
+    pf_suggested_rewrite: "إعادة صياغة مقترحة", pf_suggested_cta: "CTA مقترح",
+    pf_primary: "رئيسي", pf_words: "ك", pf_read: "ثانية قراءة", pf_hook_score: "خطاف",
     intel_title: "الذكاء الإبداعي", intel_subtitle: "أنماط من بياناتك الإبداعية",
     intel_no_data: "لا إشارات بعد", intel_no_data_sub: "ولّد خطافات أو شغّل تحليلاً",
     intel_signals: "إشارات", intel_top_model: "أفضل نموذج", intel_avg_score: "متوسط النقاط",

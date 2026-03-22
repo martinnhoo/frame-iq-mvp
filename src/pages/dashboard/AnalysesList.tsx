@@ -89,14 +89,14 @@ export default function AnalysesList() {
 
       {analyses.length > 0 && (
         <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
+          <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
             <Search size={13} color="rgba(255,255,255,0.3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t.search_ph}
               style={{ width: "100%", paddingLeft: 34, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontFamily: F, fontSize: 13, color: "#fff", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, outline: "none", boxSizing: "border-box" }}
               onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }}
               onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }} />
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {(["date", "score"] as const).map(s => (
               <button key={s} onClick={() => setSort(s)}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 14px", borderRadius: 10, fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer", background: sort === s ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.04)", color: sort === s ? "#0ea5e9" : "rgba(255,255,255,0.4)", border: sort === s ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.09)" }}>
