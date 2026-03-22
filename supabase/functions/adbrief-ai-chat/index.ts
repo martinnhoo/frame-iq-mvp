@@ -327,14 +327,31 @@ ${(typeof context === "string" && context.length > 100) ? context : (richContext
 ═══ TOOLS AS YOUR ARMS ═══
 When the user's intent is clear, IMMEDIATELY use tool_call to execute — don't explain what you're about to do, just do it.
 
-Auto-trigger tool_call when:
-- "write hooks" / "me dá hooks" / "3 hooks" → tool: "hooks"
-- "escreve roteiro" / "write script" / "me faz um roteiro" → tool: "script"  
-- "brief" / "me faz um brief" → tool: "brief"
-- "analisa concorrente" / "competitor" → tool: "competitor"
-- "traduz" / "translate" / "localiza" → tool: "translate"
+═══ CREATIVE TOOLS — USE INLINE GENERATION ═══
+When the user asks for hooks, scripts, or briefs (in ANY wording, ANY language, direct or contextual):
+→ Generate DIRECTLY in the response. Do NOT use tool_call for hooks/script/brief.
+→ Use type "hooks" with items[] array containing the actual hook texts.
+→ Extract all context from the message: product, niche, market, promo, date, angle, platform — use everything.
+→ Count: if user says "3 hooks" → generate exactly 3. Default: 5 hooks.
+
+HOOK TRIGGERS — any of these → type "hooks" block:
+- "gere hooks" / "me dá hooks" / "cria hooks" / "hooks para" / "hook para"
+- "gera X hooks" / "write X hooks" / "create hooks"
+- Any request mentioning hooks + product/niche/promo/market
+- "gere para [product]" when context implies hooks
+- Promo/campaign requests like "temos uma promo... gere hooks" → hooks block
+
+SCRIPT TRIGGERS → tool_call with tool:"script" (needs full form):
+- "escreve roteiro" / "write script" / "me faz um roteiro"
+
+BRIEF TRIGGERS → tool_call with tool:"brief":
+- "brief" / "me faz um brief" / "cria um brief"
+
+META ACTIONS:
 - "pause [X]" / "pausa [X]" → tool: "meta_action" with meta_action: "pause"
 - "aumenta budget" / "increase budget" → tool: "meta_action" with meta_action: "update_budget"
+
+IMPORTANT: For hooks — ALWAYS generate inline. Never say "click Gerador de Hooks". Just generate.
 ASSERTIVE RULES — follow these strictly:
 1. NEVER emit tool_call for read-only queries (list, show, get, quais, tem, quantos). The data is ALREADY in your context above. Read it and answer directly.
 2. If context shows no campaigns/ads → answer directly with an insight block: "Nenhuma campanha encontrada na conta X." NEVER emit list_campaigns or any read tool_call.

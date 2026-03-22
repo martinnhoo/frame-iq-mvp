@@ -518,6 +518,44 @@ export default function AdBriefAI() {
     }catch{}
   },[messages]);
 
+  // Execute pending tool_calls (hooks generated inline by AI)
+  useEffect(()=>{
+    const hasPending=messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool));
+    if(!hasPending)return;
+    messages.forEach(msg=>{
+      if(!msg.blocks?.some(b=>(b as any)._pendingTool))return;
+      msg.blocks.forEach(async(block,bi)=>{
+        if(!(block as any)._pendingTool)return;
+        const fn=(block as any)._pendingTool as string;
+        const params=(block as any)._toolParams||{};
+        try{
+          const{data}=await supabase.functions.invoke(fn,{body:params});
+          setMessages(prev=>prev.map(m=>{
+            if(m.id!==msg.id)return m;
+            const newBlocks=[...(m.blocks||[])];
+            if(fn==="generate-hooks"&&data?.hooks){
+              newBlocks[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:data.hooks.map((h:any)=>h.hook||h)};
+            } else if(fn==="generate-script"&&data?.script){
+              newBlocks[bi]={type:"insight",title:lang==="pt"?"Roteiro":lang==="es"?"Guión":"Script",content:data.script};
+            } else if(fn==="generate-brief"&&data?.brief){
+              newBlocks[bi]={type:"insight",title:lang==="pt"?"Brief Criativo":"Creative Brief",content:data.brief};
+            } else {
+              newBlocks[bi]={type:"insight",title:String(fn).replace("generate-",""),content:JSON.stringify(data?.result||data||{}).slice(0,300)};
+            }
+            return{...m,blocks:newBlocks};
+          }));
+        }catch(e){
+          setMessages(prev=>prev.map(m=>{
+            if(m.id!==msg.id)return m;
+            const newBlocks=[...(m.blocks||[])];
+            newBlocks[bi]={type:"warning",title:"Tool error",content:String((e as any)?.message||"Failed")};
+            return{...m,blocks:newBlocks};
+          }));
+        }
+      });
+    });
+  },[messages.map(m=>m.id).join(",")]); // eslint-disable-line
+
   const handleConnect=async(id:string,fn:string)=>{
     // If no account selected, redirect to Accounts to create/select one first
     if(!selectedPersona){
@@ -631,10 +669,16 @@ export default function AdBriefAI() {
           const DESTRUCTIVE=["pause","enable","update_budget","publish","duplicate","delete","archive","rename","set_","change_"];
           const isDestructive=DESTRUCTIVE.some(d=>String(p.meta_action||"").toLowerCase().includes(d));
           if(!isDestructive){
-            // Mark for auto-execution — will be executed after blocks are rendered
             return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value,_autoExec:true};
           }
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
+        }
+        // Execute hooks/script/brief tool_calls inline
+        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")){
+          const p=c.tool_params||{};
+          const fn=c.tool==="hooks"?"generate-hooks":c.tool==="script"?"generate-script":c.tool==="brief"?"generate-brief":c.tool==="competitor"?"decode-competitor":"translate-text";
+          // Return loading block — will be replaced by useEffect after render
+          return{...c,type:"tool_call" as const,_pendingTool:fn,_toolParams:{...p,user_id:user.id,persona_id:selectedPersona?.id||null}};
         }
         return c;
       });
@@ -753,6 +797,14 @@ export default function AdBriefAI() {
                 {msg.blocks?.map((b,bi)=>
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
+                  (b as any)._pendingTool?(
+                    <div key={bi} style={{display:"flex",alignItems:"center",gap:8,padding:"12px 14px",borderRadius:12,background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.15)",marginBottom:8}}>
+                      <Loader2 size={14} color="#0ea5e9" className="animate-spin"/>
+                      <span style={{...m,fontSize:12,color:"rgba(238,240,246,0.55)"}}>
+                        {lang==="pt"?"Gerando...":lang==="es"?"Generando...":"Generating..."}
+                      </span>
+                    </div>
+                  ):
                   <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
                 {/* 👍 👎 Copy Retry row */}
