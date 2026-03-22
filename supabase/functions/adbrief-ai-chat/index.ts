@@ -265,12 +265,12 @@ Deno.serve(async (req) => {
       persona_id
         ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      // 7. Learned patterns — WAS MISSING QUERY — winners + perf + competitor patterns
+      // 7. Learned patterns — persona-scoped: prefer this account's patterns, include global (null persona_id)
       (supabase as any).from("learned_patterns")
-        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables")
+        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables, persona_id")
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
-        .limit(30),
+        .limit(60),
       // 8. Daily snapshots — last 7 days, persona-scoped when possible
       (supabase as any).from("daily_snapshots")
         .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
@@ -294,7 +294,9 @@ Deno.serve(async (req) => {
 
     // ── 4. Build context ──────────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
-    const memory = (creativeMemory || []) as any[];
+    // creative_memory: scope to persona if available
+    const allMemory = (creativeMemory || []) as any[];
+    const memory = allMemory; // creative_memory doesn't have persona_id yet — use all, AI persona context prevents cross-contamination
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
 
@@ -347,7 +349,11 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     }).filter(Boolean).join("\n");
 
     // Learned patterns — what the product knows about this user
-    const patterns = (learnedPatterns || []) as any[];
+    // Scope patterns to this persona — prefer persona-specific, include global (null persona_id), exclude other personas
+    const allRawPatterns = (learnedPatterns || []) as any[];
+    const patterns = persona_id
+      ? allRawPatterns.filter((p: any) => p.persona_id === persona_id || p.persona_id === null).slice(0, 30)
+      : allRawPatterns.filter((p: any) => p.persona_id === null).slice(0, 30);
     const winners = patterns.filter(p => p.is_winner && p.confidence > 0.2);
     const competitors = patterns.filter(p => p.pattern_key.startsWith('competitor_'));
     const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
@@ -694,6 +700,9 @@ Tom: direto, confiante, parceiro — como um sócio sênior de mídia paga que v
 - NEVER be rude or condescending. Never say "Não sou seu X" or dismiss the person.
 - Max 2 blocks per response. Tight, dense, valuable.
 - If data is missing: state what you'd need in 1 sentence, then give your best hypothesis using what you DO have.
+- NEVER invent specific data (CTR percentages, spend amounts, creative names, days running) if not in context.
+- NEVER say "criativos com mais de X dias" unless you can see that data in the context.
+- If context has no live Meta data: say "não tenho dados desta semana ainda" and offer a diagnostic framework.
 
 ═══ ESCOPO INTELIGENTE — LEIA ANTES DE REJEITAR ═══
 Antes de marcar qualquer mensagem como off_topic, pergunte: "isso pode ser usado para performance de anúncios?"
@@ -734,7 +743,11 @@ Diagnosis shortcuts:
 - "CPA high" → LP, offer, or audience. Check landing page speed and headline first.
 - "Not spending" → learning, overlap, bid cap too low, or disapproved creative
 
-═══ REAL ACCOUNT DATA ═══
+═══ DADOS REAIS — SOMENTE DESTA CONTA ═══
+REGRA CRÍTICA: Tudo abaixo é específico para a conta ativa "${personaCtx ? 'workspace ativo' : 'conta principal'}".
+NUNCA invente dados. NUNCA use dados de outra conta.
+Se não há dados reais abaixo, diga explicitamente: "Não tenho dados desta conta ainda."
+Se os dados mostram CTR de X%, use X%. Não use médias do setor como se fossem desta conta.
 ${(() => {
   const ctx = (typeof context === "string" && context.length > 100) ? context : richContext;
   if (ctx && ctx.trim().length > 50) return ctx;
