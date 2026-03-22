@@ -149,7 +149,10 @@ export default function CompetitorDecoder() {
         body: { ad_text: txt, observation: observation.trim() || undefined, persona_context: personaCtx, ui_language: lang },
       });
       if (error) throw error;
-      if (data?.error_type === "url_not_supported") { toast.error(data.message); setLoading(false); return; }
+      if (data?.error_type === "url_not_supported") {
+        setResult({ _urlError: true, _message: data.message } as any);
+        setLoading(false); return;
+      }
       setResult(data);
     } catch { toast.error(lang === "pt" ? "Análise falhou — tente novamente" : "Analysis failed"); }
     finally { setLoading(false); }
@@ -213,65 +216,67 @@ export default function CompetitorDecoder() {
       {/* Result — briefing format */}
       {result && (
         <div>
-          {/* Mismatch */}
-          {result.mismatch_detected && result.mismatch_reason && (
-            <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 9, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)", marginBottom: 20 }}>
-              <AlertCircle size={13} color="#fbbf24" style={{ marginTop: 2, flexShrink: 0 }} />
-              <p style={{ ...M, fontSize: 12, color: "rgba(251,191,36,0.80)", lineHeight: 1.5, margin: 0 }}>{result.mismatch_reason}</p>
-            </div>
-          )}
-
-          {/* Meta row: industry + score */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div>
-              <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 4 }}>{t.industry}</span>
-              <span style={{ ...F, fontSize: 13, fontWeight: 700, color: "#eef0f6" }}>{result.industry}</span>
-              {result.market && <span style={{ ...M, fontSize: 11, color: "rgba(238,240,246,0.38)", marginLeft: 8 }}>{result.market}</span>}
-            </div>
-            <div style={{ textAlign: "right" as const, minWidth: 160 }}>
-              <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 4 }}>{t.hook}</span>
-              <ScoreBar score={result.hook_score} />
-              {result.hook_score_label && <span style={{ ...M, fontSize: 10, color: "rgba(238,240,246,0.38)" }}>{result.hook_score_label}</span>}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 22 }} />
-
-          {/* Briefing sections */}
-          <BriefingSection label={t.diagnosis_label} content={result.diagnosis} onCopy={() => copy("diag", result.diagnosis)} copied={copied["diag"]} />
-          <BriefingSection label={t.why_label} content={result.why_it_works_or_fails} onCopy={() => copy("why", result.why_it_works_or_fails)} copied={copied["why"]} />
-          <BriefingSection label={t.move_label} content={result.your_move} onCopy={() => copy("move", result.your_move)} copied={copied["move"]} />
-
-          {/* Steal this — highlighted */}
-          <div style={{ marginBottom: 22, padding: "14px 16px", borderRadius: 10, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <Target size={12} color="#22d3ee" />
-                <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(34,211,238,0.55)", letterSpacing: "0.10em", textTransform: "uppercase" as const }}>{t.steal_label}</span>
-              </div>
-              <button onClick={() => copy("steal", result.steal_this)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 6, background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.20)", cursor: "pointer", ...M, fontSize: 10, color: "#22d3ee" }}>
-                {copied["steal"] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
+          {/* URL error */}
+          {(result as any)._urlError ? (
+            <div style={{ padding: "20px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.20)" }}>
+              <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.80)", lineHeight: 1.7, margin: "0 0 12px" }}>{(result as any)._message}</p>
+              <button onClick={() => { window.location.href = "/dashboard/translate"; }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", cursor: "pointer", ...M, fontSize: 12, fontWeight: 600, color: "#38bdf8" }}>
+                {lang === "pt" ? "→ Abrir ferramenta Traduzir" : lang === "es" ? "→ Abrir herramienta Traducir" : "→ Open Translate tool"}
               </button>
             </div>
-            <p style={{ ...M, fontSize: 13.5, color: "rgba(238,240,246,0.82)", lineHeight: 1.75, margin: 0 }}>{result.steal_this}</p>
-          </div>
-
-          {/* Hooks */}
-          {result.hooks?.length > 0 && (
+          ) : (
             <div>
-              <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const, display: "block", marginBottom: 10 }}>{t.hooks_label}</span>
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 7 }}>
-                {result.hooks.map((hook, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span style={{ ...M, fontSize: 10, fontWeight: 800, color: "rgba(238,240,246,0.22)", flexShrink: 0, marginTop: 3, minWidth: 14 }}>#{i + 1}</span>
-                    <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.85)", lineHeight: 1.55, margin: 0, flex: 1 }}>{hook}</p>
-                    <button onClick={() => copy(`hook${i}`, hook)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 9px", borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", ...M, fontSize: 10, color: "rgba(238,240,246,0.45)", flexShrink: 0 }}>
-                      {copied[`hook${i}`] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
-                    </button>
-                  </div>
-                ))}
+              {result.mismatch_detected && result.mismatch_reason && (
+                <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 9, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)", marginBottom: 20 }}>
+                  <AlertCircle size={13} color="#fbbf24" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <p style={{ ...M, fontSize: 12, color: "rgba(251,191,36,0.80)", lineHeight: 1.5, margin: 0 }}>{result.mismatch_reason}</p>
+                </div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22, padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div>
+                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 4 }}>{t.industry}</span>
+                  <span style={{ ...F, fontSize: 13, fontWeight: 700, color: "#eef0f6" }}>{result.industry}</span>
+                  {result.market && <span style={{ ...M, fontSize: 11, color: "rgba(238,240,246,0.38)", marginLeft: 8 }}>{result.market}</span>}
+                </div>
+                <div style={{ textAlign: "right" as const, minWidth: 160 }}>
+                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 4 }}>{t.hook}</span>
+                  <ScoreBar score={result.hook_score} />
+                  {result.hook_score_label && <span style={{ ...M, fontSize: 10, color: "rgba(238,240,246,0.38)" }}>{result.hook_score_label}</span>}
+                </div>
               </div>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 22 }} />
+              <BriefingSection label={t.diagnosis_label} content={result.diagnosis} onCopy={() => copy("diag", result.diagnosis)} copied={copied["diag"]} />
+              <BriefingSection label={t.why_label} content={result.why_it_works_or_fails} onCopy={() => copy("why", result.why_it_works_or_fails)} copied={copied["why"]} />
+              <BriefingSection label={t.move_label} content={result.your_move} onCopy={() => copy("move", result.your_move)} copied={copied["move"]} />
+              <div style={{ marginBottom: 22, padding: "14px 16px", borderRadius: 10, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Target size={12} color="#22d3ee" />
+                    <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(34,211,238,0.55)", letterSpacing: "0.10em", textTransform: "uppercase" as const }}>{t.steal_label}</span>
+                  </div>
+                  <button onClick={() => copy("steal", result.steal_this)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 6, background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.20)", cursor: "pointer", ...M, fontSize: 10, color: "#22d3ee" }}>
+                    {copied["steal"] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
+                  </button>
+                </div>
+                <p style={{ ...M, fontSize: 13.5, color: "rgba(238,240,246,0.82)", lineHeight: 1.75, margin: 0 }}>{result.steal_this}</p>
+              </div>
+              {result.hooks?.length > 0 && (
+                <div>
+                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const, display: "block", marginBottom: 10 }}>{t.hooks_label}</span>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 7 }}>
+                    {result.hooks.map((hook, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span style={{ ...M, fontSize: 10, fontWeight: 800, color: "rgba(238,240,246,0.22)", flexShrink: 0, marginTop: 3, minWidth: 14 }}>#{i + 1}</span>
+                        <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.85)", lineHeight: 1.55, margin: 0, flex: 1 }}>{hook}</p>
+                        <button onClick={() => copy(`hook${i}`, hook)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 9px", borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", ...M, fontSize: 10, color: "rgba(238,240,246,0.45)", flexShrink: 0 }}>
+                          {copied[`hook${i}`] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -94,13 +94,18 @@ Retorne este JSON exato (todos os valores em ${langName}, prosa densa, sem bulle
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1800,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+        messages: [
+          { role: 'user', content: userPrompt },
+          { role: 'assistant', content: '{' }, // prefill forces JSON start, prevents English preamble
+        ],
       }),
     });
 
     if (!res.ok) { const t = await res.text(); throw new Error(`Anthropic ${res.status}: ${t.slice(0,200)}`); }
     const data = await res.json();
-    const raw = data.content?.[0]?.type === 'text' ? data.content[0].text : '{}';
+    const rawText = data.content?.[0]?.type === 'text' ? data.content[0].text : '{}';
+    // Prepend '{' because we prefilled the assistant response with it
+    const raw = '{' + rawText;
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
     return new Response(JSON.stringify({ ...parsed, mock_mode: false }), { headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (e) {
@@ -108,4 +113,4 @@ Retorne este JSON exato (todos os valores em ${langName}, prosa densa, sem bulle
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603251800
+// redeploy 202603261000
