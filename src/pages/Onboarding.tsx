@@ -29,7 +29,7 @@ const T = {
     s1_title: "Como quer que a IA\nte chame?",
     s1_sub: "E qual mercado você gerencia? A IA usa isso para personalizar cada resposta.",
     s1_name_label: "Seu nome (opcional)",
-    s1_name_ph: "Ex: Martinho",
+    s1_name_ph: "Ex: Lucas",
     s1_niche: "Seu mercado principal",
     s1_terms: "Concordo com os",
     s1_terms_and: "e a",
@@ -70,7 +70,7 @@ const T = {
     s1_title: "What should the AI\ncall you?",
     s1_sub: "And which market do you run? The AI uses this to personalize every response.",
     s1_name_label: "Your name (optional)",
-    s1_name_ph: "e.g. Alex",
+    s1_name_ph: "e.g. James",
     s1_niche: "Your main market",
     s1_terms: "I agree to the",
     s1_terms_and: "and",
@@ -109,7 +109,7 @@ const T = {
     s1_title: "¿Cómo quieres que\nla IA te llame?",
     s1_sub: "¿Y qué mercado gestionas? La IA usa esto para personalizar cada respuesta.",
     s1_name_label: "Tu nombre (opcional)",
-    s1_name_ph: "Ej: Carlos",
+    s1_name_ph: "Ej: Miguel",
     s1_niche: "Tu mercado principal",
     s1_terms: "Acepto los",
     s1_terms_and: "y la",
@@ -272,9 +272,9 @@ export default function Onboarding() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px 32px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "16px 16px 20px", overflowY: "auto" as const }}>
         <div style={{
-          width: "100%", maxWidth: 480,
+          width: "100%", maxWidth: 480, paddingBottom: 4,
           opacity: animDir === "in" ? 1 : 0,
           transform: animDir === "in" ? "translateY(0)" : "translateY(16px)",
           transition: "all 0.22s cubic-bezier(0.4,0,0.2,1)"
@@ -309,7 +309,7 @@ export default function Onboarding() {
                     padding: "12px 16px", borderRadius: 12,
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.10)",
-                    color: "#fff", fontSize: 14, fontFamily: F,
+                    color: "#fff", fontSize: 16, fontFamily: F,
                     outline: "none", transition: "border-color 0.15s",
                   }}
                   onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }}
@@ -322,7 +322,7 @@ export default function Onboarding() {
                 <label style={{ display: "block", fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 10, letterSpacing: "0.04em" }}>
                   {t.s1_niche}
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }} className="niche-grid">
                   {NICHES.map(n => {
                     const active = niche === n.value;
                     return (
@@ -337,8 +337,8 @@ export default function Onboarding() {
                         onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
                         onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
                       >
-                        <span style={{ fontSize: 18, lineHeight: 1 }}>{n.icon}</span>
-                        <span style={{ fontFamily: M, fontSize: 10, color: active ? "#fff" : "rgba(255,255,255,0.4)", fontWeight: active ? 600 : 400, textAlign: "center", lineHeight: 1.2 }}>
+                        <span className="niche-icon" style={{ fontSize: 18, lineHeight: 1 }}>{n.icon}</span>
+                        <span className="niche-label" style={{ fontFamily: M, fontSize: 10, color: active ? "#fff" : "rgba(255,255,255,0.4)", fontWeight: active ? 600 : 400, textAlign: "center", lineHeight: 1.2 }}>
                           {n.label}
                         </span>
                       </button>
@@ -396,7 +396,7 @@ export default function Onboarding() {
               </p>
 
               {/* Before / After comparison */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
                 {/* Generic */}
                 <div style={{ padding: "14px", borderRadius: 14, background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.15)" }}>
                   <p style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "#f87171", letterSpacing: "0.1em", margin: "0 0 8px", textTransform: "uppercase" }}>
@@ -515,8 +515,21 @@ export default function Onboarding() {
         </div>
       </div>
 
+      <style>{`
+        .niche-grid { display: grid; }
+        @media (max-width: 420px) {
+          .niche-grid button { padding: 9px 3px !important; }
+          .niche-grid .niche-icon { font-size: 15px !important; }
+          .niche-grid .niche-label { font-size: 9px !important; }
+        }
+        @media (max-width: 340px) {
+          .niche-grid { grid-template-columns: repeat(4, 1fr) !important; }
+        }
+        * { -webkit-tap-highlight-color: transparent; }
+        button, input, textarea { touch-action: manipulation; }
+      `}</style>
       {/* Step indicators */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "0 0 28px", flexShrink: 0 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "10px 0 20px", flexShrink: 0 }}>
         {([1,2,3] as const).map(n => (
           <div key={n} style={{
             height: 4, borderRadius: 3,
