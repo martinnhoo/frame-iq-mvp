@@ -377,8 +377,6 @@ ABSOLUTE FORMAT RULES:
 
     const aiResult = await gatewayRes.json();
     const raw = aiResult.choices?.[0]?.message?.content || "[]";
-
-    const raw = aiResult.choices?.[0]?.message?.content || "[]";
     let blocks;
     try {
       blocks = JSON.parse(raw.replace(/```json|```/g, "").trim());
