@@ -212,7 +212,7 @@ function DashboardBlock({block}:{block:Block}) {
           <BarChart2 size={12} color="#000"/>
         </div>
         <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
-        <span style={{...m,fontSize:8,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
+        <span style={{...m,fontSize:10,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
       </div>
       {block.metrics && block.metrics.length>0 && (
         <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.04)"}}>
@@ -222,7 +222,7 @@ function DashboardBlock({block}:{block:Block}) {
             return(
               <div key={i} style={{padding:"16px 18px",background:"#181e2d",position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
-                <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
+                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
                 <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
                 {metric.delta&&(
                   <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.10)"}`}}>
@@ -260,7 +260,7 @@ function DashboardBlock({block}:{block:Block}) {
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead><tr style={{background:"rgba(255,255,255,0.02)"}}>
               {block.table.headers.map((h,i)=>(
-                <th key={i} style={{...m,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
+                <th key={i} style={{...m,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
               ))}
             </tr></thead>
             <tbody>{block.table.rows.map((row,ri)=>(
@@ -644,7 +644,7 @@ export default function AdBriefAI() {
         </div>
         <div style={{flex:1,minWidth:0}}>
           <p style={{fontSize:13,fontWeight:800,color:"#fff",lineHeight:1,letterSpacing:"-0.01em"}}>AdBrief AI</p>
-          <p style={{...m,fontSize:9,color:contextReady&&metaConn?"#34d399":contextReady?"#fbbf24":"rgba(255,255,255,0.25)",letterSpacing:"0.08em",marginTop:2}}>
+          <p style={{...m,fontSize:11,color:contextReady&&metaConn?"#34d399":contextReady?"#fbbf24":"rgba(255,255,255,0.25)",letterSpacing:"0.08em",marginTop:2}}>
             {contextReady&&metaConn?`● ${lang==="pt"?"Pronto — dados reais":lang==="es"?"Listo — datos reales":"Ready — live data"}`:contextReady?`○ ${lang==="pt"?"Conecte o Meta Ads":lang==="es"?"Conecta Meta Ads":"Connect Meta Ads"}`:`○ ${lang==="pt"?"Carregando...":lang==="es"?"Cargando...":"Loading..."}`}
           </p>
         </div>
@@ -752,7 +752,7 @@ export default function AdBriefAI() {
                   <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                     <Sparkles size={8} color="#fff"/>
                   </div>
-                  <span style={{...m,fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em"}}>ADBRIEF AI</span>
+                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em"}}>ADBRIEF AI</span>
                 </div>
                 {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>
@@ -834,7 +834,7 @@ export default function AdBriefAI() {
             {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>
-        <p style={{...m,fontSize:9.5,color:"rgba(255,255,255,0.12)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{L.footer}</p>
+        <p style={{...m,fontSize:11.5,color:"rgba(255,255,255,0.12)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{L.footer}</p>
       </div>
 
       <style>{`

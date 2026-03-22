@@ -86,7 +86,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   ];
 
   const sectionLabel = (txt: string) => (
-    <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: SB.sectionLabel, letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 12px 5px" }}>{txt}</p>
+    <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: SB.sectionLabel, letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 12px 5px" }}>{txt}</p>
   );
 
   const primaryItem = (url: string, label: string, Icon: any, exact = false, hot = false) => {
@@ -108,7 +108,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
       >
         <Icon size={15} style={{ color: active ? SB.activeIcon : SB.idleIcon, flexShrink: 0 }} />
         <span style={{ flex: 1 }}>{label}</span>
-        {hot && !active && <span style={{ fontSize: 8, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em" }}>AI</span>}
+        {hot && !active && <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em" }}>AI</span>}
         {active && <div style={{ width: 4, height: 4, borderRadius: "50%", background: SB.activeIcon, boxShadow: `0 0 6px ${SB.activeIcon}` }} />}
       </NavLink>
     );
@@ -177,7 +177,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               <Sparkles size={13} style={{ color: "#0ea5e9", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 11, fontWeight: 600, color: "#e2f4ff", marginBottom: 1 }}>{dt("nav_upgrade")}</p>
-                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>{dt("nav_upgrade_desc")}</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.42)" }}>{dt("nav_upgrade_desc")}</p>
               </div>
             </button>
           )}
@@ -199,7 +199,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
               <p style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.88)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {displayName}
               </p>
-              <p style={{ fontSize: 10, color: isLifetime ? "#fbbf24" : pm.color, marginTop: 1, fontWeight: 500 }}>
+              <p style={{ fontSize: 11, color: isLifetime ? "#fbbf24" : pm.color, marginTop: 1, fontWeight: 500 }}>
                 {isLifetime ? "∞ Lifetime" : pm.label}
               </p>
             </div>

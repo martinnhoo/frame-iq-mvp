@@ -321,3 +321,22 @@ code, pre,
   /* More padding on large screens */
   .dashboard-main { padding: 0; }
 }
+
+/* ── Dashboard centering on ultra-wide (2560px+) ─────────────────────────────── */
+@media (min-width: 2400px) {
+  .dashboard-root {
+    max-width: 2400px !important;
+    margin: 0 auto !important;
+  }
+  html, body { font-size: 16px; }
+}
+
+/* ── Prevent tiny text at high DPR (HiDPI) ──────────────────────────────────── */
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+  :root { --base-font-boost: 1; }
+  .dashboard-main { font-size: 14px; }
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  html { font-size: 15px; }
+}
