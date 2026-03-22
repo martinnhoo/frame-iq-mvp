@@ -352,7 +352,7 @@ export default function DashboardLayout() {
 
         {/* Account picker — like Meta Ads top bar */}
         <div className="sticky z-20 flex items-center gap-3 border-b"
-          style={{ top: 0, background: "#131720", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.10)", padding: "0 20px", height: 52 }}>
+          style={{ top: 0, background: "#131720", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.10)", padding: "0 14px", height: 52, overflowX: "auto", scrollbarWidth: "none" }}>
           <div className="relative">
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}

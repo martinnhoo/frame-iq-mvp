@@ -713,7 +713,7 @@ export default function AdBriefAI() {
                     {lang==="pt"?"Conta conectada. Pergunte qualquer coisa.":lang==="es"?"Cuenta conectada. Pregunta lo que quieras.":"Account connected. Ask me anything."}
                   </p>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8}}>
                   {SUGGS.map((s,i)=>(
                     <button key={i} onClick={()=>send(s)}
                       style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}

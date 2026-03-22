@@ -340,3 +340,26 @@ code, pre,
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   html { font-size: 15px; }
 }
+
+/* ── Mobile touch targets & scroll fixes ────────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Hide scrollbars on pill rows */
+  *::-webkit-scrollbar { display: none; }
+
+  /* Minimum touch target 44px */
+  button, a, [role="button"] { min-height: 36px; }
+
+  /* Account picker bar on mobile */
+  .dashboard-main { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@media (max-width: 640px) {
+  /* Chat messages padding */
+  .chat-messages { padding: 10px 12px 8px !important; }
+
+  /* Tool buttons min height */
+  .tool-btn { min-height: 44px !important; padding: 10px 16px !important; }
+
+  /* Onboarding steps full width */
+  .onboarding-step { padding: 20px 16px !important; }
+}
