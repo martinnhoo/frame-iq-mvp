@@ -298,8 +298,8 @@ export default function DashboardLayout() {
           padding: "0 14px", gap: 10,
           background: "#131720",
           borderBottom: "1px solid rgba(255,255,255,0.10)",
-          position: "sticky", top: 0, zIndex: 30,
-          overflowX: "auto", scrollbarWidth: "none" as any,
+          position: "sticky", top: 0, zIndex: 100,
+          overflow: "visible",
         }}>
           {/* Sidebar toggle — always visible */}
           <button onClick={() => setSidebarOpen(s => !s)}

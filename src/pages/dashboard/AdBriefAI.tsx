@@ -448,14 +448,21 @@ export default function AdBriefAI() {
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
-  // Load connections — only when an account (persona) is selected
+  // Load connections — scoped to selected account, fallback to global
   useEffect(()=>{
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
-    if(!pid){setConnections([]);return;} // no account selected → no connections shown
-    supabase.from("platform_connections" as any).select("platform,status")
-      .eq("user_id",user.id).eq("persona_id",pid)
-      .then(({data})=>setConnections((data||[]).filter((c:any)=>c.status==="active").map((c:any)=>c.platform)));
+    if(!pid){setConnections([]);return;}
+    // Check specific connection for this account, then fall back to global (null)
+    Promise.all([
+      supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).eq("persona_id",pid),
+      supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).is("persona_id",null),
+    ]).then(([specific,global])=>{
+      const s=((specific.data||[]) as any[]).filter(c=>c.status==="active").map(c=>c.platform);
+      const g=((global.data||[]) as any[]).filter(c=>c.status==="active").map(c=>c.platform);
+      // specific takes priority; merge with globals not already covered by specific
+      setConnections([...new Set([...s,...g])]);
+    });
   },[user?.id,selectedPersona?.id]);
 
   // Load context
@@ -654,7 +661,7 @@ export default function AdBriefAI() {
                   </button>
                 )}
                 <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:14}}>
-                  {lang==="pt"?"Leva 30 segundos · cancele quando quiser":lang==="es"?"30 segundos · cancela cuando quieras":"30 seconds · cancel anytime"}
+                  {lang==="pt"?"Leva 30 segundos":lang==="es"?"30 segundos":"30 seconds"}
                 </p>
               </div>
             ) : (
