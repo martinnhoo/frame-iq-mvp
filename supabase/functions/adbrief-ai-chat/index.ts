@@ -266,9 +266,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const uiLangName = LANG_NAMES[uiLang] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
-    // ── 6. Anthropic API call ─────────────────────────────────────────────────
-    const anthropic = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") });
-
+    // ── 6. Lovable AI Gateway call ──────────────────────────────────────────
     const systemPrompt = `LANGUAGE: respond in ${uiLangName} only. Generated copy/hooks/scripts: ${contentLangName} only.
 PT-BR vocab: "criativos", "verba", "gestor de tráfego", "pausar", "escalar", "hooks", "roteiro".
 
@@ -350,28 +348,35 @@ ABSOLUTE FORMAT RULES:
 - title = max 6 words, action-oriented, no articles if possible.
 - ZERO follow-up questions if you have enough data to act.`;
 
-
-    const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
-    if (Array.isArray(history) && history.length > 0) {
-      for (const h of history.slice(-16)) {
-        if (h.role === "user" || h.role === "assistant") {
-          let content = String(h.content || "").trim();
-          if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "…";
-          if (content) historyMessages.push({ role: h.role, content });
-        }
-      }
-    }
-
     const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
       ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
       : "";
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      system: systemPrompt + prefStr,
-      messages: [...historyMessages, { role: "user" as const, content: message }],
+    const aiMessages = [...historyMessages, { role: "user" as const, content: message }];
+
+    const gatewayRes = await fetch("https://ai.lovable.dev/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt + prefStr },
+          ...aiMessages,
+        ],
+      }),
     });
+
+    if (!gatewayRes.ok) {
+      const errText = await gatewayRes.text();
+      console.error("AI Gateway error:", gatewayRes.status, errText);
+      throw new Error(`AI Gateway ${gatewayRes.status}`);
+    }
+
+    const aiResult = await gatewayRes.json();
+    const raw = aiResult.choices?.[0]?.message?.content || "[]";
 
     const raw = response.content[0]?.type === "text" ? response.content[0].text : "[]";
     let blocks;
