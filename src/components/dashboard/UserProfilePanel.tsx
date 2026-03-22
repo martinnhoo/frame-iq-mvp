@@ -72,19 +72,15 @@ const LANGUAGES = [
   { code: "hi", label: "Hindi" },
 ];
 
-const PLAN_INFO: Record<string, { label: string; gradient: string; desc: string; price: string }> = {
-  free:    { label: "Free",    gradient: "from-white/20 to-white/5",           desc: "3 mensagens grátis · conecte o Meta Ads",          price: "$0" },
-  maker:   { label: "Maker",   gradient: "from-blue-500/30 to-blue-900/10",    desc: "50 AI msgs/day · 1 ad account · all tools",        price: "$19/mo" },
-  pro:     { label: "Pro",     gradient: "from-purple-500/30 to-purple-900/10", desc: "200 AI msgs/day · 3 ad accounts · all tools",     price: "$49/mo" },
-  studio:  { label: "Studio",  gradient: "from-pink-500/30 to-pink-900/10",    desc: "Unlimited msgs · unlimited accounts · agency",      price: "$149/mo" },
+const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
+  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte o Meta Ads",        price: "$0" },
+  maker:   { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
+  pro:     { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
+  studio:  { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
+  creator: { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta",                      price: "$19/mo" },
+  starter: { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas",                    price: "$49/mo" },
+  scale:   { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · agência",                  price: "$149/mo" },
 };
-
-const TABS = [
-  { id: "profile",     label: "Profile",     icon: User },
-  { id: "preferences", label: "Prefs",       icon: Palette },
-  { id: "plan",        label: "Plan",        icon: CreditCard },
-  { id: "security",    label: "Security",    icon: Shield },
-];
 
 // ── Persona Detail View (Editable) ─────────────────────────────────────────────
 
@@ -246,12 +242,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [saved, setSaved] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  const [personas, setPersonas] = useState<PersonaRecord[]>([]);
-  const [personasLoading, setPersonasLoading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
-  const [selectedPersona, setSelectedPersona] = useState<PersonaRecord | null>(null);
 
   const { setLanguage: setGlobalLanguage, language } = useLanguage();
 
@@ -265,35 +256,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       // Apply profile language to global context (without overriding localStorage)
       setGlobalLanguage(savedLang as any, false);
       setAvatarUrl(profile?.avatar_url || null);
-      loadPersonas();
     }
   }, [open]);
-
-  const loadPersonas = async () => {
-    setPersonasLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("personas" as never)
-        .select("id, created_at, result" as never)
-        .eq("user_id" as never, user.id)
-        .order("created_at" as never, { ascending: false });
-
-      if (!error && data) {
-        const rows = data as Array<{ id: string; created_at: string; result: unknown }>;
-        setPersonas(
-          rows.map((row) => ({
-            id: row.id,
-            created_at: row.created_at,
-            ...(row.result as Record<string, unknown>),
-          } as PersonaRecord))
-        );
-      }
-    } catch (e) {
-      console.error("loadPersonas:", e);
-    } finally {
-      setPersonasLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -306,32 +270,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
     if (!error && data) {
       onProfileUpdate(data as Profile);
-      setGlobalLanguage(lang as any, true); // persist to localStorage
+      setGlobalLanguage(lang as any, true);
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
-      toast.success("Saved!");
+      toast.success(language === "pt" ? "Salvo!" : "Saved!");
     } else {
-      toast.error("Failed to save");
+      toast.error(language === "pt" ? "Erro ao salvar" : "Failed to save");
     }
     setSaving(false);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this persona permanently? This cannot be undone.")) return;
-    setDeletingId(id);
-    const { error } = await supabase.from("personas" as never).delete().eq("id" as never, id).eq("user_id" as never, user.id);
-    if (!error) {
-      setPersonas((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Persona deleted");
-    } else {
-      toast.error("Failed to delete");
-    }
-    setDeletingId(null);
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
   };
 
   const compressImage = (file: File, maxSize = 256, quality = 0.7): Promise<Blob> => {
