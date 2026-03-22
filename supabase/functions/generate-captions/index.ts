@@ -1,4 +1,4 @@
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
+// Anthropic via direct fetch (no SDK needed in Deno edge runtime)
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
