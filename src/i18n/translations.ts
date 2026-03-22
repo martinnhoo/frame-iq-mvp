@@ -1840,7 +1840,7 @@ export const translations: Record<Language, TranslationKeys> = {
     how_s2_title: "IA aprende seus padrões", how_s2_desc: "Identifica o que funciona: hooks, formatos, mercados, audiências — dos SEUS dados, não de médias do setor.", how_s2_result: "Fórmula vencedora descoberta",
     how_s3_title: "Gere conteúdo calibrado", how_s3_desc: "Cada script, brief e hook ajustado para sua conta. Mais: pontuações preditivas antes de produzir.", how_s3_result: "Chega de achismo",
     ai_section_title: "O que a IA realmente te diz", ai_section_sub: "Outputs reais. Insights reais. Não dicas genéricas — decisões baseadas em dados da SUA conta.",
-    prov_title1: "Seu gestor de tráfego esquece.", prov_title2: "A IA não.",
+    prov_title1: "Qualquer pessoa esquece.", prov_title2: "A IA não.",
     prov_h1: "Lembra dos últimos 10 anúncios", prov_ai1: "Lembra de todos os anúncios",
     prov_h2: "Feeling sobre o que funciona", prov_ai2: "Previsões baseadas em dados",
     prov_h3: "Mesmos erros no próximo trimestre", prov_ai3: "Nunca repete um erro",
