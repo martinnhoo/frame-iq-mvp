@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Logo } from "@/components/Logo";
 import {
   X, LogOut, Save, Trash2, RefreshCw, Sparkles,
   Loader2, Check, User, Palette, CreditCard, Shield,
@@ -379,9 +380,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         {/* Header */}
         <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 20, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
-              <span style={{ fontSize: 20, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+              <Logo size="md" />
             </div>
             <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
               <X className="h-3.5 w-3.5" />
@@ -461,32 +461,99 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             </div>
           )}
 
-          {tab === "plan" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ padding: "16px", borderRadius: 14, background: `${plan.color}10`, border: `1px solid ${plan.color}30` }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <p style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#eef0f6" }}>{plan.label}</p>
-                  <span style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}35` }}>{language === "pt" ? "Plano atual" : language === "es" ? "Plan actual" : "Current"}</span>
+          {tab === "plan" && (() => {
+            const currentPlan = profile?.plan || "free";
+            const isPro = currentPlan === "pro";
+            const isStudio = currentPlan === "studio";
+            const isFree = currentPlan === "free";
+            const isMaker = currentPlan === "maker";
+
+            const FEATURES: Record<string, { icon: string; label: string }[]> = {
+              free:   [{ icon:"💬", label: language==="pt"?"3 mensagens IA/dia":"3 AI messages/day" }, { icon:"🔗", label: language==="pt"?"Conectar Meta Ads":"Connect Meta Ads" }],
+              maker:  [{ icon:"💬", label: language==="pt"?"50 mensagens IA/dia":"50 AI messages/day" }, { icon:"🔗", label: language==="pt"?"1 conta de anúncios":"1 ad account" }, { icon:"🛠️", label: language==="pt"?"Ferramentas básicas":"Basic tools" }],
+              pro:    [{ icon:"💬", label: language==="pt"?"200 mensagens IA/dia":"200 AI messages/day" }, { icon:"🔗", label: language==="pt"?"3 contas de anúncios":"3 ad accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🌍", label: language==="pt"?"Multi-mercado":"Multi-market" }, { icon:"📊", label: language==="pt"?"Dashboards avançados":"Advanced dashboards" }],
+              studio: [{ icon:"∞", label: language==="pt"?"Mensagens ilimitadas":"Unlimited messages" }, { icon:"🔗", label: language==="pt"?"Contas ilimitadas":"Unlimited accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🏢", label: language==="pt"?"Workspace agência":"Agency workspace" }, { icon:"🚀", label: language==="pt"?"Prioridade máxima":"Maximum priority" }],
+            };
+
+            const planKey = ["maker","pro","studio"].includes(currentPlan) ? currentPlan : (["creator"].includes(currentPlan) ? "maker" : ["starter"].includes(currentPlan) ? "pro" : ["scale"].includes(currentPlan) ? "studio" : "free");
+            const features = FEATURES[planKey] || FEATURES.free;
+
+            const NEXT_PLAN: Record<string, { key: string; label: string; price: string; pitch: string }> = {
+              free:   { key: "maker",  label: "Maker",  price: "$19/mo", pitch: language==="pt"?"Desbloqueie mais mensagens e ferramentas de criativo":"Unlock more messages and creative tools" },
+              maker:  { key: "pro",    label: "Pro",    price: "$49/mo", pitch: language==="pt"?"3 contas, todas as tools, multi-mercado — tudo desbloqueado":"3 accounts, all tools, multi-market" },
+              pro:    { key: "studio", label: "Studio", price: "$149/mo", pitch: language==="pt"?"Ilimitado. Para agências e times que produzem todos os dias":"Unlimited. For agencies that produce every day" },
+            };
+            const next = NEXT_PLAN[planKey];
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Current plan card */}
+                <div style={{ padding: "18px", borderRadius: 14, background: `${plan.color}12`, border: `1px solid ${plan.color}35`, position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: `radial-gradient(circle, ${plan.color}20, transparent 70%)`, pointerEvents: "none" }} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <p style={{ fontFamily: F, fontSize: 18, fontWeight: 900, color: "#eef0f6", letterSpacing: "-0.02em" }}>{plan.label}</p>
+                    <span style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40` }}>
+                      {language==="pt"?"Plano atual":"Current plan"}
+                    </span>
+                  </div>
+                  {(isPro || isStudio) && (
+                    <p style={{ fontFamily: M, fontSize: 12, color: "#34d399", fontWeight: 600, marginBottom: 10 }}>
+                      {isStudio ? "🏆 " : "⭐ "}{language==="pt" ? (isStudio?"Você está no topo! Máximo poder da IA.":"Ótima escolha! Você tem acesso a tudo.") : (isStudio?"You're at the top! Maximum AI power.":"Great choice! You have access to everything.")}
+                    </p>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {features.map((f,i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13, width: 20, textAlign: "center", flexShrink: 0 }}>{f.icon}</span>
+                        <span style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.70)" }}>{f.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.48)", lineHeight: 1.5 }}>{plan.desc}</p>
+
+                {/* Upgrade CTA */}
+                {next && (
+                  <div style={{ padding: "16px", borderRadius: 14, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.20)" }}>
+                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#eef0f6", marginBottom: 4 }}>
+                      {language==="pt"?`Próximo: ${next.label} — ${next.price}`:`Next: ${next.label} — ${next.price}`}
+                    </p>
+                    <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.50)", lineHeight: 1.5, marginBottom: 12 }}>{next.pitch}</p>
+                    <button onClick={() => setPlanModalOpen(true)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px", borderRadius: 10, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                      <Zap className="h-4 w-4" />
+                      {language==="pt"?`Fazer upgrade para ${next.label}`:`Upgrade to ${next.label}`}
+                    </button>
+                  </div>
+                )}
+
+                {/* Support */}
+                <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <p style={{ fontFamily: M, fontSize: 11, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                    {language==="pt"?"Suporte":"Support"}
+                  </p>
+                  <a href="mailto:support@adbrief.pro"
+                    style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: M, fontSize: 12, color: "#38bdf8", textDecoration: "none", fontWeight: 500 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    support@adbrief.pro
+                  </a>
+                </div>
               </div>
-              {profile?.plan !== "studio" && (
-                <button onClick={() => setPlanModalOpen(true)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                  <Zap className="h-4 w-4" />{language === "pt" ? "Fazer upgrade" : language === "es" ? "Mejorar plan" : "Upgrade plan"}
-                </button>
-              )}
-            </div>
-          )}
+            );
+          })()}
 
           {tab === "security" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ padding: "16px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#eef0f6", marginBottom: 6 }}>{language === "pt" ? "Senha" : language === "es" ? "Contraseña" : "Password"}</p>
-                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", lineHeight: 1.6, marginBottom: 12 }}>{language === "pt" ? "Alterações de senha são feitas via link por email." : language === "es" ? "Los cambios de contraseña se hacen por link de correo." : "Password changes are handled via email link."}</p>
-                <button onClick={async () => { await supabase.auth.resetPasswordForEmail(user.email || ""); toast.success(language === "pt" ? "Link enviado!" : "Link sent!"); }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.70)" }}>
-                  <Shield className="h-3.5 w-3.5" />{language === "pt" ? "Enviar link de redefinição" : language === "es" ? "Enviar enlace" : "Send reset link"}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ padding: "18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#eef0f6", marginBottom: 6 }}>
+                  {language==="pt"?"Redefinir senha":language==="es"?"Restablecer contraseña":"Reset password"}
+                </p>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", lineHeight: 1.6, marginBottom: 14 }}>
+                  {language==="pt"?"Enviaremos um link para o seu email para redefinir a senha.":language==="es"?"Enviaremos un enlace a tu correo para restablecer la contraseña.":"We'll send a link to your email to reset your password."}
+                </p>
+                <button onClick={async () => { await supabase.auth.resetPasswordForEmail(user.email || ""); toast.success(language==="pt"?"Link enviado para "+user.email:"Link sent to "+user.email); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 600, color: "#eef0f6" }}>
+                  <Shield className="h-4 w-4" />
+                  {language==="pt"?"Enviar link de redefinição":language==="es"?"Enviar enlace de restablecimiento":"Send reset link"}
                 </button>
               </div>
             </div>
