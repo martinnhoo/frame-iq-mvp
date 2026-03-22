@@ -144,10 +144,11 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
-        <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${SB.divider}`, flexShrink: 0 }}>
+        <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${SB.border}`, flexShrink: 0 }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
-            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "block" }}>
-            <Logo size="md" />
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
           </button>
         </div>
 

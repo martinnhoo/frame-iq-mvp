@@ -253,7 +253,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<PersonaRecord | null>(null);
 
-  const { setLanguage: setGlobalLanguage } = useLanguage();
+  const { setLanguage: setGlobalLanguage, language } = useLanguage();
 
   // Sync fields when panel opens
   useEffect(() => {
@@ -409,361 +409,148 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
   if (!open) return null;
 
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+
+  const TABS_NEW = [
+    { id: "profile",  label: language === "pt" ? "Perfil"    : language === "es" ? "Perfil"    : "Profile",  icon: User },
+    { id: "plan",     label: language === "pt" ? "Plano"     : language === "es" ? "Plan"       : "Plan",     icon: CreditCard },
+    { id: "security", label: language === "pt" ? "Segurança" : language === "es" ? "Seguridad"  : "Security", icon: Shield },
+  ];
+
   return (
     <>
       <style>{`
-        @keyframes panelIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to   { transform: translateX(0);    opacity: 1; }
-        }
-        .panel-enter { animation: panelIn 0.28s cubic-bezier(.23,1,.32,1) both; }
+        @keyframes panelIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .panel-enter { animation: panelIn 0.25s cubic-bezier(.23,1,.32,1) both; }
       `}</style>
 
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-[3px]"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Slide-over panel */}
-      <div
-        role="dialog"
-        aria-label="User profile"
-        className="panel-enter fixed right-0 top-0 bottom-0 z-[61] w-full max-w-[420px] flex flex-col bg-[#0c0c0c] border-l border-white/[0.13] shadow-[−20px_0_80px_rgba(0,0,0,0.8)]"
-      >
-        {/* ── Header ── */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.12] shrink-0">
-          {/* Avatar orb */}
-          <div className="relative shrink-0">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="h-11 w-11 rounded-2xl object-cover border border-white/[0.12] shadow-lg" />
-            ) : (
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-pink-500/20 border border-white/[0.12] flex items-center justify-center text-base font-bold text-white shadow-lg">
-                {initials}
-              </div>
-            )}
-            <label
-              className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors"
-              title="Change avatar"
-            >
-              {uploadingAvatar ? (
-                <Loader2 className="h-2.5 w-2.5 text-white/40 animate-spin" />
-              ) : (
-                <Camera className="h-2.5 w-2.5 text-white/40" />
-              )}
-              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-            </label>
-          </div>
+      <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[61] w-full flex flex-col"
+        style={{ maxWidth: 400, background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{profile?.name || user.email?.split("@")[0]}</p>
-            <p className="text-xs text-white/50 truncate">{user.email}</p>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="shrink-0 h-8 w-8 rounded-xl bg-white/[0.08] flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* ── Tabs ── */}
-        <div className="flex gap-0.5 px-4 pt-3 shrink-0">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                tab === t.id
-                  ? "bg-white/[0.09] text-white"
-                  : "text-white/45 hover:text-white/50 hover:bg-white/[0.08]"
-              }`}
-            >
-              <t.icon className="h-3 w-3" />
-              {t.label}
+        {/* Header */}
+        <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 20, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
+              <span style={{ fontSize: 20, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+              <X className="h-3.5 w-3.5" />
             </button>
-          ))}
+          </div>
+
+          {/* User card */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20 }}>
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", border: "1px solid rgba(255,255,255,0.10)" }} />
+              ) : (
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff" }}>
+                  {initials}
+                </div>
+              )}
+              <label style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, borderRadius: "50%", background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                {uploadingAvatar ? <Loader2 className="h-2.5 w-2.5 text-white/40 animate-spin" /> : <Camera className="h-2.5 w-2.5" style={{ color: "rgba(255,255,255,0.5)" }} />}
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+              </label>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#eef0f6", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.name || user.email?.split("@")[0]}</p>
+              <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.42)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
+            </div>
+            <div style={{ flexShrink: 0, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40`, fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color }}>{plan.label}</div>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 3 }}>
+            {TABS_NEW.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 9, border: "none", cursor: "pointer", fontFamily: M, fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                  background: tab === t.id ? "rgba(255,255,255,0.09)" : "transparent",
+                  color: tab === t.id ? "#eef0f6" : "rgba(238,240,246,0.38)" }}>
+                <t.icon className="h-3 w-3" />{t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ── Scrollable body ── */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "12px 0 0", flexShrink: 0 }} />
 
-          {/* ══ PROFILE ══ */}
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 32px" }}>
+
           {tab === "profile" && (
-            <div className="px-5 py-5 space-y-4">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1.5">Display name</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-white text-sm placeholder:text-white/15 outline-none focus:border-white/20 transition-colors"
-                />
+                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Nome" : language === "es" ? "Nombre" : "Name"}</label>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder={language === "pt" ? "Seu nome" : language === "es" ? "Tu nombre" : "Your name"}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }} onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }} />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1.5">Email</label>
-                <input
-                  value={user.email || ""}
-                  disabled
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.04] text-white/45 text-sm cursor-not-allowed"
-                />
+                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>Email</label>
+                <input value={user.email || ""} disabled style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(238,240,246,0.30)", fontFamily: M, fontSize: 13, boxSizing: "border-box" as const, cursor: "not-allowed" }} />
               </div>
-
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 active:scale-[.98] disabled:opacity-40 transition-all"
-              >
-                {saving ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : saved ? (
-                  <Check className="h-3.5 w-3.5 text-green-600" />
-                ) : (
-                  <Save className="h-3.5 w-3.5" />
-                )}
-                {saved ? "Saved!" : "Save changes"}
+              <div>
+                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : "Language"}</label>
+                <select value={lang} onChange={e => setLang(e.target.value)}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const, cursor: "pointer" }}>
+                  <option value="pt">🇧🇷 Português</option>
+                  <option value="en">🇺🇸 English</option>
+                  <option value="es">🇲🇽 Español</option>
+                </select>
+              </div>
+              <button onClick={handleSave} disabled={saving}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: saved ? "#34d399" : "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: saving ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", opacity: saving ? 0.7 : 1 }}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                {saving ? (language === "pt" ? "Salvando..." : "Saving...") : saved ? (language === "pt" ? "Salvo!" : "Saved!") : (language === "pt" ? "Salvar alterações" : language === "es" ? "Guardar cambios" : "Save changes")}
+              </button>
+              <button onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 20px", borderRadius: 10, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.20)", cursor: "pointer", fontFamily: M, fontSize: 13, fontWeight: 600, color: "#f87171" }}>
+                <LogOut className="h-4 w-4" />{language === "pt" ? "Sair da conta" : language === "es" ? "Cerrar sesión" : "Sign out"}
               </button>
             </div>
           )}
 
-          {/* ══ PREFERENCES ══ */}
-          {tab === "preferences" && (
-            <div className="px-5 py-5 space-y-5">
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-3">Primary market</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {MARKETS.map((m) => (
-                    <button
-                      key={m.code}
-                      onClick={() => setMarket(m.code)}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-center transition-all ${
-                        market === m.code
-                          ? "border-white/25 bg-white/[0.08] text-white"
-                          : "border-white/[0.05] text-white/45 hover:border-white/15 hover:text-white/50"
-                      }`}
-                    >
-                      <span className="text-xl">{m.flag}</span>
-                      <span className="text-[10px] leading-tight">{m.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-3">Preferred language</label>
-                <div className="flex flex-wrap gap-2">
-                  {LANGUAGES.map((l) => (
-                    <button
-                      key={l.code}
-                      onClick={() => setLang(l.code)}
-                      className={`px-4 py-1.5 rounded-xl text-sm border transition-all ${
-                        lang === l.code
-                          ? "border-white/25 bg-white/[0.08] text-white font-medium"
-                          : "border-white/[0.05] text-white/45 hover:border-white/15 hover:text-white/50"
-                      }`}
-                    >
-                      {l.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 active:scale-[.98] disabled:opacity-40 transition-all"
-              >
-                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : saved ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Save className="h-3.5 w-3.5" />}
-                {saved ? "Saved!" : "Save preferences"}
-              </button>
-            </div>
-          )}
-
-          {/* ══ PLAN ══ */}
           {tab === "plan" && (
-            <div className="px-5 py-5 space-y-4">
-              {/* Current plan card */}
-              <div className={`rounded-2xl bg-gradient-to-br ${plan.gradient} border border-white/[0.15] p-5`}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-lg font-bold text-white">{plan.label}</p>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/60 border border-white/10">
-                    Current
-                  </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ padding: "16px", borderRadius: 14, background: `${plan.color}10`, border: `1px solid ${plan.color}30` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <p style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#eef0f6" }}>{plan.label}</p>
+                  <span style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}35` }}>{language === "pt" ? "Plano atual" : language === "es" ? "Plan actual" : "Current"}</span>
                 </div>
-                <p className="text-sm text-white/50">{plan.desc}</p>
-                <p className="text-2xl font-bold text-white mt-3">{plan.price}</p>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.48)", lineHeight: 1.5 }}>{plan.desc}</p>
               </div>
-
-              {/* Upgrade options */}
-              {(profile?.plan === "free" || profile?.plan === "maker") && (
-                <>
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Upgrade to</p>
-                  <div className="space-y-2">
-                    {(["maker", "pro", "studio"] as const)
-                      .filter((k) => {
-                        const order = ["free", "maker", "pro", "studio"];
-                        return order.indexOf(k) > order.indexOf(profile?.plan || "free");
-                      })
-                      .map((key) => {
-                        const p = PLAN_INFO[key];
-                        const isPopular = key === "pro";
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => window.location.href = "/pricing"}
-                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all group ${
-                              isPopular
-                                ? "border-sky-500/30 bg-sky-500/5 hover:border-sky-500/50 hover:bg-sky-500/10"
-                                : "border-white/[0.13] bg-white/[0.06] hover:border-white/15 hover:bg-white/[0.08]"
-                            }`}
-                          >
-                            <div className="text-left">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-white">{p.label}</p>
-                                {isPopular && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/20 font-bold">POPULAR</span>}
-                              </div>
-                              <p className="text-xs text-white/50">{p.desc}</p>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-bold text-white/60">{p.price}</span>
-                              <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-white/50 transition-colors" />
-                            </div>
-                          </button>
-                        );
-                    })}
-                  </div>
-                  <p className="text-[11px] text-white/15 text-center pt-1">3-day free trial on all plans · Powered by Stripe</p>
-                </>
+              {profile?.plan !== "studio" && (
+                <button onClick={() => setPlanModalOpen(true)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                  <Zap className="h-4 w-4" />{language === "pt" ? "Fazer upgrade" : language === "es" ? "Mejorar plan" : "Upgrade plan"}
+                </button>
               )}
             </div>
           )}
 
-          {/* ══ SECURITY ══ */}
           {tab === "security" && (
-            <div className="px-5 py-5 space-y-4">
-              <div className="rounded-2xl bg-white/[0.06] border border-white/[0.12] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-white/70 font-medium">Email</p>
-                    <p className="text-xs text-white/50 mt-0.5">{user.email}</p>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 font-medium">
-                    Verified
-                  </span>
-                </div>
-
-                <div className="h-px bg-white/[0.08]" />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-white/70 font-medium">Account created</p>
-                    <p className="text-xs text-white/50 mt-0.5">
-                      {user.created_at
-                        ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ padding: "16px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#eef0f6", marginBottom: 6 }}>{language === "pt" ? "Senha" : language === "es" ? "Contraseña" : "Password"}</p>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", lineHeight: 1.6, marginBottom: 12 }}>{language === "pt" ? "Alterações de senha são feitas via link por email." : language === "es" ? "Los cambios de contraseña se hacen por link de correo." : "Password changes are handled via email link."}</p>
+                <button onClick={async () => { await supabase.auth.resetPasswordForEmail(user.email || ""); toast.success(language === "pt" ? "Link enviado!" : "Link sent!"); }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 9, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.70)" }}>
+                  <Shield className="h-3.5 w-3.5" />{language === "pt" ? "Enviar link de redefinição" : language === "es" ? "Enviar enlace" : "Send reset link"}
+                </button>
               </div>
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 justify-center px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm font-medium hover:bg-red-500/10 hover:border-red-500/30 active:scale-[.98] transition-all"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign out of AdBrief
-              </button>
-
-              <p className="text-[11px] text-white/15 text-center">
-                Password changes are handled via email link
-              </p>
             </div>
           )}
-
-          {/* ══ PERSONAS SECTION — always at bottom ══ */}
-          <div className="px-5 pb-10">
-            <div className="border-t border-white/[0.05] pt-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-                    Saved Personas
-                  </p>
-                  <p className="text-xs text-white/40 mt-0.5">Your AI audience profiles</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="/dashboard/persona"
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.06] border border-white/[0.09] text-white/50 text-xs font-medium hover:bg-white/[0.1] hover:text-white transition-all"
-                    title="Create new persona"
-                  >
-                    <span className="text-base leading-none">+</span> New
-                  </a>
-                  <button
-                    onClick={loadPersonas}
-                    disabled={personasLoading}
-                    className="h-7 w-7 rounded-lg bg-white/[0.08] flex items-center justify-center text-white/45 hover:text-white/60 hover:bg-white/[0.08] transition-all disabled:opacity-30"
-                    title="Refresh"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 ${personasLoading ? "animate-spin" : ""}`} />
-                  </button>
-                </div>
-              </div>
-
-              {personasLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-5 w-5 animate-spin text-white/15" />
-                </div>
-              ) : personas.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/[0.13] py-10 flex flex-col items-center gap-3">
-                  <span className="text-4xl select-none">🧠</span>
-                  <p className="text-sm text-white/45 font-medium">No personas yet</p>
-                  <p className="text-xs text-white/15 text-center px-6 leading-relaxed">
-                    Generate one using the Persona Builder in the sidebar to see it here
-                  </p>
-                </div>
-              ) : selectedPersona ? (
-                <PersonaDetailView
-                  persona={selectedPersona}
-                  onBack={() => setSelectedPersona(null)}
-                  onSave={(updated) => {
-                    setPersonas(prev => prev.map(p => p.id === updated.id ? updated : p));
-                    setSelectedPersona(updated);
-                  }}
-                  onDelete={() => { handleDelete(selectedPersona.id); setSelectedPersona(null); }}
-                  isDeleting={deletingId === selectedPersona.id}
-                  userId={user.id}
-                />
-              ) : (
-                <div className="grid grid-cols-3 gap-3">
-                  {personas.map((persona) => (
-                    <div key={persona.id} className="flex flex-col items-center gap-2 cursor-pointer group"
-                      onClick={() => setSelectedPersona(persona)}>
-                      <Persona3DAvatar
-                        emoji={persona.avatar_emoji || "👤"}
-                        name={persona.name}
-                        gender={persona.gender || ""}
-                        size="md"
-                      />
-                      <p className="text-xs text-white/50 group-hover:text-white transition-colors text-center truncate w-full">{persona.name}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
 
         </div>
       </div>
+
       {planModalOpen && (
-        <PlanUpgradeModal
-          open={planModalOpen}
-          onClose={() => setPlanModalOpen(false)}
-          currentPlan={profile?.plan || "free"}
-        />
+        <PlanUpgradeModal open={planModalOpen} onClose={() => setPlanModalOpen(false)} currentPlan={profile?.plan || "free"} />
       )}
     </>
   );
