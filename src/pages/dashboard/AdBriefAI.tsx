@@ -447,6 +447,35 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
+// ── Proactive Block — first message from the AI when chat opens ──────────────
+function ProactiveBlock({ block }: { block: Block }) {
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+  const hour = new Date().getHours();
+  const timeEmoji = hour < 12 ? "🌅" : hour < 18 ? "☀️" : "🌙";
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
+      {/* Greeting header — distinct from regular messages */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,rgba(14,165,233,0.20),rgba(99,102,241,0.15))", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>
+          {timeEmoji}
+        </div>
+        <div>
+          <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#eef0f6", letterSpacing: "-0.02em" }}>{block.title}</span>
+          <span style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.30)", marginLeft: 8 }}>AdBrief AI</span>
+        </div>
+      </div>
+      {/* Message body — clean, no card wrapper */}
+      <div style={{ paddingLeft: 42 }}>
+        <p style={{ fontFamily: M, fontSize: 14, color: "rgba(238,240,246,0.82)", lineHeight: 1.75, margin: 0 }}>
+          {block.content}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard Offer Block ─────────────────────────────────────────────────────
 function DashboardOfferBlock({ block, lang, onConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
@@ -562,6 +591,42 @@ export default function AdBriefAI() {
     });
   },[user?.id,selectedPersona?.id]);
 
+  // Proactive greeting — fires when connections are known (after context is ready)
+  useEffect(()=>{
+    if(!contextReady || proactiveFired.current) return;
+    if(!user?.id) return;
+    // Wait a tick to let connections settle
+    const timer = setTimeout(()=>{
+      const today = new Date().toISOString().split("T")[0];
+      const pid = selectedPersona?.id || null;
+      (supabase as any).from("daily_snapshots")
+        .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then((r:any)=>{
+          const snap = r.data;
+          const hasMetaConn = connections.includes("meta");
+          if(!snap && hasMetaConn){
+            // Has Meta but no snapshot yet — run intelligence first
+            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
+              .then(()=>{
+                (supabase as any).from("daily_snapshots")
+                  .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
+                  .eq("user_id",user.id).order("date",{ascending:false}).limit(1).maybeSingle()
+                  .then((r2:any)=>{ if(!proactiveFired.current) triggerProactiveGreeting(r2.data, hasMetaConn); })
+                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
+              })
+              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
+          } else {
+            if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn);
+          }
+        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta")); });
+    }, 600); // 600ms — let connections load
+    return () => clearTimeout(timer);
+  },[contextReady, connections.length, user?.id]);
+
   // Load context
   useEffect(()=>{
     if(!user?.id)return;
@@ -581,36 +646,7 @@ export default function AdBriefAI() {
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}`);
       setContextReady(true);
-      // Auto-trigger daily intelligence + proactive greeting
-      if(user?.id){
-        const today=new Date().toISOString().split("T")[0];
-        (supabase as any).from("daily_snapshots")
-          .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_spend,yesterday_ctr,ai_insight,top_ads,raw_period")
-          .eq("user_id",user.id).eq("date",today).maybeSingle()
-          .then((r:any)=>{
-            if(!r.data){
-              // No snapshot today — run intelligence then re-fetch and greet
-              supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id}})
-                .then(()=>{
-                  // Re-fetch snapshot after intelligence runs
-                  (supabase as any).from("daily_snapshots")
-                    .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads")
-                    .eq("user_id",user.id).eq("date",today).maybeSingle()
-                    .then((r2:any)=>{
-                      if(!proactiveFired.current) triggerProactiveGreeting(r2.data || null);
-                    }).catch(()=>{
-                      if(!proactiveFired.current) triggerProactiveGreeting(null);
-                    });
-                })
-                .catch(()=>{
-                  if(!proactiveFired.current) triggerProactiveGreeting(null);
-                });
-            } else {
-              // Snapshot exists — trigger proactive greeting with real data
-              if(!proactiveFired.current) triggerProactiveGreeting(r.data);
-            }
-          }).catch(()=>{});
-      }
+      // Proactive greeting now fires from the connections useEffect (after connections load)
     })();
   },[user?.id]);
 
@@ -677,7 +713,7 @@ export default function AdBriefAI() {
   },[messages]);
 
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
-  const triggerProactiveGreeting = async (snapshot: any) => {
+  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean) => {
     if (proactiveFired.current) return;
     proactiveFired.current = true;
 
@@ -736,6 +772,13 @@ export default function AdBriefAI() {
           ? `${greeting}. Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear algo nuevo?`
           : `${greeting}. Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns? Want to create something new?`;
 
+      } else if (hasMetaConn) {
+        // ── Meta conectado mas sem campanhas ─────────────────────────────────
+        proactiveMsg = lang === "pt"
+          ? `${greeting}. Sua conta Meta Ads está conectada, mas não encontrei campanhas com dados nos últimos 7 dias. Você tem campanhas pausadas que quer reativar? Ou quer criar novos criativos?`
+          : lang === "es"
+          ? `${greeting}. Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear nuevos creativos?`
+          : `${greeting}. Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns to reactivate?`;
       } else {
         // ── Sem Meta conectado ────────────────────────────────────────────────
         proactiveMsg = lang === "pt"
@@ -745,10 +788,15 @@ export default function AdBriefAI() {
           : `${greeting}. To work properly I need to see your Meta Ads account. Connect it and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
       }
 
+      // Remove greeting from content if it starts with it (avoids duplicate)
+      const cleanMsg = proactiveMsg.startsWith(greeting)
+        ? proactiveMsg.slice(greeting.length).replace(/^[.,!]\s*/, "").trim()
+        : proactiveMsg;
+
       const aid = Date.now() + 1;
       setMessages([{
         role: "assistant",
-        blocks: [{ type: "insight", title: greeting, content: proactiveMsg }],
+        blocks: [{ type: "proactive" as any, title: greeting, content: cleanMsg }],
         ts: aid, id: aid
       }]);
 
@@ -1125,10 +1173,12 @@ export default function AdBriefAI() {
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
                   b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)}/>:
+                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b}/>:
                   (b as any)._pendingTool?null:
                   <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
-                {/* 👍 👎 Copy Retry row */}
+                {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
+                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                 <div style={{display:"flex",alignItems:"center",gap:5,marginTop:5}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
                     style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.10)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
@@ -1147,6 +1197,7 @@ export default function AdBriefAI() {
                     <RefreshCw size={10}/>Retry
                   </button>
                 </div>
+                )}
               </div>
             )}
           </div>
