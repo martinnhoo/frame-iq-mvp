@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -627,10 +627,58 @@ export default function IntelligencePage() {
           </div>
 
           {analyses.length === 0 && memoryData.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/[0.13] py-16 text-center">
-              <p className="text-3xl mb-3">🧠</p>
-              <p className="text-white/40 text-sm font-semibold mb-1">No creative signals yet</p>
-              <p className="text-white/40 text-xs">Run an analysis or generate hooks to build your creative intelligence profile</p>
+            <div className="rounded-2xl p-6 space-y-5" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="text-center pb-2">
+                <p className="text-2xl mb-2">🧠</p>
+                <p className="text-white/60 text-sm font-semibold">Sem dados ainda</p>
+                <p className="text-white/30 text-xs mt-1 max-w-xs mx-auto">
+                  Quanto mais você usar as ferramentas, mais inteligente fica o seu perfil criativo.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  {
+                    icon: "📹",
+                    label: "Analisar criativo",
+                    desc: "Suba um vídeo e extraia hook score, formato e insights.",
+                    color: "#0ea5e9",
+                    bg: "rgba(14,165,233,0.08)",
+                    border: "rgba(14,165,233,0.18)",
+                    path: "/dashboard/analyses/new",
+                  },
+                  {
+                    icon: "⚡",
+                    label: "Gerar hooks",
+                    desc: "Crie hooks e o AdBrief aprende o que funciona para você.",
+                    color: "#34d399",
+                    bg: "rgba(52,211,153,0.08)",
+                    border: "rgba(52,211,153,0.18)",
+                    path: "/dashboard/hooks",
+                  },
+                  {
+                    icon: "📊",
+                    label: "Importar dados Meta",
+                    desc: "Conecte sua conta e veja padrões de performance reais.",
+                    color: "#fbbf24",
+                    bg: "rgba(251,191,36,0.08)",
+                    border: "rgba(251,191,36,0.18)",
+                    path: "/dashboard/intelligence",
+                  },
+                ].map(action => (
+                  <button
+                    key={action.label}
+                    onClick={() => navigate(action.path)}
+                    className="flex flex-col items-start gap-2 p-4 rounded-xl text-left transition-all"
+                    style={{ background: action.bg, border: `1px solid ${action.border}` }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = action.color + "50"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = action.border; }}
+                  >
+                    <span className="text-xl">{action.icon}</span>
+                    <p className="text-sm font-bold" style={{ color: action.color }}>{action.label}</p>
+                    <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>{action.desc}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <>

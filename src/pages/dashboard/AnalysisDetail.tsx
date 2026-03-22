@@ -346,6 +346,85 @@ const AnalysisDetail = () => {
             </div>
           )}
 
+          {/* ── Action Buttons ── */}
+          <div className="rounded-2xl p-4 space-y-3"
+            style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p className="text-[10px] uppercase tracking-[0.2em]"
+              style={{ ...mono, color: "rgba(255,255,255,0.25)" }}>Next actions</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+
+              {/* Rewrite hook */}
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (audioHook) params.set("hook", audioHook);
+                  if (brief) params.set("product", brief.slice(0, 120));
+                  if (marketGuess) params.set("market", marketGuess);
+                  if (format) params.set("format", format);
+                  navigate("/dashboard/hooks?" + params.toString());
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group"
+                style={{ background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)", color: "#0ea5e9" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.35)"; (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.15)"; (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.07)"; }}>
+                <Zap className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold" style={jakarta}>Rewrite hook</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {hookScore !== null ? `Score ${hookScore.toFixed(1)} → improve` : "Generate better variants"}
+                  </p>
+                </div>
+              </button>
+
+              {/* Generate script variations */}
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (brief) params.set("product", brief.slice(0, 120));
+                  if (summary) params.set("context", summary.slice(0, 200));
+                  if (marketGuess) params.set("market", marketGuess);
+                  if (format) params.set("format", format);
+                  if (platforms[0]) params.set("platform", platforms[0].toLowerCase());
+                  navigate("/dashboard/script?" + params.toString());
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.15)", color: "#34d399" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.35)"; (e.currentTarget as HTMLElement).style.background = "rgba(52,211,153,0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.15)"; (e.currentTarget as HTMLElement).style.background = "rgba(52,211,153,0.07)"; }}>
+                <RefreshCw className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold" style={jakarta}>Write script variation</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {format ? format.charAt(0).toUpperCase() + format.slice(1) + " format" : "New angle, same product"}
+                  </p>
+                </div>
+              </button>
+
+              {/* Create brief */}
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (brief) params.set("product", brief.slice(0, 120));
+                  if (summary) params.set("context", summary.slice(0, 200));
+                  if (marketGuess) params.set("market", marketGuess);
+                  navigate("/dashboard/brief?" + params.toString());
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.15)", color: "#fbbf24" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(251,191,36,0.35)"; (e.currentTarget as HTMLElement).style.background = "rgba(251,191,36,0.12)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(251,191,36,0.15)"; (e.currentTarget as HTMLElement).style.background = "rgba(251,191,36,0.07)"; }}>
+                <ChevronRight className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold" style={jakarta}>Create production brief</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {marketGuess ? "For " + marketGuess + " market" : "Full creative brief"}
+                  </p>
+                </div>
+              </button>
+
+            </div>
+          </div>
+
           {/* ── Feedback ── */}
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] text-white/40" style={mono}>Was this analysis useful?</span>

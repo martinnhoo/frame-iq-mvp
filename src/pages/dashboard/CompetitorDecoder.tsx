@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -141,6 +142,18 @@ export default function CompetitorDecoder() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [copied, setCopied] = useState<Record<string, boolean>>({});
+  const [searchParams] = useSearchParams();
+
+  // Pre-fill from CompetitorTracker navigation
+  useEffect(() => {
+    const brand = searchParams.get("brand");
+    const market = searchParams.get("market");
+    if (brand) {
+      const obs = market ? `Analyzing ${brand} ads (${market} market)` : `Analyzing ${brand} ads`;
+      setObservation(obs);
+      setTab("text");
+    }
+  }, []);
 
   const cp = async (key: string, text: string) => {
     await navigator.clipboard.writeText(text);

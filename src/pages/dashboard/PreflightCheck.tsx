@@ -12,7 +12,7 @@ import {
   Plane, Loader2, CheckCircle, AlertTriangle, XCircle,
   ChevronDown, Clock, BarChart2, Zap, Shield, MessageSquare,
   RefreshCw, Copy, Check, ArrowRight, TrendingUp, AlertCircle,
-  Sparkles, Upload, FileVideo, FileText, X,
+  Sparkles, Upload, FileVideo, FileText, X, History, ChevronRight,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -224,6 +224,22 @@ export default function PreflightCheck() {
   const [result, setResult] = useState<PreflightResult | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  // History
+  const [history, setHistory] = useState<Array<{id: string; created_at: string; score: number; verdict: string; platform: string; market: string; format: string}>>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadHistory = async () => {
+    if (!user?.id) return;
+    const { data } = await (supabase as any).from("preflight_results")
+      .select("id, created_at, score, verdict, platform, market, format")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setHistory(data);
+  };
+
+  useEffect(() => { loadHistory(); }, [user?.id]);
+
   const wordCount = script.trim().split(/\s+/).filter(Boolean).length;
   const estimatedSeconds = Math.round(wordCount / 2.5);
 
@@ -312,6 +328,19 @@ export default function PreflightCheck() {
         setScript((data as { transcript?: string }).transcript || "");
       }
       toast.success(t("pf_toast_done"));
+      // Save to history (fire and forget — table may not exist yet, fails silently)
+      if (user?.id) {
+        (supabase as any).from("preflight_results").insert({
+          user_id: user.id,
+          score: data.score,
+          verdict: data.verdict,
+          platform,
+          market,
+          format,
+          result_json: data,
+          created_at: new Date().toISOString(),
+        }).then(() => loadHistory());
+      }
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -351,16 +380,58 @@ export default function PreflightCheck() {
               {t("pf_subtitle")}
             </p>
           </div>
-          {result && verdictCfg && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border shrink-0"
-              style={{ background: verdictCfg.bg, borderColor: verdictCfg.border, color: verdictCfg.color }}>
-              {result.verdict === "READY" ? <CheckCircle className="h-4 w-4" /> :
-               result.verdict === "BLOCKED" ? <XCircle className="h-4 w-4" /> :
-               <AlertTriangle className="h-4 w-4" />}
-              <span className="text-xs font-bold" style={mono}>{verdictCfg.label}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {history.length > 0 && (
+              <button onClick={() => setShowHistory(h => !h)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all"
+                style={{ background: showHistory ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
+                <History className="h-3.5 w-3.5" />
+                {history.length}
+              </button>
+            )}
+            {result && verdictCfg && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border"
+                style={{ background: verdictCfg.bg, borderColor: verdictCfg.border, color: verdictCfg.color }}>
+                {result.verdict === "READY" ? <CheckCircle className="h-4 w-4" /> :
+                 result.verdict === "BLOCKED" ? <XCircle className="h-4 w-4" /> :
+                 <AlertTriangle className="h-4 w-4" />}
+                <span className="text-xs font-bold" style={mono}>{verdictCfg.label}</span>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* ── History panel ── */}
+        {showHistory && history.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+              <History className="h-3.5 w-3.5" style={{ color: "rgba(255,255,255,0.3)" }} />
+              <span className="text-[10px] uppercase tracking-[0.2em]" style={{ ...mono, color: "rgba(255,255,255,0.3)" }}>Previous runs</span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+              {history.map(h => {
+                const vcfg = VERDICT_CFG[h.verdict as keyof typeof VERDICT_CFG] || VERDICT_CFG.REVIEW;
+                return (
+                  <div key={h.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold"
+                      style={{ background: vcfg.bg, border: `1px solid ${vcfg.border}`, color: vcfg.color, ...mono }}>
+                      {h.score}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ ...mono, background: vcfg.bg, color: vcfg.color, border: `1px solid ${vcfg.border}` }}>{h.verdict}</span>
+                        <span className="text-[10px] text-white/40" style={mono}>{h.platform} · {h.market} · {h.format}</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-white/30 shrink-0" style={mono}>
+                      {new Date(h.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Input panel ── */}
         <div className="rounded-2xl overflow-hidden" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>

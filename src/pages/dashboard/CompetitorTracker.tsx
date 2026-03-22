@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, TrendingUp, Plus, Trash2, Loader2, Clock, AlertCircle } from "lucide-react";
+import { Search, Eye, TrendingUp, Plus, Trash2, Loader2, Clock, Zap, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-
-// Competitor tracker - UI ready, live data needs Meta Ads API + TikTok API keys in Supabase secrets
-// Table: competitor_trackers (user_id, name, market, platform, created_at)
 
 const MARKETS = [
   { value: "BR", flag: "🇧🇷", label: "Brazil" },
@@ -19,28 +16,30 @@ const MARKETS = [
 
 const PLATFORMS = ["Meta", "TikTok", "YouTube", "Both"];
 
+const F = "'Plus Jakarta Sans', sans-serif";
+const M = "'Inter', sans-serif";
+
 interface Competitor {
   id: string;
   name: string;
   market: string;
   platform: string;
   created_at: string;
+  last_analysis?: string | null;
+  analysis_count?: number;
 }
-
-type DateFilter = "7d" | "30d" | "all";
 
 export default function CompetitorTracker() {
   const { user } = useOutletContext<DashboardContext>();
+  const navigate = useNavigate();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [form, setForm] = useState({ name: "", market: "BR", platform: "Meta" });
 
   const load = async () => {
-    // Try loading from Supabase — will fail gracefully if table doesn't exist yet
     try {
       const { data } = await supabase
         .from("competitor_trackers" as never)
@@ -48,9 +47,7 @@ export default function CompetitorTracker() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (data) setCompetitors(data as Competitor[]);
-    } catch {
-      // table may not exist yet — that's ok, show empty state
-    }
+    } catch { /* table may not exist yet */ }
     setLoading(false);
   };
 
@@ -62,192 +59,221 @@ export default function CompetitorTracker() {
       const { data, error } = await supabase
         .from("competitor_trackers" as never)
         .insert({ user_id: user.id, name: form.name.trim(), market: form.market, platform: form.platform } as never)
-        .select()
-        .single();
+        .select().single();
       if (error) throw error;
       setCompetitors(p => [data as Competitor, ...p]);
       setForm({ name: "", market: "BR", platform: "Meta" });
       setAdding(false);
-      toast.success(`Now tracking "${form.name}"`);
+      toast.success(`"${form.name}" adicionado à lista`);
     } catch {
-      toast.error("Failed to add — Supabase table may need to be created. Check docs.");
+      toast.error("Erro ao adicionar — tente novamente");
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Remove "${name}" from tracking?`)) return;
+    if (!confirm(`Remover "${name}" do tracker?`)) return;
     setDeleting(id);
     try {
       await supabase.from("competitor_trackers" as never).delete().eq("id", id);
       setCompetitors(p => p.filter(c => c.id !== id));
-      toast.success("Removed");
-    } catch {
-      toast.error("Failed to remove");
-    }
+      toast.success("Removido");
+    } catch { toast.error("Erro ao remover"); }
     setDeleting(null);
   };
 
-  const filtered = competitors.filter(c => {
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (dateFilter !== "all") {
-      const days = dateFilter === "7d" ? 7 : 30;
-      if (Date.now() - new Date(c.created_at).getTime() > days * 86400000) return false;
-    }
-    return true;
-  });
+  // Navigate to CompetitorDecoder with brand pre-filled
+  const handleAnalyze = (c: Competitor) => {
+    navigate(`/dashboard/competitor?brand=${encodeURIComponent(c.name)}&market=${c.market}&platform=${c.platform.toLowerCase()}`);
+  };
 
-  const marketData = (code: string) => MARKETS.find(m => m.value === code);
+  const filtered = competitors.filter(c =>
+    !search || c.name.toLowerCase().includes(search.toLowerCase())
+  );
 
+  const mktData = (code: string) => MARKETS.find(m => m.value === code);
   const timeAgo = (d: string) => {
-    const diff = Date.now() - new Date(d).getTime();
-    const days = Math.floor(diff / 86400000);
-    if (days === 0) return "today";
-    if (days === 1) return "yesterday";
-    return `${days}d ago`;
+    const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+    if (days === 0) return "hoje"; if (days === 1) return "ontem"; return `há ${days}d`;
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5 overflow-x-hidden">
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2" style={{ fontFamily: F }}>
             <Eye className="h-5 w-5 text-white/40" />
             Competitor Tracker
           </h1>
-          <p className="text-white/50 text-sm mt-0.5">
-            Track competitor brands — live data requires Meta Ads + TikTok API.
+          <p className="text-white/45 text-sm mt-0.5" style={{ fontFamily: M }}>
+            Salve concorrentes e analise qualquer anúncio deles com IA
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-xl bg-white/[0.08] border border-white/[0.12] p-1">
-            {(["7d", "30d", "all"] as DateFilter[]).map(f => (
-              <button key={f} onClick={() => setDateFilter(f)}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-all ${dateFilter === f ? "bg-white/10 text-white" : "text-white/50 hover:text-white/60"}`}>
-                {f === "7d" ? "7d" : f === "30d" ? "30d" : "All"}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setAdding(a => !a)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
-          >
-            <Plus className="h-4 w-4" /> Add Competitor
-          </button>
-        </div>
+        <button onClick={() => setAdding(a => !a)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+          style={{ fontFamily: F }}>
+          <Plus className="h-4 w-4" /> Add Competitor
+        </button>
       </div>
 
       {/* Add form */}
       {adding && (
-        <div className="rounded-2xl border border-white/[0.1] bg-white/[0.07] p-4 space-y-3">
-          <p className="text-sm font-semibold text-white/70">Track a new competitor</p>
+        <div className="rounded-2xl p-4 space-y-3" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <p className="text-sm font-semibold text-white/60" style={{ fontFamily: F }}>Adicionar concorrente</p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              placeholder="Brand name (e.g. Betway)"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              onKeyDown={e => e.key === "Enter" && handleAdd()}
-              autoFocus
-              className="flex-1 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm placeholder:text-white/45 outline-none focus:border-white/20"
-            />
-            <select
-              value={form.market}
-              onChange={e => setForm(f => ({ ...f, market: e.target.value }))}
-              className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm outline-none focus:border-white/20"
-            >
+            <input placeholder="Nome da marca (ex: Betway, Bet365)"
+              value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onKeyDown={e => e.key === "Enter" && handleAdd()} autoFocus
+              className="flex-1 px-3 py-2.5 rounded-xl text-white text-sm placeholder:text-white/35 outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", fontFamily: M }} />
+            <select value={form.market} onChange={e => setForm(f => ({ ...f, market: e.target.value }))}
+              className="px-3 py-2.5 rounded-xl text-white text-sm outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", fontFamily: M }}>
               {MARKETS.map(m => <option key={m.value} value={m.value}>{m.flag} {m.label}</option>)}
             </select>
-            <select
-              value={form.platform}
-              onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
-              className="px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-white text-sm outline-none focus:border-white/20"
-            >
+            <select value={form.platform} onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
+              className="px-3 py-2.5 rounded-xl text-white text-sm outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", fontFamily: M }}>
               {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleAdd} className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
-              Start tracking
+            <button onClick={handleAdd}
+              className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors"
+              style={{ fontFamily: F }}>
+              Salvar
             </button>
-            <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-white/40 hover:text-white text-sm transition-colors">
-              Cancel
+            <button onClick={() => setAdding(false)}
+              className="px-4 py-2 rounded-xl text-white/40 hover:text-white text-sm transition-colors"
+              style={{ fontFamily: F }}>
+              Cancelar
             </button>
           </div>
         </div>
       )}
 
+      {/* How it works — shown only when list is empty */}
+      {!loading && competitors.length === 0 && (
+        <div className="rounded-2xl p-5 space-y-4" style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/30" style={{ fontFamily: M }}>Como funciona</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { num: "1", title: "Salva a marca", desc: "Adicione qualquer concorrente à sua lista de monitoramento.", color: "#0ea5e9" },
+              { num: "2", title: "Baixa o anúncio", desc: "Viu um anúncio deles no TikTok ou Meta? Baixa o vídeo ou copia o copy.", color: "#34d399" },
+              { num: "3", title: "Analisa com IA", desc: "Clique em Analyze → cole o texto ou suba o vídeo. A IA faz o breakdown completo.", color: "#fbbf24" },
+            ].map(step => (
+              <div key={step.num} className="flex items-start gap-3">
+                <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold"
+                  style={{ background: `${step.color}18`, border: `1px solid ${step.color}30`, color: step.color, fontFamily: M }}>
+                  {step.num}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white/70" style={{ fontFamily: F }}>{step.title}</p>
+                  <p className="text-xs text-white/35 mt-0.5 leading-relaxed" style={{ fontFamily: M }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-        <input
-          placeholder="Search tracked competitors..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/[0.15] text-white text-sm placeholder:text-white/40 outline-none focus:border-white/20"
-        />
-      </div>
+      {competitors.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35" />
+          <input placeholder="Buscar concorrente..." value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-white text-sm placeholder:text-white/35 outline-none"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", fontFamily: M }} />
+        </div>
+      )}
 
-      {/* API notice */}
-      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/[0.08] border border-amber-500/20 text-amber-300/80 text-xs">
-        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-        <span>
-          <strong>Live data not connected.</strong> To enable real ad monitoring, add <code className="bg-white/10 px-1 rounded">META_ADS_ACCESS_TOKEN</code> and <code className="bg-white/10 px-1 rounded">TIKTOK_ACCESS_TOKEN</code> to your Supabase Edge Function secrets. Tracked brands are saved and ready.
-        </span>
-      </div>
-
-      {/* Competitors list */}
+      {/* List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-white/40" />
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.06] py-14 flex flex-col items-center gap-4 text-center">
-          <div className="h-12 w-12 rounded-2xl bg-white/[0.06] flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-white/40" />
-          </div>
-          <div>
-            <p className="text-white/40 font-medium">No competitors tracked yet</p>
-            <p className="text-white/40 text-sm mt-1">Add a brand to start monitoring their ads</p>
-          </div>
-          <button
-            onClick={() => setAdding(true)}
-            className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/40 hover:text-white hover:border-white/20 text-sm transition-all"
-          >
-            Add first competitor
-          </button>
+      ) : filtered.length === 0 && competitors.length > 0 ? (
+        <div className="text-center py-10 text-white/35 text-sm" style={{ fontFamily: M }}>
+          Nenhum concorrente encontrado para "{search}"
         </div>
-      ) : (
-        <div className="rounded-2xl border border-white/[0.15] overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[1fr_80px_100px_80px_40px] gap-4 px-5 py-3 border-b border-white/[0.12] text-[10px] text-white/45 uppercase tracking-widest">
-            <span>Brand</span>
-            <span>Market</span>
-            <span>Platform</span>
-            <span>Added</span>
-            <span />
-          </div>
-          {filtered.map((c) => {
-            const mkt = marketData(c.market);
+      ) : filtered.length > 0 ? (
+        <div className="space-y-2">
+          {filtered.map(c => {
+            const mkt = mktData(c.market);
             return (
-              <div
-                key={c.id}
-                className="group flex flex-col sm:grid sm:grid-cols-[1fr_80px_100px_80px_40px] gap-2 sm:gap-4 px-5 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.06] transition-colors"
-              >
-                <span className="text-white font-medium">{c.name}</span>
-                <span className="text-white/50 text-sm">{mkt?.flag} {c.market}</span>
-                <span className="text-white/50 text-sm">{c.platform}</span>
-                <span className="text-white/45 text-xs flex items-center gap-1">
-                  <Clock className="h-3 w-3" />{timeAgo(c.created_at)}
-                </span>
-                <button
-                  onClick={() => handleDelete(c.id, c.name)}
-                  disabled={deleting === c.id}
-                  className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                >
-                  {deleting === c.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                </button>
+              <div key={c.id} className="group rounded-2xl transition-all"
+                style={{ background: "#0a0a0d", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div className="flex items-center gap-4 px-4 py-4">
+                  {/* Brand name + meta */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate" style={{ fontFamily: F }}>{c.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[11px] text-white/40" style={{ fontFamily: M }}>{mkt?.flag} {c.market}</span>
+                      <span className="text-white/15">·</span>
+                      <span className="text-[11px] text-white/40" style={{ fontFamily: M }}>{c.platform}</span>
+                      <span className="text-white/15">·</span>
+                      <span className="text-[11px] text-white/30 flex items-center gap-1" style={{ fontFamily: M }}>
+                        <Clock className="h-3 w-3" />{timeAgo(c.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Analyze button */}
+                  <button onClick={() => handleAnalyze(c)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0"
+                    style={{ background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9", fontFamily: F }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.18)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.4)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.2)"; }}>
+                    <Zap className="h-3 w-3" /> Analyze
+                  </button>
+
+                  {/* Delete */}
+                  <button onClick={() => handleDelete(c.id, c.name)} disabled={deleting === c.id}
+                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-lg transition-all shrink-0"
+                    style={{ color: "rgba(255,255,255,0.25)" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#f87171"; (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.1)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                    {deleting === c.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+
+                {/* Analyze CTA strip — shown when no analysis yet */}
+                <div className="px-4 pb-3">
+                  <button onClick={() => handleAnalyze(c)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontFamily: M }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.15)"; (e.currentTarget as HTMLElement).style.color = "#0ea5e9"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
+                    <span>Baixou um anúncio deles? Cole aqui e analise →</span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                  </button>
+                </div>
               </div>
             );
           })}
+        </div>
+      ) : null}
+
+      {/* Empty state with CTA — after load, no competitors */}
+      {!loading && competitors.length === 0 && (
+        <div className="rounded-2xl py-14 flex flex-col items-center gap-4 text-center"
+          style={{ background: "#0a0a0d", border: "1px dashed rgba(255,255,255,0.08)" }}>
+          <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
+            style={{ background: "rgba(255,255,255,0.05)" }}>
+            <TrendingUp className="h-5 w-5 text-white/40" />
+          </div>
+          <div>
+            <p className="text-white/50 font-medium" style={{ fontFamily: F }}>Nenhum concorrente ainda</p>
+            <p className="text-white/30 text-sm mt-1 max-w-xs" style={{ fontFamily: M }}>
+              Adicione marcas que você monitora para analisar os anúncios delas com IA
+            </p>
+          </div>
+          <button onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9", fontFamily: F }}>
+            <Plus className="h-4 w-4" /> Add first competitor
+          </button>
         </div>
       )}
     </div>

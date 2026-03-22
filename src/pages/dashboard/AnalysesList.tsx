@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2, Trash2, XCircle, Search, SortDesc } from "lucide-react";
+import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2, Trash2, XCircle, Search, SortDesc, Zap, FileText, ClipboardList } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -129,36 +129,67 @@ export default function AnalysesList() {
             const score = (a.result?.hook_score as number) ?? null;
             const statusLabel = STATUS_LABELS[a.status]?.[language] || STATUS_LABELS[a.status]?.en || a.status;
             return (
-              <div key={a.id} onClick={() => navigate("/dashboard/analyses/" + a.id)}
-                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", transition: "all 0.12s" }}
+              <div key={a.id} className="group"
+                style={{ borderRadius: 14, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden", transition: "all 0.12s" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.04)"; el.style.borderColor = "rgba(255,255,255,0.12)"; }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.025)"; el.style.borderColor = "rgba(255,255,255,0.07)"; }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <BarChart3 size={16} color="#0ea5e9" />
+                {/* Main row */}
+                <div onClick={() => navigate("/dashboard/analyses/" + a.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", cursor: "pointer" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(14,165,233,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <BarChart3 size={16} color="#0ea5e9" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {a.title || t.untitled}
+                    </p>
+                    <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.32)", margin: "3px 0 0" }}>
+                      {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
+                  {score !== null && (
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 15, fontWeight: 700, color: scoreColor(score), flexShrink: 0 }}>
+                      {score.toFixed(1)}
+                    </span>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, background: cfg.bg, border: "1px solid " + cfg.border, flexShrink: 0 }}>
+                    <StatusIcon size={11} color={cfg.color} />
+                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: cfg.color }}>{statusLabel}</span>
+                  </div>
+                  <button onClick={e => handleDelete(e, a.id, a.status)} disabled={deleting === a.id}
+                    style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "1px solid transparent", cursor: "pointer", flexShrink: 0, color: "rgba(255,255,255,0.25)", transition: "all 0.12s" }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = "#f87171"; el.style.background = "rgba(248,113,113,0.1)"; el.style.borderColor = "rgba(248,113,113,0.2)"; }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.25)"; el.style.background = "transparent"; el.style.borderColor = "transparent"; }}>
+                    {deleting === a.id ? <Loader2 size={12} className="animate-spin" /> : a.status === "pending" ? <XCircle size={12} /> : <Trash2 size={12} />}
+                  </button>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {a.title || t.untitled}
-                  </p>
-                  <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.32)", margin: "3px 0 0" }}>
-                    {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                  </p>
-                </div>
-                {score !== null && (
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 15, fontWeight: 700, color: scoreColor(score), flexShrink: 0 }}>
-                    {score.toFixed(1)}
-                  </span>
-                )}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, background: cfg.bg, border: "1px solid " + cfg.border, flexShrink: 0 }}>
-                  <StatusIcon size={11} color={cfg.color} />
-                  <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: cfg.color }}>{statusLabel}</span>
-                </div>
-                <button onClick={e => handleDelete(e, a.id, a.status)} disabled={deleting === a.id}
-                  style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "1px solid transparent", cursor: "pointer", flexShrink: 0, color: "rgba(255,255,255,0.25)", transition: "all 0.12s" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = "#f87171"; el.style.background = "rgba(248,113,113,0.1)"; el.style.borderColor = "rgba(248,113,113,0.2)"; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.25)"; el.style.background = "transparent"; el.style.borderColor = "transparent"; }}>
-                  {deleting === a.id ? <Loader2 size={12} className="animate-spin" /> : a.status === "pending" ? <XCircle size={12} /> : <Trash2 size={12} />}
-                </button>
+                {/* Quick actions — only for completed analyses */}
+                {a.status === "completed" && (() => {
+                  const r = a.result as Record<string, unknown> | null;
+                  const hook = (r?.audio_hook as string) ?? null;
+                  const brief = (r?.brief as string) ?? null;
+                  const summary = (r?.summary as string) ?? null;
+                  const market = (r?.market_guess as string) ?? null;
+                  const fmt = (r?.format as string) ?? null;
+                  const mkHookUrl = () => { const p = new URLSearchParams(); if (hook) p.set("hook", hook); if (brief) p.set("product", brief.slice(0,120)); if (market) p.set("market", market); return "/dashboard/hooks?" + p; };
+                  const mkScriptUrl = () => { const p = new URLSearchParams(); if (brief) p.set("product", brief.slice(0,120)); if (summary) p.set("context", summary.slice(0,200)); if (market) p.set("market", market); if (fmt) p.set("format", fmt); return "/dashboard/script?" + p; };
+                  const mkBriefUrl = () => { const p = new URLSearchParams(); if (brief) p.set("product", brief.slice(0,120)); if (summary) p.set("context", summary.slice(0,200)); if (market) p.set("market", market); return "/dashboard/brief?" + p; };
+                  return (
+                    <div style={{ display: "flex", gap: 6, padding: "0 16px 12px", flexWrap: "wrap" }}>
+                      {[
+                        { label: language === "pt" ? "Reescrever hook" : language === "es" ? "Reescribir hook" : "Rewrite hook", url: mkHookUrl(), color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)", icon: <Zap size={10} /> },
+                        { label: language === "pt" ? "Variação de script" : language === "es" ? "Variación de guión" : "Script variation", url: mkScriptUrl(), color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)", icon: <FileText size={10} /> },
+                        { label: language === "pt" ? "Criar brief" : language === "es" ? "Crear brief" : "Create brief", url: mkBriefUrl(), color: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.2)", icon: <ClipboardList size={10} /> },
+                      ].map(action => (
+                        <button key={action.label}
+                          onClick={e => { e.stopPropagation(); navigate(action.url); }}
+                          style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, fontFamily: F, fontSize: 11, fontWeight: 600, cursor: "pointer", color: action.color, background: action.bg, border: "1px solid " + action.border, transition: "all 0.12s" }}>
+                          {action.icon} {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
