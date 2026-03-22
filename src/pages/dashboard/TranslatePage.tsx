@@ -221,17 +221,23 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         const lang = LANGUAGES.find(l => l.code === targetLang) || LANGUAGES[0];
         try {
           console.log("Starting translation to", targetLang);
-          const { data: tData, error: tError } = await supabase.functions.invoke("translate-text", {
-            body: {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          const res = await fetch(`https://${projectId}.supabase.co/functions/v1/translate-text`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}`, "apikey": anonKey },
+            body: JSON.stringify({
               source_text: rawTranscript,
               from_language: "auto", from_language_name: "Auto-detect",
               to_language: lang.code, to_language_name: lang.name,
               context: "Video transcript — preserve natural speech patterns",
               tone: "Conversational", user_id: userId,
-            },
+            }),
           });
+          const tData = res.ok ? await res.json() : null;
+          const tError = res.ok ? null : `HTTP ${res.status}`;
           console.log("Translation response:", tData, "error:", tError);
-          if (tError) {
+          if (tError || !tData) {
             console.error("Translation error:", tError);
             toast.error("Translation failed — transcript is still available");
           } else {
@@ -439,16 +445,21 @@ const AdaptMode = ({ userId }: { userId: string }) => {
     if (!targetLangs.length) { toast.error("Select at least one target market"); return; }
     setLoading(true); setResults([]);
     try {
-      const { data, error } = await supabase.functions.invoke("translate-text", {
-        body: {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/translate-text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}`, "apikey": anonKey },
+        body: JSON.stringify({
           source_text: input.trim(),
           from_language: sourceLang,
           from_language_name: LANGUAGES.find(l => l.code === sourceLang)?.name,
           multi_targets: targetLangs,
           tone, context: context.trim() || undefined, user_id: userId,
-        },
+        }),
       });
-      if (error) throw new Error(error.message);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
       if (data?.mock_mode) toast.info("Add ANTHROPIC_API_KEY in Supabase for real AI translation");
       const rawResults = data?.multi ?? [{ lang: targetLangs[0], translated_text: data?.translated_text, cultural_adaptation: data?.cultural_adaptation }];
       setResults(rawResults.map((r: { lang: string; translated_text: string; cultural_adaptation: string }) => {
