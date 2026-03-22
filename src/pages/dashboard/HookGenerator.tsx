@@ -114,7 +114,7 @@ export default function HookGenerator() {
       if (user?.id && generatedHooks.length) {
         supabase.functions.invoke("capture-learning", { body: {
           user_id: user.id, event_type: "hooks_generated",
-          data: { hooks: generatedHooks, product, niche, market, platform, tone: style }
+          data: { hooks: generatedHooks, product, niche, market, platform, tone }
         }}).catch(() => {});
       }
       if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY to get real AI hooks");
