@@ -79,7 +79,7 @@ export default function DashboardLayout() {
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
     try {
       const s = localStorage.getItem("frameiq_active_persona");
@@ -290,33 +290,25 @@ export default function DashboardLayout() {
       />
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
-        {/* Mobile topbar */}
-        <header className="lg:hidden" style={{
+
+        {/* ── Single unified topbar ── */}
+        <header style={{
           height: 52, minHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
-          padding: "0 16px",
+          padding: "0 14px", gap: 10,
           background: "#131720",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.10)",
           position: "sticky", top: 0, zIndex: 30,
-          gap: 12,
+          overflowX: "auto", scrollbarWidth: "none" as any,
         }}>
-          <button onClick={() => setSidebarOpen(true)}
-            style={{ width: 34, height: 34, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", color: "rgba(255,255,255,0.7)" }}>
+          {/* Sidebar toggle — always visible */}
+          <button onClick={() => setSidebarOpen(s => !s)}
+            style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", color: "rgba(255,255,255,0.6)" }}>
             <Menu className="h-4 w-4" />
           </button>
-          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <Logo size="sm" />
-          </div>
-          <button onClick={() => setSidebarOpen(true)}
-            style={{ width: 34, height: 34, flexShrink: 0, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff" }}>
-            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
-          </button>
-        </header>
 
-        {/* Account picker — like Meta Ads top bar */}
-        <div className="sticky z-20 flex items-center gap-3 border-b"
-          style={{ top: 0, background: "#131720", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.10)", padding: "0 14px", height: 52, overflowX: "auto", scrollbarWidth: "none" }}>
-          <div className="relative">
+          {/* Account picker */}
+          <div className="relative" style={{ flexShrink: 0 }}>
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
               className="flex items-center gap-2.5 transition-all"
@@ -420,7 +412,7 @@ export default function DashboardLayout() {
           )}
 
           {personaPickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
-        </div>
+        </header>
 
         {/* Alerts */}
         {usageDetails?.show_warning && !usageDetails?.is_over_limit && (

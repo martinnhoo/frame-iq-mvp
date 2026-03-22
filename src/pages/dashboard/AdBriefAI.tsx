@@ -626,55 +626,6 @@ export default function AdBriefAI() {
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0e1118",...j,overflow:"hidden"}}>
 
-      {/* ── Header — unified single bar ── */}
-      <div style={{padding:"0 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:10,flexShrink:0,height:52,minHeight:52}}>
-        {/* Title + status inline */}
-        <div style={{display:"flex",alignItems:"center",gap:8,flex:1,minWidth:0}}>
-          <span style={{...j,fontSize:14,fontWeight:800,color:"#eef0f6",letterSpacing:"-0.02em",whiteSpace:"nowrap"}}>AdBrief AI</span>
-          <span style={{width:1,height:14,background:"rgba(255,255,255,0.12)",flexShrink:0}}/>
-          <span style={{
-            fontFamily:"'Inter',sans-serif",
-            fontSize:12,fontWeight:500,
-            color:contextReady&&metaConn?"#34d399":contextReady?"#fbbf24":"rgba(238,240,246,0.28)",
-            whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",
-          }}>
-            {contextReady&&metaConn
-              ?(lang==="pt"?"dados reais":lang==="es"?"datos reales":"live data")
-              :contextReady
-              ?(lang==="pt"?"conecte o Meta Ads":lang==="es"?"conecta Meta Ads":"connect Meta Ads")
-              :(lang==="pt"?"carregando...":lang==="es"?"cargando...":"loading...")}
-          </span>
-          {contextReady&&metaConn&&<div style={{width:6,height:6,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 6px #34d399",flexShrink:0}}/>}
-        </div>
-        {/* Platform pills — more visible */}
-        <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
-          {PLATFORMS.map(p=>{
-            const active=connections.includes(p.id);
-            return(
-              <button key={p.id} onClick={()=>!p.soon&&!active&&handleConnect(p.id,p.fn)} disabled={!!p.soon||connectingId===p.id}
-                style={{
-                  display:"flex",alignItems:"center",gap:5,padding:"5px 11px",borderRadius:20,
-                  border:`1px solid ${active?p.color+"60":"rgba(255,255,255,0.14)"}`,
-                  background:active?`${p.color}18`:"rgba(255,255,255,0.04)",
-                  cursor:p.soon||active?"default":"pointer",transition:"all 0.15s",flexShrink:0,
-                  opacity:p.soon?0.4:1,
-                }}>
-                <p.Icon active={active}/>
-                <span style={{fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,color:active?p.color:"rgba(238,240,246,0.55)",whiteSpace:"nowrap"}}>
-                  {connectingId===p.id?L.connecting:p.soon?L.soon:p.label.replace(" Ads","")}
-                </span>
-                {active&&<div style={{width:5,height:5,borderRadius:"50%",background:p.color,boxShadow:`0 0 5px ${p.color}`}}/>}
-              </button>
-            );
-          })}
-        </div>
-        {messages.length>0&&(
-          <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);}}
-            style={{background:"none",border:"1px solid rgba(255,255,255,0.10)",borderRadius:7,cursor:"pointer",color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:3,fontSize:11,padding:"5px 9px",fontFamily:"'Inter',sans-serif",flexShrink:0}}>
-            <RotateCcw size={10}/> {L.clear}
-          </button>
-        )}
-      </div>
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
         {messages.length===0&&(

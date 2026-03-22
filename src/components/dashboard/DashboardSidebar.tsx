@@ -140,8 +140,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm" onClick={onClose} />}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column" }}
+        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
         <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${SB.divider}`, flexShrink: 0 }}>
