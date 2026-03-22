@@ -34,6 +34,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     const { product, niche, market, platform, tone, user_id, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
     
@@ -72,7 +76,6 @@ Deno.serve(async (req) => {
     // Load user AI profile + loop context for personalization
     let userContext = '';
     if (user_id) {
-      const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
       const { data: profile } = await supabase.from('user_ai_profile')
         .select('top_performing_models, best_platforms, avg_hook_score, creative_style, ai_summary')
         .eq('user_id', user_id).maybeSingle();
@@ -101,13 +104,13 @@ Deno.serve(async (req) => {
 
     if (!ANTHROPIC_API_KEY) {
       // Mock response
-      const mockHooks = Array.from({ length: count }, (_, i) => ({
-        hook: `Hook variation ${i + 1} for ${product} — ${['Stop scrolling', 'This changed everything', 'Nobody talks about this', 'I tested this for 30 days', 'The truth about'][i % 5]} ${product}`,
+      const mockHooks = Array.from({ length: effectiveCount }, (_, i) => ({
+        hook: `Hook variation ${i + 1} for ${effectiveProduct} — ${['Stop scrolling', 'This changed everything', 'Nobody talks about this', 'I tested this for 30 days', 'The truth about'][i % 5]} ${effectiveProduct}`,
         hook_type: ['curiosity', 'social_proof', 'pattern_interrupt', 'direct_offer', 'emotional'][i % 5],
         predicted_score: Math.round((6 + Math.random() * 3) * 10) / 10,
         hook_strength: ['medium', 'high', 'high', 'viral', 'medium'][i % 5],
         platform_fit: [platform || 'TikTok'],
-        why: `This hook works because it creates immediate curiosity about ${product}.`,
+        why: `This hook works because it creates immediate curiosity about ${effectiveProduct}.`,
         cta_suggestion: 'Swipe up to learn more',
       }));
       return new Response(JSON.stringify({ hooks: mockHooks, mock_mode: true }), { headers: { ...cors, 'Content-Type': 'application/json' } });
