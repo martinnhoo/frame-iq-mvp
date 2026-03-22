@@ -391,6 +391,69 @@ export type Database = {
           },
         ]
       }
+      daily_snapshots: {
+        Row: {
+          account_id: string | null
+          account_name: string | null
+          active_ads: number | null
+          ai_insight: string | null
+          avg_ctr: number | null
+          created_at: string | null
+          date: string
+          id: string
+          losers_count: number | null
+          persona_id: string | null
+          raw_period: Json | null
+          top_ads: Json | null
+          total_clicks: number | null
+          total_spend: number | null
+          user_id: string
+          winners_count: number | null
+          yesterday_ctr: number | null
+          yesterday_spend: number | null
+        }
+        Insert: {
+          account_id?: string | null
+          account_name?: string | null
+          active_ads?: number | null
+          ai_insight?: string | null
+          avg_ctr?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          losers_count?: number | null
+          persona_id?: string | null
+          raw_period?: Json | null
+          top_ads?: Json | null
+          total_clicks?: number | null
+          total_spend?: number | null
+          user_id: string
+          winners_count?: number | null
+          yesterday_ctr?: number | null
+          yesterday_spend?: number | null
+        }
+        Update: {
+          account_id?: string | null
+          account_name?: string | null
+          active_ads?: number | null
+          ai_insight?: string | null
+          avg_ctr?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          losers_count?: number | null
+          persona_id?: string | null
+          raw_period?: Json | null
+          top_ads?: Json | null
+          total_clicks?: number | null
+          total_spend?: number | null
+          user_id?: string
+          winners_count?: number | null
+          yesterday_ctr?: number | null
+          yesterday_spend?: number | null
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           company: string
