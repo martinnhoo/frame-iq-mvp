@@ -411,7 +411,7 @@ export default function DashboardLayout() {
           <div style={{ flex: 1 }} />
 
           {/* User avatar — opens profile */}
-          <button onClick={() => setProfileOpen(true)}
+          <button onClick={() => navigate("/dashboard/settings")}
             style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden" }}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
