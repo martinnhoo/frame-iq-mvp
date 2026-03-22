@@ -1,76 +1,101 @@
+// send-welcome-email v3 — unified design system
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
+const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 type Lang = "en" | "pt" | "es" | "fr" | "de";
 
-const templates = {
-  en: {
-    subject: "Your AdBrief account is ready.",
-    preheader: "The AI that reads your ad account in real time and thinks like a senior strategist.",
-    greeting: "Hey", headline: "Welcome to AdBrief.",
-    body1: "You now have an AI connected to your ad account — Meta, TikTok, or Google — that answers any question about your campaigns using real data.",
-    body2: "Get started in 3 steps:",
-    s1t: "01 — Connect your ad account", s1d: "One click. No CSV, no spreadsheet, no manual setup. The AI reads your spend, CTR, CPM, and creatives in real time.",
-    s2t: "02 — Create a persona", s2d: "Define who you're advertising to. The AI uses this to respond with context specific to your market.",
-    s3t: "03 — Ask anything", s3d: "\"What's killing my ROAS this week?\" · \"Write 3 hooks for my best market\" · \"Which creative should I pause right now?\"",
-    cta: "Open AdBrief →", closing: "See you inside,",
-    ps: "Your 1-day free trial starts when you pick a plan. Full access to every feature, no limits. Cancel within 24 hours and pay nothing.",
-    footer: "You signed up at adbrief.pro",
-  },
+const T: Record<Lang, {
+  subject: string; preheader: string; greeting: string; headline: string;
+  sub: string; body: string; s1t: string; s1d: string; s2t: string; s2d: string;
+  s3t: string; s3d: string; cta: string; ps: string; footer: string;
+}> = {
   pt: {
     subject: "Sua conta no AdBrief está pronta.",
-    preheader: "A IA que lê sua conta de anúncios em tempo real e pensa como um gestor de tráfego sênior.",
-    greeting: "Oi", headline: "Bem-vindo ao AdBrief.",
-    body1: "Você agora tem acesso a uma IA que conecta com sua conta de anúncios — Meta, TikTok ou Google — e responde qualquer pergunta sobre suas campanhas com dados reais.",
-    body2: "Comece em 3 passos:",
-    s1t: "01 — Conecte sua conta de anúncios", s1d: "Um clique. Sem CSV, sem planilha, sem configuração. A AI lê spend, CTR, CPM e criativos em tempo real.",
-    s2t: "02 — Crie uma persona", s2d: "Defina quem você está anunciando. A AI usa isso para responder com contexto do seu mercado específico.",
-    s3t: "03 — Pergunte qualquer coisa", s3d: "\"O que está matando meu ROAS essa semana?\" · \"Escreva 3 hooks para meu melhor mercado\" · \"Qual criativo devo pausar agora?\"",
-    cta: "Abrir o AdBrief →", closing: "Até logo,",
-    ps: "Seu trial de 1 dia começa quando você escolher um plano. Acesso total a todos os recursos, sem limites. Cancele nas primeiras 24 horas e não paga nada.",
+    preheader: "A IA que sabe o que está acontecendo na sua conta de anúncios — agora.",
+    greeting: "Oi",
+    headline: "Bem-vindo ao AdBrief.",
+    sub: "A IA que conhece sua conta de anúncios.",
+    body: "Você tem acesso a uma IA que conecta com o seu Meta Ads e responde qualquer pergunta com dados reais — spend, CTR, criativos, o que escalar, o que pausar.",
+    s1t: "Conecte o Meta Ads",
+    s1d: "Um clique. A IA lê spend, CTR, criativos e frequência em tempo real.",
+    s2t: "Crie uma persona",
+    s2d: "Diga para quem você anuncia. A IA usa o contexto do seu mercado em cada resposta.",
+    s3t: "Pergunte qualquer coisa",
+    s3d: "\"O que está matando meu ROAS?\" · \"Qual criativo pausar?\" · \"Gere 3 hooks para minha conta\"",
+    cta: "Abrir o AdBrief →",
+    ps: "Trial de 1 dia começa quando você escolhe o plano. Acesso total. Cancele nas primeiras 24h e não paga nada.",
     footer: "Você se cadastrou em adbrief.pro",
   },
+  en: {
+    subject: "Your AdBrief account is ready.",
+    preheader: "The AI that knows what's happening in your ad account — right now.",
+    greeting: "Hey",
+    headline: "Welcome to AdBrief.",
+    sub: "The AI that knows your ad account.",
+    body: "You now have an AI connected to Meta Ads that answers any question with real data — spend, CTR, creatives, what to scale, what to pause.",
+    s1t: "Connect Meta Ads",
+    s1d: "One click. The AI reads spend, CTR, creatives and frequency in real time.",
+    s2t: "Create a persona",
+    s2d: "Tell it who you're targeting. It uses your market context in every answer.",
+    s3t: "Ask anything",
+    s3d: "\"What's killing my ROAS?\" · \"Which creative should I pause?\" · \"Write 3 hooks for my account\"",
+    cta: "Open AdBrief →",
+    ps: "1-day trial starts when you pick a plan. Full access. Cancel within 24 hours and pay nothing.",
+    footer: "You signed up at adbrief.pro",
+  },
   es: {
-    subject: "Bienvenido a AdBrief. Hagamos que tus anuncios conviertan más.",
-    preheader: "Conecta tu cuenta publicitaria y pregunta cualquier cosa sobre tus campañas.",
-    greeting: "Hola", headline: "Bienvenido a AdBrief.",
-    body1: "Tu cuenta está lista. Ahora tienes una IA que lee tus datos de Meta, TikTok o Google Ads en tiempo real — y piensa como un media buyer senior.",
-    body2: "Esto es lo que debes hacer primero:",
-    s1t: "01 — Conecta tu cuenta publicitaria", s1d: "Vincula Meta, TikTok o Google Ads en un clic. Sin CSV. Sin configuración manual.",
-    s2t: "02 — Crea una persona", s2d: "Dile a AdBrief a quién estás dirigiendo tus anuncios. Lo usa para darte respuestas específicas de tu mercado.",
-    s3t: "03 — Pregunta cualquier cosa", s3d: "\"¿Qué está matando mi ROAS?\" · \"Escribe 3 hooks para mi mercado\" · \"¿Qué anuncio debo pausar?\"",
-    cta: "Abrir AdBrief →", closing: "Hasta pronto,",
-    ps: "Tu prueba de 1 día comienza cuando eliges un plan. Todas las funciones, sin límites, cancela cuando quieras en las primeras 24 horas.",
+    subject: "Tu cuenta en AdBrief está lista.",
+    preheader: "La IA que sabe qué está pasando en tu cuenta de anuncios — ahora mismo.",
+    greeting: "Hola",
+    headline: "Bienvenido a AdBrief.",
+    sub: "La IA que conoce tu cuenta de anuncios.",
+    body: "Tienes acceso a una IA conectada a Meta Ads que responde cualquier pregunta con datos reales — gasto, CTR, creativos, qué escalar, qué pausar.",
+    s1t: "Conecta Meta Ads",
+    s1d: "Un clic. La IA lee gasto, CTR, creativos y frecuencia en tiempo real.",
+    s2t: "Crea una persona",
+    s2d: "Dile a quién te diriges. Usa el contexto de tu mercado en cada respuesta.",
+    s3t: "Pregunta lo que quieras",
+    s3d: "\"¿Qué está matando mi ROAS?\" · \"¿Qué creativo pausar?\" · \"Escribe 3 hooks para mi cuenta\"",
+    cta: "Abrir AdBrief →",
+    ps: "Prueba de 1 día comienza cuando eliges el plan. Acceso total. Cancela en las primeras 24h y no pagas nada.",
     footer: "Te registraste en adbrief.pro",
   },
   fr: {
-    subject: "Bienvenue sur AdBrief. Faisons performer vos publicités.",
-    preheader: "Connectez votre compte publicitaire et posez n'importe quelle question.",
-    greeting: "Bonjour", headline: "Bienvenue sur AdBrief.",
-    body1: "Votre compte est prêt. Vous avez maintenant une IA qui lit vos données Meta, TikTok ou Google Ads en temps réel — et pense comme un media buyer senior.",
-    body2: "Voici quoi faire en premier :",
-    s1t: "01 — Connectez votre compte publicitaire", s1d: "Liez Meta, TikTok ou Google Ads en un clic. Sans CSV. Sans configuration manuelle.",
-    s2t: "02 — Créez un persona", s2d: "Dites à AdBrief qui vous ciblez. Il utilise ça pour vous donner des réponses spécifiques à votre marché.",
-    s3t: "03 — Posez n'importe quelle question", s3d: "\"Qu'est-ce qui tue mon ROAS ?\" · \"Écris 3 hooks pour mon marché\" · \"Quelle pub mettre en pause ?\"",
-    cta: "Ouvrir AdBrief →", closing: "À bientôt,",
-    ps: "Votre essai d'1 jour commence quand vous choisissez un plan. Toutes les fonctionnalités, annulez à tout moment dans les 24 premières heures.",
+    subject: "Votre compte AdBrief est prêt.",
+    preheader: "L'IA qui sait ce qui se passe dans votre compte publicitaire — maintenant.",
+    greeting: "Bonjour",
+    headline: "Bienvenue sur AdBrief.",
+    sub: "L'IA qui connaît votre compte publicitaire.",
+    body: "Vous avez accès à une IA connectée à Meta Ads qui répond à toute question avec de vraies données — dépenses, CTR, créatifs, quoi scaler, quoi mettre en pause.",
+    s1t: "Connectez Meta Ads",
+    s1d: "Un clic. L'IA lit dépenses, CTR, créatifs et fréquence en temps réel.",
+    s2t: "Créez un persona",
+    s2d: "Dites-lui qui vous ciblez. Il utilise le contexte de votre marché dans chaque réponse.",
+    s3t: "Posez n'importe quelle question",
+    s3d: "\"Qu'est-ce qui tue mon ROAS ?\" · \"Quel créatif mettre en pause ?\" · \"Écris 3 hooks pour mon compte\"",
+    cta: "Ouvrir AdBrief →",
+    ps: "Essai d'1 jour commence quand vous choisissez le plan. Accès complet. Annulez dans les 24h et ne payez rien.",
     footer: "Vous vous êtes inscrit sur adbrief.pro",
   },
   de: {
-    subject: "Willkommen bei AdBrief. Lass deine Anzeigen härter arbeiten.",
-    preheader: "Verbinde dein Anzeigenkonto und frag alles über deine Kampagnen.",
-    greeting: "Hey", headline: "Willkommen bei AdBrief.",
-    body1: "Dein Konto ist bereit. Du hast jetzt eine KI, die deine Meta-, TikTok- oder Google Ads-Daten in Echtzeit liest — und wie ein Senior-Media-Buyer denkt.",
-    body2: "Das solltest du zuerst tun:",
-    s1t: "01 — Verbinde dein Anzeigenkonto", s1d: "Verknüpfe Meta, TikTok oder Google Ads mit einem Klick. Kein CSV. Kein manuelles Setup.",
-    s2t: "02 — Erstelle eine Persona", s2d: "Sag AdBrief, wen du targetierst. Es nutzt das für marktspezifische Antworten.",
-    s3t: "03 — Frag alles", s3d: "\"Was tötet meinen ROAS?\" · \"Schreib 3 Hooks für meinen Markt\" · \"Welche Anzeige pausieren?\"",
-    cta: "AdBrief öffnen →", closing: "Bis bald,",
-    ps: "Dein 1-Tage-Test beginnt, wenn du einen Plan wählst. Alle Funktionen, jederzeit innerhalb von 24 Stunden kündbar.",
+    subject: "Dein AdBrief-Konto ist bereit.",
+    preheader: "Die KI, die weiß, was in deinem Anzeigenkonto passiert — jetzt.",
+    greeting: "Hey",
+    headline: "Willkommen bei AdBrief.",
+    sub: "Die KI, die dein Anzeigenkonto kennt.",
+    body: "Du hast jetzt Zugang zu einer KI, die mit Meta Ads verbunden ist und jede Frage mit echten Daten beantwortet — Ausgaben, CTR, Creatives, was skalieren, was pausieren.",
+    s1t: "Meta Ads verbinden",
+    s1d: "Ein Klick. Die KI liest Ausgaben, CTR, Creatives und Frequenz in Echtzeit.",
+    s2t: "Persona erstellen",
+    s2d: "Sag ihr, wen du targetierst. Sie nutzt deinen Marktkontext in jeder Antwort.",
+    s3t: "Frag alles",
+    s3d: "\"Was tötet meinen ROAS?\" · \"Welches Creative pausieren?\" · \"Schreib 3 Hooks für mein Konto\"",
+    cta: "AdBrief öffnen →",
+    ps: "1-Tage-Test beginnt wenn du einen Plan wählst. Voller Zugang. Kündige in 24h und zahle nichts.",
     footer: "Du hast dich bei adbrief.pro registriert",
   },
 };
@@ -85,173 +110,132 @@ function detectLang(raw?: string | null): Lang {
   return "en";
 }
 
-function buildHtml(t: typeof templates["en"], firstName: string, appUrl: string): string {
+function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string {
+  const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
+  const M = "'Helvetica Neue',Arial,sans-serif";
+
+  const steps = [
+    { n: "01", title: t.s1t, desc: t.s1d },
+    { n: "02", title: t.s2t, desc: t.s2d },
+    { n: "03", title: t.s3t, desc: t.s3d },
+  ].map(s => `
+    <tr>
+      <td style="padding:0 0 16px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td width="32" valign="top" style="padding-top:2px;">
+            <span style="font-size:10px;font-weight:800;color:#0ea5e9;letter-spacing:0.05em;font-family:${M};">${s.n}</span>
+          </td>
+          <td valign="top">
+            <p style="margin:0 0 3px;font-size:13px;font-weight:700;color:#eef0f6;font-family:${F};">${s.title}</p>
+            <p style="margin:0;font-size:13px;color:rgba(238,240,246,0.50);line-height:1.55;font-family:${M};">${s.desc}</p>
+          </td>
+        </tr>
+        </table>
+      </td>
+    </tr>`).join("");
+
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${t.subject}</title></head>
-<body style="margin:0;padding:0;background:#060812;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;">
-<span style="display:none;max-height:0;overflow:hidden;">${t.preheader}</span>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#060812;">
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="color-scheme" content="dark"/>
+<title>${t.subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#080c12;font-family:${M};-webkit-font-smoothing:antialiased;">
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;</span>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#080c12;">
 <tr><td align="center" style="padding:48px 16px 64px;">
-<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
 
-<!-- Logo -->
-<tr><td style="padding-bottom:36px;">
-  <span style="font-size:24px;font-weight:800;letter-spacing:-0.04em;color:#fff;">ad</span><span style="font-size:24px;font-weight:800;letter-spacing:-0.04em;color:#0ea5e9;">brief</span>
-</td></tr>
+  <!-- LOGO -->
+  <tr><td style="padding-bottom:36px;">
+    <table cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="background:linear-gradient(135deg,#0ea5e9,#0284c7);width:34px;height:34px;border-radius:9px;text-align:center;vertical-align:middle;">
+        <span style="font-size:16px;font-weight:900;color:#fff;font-family:${F};display:block;line-height:34px;letter-spacing:-0.05em;">ab</span>
+      </td>
+      <td style="padding-left:10px;vertical-align:middle;">
+        <span style="font-size:19px;font-weight:800;color:#fff;letter-spacing:-0.04em;font-family:${F};">ad</span><span style="font-size:19px;font-weight:800;color:#0ea5e9;letter-spacing:-0.04em;font-family:${F};">brief</span>
+      </td>
+    </tr></table>
+  </td></tr>
 
-<!-- Divider -->
-<tr><td style="padding-bottom:36px;"><table width="100%" cellpadding="0" cellspacing="0"><tr>
-  <td width="33%" style="height:1px;background:transparent;"></td>
-  <td width="34%" style="height:1px;background:rgba(14,165,233,0.5);"></td>
-  <td width="33%" style="height:1px;background:transparent;"></td>
-</tr></table></td></tr>
+  <!-- CARD -->
+  <tr><td style="background:#0d1320;border-radius:20px;border:1px solid rgba(255,255,255,0.09);padding:40px;">
 
-<!-- Headline -->
-<tr><td style="padding-bottom:20px;">
-  <h1 style="margin:0;font-size:30px;font-weight:800;letter-spacing:-0.04em;line-height:1.1;color:#fff;">${t.headline}</h1>
-</td></tr>
+    <!-- Greeting -->
+    <p style="margin:0 0 6px;font-size:14px;color:rgba(238,240,246,0.45);font-family:${M};">${t.greeting} ${firstName},</p>
 
-<!-- Body -->
-<tr><td style="padding-bottom:10px;">
-  <p style="margin:0;font-size:16px;color:#e4e4e7;line-height:1.6;">${t.greeting} ${firstName},</p>
-</td></tr>
-<tr><td style="padding-bottom:24px;">
-  <p style="margin:0;font-size:15px;color:#a1a1aa;line-height:1.75;">${t.body1}</p>
-</td></tr>
-<tr><td style="padding-bottom:20px;">
-  <p style="margin:0;font-size:14px;font-weight:600;color:#e4e4e7;">${t.body2}</p>
-</td></tr>
+    <!-- Headline -->
+    <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.1;font-family:${F};">${t.headline}</h1>
+    <p style="margin:0 0 28px;font-size:14px;color:rgba(238,240,246,0.45);font-family:${M};">${t.sub}</p>
 
-<!-- Steps card -->
-<tr><td style="padding-bottom:32px;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(14,165,233,0.18);border-radius:14px;overflow:hidden;">
-    <tr><td style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(14,165,233,0.04);">
-      <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:0.1em;color:#0ea5e9;text-transform:uppercase;">${t.s1t}</p>
-      <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.s1d}</p>
+    <!-- Divider -->
+    <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:28px;"></div>
+
+    <!-- Body -->
+    <p style="margin:0 0 28px;font-size:15px;color:rgba(238,240,246,0.70);line-height:1.70;font-family:${M};">${t.body}</p>
+
+    <!-- Steps -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.07);padding:20px;">
+      <tr><td style="padding:0 0 14px;">
+        <p style="margin:0;font-size:11px;font-weight:700;color:rgba(238,240,246,0.30);letter-spacing:0.10em;text-transform:uppercase;font-family:${F};">COMO COMEÇAR</p>
+      </td></tr>
+      ${steps}
+    </table>
+
+    <!-- CTA -->
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td align="center">
+      <a href="${appUrl}/dashboard/ai" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:12px;font-family:${F};letter-spacing:-0.01em;box-shadow:0 8px 32px rgba(14,165,233,0.30);">${t.cta}</a>
     </td></tr>
-    <tr><td style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.06);">
-      <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:0.1em;color:#06b6d4;text-transform:uppercase;">${t.s2t}</p>
-      <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.s2d}</p>
-    </td></tr>
-    <tr><td style="padding:20px 24px;">
-      <p style="margin:0 0 5px;font-size:10px;font-weight:700;letter-spacing:0.1em;color:#34d399;text-transform:uppercase;">${t.s3t}</p>
-      <p style="margin:0;font-size:13px;color:#71717a;line-height:1.6;">${t.s3d}</p>
-    </td></tr>
-  </table>
-</td></tr>
+    </table>
 
-<!-- CTA -->
-<tr><td style="padding-bottom:40px;text-align:center;">
-  <a href="${appUrl}/dashboard/loop/ai" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#000;font-size:15px;font-weight:800;text-decoration:none;border-radius:12px;letter-spacing:-0.01em;">${t.cta}</a>
-</td></tr>
+    <!-- PS -->
+    <p style="margin:28px 0 0;font-size:12px;color:rgba(238,240,246,0.30);line-height:1.6;text-align:center;font-family:${M};">${t.ps}</p>
 
-<!-- Closing -->
-<tr><td style="padding-bottom:6px;"><p style="margin:0;font-size:15px;color:#a1a1aa;">${t.closing}</p></td></tr>
-<tr><td style="padding-bottom:32px;"><p style="margin:0;font-size:15px;font-weight:700;color:#fff;">The AdBrief team</p></td></tr>
+  </td></tr>
 
-<!-- PS box -->
-<tr><td style="padding-bottom:40px;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(14,165,233,0.05);border:1px solid rgba(14,165,233,0.15);border-radius:10px;">
-    <tr><td style="padding:14px 18px;">
-      <p style="margin:0;font-size:12px;color:#71717a;line-height:1.7;"><strong style="color:#a1a1aa;">P.S.</strong> — ${t.ps}</p>
-    </td></tr>
-  </table>
-</td></tr>
-
-<!-- Footer -->
-<tr><td style="border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;text-align:center;">
-  <p style="margin:0 0 4px;font-size:11px;color:#3f3f46;">${t.footer}</p>
-  <p style="margin:0;font-size:11px;color:#27272a;">© 2026 AdBrief · adbrief.pro</p>
-</td></tr>
+  <!-- FOOTER -->
+  <tr><td style="padding:24px 4px 0;text-align:center;">
+    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.18);font-family:${M};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(255,255,255,0.25);text-decoration:none;">adbrief.pro</a></p>
+  </td></tr>
 
 </table>
 </td></tr>
 </table>
-</body></html>`;
+</body>
+</html>`;
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const RESEND = Deno.env.get("RESEND_API_KEY") ?? "";
+    const FROM   = Deno.env.get("RESEND_FROM_EMAIL") ?? "AdBrief <hello@adbrief.pro>";
+    const APP    = Deno.env.get("APP_URL") ?? "https://adbrief.pro";
 
-    const { user_id, language, first_name, email: emailOverride, pain_point } = await req.json();
-
-    let toEmail = emailOverride;
-    let firstName = first_name || "there";
-
-    if (user_id) {
-      const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
-      if (!toEmail) toEmail = authUser?.user?.email;
-      if (firstName === "there" || !first_name) {
-        const meta = authUser?.user?.user_metadata;
-        firstName = meta?.full_name?.split(" ")[0] || meta?.name?.split(" ")[0]
-          || toEmail?.split("@")[0] || "there";
-      }
-    }
-
-    if (!toEmail) {
-      return new Response(JSON.stringify({ error: "Email not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { email, name, language } = await req.json();
+    if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 400, headers: cors });
 
     const lang = detectLang(language);
-    let t = { ...templates[lang] };
-    const appUrl = Deno.env.get("APP_URL") || "https://www.adbrief.pro";
-    // Personalize subject based on pain_point from onboarding
-    const painSubjects: Record<string, Record<string, string>> = {
-      roas_drop:       { en: "Your ROAS fix starts here — AdBrief", pt: "Seu ROAS vai melhorar — AdBrief", es: "Tu ROAS mejora aquí — AdBrief" },
-      creative_fatigue:{ en: "Fresh creatives on demand — AdBrief",  pt: "Criativos frescos quando precisar — AdBrief", es: "Creativos frescos cuando los necesites — AdBrief" },
-      hook_writing:    { en: "Write hooks that stop the scroll — AdBrief", pt: "Escreva hooks que param o scroll — AdBrief", es: "Escribe hooks que detienen el scroll — AdBrief" },
-      scaling:         { en: "Scale without killing performance — AdBrief", pt: "Escale sem destruir a performance — AdBrief", es: "Escala sin destruir el rendimiento — AdBrief" },
-      briefing:        { en: "Brief your team in 30 seconds — AdBrief", pt: "Briefar sua equipe em 30 segundos — AdBrief", es: "Haz briefing en 30 segundos — AdBrief" },
-      analysis:        { en: "Your campaigns analyzed in seconds — AdBrief", pt: "Suas campanhas analisadas em segundos — AdBrief", es: "Tus campañas analizadas en segundos — AdBrief" },
-    };
-    const langCode = lang.slice(0,2);
-    if (pain_point && painSubjects[pain_point]) {
-      const subj = painSubjects[pain_point][langCode] || painSubjects[pain_point]["en"];
-      if (subj) t = { ...t, subject: subj };
-    }
-    const html = buildHtml(t, firstName, appUrl);
-
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY not set — skipping send");
-      return new Response(JSON.stringify({ success: false, error: "RESEND_API_KEY not set" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const t = T[lang];
+    const firstName = (name || "").split(" ")[0] || (lang === "pt" ? "gestor" : lang === "es" ? "gestor" : "there");
+    const html = buildHtml(t, firstName, APP);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "AdBrief <hello@adbrief.pro>",
-        to: [toEmail],
-        subject: t.subject,
-        html,
-      }),
+      headers: { "Authorization": `Bearer ${RESEND}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: FROM, to: [email], subject: t.subject, html }),
     });
 
-    const body = await res.json();
-    if (!res.ok) throw new Error(`Resend: ${JSON.stringify(body)}`);
-
-    return new Response(JSON.stringify({ success: true, email: toEmail, lang, id: body.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const data = await res.json();
+    return new Response(JSON.stringify({ ok: res.ok, ...data }), {
+      headers: { ...cors, "Content-Type": "application/json" }
     });
-
-  } catch (err: any) {
-    console.error("send-welcome-email:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
-
-// fixed: let t, deploy 202603211609

@@ -268,6 +268,11 @@ Analise os dados da conta e retorne JSON com:
 
   await sb.from('daily_snapshots' as any).upsert(snapshot, { onConflict: 'user_id,persona_id,date' });
 
+  // Send daily intelligence email
+  try {
+    await sb.functions.invoke('send-daily-intelligence-email', { body: { user_id } });
+  } catch (e) { console.error('email dispatch error:', e); }
+
   // ── Rebuild ai_profile ────────────────────────────────────────────────────
   const { data: patterns } = await sb.from('learned_patterns').select('is_winner, avg_ctr, insight_text, confidence')
     .eq('user_id', user_id).order('confidence', { ascending: false }).limit(20);
