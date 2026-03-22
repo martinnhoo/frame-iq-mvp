@@ -125,7 +125,7 @@ function Section({ label, content, onCopy, copied }: { label: string; content: s
 }
 
 export default function CompetitorDecoder() {
-  const { selectedPersona } = useOutletContext<DashboardContext>();
+  const { selectedPersona, user } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const lang = (["pt","es","en"].includes(language) ? language : "pt") as "pt"|"es"|"en";
   const t = L[lang];
@@ -187,6 +187,13 @@ export default function CompetitorDecoder() {
       if (error) throw error;
       if (data?.error_type) { setResult({ _urlError: true, _message: data.message } as any); return; }
       setResult(data);
+      // Capture learning — fire and forget
+      if (data?.industry && user?.id) {
+        supabase.functions.invoke("capture-learning", { body: {
+          user_id: user.id, event_type: "competitor_analyzed",
+          data: { industry: data.industry, hook_score: data.hook_score, hook_type: data.hook_type, your_move: data.your_move, steal_this: data.steal_this }
+        }}).catch(() => {});
+      }
     } catch { toast.error(lang === "pt" ? "Análise falhou — tente novamente" : "Analysis failed"); }
     finally { setLoading(false); }
   };

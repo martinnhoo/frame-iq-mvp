@@ -135,7 +135,7 @@ Generate ${effectiveCount} unique, high-converting hook variations for:
 - Primary Platform: ${platform || 'TikTok/Reels'}
 - Tone: ${tone || 'aggressive, urgent, direct'}
 ${angle ? `- Angle/Focus: ${angle}` : ''}
-${context ? `- Campaign Context (USE THIS): ${context}` : ''}
+${context ? `- Context/Promo/Learned patterns (USE THIS to personalize): ${context}` : ''}
 
 Rules for hooks:
 - Each must stop the scroll in the FIRST 3 SECONDS
@@ -177,4 +177,4 @@ Return ONLY valid JSON (no markdown):
     return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603251400
+// redeploy 202603261300

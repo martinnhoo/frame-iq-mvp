@@ -107,8 +107,16 @@ export default function HookGenerator() {
         },
       });
       if (error) throw error;
-      setHooks(data.hooks || []);
+      const generatedHooks = data.hooks || [];
+      setHooks(generatedHooks);
       setMockMode(data.mock_mode);
+      // Capture learning — fire and forget
+      if (user?.id && generatedHooks.length) {
+        supabase.functions.invoke("capture-learning", { body: {
+          user_id: user.id, event_type: "hooks_generated",
+          data: { hooks: generatedHooks, product, niche, market, platform, tone: style }
+        }}).catch(() => {});
+      }
       if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY to get real AI hooks");
     } catch {
       toast.error("Hook generation failed");

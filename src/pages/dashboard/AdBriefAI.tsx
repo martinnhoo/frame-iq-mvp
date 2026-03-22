@@ -538,6 +538,13 @@ export default function AdBriefAI() {
             const nb=[...(m.blocks||[])];
             if(fn==="generate-hooks"&&data?.hooks?.length){
               nb[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:data.hooks.map((h:any)=>typeof h==="string"?h:h.hook||h.text||JSON.stringify(h))};
+              // Capture learning — fire and forget
+              if(user?.id){
+                supabase.functions.invoke("capture-learning",{body:{
+                  user_id:user.id,event_type:"hooks_generated",
+                  data:{ hooks:data.hooks, product:params.product, niche:params.niche, market:params.market, platform:params.platform, tone:params.tone, context:params.context }
+                }}).catch(()=>{});
+              }
             }else if(fn==="generate-script"&&(data?.script||data?.content)){
               nb[bi]={type:"insight",title:lang==="pt"?"Roteiro":"Script",content:data.script||data.content};
             }else if(fn==="generate-brief"&&(data?.brief||data?.content)){
@@ -617,7 +624,18 @@ export default function AdBriefAI() {
   };
 
   const handleFeedback=(id:number,type:"like"|"dislike",blocks:Block[])=>{
-    setFeedback(f=>({...f,[id]:f[id]===type?null:type}));
+    const prev=feedback[id];
+    if(prev===type)return; // already set
+    setFeedback(f=>({...f,[id]:type}));
+    // Fire-and-forget: capture learning
+    if(user?.id){
+      const msg=messages.find(m=>m.id===id);
+      supabase.functions.invoke("capture-learning",{body:{
+        user_id:user.id,
+        event_type:"chat_feedback",
+        data:{ blocks, feedback:type, message_text:msg?.userText||"" }
+      }}).catch(()=>{});
+    }
   };
 
   const send=async(text?:string)=>{

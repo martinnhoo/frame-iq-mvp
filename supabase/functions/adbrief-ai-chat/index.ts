@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
       { data: platformConns },
       { data: adsImports },
       { data: personaRow },
+      { data: learnedPatterns },
     ] = await Promise.all([
       supabase.from("analyses")
         .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
@@ -176,6 +177,17 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
     }).filter(Boolean).join("\n");
 
+    // Learned patterns — what the product knows about this user
+    const patterns = (learnedPatterns || []) as any[];
+    const winners = patterns.filter(p => p.is_winner && p.confidence > 0.2);
+    const competitors = patterns.filter(p => p.pattern_key.startsWith('competitor_'));
+    const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
+    const learnedCtx = [
+      winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
+      perfPatterns.length ? `PERFORMANCE HISTÓRICA:\n${perfPatterns.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+    ].filter(Boolean).join("\n\n");
+
     // ── 4b. Fetch live Meta Ads data ─────────────────────────────────────────
     let liveMetaData = "";
     const metaConn = (connections as any[]).find((c: any) => c.platform === "meta");
@@ -252,6 +264,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
+      learnedCtx ? `=== APRENDIZADO DA CONTA ===\n${learnedCtx}\n(Use esses padrões para personalizar hooks, scripts e recomendações)` : "",
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
       (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
@@ -338,6 +351,7 @@ Triggers: "gere hooks", "me dá hooks", "cria hooks", "hooks para", "preciso de 
 → Se o usuário disse "3 hooks" use count:3. Default: 5.
 → SEMPRE use tool_call com tool:"hooks" — NUNCA emita um bloco hooks com items vazio.
 → O sistema vai executar a edge function e retornar os hooks reais.
+→ Se há padrões vencedores no contexto (APRENDIZADO DA CONTA), passe-os no campo "context" do tool_call para a edge function usar como referência.
 
 SCRIPT → tool_call tool:"script": "escreve roteiro", "write script", "me faz um roteiro"
 BRIEF → tool_call tool:"brief": "brief", "me faz um brief", "cria um brief"
@@ -440,4 +454,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603251400
+// redeploy 202603261300
