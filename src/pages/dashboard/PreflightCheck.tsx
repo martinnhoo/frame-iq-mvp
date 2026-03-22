@@ -396,7 +396,7 @@ export default function PreflightCheck() {
               <textarea
                 value={script}
                 onChange={e => setScript(e.target.value)}
-                placeholder={{t("pf_script_ph")}}
+                placeholder={t("pf_script_ph")}
                 rows={7}
                 className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-colors leading-relaxed"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", ...mono }}

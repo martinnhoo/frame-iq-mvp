@@ -970,7 +970,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     pf_tofu: "认知阶段", pf_mofu: "考量阶段", pf_bofu: "转化阶段",
     pf_platform: "平台", pf_market: "市场", pf_duration: "时长", pf_format: "格式",
     pf_product: "产品/品牌", pf_product_ph: "例：Afun Bet、iGaming应用...",
-    pf_compliance_label: "合规备注", pf_compliance_ph: "例：避免"赌场"等词...",
+    pf_compliance_label: "合规备注", pf_compliance_ph: "例：避免'赌场'等词...",
     pf_optional: "可选", pf_hook_ph: "观众听到的第一句话...", pf_cta_ph: "例：立即游戏，点击链接...",
     pf_transcribing: "转录中 + 分析中...",
     pf_drop_video: "将视频拖放到此处", pf_drop_sub: "MP4、MOV、AVI、WebM · 提取音频并分析",
