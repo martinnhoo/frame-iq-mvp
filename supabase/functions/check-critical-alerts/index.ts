@@ -375,10 +375,29 @@ Deno.serve(async (req) => {
 
         if (emailRes.ok) {
           alertsFired++;
-          // Mark: sent today + each individual alert deduped for this week
           const newFlags: Record<string, boolean> = { ...flags, [dailyKey]: true };
           sorted.forEach(a => { newFlags[a.dedup_key] = true; });
           await sb.from("profiles").update({ usage_alert_flags: newFlags } as any).eq("id", conn.user_id);
+        }
+
+        // Save alerts to account_alerts table — regardless of email success
+        // These persist until user explicitly dismisses them in the chat
+        const alertRows = sorted.map(a => ({
+          user_id: conn.user_id,
+          type: a.type,
+          urgency: a.urgency === "🔴" ? "high" : "medium",
+          ad_name: a.ad,
+          campaign_name: a.campaign,
+          detail: a.detail,
+          kpi_label: null as string | null,
+          kpi_value: null as string | null,
+          action_suggestion: a.urgency === "🔴"
+            ? "Abrir AdBrief e agir agora"
+            : "Verificar oportunidade",
+          emailed_at: emailRes.ok ? new Date().toISOString() : null,
+        }));
+        if (alertRows.length > 0) {
+          await sb.from("account_alerts" as any).insert(alertRows).catch(() => {});
         }
 
       } catch (e) {
@@ -396,4 +415,4 @@ Deno.serve(async (req) => {
     });
   }
 });
-// redeploy 202603270100
+// redeploy 202603270400

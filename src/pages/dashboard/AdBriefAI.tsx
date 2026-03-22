@@ -573,6 +573,8 @@ export default function AdBriefAI() {
   const SK="adbrief_ai_v4";
 
   const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(sessionStorage.getItem(SK)||"[]")}catch{return[]}});
+  const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
+  const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const [contextReady,setContextReady]=useState(false);
@@ -727,6 +729,33 @@ export default function AdBriefAI() {
       });
     });
   },[messages]);
+
+  // ── Load persistent account alerts ────────────────────────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    const loadAlerts = async () => {
+      const { data } = await supabase
+        .from("account_alerts" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .is("dismissed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (data?.length) setAccountAlerts(data);
+    };
+    loadAlerts();
+  }, [user?.id]);
+
+  // ── Dismiss an alert permanently ───────────────────────────────────────────
+  const dismissAlert = async (alertId: string) => {
+    setAlertsDismissing(prev => new Set([...prev, alertId]));
+    await supabase
+      .from("account_alerts" as any)
+      .update({ dismissed_at: new Date().toISOString() } as any)
+      .eq("id", alertId);
+    setAccountAlerts(prev => prev.filter((a: any) => a.id !== alertId));
+    setAlertsDismissing(prev => { const s = new Set(prev); s.delete(alertId); return s; });
+  };
 
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
   const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean) => {
@@ -1119,6 +1148,53 @@ export default function AdBriefAI() {
 
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
+        
+        {/* ── Persistent Account Alerts — survive chat clear ── */}
+        {accountAlerts.length > 0 && (
+          <div style={{maxWidth:680,margin:"0 auto 16px",display:"flex",flexDirection:"column",gap:8}}>
+            {accountAlerts.map((alert:any) => {
+              const isHigh = alert.urgency === "high";
+              const isDismissing = alertsDismissing.has(alert.id);
+              return (
+                <div key={alert.id} style={{
+                  padding:"12px 14px",borderRadius:14,
+                  background: isHigh ? "rgba(248,113,113,0.07)" : "rgba(251,191,36,0.07)",
+                  border: `1px solid ${isHigh ? "rgba(248,113,113,0.25)" : "rgba(251,191,36,0.25)"}`,
+                  display:"flex",alignItems:"flex-start",gap:10,
+                  opacity: isDismissing ? 0.4 : 1,
+                  transition:"opacity 0.2s"
+                }}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "🔴" : "🟡"}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{margin:"0 0 2px",fontSize:11,fontWeight:700,color: isHigh ? "#f87171" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
+                      {alert.type?.replace(/_/g," ")}
+                    </p>
+                    {alert.ad_name && (
+                      <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                        {alert.ad_name}
+                        {alert.campaign_name && <span style={{fontWeight:400,color:"rgba(238,240,246,0.4)",fontSize:11}}> · {alert.campaign_name}</span>}
+                      </p>
+                    )}
+                    <p style={{margin:0,fontSize:12,color:"rgba(238,240,246,0.65)",lineHeight:1.5,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                      {alert.detail}
+                    </p>
+                    <p style={{margin:"4px 0 0",fontSize:10,color:"rgba(238,240,246,0.3)",fontFamily:"'DM Mono',monospace"}}>
+                      {new Date(alert.created_at).toLocaleString(lang==="pt"?"pt-BR":"en-US",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => dismissAlert(alert.id)}
+                    disabled={isDismissing}
+                    style={{flexShrink:0,background:"none",border:"none",cursor:"pointer",color:"rgba(238,240,246,0.25)",fontSize:16,padding:"2px 4px",lineHeight:1}}
+                    title={lang==="pt"?"Dispensar":"Dismiss"}>
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {messages.length===0&&proactiveLoading&&(
           <div style={{maxWidth:680,margin:"24px auto 0"}}>
             <ThinkingIndicator lang={lang} variant="chat" label={
@@ -1250,7 +1326,7 @@ export default function AdBriefAI() {
         {/* Input */}
         <div className="chat-input-area" style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
           {messages.length>0&&(
-            <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+            <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);}} // alerts survive clear title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
               style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
