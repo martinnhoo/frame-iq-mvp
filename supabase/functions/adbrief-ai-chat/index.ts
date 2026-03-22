@@ -370,9 +370,16 @@ Return ONLY a valid JSON array. Zero text outside the array.
 
 Block schemas:
 { "type": "insight"|"action"|"warning"|"off_topic", "title": "max 6 words", "content": "max 2 sentences, plain text, no markdown" }
-{ "type": "hooks", "title": "...", "content": "...", "items": ["hook 1 text", "hook 2 text", "hook 3 text"] }
 { "type": "dashboard", "title": "...", "content": "...", "metrics": [{ "label": "...", "value": "...", "delta": "...", "trend": "up|down|flat" }], "chart": { "type": "bar", "labels": [...], "values": [...], "colors": [...] } }
-{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "platform": "...", "niche": "...", "market": "...", "tone": "...", "angle": "..." } }
+{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }
+
+IMPORTANT — tool_call for hooks:
+- "product": extract from user message (product name, brand, service)
+- "niche": extract from user message (iGaming, fitness, fintech, etc.)
+- "market": extract from user message (BR, MX, US) or infer from language
+- "context": copy ALL promo/offer/date info from the message (ex: "promo até 25/03, cupom 10% OFF primeiro mês")
+- "count": number of hooks requested (default 5)
+- NEVER emit type "hooks" — always use tool_call
 { "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "...", "target_type": "campaign|adset|ad", "target_name": "...", "value": "..." } }
 { "type": "navigate", "route": "/dashboard/...", "cta": "..." }
 
@@ -433,4 +440,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603231530
+// redeploy 202603251400

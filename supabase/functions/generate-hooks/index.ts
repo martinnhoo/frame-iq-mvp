@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
   try {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const { product, niche, market, platform, tone, user_id, persona_id, count = 10, persona_context, funnel_stage = "tofu" } = await req.json();
+    const { product, niche, market, platform, tone, user_id, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
     
     // ── Cap hook count by plan ─────────────────────────────────────────────
     let effectiveCount = count;
@@ -130,6 +130,8 @@ Generate ${effectiveCount} unique, high-converting hook variations for:
 - Target Market: ${market || 'global'}
 - Primary Platform: ${platform || 'TikTok/Reels'}
 - Tone: ${tone || 'aggressive, urgent, direct'}
+${angle ? `- Angle/Focus: ${angle}` : ''}
+${context ? `- Campaign Context (USE THIS): ${context}` : ''}
 
 Rules for hooks:
 - Each must stop the scroll in the FIRST 3 SECONDS
@@ -171,3 +173,4 @@ Return ONLY valid JSON (no markdown):
     return new Response(JSON.stringify({ error: String(error) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
+// redeploy 202603251400

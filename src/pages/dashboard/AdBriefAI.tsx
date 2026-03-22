@@ -681,12 +681,15 @@ export default function AdBriefAI() {
           const p=c.tool_params||{};
           const fn=c.tool==="hooks"?"generate-hooks":c.tool==="script"?"generate-script":"generate-brief";
           const params={...p,user_id:user.id,persona_id:selectedPersona?.id||null,
-            market:p.market||lang.toUpperCase(),
+            product:p.product||p.niche||"iGaming",
+            niche:p.niche||p.product||"iGaming",
+            market:p.market||lang.toUpperCase()||"BR",
             platform:p.platform||"Meta Feed",
             tone:p.tone||"Aggressive / Urgent",
             count:p.count||5,
+            context:p.context||p.angle||"",
+            angle:p.angle||"",
           };
-          // Execute immediately — mark as pending, useEffect will resolve
           return{...c,type:"tool_call" as const,_pendingTool:fn,_toolParams:params};
         }
         return c;
