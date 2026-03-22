@@ -231,9 +231,74 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
     }).filter(Boolean).join("\n");
 
+    // ── 4b. Fetch live Meta Ads data if token available ───────────────────────
+    let liveMetaData = "";
+    const metaConn = (connections as any[]).find((c: any) => c.platform === "meta");
+    if (metaConn) {
+      try {
+        // Get token for this connection
+        const { data: tokenRow } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id)
+          .eq("platform", "meta")
+          .eq("status", "active")
+          .then(async (r: any) => {
+            const all = r.data || [];
+            if (persona_id) {
+              const specific = all.find((c: any) => c.persona_id === persona_id);
+              if (specific) return { data: specific };
+            }
+            const global = all.find((c: any) => !c.persona_id);
+            return { data: global || null };
+          });
+
+        if (tokenRow?.access_token) {
+          const token = tokenRow.access_token;
+          const accs = (tokenRow.ad_accounts as any[]) || [];
+          const selId = tokenRow.selected_account_id || accs[0]?.id;
+          const activeAcc = accs.find((a: any) => a.id === selId) || accs[0];
+
+          if (activeAcc?.id) {
+            const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
+            const until = new Date().toISOString().split("T")[0];
+            const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+
+            const [adsRes, campaignsRes] = await Promise.allSettled([
+              fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective&limit=20&access_token=${token}`),
+            ]);
+
+            const adsData = adsRes.status === "fulfilled" ? await adsRes.value.json() : null;
+            const campaignsData = campaignsRes.status === "fulfilled" ? await campaignsRes.value.json() : null;
+
+            if (adsData?.data?.length) {
+              const adLines = adsData.data.slice(0, 10).map((ad: any) => {
+                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
+                const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
+                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} cpc=$${parseFloat(ad.cpc||0).toFixed(2)} freq=${ad.frequency||"?"} reach=${ad.reach||"?"} purchases=${purchases}${hookRate?` hook_rate=${((parseInt(hookRate)/parseInt(ad.impressions||1))*100).toFixed(1)}%`:""}`;
+              }).join("\n");
+
+              liveMetaData += `LIVE META ADS DATA (last 30 days) — Account: ${activeAcc.name || activeAcc.id}\nAD PERFORMANCE (top by spend):\n${adLines}\n`;
+            }
+
+            if (campaignsData?.data?.length) {
+              const campLines = campaignsData.data.slice(0, 10).map((c: any) =>
+                `  ${c.name}: status=${c.status} budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "?"} objective=${c.objective}`
+              ).join("\n");
+              liveMetaData += `CAMPAIGNS:\n${campLines}\n`;
+            }
+          }
+        }
+      } catch (_e) {
+        // Silent — live data is bonus, not required
+      }
+    }
+
     const richContext = [
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
+      liveMetaData || "",
       `ANALYSES: ${analyses.length} total | avg hook score: ${avgScore ?? "—"}/10`,
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",

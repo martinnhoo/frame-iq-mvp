@@ -105,10 +105,16 @@ export default function OAuthCallback() {
   }, []);
 
   const saveSelectedAccount = async (uid: string, accountId: string, pid: string | null) => {
-    await supabase.from("platform_connections" as any)
+    const query = supabase.from("platform_connections" as any)
       .update({ selected_account_id: accountId })
       .eq("user_id", uid)
       .eq("platform", platform!);
+    // Scope to the correct row: persona-specific or global
+    if (pid) {
+      await query.eq("persona_id", pid);
+    } else {
+      await query.is("persona_id", null);
+    }
   };
 
   const handleSelect = async (accountId: string) => {
