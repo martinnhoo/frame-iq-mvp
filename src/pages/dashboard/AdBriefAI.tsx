@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, Sparkles, RotateCcw, Brain,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
@@ -852,15 +853,9 @@ export default function AdBriefAI() {
           </div>
         ))}
 
-        {loading&&(
-          <div style={{maxWidth:680,margin:"0 auto 14px",display:"flex",gap:7,alignItems:"center"}}>
-            <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Sparkles size={8} color="#fff"/>
-            </div>
-            <div style={{display:"flex",gap:3}}>
-              {[0,1,2].map(d=><div key={d} style={{width:5,height:5,borderRadius:"50%",background:"#0ea5e9",animation:`pulse 1.2s ease-in-out ${d*0.2}s infinite`}}/>)}
-            </div>
-          </div>
+        {loading&&<ThinkingIndicator lang={lang} variant="chat"/>}
+        {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
+          <ThinkingIndicator lang={lang} variant="chat" label={lang==="pt"?"Gerando":lang==="es"?"Generando":"Generating"}/>
         )}
         <div ref={bottomRef} style={{height:8}}/>
       </div>

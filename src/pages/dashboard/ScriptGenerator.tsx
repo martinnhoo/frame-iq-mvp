@@ -1,3 +1,4 @@
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -225,6 +226,8 @@ export default function ScriptGenerator() {
           {loading ? dt("sg_generating") : dt("sg_generate")}
         </Button>
       </div>
+
+      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? "Escrevendo roteiro" : language === "es" ? "Escribiendo guión" : "Writing script"} />}
 
       {result?.scripts && (
         <div className="space-y-4">

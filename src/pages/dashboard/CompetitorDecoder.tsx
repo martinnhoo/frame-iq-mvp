@@ -1,3 +1,4 @@
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -219,6 +220,8 @@ export default function CompetitorDecoder(){
           {lang==="pt"?"Setor e nicho são detectados automaticamente pela IA.":lang==="es"?"El sector y nicho son detectados automáticamente por la IA.":"Sector and niche are auto-detected by the AI."}
         </p>
       </div>
+
+      {loading&&<ThinkingIndicator lang={lang} variant="tool" label={lang==="pt"?"Decodificando anúncio":lang==="es"?"Decodificando anuncio":"Decoding ad"} />}
 
       {result&&(
         <div style={{display:"flex",flexDirection:"column"as const,gap:12}}>

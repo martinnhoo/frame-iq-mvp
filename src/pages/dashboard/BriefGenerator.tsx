@@ -1,3 +1,4 @@
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -192,6 +193,8 @@ export default function BriefGenerator() {
           {loading ? "Generating brief..." : "Generate Creative Brief"}
         </Button>
       </div>
+
+      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? "Criando brief criativo" : language === "es" ? "Creando brief creativo" : "Creating creative brief"} />}
 
       {b && (
         <div className="space-y-4">

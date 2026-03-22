@@ -1,3 +1,4 @@
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -541,6 +542,8 @@ export default function PreflightCheck() {
             </button>
           </div>
         </div>
+
+        {loading && <ThinkingIndicator lang="pt" variant="tool" label="Analisando criativo" />}
 
         {/* ── Results ── */}
         {result && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { Zap, ChevronDown, ChevronUp, Copy, Check, Loader2, Sparkles, RefreshCw, TrendingUp, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
@@ -248,6 +249,9 @@ export default function HookGenerator() {
         </button>
       </div>
       </div>
+
+      {/* Thinking indicator while loading */}
+      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? `Gerando ${hookCount} hooks` : language === "es" ? `Generando ${hookCount} hooks` : `Generating ${hookCount} hooks`} />}
 
       {/* Results */}
       {hooks.length > 0 && (
