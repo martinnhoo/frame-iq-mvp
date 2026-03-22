@@ -224,6 +224,7 @@ Deno.serve(async (req) => {
       { data: learnedPatterns },
       { data: dailySnapshots },
       { data: preflightHistory },
+      { data: accountAlerts },
     ] = await Promise.all([
       // 1. Recent analyses — last 15, full result for context
       supabase.from("analyses")
@@ -289,6 +290,14 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
         .limit(10)
+        .then((r: any) => r.error ? { data: [] } : r),
+      // 10. Active account alerts — undismissed, sent to AI as memory
+      (supabase as any).from("account_alerts")
+        .select("type, urgency, ad_name, campaign_name, detail, kpi_label, kpi_value, action_suggestion, created_at")
+        .eq("user_id", user_id)
+        .is("dismissed_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5)
         .then((r: any) => r.error ? { data: [] } : r),
     ]);
 
@@ -550,6 +559,17 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
       })(),
       pfCtx || "",
       (aiProfile as any)?.ai_summary ? `PERFIL DO USUÁRIO: ${(aiProfile as any).ai_summary}` : "",
+      (() => {
+        const alerts = (accountAlerts || []) as any[];
+        if (!alerts.length) return "";
+        const lines = alerts.map((a: any) => {
+          const when = a.created_at ? new Date(a.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+          const ad = a.ad_name ? `"${a.ad_name}"` : "";
+          const camp = a.campaign_name ? ` (${a.campaign_name})` : "";
+          return `  [${a.urgency?.toUpperCase() || "HIGH"}] ${a.detail}${ad ? ` — Ad: ${ad}${camp}` : ""}${a.action_suggestion ? ` → Ação: ${a.action_suggestion}` : ""}${when ? ` (${when})` : ""}`;
+        }).join("\n");
+        return `=== ALERTAS ATIVOS DA CONTA (não dispensados pelo usuário) ===\n${lines}\nEsses alertas foram gerados automaticamente. Se o usuário perguntar sobre performance ou problemas, referencie esses alertas diretamente.`;
+      })(),
       (() => {
         const notes = (aiProfile as any)?.pain_point as string | null;
         if (!notes) return "";
