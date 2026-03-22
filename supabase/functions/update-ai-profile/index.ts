@@ -1,5 +1,4 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,13 +94,19 @@ Deno.serve(async (req) => {
     // ── Anthropic AI analysis (if enough data) ───────────────────────────────
     if (ANTHROPIC_API_KEY && (analyses?.length || 0) >= 3) {
       try {
-        const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-        const msg = await client.messages.create({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 512,
-          messages: [{
-            role: 'user',
-            content: `You are a creative intelligence analyst for a performance marketing SaaS. Analyze this user's creative patterns and feedback to generate personalized insights.
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 512,
+            messages: [{
+              role: 'user',
+              content: `You are a creative intelligence analyst for a performance marketing SaaS. Analyze this user's creative patterns and feedback to generate personalized insights.
 
 DATA:
 - Analyses: ${analyses?.length || 0} | Boards: ${boards?.length || 0}
@@ -115,9 +120,16 @@ DATA:
 
 Return ONLY valid JSON (no markdown):
 {"summary":"2-3 sentence personalized insight about their creative style and patterns","recommendations":["specific actionable tip 1","specific actionable tip 2","specific actionable tip 3"],"creative_style":"brief label e.g. Performance UGC Specialist"}`
-          }]
+            }]
+          })
         });
-        const text = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').replace(/```json|```/g, '').trim();
+
+        if (!response.ok) {
+          throw new Error(`Claude API error: ${response.status}`);
+        }
+
+        const msg = await response.json();
+        const text = (msg.content?.[0]?.type === 'text' ? msg.content[0].text : '').replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(text);
         aiSummary = parsed.summary;
         aiRecommendations = parsed.recommendations || [];

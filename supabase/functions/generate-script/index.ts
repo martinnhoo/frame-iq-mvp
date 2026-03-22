@@ -1,6 +1,4 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-const createSvcClient = createClient;
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +23,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     // ── Auth header verification (prevents user_id spoofing) ────────────────
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -33,9 +36,11 @@ Deno.serve(async (req) => {
     const verified_user_id = authUser.id;
     // ─────────────────────────────────────────────────────────────────────────
     const { product, offer, audience, format, duration, market, angle, extra_context, user_id } = await req.json();
+    const effectiveUserId = verified_user_id;
+
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
-    if (user_id) {
-      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
+    if (effectiveUserId) {
+      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', effectiveUserId).maybeSingle();
       const plan = prof?.plan || 'free';
       const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
       if (!allowed) {
@@ -52,7 +57,7 @@ Deno.serve(async (req) => {
 
     // Fetch accumulated creative context from the loop
     let loopContext = "";
-    if (user_id) {
+    if (effectiveUserId) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
         const loopRes = await fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
@@ -61,7 +66,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
           },
-          body: JSON.stringify({ action: "get_context", user_id }),
+          body: JSON.stringify({ action: "get_context", user_id: effectiveUserId }),
         });
         if (loopRes.ok) {
           const loopData = await loopRes.json();
@@ -72,7 +77,13 @@ Deno.serve(async (req) => {
       } catch { /* loop context is optional */ }
     }
 
-    const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const systemPrompt = `You are a senior performance creative director with 12 years writing scripts for paid social — iGaming, DTC, fintech, apps. Your scripts consistently outperform AI-generated content because they feel human, specific, and platform-native.
 
@@ -121,14 +132,31 @@ Return ONLY a JSON object — no markdown, no explanation:
 
 Each script needs 8–15 lines alternating VO/on-screen/visual. Vary the angle dramatically between the 3 scripts.`;
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 3000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 3000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
     });
 
-    const raw = response.content[0].type === "text" ? response.content[0].text : "{}";
+    if (!response.ok) {
+      const errorText = await response.text();
+      return new Response(JSON.stringify({ error: `Claude API error: ${response.status}`, details: errorText }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const responseData = await response.json();
+    const raw = responseData.content?.[0]?.type === "text" ? responseData.content[0].text : "{}";
     let result;
     try {
       result = JSON.parse(raw.replace(/```json|```/g, "").trim());
