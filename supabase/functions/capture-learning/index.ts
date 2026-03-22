@@ -70,6 +70,62 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case 'preflight_run': {
+        // Track preflight score trends per platform/market/format combination
+        const { score, verdict, platform, market, format, hook_score, hook_type, top_fixes } = data;
+        if (!score) break;
+        const key = `preflight_${(platform||'tiktok').toLowerCase()}_${(market||'BR').toLowerCase()}`;
+        const { data: ex } = await (sb as any).from('learned_patterns')
+          .select('id, sample_size, variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+        const entries = ((ex?.variables as any)?.entries || []);
+        entries.unshift({ score, verdict, format, hook_score, hook_type, fixes: top_fixes, date: new Date().toISOString().split('T')[0] });
+        const avgScore = entries.slice(0,10).reduce((s: number, e: any) => s + (e.score||0), 0) / Math.min(entries.length, 10);
+        const isGettingBetter = entries.length >= 3 && entries[0].score > entries[2].score;
+        if (ex) {
+          await (sb as any).from('learned_patterns').update({
+            sample_size: (ex.sample_size||0)+1,
+            confidence: Math.min(1, ((ex.sample_size||0)+1) / 8),
+            insight_text: `Preflight ${platform}/${market}: score médio ${avgScore.toFixed(0)}/100${isGettingBetter ? ' — melhorando' : ''} (${(ex.sample_size||0)+1} runs)`,
+            last_updated: new Date().toISOString(),
+            variables: { entries: entries.slice(0, 20) }
+          }).eq('id', ex.id);
+        } else {
+          await (sb as any).from('learned_patterns').insert({
+            user_id, pattern_key: key, sample_size: 1, confidence: 0.15,
+            insight_text: `Preflight ${platform}/${market}: primeiro run, score ${score}/100, veredicto ${verdict}`,
+            variables: { entries: entries.slice(0, 20) }
+          });
+        }
+        break;
+      }
+
+      case 'meta_action_executed': {
+        // Every real Meta action (pause/enable/budget change) becomes a learning signal
+        const { action, target_name, target_type, target_id, value, executed_at } = data;
+        if (!action) break;
+        const key = `action_${action.toLowerCase()}_${(target_type||'ad').toLowerCase()}`;
+        const { data: ex } = await (sb as any).from('learned_patterns')
+          .select('id, sample_size, variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+        const entries = ((ex?.variables as any)?.entries || []);
+        entries.unshift({ name: target_name?.slice(0,60), id: target_id, value, date: executed_at?.split('T')[0] || new Date().toISOString().split('T')[0] });
+        if (ex) {
+          await (sb as any).from('learned_patterns').update({
+            sample_size: (ex.sample_size||0) + 1,
+            confidence: Math.min(1, ((ex.sample_size||0) + 1) / 5),
+            insight_text: `${action} executado ${(ex.sample_size||0)+1}x — último: "${target_name?.slice(0,40)}"`,
+            last_updated: new Date().toISOString(),
+            variables: { entries: entries.slice(0, 20) }
+          }).eq('id', ex.id);
+        } else {
+          await (sb as any).from('learned_patterns').insert({
+            user_id, pattern_key: key, sample_size: 1, confidence: 0.2,
+            insight_text: `${action} executado pela primeira vez em ${target_type}: "${target_name?.slice(0,40)}"`,
+            variables: { entries: entries.slice(0, 20) }
+          });
+        }
+        break;
+      }
+
       case 'performance_reported': {
         const { hook_type, ctr, roas, platform, market, hook_text } = data;
         if (!ctr && !roas) break;
@@ -109,4 +165,4 @@ Deno.serve(async (req) => {
   }
 });
 
-// redeploy 202603261600
+// redeploy 202603262100

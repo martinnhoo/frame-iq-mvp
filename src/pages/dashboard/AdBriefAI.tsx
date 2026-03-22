@@ -861,10 +861,34 @@ export default function AdBriefAI() {
       setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha",content:data?.error||error?.message||"Tente novamente."}]}]);
       return;
     }
+
+    // ── Feed capture-learning with real action outcomes ──────────────────────
+    // Every executed Meta action (pause/enable/budget) becomes a performance signal
+    if(user?.id && block.meta_action && block.meta_action !== "list_campaigns"){
+      supabase.functions.invoke("capture-learning",{body:{
+        user_id: user.id,
+        event_type: "meta_action_executed",
+        data: {
+          action: block.meta_action,
+          target_name: block.target_name || block.title || "",
+          target_type: block.target_type || "ad",
+          target_id: block.target_id || null,
+          value: block.value || null,
+          success: true,
+          executed_at: new Date().toISOString(),
+        }
+      }}).catch(()=>{});
+    }
+
     if(data?.campaigns){
       const rows=(data.campaigns as any[]).map((c:any)=>[c.name,c.effective_status||c.status,c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
       const id=Date.now();
       setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"dashboard",title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}}]}]);
+    } else if(data?.success && block.meta_action){
+      // Show success confirmation
+      const id=Date.now();
+      const label = data.message || (block.meta_action === "pause" ? (lang==="pt"?"Pausado com sucesso":"Paused successfully") : block.meta_action === "enable" ? (lang==="pt"?"Ativado com sucesso":"Activated successfully") : (lang==="pt"?"Ação executada":"Action executed"));
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"action",title:lang==="pt"?"Pronto":"Done",content:label}]}]);
     }
   };
 

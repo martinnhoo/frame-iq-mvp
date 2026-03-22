@@ -328,7 +328,7 @@ export default function PreflightCheck() {
         setScript((data as { transcript?: string }).transcript || "");
       }
       toast.success(t("pf_toast_done"));
-      // Save to history (fire and forget — table may not exist yet, fails silently)
+      // Save to history + feed learning engine
       if (user?.id) {
         (supabase as any).from("preflight_results").insert({
           user_id: user.id,
@@ -340,6 +340,24 @@ export default function PreflightCheck() {
           result_json: data,
           created_at: new Date().toISOString(),
         }).then(() => loadHistory());
+
+        // Feed capture-learning so AI profile improves with each preflight run
+        supabase.functions.invoke("capture-learning", {
+          body: {
+            user_id: user.id,
+            event_type: "preflight_run",
+            data: {
+              score: data.score,
+              verdict: data.verdict,
+              platform,
+              market,
+              format,
+              hook_score: data.estimated_hook_score,
+              hook_type: data.hook_analysis?.type,
+              top_fixes: data.top_fixes?.slice(0, 3),
+            }
+          }
+        }).catch(() => {});
       }
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     } catch (err: unknown) {

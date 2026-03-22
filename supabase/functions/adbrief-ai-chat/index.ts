@@ -133,28 +133,31 @@ Deno.serve(async (req) => {
       { data: personaRow },
       { data: learnedPatterns },
       { data: dailySnapshots },
+      { data: preflightHistory },
     ] = await Promise.all([
+      // 1. Recent analyses — last 15, full result for context
       supabase.from("analyses")
         .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
         .eq("user_id", user_id).eq("status", "completed")
         .order("created_at", { ascending: false }).limit(15),
+      // 2. AI profile
       supabase.from("user_ai_profile" as any)
         .select("*").eq("user_id" as any, user_id).maybeSingle(),
+      // 3. Creative memory
       supabase.from("creative_memory" as any)
         .select("hook_type, hook_score, platform, notes, created_at" as any)
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(20),
+      // 4. Platform connections (persona-scoped)
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at")
         .eq("user_id", user_id).eq("status", "active")
         .then(async (r: any) => {
           if (r.error?.code === "42P01") return { data: [], error: null };
-          // If persona_id given, prefer persona-specific connections, fall back to global (null)
           const all = r.data || [];
           if (persona_id) {
             const specific = all.filter((c: any) => c.persona_id === persona_id);
             const global = all.filter((c: any) => c.persona_id === null);
-            // Merge: specific takes priority per platform
             const merged: any[] = [...specific];
             global.forEach((g: any) => {
               if (!merged.find((s: any) => s.platform === g.platform)) merged.push(g);
@@ -163,13 +166,34 @@ Deno.serve(async (req) => {
           }
           return { data: all.filter((c: any) => c.persona_id === null || !c.persona_id) };
         }),
+      // 5. Ads data imports
       supabase.from("ads_data_imports" as any)
         .select("platform, result, created_at" as any)
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(3),
+      // 6. Persona row — WAS MISSING QUERY
       persona_id
         ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      // 7. Learned patterns — WAS MISSING QUERY — winners + perf + competitor patterns
+      (supabase as any).from("learned_patterns")
+        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables")
+        .eq("user_id", user_id)
+        .order("confidence", { ascending: false })
+        .limit(30),
+      // 8. Daily snapshots — last 7 days of Meta intelligence
+      (supabase as any).from("daily_snapshots")
+        .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
+        .eq("user_id", user_id)
+        .order("date", { ascending: false })
+        .limit(7),
+      // 9. Preflight history — last 10 runs to understand creative quality trend
+      (supabase as any).from("preflight_results")
+        .select("created_at, score, verdict, platform, market, format")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false })
+        .limit(10)
+        .then((r: any) => r.error ? { data: [] } : r),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -305,6 +329,24 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       }
     }
 
+    // ── Preflight history context ─────────────────────────────────────────────
+    const pfHistory = (preflightHistory || []) as any[];
+    const pfCtx = (() => {
+      if (!pfHistory.length) return "";
+      const avgScore = (pfHistory.reduce((s: number, r: any) => s + (r.score || 0), 0) / pfHistory.length).toFixed(0);
+      const verdicts = pfHistory.reduce((acc: any, r: any) => { acc[r.verdict] = (acc[r.verdict]||0)+1; return acc; }, {});
+      const lastRun = pfHistory[0];
+      const trend = pfHistory.length >= 3
+        ? pfHistory.slice(0,3).map((r: any) => r.score).join(" → ")
+        : null;
+      return [
+        `PRE-FLIGHT HISTORY (${pfHistory.length} runs):`,
+        `  Avg score: ${avgScore}/100 | Verdicts: ${Object.entries(verdicts).map(([v,c]) => `${v}:${c}`).join(", ")}`,
+        lastRun ? `  Last run: score ${lastRun.score} | ${lastRun.verdict} | ${lastRun.platform} / ${lastRun.market} / ${lastRun.format}` : "",
+        trend ? `  Score trend (last 3): ${trend}` : "",
+      ].filter(Boolean).join("\n");
+    })();
+
     const richContext = [
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
@@ -341,6 +383,7 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
           snaps.length > 1 ? `\nHISTÓRICO:\n${snaps.slice(0,7).map((s:any)=>`  ${s.date}: CTR ${((s.avg_ctr||0)*100).toFixed(2)}% / R$${(s.total_spend||0).toFixed(0)} / ${s.active_ads||0} ads`).join('\n')}` : '',
         ].filter(Boolean).join('\n');
       })(),
+      pfCtx || "",
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
       (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
@@ -542,4 +585,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603261900
+// redeploy 202603262100
