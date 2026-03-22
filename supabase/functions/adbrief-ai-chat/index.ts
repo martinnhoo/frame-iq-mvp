@@ -1,5 +1,4 @@
-// adbrief-ai-chat v9 — persona_id scoped platform connections
-import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
+// adbrief-ai-chat v10 — Lovable AI Gateway
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
