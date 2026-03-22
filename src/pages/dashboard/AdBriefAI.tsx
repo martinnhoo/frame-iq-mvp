@@ -634,10 +634,10 @@ export default function AdBriefAI() {
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0e1118",...j,overflow:"hidden"}}>
 
       {/* ── Header ── */}
-      <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+      <div style={{padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:8,flexShrink:0,flexWrap:"wrap"}}>
         {/* Logo premium */}
-        <div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(14,165,233,0.25)",flexShrink:0}}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(14,165,233,0.25)",flexShrink:0}}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M9 22V12h6v10" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -648,32 +648,31 @@ export default function AdBriefAI() {
             {contextReady&&metaConn?`● ${lang==="pt"?"Pronto — dados reais":lang==="es"?"Listo — datos reales":"Ready — live data"}`:contextReady?`○ ${lang==="pt"?"Conecte o Meta Ads":lang==="es"?"Conecta Meta Ads":"Connect Meta Ads"}`:`○ ${lang==="pt"?"Carregando...":lang==="es"?"Cargando...":"Loading..."}`}
           </p>
         </div>
-        {/* Platform pills */}
-        <div style={{display:"flex",gap:5,alignItems:"center"}}>
+        {/* Platform pills — scrollable on mobile */}
+        <div style={{display:"flex",gap:4,alignItems:"center",overflowX:"auto",maxWidth:"100%",scrollbarWidth:"none"}}>
           {PLATFORMS.map(p=>{
             const active=connections.includes(p.id);
             return(
               <button key={p.id} onClick={()=>!p.soon&&!active&&handleConnect(p.id,p.fn)} disabled={!!p.soon||connectingId===p.id}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,border:`1px solid ${active?`${p.color}35`:"rgba(255,255,255,0.10)"}`,background:active?`${p.color}10`:"transparent",cursor:p.soon||active?"default":"pointer",transition:"all 0.15s"}}>
+                style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:16,border:`1px solid ${active?`${p.color}35`:"rgba(255,255,255,0.10)"}`,background:active?`${p.color}10`:"transparent",cursor:p.soon||active?"default":"pointer",transition:"all 0.15s",flexShrink:0}}>
                 <p.Icon active={active}/>
-                <span style={{...m,fontSize:10,fontWeight:600,color:active?p.color:"rgba(255,255,255,0.3)"}}>
+                <span style={{...m,fontSize:10,fontWeight:600,color:active?p.color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>
                   {connectingId===p.id?L.connecting:p.soon?L.soon:p.label.replace(" Ads","")}
                 </span>
-                {active&&<div style={{width:5,height:5,borderRadius:"50%",background:p.color,boxShadow:`0 0 4px ${p.color}`}}/>}
+                {active&&<div style={{width:4,height:4,borderRadius:"50%",background:p.color}}/>}
               </button>
             );
           })}
         </div>
         {messages.length>0&&(
           <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);}}
-            style={{background:"none",border:"1px solid rgba(255,255,255,0.07)",borderRadius:7,cursor:"pointer",color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center",gap:4,fontSize:11,padding:"5px 9px",...m,flexShrink:0}}>
+            style={{background:"none",border:"1px solid rgba(255,255,255,0.10)",borderRadius:7,cursor:"pointer",color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center",gap:3,fontSize:11,padding:"4px 8px",...m,flexShrink:0}}>
             <RotateCcw size={10}/> {L.clear}
           </button>
         )}
       </div>
-
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px 20px 8px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
         {messages.length===0&&(
           <div style={{maxWidth:620,margin:"16px auto 0"}}>
             {!hasData ? (
@@ -798,9 +797,9 @@ export default function AdBriefAI() {
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 20px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
+      <div style={{padding:"8px 12px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
         {/* Toolbar */}
-        <div className="chat-input-area" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",flexWrap:"wrap"}}>
+        <div className="chat-input-area" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",overflowX:"auto",flexWrap:"nowrap",scrollbarWidth:"none",WebkitOverflowScrolling:"touch" as any}}>
           {TOOLS.map(tool=>{
             const isDashActive = activeTool==="dashboard";
             return(
