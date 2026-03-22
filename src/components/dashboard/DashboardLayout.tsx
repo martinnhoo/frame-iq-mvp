@@ -224,7 +224,10 @@ export default function DashboardLayout() {
     // Safety timeout — if init takes >6s on mobile, force show dashboard
     const timeout = setTimeout(() => { setLoading(false); }, 6000);
     init().finally(() => clearTimeout(timeout));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => { if (!session) navigate("/login"); });
+    // Only redirect on explicit sign-out events, NOT during initial hydration
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") navigate("/login");
+    });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
 
