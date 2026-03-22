@@ -1,4 +1,4 @@
-// decode-competitor v4 — densidade máxima, zero fluff, idioma do anúncio
+// decode-competitor v5 — idioma forçado, score 0-1000 calibrado, detecção de URL
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -13,66 +13,94 @@ Deno.serve(async (req) => {
     const { ad_text, observation, persona_context, ui_language } = await req.json();
     if (!ad_text) return new Response(JSON.stringify({ error: 'ad_text required' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-    // Determine response language based on ui_language or ad content
-    const langInstructions: Record<string, string> = {
-      pt: 'Respond in Brazilian Portuguese (PT-BR). All labels, descriptions, hooks, strategy — everything in PT-BR.',
-      es: 'Respond in Spanish. All labels, descriptions, hooks, strategy — everything in Spanish.',
-      en: 'Respond in English. All labels, descriptions, hooks, strategy — everything in English.',
-    };
-    const langInstruction = langInstructions[ui_language || 'pt'] || langInstructions.pt;
+    const lang = ui_language || 'pt';
 
-    const systemPrompt = `You are a performance marketing strategist who has spent $100M+ on ads.
-You decode competitor ads with extreme precision and zero fluff.
+    // Detect if input is just a URL (can't extract content)
+    const isUrl = /^https?:\/\/\S+$/.test(ad_text.trim());
+    if (isUrl) {
+      const msgs: Record<string, string> = {
+        pt: 'Não consigo acessar o conteúdo do vídeo diretamente pelo link. Cole a transcrição, legenda ou copy do anúncio aqui — funciona com qualquer texto do vídeo.',
+        es: 'No puedo acceder al contenido del video directamente por el enlace. Pega la transcripción, subtítulos o copy del anuncio aquí.',
+        en: 'Cannot access video content directly from the URL. Paste the transcript, captions or ad copy here.',
+      };
+      return new Response(JSON.stringify({
+        error_type: 'url_not_supported',
+        message: msgs[lang] || msgs.pt,
+      }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
 
-LANGUAGE RULE: ${langInstruction}
-The ad content may be in any language — your ANALYSIS AND OUTPUT must be in the language specified above.
+    // Language maps
+    const LANG_NAMES: Record<string, string> = { pt: 'Português Brasileiro (PT-BR)', es: 'Español', en: 'English' };
+    const langName = LANG_NAMES[lang] || LANG_NAMES.pt;
 
-RULES:
-1. Be surgical — every sentence must add value. No filler.
-2. Identify industry/niche FROM THE AD CONTENT itself — never assume.
-3. If the input looks like a URL (starts with http), respond noting it cannot be processed directly and ask for the transcript or copy.
-4. If observation is given, weight your entire analysis toward that question.
-5. Return ONLY valid JSON. No markdown.`;
+    // Score rubric — fixed calibration for consistency
+    const SCORE_RUBRIC = `
+HOOK SCORE (0–1000) — use this exact rubric every time for calibration:
+0–200:   Weak. Generic, no scroll-stop, no emotion, no specificity. Forgettable.
+201–400: Below average. One hook element present but weak execution. Won't stop scroll.
+401–550: Average. Functional but predictable. Seen before. Competes, doesn't win.
+551–700: Good. Clear hook, one strong trigger, relevant to audience. Gets clicks.
+701–850: Strong. Scroll-stopping, emotionally charged, platform-native, specific. Top 20%.
+851–950: Viral potential. Pattern interrupt + strong emotion + immediate clarity. Top 5%.
+951–1000: Exceptional. Rare. Combines: unexpected + relatable + platform-perfect + urgency. Hall of fame.
 
-    const userPrompt = `Decode this competitor ad:
+Calibration anchors:
+- "Clique aqui para saber mais" = 150
+- "Esse app mudou minha vida" = 420
+- "90% das pessoas perdem dinheiro apostando. Você é 1 deles?" = 720
+- "Proibido para menores: o método que corretores não querem que você veja" = 840
+- "Fiz R$4.800 em 3 dias. Aqui está exatamente o que eu fiz." = 890`;
 
-AD CONTENT:
+    const systemPrompt = `IDIOMA OBRIGATÓRIO: ${langName}
+Você É um analista de performance que gastou mais de R$50M em anúncios.
+TODAS as suas respostas DEVEM estar em ${langName} — sem exceção.
+Não escreva NADA em inglês. Nem labels, nem valores, nem campos do JSON.
+Se o anúncio está em outro idioma, sua análise continua em ${langName}.
+
+${SCORE_RUBRIC}
+
+Retorne APENAS JSON válido. Zero texto fora do JSON.`;
+
+    const userPrompt = `Decodifique este anúncio concorrente:
+
+CONTEÚDO DO ANÚNCIO:
 ${ad_text}
 
-${observation ? `USER FOCUS: ${observation}` : ''}
-${persona_context ? `MY ACCOUNT CONTEXT: ${persona_context}` : ''}
+${observation ? `FOCO DO USUÁRIO: ${observation}` : ''}
+${persona_context ? `CONTEXTO DA MINHA CONTA: ${persona_context}` : ''}
 
-Return exactly this JSON (all string values in the specified language):
+Retorne EXATAMENTE este JSON (todos os valores em ${langName}):
 {
-  "industry": "<auto-detected: be specific, e.g. 'iGaming/Cassino', 'E-commerce moda feminina', 'SaaS B2B'>",
-  "market": "<detected market/country from language, currency, slang>",
+  "industry": "<setor identificado do conteúdo — seja específico: 'iGaming/Cassino BR', 'E-commerce Moda Feminina', 'SaaS B2B RH'>",
+  "market": "<mercado detectado pelo idioma/moeda/gíria: 'Brasil', 'México', 'EUA'>",
   "mismatch_detected": false,
   "mismatch_reason": "",
-  
-  "hook_score": <1.0-10.0>,
-  "hook_type": "<type in detected language, e.g. 'Prova Social', 'Curiosidade', 'Oferta Direta'>",
-  "hook_formula": "<exact formula extracted from first 3 seconds>",
-  "hook_dissection": "<2 sentences: why this hook works or fails — be direct>",
-  
-  "format": "<UGC|Depoimento|Tutorial|Problema-Solução|Antes-Depois|Promo|Demo|Talking Head|Slideshow|Nativo>",
-  "target_audience": "<1 sentence: age, intent, pain state>",
-  "emotional_triggers": ["<trigger>", "<trigger>", "<trigger>"],
-  
-  "strengths": ["<strength + why it works>"],
-  "weaknesses": ["<weakness + what's missing>"],
-  
+
+  "hook_score": <número inteiro 0-1000 usando o rubric acima>,
+  "hook_score_label": "<ex: 'Acima da média', 'Viral potential', 'Abaixo da média'>",
+  "hook_type": "<tipo em ${langName}: 'Prova Social', 'Curiosidade', 'Dor', 'Oferta Direta', 'Interrupção de Padrão', 'Pergunta', 'Emocional'>",
+  "hook_formula": "<fórmula extraída dos primeiros 3 segundos>",
+  "hook_dissection": "<2 frases: por que este hook funciona ou falha — seja direto e específico>",
+
+  "format": "<formato em ${langName}: 'UGC', 'Depoimento', 'Tutorial', 'Problema-Solução', 'Antes-Depois', 'Promo', 'Demo', 'Talking Head', 'Slideshow', 'Nativo'>",
+  "target_audience": "<1 frase: faixa etária, intenção, estado de consciência>",
+  "emotional_triggers": ["<gatilho>", "<gatilho>", "<gatilho>"],
+
+  "strengths": ["<ponto forte + por que funciona>"],
+  "weaknesses": ["<fraqueza + o que está faltando>"],
+
   "threat_level": "<low|medium|high|critical>",
-  "counter_strategy": "<3 sentences max: concrete tactics to beat this ad. Name hook angle, trigger, format.>",
-  
-  "steal_worthy": ["<element + how to adapt>"],
-  
+  "counter_strategy": "<máximo 3 frases: táticas concretas para superar este anúncio. Nomeie o ângulo de hook, gatilho emocional e formato a usar.>",
+
+  "steal_worthy": ["<elemento + como adaptar>"],
+
   "ready_hooks": [
-    { "hook": "<copy-paste ready hook>", "angle": "<3-5 words: what makes it different>" },
-    { "hook": "<different emotional trigger>", "angle": "<angle>" },
-    { "hook": "<pattern interrupt approach>", "angle": "<angle>" }
+    { "hook": "<hook pronto para usar — copiar e colar>", "angle": "<3-5 palavras: o que torna diferente>" },
+    { "hook": "<gatilho emocional diferente>", "angle": "<ângulo>" },
+    { "hook": "<abordagem de interrupção de padrão>", "angle": "<ângulo>" }
   ],
-  
-  "immediate_action": "<1 concrete action to take TODAY. Specific, not vague.>"
+
+  "immediate_action": "<1 ação concreta para fazer HOJE. Específica, não vaga.>"
 }`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -80,7 +108,7 @@ Return exactly this JSON (all string values in the specified language):
       headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 2200,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
       }),
@@ -96,4 +124,4 @@ Return exactly this JSON (all string values in the specified language):
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603251600
+// redeploy 202603251700

@@ -11,7 +11,7 @@ interface ReadyHook { hook: string; type: string; angle: string; }
 interface DecodeResult {
   mismatch_detected?: boolean; mismatch_reason?: string;
   framework: string; hook_type: string; hook_formula?: string;
-  hook_score: number; hook_strength: string; hook_dissection?: string; pacing?: string;
+  hook_score: number; hook_score_label?: string; hook_strength: string; hook_dissection?: string; pacing?: string;
   emotional_triggers: string[]; persuasion_tactics: string[];
   target_audience: string; creative_model: string;
   strengths: string[]; weaknesses: string[];
@@ -140,6 +140,11 @@ export default function CompetitorDecoder(){
         body:{ad_text:txt,observation:observation.trim()||undefined,persona_context:personaCtx,ui_language:lang},
       });
       if(error)throw error;
+      // URL not supported — show helpful message
+      if(data?.error_type==="url_not_supported"){
+        toast.error(data.message||"Cole o texto do anúncio, não o link.");
+        setLoading(false);return;
+      }
       setResult(data);
       if(data?.mismatch_detected&&data?.mismatch_reason){toast.warning(data.mismatch_reason.slice(0,100));}
     }catch{toast.error(lang==="pt"?"Decodificação falhou":lang==="es"?"Decodificación fallida":"Decoding failed");}
@@ -247,11 +252,15 @@ export default function CompetitorDecoder(){
             <div style={{padding:"14px 16px",borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)"}}>
               <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:6}}>{t.hook_score}</p>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <span style={{...F,fontSize:26,fontWeight:900,color:result.hook_score>=8?"#34d399":result.hook_score>=6?"#fbbf24":"#f87171",lineHeight:1}}>
-                  {result.hook_score?.toFixed(1)}<span style={{fontSize:12,color:"rgba(238,240,246,0.25)"}}>/10</span>
-                </span>
+                <div>
+                  <span style={{...F,fontSize:28,fontWeight:900,color:result.hook_score>=750?"#34d399":result.hook_score>=500?"#fbbf24":"#f87171",lineHeight:1}}>
+                    {result.hook_score}
+                  </span>
+                  <span style={{...M,fontSize:11,color:"rgba(238,240,246,0.25)"}}>/1000</span>
+                  {(result as any).hook_score_label&&<p style={{...M,fontSize:10,color:"rgba(238,240,246,0.40)",margin:"2px 0 0"}}>{(result as any).hook_score_label}</p>}
+                </div>
                 <div style={{flex:1,height:4,borderRadius:99,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,#a78bfa,${result.hook_score>=8?"#34d399":result.hook_score>=6?"#fbbf24":"#f87171"})`,width:`${Math.min(100,result.hook_score*10)}%`,transition:"width 0.6s ease"}}/>
+                  <div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,#a78bfa,${result.hook_score>=750?"#34d399":result.hook_score>=500?"#fbbf24":"#f87171"})`,width:`${Math.min(100,result.hook_score/10)}%`,transition:"width 0.6s ease"}}/>
                 </div>
               </div>
             </div>
