@@ -521,7 +521,7 @@ export default function AdBriefAI() {
       error_msg:data?.error||error?.message||null,
       executed_at:new Date().toISOString(),
     };
-    supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{}).catch(()=>{});
+    supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{});
 
     if(error||data?.error){
       const id=Date.now();

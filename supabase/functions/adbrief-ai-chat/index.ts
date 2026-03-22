@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
       const dashMonth = usageRow?.dashboard_month || "";
 
       const uiLang = user_language || "en";
+      if (planKey === "maker") {
         // 1 per month
         if (dashMonth === monthKey && dashCount > 0) {
           const msgs: Record<string, { title: string; content: string }> = {
@@ -466,7 +467,7 @@ ABSOLUTE FORMAT RULES:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  } catch (e: any) {
+  } catch (e) {
     console.error("adbrief-ai-chat error:", e);
     return new Response(JSON.stringify({ error: e.message || "internal_error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
