@@ -448,29 +448,45 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
-function ProactiveBlock({ block }: { block: Block }) {
+function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; onSend: (s: string) => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
   const hour = new Date().getHours();
   const timeEmoji = hour < 12 ? "🌅" : hour < 18 ? "☀️" : "🌙";
 
+  const quickActions: Record<string, string[][]> = {
+    pt: [["📊","Resumo da conta"],["⚡","Gerar hooks"],["✍️","Escrever roteiro"],["🎯","O que pausar?"]],
+    es: [["📊","Resumen de cuenta"],["⚡","Generar hooks"],["✍️","Escribir guión"],["🎯","¿Qué pausar?"]],
+    en: [["📊","Account summary"],["⚡","Generate hooks"],["✍️","Write script"],["🎯","What to pause?"]],
+  };
+  const actions = quickActions[lang] || quickActions.pt;
+
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
-      {/* Greeting header — distinct from regular messages */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,rgba(14,165,233,0.20),rgba(99,102,241,0.15))", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))", border: "1px solid rgba(14,165,233,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>
           {timeEmoji}
         </div>
-        <div>
-          <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#eef0f6", letterSpacing: "-0.02em" }}>{block.title}</span>
-          <span style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.30)", marginLeft: 8 }}>AdBrief AI</span>
-        </div>
+        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.01em" }}>{block.title}</span>
+        <span style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)" }}>AdBrief AI</span>
       </div>
-      {/* Message body — clean, no card wrapper */}
-      <div style={{ paddingLeft: 42 }}>
-        <p style={{ fontFamily: M, fontSize: 14, color: "rgba(238,240,246,0.82)", lineHeight: 1.75, margin: 0 }}>
+      {/* Message */}
+      <div style={{ paddingLeft: 40 }}>
+        <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(238,240,246,0.78)", lineHeight: 1.72, margin: "0 0 14px" }}>
           {block.content}
         </p>
+        {/* Quick action pills */}
+        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+          {actions.map(([emoji, label], i) => (
+            <button key={i} onClick={() => onSend(label)}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.55)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "#eef0f6"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.55)"; }}>
+              <span style={{ fontSize: 12 }}>{emoji}</span>{label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -623,7 +639,7 @@ export default function AdBriefAI() {
             if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn);
           }
         }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta")); });
-    }, 600); // 600ms — let connections load
+    }, 300); // 300ms — let connections settle
     return () => clearTimeout(timer);
   },[contextReady, connections.length, user?.id]);
 
@@ -1082,9 +1098,7 @@ export default function AdBriefAI() {
         {messages.length===0&&proactiveLoading&&(
           <div style={{maxWidth:680,margin:"24px auto 0"}}>
             <ThinkingIndicator lang={lang} variant="chat" label={
-              lang==="pt"?"Analisando sua conta...":
-              lang==="es"?"Analizando tu cuenta...":
-              "Analyzing your account..."
+              lang==="pt"?"Pensando":lang==="es"?"Pensando":"Thinking"
             }/>
           </div>
         )}
@@ -1117,30 +1131,7 @@ export default function AdBriefAI() {
                   {lang==="pt"?"Leva 30 segundos":lang==="es"?"30 segundos":"30 seconds"}
                 </p>
               </div>
-            ) : (
-              /* ── Connected — show suggestions ── */
-              <>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-                  <div style={{width:28,height:28,borderRadius:10,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <Sparkles size={13} color="rgba(14,165,233,0.8)"/>
-                  </div>
-                  <p style={{...j,fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",margin:0}}>
-                    {lang==="pt"?"Conta conectada. Pergunte qualquer coisa.":lang==="es"?"Cuenta conectada. Pregunta lo que quieras.":"Account connected. Ask me anything."}
-                  </p>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8}}>
-                  {SUGGS.map((s,i)=>(
-                    <button key={i} onClick={()=>send(s)}
-                      style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
-                      onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.transform="translateY(-1px)";}}
-                      onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.04)";el.style.borderColor="rgba(255,255,255,0.10)";el.style.transform="translateY(0)";}}>
-                      <span style={{fontSize:13,opacity:0.5,flexShrink:0}}>{["📊","⚡","✍️","🎯"][i]}</span>
-                      <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.5,fontWeight:500}}>{s}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            ) : null}
           </div>
         )}
 
@@ -1173,7 +1164,7 @@ export default function AdBriefAI() {
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
                   b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)}/>:
-                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b}/>:
+                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send}/>:
                   (b as any)._pendingTool?null:
                   <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
