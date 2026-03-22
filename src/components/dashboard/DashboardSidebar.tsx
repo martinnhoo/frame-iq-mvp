@@ -79,10 +79,9 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const TOOLS_NAV = [
     { url: "/dashboard/script",       label: dt("nav_script")||"Roteiro",      icon: "✍️" },
     { url: "/dashboard/translate",    label: dt("nav_translate")||"Traduzir",   icon: "🌍" },
-    { url: "/dashboard/preflight",    label: dt("nav_preflight")||"Pré-voo",    icon: "✅" },
+    { url: "/dashboard/preflight",    label: dt("nav_preflight")||"Check Criativo", icon: "✅" },
     { url: "/dashboard/templates",    label: dt("nav_templates")||"Templates",  icon: "📐" },
     { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",        icon: "🗂️" },
-    { url: "/dashboard/intelligence", label: dt("nav_intelligence")||"Intel",   icon: "📊" },
   ];
 
   const sectionLabel = (txt: string) => (

@@ -102,9 +102,17 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
 
   const selectAccount = async (platform: string, accountId2: string) => {
     setChangingAccount(platform);
-    await supabase.from("platform_connections" as any)
+    // Try specific connection first, fall back to global (persona_id=null)
+    const { count } = await (supabase.from("platform_connections" as any) as any)
       .update({ selected_account_id: accountId2 })
-      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
+      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform)
+      .select("id", { count: "exact", head: true });
+    if (!count) {
+      // No specific row found — update global connection
+      await supabase.from("platform_connections" as any)
+        .update({ selected_account_id: accountId2 })
+        .eq("user_id", userId).is("persona_id", null).eq("platform", platform);
+    }
     load();
     setChangingAccount(null);
   };

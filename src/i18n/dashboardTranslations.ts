@@ -373,7 +373,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   en: {
     nav_overview: "Overview", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Hook Generator", nav_templates: "Templates", nav_translate: "Translate",
-    nav_preflight: "Pre-flight", nav_intelligence: "Intelligence", nav_persona: "Accounts", nav_accounts: "Accounts",
+    nav_preflight: "Creative Check", nav_intelligence: "Intelligence", nav_persona: "Accounts", nav_accounts: "Accounts",
     nav_workspace: "Workspace", nav_tools: "Tools", nav_upgrade: "Upgrade plan",
     nav_upgrade_desc: "Unlock more analyses & boards",
     nav_competitor: "Competitor", nav_script: "Script", nav_brief: "Brief",
@@ -524,7 +524,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   pt: {
     nav_overview: "Visão Geral", nav_analyses: "Análises", nav_boards: "Boards",
     nav_hooks: "Gerador de Hooks", nav_templates: "Templates", nav_translate: "Traduzir",
-    nav_preflight: "Pré-voo", nav_intelligence: "Inteligência", nav_persona: "Contas", nav_accounts: "Contas",
+    nav_preflight: "Check Criativo", nav_intelligence: "Inteligência", nav_persona: "Contas", nav_accounts: "Contas",
     nav_workspace: "Área de Trabalho", nav_tools: "Ferramentas", nav_upgrade: "Fazer upgrade",
     nav_upgrade_desc: "Desbloqueie mais análises e boards",
     nav_competitor: "Concorrente", nav_script: "Roteiro", nav_brief: "Brief",

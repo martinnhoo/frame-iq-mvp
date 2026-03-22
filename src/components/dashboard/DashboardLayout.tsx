@@ -234,67 +234,34 @@ export default function DashboardLayout() {
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
       }}>
-        {/* Background radial glow */}
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", width: 600, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -40%)", width: 300, height: 300, background: "radial-gradient(ellipse, rgba(6,182,212,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
-
-        {/* Grid dots bg */}
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)", backgroundSize: "32px 32px", pointerEvents: "none" }} />
+        {/* Background radial glow — centered */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 700, height: 700, background: "radial-gradient(ellipse, rgba(14,165,233,0.12) 0%, rgba(99,102,241,0.06) 40%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 350, height: 350, background: "radial-gradient(ellipse, rgba(6,182,212,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
 
         {/* Center content */}
-        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
 
-          {/* Logo mark */}
-          <div style={{ position: "relative" }}>
-            {/* Outer ring pulse */}
-            <div style={{ position: "absolute", inset: -16, borderRadius: "50%", border: "1px solid rgba(14,165,233,0.15)", animation: "ringPulse 2s ease-in-out infinite" }} />
-            <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px solid rgba(14,165,233,0.10)", animation: "ringPulse 2s ease-in-out infinite 0.4s" }} />
-            {/* Icon container */}
-            <div style={{
-              width: 64, height: 64, borderRadius: 20,
-              background: "linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.12))",
-              border: "1px solid rgba(14,165,233,0.35)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 60px rgba(14,165,233,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
-            }}>
-              <span style={{ fontSize: 24, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ab</span>
-            </div>
-          </div>
-
-          {/* Wordmark */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          {/* Wordmark only — no icon */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
             <div>
-              <span style={{ fontSize: 32, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
-              <span style={{ fontSize: 32, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
+              <span style={{ fontSize: 36, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
+              <span style={{ fontSize: 36, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
             </div>
-            <p style={{ fontSize: 11, color: "rgba(238,240,246,0.28)", letterSpacing: "0.14em", textTransform: "uppercase", margin: 0 }}>
+            <p style={{ fontSize: 11, color: "rgba(238,240,246,0.30)", letterSpacing: "0.16em", textTransform: "uppercase", margin: 0, fontFamily: "'Inter', sans-serif" }}>
               {dt("ov_loading")}
             </p>
           </div>
 
           {/* Progress bar */}
-          <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
+          <div style={{ width: 180, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
             <div style={{
               position: "absolute", left: 0, top: 0,
               width: "45%", height: "100%",
-              background: "linear-gradient(90deg, transparent, #0ea5e9, #34d399, #0ea5e9, transparent)",
+              background: "linear-gradient(90deg, transparent, #38bdf8, #34d399, #38bdf8, transparent)",
               borderRadius: 99,
               animation: "loadBar 1.8s ease-in-out infinite",
               willChange: "transform",
             }} />
-          </div>
-
-          {/* Animated dots */}
-          <div style={{ display: "flex", gap: 5 }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{
-                width: 4, height: 4, borderRadius: "50%",
-                background: "rgba(14,165,233,0.5)",
-                animation: `dotBounce 1.2s ease-in-out infinite`,
-                animationDelay: `${i * 0.2}s`,
-                willChange: "transform, opacity",
-              }} />
-            ))}
           </div>
         </div>
 
@@ -302,10 +269,6 @@ export default function DashboardLayout() {
           @keyframes loadBar {
             0%   { transform: translateX(-120%); }
             100% { transform: translateX(500%); }
-          }
-          @keyframes ringPulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50%       { opacity: 0.2; transform: scale(1.08); }
           }
           @keyframes dotBounce {
             0%, 100% { transform: translateY(0); opacity: 0.4; }
