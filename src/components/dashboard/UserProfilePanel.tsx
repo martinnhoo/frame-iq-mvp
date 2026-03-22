@@ -625,11 +625,23 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, marginBottom: 4, background: i === 0 ? "rgba(14,165,233,0.06)" : "transparent" }}>
                             <div>
                               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(238,240,246,0.65)" }}>{s.date}</span>
-                              {s.ai_insight && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.35)", margin: "2px 0 0", lineHeight: 1.4 }}>{s.ai_insight.slice(0, 70)}...</p>}
+                              {s.ai_insight && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.35)", margin: "2px 0 0", lineHeight: 1.4 }}>{s.ai_insight.slice(0, 80)}</p>}
+                              {/* Show action recommendations if available */}
+                              {((s.raw_period as any)?.actions || []).slice(0, 2).map((a: any, ai: number) => (
+                                <div key={ai} style={{ display: "inline-flex", alignItems: "center", gap: 3, marginTop: 3, marginRight: 4, padding: "1px 6px", borderRadius: 4,
+                                  background: a.urgencia === 'alta' ? "rgba(248,113,113,0.12)" : a.tipo === 'escalar' ? "rgba(52,211,153,0.10)" : "rgba(255,255,255,0.06)",
+                                  border: `1px solid ${a.urgencia === 'alta' ? "rgba(248,113,113,0.25)" : a.tipo === 'escalar' ? "rgba(52,211,153,0.20)" : "rgba(255,255,255,0.10)"}` }}>
+                                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, fontWeight: 700, color: a.urgencia === 'alta' ? "#f87171" : a.tipo === 'escalar' ? "#34d399" : "rgba(238,240,246,0.50)", textTransform: "uppercase" as const }}>
+                                    {a.tipo === 'escalar' ? '↑' : a.tipo === 'pausar' ? '⏸' : '→'} {a.tipo}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                             <div style={{ textAlign: "right" as const, flexShrink: 0, marginLeft: 8 }}>
-                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 700, color: "#34d399", margin: 0 }}>CTR {(s.avg_ctr * 100).toFixed(2)}%</p>
-                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.35)", margin: "1px 0 0" }}>R${s.total_spend?.toFixed(0)}</p>
+                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 700, color: "#34d399", margin: 0 }}>CTR {(s.avg_ctr * 100).toFixed(2)}%</p>
+                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "1px 0 0" }}>R${s.total_spend?.toFixed(0)} spend</p>
+                              {s.winners_count > 0 && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: "rgba(52,211,153,0.60)", margin: "1px 0 0" }}>↑ {s.winners_count} escalar</p>}
+                              {s.losers_count > 0 && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: "rgba(248,113,113,0.60)", margin: "1px 0 0" }}>⏸ {s.losers_count} pausar</p>}
                             </div>
                           </div>
                         ))}

@@ -679,10 +679,88 @@ export default function AdBriefAI() {
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
       const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
 
+      // Title translation map — converts technical API terms to human-readable labels
+      const TITLE_MAP: Record<string, Record<string, string>> = {
+        pt: {
+          "list_campaigns": "Campanhas da conta",
+          "list_ads": "Anúncios ativos",
+          "get_campaigns": "Campanhas",
+          "get_ads": "Anúncios",
+          "list_adsets": "Conjuntos de anúncios",
+          "get_insights": "Performance",
+          "meta_action": "Ação no Meta Ads",
+          "tool_call": "Processando...",
+          "hooks": "Hooks gerados",
+          "script": "Roteiro",
+          "brief": "Brief criativo",
+          "off_topic": "Fora do escopo",
+          "insight": "Análise",
+          "action": "Ação recomendada",
+          "warning": "Atenção",
+          "navigate": "Ver mais",
+          "dashboard": "Dashboard",
+          "pause": "Pausar campanha",
+          "enable": "Ativar campanha",
+          "update_budget": "Atualizar orçamento",
+          "publish": "Publicar",
+          "duplicate": "Duplicar",
+        },
+        es: {
+          "list_campaigns": "Campañas de la cuenta",
+          "list_ads": "Anuncios activos",
+          "get_campaigns": "Campañas",
+          "get_ads": "Anuncios",
+          "meta_action": "Acción en Meta Ads",
+          "tool_call": "Procesando...",
+          "hooks": "Hooks generados",
+          "script": "Guión",
+          "brief": "Brief creativo",
+          "off_topic": "Fuera del alcance",
+          "insight": "Análisis",
+          "action": "Acción recomendada",
+          "warning": "Atención",
+        },
+        en: {
+          "list_campaigns": "Account campaigns",
+          "list_ads": "Active ads",
+          "get_campaigns": "Campaigns",
+          "get_ads": "Ads",
+          "meta_action": "Meta Ads action",
+          "tool_call": "Processing...",
+          "hooks": "Generated hooks",
+          "script": "Script",
+          "brief": "Creative brief",
+          "off_topic": "Out of scope",
+          "insight": "Analysis",
+          "action": "Recommended action",
+          "warning": "Attention",
+        },
+      };
+      const translateTitle = (title: string, type: string): string => {
+        const map = TITLE_MAP[lang] || TITLE_MAP.en;
+        // Check if title is a known technical term
+        if (map[title]) return map[title];
+        // Check if title is a type name
+        if (map[type]) return map[type];
+        // Check for patterns like "list_X" or "get_X"
+        if (/^(list|get|fetch|update|create|delete|pause|enable)_/.test(title)) {
+          const action = title.split('_')[0];
+          const subject = title.split('_').slice(1).join(' ');
+          const actionMap: Record<string, Record<string,string>> = {
+            pt: { list: 'Listar', get: 'Buscar', fetch: 'Buscar', update: 'Atualizar', create: 'Criar', delete: 'Remover', pause: 'Pausar', enable: 'Ativar' },
+            es: { list: 'Listar', get: 'Buscar', fetch: 'Buscar', update: 'Actualizar' },
+            en: { list: 'List', get: 'Get', fetch: 'Fetch', update: 'Update' },
+          };
+          const aMap = actionMap[lang] || actionMap.en;
+          if (aMap[action]) return `${aMap[action]} ${subject}`;
+        }
+        return title;
+      };
+
       blocks=blocks.map(b=>{
         // Clean all text
         const c={...b,
-          title:b.title?stripMd(b.title):b.title,
+          title:b.title?translateTitle(stripMd(b.title), b.type):b.title,
           content:b.content?stripMd(b.content):b.content,
           items:b.items?.map((it:string)=>stripMd(it)),
         };

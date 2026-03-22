@@ -273,13 +273,24 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         const prev = snaps[1];
         const ctrDelta = prev ? ((latest.avg_ctr - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001) * 100).toFixed(1) : null;
         const spendDelta = prev && prev.total_spend > 0 ? ((latest.total_spend - prev.total_spend) / prev.total_spend * 100).toFixed(1) : null;
+        const topAds = (latest.top_ads as any[]) || [];
+        const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 3);
+        const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 3);
+        const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 3);
+        const aiActions = ((latest.raw_period as any)?.actions || []) as any[];
         return [
-          `=== INTELLIGENCE DIÁRIA (${latest.date}) ===`,
-          `Spend 7d: R$${(latest.total_spend||0).toFixed(0)} | CTR médio: ${((latest.avg_ctr||0)*100).toFixed(2)}% | Ads ativos: ${latest.active_ads||0}`,
-          ctrDelta ? `vs semana anterior: CTR ${parseFloat(ctrDelta)>0?'+':''}${ctrDelta}%, Spend ${parseFloat(spendDelta||'0')>0?'+':''}${spendDelta||'0'}%` : '',
-          `Vencedores: ${latest.winners_count||0} | Precisam atenção: ${latest.losers_count||0}`,
-          latest.ai_insight ? `Insight: ${latest.ai_insight}` : '',
-          snaps.length > 1 ? `Histórico 7d: ${snaps.slice(0,5).map((s:any)=>`${s.date}: CTR ${((s.avg_ctr||0)*100).toFixed(2)}% / R$${(s.total_spend||0).toFixed(0)}`).join(' | ')}` : '',
+          `=== INTELLIGENCE DIÁRIA — ${latest.date} (${latest.account_name || 'conta'}) ===`,
+          `Spend 7d: R$${(latest.total_spend||0).toFixed(0)} | CTR médio: ${((latest.avg_ctr||0)*100).toFixed(2)}% | ${latest.active_ads||0} ads ativos`,
+          ctrDelta ? `Vs semana anterior: CTR ${parseFloat(ctrDelta)>0?'+':''}${ctrDelta}% | Spend ${parseFloat(spendDelta||'0')>0?'+':''}${spendDelta||'0'}%` : '',
+          latest.yesterday_spend > 0 ? `Ontem: R$${(latest.yesterday_spend||0).toFixed(0)} spend | CTR ${((latest.yesterday_ctr||0)*100).toFixed(2)}%` : '',
+          toScale.length ? `ESCALAR AGORA (alta performance): ${toScale.map((a:any)=>`"${a.name?.slice(0,35)}" CTR ${(a.ctr*100)?.toFixed(2)}%`).join(' | ')}` : '',
+          toPause.length ? `PAUSAR (gastando sem retorno): ${toPause.map((a:any)=>`"${a.name?.slice(0,35)}" CTR ${(a.ctr*100)?.toFixed(2)}% R$${a.spend?.toFixed(0)}`).join(' | ')}` : '',
+          fatigued.length ? `FADIGA CRIATIVA (freq alta): ${fatigued.map((a:any)=>`"${a.name?.slice(0,30)}" freq ${a.frequency?.toFixed(1)}`).join(' | ')}` : '',
+          topAds.slice(0,5).length ? `TOP ADS:
+${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | CTR ${(a.ctr*100)?.toFixed(2)}% | R$${a.spend?.toFixed(0)} spend${a.conversions>0?` | ${a.conversions} conv`:''}${a.deltaCtr?` | ${parseFloat(a.deltaCtr?.toFixed(1))>0?'+':''}${a.deltaCtr?.toFixed(1)}% vs sem. ant`:''}`).join('\n')}` : '',
+          aiActions.length ? `AÇÕES RECOMENDADAS:\n${aiActions.map((a:any)=>`  [${a.urgencia?.toUpperCase()}] ${a.tipo?.toUpperCase()}: "${a.anuncio?.slice(0,35)}" — ${a.motivo}`).join('\n')}` : '',
+          latest.ai_insight ? `\nINSIGHT DO DIA: ${latest.ai_insight}` : '',
+          snaps.length > 1 ? `\nHISTÓRICO:\n${snaps.slice(0,7).map((s:any)=>`  ${s.date}: CTR ${((s.avg_ctr||0)*100).toFixed(2)}% / R$${(s.total_spend||0).toFixed(0)} / ${s.active_ads||0} ads`).join('\n')}` : '',
         ].filter(Boolean).join('\n');
       })(),
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
@@ -386,12 +397,14 @@ ASSERTIVE RULES — follow these strictly:
 5. If the user asks to activate something already active → answer directly: "Já está ativa."
 6. Be direct. Never ask for confirmation for read queries. Never show empty blocks.
 
-INTELLIGENCE DIÁRIA — quando disponível no contexto:
-- Use os dados de performance REAIS para personalizar qualquer recomendação
-- Se há vencedores identificados → priorize padrões similares ao gerar hooks
-- Se há perdedores → proativamente sugira pausar (mas não execute sem confirmação)
-- Compare CTR/spend de ontem vs semana anterior para identificar tendências
-- O insight do dia já foi gerado pela IA — reforce ou expanda se o usuário perguntar sobre performance
+INTELLIGENCE DIÁRIA — USE SEMPRE que disponível no contexto:
+- Quando o usuário perguntar "como está minha conta", "o que está acontecendo", "me dá um resumo" → responda com os dados REAIS do contexto (CTR, spend, top ads, comparação com semana anterior)
+- ESCALAR: Se há ads marcados como isScalable=true → mencione proativamente ao falar de orçamento
+- PAUSAR: Se há ads marcados como needsPause=true → alerte o usuário (mas peça confirmação antes de executar)
+- FADIGA: Se frequência > 3.5 → sugira criar novos criativos para esse público
+- AÇÕES RECOMENDADAS: Se há aiActions no contexto → apresente como sugestões claras em PT
+- Use nomes REAIS dos anúncios do contexto — nunca invente nomes
+- Se o usuário pede para "escalar [nome]" ou "pausar [nome]" → execute via meta_action usando o ID correto do contexto
 
 For tools, auto-fill params from context whenever possible:
 - If persona has market/niche info → use it in hooks/script params
@@ -478,4 +491,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603261600
+// redeploy 202603261700

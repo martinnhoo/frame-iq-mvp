@@ -1,7 +1,5 @@
-// daily-intelligence v1 — cron diário que aprende com Meta Ads e atualiza a inteligência da conta
-// Chamado via Supabase cron às 12h UTC todos os dias
-// Também pode ser chamado manualmente via POST { user_id, persona_id? }
-
+// daily-intelligence v2 — inteligência real focada na dor do gestor de tráfego
+// Roda: (1) todo dia às 12h via cron, (2) ao abrir o chat se sem snapshot hoje
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -11,58 +9,44 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
-
   try {
-    const sb = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-    const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-
+    const sb = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const ANTHROPIC = Deno.env.get('ANTHROPIC_API_KEY');
     const body = await req.json().catch(() => ({}));
     const { user_id, persona_id } = body;
 
-    // If no user_id → run for ALL users with active Meta connections (cron mode)
+    // Cron mode: run for all active Meta users
     const targets: { user_id: string; persona_id: string | null }[] = [];
-
     if (user_id) {
       targets.push({ user_id, persona_id: persona_id || null });
     } else {
-      // Cron mode: find all active Meta connections
-      const { data: conns } = await sb
-        .from('platform_connections' as any)
-        .select('user_id, persona_id')
-        .eq('platform', 'meta')
-        .eq('status', 'active');
-      (conns || []).forEach((c: any) => targets.push({ user_id: c.user_id, persona_id: c.persona_id }));
+      const { data: conns } = await sb.from('platform_connections' as any)
+        .select('user_id, persona_id').eq('platform', 'meta').eq('status', 'active');
+      // Deduplicate by user_id — only run once per user
+      const seen = new Set<string>();
+      (conns || []).forEach((c: any) => {
+        if (!seen.has(c.user_id)) { seen.add(c.user_id); targets.push({ user_id: c.user_id, persona_id: c.persona_id }); }
+      });
     }
 
-    const results: any[] = [];
+    const results = [];
     for (const target of targets) {
       try {
-        const result = await runForUser(sb, ANTHROPIC_KEY, target.user_id, target.persona_id);
-        results.push({ ...target, result });
-      } catch (e) {
-        results.push({ ...target, error: String(e) });
-      }
+        const r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+        results.push({ ...target, result: r });
+      } catch (e) { results.push({ ...target, error: String(e) }); }
     }
 
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
-
   } catch (e) {
-    console.error('daily-intelligence error:', e);
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500, headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
 
-async function runForUser(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
-  console.log(`Running daily intelligence for user ${user_id}, persona ${persona_id}`);
-
-  // ── 1. Get Meta connection ────────────────────────────────────────────────
+async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
+  // ── Get Meta token ───────────────────────────────────────────────────────
   let conn: any = null;
   if (persona_id) {
     const { data } = await sb.from('platform_connections' as any)
@@ -81,206 +65,232 @@ async function runForUser(sb: any, anthropicKey: string | undefined, user_id: st
   const token = conn.access_token;
   const accounts = (conn.ad_accounts as any[]) || [];
   const selectedId = conn.selected_account_id;
-  const activeAccount = (selectedId && accounts.find((a: any) => a.id === selectedId)) || accounts[0];
-  if (!activeAccount?.id) return { skipped: 'No active ad account' };
+  const account = (selectedId && accounts.find((a: any) => a.id === selectedId)) || accounts[0];
+  if (!account?.id) return { skipped: 'No active account' };
 
-  const accountId = activeAccount.id;
-
-  // ── 2. Pull insights — today's window vs yesterday's window ──────────────
-  const today = new Date();
   const fmt = (d: Date) => d.toISOString().split('T')[0];
+  const now = new Date();
+  const today = fmt(now);
+  const d7 = fmt(new Date(now.getTime() - 7 * 86400000));
+  const d14 = fmt(new Date(now.getTime() - 14 * 86400000));
+  const yesterday = fmt(new Date(now.getTime() - 86400000));
 
-  // Current period: last 7 days
-  const since7 = fmt(new Date(today.getTime() - 7 * 86400000));
-  const until7 = fmt(today);
+  // ── Pull Meta data: ad-level with time breakdown ─────────────────────────
+  const fields = [
+    'ad_id', 'ad_name', 'adset_name', 'campaign_name',
+    'spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm', 'reach', 'frequency',
+    'actions', 'cost_per_action_type', 'video_play_actions', 'video_avg_time_watched_actions',
+    'date_start', 'date_stop'
+  ].join(',');
 
-  // Previous period: 7-14 days ago
-  const since14 = fmt(new Date(today.getTime() - 14 * 86400000));
-  const until14 = fmt(new Date(today.getTime() - 7 * 86400000));
-
-  // Yesterday specifically
-  const yesterday = fmt(new Date(today.getTime() - 86400000));
-
-  const fields = 'ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,cost_per_action_type';
-
-  const [currentRes, prevRes, yesterdayRes] = await Promise.all([
-    fetch(`https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=${fields}&time_range={"since":"${since7}","until":"${until7}"}&sort=spend_descending&limit=50&access_token=${token}`),
-    fetch(`https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=${fields}&time_range={"since":"${since14}","until":"${until14}"}&sort=spend_descending&limit=50&access_token=${token}`),
-    fetch(`https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${until7}"}&sort=spend_descending&limit=20&access_token=${token}`),
+  const [wk1Res, wk2Res, ydRes] = await Promise.all([
+    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d7}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d14}","until":"${d7}"}&sort=spend_descending&limit=50&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=20&access_token=${token}`),
   ]);
 
-  const [currentData, prevData, yesterdayData] = await Promise.all([
-    currentRes.json(), prevRes.json(), yesterdayRes.json()
-  ]);
+  const [wk1, wk2, yd] = await Promise.all([wk1Res.json(), wk2Res.json(), ydRes.json()]);
+  if (wk1.error) throw new Error(`Meta: ${wk1.error.message}`);
 
-  if (currentData.error) throw new Error(`Meta API: ${currentData.error.message}`);
+  const curr: any[] = wk1.data || [];
+  const prev: any[] = wk2.data || [];
+  const yest: any[] = yd.data || [];
 
-  const current: any[] = currentData.data || [];
-  const previous: any[] = prevData.data || [];
-  const yesterdayAds: any[] = yesterdayData.data || [];
-
-  // ── 3. Compute deltas and identify winners/losers ────────────────────────
+  // ── Process and enrich ───────────────────────────────────────────────────
   const prevMap: Record<string, any> = {};
-  previous.forEach((ad: any) => { prevMap[ad.ad_name] = ad; });
+  prev.forEach((a: any) => prevMap[a.ad_name || a.ad_id] = a);
 
-  const enriched = current.map((ad: any) => {
-    const prev = prevMap[ad.name] || prevMap[ad.ad_name];
-    const ctr = parseFloat(ad.ctr || '0');
-    const spend = parseFloat(ad.spend || '0');
-    const clicks = parseInt(ad.clicks || '0');
-    const prevCtr = prev ? parseFloat(prev.ctr || '0') : null;
-    const deltaCtR = prevCtr !== null ? ctr - prevCtr : null;
-    const conversions = ((ad.actions || []) as any[]).find((a: any) => a.action_type === 'purchase')?.value || 0;
-    const roas = conversions && spend > 0 ? (parseFloat(conversions) * 50) / spend : null; // estimate
+  const parseN = (v: any) => parseFloat(v || '0');
+  const getConversions = (ad: any) => {
+    const actions = (ad.actions || []) as any[];
+    const conv = actions.find((a: any) => ['purchase', 'lead', 'complete_registration', 'app_install'].includes(a.action_type));
+    return conv ? parseFloat(conv.value || '0') : 0;
+  };
+  const getVideoRetention = (ad: any) => {
+    const plays = (ad.video_play_actions || []) as any[];
+    const avg = (ad.video_avg_time_watched_actions || []) as any[];
+    return { plays: plays[0]?.value || 0, avg_watch: avg[0]?.value || 0 };
+  };
+
+  const enriched = curr.map((ad: any) => {
+    const p = prevMap[ad.ad_name || ad.ad_id];
+    const spend = parseN(ad.spend);
+    const ctr = parseN(ad.ctr);
+    const cpc = parseN(ad.cpc);
+    const impressions = parseN(ad.impressions);
+    const frequency = parseN(ad.frequency);
+    const prevCtr = p ? parseN(p.ctr) : null;
+    const prevSpend = p ? parseN(p.spend) : null;
+    const conversions = getConversions(ad);
+    const video = getVideoRetention(ad);
+    const roas = conversions > 0 && spend > 0 ? (conversions * 30) / spend : null; // estimate: avg order R$30
+
+    // Fatigue signals
+    const isFatigued = frequency > 3.5 || (prevCtr !== null && prevCtr > 0 && ctr / prevCtr < 0.7);
+    const isScalable = ctr > 0.02 && spend > 10 && (!prevCtr || ctr >= prevCtr * 0.9);
+    const needsPause = (ctr < 0.005 && spend > 20) || (cpc > 5 && conversions === 0 && spend > 30);
+    const deltaCtr = prevCtr !== null ? ((ctr - prevCtr) / Math.max(prevCtr, 0.001) * 100) : null;
+
     return {
-      name: ad.ad_name || ad.name,
-      campaign: ad.campaign_name,
-      spend, ctr, clicks,
-      cpc: parseFloat(ad.cpc || '0'),
-      cpm: parseFloat(ad.cpm || '0'),
-      reach: parseInt(ad.reach || '0'),
-      conversions: parseInt(String(conversions) || '0'),
-      roas,
-      prevCtr,
-      deltaCtr: deltaCtR,
-      trend: deltaCtR === null ? 'new' : deltaCtR > 0.002 ? 'up' : deltaCtR < -0.002 ? 'down' : 'stable',
+      id: ad.ad_id, name: ad.ad_name || 'Sem nome',
+      adset: ad.adset_name, campaign: ad.campaign_name,
+      spend, ctr, cpc, cpm: parseN(ad.cpm), impressions, frequency,
+      conversions, roas,
+      prevCtr, deltaCtr,
+      videoPlays: video.plays, avgWatch: video.avg_watch,
+      isFatigued, isScalable, needsPause,
+      trend: deltaCtr === null ? 'new' : deltaCtr > 5 ? 'up' : deltaCtr < -5 ? 'down' : 'stable',
     };
   });
 
-  // Sort: winners first (high CTR + spend)
-  enriched.sort((a, b) => (b.ctr * Math.log(b.spend + 1)) - (a.ctr * Math.log(a.spend + 1)));
+  enriched.sort((a: any, b: any) => b.spend - a.spend);
 
-  const winners = enriched.filter(a => a.ctr > 0.015 && a.spend > 5);
-  const losers = enriched.filter(a => a.ctr < 0.008 && a.spend > 10);
-  const trending_up = enriched.filter(a => a.trend === 'up');
-  const trending_down = enriched.filter(a => a.trend === 'down');
-
-  // ── 4. Account-level summary ─────────────────────────────────────────────
-  const totalSpend = enriched.reduce((s, a) => s + a.spend, 0);
-  const totalClicks = enriched.reduce((s, a) => s + a.clicks, 0);
-  const avgCtr = totalSpend > 0 ? enriched.reduce((s, a) => s + a.ctr * a.spend, 0) / totalSpend : 0;
-  const yesterdaySpend = yesterdayAds.reduce((s: number, a: any) => s + parseFloat(a.spend || '0'), 0);
-  const yesterdayCtr = yesterdayAds.length
-    ? yesterdayAds.reduce((s: number, a: any) => s + parseFloat(a.ctr || '0'), 0) / yesterdayAds.length
+  const totalSpend = enriched.reduce((s: number, a: any) => s + a.spend, 0);
+  const totalConversions = enriched.reduce((s: number, a: any) => s + a.conversions, 0);
+  const avgCtr = totalSpend > 0
+    ? enriched.reduce((s: number, a: any) => s + a.ctr * a.spend, 0) / totalSpend
     : 0;
+  const ydSpend = yest.reduce((s: number, a: any) => s + parseN(a.spend), 0);
+  const ydCtr = yest.length ? yest.reduce((s: number, a: any) => s + parseN(a.ctr), 0) / yest.length : 0;
 
-  // ── 5. Update learned_patterns with real performance data ────────────────
-  for (const ad of winners) {
-    if (!ad.ctr) continue;
-    const patKey = `meta_winner_${ad.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 40)}`;
-    const { data: ex } = await sb.from('learned_patterns').select('id,sample_size,avg_ctr,variables')
-      .eq('user_id', user_id).eq('pattern_key', patKey).maybeSingle();
+  const scalable = enriched.filter((a: any) => a.isScalable);
+  const fatigued = enriched.filter((a: any) => a.isFatigued);
+  const toPause = enriched.filter((a: any) => a.needsPause);
+  const newAds = enriched.filter((a: any) => a.trend === 'new');
+  const trending = enriched.filter((a: any) => a.trend === 'up');
 
+  // ── Patterns: learn hook types that work ─────────────────────────────────
+  for (const ad of scalable.slice(0, 10)) {
+    if (ad.ctr < 0.01) continue;
+    const key = `meta_ad_${ad.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 35)}`;
+    const { data: ex } = await sb.from('learned_patterns').select('id, sample_size, avg_ctr, avg_roas, variables')
+      .eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+    const vars: any = (ex?.variables as any) || {};
+    const history = vars.history || [];
+    history.unshift({ date: today, ctr: ad.ctr, spend: ad.spend, conversions: ad.conversions, trend: ad.trend });
     if (ex) {
       const n = ex.sample_size || 0;
-      const newCtr = ((ex.avg_ctr || 0) * n + ad.ctr) / (n + 1);
       await sb.from('learned_patterns').update({
-        sample_size: n + 1, avg_ctr: newCtr, avg_roas: ad.roas,
-        is_winner: true, confidence: Math.min(1, (n + 1) / 7),
-        insight_text: `"${ad.name.slice(0, 50)}": CTR ${ad.ctr.toFixed(3)}, spend R$${ad.spend.toFixed(0)}, trend ${ad.trend}`,
+        sample_size: n + 1,
+        avg_ctr: ((ex.avg_ctr || 0) * n + ad.ctr) / (n + 1),
+        avg_roas: ad.roas || ex.avg_roas,
+        is_winner: ad.ctr > 0.018,
+        confidence: Math.min(1, (n + 1) / 14),
+        insight_text: `"${ad.name.slice(0, 45)}": CTR ${(ad.ctr*100).toFixed(2)}% (${ad.trend}) | ${ad.spend.toFixed(0)} spend`,
         last_updated: new Date().toISOString(),
-        variables: { ...(ex.variables as any || {}), campaign: ad.campaign, last_ctr: ad.ctr, last_spend: ad.spend }
+        variables: { ...vars, history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset, frequency: ad.frequency }
       }).eq('id', ex.id);
     } else {
       await sb.from('learned_patterns').insert({
-        user_id, pattern_key: patKey, is_winner: true, sample_size: 1,
-        avg_ctr: ad.ctr, avg_roas: ad.roas, confidence: 0.15,
-        insight_text: `"${ad.name.slice(0, 50)}": CTR ${ad.ctr.toFixed(3)}, spend R$${ad.spend.toFixed(0)}`,
-        variables: { campaign: ad.campaign, last_ctr: ad.ctr, last_spend: ad.spend, trend: ad.trend }
+        user_id, pattern_key: key, is_winner: ad.ctr > 0.018, sample_size: 1,
+        avg_ctr: ad.ctr, avg_roas: ad.roas || null, confidence: 0.07,
+        insight_text: `"${ad.name.slice(0, 45)}": CTR ${(ad.ctr*100).toFixed(2)}% | ${ad.spend.toFixed(0)} spend`,
+        variables: { history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset }
       });
     }
   }
 
-  // ── 6. AI-generated insight using real data ───────────────────────────────
+  // ── AI Insight — focused on what to DO today ─────────────────────────────
   let aiInsight = '';
-  if (anthropicKey && current.length > 0) {
+  let aiActions: any[] = [];
+  if (anthropicKey && curr.length > 0) {
     try {
-      const dataStr = JSON.stringify({
-        period: `${since7} to ${until7}`,
-        yesterday: { spend: yesterdaySpend.toFixed(2), avg_ctr: yesterdayCtr.toFixed(4) },
-        week: { total_spend: totalSpend.toFixed(2), avg_ctr: avgCtr.toFixed(4), active_ads: current.length },
-        top3: enriched.slice(0, 3).map(a => ({ name: a.name.slice(0, 40), ctr: a.ctr, spend: a.spend, trend: a.trend })),
-        winners: winners.slice(0, 3).map(a => a.name.slice(0, 40)),
-        losers: losers.slice(0, 3).map(a => a.name.slice(0, 40)),
-        trending_up: trending_up.slice(0, 2).map(a => a.name.slice(0, 40)),
-        trending_down: trending_down.slice(0, 2).map(a => a.name.slice(0, 40)),
-      }, null, 2);
+      const ctx = {
+        account: account.name || account.id,
+        period: `${d7} → ${today}`,
+        spend_total: totalSpend.toFixed(2),
+        spend_yesterday: ydSpend.toFixed(2),
+        conversions: totalConversions,
+        avg_ctr_pct: (avgCtr * 100).toFixed(2),
+        ctr_yesterday_pct: (ydCtr * 100).toFixed(2),
+        active_ads: curr.length,
+        new_ads_this_week: newAds.length,
+        top3: enriched.slice(0, 3).map((a: any) => ({
+          name: a.name.slice(0, 40),
+          ctr_pct: (a.ctr * 100).toFixed(2),
+          spend: a.spend.toFixed(0),
+          conversions: a.conversions,
+          trend: a.trend,
+          frequency: a.frequency.toFixed(1),
+        })),
+        scale_now: scalable.slice(0, 3).map((a: any) => a.name.slice(0, 40)),
+        fatigued: fatigued.slice(0, 3).map((a: any) => ({ name: a.name.slice(0, 40), freq: a.frequency.toFixed(1), ctr_drop: a.deltaCtr?.toFixed(1) })),
+        pause_now: toPause.slice(0, 3).map((a: any) => a.name.slice(0, 40)),
+      };
 
       const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 400,
-          system: 'Você é um analista de performance de mídia paga. Responda em PT-BR. Seja direto, específico, acionável. Máximo 3 frases. Foco em o que fazer hoje.',
-          messages: [{ role: 'user', content: `Analise esses dados de Meta Ads e dê 1 insight acionável para hoje:\n${dataStr}` }],
+          max_tokens: 600,
+          system: `Você é um analista sênior de performance em mídia paga. Responda SEMPRE em Português Brasileiro.
+Analise os dados da conta e retorne JSON com:
+{
+  "resumo": "<1 frase: situação geral da conta>",
+  "insight_principal": "<2 frases: o insight mais importante hoje — específico, não genérico>",
+  "acoes": [
+    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<1 frase curta>", "urgencia": "alta|media|baixa"},
+    ...máximo 4 ações
+  ],
+  "alerta": "<se houver algo urgente, 1 frase. Senão: null>"
+}`,
+          messages: [{ role: 'user', content: JSON.stringify(ctx, null, 2) }],
         }),
       });
       const aiData = await aiRes.json();
-      aiInsight = aiData.content?.[0]?.text || '';
+      const rawText = aiData.content?.[0]?.text || '{}';
+      const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      aiInsight = parsed.insight_principal || parsed.resumo || '';
+      aiActions = parsed.acoes || [];
+      if (parsed.alerta) aiInsight = `⚠️ ${parsed.alerta} — ${aiInsight}`;
     } catch (e) {
-      console.error('AI insight failed:', e);
+      console.error('AI insight error:', e);
     }
   }
 
-  // ── 7. Save daily snapshot ───────────────────────────────────────────────
-  await sb.from('daily_snapshots' as any).insert({
-    user_id,
-    persona_id: persona_id || null,
-    date: fmt(today),
-    account_id: accountId,
-    account_name: activeAccount.name || accountId,
-    total_spend: totalSpend,
-    avg_ctr: avgCtr,
-    total_clicks: totalClicks,
-    active_ads: current.length,
-    winners_count: winners.length,
-    losers_count: losers.length,
-    yesterday_spend: yesterdaySpend,
-    yesterday_ctr: yesterdayCtr,
-    top_ads: enriched.slice(0, 10),
+  // ── Save snapshot ─────────────────────────────────────────────────────────
+  const snapshot = {
+    user_id, persona_id: persona_id || null, date: today,
+    account_id: account.id, account_name: account.name || account.id,
+    total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + parseInt(a.impressions > 0 ? String(a.ctr * a.impressions / 100) : '0'), 0),
+    active_ads: curr.length, winners_count: scalable.length, losers_count: toPause.length,
+    yesterday_spend: ydSpend, yesterday_ctr: ydCtr,
+    top_ads: enriched.slice(0, 15).map((a: any) => ({
+      id: a.id, name: a.name, campaign: a.campaign, spend: a.spend,
+      ctr: a.ctr, cpc: a.cpc, conversions: a.conversions, roas: a.roas,
+      trend: a.trend, isFatigued: a.isFatigued, isScalable: a.isScalable, needsPause: a.needsPause,
+      frequency: a.frequency, deltaCtr: a.deltaCtr
+    })),
     ai_insight: aiInsight,
-    raw_period: { since: since7, until: until7 },
-  }).onConflict('user_id,persona_id,date').merge();
+    raw_period: { since: d7, until: today, actions: aiActions, fatigued: fatigued.slice(0, 5).map((a: any) => a.name), scalable: scalable.slice(0, 5).map((a: any) => a.name) },
+  };
 
-  // ── 8. Rebuild user_ai_profile with enriched data ────────────────────────
-  const { data: allPatterns } = await sb.from('learned_patterns')
-    .select('is_winner, avg_ctr, avg_roas, insight_text, confidence, pattern_key')
+  await sb.from('daily_snapshots' as any).upsert(snapshot, { onConflict: 'user_id,persona_id,date' });
+
+  // ── Rebuild ai_profile ────────────────────────────────────────────────────
+  const { data: patterns } = await sb.from('learned_patterns').select('is_winner, avg_ctr, insight_text, confidence')
     .eq('user_id', user_id).order('confidence', { ascending: false }).limit(20);
-
-  const realWinners = (allPatterns || []).filter((p: any) => p.is_winner && p.confidence > 0.2);
-  const bestCtr = winners[0]?.ctr || avgCtr;
+  const winners = (patterns || []).filter((p: any) => p.is_winner && p.confidence > 0.2);
 
   const summary = [
-    `Semana: R$${totalSpend.toFixed(0)} spend, CTR médio ${(avgCtr * 100).toFixed(2)}%, ${current.length} anúncios ativos.`,
-    winners.length ? `Vencedores: ${winners.slice(0, 2).map(a => `"${a.name.slice(0, 30)}" (CTR ${(a.ctr * 100).toFixed(2)}%)`).join(', ')}.` : '',
-    losers.length ? `Pausar: ${losers.slice(0, 2).map(a => `"${a.name.slice(0, 30)}"`).join(', ')}.` : '',
+    `Conta: ${account.name || account.id}. Semana: R$${totalSpend.toFixed(0)} spend, CTR ${(avgCtr*100).toFixed(2)}%, ${curr.length} ads ativos.`,
+    scalable.length ? `Escalar agora: ${scalable.slice(0,2).map((a: any) => a.name.slice(0,30)).join(', ')}.` : '',
+    toPause.length ? `Pausar: ${toPause.slice(0,2).map((a: any) => a.name.slice(0,30)).join(', ')}.` : '',
     aiInsight || '',
   ].filter(Boolean).join(' ');
 
   await sb.from('user_ai_profile' as any).upsert({
-    user_id,
-    avg_hook_score: bestCtr * 1000, // normalize to hook score scale
-    ai_summary: summary,
-    ai_recommendations: {
-      winners: winners.slice(0, 3).map(a => ({ name: a.name.slice(0, 40), ctr: a.ctr, trend: a.trend })),
-      losers: losers.slice(0, 3).map(a => ({ name: a.name.slice(0, 40), ctr: a.ctr })),
-      insight: aiInsight,
-      updated: new Date().toISOString(),
-    },
-    total_analyses: current.length,
+    user_id, ai_summary: summary, avg_hook_score: avgCtr * 1000, total_analyses: curr.length,
+    ai_recommendations: { actions: aiActions, winners: winners.slice(0,3).map((p: any) => p.insight_text), insight: aiInsight, updated: today },
     last_updated: new Date().toISOString(),
   }, { onConflict: 'user_id' });
 
   return {
-    ok: true,
-    spend: totalSpend.toFixed(2),
-    avg_ctr: avgCtr.toFixed(4),
-    active_ads: current.length,
-    winners: winners.length,
-    losers: losers.length,
-    ai_insight: aiInsight.slice(0, 100),
+    ok: true, account: account.name || account.id,
+    spend: totalSpend.toFixed(2), ctr: (avgCtr*100).toFixed(3),
+    ads: curr.length, scalable: scalable.length, pause: toPause.length, fatigued: fatigued.length,
+    insight: aiInsight.slice(0, 80),
   };
 }
-
-// redeploy 202603261600
+// redeploy 202603261700
