@@ -144,7 +144,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
-        <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${SB.border}`, flexShrink: 0 }}>
+        <div style={{ height: 52, minHeight: 52, padding: "0 16px", borderBottom: `1px solid ${SB.border}`, flexShrink: 0, display: "flex", alignItems: "center" }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
             <Logo size="md" />

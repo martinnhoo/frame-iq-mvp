@@ -596,9 +596,15 @@ export default function AdBriefAI() {
           });
           if(metrics.length>0)return{...c,type:"dashboard" as const,metrics,items:undefined};
         }
-        // Convert meta_action tool_call
+        // Convert meta_action tool_call — read-only actions show as insight, destructive ones show confirm
         if(c.type==="tool_call"&&c.tool_params?.meta_action){
           const p=c.tool_params;
+          const DESTRUCTIVE=["pause","enable","update_budget","publish","duplicate","delete","archive","rename","set_","change_"];
+          const isDestructive=DESTRUCTIVE.some(d=>String(p.meta_action||"").toLowerCase().includes(d));
+          if(!isDestructive){
+            // Read-only: don't show confirm dialog, treat as regular insight
+            return{...c,type:"insight" as const,title:p.meta_action||"",content:c.content||""};
+          }
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }
         return c;
