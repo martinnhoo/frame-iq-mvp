@@ -364,7 +364,18 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
   const s=BS[block.type]||BS.insight;
   const [open,setOpen]=useState(true);
+  const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const ICONS: Record<string,string>={action:"🎯",pattern:"📊",hooks:"⚡",warning:"⚠️",insight:"📈",navigate:"→",tool_call:"⚡",off_topic:"🚫"};
+
+  const copyItem=(text:string,idx:number)=>{
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(()=>setCopiedIdx(null),1800);
+  };
+
+  const useAsScript=(text:string)=>{
+    onNavigate("/dashboard/script",{product:text.slice(0,120)});
+  };
 
   if(block.type==="navigate") return(
     <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 14px"}}>
@@ -376,6 +387,8 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
       </button>
     </div>
   );
+
+  const isHooks = block.type === "hooks";
 
   return(
     <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
@@ -389,9 +402,21 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
         <div style={{padding:"0 14px 12px"}}>
           {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.68)",lineHeight:1.7,marginBottom:block.items?.length?8:0}}>{block.content}</p>}
           {block.items?.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.05)"}}>
-              <span style={{color:s.color,fontSize:11,marginTop:2,flexShrink:0,fontWeight:700}}>{i+1}.</span>
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.78)",lineHeight:1.6}}>{item}</span>
+            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.05)",alignItems:"flex-start"}}>
+              <span style={{color:s.color,fontSize:11,marginTop:3,flexShrink:0,fontWeight:700}}>{i+1}.</span>
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.78)",lineHeight:1.6,flex:1}}>{item}</span>
+              {isHooks&&(
+                <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
+                  <button onClick={()=>copyItem(item,i)}
+                    style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",...m,transition:"all 0.12s"}}>
+                    <Copy size={9}/>{copiedIdx===i?(lang==="pt"?"✓":lang==="es"?"✓":"✓"):(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
+                  </button>
+                  <button onClick={()=>useAsScript(item)}
+                    style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:`${s.color}10`,border:`1px solid ${s.color}25`,cursor:"pointer",fontSize:10,color:s.color,...m,transition:"all 0.12s"}}>
+                    {lang==="pt"?"→ Roteiro":lang==="es"?"→ Guión":"→ Script"}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

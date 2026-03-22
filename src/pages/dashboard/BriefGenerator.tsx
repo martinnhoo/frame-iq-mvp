@@ -42,7 +42,7 @@ export default function BriefGenerator() {
     const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
   }, []);
   const [objective, setObjective] = useState("conversion");
-  const [market, setMarket] = useState("US");
+  const [market, setMarket] = useState(() => language === "pt" ? "BR" : language === "es" ? "MX" : "US");
   const [audience, setAudience] = useState("");
   const [competitors, setCompetitors] = useState("");
   const [extraContext, setExtraContext] = useState("");
