@@ -1150,9 +1150,9 @@ export default function AdBriefAI() {
   const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
 
   const LABEL: Record<string,Record<string,string>>={
-    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte sobre campanhas, hooks, performance...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
-    es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta sobre campañas, hooks, rendimiento...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask about campaigns, hooks, performance...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte algo...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta algo...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
+    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -1337,7 +1337,7 @@ export default function AdBriefAI() {
       {/* ── Input area ── */}
       <div style={{padding:"8px 12px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
         {/* Toolbar */}
-        <div className="chat-input-area" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",overflowX:"auto",flexWrap:"nowrap",scrollbarWidth:"none",WebkitOverflowScrolling:"touch" as any}}>
+        <div className="chat-input-area chat-quick-actions" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",overflowX:"auto",flexWrap:"nowrap",scrollbarWidth:"none",WebkitOverflowScrolling:"touch" as any}}>
           {TOOLS.map(tool=>{
             const isDashActive = activeTool==="dashboard";
             return(
@@ -1369,7 +1369,7 @@ export default function AdBriefAI() {
           <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             placeholder={L.placeholder} rows={1}
-            style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}}
+            style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}} className="chat-textarea"
             onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
             onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
             onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
@@ -1379,12 +1379,18 @@ export default function AdBriefAI() {
             {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>
-        <p style={{...m,fontSize:11.5,color:"rgba(255,255,255,0.12)",textAlign:"center",marginTop:7,letterSpacing:"0.05em"}}>{L.footer}</p>
+        <p className="chat-footer-hint" style={{...m,fontSize:11,color:"rgba(255,255,255,0.10)",textAlign:"center",marginTop:5,letterSpacing:"0.03em"}}>{L.footer}</p>
       </div>
 
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @media(max-width:640px){
+          .chat-quick-actions{display:none!important}
+          .chat-footer-hint{display:none!important}
+          textarea::placeholder{font-size:12px!important;opacity:0.35!important}
+        }
+        .chat-textarea::placeholder{color:rgba(255,255,255,0.22)!important}
       `}</style>
 
       {showUpgradeWall&&(
