@@ -1,8 +1,8 @@
-// Anthropic via direct fetch (no SDK needed in Deno edge runtime)
+// generate-captions — Anthropic Claude via direct fetch (no SDK)
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 type Platform = "tiktok" | "reels" | "facebook" | "linkedin";
@@ -18,14 +18,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // ── Auth guard ────────────────────────────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     const { createClient } = await import("npm:@supabase/supabase-js@2");
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-    // ─────────────────────────────────────────────────────────────────────────
+
     const { files, platforms, context } = await req.json() as {
       files: Array<{ id: string; name: string; type: string; base64: string | null }>;
       platforms: Platform[];
@@ -38,7 +37,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 
     const systemPrompt = `You are a senior performance marketing creative strategist with 10+ years writing social media captions for iGaming, DTC, and consumer apps. Your captions consistently outperform AI-generated content because they sound like real humans — specific, punchy, and platform-native.
 
@@ -53,14 +52,14 @@ Rules you never break:
 
     const results = await Promise.all(files.map(async (file) => {
       const platformResults = await Promise.all(platforms.map(async (platform) => {
-        const userContent: Anthropic.MessageParam["content"] = [];
+        const userContent: any[] = [];
 
         if (file.base64 && file.type.startsWith("image/")) {
           userContent.push({
             type: "image",
             source: {
               type: "base64",
-              media_type: file.type as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
+              media_type: file.type,
               data: file.base64,
             },
           });
@@ -85,20 +84,29 @@ Return ONLY a JSON object with this exact structure — no markdown, no explanat
 Each caption must be distinctly different in angle, not just rephrased. All must respect the platform rules exactly.`,
         });
 
-        const response = await client.messages.create({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 600,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userContent }],
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 600,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userContent }],
+          }),
         });
 
-        const raw = response.content[0].type === "text" ? response.content[0].text : "{}";
+        const data = await response.json();
+        const raw = data.content?.[0]?.type === "text" ? data.content[0].text : "{}";
         let captions: string[] = [];
         try {
           const clean = raw.replace(/```json|```/g, "").trim();
           captions = JSON.parse(clean).captions || [];
         } catch {
-          captions = raw.split("\n").filter(l => l.trim().startsWith('"') || l.trim().match(/^\d\./)).slice(0, 3);
+          captions = raw.split("\n").filter((l: string) => l.trim().startsWith('"') || l.trim().match(/^\d\./)).slice(0, 3);
         }
 
         return { platform, captions };
