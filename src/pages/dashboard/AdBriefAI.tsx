@@ -575,6 +575,7 @@ export default function AdBriefAI() {
   const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(sessionStorage.getItem(SK)||"[]")}catch{return[]}});
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
+  const [greetingKey,setGreetingKey]=useState(0);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const [contextReady,setContextReady]=useState(false);
@@ -1326,7 +1327,7 @@ export default function AdBriefAI() {
         {/* Input */}
         <div className="chat-input-area" style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
           {messages.length>0&&(
-            <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;}} // alerts survive clear, greeting resets title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+            <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} // alerts survive clear, greeting resets title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
               style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
