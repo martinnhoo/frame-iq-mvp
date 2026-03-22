@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // ── 2. Plan check + daily cap ─────────────────────────────────────────────
+    // ── 2. Plan check + smart rate limiting ──────────────────────────────────
     const { data: profileRow } = await supabase
       .from("profiles").select("plan").eq("id", user_id).maybeSingle();
     const plan = profileRow?.plan || "free";
@@ -33,32 +33,85 @@ Deno.serve(async (req) => {
       : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
 
     const today = new Date().toISOString().slice(0, 10);
-    const now = new Date();
-    const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
-    const weekKey = weekStart.toISOString().slice(0, 10);
     const monthKey = today.slice(0, 7); // YYYY-MM
 
+    // Fetch daily + monthly usage in one query
     const { data: usageRow } = await (supabase as any)
-      .from("free_usage").select("chat_count, last_reset").eq("user_id", user_id).maybeSingle();
+      .from("free_usage")
+      .select("chat_count, last_reset, monthly_msg_count, monthly_reset")
+      .eq("user_id", user_id).maybeSingle();
+
     const lastReset = usageRow?.last_reset?.slice(0, 10);
     const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
+    const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
+    const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
 
-    const DAILY_CAPS: Record<string, number> = { free: 3, maker: 50, pro: 200, studio: 500 };
-    const cap = DAILY_CAPS[planKey] ?? 3;
+    // ── Cost model: $0.0236 per chat message (Sonnet, 5850 in + 400 out tokens)
+    const COST_PER_MSG = 0.0236;
+    const estimatedMonthlyCost = monthlyCount * COST_PER_MSG;
 
+    // ── Plan revenue & thresholds
+    const PLAN_REVENUE:    Record<string, number> = { free: 0,   maker: 19,  pro: 49,  studio: 149 };
+    const DAILY_CAPS:      Record<string, number> = { free: 3,   maker: 50,  pro: 200, studio: 500 };
+    // Cooldown threshold: monthly cost > 70% of plan revenue (msgs)
+    // Soft cap: monthly cost > 90% of plan revenue  
+    const COOLDOWN_MSGS:   Record<string, number> = { free: 3,   maker: 564, pro: 1456, studio: 4428 };
+    const SOFTCAP_MSGS:    Record<string, number> = { free: 3,   maker: 726, pro: 1872, studio: 5694 };
+
+    const revenue  = PLAN_REVENUE[planKey] ?? 0;
+    const cap      = DAILY_CAPS[planKey]   ?? 3;
+    const cooldown = COOLDOWN_MSGS[planKey] ?? 3;
+    const softcap  = SOFTCAP_MSGS[planKey]  ?? 3;
+    const uiLang   = (user_language as string) || "pt";
+
+    // ── Hard check: daily cap (existing protection)
     if (dailyCount >= cap) {
-      const uiLang = user_language || "en";
-      const msgs: Record<string, { title: string; content: string }> = {
-        en: { title: "Daily limit reached", content: `You've used all ${cap} messages for today. Resets tomorrow.` },
-        pt: { title: "Limite diário atingido", content: `Você usou todas as ${cap} mensagens de hoje. Renova amanhã.` },
-        es: { title: "Límite diario alcanzado", content: `Usaste los ${cap} mensajes de hoy. Se reinicia mañana.` },
-        fr: { title: "Limite atteinte", content: `Vous avez utilisé vos ${cap} messages du jour.` },
-        de: { title: "Tageslimit erreicht", content: `Sie haben Ihre ${cap} Nachrichten aufgebraucht.` },
+      const m: Record<string, string> = {
+        pt: `Você usou todas as ${cap} mensagens de hoje. Renova amanhã.`,
+        es: `Usaste los ${cap} mensajes de hoy. Se reinicia mañana.`,
+        en: `You've used all ${cap} messages for today. Resets tomorrow.`,
       };
-      const m = msgs[uiLang] || msgs.en;
-      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning",
+        title: uiLang === "pt" ? "Limite diário atingido" : uiLang === "es" ? "Límite diario" : "Daily limit reached",
+        content: m[uiLang] || m.en }] }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Soft cap: monthly cost approaching revenue ceiling — suggest upgrade, don't block
+    if (monthlyCount >= softcap && planKey !== "studio") {
+      const nextPlan = planKey === "free" ? "Maker" : planKey === "maker" ? "Pro" : "Studio";
+      const m: Record<string, string> = {
+        pt: `Você usou ${monthlyCount} mensagens este mês — está se aproximando do limite de rentabilidade do plano ${planKey}. Considere fazer upgrade para ${nextPlan} para continuar sem interrupções.`,
+        es: `Usaste ${monthlyCount} mensajes este mes. Considera actualizar a ${nextPlan}.`,
+        en: `You've used ${monthlyCount} messages this month. Consider upgrading to ${nextPlan} to continue without limits.`,
+      };
+      return new Response(JSON.stringify({ error: "monthly_softcap", blocks: [{ type: "warning",
+        title: uiLang === "pt" ? "Limite mensal se aproximando" : "Monthly limit approaching",
+        content: m[uiLang] || m.en,
+        cta_label: uiLang === "pt" ? `Fazer upgrade para ${nextPlan}` : `Upgrade to ${nextPlan}`,
+        cta_route: "/pricing" }] }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Smart cooldown: monthly cost crossed 70% of plan revenue
+    // Only kicks in for users who are genuinely heavy — normal users never hit this
+    let cooldownDelay = 0;
+    if (monthlyCount >= cooldown && planKey !== "studio") {
+      // Progressive delay: 2s at 70%, scaling to 8s at 90%
+      const pct = Math.min((monthlyCount - cooldown) / (softcap - cooldown), 1);
+      cooldownDelay = Math.round(2000 + pct * 6000); // 2s → 8s
+    }
+
+    // ── Log cost alert if user crossed 70% threshold (fire-and-forget)
+    if (monthlyCount >= cooldown && monthlyCount % 10 === 0) {
+      (supabase as any).from("cost_alerts").upsert({
+        user_id,
+        plan: planKey,
+        monthly_msgs: monthlyCount,
+        estimated_cost: estimatedMonthlyCost,
+        plan_revenue: revenue,
+        cost_pct: revenue > 0 ? Math.round((estimatedMonthlyCost / revenue) * 100) : 999,
+        alert_date: today,
+        last_updated: new Date().toISOString(),
+      }, { onConflict: "user_id" }).then(() => {}).catch(() => {});
     }
 
     const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics|como está minha conta|how is my account|como vai/i.test(message);
@@ -111,17 +164,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Studio freeze time
-    if (planKey === "studio" && dailyCount > 100) {
-      const delay = Math.min(Math.floor((dailyCount / cap) * 8000), 8000);
-      await new Promise(r => setTimeout(r, delay));
+    // Apply smart cooldown if active (only for abusive usage)
+    if (cooldownDelay > 0) {
+      await new Promise(r => setTimeout(r, cooldownDelay));
     }
 
-    // Update chat counter
-    await (supabase as any).from("free_usage").upsert(
-      { user_id, chat_count: dailyCount + 1, last_reset: today },
-      { onConflict: "user_id" }
-    );
+    // Update daily + monthly counter atomically
+    await (supabase as any).from("free_usage").upsert({
+      user_id,
+      chat_count: dailyCount + 1,
+      last_reset: today,
+      monthly_msg_count: monthlyCount + 1,
+      monthly_reset: monthKey,
+    }, { onConflict: "user_id" });
 
     // ── 3. Fetch account data in parallel ─────────────────────────────────────
     const [
@@ -609,4 +664,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603262200
+// redeploy 202603262300
