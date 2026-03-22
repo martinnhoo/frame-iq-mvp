@@ -1,4 +1,4 @@
-// decode-competitor v3 — surgical analysis, zero fluff, max actionability
+// decode-competitor v4 — densidade máxima, zero fluff, idioma do anúncio
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,88 +10,69 @@ Deno.serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-    const { ad_text, industry, market, context, observation, persona_context, auto_detect_industry } = await req.json();
+    const { ad_text, observation, persona_context, ui_language } = await req.json();
     if (!ad_text) return new Response(JSON.stringify({ error: 'ad_text required' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-    const systemPrompt = `You are a $100M+ ad spend strategist. You decode competitor ads with surgical precision.
+    // Determine response language based on ui_language or ad content
+    const langInstructions: Record<string, string> = {
+      pt: 'Respond in Brazilian Portuguese (PT-BR). All labels, descriptions, hooks, strategy — everything in PT-BR.',
+      es: 'Respond in Spanish. All labels, descriptions, hooks, strategy — everything in Spanish.',
+      en: 'Respond in English. All labels, descriptions, hooks, strategy — everything in English.',
+    };
+    const langInstruction = langInstructions[ui_language || 'pt'] || langInstructions.pt;
+
+    const systemPrompt = `You are a performance marketing strategist who has spent $100M+ on ads.
+You decode competitor ads with extreme precision and zero fluff.
+
+LANGUAGE RULE: ${langInstruction}
+The ad content may be in any language — your ANALYSIS AND OUTPUT must be in the language specified above.
 
 RULES:
-1. Every field must be SPECIFIC to this exact ad — no generic marketing copy
-2. counter_strategy and ready_hooks must be in the SAME LANGUAGE as the ad_text
-3. ready_hooks must be immediately usable — copy-paste ready, not templates
-4. If context about the user's brand is given, every recommendation must be tailored to BEAT this specific ad for that brand
-5. Mismatch check: if observation mentions a specific sector/niche but the ad clearly belongs to a DIFFERENT industry, set mismatch_detected: true with a clear explanation. Also set if auto-detected industry seems uncertain.
-6. Return ONLY valid JSON. No markdown. No text outside JSON.`;
+1. Be surgical — every sentence must add value. No filler.
+2. Identify industry/niche FROM THE AD CONTENT itself — never assume.
+3. If the input looks like a URL (starts with http), respond noting it cannot be processed directly and ask for the transcript or copy.
+4. If observation is given, weight your entire analysis toward that question.
+5. Return ONLY valid JSON. No markdown.`;
 
-    const userPrompt = `Decode this competitor ad with maximum precision:
+    const userPrompt = `Decode this competitor ad:
 
 AD CONTENT:
 ${ad_text}
 
-${auto_detect_industry ? 'INDUSTRY: Auto-detect from the ad content (do not assume — identify from the ad itself)' : `INDUSTRY: ${industry || 'Not specified'}`}
-MARKET: ${market || 'Auto-detect from language/currency/context in the ad'}
-${observation ? `\nOBSERVATION FROM USER: ${observation}\n(The user wants you to evaluate the ad with this specific question/angle in mind. Incorporate it throughout your analysis.)` : ''}
-${persona_context ? `\nMY AUDIENCE: ${persona_context}` : ''}
+${observation ? `USER FOCUS: ${observation}` : ''}
+${persona_context ? `MY ACCOUNT CONTEXT: ${persona_context}` : ''}
 
-Return this exact JSON:
+Return exactly this JSON (all string values in the specified language):
 {
-  "mismatch_detected": <true|false>,
-  "mismatch_reason": "<if true: explain exactly what the ad is vs what was stated. If false: empty string>",
+  "industry": "<auto-detected: be specific, e.g. 'iGaming/Cassino', 'E-commerce moda feminina', 'SaaS B2B'>",
+  "market": "<detected market/country from language, currency, slang>",
+  "mismatch_detected": false,
+  "mismatch_reason": "",
   
-  "hook_type": "<curiosity|pain_point|social_proof|pattern_interrupt|direct_offer|emotional|question>",
-  "hook_formula": "<the EXACT formula extracted from first 3 seconds, e.g.: '[Shocking number] + [desire] + [secret implication]'>",
-  "hook_score": <1.0-10.0 — benchmark against top 10% of ${industry} ads in ${market}>,
-  "hook_strength": "<low|medium|high|viral>",
+  "hook_score": <1.0-10.0>,
+  "hook_type": "<type in detected language, e.g. 'Prova Social', 'Curiosidade', 'Oferta Direta'>",
+  "hook_formula": "<exact formula extracted from first 3 seconds>",
+  "hook_dissection": "<2 sentences: why this hook works or fails — be direct>",
   
-  "framework": "<AIDA|PAS|BAB|Hook-Story-Offer|4Ps|before-after|problem-agitate-solve|other>",
-  "creative_model": "<UGC|Testimonial|Tutorial|Problem-Solution|Before-After|Promo|Demo|Talking-Head|Slideshow|Native>",
-  "pacing": "<fast-cut|slow-build|shock-open|social-scroll|talking-head-direct>",
+  "format": "<UGC|Depoimento|Tutorial|Problema-Solução|Antes-Depois|Promo|Demo|Talking Head|Slideshow|Nativo>",
+  "target_audience": "<1 sentence: age, intent, pain state>",
+  "emotional_triggers": ["<trigger>", "<trigger>", "<trigger>"],
   
-  "target_audience": "<specific: age range, intent, pain state, awareness level — 1 sentence max>",
-  "emotional_triggers": ["<exact trigger name, 3-6 words max>"],
-  "persuasion_tactics": ["<exact tactic, 3-6 words max>"],
-  
-  "hook_dissection": "<2 sentences max explaining EXACTLY why this hook works or doesn't work — specific to this ad>",
-  
-  "strengths": ["<strength + WHY it works in 1 sentence>"],
-  "weaknesses": ["<weakness + what's missing in 1 sentence>"],
+  "strengths": ["<strength + why it works>"],
+  "weaknesses": ["<weakness + what's missing>"],
   
   "threat_level": "<low|medium|high|critical>",
-  "threat_reason": "<1 sentence: why this threat level — specific to ${industry} in ${market}>",
+  "counter_strategy": "<3 sentences max: concrete tactics to beat this ad. Name hook angle, trigger, format.>",
   
-  "counter_strategy": "<3 sentences max. Specific tactics to beat this exact ad. Name the hook angle, emotional trigger, and format to use. In the same language as the ad.>",
-  
-  "steal_worthy": ["<element to steal + HOW to adapt it in 1 sentence>"],
+  "steal_worthy": ["<element + how to adapt>"],
   
   "ready_hooks": [
-    {
-      "hook": "<ready-to-use hook — copy-paste, same language as ad>",
-      "type": "<hook type>",
-      "angle": "<what makes this different from competitor: 3-5 words>"
-    },
-    {
-      "hook": "<different emotional trigger — same language>",
-      "type": "<hook type>",
-      "angle": "<angle in 3-5 words>"
-    },
-    {
-      "hook": "<different format/pacing approach — same language>",
-      "type": "<hook type>",
-      "angle": "<angle in 3-5 words>"
-    },
-    {
-      "hook": "<pain-point attack on competitor weakness — same language>",
-      "type": "<hook type>",
-      "angle": "<angle in 3-5 words>"
-    },
-    {
-      "hook": "<curiosity/pattern interrupt approach — same language>",
-      "type": "<hook type>",
-      "angle": "<angle in 3-5 words>"
-    }
+    { "hook": "<copy-paste ready hook>", "angle": "<3-5 words: what makes it different>" },
+    { "hook": "<different emotional trigger>", "angle": "<angle>" },
+    { "hook": "<pattern interrupt approach>", "angle": "<angle>" }
   ],
   
-  "immediate_action": "<1 specific action to take TODAY based on this analysis. Concrete, not vague. In same language as ad.>"
+  "immediate_action": "<1 concrete action to take TODAY. Specific, not vague.>"
 }`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -99,7 +80,7 @@ Return this exact JSON:
       headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2500,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
       }),
@@ -115,4 +96,4 @@ Return this exact JSON:
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603241200
+// redeploy 202603251600

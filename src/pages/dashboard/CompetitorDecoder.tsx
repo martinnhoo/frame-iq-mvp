@@ -137,11 +137,11 @@ export default function CompetitorDecoder(){
     try{
       const personaCtx=selectedPersona?`Account: ${selectedPersona.name}. Platforms: ${(selectedPersona as any).best_platforms?.join(", ")}.`:undefined;
       const{data,error}=await supabase.functions.invoke("decode-competitor",{
-        body:{ad_text:txt,observation:observation.trim()||undefined,auto_detect_industry:true,persona_context:personaCtx},
+        body:{ad_text:txt,observation:observation.trim()||undefined,persona_context:personaCtx,ui_language:lang},
       });
       if(error)throw error;
       setResult(data);
-      if(data?.mismatch_detected)toast.warning(lang==="pt"?"Setor/nicho detectado automaticamente — confira se está correto":lang==="es"?"Sector/nicho detectado automáticamente":"Industry auto-detected — verify if correct");
+      if(data?.mismatch_detected&&data?.mismatch_reason){toast.warning(data.mismatch_reason.slice(0,100));}
     }catch{toast.error(lang==="pt"?"Decodificação falhou":lang==="es"?"Decodificación fallida":"Decoding failed");}
     finally{setLoading(false);}
   };
@@ -223,149 +223,143 @@ export default function CompetitorDecoder(){
 
       {loading&&<ThinkingIndicator lang={lang} variant="tool" label={lang==="pt"?"Decodificando anúncio":lang==="es"?"Decodificando anuncio":"Decoding ad"} />}
 
-      {result&&(
-        <div style={{display:"flex",flexDirection:"column"as const,gap:12}}>
 
+      {result&&(
+        <div style={{display:"flex",flexDirection:"column"as const,gap:10}}>
+
+          {/* Mismatch warning */}
           {result.mismatch_detected&&result.mismatch_reason&&(
-            <div style={{padding:"16px 18px",borderRadius:14,background:"rgba(251,191,36,0.07)",border:"2px solid rgba(251,191,36,0.28)"}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                <AlertCircle size={16} color="#fbbf24"/>
-                <p style={{...F,fontSize:13,fontWeight:800,color:"#fbbf24",margin:0}}>{t.mismatch_title}</p>
-              </div>
-              <p style={{...M,fontSize:12,color:"rgba(238,240,246,0.62)",lineHeight:1.6,margin:0}}>{result.mismatch_reason}</p>
+            <div style={{padding:"12px 16px",borderRadius:12,background:"rgba(251,191,36,0.07)",border:"1px solid rgba(251,191,36,0.25)",display:"flex",gap:10,alignItems:"flex-start"}}>
+              <AlertCircle size={14} color="#fbbf24" style={{marginTop:2,flexShrink:0}}/>
+              <p style={{...M,fontSize:12,color:"rgba(251,191,36,0.85)",lineHeight:1.5,margin:0}}>{result.mismatch_reason}</p>
             </div>
           )}
 
-          {/* Score + Threat + Framework */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-            <div style={{padding:"16px",borderRadius:14,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.08)"}}>
-              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.hook_score}</p>
-              <ScoreBar score={result.hook_score}/>
-              <p style={{...M,fontSize:10,color:"rgba(238,240,246,0.28)",marginTop:6,textTransform:"uppercase"as const,letterSpacing:"0.08em"}}>{result.hook_strength}</p>
+          {/* Industry + Score bar */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{padding:"14px 16px",borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)"}}>
+              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:6}}>
+                {lang==="pt"?"Setor detectado":lang==="es"?"Sector detectado":"Detected sector"}
+              </p>
+              <p style={{...F,fontSize:14,fontWeight:700,color:"#eef0f6",margin:0}}>{(result as any).industry||"—"}</p>
+              {(result as any).market&&<p style={{...M,fontSize:11,color:"rgba(238,240,246,0.40)",marginTop:2}}>{(result as any).market}</p>}
             </div>
-            {threat&&(
-              <div style={{padding:"16px",borderRadius:14,background:threat.bg,border:`1px solid ${threat.border}`}}>
-                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.threat_level}</p>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                  <AlertTriangle size={15} color={threat.color}/>
-                  <p style={{...F,fontSize:14,fontWeight:800,color:threat.color,margin:0}}>{threatLabel}</p>
+            <div style={{padding:"14px 16px",borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)"}}>
+              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:6}}>{t.hook_score}</p>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{...F,fontSize:26,fontWeight:900,color:result.hook_score>=8?"#34d399":result.hook_score>=6?"#fbbf24":"#f87171",lineHeight:1}}>
+                  {result.hook_score?.toFixed(1)}<span style={{fontSize:12,color:"rgba(238,240,246,0.25)"}}>/10</span>
+                </span>
+                <div style={{flex:1,height:4,borderRadius:99,background:"rgba(255,255,255,0.06)",overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,#a78bfa,${result.hook_score>=8?"#34d399":result.hook_score>=6?"#fbbf24":"#f87171"})`,width:`${Math.min(100,result.hook_score*10)}%`,transition:"width 0.6s ease"}}/>
                 </div>
-                {result.threat_reason&&<p style={{...M,fontSize:11,color:"rgba(238,240,246,0.38)",lineHeight:1.5,margin:0}}>{result.threat_reason}</p>}
-              </div>
-            )}
-            <div style={{padding:"16px",borderRadius:14,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.08)"}}>
-              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.framework}</p>
-              <p style={{...F,fontSize:14,fontWeight:800,color:"#eef0f6",margin:"0 0 8px"}}>{result.framework}</p>
-              <div style={{display:"flex",flexWrap:"wrap"as const,gap:5}}>
-                {hookColor&&<Tag label={result.hook_type?.replace(/_/g," ")} color={hookColor.color} bg={hookColor.bg} border={hookColor.border}/>}
-                <Tag label={result.creative_model} color="rgba(238,240,246,0.42)" bg="rgba(255,255,255,0.05)" border="rgba(255,255,255,0.10)"/>
               </div>
             </div>
           </div>
 
           {/* Hook formula + dissection */}
-          {(result.hook_formula||result.hook_dissection)&&(
-            <div style={{borderRadius:14,background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.18)",overflow:"hidden"}}>
-              {result.hook_formula&&(
-                <div style={{padding:"14px 18px",borderBottom:result.hook_dissection?"1px solid rgba(167,139,250,0.12)":"none"}}>
-                  <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(167,139,250,0.55)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:8}}>{t.hook_formula}</p>
-                  <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.85)",lineHeight:1.6,margin:0,fontStyle:"italic"as const}}>"{result.hook_formula}"</p>
-                </div>
-              )}
-              {result.hook_dissection&&(
-                <div style={{padding:"14px 18px"}}>
-                  <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(167,139,250,0.55)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:8}}>{t.hook_dissection}</p>
-                  <p style={{...M,fontSize:12.5,color:"rgba(238,240,246,0.62)",lineHeight:1.65,margin:0}}>{result.hook_dissection}</p>
-                </div>
-              )}
+          <div style={{padding:"16px 18px",borderRadius:12,background:"rgba(34,211,238,0.04)",border:"1px solid rgba(34,211,238,0.15)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:8}}>
+              <span style={{...M,fontSize:10,fontWeight:700,color:"rgba(34,211,238,0.55)",letterSpacing:"0.10em",textTransform:"uppercase"as const}}>{t.hook_formula}</span>
+              {result.hook_type&&<span style={{...M,fontSize:11,fontWeight:600,color:"#22d3ee",background:"rgba(34,211,238,0.10)",border:"1px solid rgba(34,211,238,0.20)",padding:"2px 8px",borderRadius:20}}>{result.hook_type}</span>}
             </div>
-          )}
-
-          {/* Target + Triggers + Tactics */}
-          <div style={{padding:"14px 18px",borderRadius:14,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.08)"}}>
-            <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:6}}>{t.target}</p>
-            <p style={{...M,fontSize:12.5,color:"rgba(238,240,246,0.68)",margin:"0 0 12px",lineHeight:1.5}}>{result.target_audience}</p>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-              <div>
-                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(244,114,182,0.50)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:7}}>{t.emotional}</p>
-                <div style={{display:"flex",flexWrap:"wrap"as const,gap:5}}>
-                  {result.emotional_triggers?.map(e2=><Tag key={e2} label={e2} color="#f9a8d4" bg="rgba(244,114,182,0.10)" border="rgba(244,114,182,0.20)"/>)}
-                </div>
-              </div>
-              <div>
-                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(96,165,250,0.50)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:7}}>{t.persuasion}</p>
-                <div style={{display:"flex",flexWrap:"wrap"as const,gap:5}}>
-                  {result.persuasion_tactics?.map(p2=><Tag key={p2} label={p2} color="#93c5fd" bg="rgba(96,165,250,0.10)" border="rgba(96,165,250,0.20)"/>)}
-                </div>
-              </div>
-            </div>
+            {result.hook_formula&&<p style={{...F,fontSize:13,fontWeight:700,color:"#eef0f6",margin:"0 0 8px",lineHeight:1.4}}>{result.hook_formula}</p>}
+            {result.hook_dissection&&<p style={{...M,fontSize:12,color:"rgba(238,240,246,0.58)",lineHeight:1.6,margin:0}}>{result.hook_dissection}</p>}
           </div>
+
+          {/* Format + Target + Triggers — compact 3-col */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+            {(result as any).format&&(
+              <div style={{padding:"12px 14px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:5}}>
+                  {lang==="pt"?"Formato":lang==="es"?"Formato":"Format"}
+                </p>
+                <p style={{...M,fontSize:12,fontWeight:600,color:"rgba(238,240,246,0.75)",margin:0}}>{(result as any).format}</p>
+              </div>
+            )}
+            {result.target_audience&&(
+              <div style={{padding:"12px 14px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:5}}>{t.target}</p>
+                <p style={{...M,fontSize:12,color:"rgba(238,240,246,0.65)",margin:0,lineHeight:1.4}}>{result.target_audience}</p>
+              </div>
+            )}
+            {result.emotional_triggers?.length>0&&(
+              <div style={{padding:"12px 14px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)"}}>
+                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:5}}>{t.emotional}</p>
+                <div style={{display:"flex",flexWrap:"wrap"as const,gap:4}}>
+                  {result.emotional_triggers.slice(0,3).map((tr,i)=>(
+                    <span key={i} style={{...M,fontSize:10,fontWeight:600,color:"#f472b6",background:"rgba(244,114,182,0.08)",border:"1px solid rgba(244,114,182,0.18)",padding:"2px 7px",borderRadius:20}}>{tr}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Threat + Counter Strategy */}
+          {(()=>{const thr=THREAT[result.threat_level]||THREAT.medium;const lbl=lang==="pt"?thr.pt:lang==="es"?thr.es:thr.en;return(
+            <div style={{padding:"16px 18px",borderRadius:12,background:thr.bg,border:`1px solid ${thr.border}`}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:7}}>
+                  <Shield size={13} color={thr.color}/>
+                  <span style={{...M,fontSize:10,fontWeight:700,color:thr.color,letterSpacing:"0.10em",textTransform:"uppercase"as const}}>{t.threat_level}: {lbl}</span>
+                </div>
+                <button onClick={async()=>{await navigator.clipboard.writeText(result.counter_strategy);setCopiedCounter(true);toast.success(t.copied);setTimeout(()=>setCopiedCounter(false),2000);}}
+                  style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:7,background:`${thr.color}18`,border:`1px solid ${thr.border}`,cursor:"pointer",...M,fontSize:11,fontWeight:600,color:thr.color}}>
+                  {copiedCounter?<><Check size={10}/> {t.copied}</>:<><Copy size={10}/> {t.copy_strategy}</>}
+                </button>
+              </div>
+              <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.80)",lineHeight:1.65,margin:0}}>{result.counter_strategy}</p>
+            </div>
+          )})()}
 
           {/* Strengths + Weaknesses */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div style={{padding:"16px 18px",borderRadius:14,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.15)"}}>
-              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(52,211,153,0.50)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.strengths}</p>
-              <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column"as const,gap:8}}>
-                {result.strengths?.map((s,i)=>(
-                  <li key={i} style={{display:"flex",alignItems:"flex-start",gap:8}}>
-                    <span style={{width:16,height:16,borderRadius:"50%",background:"rgba(52,211,153,0.15)",color:"#34d399",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",...M,fontSize:9,fontWeight:700,marginTop:2}}>{i+1}</span>
-                    <span style={{...M,fontSize:12,color:"rgba(238,240,246,0.58)",lineHeight:1.5}}>{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div style={{padding:"16px 18px",borderRadius:14,background:"rgba(248,113,113,0.05)",border:"1px solid rgba(248,113,113,0.15)"}}>
-              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(248,113,113,0.50)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.weaknesses}</p>
-              <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column"as const,gap:8}}>
-                {result.weaknesses?.map((w,i)=>(
-                  <li key={i} style={{display:"flex",alignItems:"flex-start",gap:8}}>
-                    <span style={{width:16,height:16,borderRadius:"50%",background:"rgba(248,113,113,0.15)",color:"#f87171",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",...M,fontSize:9,fontWeight:700,marginTop:2}}>{i+1}</span>
-                    <span style={{...M,fontSize:12,color:"rgba(238,240,246,0.58)",lineHeight:1.5}}>{w}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Counter strategy */}
-          <div style={{padding:"18px",borderRadius:14,background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.20)"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-              <div style={{display:"flex",alignItems:"center",gap:7}}>
-                <Shield size={15} color="#0ea5e9"/>
-                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(14,165,233,0.58)",letterSpacing:"0.12em",textTransform:"uppercase"as const,margin:0}}>{t.counter}</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {result.strengths?.length>0&&(
+              <div style={{padding:"14px 16px",borderRadius:12,background:"rgba(52,211,153,0.04)",border:"1px solid rgba(52,211,153,0.15)"}}>
+                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(52,211,153,0.55)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:8}}>{t.strengths}</p>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column"as const,gap:5}}>
+                  {result.strengths.map((s,i)=>(
+                    <li key={i} style={{display:"flex",gap:7,alignItems:"flex-start"}}>
+                      <span style={{color:"#34d399",flexShrink:0,fontSize:11,marginTop:2}}>✓</span>
+                      <span style={{...M,fontSize:12,color:"rgba(238,240,246,0.62)",lineHeight:1.45}}>{s}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <button onClick={async()=>{await navigator.clipboard.writeText(result.counter_strategy);setCopiedCounter(true);toast.success(t.copied);setTimeout(()=>setCopiedCounter(false),2000);}}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:7,background:"rgba(14,165,233,0.10)",border:"1px solid rgba(14,165,233,0.20)",cursor:"pointer",...M,fontSize:11,fontWeight:600,color:"#0ea5e9"}}>
-                {copiedCounter?<><Check size={11}/> {t.copied}</>:<><Copy size={11}/> {t.copy_strategy}</>}
-              </button>
-            </div>
-            <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.70)",lineHeight:1.7,margin:0}}>{result.counter_strategy}</p>
+            )}
+            {result.weaknesses?.length>0&&(
+              <div style={{padding:"14px 16px",borderRadius:12,background:"rgba(248,113,113,0.04)",border:"1px solid rgba(248,113,113,0.15)"}}>
+                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(248,113,113,0.55)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:8}}>{t.weaknesses}</p>
+                <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column"as const,gap:5}}>
+                  {result.weaknesses.map((w,i)=>(
+                    <li key={i} style={{display:"flex",gap:7,alignItems:"flex-start"}}>
+                      <span style={{color:"#f87171",flexShrink:0,fontSize:11,marginTop:2}}>✗</span>
+                      <span style={{...M,fontSize:12,color:"rgba(238,240,246,0.62)",lineHeight:1.45}}>{w}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          {/* Ready hooks — 5 with angle + type badge */}
+          {/* Ready hooks */}
           {result.ready_hooks&&result.ready_hooks.length>0&&(
-            <div style={{borderRadius:14,border:"1px solid rgba(251,191,36,0.20)",overflow:"hidden"}}>
-              <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(251,191,36,0.12)",background:"rgba(251,191,36,0.05)",display:"flex",alignItems:"center",gap:8}}>
-                <TrendingUp size={15} color="#fbbf24"/>
-                <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(251,191,36,0.58)",letterSpacing:"0.12em",textTransform:"uppercase"as const,margin:0}}>{t.ready_hooks}</p>
-                <span style={{...M,fontSize:10,color:"rgba(251,191,36,0.35)",marginLeft:"auto"}}>{result.ready_hooks.length} hooks</span>
+            <div style={{borderRadius:12,border:"1px solid rgba(251,191,36,0.18)",overflow:"hidden"}}>
+              <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(251,191,36,0.10)",background:"rgba(251,191,36,0.04)",display:"flex",alignItems:"center",gap:8}}>
+                <TrendingUp size={13} color="#fbbf24"/>
+                <span style={{...M,fontSize:10,fontWeight:700,color:"rgba(251,191,36,0.55)",letterSpacing:"0.10em",textTransform:"uppercase"as const}}>{t.ready_hooks}</span>
+                <span style={{...M,fontSize:10,color:"rgba(251,191,36,0.30)",marginLeft:"auto"}}>{result.ready_hooks.length} hooks</span>
               </div>
-              <div style={{padding:"10px",display:"flex",flexDirection:"column"as const,gap:6}}>
+              <div style={{padding:"8px",display:"flex",flexDirection:"column"as const,gap:5}}>
                 {result.ready_hooks.map((hookItem,i)=>{
                   const hookText=getHookText(hookItem);
                   const angle=getHookAngle(hookItem);
-                  const htype=getHookType(hookItem);
-                  const hc=HC[htype]||HC.curiosity;
                   return(
-                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"12px",borderRadius:10,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.06)"}}>
-                      <span style={{...M,fontSize:10,fontWeight:800,color:"rgba(251,191,36,0.38)",flexShrink:0,marginTop:3,minWidth:16}}>#{i+1}</span>
+                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 12px",borderRadius:9,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.06)"}}>
+                      <span style={{...M,fontSize:10,fontWeight:800,color:"rgba(251,191,36,0.35)",flexShrink:0,marginTop:2,minWidth:14}}>#{i+1}</span>
                       <div style={{flex:1,minWidth:0}}>
-                        {angle&&(
-                          <span style={{...M,fontSize:10,fontWeight:700,color:hc.color,background:hc.bg,border:`1px solid ${hc.border}`,padding:"2px 8px",borderRadius:20,display:"inline-block",marginBottom:7}}>
-                            {angle}
-                          </span>
-                        )}
-                        <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.82)",lineHeight:1.55,margin:0}}>{hookText}</p>
+                        {angle&&<span style={{...M,fontSize:10,fontWeight:700,color:"#fbbf24",background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.18)",padding:"2px 7px",borderRadius:20,display:"inline-block",marginBottom:5}}>{angle}</span>}
+                        <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.85)",lineHeight:1.5,margin:0}}>{hookText}</p>
                       </div>
                       <button onClick={()=>copyHook(hookText,i)}
                         style={{display:"flex",alignItems:"center",gap:4,padding:"5px 10px",borderRadius:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.10)",cursor:"pointer",...M,fontSize:11,color:"rgba(238,240,246,0.50)",whiteSpace:"nowrap"as const,flexShrink:0}}>
@@ -378,36 +372,20 @@ export default function CompetitorDecoder(){
             </div>
           )}
 
-          {/* Steal worthy */}
-          {result.steal_worthy?.length>0&&(
-            <div style={{padding:"16px 18px",borderRadius:14,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.08)"}}>
-              <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.28)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:10}}>{t.steal}</p>
-              <ul style={{listStyle:"none",padding:0,margin:0,display:"flex",flexDirection:"column"as const,gap:8}}>
-                {result.steal_worthy?.map((s,i)=>(
-                  <li key={i} style={{display:"flex",alignItems:"flex-start",gap:8}}>
-                    <span style={{color:"rgba(251,191,36,0.55)",flexShrink:0,marginTop:2,fontSize:12}}>→</span>
-                    <span style={{...M,fontSize:12,color:"rgba(238,240,246,0.58)",lineHeight:1.5}}>{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {/* Immediate action */}
           {result.immediate_action&&(
-            <div style={{padding:"18px",borderRadius:14,background:"linear-gradient(135deg,rgba(34,211,238,0.08),rgba(14,165,233,0.04))",border:"1px solid rgba(34,211,238,0.25)",position:"relative"as const,overflow:"hidden"}}>
-              <div style={{position:"absolute"as const,top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:"radial-gradient(circle,rgba(34,211,238,0.12),transparent 70%)",pointerEvents:"none"}}/>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{padding:"16px 18px",borderRadius:12,background:"linear-gradient(135deg,rgba(34,211,238,0.07),rgba(14,165,233,0.04))",border:"1px solid rgba(34,211,238,0.22)"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
-                  <Target size={15} color="#22d3ee"/>
-                  <p style={{...M,fontSize:10,fontWeight:700,color:"rgba(34,211,238,0.60)",letterSpacing:"0.12em",textTransform:"uppercase"as const,margin:0}}>{t.immediate}</p>
+                  <Target size={13} color="#22d3ee"/>
+                  <span style={{...M,fontSize:10,fontWeight:700,color:"rgba(34,211,238,0.55)",letterSpacing:"0.10em",textTransform:"uppercase"as const}}>{t.immediate}</span>
                 </div>
                 <button onClick={async()=>{await navigator.clipboard.writeText(result.immediate_action!);setCopiedAction(true);toast.success(t.copied);setTimeout(()=>setCopiedAction(false),2000);}}
-                  style={{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:7,background:"rgba(34,211,238,0.10)",border:"1px solid rgba(34,211,238,0.22)",cursor:"pointer",...M,fontSize:11,fontWeight:600,color:"#22d3ee"}}>
+                  style={{display:"flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:7,background:"rgba(34,211,238,0.10)",border:"1px solid rgba(34,211,238,0.22)",cursor:"pointer",...M,fontSize:11,fontWeight:600,color:"#22d3ee"}}>
                   {copiedAction?<><Check size={11}/> {t.copied}</>:<><Copy size={11}/> {t.copy_hook}</>}
                 </button>
               </div>
-              <p style={{...F,fontSize:13.5,fontWeight:700,color:"rgba(238,240,246,0.88)",lineHeight:1.6,margin:0}}>{result.immediate_action}</p>
+              <p style={{...F,fontSize:13.5,fontWeight:700,color:"rgba(238,240,246,0.90)",lineHeight:1.6,margin:0}}>{result.immediate_action}</p>
             </div>
           )}
 
