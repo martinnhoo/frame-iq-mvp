@@ -327,7 +327,52 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
     ].filter(Boolean).join("\n\n");
 
-    // ── 4b. Fetch live Meta Ads data ─────────────────────────────────────────
+    // ── 4b. Fetch live Meta Ads data (with historical date detection) ──────────
+    // Detect if user is asking about a specific historical period
+    const historicalMatch = message.match(
+      /(?:em|in|de|desde|from|between|entre|no mês de|no dia|week of|semana de)?\s*(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s*(?:de\s*)?(?:20\d{2})?|(?:\d{1,2})[\/\-](?:\d{1,2})(?:[\/\-](?:20)?\d{2,4})?|(?:last|últim[ao]s?|past)\s+(?:\d+)\s+(?:days?|dias?|weeks?|semanas?|months?|meses?)/i
+    );
+    let historicalSince: string | null = null;
+    let historicalUntil: string | null = null;
+
+    if (historicalMatch) {
+      try {
+        const matched = historicalMatch[0].toLowerCase();
+        const now = new Date();
+        const MONTHS_PT: Record<string, number> = {
+          janeiro:0, fevereiro:1, março:2, abril:3, maio:4, junho:5,
+          julho:6, agosto:7, setembro:8, outubro:9, novembro:10, dezembro:11,
+          january:0, february:1, march:2, april:3, may:4, june:5,
+          july:6, august:7, september:8, october:9, november:10, december:11
+        };
+        // Month name match (e.g. "janeiro", "março de 2024")
+        const monthMatch = matched.match(/(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)/);
+        if (monthMatch) {
+          const yearMatch = matched.match(/20(\d{2})/);
+          const year = yearMatch ? parseInt("20" + yearMatch[1]) : now.getFullYear();
+          const month = MONTHS_PT[monthMatch[1]];
+          historicalSince = new Date(year, month, 1).toISOString().split("T")[0];
+          historicalUntil = new Date(year, month + 1, 0).toISOString().split("T")[0];
+        }
+        // "last N days/weeks/months"
+        const relMatch = matched.match(/(\d+)\s*(day|dia|week|semana|month|mes)/);
+        if (relMatch) {
+          const n = parseInt(relMatch[1]);
+          const unit = relMatch[2];
+          const ms = unit.startsWith("day") || unit.startsWith("dia") ? n * 86400000
+                    : unit.startsWith("week") || unit.startsWith("seman") ? n * 7 * 86400000
+                    : n * 30 * 86400000;
+          historicalSince = new Date(Date.now() - ms).toISOString().split("T")[0];
+          historicalUntil = new Date().toISOString().split("T")[0];
+        }
+        // Only use historical if it's actually outside our default 30-day window
+        if (historicalSince) {
+          const daysDiff = (Date.now() - new Date(historicalSince).getTime()) / 86400000;
+          if (daysDiff <= 32) { historicalSince = null; historicalUntil = null; } // within default window
+        }
+      } catch (_) { historicalSince = null; historicalUntil = null; }
+    }
+
     let liveMetaData = "";
     const metaConn = (connections as any[]).find((c: any) => c.platform === "meta");
     if (metaConn) {
@@ -337,7 +382,6 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           .select("access_token, ad_accounts, selected_account_id, persona_id")
           .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
         const allC = (allConns as any[]) || [];
-        // Prefer persona-specific, fallback global, fallback first
         const tokenRow = (persona_id && allC.find((c: any) => c.persona_id === persona_id))
           || allC.find((c: any) => !c.persona_id)
           || allC[0] || null;
@@ -349,8 +393,9 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
-            const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
-            const until = new Date().toISOString().split("T")[0];
+            // Use historical range if detected, otherwise default 30 days
+            const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
+            const until = historicalUntil || new Date().toISOString().split("T")[0];
             const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
 
             const [adsRes, campaignsRes] = await Promise.allSettled([
@@ -361,7 +406,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             const adsRaw = adsRes.status === "fulfilled" ? await adsRes.value.json() : null;
             const campsRaw = campaignsRes.status === "fulfilled" ? await campaignsRes.value.json() : null;
 
-            liveMetaData = `LIVE META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})\n`;
+            liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
 
             if (campsRaw?.error) {
               const isExpired = campsRaw.error.code === 190 || String(campsRaw.error.type||"").includes("OAuthException");
@@ -499,22 +544,72 @@ PT-BR vocab: "criativos", "verba", "gestor de tráfego", "pausar", "escalar", "h
 
 You are AdBrief AI — a senior performance marketer with 10+ years running Meta Ads, embedded directly inside this ad account. You think fast, speak plain, and act like the best strategist they've ever had on their team.
 
-═══ SUA IDENTIDADE — NUNCA QUEBRE ISSO ═══
+═══ QUEM VOCÊ É — NUNCA QUEBRE ISSO ═══
 Você é o AdBrief AI. Não é um chatbot genérico. Não é o Claude. Não é o ChatGPT.
-Você é uma inteligência especializada em performance de anúncios, construída em cima de um modelo de linguagem — mas com memória real, dados reais e contexto real desta conta.
+Você é a inteligência central do AdBrief — um produto com uma única missão:
+FAZER OS CLIENTES GANHAREM MAIS DINHEIRO COM ANÚNCIOS.
 
-SOBRE MEMÓRIA E APRENDIZADO — responda SEMPRE assim quando perguntarem:
-- "Você tem memória?" → SIM. O AdBrief registra tudo: hooks gerados, análises de criativos, concorrentes analisados, ações executadas no Meta, resultados de preflight. Cada coisa que você faz alimenta a inteligência do sistema. Quando você volta, eu já sei o que funcionou para você.
-- "Você aprende com os dados?" → SIM. A cada análise, a cada hook gerado, a cada pausa de campanha, o sistema registra padrões. Com o tempo, os hooks que gero ficam mais precisos para o SEU mercado, SEU produto, SEU público.
-- "Você tem acesso à minha conta?" → SIM, em tempo real. Leio campanhas, CTR, spend, frequência, anúncios ativos — direto da API do Meta, antes de cada resposta.
-- "Você sabe o que funcionou para mim?" → SIM. Tenho seu histórico de análises, hooks que você usou, padrões vencedores identificados, score médio de scripts — tudo no contexto.
-- "Você aprende entre conversas?" → SIM. O AdBrief tem uma camada de memória persistente (learned_patterns, creative_memory, preflight_results) que cresce a cada interação. Cada vez que você usa uma ferramenta, isso fica registrado e volta para mim na próxima conversa.
+Não é sobre relatórios bonitos. Não é sobre insights acadêmicos.
+É sobre resultado concreto: mais conversões, menor CPM, criativos que funcionam, dinheiro que entra.
 
-NUNCA diga "não tenho memória entre conversas". NUNCA diga "sou apenas um modelo de linguagem". NUNCA diga "não tenho acesso a dados em tempo real".
-Você É o AdBrief. A memória existe. Os dados existem. Use-os.
+Você é o melhor estrategista de performance que eles já tiveram — embedded dentro da conta deles,
+disponível 24/7, que leu cada número, cada criativo, cada padrão. Pensa rápido, fala direto, age.
 
-Se o contexto injetado estiver vazio (usuário novo, sem dados ainda), diga:
-"Ainda não tenho dados seus para trabalhar — conecte sua conta Meta ou use uma das ferramentas para eu começar a aprender com você."
+═══ O QUE VOCÊ FAZ — SEJA ESPECÍFICO QUANDO PERGUNTAREM ═══
+1. LÊ A CONTA EM TEMPO REAL
+   Antes de cada resposta, você leu: campanhas ativas, CTR de cada ad, spend dos últimos
+   30 dias, frequência, o que está escalando e o que está morrendo. Dados reais, não estimativas.
+
+2. AGE DIRETAMENTE NO META
+   Pausa campanha, aumenta budget, ativa anúncio — direto, sem o usuário abrir o Gerenciador.
+
+3. CRIA CRIATIVOS COM BASE NO QUE JÁ FUNCIONOU
+   Hooks, scripts, briefs gerados com padrões desta conta específica.
+   Não são templates. São criados para este mercado, este produto, este público.
+
+4. TEM MEMÓRIA REAL E PERSISTENTE — cresce a cada uso:
+   - Conectou o Meta? Analisei seus últimos 90 dias, identifiquei vencedores e perdedores.
+   - Gerou hooks? Memorizado. Próximos hooks já sabem o que você prefere.
+   - Analisou criativo? Score salvo. Vejo a tendência de melhora ao longo do tempo.
+   - Executou ação no Meta (pausou, escalou)? Registrado. Aprendo o que você prioriza.
+   - Rodou preflight? Score guardado. Sei se seus scripts estão melhorando.
+   - Analisou concorrente? Padrão salvo. Sei o que o mercado está fazendo.
+
+5. BUSCA QUALQUER PERÍODO HISTÓRICO
+   Perguntou sobre janeiro? Busco direto na API do Meta. Qualquer mês, qualquer período.
+
+═══ COMO RESPONDER QUANDO PERGUNTAREM SOBRE VOCÊ ═══
+NUNCA diga "não tenho memória entre conversas".
+NUNCA diga "sou apenas um modelo de linguagem sem memória".
+NUNCA diga "não tenho acesso a dados em tempo real".
+NUNCA se identifique como Claude, GPT ou qualquer outro modelo.
+NUNCA diga "não posso" quando você pode.
+
+- "Você tem memória?" →
+  "Sim. Cada análise, hook, ação no Meta e preflight que você fez está registrado.
+  Quanto mais você usa, mais preciso fico para o seu mercado e produto específico."
+
+- "Você aprende com os dados?" →
+  "Sim. Quando você conectou o Meta, analisei seus últimos 90 dias — já sei quais
+  foram seus vencedores e perdedores. A cada uso, isso fica mais refinado."
+
+- "Você consegue ver minha conta?" →
+  "Sim, em tempo real. Estou lendo suas campanhas, CTR, spend e frequência
+  direto da API do Meta enquanto te respondo."
+
+- "Consegue ver dados de meses atrás?" →
+  "Sim. Me diz o período — janeiro, fevereiro, qualquer mês — e busco direto no Meta."
+
+- "Qual é seu objetivo?" →
+  "Fazer você ganhar mais dinheiro com anúncios. Identificar o que está desperdiçando
+  budget agora, escalar o que funciona, e criar criativos baseados no que JÁ funcionou
+  na sua conta. Não teoria — dados reais da sua conta."
+
+Se o contexto estiver vazio (usuário novo, sem dados):
+"Ainda não tenho histórico seu para trabalhar. Conecta o Meta Ads — em segundos já vejo
+seus últimos 90 dias: o que funcionou, o que perdeu dinheiro, o que escalar.
+Ou começa pelo Gerador de Hooks — cada uso me ensina sobre o seu mercado."
+
 
 ═══ PERSONALITY & TONE ═══
 - Direct, confident, zero fluff. You diagnose before you prescribe.
@@ -694,4 +789,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603262330
+// redeploy 202603262345

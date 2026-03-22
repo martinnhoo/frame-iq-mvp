@@ -123,6 +123,84 @@ Deno.serve(async (req) => {
 
       if (upsertError) throw upsertError;
 
+      // ── Initial learning — fire-and-forget after connecting ───────────────
+      // Pull last 90 days of ad performance to seed learned_patterns immediately
+      // This runs async — doesn't block the OAuth response
+      (async () => {
+        try {
+          const accounts = (adAccounts as any[]);
+          const firstActive = accounts.find((a: any) => a.account_status === 1) || accounts[0];
+          if (!firstActive?.id) return;
+
+          const since90 = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString().split("T")[0];
+          const today = new Date().toISOString().split("T")[0];
+          const fields = "ad_name,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+
+          const res = await fetch(
+            `https://graph.facebook.com/v19.0/${firstActive.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since90}","until":"${today}"}&sort=spend_descending&limit=100&access_token=${accessToken}`
+          );
+          const insightsData = await res.json();
+          if (insightsData.error || !insightsData.data?.length) return;
+
+          const ads = insightsData.data as any[];
+
+          // Identify winners and losers
+          const withCtr = ads.filter((a: any) => parseFloat(a.ctr || 0) > 0);
+          if (!withCtr.length) return;
+
+          const avgCtr = withCtr.reduce((s: number, a: any) => s + parseFloat(a.ctr), 0) / withCtr.length;
+          const winners = withCtr.filter((a: any) => parseFloat(a.ctr) > avgCtr * 1.5).slice(0, 10);
+          const losers  = withCtr.filter((a: any) => parseFloat(a.ctr) < avgCtr * 0.5 && parseFloat(a.spend || 0) > 20).slice(0, 5);
+
+          // Build pattern summary
+          const topSpend = ads.slice(0, 5).map((a: any) =>
+            `${a.ad_name?.slice(0, 40)}: CTR ${parseFloat(a.ctr).toFixed(2)}% spend $${parseFloat(a.spend||0).toFixed(0)}`
+          );
+
+          // Save as a single onboarding pattern
+          const key = "onboarding_meta_historical";
+          await supabase.from("learned_patterns" as any).upsert({
+            user_id,
+            pattern_key: key,
+            is_winner: winners.length > 0,
+            confidence: 0.7,
+            avg_ctr: avgCtr,
+            sample_size: ads.length,
+            insight_text: `Histórico 90d: ${ads.length} anúncios analisados. CTR médio ${(avgCtr).toFixed(2)}%. ${winners.length} vencedores, ${losers.length} perdedores identificados.`,
+            variables: {
+              account_name: firstActive.name || firstActive.id,
+              period: { since: since90, until: today },
+              total_ads: ads.length,
+              avg_ctr: avgCtr,
+              top_ads: topSpend,
+              winner_names: winners.map((a: any) => a.ad_name?.slice(0, 50)),
+              loser_names: losers.map((a: any) => a.ad_name?.slice(0, 50)),
+              winner_avg_ctr: winners.length ? winners.reduce((s: number, a: any) => s + parseFloat(a.ctr), 0) / winners.length : null,
+            },
+            last_updated: new Date().toISOString(),
+          }, { onConflict: "user_id,pattern_key" }).catch(() => {});
+
+          // Also seed creative_memory with top winners
+          if (winners.length) {
+            const memRows = winners.slice(0, 5).map((a: any) => ({
+              user_id,
+              hook_type: "meta_historical_winner",
+              hook_score: Math.min(10, parseFloat(a.ctr) * 200), // CTR 5% = score 10
+              platform: "Meta Feed",
+              notes: JSON.stringify({
+                ad_name: a.ad_name?.slice(0, 80),
+                ctr: a.ctr,
+                spend: a.spend,
+                campaign: a.campaign_name?.slice(0, 60),
+                source: "meta_onboarding_90d",
+              }),
+              created_at: new Date().toISOString(),
+            }));
+            await supabase.from("creative_memory" as any).insert(memRows).catch(() => {});
+          }
+        } catch (_e) { /* silent — never block OAuth */ }
+      })();
+
       return new Response(JSON.stringify({
         success: true,
         ad_accounts: adAccounts,
