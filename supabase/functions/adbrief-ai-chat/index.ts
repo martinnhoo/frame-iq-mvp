@@ -178,6 +178,41 @@ Deno.serve(async (req) => {
       monthly_reset: monthKey,
     }, { onConflict: "user_id" });
 
+    // ── 2b. Detect "remember this" instructions — save before fetching context ──
+    const rememberTriggers = /(lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse))/i;
+    if (rememberTriggers.test(message)) {
+      // Extract what to remember — take the message minus trigger words
+      const noteText = message
+        .replace(/^(ei[,!]?\s*)?/i, '')
+        .replace(/lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse)/gi, '')
+        .replace(/[,:\s]+$/, '')
+        .trim()
+        .slice(0, 300);
+
+      if (noteText.length > 5) {
+        // Save to user_ai_profile.pain_point (reusing existing column for user notes)
+        // Get current notes first
+        const { data: existingProfile } = await (supabase as any)
+          .from('user_ai_profile')
+          .select('pain_point')
+          .eq('user_id', user_id)
+          .maybeSingle();
+
+        const existing = (existingProfile?.pain_point as string) || '';
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const newNote = `[${timestamp}] ${noteText}`;
+        // Keep last 5 notes, separated by | — avoids unbounded growth
+        const allNotes = existing
+          ? [newNote, ...existing.split('|||').filter(Boolean)].slice(0, 5).join('|||')
+          : newNote;
+
+        await (supabase as any).from('user_ai_profile').upsert(
+          { user_id, pain_point: allNotes, last_updated: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        ).catch(() => {});
+      }
+    }
+
     // ── 3. Fetch account data in parallel ─────────────────────────────────────
     const [
       { data: recentAnalyses },
@@ -508,8 +543,14 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
         ].filter(Boolean).join('\n');
       })(),
       pfCtx || "",
-      (aiProfile as any)?.ai_summary ? `AI PROFILE: ${(aiProfile as any).ai_summary}` : "",
-      (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
+      (aiProfile as any)?.ai_summary ? `PERFIL DO USUÁRIO: ${(aiProfile as any).ai_summary}` : "",
+      (() => {
+        const notes = (aiProfile as any)?.pain_point as string | null;
+        if (!notes) return "";
+        const items = notes.split("|||").filter(Boolean).slice(0, 5);
+        if (!items.length) return "";
+        return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map(n => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
+      })(),
     ].filter(Boolean).join("\n");
 
     // ── 5. Language ───────────────────────────────────────────────────────────
@@ -694,6 +735,12 @@ META ACTIONS:
 - "aumenta budget" → tool: "meta_action" meta_action: "update_budget"
 
 REGRA ABSOLUTA: Nunca diga "use o Gerador de Hooks". Nunca emita bloco hooks com items:[]. Sempre use tool_call para hooks.
+MEMÓRIA DE INSTRUÇÕES DO USUÁRIO:
+- Se o usuário disser "lembre que X", "quero que você saiba Y", "não esqueça Z", "já te falei isso" → confirme que salvou: "Anotado. Vou lembrar disso sempre." — e aplique imediatamente.
+- Se o contexto tiver INSTRUÇÕES PERMANENTES DO USUÁRIO → aplique-as em TODAS as respostas, sem precisar ser lembrado.
+- Nunca diga "não tenho memória de conversas anteriores" se há instruções permanentes no contexto.
+- Se o usuário disser "você esqueceu o que te falei" → peça desculpas uma vez, reafirme a instrução e aplique.
+
 ASSERTIVE RULES — follow these strictly:
 1. NEVER emit tool_call for read-only queries (list, show, get, quais, tem, quantos). The data is ALREADY in your context above. Read it and answer directly.
 2. If context shows no campaigns/ads → answer directly with an insight block: "Nenhuma campanha encontrada na conta X." NEVER emit list_campaigns or any read tool_call.
@@ -799,4 +846,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603262400
+// redeploy 202603262430
