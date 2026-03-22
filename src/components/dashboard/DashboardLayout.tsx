@@ -234,7 +234,7 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div style={{
-        minHeight: "100dvh", background: "#0e1118", position: "fixed", inset: 0, zIndex: 9999,
+        minHeight: "100dvh", background: "#080c12", position: "fixed", inset: 0, zIndex: 9999,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
@@ -285,7 +285,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#0e1118", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#080c12", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -302,7 +302,7 @@ export default function DashboardLayout() {
           height: 52, minHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
           paddingLeft: 20, paddingRight: 14, gap: 10,
-          background: "#0e1118",
+          background: "#0b0f18", borderRight: "1px solid rgba(255,255,255,0.06)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
           position: "sticky", top: 0, zIndex: 100,
           overflow: "visible",
@@ -439,7 +439,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#0e1118", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 100%, rgba(14,165,233,0.04) 0%, transparent 65%), #080c12", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>

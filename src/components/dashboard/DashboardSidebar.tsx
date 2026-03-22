@@ -38,7 +38,7 @@ const PLANS: Record<string, { label: string; color: string }> = {
 
 // Sidebar colors v2 — more contrast, cleaner hierarchy
 const SB = {
-  bg:           "#131720",
+  bg:           "#0b0f18",
   border:       "rgba(255,255,255,0.08)",
   activeItem:   "rgba(14,165,233,0.10)",
   activeBorder: "rgba(14,165,233,0.35)",
@@ -142,7 +142,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         style={{ width: 220, background: SB.bg, borderRight: `1px solid rgba(255,255,255,0.07)`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
-        <div style={{ height: 52, minHeight: 52, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", background: "#0e1118" }}>
+        <div style={{ height: 52, minHeight: 52, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", background: "#0b0f18" }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
             <Logo size="md" />

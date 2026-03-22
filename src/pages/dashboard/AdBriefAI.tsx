@@ -1091,7 +1091,7 @@ export default function AdBriefAI() {
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0e1118",...j,overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
