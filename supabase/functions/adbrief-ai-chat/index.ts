@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const monthKey = today.slice(0, 7); // YYYY-MM
 
     const { data: usageRow } = await (supabase as any)
-      .from("free_usage").select("chat_count, last_reset, dashboard_count, dashboard_week, dashboard_month").eq("user_id", user_id).maybeSingle();
+      .from("free_usage").select("chat_count, last_reset").eq("user_id", user_id).maybeSingle();
     const lastReset = usageRow?.last_reset?.slice(0, 10);
     const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
 
@@ -62,62 +62,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Dashboard request detection & rate limiting ───────────────────────────
     const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics/i.test(message);
-
-    if (isDashboardRequest && planKey !== "free") {
-      // Dashboard limits for paid plans only: studio=unlimited, pro=3/week, maker=1/month
-      const dashCount = usageRow?.dashboard_count || 0;
-      const dashWeek = usageRow?.dashboard_week || "";
-      const dashMonth = usageRow?.dashboard_month || "";
-
-      const uiLang = user_language || "en";
-      if (planKey === "maker") {
-        // 1 per month
-        if (dashMonth === monthKey && dashCount > 0) {
-          const msgs: Record<string, { title: string; content: string }> = {
-            en: { title: "Dashboard limit reached", content: "Your Maker plan includes 1 dashboard per month. Resets next month. Upgrade to Pro for 3/week." },
-            pt: { title: "Limite de dashboard atingido", content: "Seu plano Maker inclui 1 dashboard por mês. Renova no próximo mês. Faça upgrade para Pro para ter 3/semana." },
-            es: { title: "Límite de dashboard alcanzado", content: "Tu plan Maker incluye 1 dashboard por mes. Se reinicia el próximo mes. Actualiza a Pro para tener 3/semana." },
-          };
-          const m = msgs[uiLang] || msgs.en;
-          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      if (planKey === "pro") {
-        // 3 per week
-        const thisWeekCount = dashWeek === weekKey ? dashCount : 0;
-        if (thisWeekCount >= 3) {
-          const msgs: Record<string, { title: string; content: string }> = {
-            en: { title: "Weekly dashboard limit reached", content: "Your Pro plan includes 3 dashboards per week. Resets next Monday. Upgrade to Studio for 1/day." },
-            pt: { title: "Limite semanal de dashboards atingido", content: "Seu plano Pro inclui 3 dashboards por semana. Renova na próxima segunda. Faça upgrade para Studio para ter 1/dia." },
-            es: { title: "Límite semanal de dashboards alcanzado", content: "Tu plan Pro incluye 3 dashboards por semana. Se reinicia el próximo lunes. Actualiza a Studio para tener 1/día." },
-          };
-          const m = msgs[uiLang] || msgs.en;
-          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      if (planKey === "studio") {
-        // 1 per day
-        if (dashWeek === today && dashCount > 0) {
-          const msgs: Record<string, { title: string; content: string }> = {
-            en: { title: "Daily dashboard limit reached", content: "Your Studio plan includes 1 dashboard per day. Resets tomorrow." },
-            pt: { title: "Limite diário de dashboard atingido", content: "Seu plano Studio inclui 1 dashboard por dia. Renova amanhã." },
-            es: { title: "Límite diario de dashboard alcanzado", content: "Tu plan Studio incluye 1 dashboard por día. Se reinicia mañana." },
-          };
-          const m = msgs[uiLang] || msgs.en;
-          return new Response(JSON.stringify({ blocks: [{ type: "warning", title: m.title, content: m.content }] }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-    }
 
     // Studio freeze time
     if (planKey === "studio" && dailyCount > 100) {
@@ -423,7 +368,7 @@ ABSOLUTE FORMAT RULES:
       : "";
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250514",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 1500,
       system: systemPrompt + prefStr,
       messages: [...historyMessages, { role: "user" as const, content: message }],
@@ -438,38 +383,13 @@ ABSOLUTE FORMAT RULES:
       blocks = [{ type: "insight", title: "Response", content: raw }];
     }
 
-    // Save insight
-    const insightText = blocks
-      .filter((b: any) => ["insight", "pattern"].includes(b.type))
-      .map((b: any) => `${b.title}: ${b.content || ""} ${(b.items || []).join(". ")}`)
-      .join("\n").slice(0, 1500);
-
-    if (insightText) {
-      await (supabase as any).from("ai_user_insights").upsert(
-        { user_id, summary: insightText, updated_at: new Date().toISOString() },
-        { onConflict: "user_id" }
-      );
-    }
-
-    // If dashboard was generated, update dashboard counter
-    const hasDashboard = Array.isArray(blocks) && blocks.some((b: any) => b.type === "dashboard");
-    if (isDashboardRequest && hasDashboard) {
-      const newDashCount = (usageRow?.dashboard_count || 0) + 1;
-      await (supabase as any).from("free_usage").upsert({
-        user_id,
-        dashboard_count: newDashCount,
-        dashboard_week: planKey === "studio" ? today : weekKey,
-        dashboard_month: monthKey,
-      }, { onConflict: "user_id" });
-    }
-
     return new Response(JSON.stringify({ blocks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (e) {
-    console.error("adbrief-ai-chat error:", e);
-    return new Response(JSON.stringify({ error: e.message || "internal_error" }), {
+    console.error("adbrief-ai-chat error:", String(e));
+    return new Response(JSON.stringify({ error: String(e) || "internal_error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

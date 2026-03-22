@@ -469,12 +469,11 @@ export default function AdBriefAI() {
   useEffect(()=>{
     if(!user?.id)return;
     (async()=>{
-      const[analysesRes,patternsRes,personaRes,entriesRes,savedRes]=await Promise.all([
+      const[analysesRes,patternsRes,personaRes,entriesRes]=await Promise.all([
         supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200),
         (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
-        (supabase as any).from("personas").select("name,result").eq("user_id",user.id).eq("is_active",true).single(),
+        supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
         (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
-        (supabase as any).from("ai_user_insights").select("summary").eq("user_id",user.id).single(),
       ]);
       const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
       const patterns=(patternsRes.data||[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
@@ -483,7 +482,7 @@ export default function AdBriefAI() {
       const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
       entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
-      setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}\n\n=== INSIGHTS ===\n${savedRes.data?.summary||"None"}`);
+      setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}`);
       setContextReady(true);
     })();
   },[user?.id]);
