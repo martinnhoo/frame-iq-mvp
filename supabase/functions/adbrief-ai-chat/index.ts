@@ -1,4 +1,4 @@
-// adbrief-ai-chat v10 — Lovable AI Gateway
+// adbrief-ai-chat v11 — Anthropic Claude via direct API
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
