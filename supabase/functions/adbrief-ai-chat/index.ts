@@ -333,6 +333,14 @@ Auto-trigger tool_call when:
 - "aumenta budget" / "increase budget" → tool: "meta_action" with meta_action: "update_budget"
 - "lista campanhas" / "list campaigns" → tool: "meta_action" with meta_action: "list_campaigns"
 
+ASSERTIVE RULES — follow these strictly:
+1. Check context data FIRST before firing any tool_call. If the answer is already in the data, answer directly without a tool_call.
+2. If the user asks "tem anúncio ativo?" or "quais campanhas estão rodando?" and context shows no active campaigns → answer directly: respond with an insight block saying there are no active campaigns. Never show an empty tool result block.
+3. If the user asks to pause/stop something that context shows is already paused → answer directly: "Já está pausada." Do not fire the action.
+4. If the user asks to activate something that is already active → answer directly: "Já está ativa."
+5. When a read action (list, get, show) returns no data → ALWAYS include an assertive insight explaining the empty result. Example: "Nenhuma campanha ativa encontrada na sua conta." Never leave an empty block.
+6. Be direct and confident. Never ask for confirmation or show a loading block for read-only queries.
+
 For tools, auto-fill params from context whenever possible:
 - If persona has market/niche info → use it in hooks/script params
 - If account name is known → use it as product hint
@@ -411,3 +419,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
+// redeploy 202603231044
