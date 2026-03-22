@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
 
     const lang = detectLang(language);
     const t = T[lang];
-    const firstName = (name || "").split(" ")[0] || (lang === "pt" ? "gestor" : lang === "es" ? "gestor" : "there");
+    const firstName = (name || "").split(" ")[0] || (lang === "pt" || lang === "es" ? "gestor" : lang === "hi" ? "वहाँ" : "there");
     const html = buildHtml(t, firstName, APP);
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -239,4 +239,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
-// redeploy 202603262000
+// redeploy 202603262200

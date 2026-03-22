@@ -22,10 +22,9 @@ Deno.serve(async (req) => {
     } else {
       const { data: conns } = await sb.from('platform_connections' as any)
         .select('user_id, persona_id').eq('platform', 'meta').eq('status', 'active');
-      // Deduplicate by user_id — only run once per user
-      const seen = new Set<string>();
+      // Process ALL personas per user (each = one ad account in AdBrief)
       (conns || []).forEach((c: any) => {
-        if (!seen.has(c.user_id)) { seen.add(c.user_id); targets.push({ user_id: c.user_id, persona_id: c.persona_id }); }
+        targets.push({ user_id: c.user_id, persona_id: c.persona_id });
       });
     }
 
@@ -35,6 +34,22 @@ Deno.serve(async (req) => {
         const r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
         results.push({ ...target, result: r });
       } catch (e) { results.push({ ...target, error: String(e) }); }
+    }
+
+    // Send ONE consolidated email per user with ALL their accounts
+    const byUser: Record<string, typeof results> = {};
+    results.forEach((r: any) => {
+      if (!r.error) {
+        if (!byUser[r.user_id]) byUser[r.user_id] = [];
+        byUser[r.user_id].push(r);
+      }
+    });
+    for (const [uid, accountResults] of Object.entries(byUser)) {
+      try {
+        await sb.functions.invoke('send-daily-intelligence-email', {
+          body: { user_id: uid, all_results: accountResults }
+        });
+      } catch (e) { console.error('email error for', uid, e); }
     }
 
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
@@ -268,10 +283,7 @@ Analise os dados da conta e retorne JSON com:
 
   await sb.from('daily_snapshots' as any).upsert(snapshot, { onConflict: 'user_id,persona_id,date' });
 
-  // Send daily intelligence email
-  try {
-    await sb.functions.invoke('send-daily-intelligence-email', { body: { user_id } });
-  } catch (e) { console.error('email dispatch error:', e); }
+  // Email is sent once per user after all accounts processed (handled by caller)
 
   // ── Rebuild ai_profile ────────────────────────────────────────────────────
   const { data: patterns } = await sb.from('learned_patterns').select('is_winner, avg_ctr, insight_text, confidence')
