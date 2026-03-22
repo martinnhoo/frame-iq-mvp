@@ -149,7 +149,8 @@ export default function CompetitorDecoder() {
         body: { ad_text: txt, observation: observation.trim() || undefined, persona_context: personaCtx, ui_language: lang },
       });
       if (error) throw error;
-      if (data?.error_type === "url_not_supported") {
+      // Any extraction error — show message inline
+      if (data?.error_type) {
         setResult({ _urlError: true, _message: data.message } as any);
         setLoading(false); return;
       }

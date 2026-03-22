@@ -15,15 +15,67 @@ Deno.serve(async (req) => {
 
     const lang = ui_language || 'pt';
 
-    // Detect if input is just a URL
+    // Smart URL handling — try to extract content from public pages
     const isUrl = /^https?:\/\/\S+$/.test(ad_text.trim());
+    let extractedContent = ad_text;
+    let extractionNote = '';
+
     if (isUrl) {
-      const msgs: Record<string, string> = {
-        pt: 'Cole o texto, roteiro ou legenda do anúncio — não consigo acessar vídeos por link. Você pode usar a ferramenta Traduzir para transcrever o vídeo primeiro.',
-        es: 'Pega el texto, guión o subtítulos del anuncio — no puedo acceder a videos por enlace. Usa la herramienta Traducir para transcribir el video primero.',
-        en: 'Paste the ad text, script or captions — cannot access videos from URLs. Use the Translate tool to transcribe the video first.',
-      };
-      return new Response(JSON.stringify({ error_type: 'url_not_supported', message: msgs[lang] || msgs.pt }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      const url = ad_text.trim();
+      let domain = '';
+      try { domain = new URL(url).hostname.replace('www.', ''); } catch { domain = url; }
+
+      try {
+        const fetchRes = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+          },
+          signal: AbortSignal.timeout(8000),
+        });
+
+        if (fetchRes.ok) {
+          const html = await fetchRes.text();
+          const ogTitle = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i)?.[1] || '';
+          const ogDesc = html.match(/<meta[^>]+property="og:description"[^>]+content="([^"]+)"/i)?.[1] || '';
+          const twitterDesc = html.match(/<meta[^>]+name="twitter:description"[^>]+content="([^"]+)"/i)?.[1] || '';
+          const bodyText = html
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+            .replace(/\s+/g, ' ').trim().slice(0, 2000);
+
+          const extracted = [ogTitle, ogDesc, twitterDesc, bodyText].filter(Boolean).join(' | ').slice(0, 3000);
+
+          if (extracted.length > 80) {
+            extractedContent = `[URL: ${url}]\n${extracted}`;
+            extractionNote = `Conteúdo extraído de ${domain}.`;
+          } else {
+            const msgs: Record<string, string> = {
+              pt: `Acessei ${domain} mas não encontrei texto suficiente (provável bloqueio ou conteúdo em vídeo). Cole o copy, legenda ou roteiro do anúncio diretamente.`,
+              es: `Accedí a ${domain} pero no hay texto suficiente (probable bloqueo o contenido en video). Pega el copy o subtítulos directamente.`,
+              en: `Accessed ${domain} but not enough text found (likely blocked or video-only content). Paste the ad copy or captions directly.`,
+            };
+            return new Response(JSON.stringify({ error_type: 'insufficient_content', message: msgs[lang] || msgs.pt }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+          }
+        } else {
+          const msgs: Record<string, string> = {
+            pt: `${domain} bloqueou o acesso automático (${fetchRes.status}). Cole o texto, copy ou legenda do anúncio diretamente — funciona com qualquer coisa que você conseguir copiar.`,
+            es: `${domain} bloqueó el acceso automático. Pega el copy o subtítulos del anuncio directamente.`,
+            en: `${domain} blocked automatic access. Paste the ad copy or captions directly.`,
+          };
+          return new Response(JSON.stringify({ error_type: 'blocked', message: msgs[lang] || msgs.pt }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+        }
+      } catch (_e) {
+        const msgs: Record<string, string> = {
+          pt: `Não consegui acessar esse link. Cole o texto, copy ou legenda do anúncio diretamente.`,
+          es: `No pude acceder al enlace. Pega el texto del anuncio directamente.`,
+          en: `Could not access this link. Paste the ad text directly.`,
+        };
+        return new Response(JSON.stringify({ error_type: 'fetch_error', message: msgs[lang] || msgs.pt }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      }
     }
 
     const LANG_NAMES: Record<string, string> = { pt: 'Português Brasileiro (PT-BR)', es: 'Español', en: 'English' };
@@ -57,9 +109,9 @@ Retorne APENAS JSON válido. Zero texto fora do JSON.`;
     const userPrompt = `Analise este anúncio concorrente:
 
 CONTEÚDO:
-${ad_text}
+${extractedContent}
 
-${observation ? `FOCO DO USUÁRIO: ${observation}` : ''}
+${extractionNote ? `NOTA: ${extractionNote}` : ''}\n${observation ? `FOCO DO USUÁRIO: ${observation}` : ''}
 ${persona_context ? `CONTEXTO DA CONTA: ${persona_context}` : ''}
 
 Retorne este JSON exato (todos os valores em ${langName}, prosa densa, sem bullet points nos campos de texto):
@@ -113,4 +165,4 @@ Retorne este JSON exato (todos os valores em ${langName}, prosa densa, sem bulle
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603261000
+// redeploy 202603261200
