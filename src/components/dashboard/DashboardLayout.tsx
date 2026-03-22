@@ -79,7 +79,7 @@ export default function DashboardLayout() {
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 1024);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
     try {
       const s = localStorage.getItem("frameiq_active_persona");
@@ -291,31 +291,34 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
-        {/* ── Single unified topbar ── */}
+        {/* ── Topbar: account picker + user ── */}
         <header style={{
           height: 52, minHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
-          padding: "0 14px", gap: 10,
-          background: "#131720",
-          borderBottom: "1px solid rgba(255,255,255,0.10)",
+          paddingLeft: 20, paddingRight: 14, gap: 10,
+          background: "#0e1118",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
           position: "sticky", top: 0, zIndex: 100,
           overflow: "visible",
         }}>
-          {/* Sidebar toggle — always visible */}
-          <button onClick={() => setSidebarOpen(s => !s)}
-            style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", color: "rgba(255,255,255,0.6)" }}>
-            <Menu className="h-4 w-4" />
-          </button>
+          {/* Mobile hamburger + logo (hidden on desktop) */}
+          <div className="flex items-center gap-3 lg:hidden" style={{ flexShrink: 0 }}>
+            <button onClick={() => setSidebarOpen(s => !s)}
+              style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", color: "rgba(255,255,255,0.55)" }}>
+              <Menu className="h-4 w-4" />
+            </button>
+            <Logo size="sm" />
+          </div>
 
-          {/* Account picker */}
+          {/* Account picker — left aligned */}
           <div className="relative" style={{ flexShrink: 0 }}>
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
               className="flex items-center gap-2.5 transition-all"
               style={{
                 padding: "5px 10px 5px 8px", borderRadius: 8,
-                background: selectedPersona ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.05)",
-                border: selectedPersona ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.1)",
+                background: selectedPersona ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)",
+                border: selectedPersona ? "1px solid rgba(14,165,233,0.22)" : "1px solid rgba(255,255,255,0.09)",
                 cursor: "pointer",
               }}
             >
@@ -402,16 +405,18 @@ export default function DashboardLayout() {
             )}
           </div>
 
-          {selectedPersona && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
-              <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.32)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {selectedPersona.website || selectedPersona.description?.slice(0,40) || ""}
-              </span>
-            </div>
-          )}
-
           {personaPickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
+
+          {/* Flex spacer */}
+          <div style={{ flex: 1 }} />
+
+          {/* User avatar — opens profile */}
+          <button onClick={() => setProfileOpen(true)}
+            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden" }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
+          </button>
         </header>
 
         {/* Alerts */}

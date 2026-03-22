@@ -40,14 +40,14 @@ const PLANS: Record<string, { label: string; color: string }> = {
 // Sidebar colors v2 — more contrast, cleaner hierarchy
 const SB = {
   bg:           "#131720",
-  border:       "rgba(255,255,255,0.10)",
-  activeItem:   "rgba(14,165,233,0.12)",
-  activeBorder: "rgba(14,165,233,0.40)",
+  border:       "rgba(255,255,255,0.08)",
+  activeItem:   "rgba(14,165,233,0.10)",
+  activeBorder: "rgba(14,165,233,0.35)",
   activeText:   "#cce8ff",
   activeIcon:   "#38bdf8",
-  idleText:     "rgba(238,240,246,0.52)",
-  idleIcon:     "rgba(238,240,246,0.32)",
-  hoverBg:      "rgba(255,255,255,0.06)",
+  idleText:     "rgba(238,240,246,0.50)",
+  idleIcon:     "rgba(238,240,246,0.30)",
+  hoverBg:      "rgba(255,255,255,0.05)",
   divider:    "rgba(255,255,255,0.10)",
   sectionLabel: "rgba(255,255,255,0.28)",
   footerBg:   "rgba(0,0,0,0.2)",
@@ -140,16 +140,19 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm" onClick={onClose} />}
 
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
-        style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
+        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        style={{ width: 220, background: SB.bg, borderRight: `1px solid rgba(255,255,255,0.07)`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
-        <div style={{ height: 52, minHeight: 52, padding: "0 16px", borderBottom: `1px solid ${SB.border}`, flexShrink: 0, display: "flex", alignItems: "center" }}>
+        <div style={{ height: 52, minHeight: 52, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", background: "#0e1118" }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
             <Logo size="md" />
           </button>
         </div>
+
+        {/* Thin divider below logo, same as topbar bottom border */}
+        <div style={{ height: 1, background: "rgba(255,255,255,0.07)", flexShrink: 0 }} />
 
         {/* ── Nav ── */}
         <nav style={{ flex: 1, paddingTop: 8, overflowY: "auto", overflowX: "hidden" }}>
