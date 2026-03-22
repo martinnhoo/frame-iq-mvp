@@ -266,6 +266,18 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const uiLangName = LANG_NAMES[uiLang] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
+    // ── 5b. History ─────────────────────────────────────────────────────────
+    const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
+    if (Array.isArray(history) && history.length > 0) {
+      for (const h of history.slice(-16)) {
+        if (h.role === "user" || h.role === "assistant") {
+          let content = String(h.content || "").trim();
+          if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "…";
+          if (content) historyMessages.push({ role: h.role, content });
+        }
+      }
+    }
+
     // ── 6. Lovable AI Gateway call ──────────────────────────────────────────
     const systemPrompt = `LANGUAGE: respond in ${uiLangName} only. Generated copy/hooks/scripts: ${contentLangName} only.
 PT-BR vocab: "criativos", "verba", "gestor de tráfego", "pausar", "escalar", "hooks", "roteiro".
