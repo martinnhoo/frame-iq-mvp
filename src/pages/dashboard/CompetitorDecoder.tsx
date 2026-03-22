@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, AlertTriangle, TrendingUp, Shield, Copy, Check, Zap, ChevronRight, AlertCircle, Target, Crosshair } from "lucide-react";
+import { Loader2, AlertTriangle, TrendingUp, Shield, Copy, Check, Zap, AlertCircle, Target, Crosshair } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReadyHook { hook: string; type: string; angle: string; }
@@ -35,8 +35,6 @@ const HC: Record<string,{color:string;bg:string;border:string}> = {
   emotional:{color:"#f472b6",bg:"rgba(244,114,182,0.10)",border:"rgba(244,114,182,0.20)"},
   question:{color:"#34d399",bg:"rgba(52,211,153,0.10)",border:"rgba(52,211,153,0.20)"},
 };
-const INDUSTRIES = ["iGaming / Betting","E-commerce / DTC","Finance / Fintech","Health & Wellness","SaaS / Tech","Fashion / Beauty","Food & Beverage","Real Estate","Education","Other"];
-const MARKETS = ["BR","MX","US","UK","ES","AR","CO","IN","FR","DE"];
 const F = {fontFamily:"'Plus Jakarta Sans', sans-serif"} as const;
 const M = {fontFamily:"'Inter', sans-serif"} as const;
 
@@ -123,26 +121,26 @@ export default function CompetitorDecoder(){
   const t=T[language]||T.en;
   const lang=language as"pt"|"es"|"en";
   const [adText,setAdText]=useState("");
-  const [industry,setIndustry]=useState("iGaming / Betting");
-  const [market,setMarket]=useState("BR");
-  const [context,setContext]=useState("");
+  const [observation,setObservation]=useState("");
+  const [isDragging,setIsDragging]=useState(false);
   const [loading,setLoading]=useState(false);
   const [result,setResult]=useState<DecodeResult|null>(null);
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [copiedCounter,setCopiedCounter]=useState(false);
   const [copiedAction,setCopiedAction]=useState(false);
 
-  const decode=async()=>{
-    if(adText.trim().length<20){toast.error(t.need_more);return;}
+  const decode=async(inputText?:string)=>{
+    const txt=(inputText||adText).trim();
+    if(txt.length<10){toast.error(t.need_more);return;}
     setLoading(true);setResult(null);
     try{
       const personaCtx=selectedPersona?`Account: ${selectedPersona.name}. Platforms: ${(selectedPersona as any).best_platforms?.join(", ")}.`:undefined;
       const{data,error}=await supabase.functions.invoke("decode-competitor",{
-        body:{ad_text:adText.trim(),industry,market,context:context.trim()||undefined,persona_context:personaCtx},
+        body:{ad_text:txt,observation:observation.trim()||undefined,auto_detect_industry:true,persona_context:personaCtx},
       });
       if(error)throw error;
       setResult(data);
-      if(data?.mismatch_detected)toast.warning(lang==="pt"?"Mismatch detectado — revise o contexto":lang==="es"?"Mismatch detectado — revisa el contexto":"Mismatch detected — review context");
+      if(data?.mismatch_detected)toast.warning(lang==="pt"?"Setor/nicho detectado automaticamente — confira se está correto":lang==="es"?"Sector/nicho detectado automáticamente":"Industry auto-detected — verify if correct");
     }catch{toast.error(lang==="pt"?"Decodificação falhou":lang==="es"?"Decodificación fallida":"Decoding failed");}
     finally{setLoading(false);}
   };
@@ -169,56 +167,58 @@ export default function CompetitorDecoder(){
         </div>
       </div>
 
-      {/* Tip */}
-      <div style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",borderRadius:10,background:"rgba(34,211,238,0.04)",border:"1px solid rgba(34,211,238,0.10)",marginBottom:18}}>
-        <span style={{fontSize:13}}>💡</span>
-        <p style={{...M,fontSize:11.5,color:"rgba(238,240,246,0.38)",margin:0}}>
-          {t.tip}{" "}<a href="/dashboard/translate" style={{color:"#22d3ee",textDecoration:"none",fontWeight:600}}>{t.tip_link}</a>{" "}{t.tip_end}
+      {/* Drop zone + link input */}
+      <div
+        onDragOver={e=>{e.preventDefault();setIsDragging(true);}}
+        onDragLeave={()=>setIsDragging(false)}
+        onDrop={e=>{
+          e.preventDefault();setIsDragging(false);
+          const file=e.dataTransfer.files[0];
+          if(file&&file.type.startsWith("video/")){
+            toast.info(lang==="pt"?"Vídeo recebido — transcrevendo...":lang==="es"?"Video recibido — transcribiendo...":"Video received — transcribing...");
+            // TODO: pipe to analyze-video then decode
+          }
+          const text=e.dataTransfer.getData("text");
+          if(text){setAdText(text);decode(text);}
+        }}
+        style={{borderRadius:16,border:`2px dashed ${isDragging?"rgba(34,211,238,0.55)":"rgba(255,255,255,0.09)"}`,background:isDragging?"rgba(34,211,238,0.04)":"#131720",padding:"28px 20px",marginBottom:12,textAlign:"center"as const,transition:"all 0.15s",cursor:"default"}}>
+        <div style={{fontSize:28,marginBottom:8}}>🎯</div>
+        <p style={{...F,fontSize:14,fontWeight:700,color:"rgba(238,240,246,0.55)",margin:"0 0 6px"}}>
+          {lang==="pt"?"Arraste um vídeo ou cole o link":lang==="es"?"Arrastra un video o pega el enlace":"Drag a video or paste a link"}
+        </p>
+        <p style={{...M,fontSize:11,color:"rgba(238,240,246,0.25)",margin:"0 0 16px"}}>
+          {lang==="pt"?"TikTok, Meta Ads, YouTube, Instagram, qualquer link":lang==="es"?"TikTok, Meta Ads, YouTube, Instagram, cualquier enlace":"TikTok, Meta Ads, YouTube, Instagram, any link"}
+        </p>
+        <div style={{display:"flex",gap:8,maxWidth:500,margin:"0 auto"}}>
+          <input value={adText} onChange={e=>setAdText(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter")decode();}}
+            placeholder={lang==="pt"?"https://... ou cole o link aqui":lang==="es"?"https://... o pega el enlace aquí":"https://... or paste link here"}
+            style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"10px 14px",color:"#eef0f6",...M,fontSize:13,outline:"none",boxSizing:"border-box"as const}}
+            onFocus={e=>{e.currentTarget.style.borderColor="rgba(34,211,238,0.40)";}}
+            onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";}}
+          />
+          <button onClick={()=>decode()} disabled={loading||!adText.trim()}
+            style={{padding:"10px 20px",borderRadius:10,background:adText.trim()&&!loading?"#22d3ee":"rgba(34,211,238,0.08)",border:"none",cursor:adText.trim()&&!loading?"pointer":"not-allowed",...F,fontSize:13,fontWeight:800,color:adText.trim()&&!loading?"#000":"rgba(34,211,238,0.30)",whiteSpace:"nowrap"as const,transition:"all 0.15s",flexShrink:0}}>
+            {loading?<Loader2 size={14} className="animate-spin"/>:<Zap size={14}/>}
+          </button>
+        </div>
+      </div>
+
+      {/* Observation — optional */}
+      <div style={{marginBottom:20}}>
+        <label style={{...M,display:"block",fontSize:10,fontWeight:600,color:"rgba(238,240,246,0.28)",letterSpacing:"0.10em",textTransform:"uppercase"as const,marginBottom:6}}>
+          {lang==="pt"?"Observação (opcional)":lang==="es"?"Observación (opcional)":"Observation (optional)"}
+        </label>
+        <textarea value={observation} onChange={e=>setObservation(e.target.value)} rows={2}
+          placeholder={lang==="pt"?"O que você quer entender sobre esse anúncio? A IA vai avaliar com isso em mente...":lang==="es"?"¿Qué quieres entender de este anuncio? La IA evaluará con esto en mente...":"What do you want to understand about this ad? The AI will evaluate with this in mind..."}
+          style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"10px 14px",color:"#eef0f6",...M,fontSize:13,resize:"none"as const,outline:"none",lineHeight:1.6,boxSizing:"border-box"as const}}
+          onFocus={e=>{e.currentTarget.style.borderColor="rgba(34,211,238,0.30)";}}
+          onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
+        />
+        <p style={{...M,fontSize:10,color:"rgba(238,240,246,0.18)",marginTop:4}}>
+          {lang==="pt"?"Setor e nicho são detectados automaticamente pela IA.":lang==="es"?"El sector y nicho son detectados automáticamente por la IA.":"Sector and niche are auto-detected by the AI."}
         </p>
       </div>
-
-      {/* Input */}
-      <div style={{borderRadius:16,border:"1px solid rgba(255,255,255,0.09)",background:"#131720",overflow:"hidden",marginBottom:14}}>
-        <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-          <label style={{...M,display:"block",fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.30)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:8}}>{t.script_label}</label>
-          <textarea value={adText} onChange={e=>setAdText(e.target.value)} rows={5}
-            placeholder={t.script_placeholder}
-            style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"10px 14px",color:"#eef0f6",...M,fontSize:13,resize:"vertical"as const,outline:"none",lineHeight:1.6,boxSizing:"border-box"as const,minHeight:110}}
-            onFocus={e=>{e.currentTarget.style.borderColor="rgba(34,211,238,0.35)";}}
-            onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
-          />
-          {adText.length>0&&<p style={{...M,fontSize:10,color:"rgba(238,240,246,0.18)",marginTop:4,textAlign:"right"as const}}>{adText.length} chars</p>}
-        </div>
-        <div style={{padding:"12px 18px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-          <div>
-            <label style={{...M,display:"block",fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.30)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:6}}>{t.industry_label}</label>
-            <select value={industry} onChange={e=>setIndustry(e.target.value)}
-              style={{width:"100%",background:"#1a2032",border:"1px solid rgba(255,255,255,0.09)",borderRadius:9,padding:"8px 12px",color:"#eef0f6",...M,fontSize:12,outline:"none",cursor:"pointer",boxSizing:"border-box"as const}}>
-              {INDUSTRIES.map(i=><option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{...M,display:"block",fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.30)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:6}}>{t.market_label}</label>
-            <select value={market} onChange={e=>setMarket(e.target.value)}
-              style={{width:"100%",background:"#1a2032",border:"1px solid rgba(255,255,255,0.09)",borderRadius:9,padding:"8px 12px",color:"#eef0f6",...M,fontSize:12,outline:"none",cursor:"pointer",boxSizing:"border-box"as const}}>
-              {MARKETS.map(m=><option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-        </div>
-        <div style={{padding:"12px 18px 16px"}}>
-          <label style={{...M,display:"block",fontSize:10,fontWeight:700,color:"rgba(238,240,246,0.30)",letterSpacing:"0.12em",textTransform:"uppercase"as const,marginBottom:6}}>{t.context_label}</label>
-          <input value={context} onChange={e=>setContext(e.target.value)} placeholder={t.context_placeholder}
-            style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:9,padding:"9px 14px",color:"#eef0f6",...M,fontSize:13,outline:"none",boxSizing:"border-box"as const}}
-            onFocus={e=>{e.currentTarget.style.borderColor="rgba(34,211,238,0.35)";}}
-            onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
-          />
-        </div>
-      </div>
-
-      <button onClick={decode} disabled={loading||adText.trim().length<20}
-        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px",borderRadius:12,background:loading?"rgba(34,211,238,0.10)":adText.trim().length>=20?"#22d3ee":"rgba(34,211,238,0.07)",border:"none",cursor:adText.trim().length>=20&&!loading?"pointer":"not-allowed",...F,fontSize:14,fontWeight:800,color:loading?"#22d3ee":adText.trim().length>=20?"#000":"rgba(34,211,238,0.28)",marginBottom:28,transition:"all 0.15s"}}>
-        {loading?<><Loader2 size={16} className="animate-spin"/> {t.decoding}</>:<><Zap size={16}/> {t.decode_btn}</>}
-      </button>
 
       {result&&(
         <div style={{display:"flex",flexDirection:"column"as const,gap:12}}>
@@ -364,16 +364,10 @@ export default function CompetitorDecoder(){
                         )}
                         <p style={{...M,fontSize:13,color:"rgba(238,240,246,0.82)",lineHeight:1.55,margin:0}}>{hookText}</p>
                       </div>
-                      <div style={{display:"flex",flexDirection:"column"as const,gap:4,flexShrink:0}}>
-                        <button onClick={()=>copyHook(hookText,i)}
-                          style={{display:"flex",alignItems:"center",gap:4,padding:"5px 10px",borderRadius:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.10)",cursor:"pointer",...M,fontSize:11,color:"rgba(238,240,246,0.50)",whiteSpace:"nowrap"as const}}>
-                          {copiedIdx===i?<><Check size={11}/> {t.copied}</>:<><Copy size={11}/> {t.copy_hook}</>}
-                        </button>
-                        <button onClick={()=>navigate(`/dashboard/script?hook=${encodeURIComponent(hookText)}`)}
-                          style={{display:"flex",alignItems:"center",gap:4,padding:"5px 10px",borderRadius:7,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.18)",cursor:"pointer",...M,fontSize:11,color:"#0ea5e9",whiteSpace:"nowrap"as const}}>
-                          <ChevronRight size={11}/> {t.go_script}
-                        </button>
-                      </div>
+                      <button onClick={()=>copyHook(hookText,i)}
+                        style={{display:"flex",alignItems:"center",gap:4,padding:"5px 10px",borderRadius:7,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.10)",cursor:"pointer",...M,fontSize:11,color:"rgba(238,240,246,0.50)",whiteSpace:"nowrap"as const,flexShrink:0}}>
+                        {copiedIdx===i?<><Check size={11}/> {t.copied}</>:<><Copy size={11}/> {t.copy_hook}</>}
+                      </button>
                     </div>
                   );
                 })}

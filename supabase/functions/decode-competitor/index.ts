@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-    const { ad_text, industry, market, context, persona_context } = await req.json();
+    const { ad_text, industry, market, context, observation, persona_context, auto_detect_industry } = await req.json();
     if (!ad_text) return new Response(JSON.stringify({ error: 'ad_text required' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
     const systemPrompt = `You are a $100M+ ad spend strategist. You decode competitor ads with surgical precision.
@@ -20,7 +20,7 @@ RULES:
 2. counter_strategy and ready_hooks must be in the SAME LANGUAGE as the ad_text
 3. ready_hooks must be immediately usable — copy-paste ready, not templates
 4. If context about the user's brand is given, every recommendation must be tailored to BEAT this specific ad for that brand
-5. Mismatch check: if ad content clearly belongs to a different industry than stated context, set mismatch_detected: true
+5. Mismatch check: if observation mentions a specific sector/niche but the ad clearly belongs to a DIFFERENT industry, set mismatch_detected: true with a clear explanation. Also set if auto-detected industry seems uncertain.
 6. Return ONLY valid JSON. No markdown. No text outside JSON.`;
 
     const userPrompt = `Decode this competitor ad with maximum precision:
@@ -28,9 +28,9 @@ RULES:
 AD CONTENT:
 ${ad_text}
 
-INDUSTRY: ${industry || 'Not specified'}
-MARKET: ${market || 'Global'}
-${context ? `\nMY BRAND CONTEXT: ${context}` : ''}
+${auto_detect_industry ? 'INDUSTRY: Auto-detect from the ad content (do not assume — identify from the ad itself)' : `INDUSTRY: ${industry || 'Not specified'}`}
+MARKET: ${market || 'Auto-detect from language/currency/context in the ad'}
+${observation ? `\nOBSERVATION FROM USER: ${observation}\n(The user wants you to evaluate the ad with this specific question/angle in mind. Incorporate it throughout your analysis.)` : ''}
 ${persona_context ? `\nMY AUDIENCE: ${persona_context}` : ''}
 
 Return this exact JSON:
@@ -115,4 +115,4 @@ Return this exact JSON:
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
-// redeploy 202603231600
+// redeploy 202603241200

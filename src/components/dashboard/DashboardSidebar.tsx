@@ -1,5 +1,5 @@
 import {
-  MessageSquare, BarChart3, Zap, Search, Settings,
+  MessageSquare, BarChart3, Zap, Search, Settings, Target,
   Sparkles, CreditCard, Brain, Building2, FileText,
   Globe, LayoutDashboard, PenTool, Plane, BookOpen,
   ChevronRight, CheckCircle2, Circle,
@@ -69,6 +69,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const PRIMARY_NAV = [
     { url: "/dashboard/ai",          label: language==="pt"?"IA Chat":language==="es"?"IA Chat":"AI Chat",       icon: Brain,        exact: false, hot: true },
     { url: "/dashboard/accounts",    label: language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts",      icon: Building2,    exact: false },
+    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrente",                                icon: Target,       exact: false },
     { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: BarChart3,    exact: false },
   ];
 
@@ -76,7 +77,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { url: "/dashboard/hooks",        label: dt("nav_hooks")||"Gerador de Hooks",   icon: "⚡" },
     { url: "/dashboard/script",       label: dt("nav_script")||"Roteiro",           icon: "✍️" },
     { url: "/dashboard/translate",    label: dt("nav_translate")||"Traduzir",       icon: "🌍" },
-    { url: "/dashboard/competitor",   label: dt("nav_competitor")||"Concorrente",   icon: "🔍" },
     { url: "/dashboard/preflight",    label: dt("nav_preflight")||"Check Criativo", icon: "✅" },
     { url: "/dashboard/templates",    label: dt("nav_templates")||"Templates",      icon: "📐" },
     { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",            icon: "🗂️" },

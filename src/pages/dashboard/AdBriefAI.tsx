@@ -504,7 +504,19 @@ export default function AdBriefAI() {
     })();
   },[user?.id]);
 
-  useEffect(()=>{try{sessionStorage.setItem(SK,JSON.stringify(messages.slice(-30)))}catch{}},[messages]);
+  useEffect(()=>{
+    try{
+      // Strip _autoExec from saved messages to prevent re-firing on reload
+      const toSave=messages.slice(-30).map(m=>({
+        ...m,
+        blocks:m.blocks?.map(b=>(b as any)._autoExec
+          ? {...b,type:"insight" as const, _autoExec:undefined}
+          : b
+        )
+      }));
+      sessionStorage.setItem(SK,JSON.stringify(toSave));
+    }catch{}
+  },[messages]);
 
   const handleConnect=async(id:string,fn:string)=>{
     // If no account selected, redirect to Accounts to create/select one first
