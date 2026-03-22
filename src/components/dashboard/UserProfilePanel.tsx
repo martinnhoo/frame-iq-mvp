@@ -566,128 +566,195 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             );
           })()}
 
-          {tab === "intelligence" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {intelLoading ? (
-                <div style={{ padding: "32px", textAlign: "center" }}>
-                  <div style={{ width: 20, height: 20, border: "2px solid rgba(14,165,233,0.2)", borderTopColor: "#0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 10px" }} />
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(238,240,246,0.40)" }}>
-                    {language === "pt" ? "Carregando inteligência..." : "Loading intelligence..."}
-                  </p>
-                </div>
-              ) : !intel ? null : (
-                <>
-                  {/* AI Profile Summary */}
-                  {intel.profile?.ai_summary && (
-                    <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)" }}>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 7 }}>
-                        {language === "pt" ? "O que aprendi sobre você" : language === "es" ? "Lo que aprendí sobre ti" : "What I learned about you"}
-                      </p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(238,240,246,0.75)", lineHeight: 1.65, margin: 0 }}>{intel.profile.ai_summary}</p>
-                      {intel.profile.last_updated && (
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.25)", marginTop: 6 }}>
-                          {language === "pt" ? "Atualizado" : "Updated"}: {new Date(intel.profile.last_updated).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Stats row */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                    <div style={{ padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textAlign: "center" as const }}>
-                      <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#0ea5e9", margin: 0 }}>{intel.memory.length}</p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "2px 0 0" }}>{language === "pt" ? "Criativos" : "Creatives"}</p>
-                    </div>
-                    <div style={{ padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textAlign: "center" as const }}>
-                      <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#34d399", margin: 0 }}>
-                        {intel.patterns.filter((p: any) => p.is_winner).length}
-                      </p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "2px 0 0" }}>{language === "pt" ? "Padrões ✓" : "Patterns ✓"}</p>
-                    </div>
-                    <div style={{ padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textAlign: "center" as const }}>
-                      <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#fbbf24", margin: 0 }}>
-                        {intel.profile?.avg_hook_score ? intel.profile.avg_hook_score.toFixed(1) : "—"}
-                      </p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "2px 0 0" }}>Score médio</p>
-                    </div>
+          {tab === "intelligence" && (() => {
+            const translatePatternKey = (key: string): string => {
+              const map: Record<string, string> = {
+                chat_hooks_like: language === "pt" ? "Hooks aprovados no chat" : language === "es" ? "Hooks aprobados" : "Approved hooks",
+                chat_hooks_dislike: language === "pt" ? "Hooks rejeitados" : "Rejected hooks",
+              };
+              if (map[key]) return map[key];
+              if (key.startsWith("meta_winner_") || key.startsWith("meta_ad_")) return key.replace(/^meta_(winner|ad)_/, "").replace(/_/g, " ");
+              if (key.startsWith("competitor_")) return (language === "pt" ? "Concorrente: " : "Competitor: ") + key.replace("competitor_", "").replace(/_/g, " ");
+              if (key.startsWith("perf_")) return (language === "pt" ? "Performance: " : "") + key.replace("perf_", "").replace(/_/g, " ");
+              return key.replace(/_/g, " ");
+            };
+            const realPatterns = (intel?.patterns || []).filter((p: any) => (p.avg_ctr || 0) > 0 || (p.avg_roas || 0) > 0);
+            const prefPatterns = (intel?.patterns || []).filter((p: any) => !p.avg_ctr && !p.avg_roas && p.is_winner);
+            const hasSnaps = (intel?.snaps || []).length > 0;
+            const s0 = intel?.snaps?.[0];
+            const s1 = intel?.snaps?.[1];
+            const delCtr = s0 && s1 && s1.avg_ctr > 0 ? ((s0.avg_ctr - s1.avg_ctr) / s1.avg_ctr * 100) : null;
+            const deletePattern = async (key: string) => {
+              await (supabase as any).from("learned_patterns").delete().eq("pattern_key", key).eq("user_id", user.id);
+              setIntel((prev: any) => prev ? { ...prev, patterns: prev.patterns.filter((x: any) => x.pattern_key !== key) } : prev);
+            };
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {intelLoading ? (
+                  <div style={{ padding: "32px", textAlign: "center" }}>
+                    <div style={{ width: 18, height: 18, border: "2px solid rgba(14,165,233,0.2)", borderTopColor: "#0ea5e9", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 10px" }} />
+                    <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.40)" }}>{language === "pt" ? "Carregando..." : "Loading..."}</p>
                   </div>
+                ) : (
+                  <>
+                    {/* Summary card with reload */}
+                    {intel?.profile?.ai_summary && (
+                      <div style={{ padding: "14px 16px 12px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)", position: "relative" as const }}>
+                        <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 7 }}>
+                          {language === "pt" ? "O que aprendi sobre você" : language === "es" ? "Lo que aprendí sobre ti" : "What I've learned"}
+                        </p>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.75)", lineHeight: 1.65, margin: 0 }}>{intel.profile.ai_summary}</p>
+                        {intel.profile.last_updated && (
+                          <p style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)", marginTop: 5 }}>
+                            {language === "pt" ? "Atualizado" : "Updated"}: {new Date(intel.profile.last_updated).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}
+                          </p>
+                        )}
+                        <button onClick={() => { setIntel(null); setIntelLoading(true); }}
+                          title={language === "pt" ? "Recarregar" : "Reload"}
+                          style={{ position: "absolute" as const, bottom: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.45 }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = "0.45")}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(238,240,246,0.7)" strokeWidth="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        </button>
+                      </div>
+                    )}
 
-                  {/* Daily snapshots */}
-                  {intel.snaps.length > 0 && (
-                    <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                      <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.30)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
-                          {language === "pt" ? "Histórico diário" : language === "es" ? "Historial diario" : "Daily history"}
+                    {/* Meta Ads real performance */}
+                    {hasSnaps && s0 ? (
+                      <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                        <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.30)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                            {language === "pt" ? "Performance Meta Ads" : "Meta Ads Performance"}
+                          </p>
+                          <span style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)" }}>{s0.date}</span>
+                        </div>
+                        <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                          {[
+                            { val: `R$${(s0.total_spend||0).toFixed(0)}`, label: language === "pt" ? "Spend 7d" : "7d Spend", color: "#eef0f6" },
+                            { val: `${((s0.avg_ctr||0)*100).toFixed(2)}%`, label: "CTR", color: (s0.avg_ctr||0) >= 0.02 ? "#34d399" : (s0.avg_ctr||0) >= 0.01 ? "#fbbf24" : "#f87171", extra: delCtr !== null ? `${delCtr > 0 ? "↑" : "↓"} ${Math.abs(delCtr).toFixed(1)}%` : null, extraColor: delCtr !== null ? (delCtr > 0 ? "#34d399" : "#f87171") : "transparent" },
+                            { val: String(s0.active_ads||0), label: language === "pt" ? "Ads ativos" : "Active ads", color: "#eef0f6" },
+                          ].map((item, i) => (
+                            <div key={i} style={{ textAlign: "center" as const }}>
+                              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 18, fontWeight: 900, color: item.color, margin: 0 }}>{item.val}</p>
+                              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.35)", margin: "2px 0 0" }}>{item.label}</p>
+                              {(item as any).extra && <p style={{ fontFamily: M, fontSize: 9, color: (item as any).extraColor, margin: "1px 0 0" }}>{(item as any).extra}</p>}
+                            </div>
+                          ))}
+                        </div>
+                        {(s0.winners_count > 0 || s0.losers_count > 0) && (
+                          <div style={{ padding: "0 14px 10px", display: "flex", gap: 6 }}>
+                            {s0.winners_count > 0 && <div style={{ flex: 1, padding: "6px 8px", borderRadius: 7, background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", textAlign: "center" as const }}>
+                              <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#34d399", margin: 0 }}>↑ {s0.winners_count} {language === "pt" ? "escalar" : "scale"}</p>
+                            </div>}
+                            {s0.losers_count > 0 && <div style={{ flex: 1, padding: "6px 8px", borderRadius: 7, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.18)", textAlign: "center" as const }}>
+                              <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#f87171", margin: 0 }}>⏸ {s0.losers_count} {language === "pt" ? "pausar" : "pause"}</p>
+                            </div>}
+                          </div>
+                        )}
+                        {s0.ai_insight && (
+                          <div style={{ padding: "8px 14px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.60)", lineHeight: 1.55, margin: 0 }}>💡 {s0.ai_insight}</p>
+                          </div>
+                        )}
+                        {intel.snaps.length > 1 && (
+                          <div style={{ padding: "4px 14px 10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                            <p style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.22)", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>7 dias</p>
+                            <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 22 }}>
+                              {intel.snaps.slice(0, 7).reverse().map((sn: any, i: number) => {
+                                const maxC = Math.max(...intel.snaps.slice(0, 7).map((x: any) => x.avg_ctr || 0.001));
+                                const h = Math.max(3, (sn.avg_ctr / maxC) * 22);
+                                return <div key={i} title={`${sn.date}: CTR ${(sn.avg_ctr*100).toFixed(2)}%`}
+                                  style={{ flex: 1, height: h, borderRadius: 2, background: i === intel.snaps.slice(0,7).length-1 ? "#0ea5e9" : "rgba(255,255,255,0.12)" }} />;
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.09)" }}>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.38)", lineHeight: 1.6, margin: 0 }}>
+                          {language === "pt" ? "Conecte o Meta Ads para ver performance real — CTR, spend, o que escalar e o que pausar." : "Connect Meta Ads to see real performance."}
                         </p>
                       </div>
-                      <div style={{ padding: "8px" }}>
-                        {intel.snaps.map((s: any, i: number) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 8, marginBottom: 4, background: i === 0 ? "rgba(14,165,233,0.06)" : "transparent" }}>
-                            <div>
-                              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(238,240,246,0.65)" }}>{s.date}</span>
-                              {s.ai_insight && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.35)", margin: "2px 0 0", lineHeight: 1.4 }}>{s.ai_insight.slice(0, 80)}</p>}
-                              {/* Show action recommendations if available */}
-                              {((s.raw_period as any)?.actions || []).slice(0, 2).map((a: any, ai: number) => (
-                                <div key={ai} style={{ display: "inline-flex", alignItems: "center", gap: 3, marginTop: 3, marginRight: 4, padding: "1px 6px", borderRadius: 4,
-                                  background: a.urgencia === 'alta' ? "rgba(248,113,113,0.12)" : a.tipo === 'escalar' ? "rgba(52,211,153,0.10)" : "rgba(255,255,255,0.06)",
-                                  border: `1px solid ${a.urgencia === 'alta' ? "rgba(248,113,113,0.25)" : a.tipo === 'escalar' ? "rgba(52,211,153,0.20)" : "rgba(255,255,255,0.10)"}` }}>
-                                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, fontWeight: 700, color: a.urgencia === 'alta' ? "#f87171" : a.tipo === 'escalar' ? "#34d399" : "rgba(238,240,246,0.50)", textTransform: "uppercase" as const }}>
-                                    {a.tipo === 'escalar' ? '↑' : a.tipo === 'pausar' ? '⏸' : '→'} {a.tipo}
-                                  </span>
+                    )}
+
+                    {/* Patterns backed by real data */}
+                    {realPatterns.length > 0 && (
+                      <div style={{ borderRadius: 12, border: "1px solid rgba(52,211,153,0.14)", overflow: "hidden" }}>
+                        <div style={{ padding: "9px 14px", background: "rgba(52,211,153,0.03)", borderBottom: "1px solid rgba(52,211,153,0.09)" }}>
+                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(52,211,153,0.50)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                            {language === "pt" ? "Padrões com dados reais" : "Data-backed patterns"}
+                          </p>
+                        </div>
+                        <div style={{ padding: "8px" }}>
+                          {realPatterns.slice(0, 6).map((p: any, i: number) => (
+                            <div key={i} style={{ padding: "9px 10px", borderRadius: 8, marginBottom: 3, background: "rgba(255,255,255,0.025)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontFamily: M, fontSize: 11, fontWeight: 600, color: p.is_winner ? "#34d399" : "rgba(238,240,246,0.55)", margin: 0 }}>
+                                  {p.is_winner ? "✓ " : ""}{translatePatternKey(p.pattern_key)}
+                                </p>
+                                {p.insight_text && <p style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "2px 0 0", lineHeight: 1.4 }}>{p.insight_text.slice(0, 75)}</p>}
+                                <div style={{ display: "flex", gap: 7, marginTop: 3 }}>
+                                  {p.avg_ctr > 0 && <span style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "rgba(52,211,153,0.70)" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
+                                  {p.avg_roas > 0 && <span style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "rgba(14,165,233,0.70)" }}>ROAS {p.avg_roas.toFixed(2)}x</span>}
+                                  <span style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.22)" }}>{p.sample_size}×</span>
                                 </div>
-                              ))}
+                              </div>
+                              <button onClick={() => deletePattern(p.pattern_key)}
+                                title={language === "pt" ? "Remover" : "Remove"}
+                                style={{ flexShrink: 0, width: 20, height: 20, borderRadius: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4, marginTop: 1 }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.4)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = "0.4"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,0.9)" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                              </button>
                             </div>
-                            <div style={{ textAlign: "right" as const, flexShrink: 0, marginLeft: 8 }}>
-                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 700, color: "#34d399", margin: 0 }}>CTR {(s.avg_ctr * 100).toFixed(2)}%</p>
-                              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "1px 0 0" }}>R${s.total_spend?.toFixed(0)} spend</p>
-                              {s.winners_count > 0 && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: "rgba(52,211,153,0.60)", margin: "1px 0 0" }}>↑ {s.winners_count} escalar</p>}
-                              {s.losers_count > 0 && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 9, color: "rgba(248,113,113,0.60)", margin: "1px 0 0" }}>⏸ {s.losers_count} pausar</p>}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Winner patterns */}
-                  {intel.patterns.filter((p: any) => p.is_winner).length > 0 && (
-                    <div style={{ borderRadius: 12, border: "1px solid rgba(52,211,153,0.18)", overflow: "hidden" }}>
-                      <div style={{ padding: "10px 14px", background: "rgba(52,211,153,0.05)", borderBottom: "1px solid rgba(52,211,153,0.12)" }}>
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 700, color: "rgba(52,211,153,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
-                          {language === "pt" ? "Padrões vencedores" : language === "es" ? "Patrones ganadores" : "Winning patterns"}
+                    {/* Usage-based preferences (no real data yet) */}
+                    {prefPatterns.length > 0 && (
+                      <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                        <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.22)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                            {language === "pt" ? "Preferências de uso" : "Usage preferences"}
+                          </p>
+                        </div>
+                        <div style={{ padding: "8px" }}>
+                          {prefPatterns.slice(0, 4).map((p: any, i: number) => (
+                            <div key={i} style={{ padding: "8px 10px", borderRadius: 7, marginBottom: 3, background: "rgba(255,255,255,0.015)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.45)", margin: 0 }}>{translatePatternKey(p.pattern_key)}</p>
+                              <button onClick={() => deletePattern(p.pattern_key)}
+                                style={{ width: 18, height: 18, borderRadius: 4, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4, flexShrink: 0 }}
+                                onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                                onMouseLeave={e => (e.currentTarget.style.opacity = "0.4")}>
+                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,0.9)" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty */}
+                    {!intel?.profile?.ai_summary && !hasSnaps && realPatterns.length === 0 && prefPatterns.length === 0 && (
+                      <div style={{ padding: "32px 16px", textAlign: "center" as const, borderRadius: 12, border: "1px dashed rgba(255,255,255,0.09)" }}>
+                        <div style={{ fontSize: 26, marginBottom: 10 }}>🧠</div>
+                        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
+                          {language === "pt" ? "Ainda aprendendo..." : "Still learning..."}
+                        </p>
+                        <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
+                          {language === "pt" ? "Conecte o Meta Ads e use o produto — o sistema aprende com os resultados reais." : "Connect Meta Ads and use the product — it learns from real results."}
                         </p>
                       </div>
-                      <div style={{ padding: "8px" }}>
-                        {intel.patterns.filter((p: any) => p.is_winner).slice(0, 5).map((p: any, i: number) => (
-                          <div key={i} style={{ padding: "9px 12px", borderRadius: 8, marginBottom: 4, background: "rgba(255,255,255,0.025)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-                              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 600, color: "#34d399" }}>✓ {p.pattern_key.replace(/_/g, " ").slice(0, 35)}</span>
-                              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(238,240,246,0.35)" }}>{(p.confidence * 100).toFixed(0)}% conf.</span>
-                            </div>
-                            {p.insight_text && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(238,240,246,0.55)", margin: 0, lineHeight: 1.4 }}>{p.insight_text.slice(0, 80)}</p>}
-                            {p.avg_ctr > 0 && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(52,211,153,0.60)", margin: "3px 0 0" }}>CTR {(p.avg_ctr * 100).toFixed(3)}% · {p.sample_size} amostras</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
-                  {/* Empty state */}
-                  {intel.patterns.length === 0 && intel.memory.length === 0 && intel.snaps.length === 0 && (
-                    <div style={{ padding: "32px 16px", textAlign: "center" as const, borderRadius: 12, border: "1px dashed rgba(255,255,255,0.09)" }}>
-                      <div style={{ fontSize: 28, marginBottom: 10 }}>🧠</div>
-                      <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "rgba(238,240,246,0.42)", margin: "0 0 6px" }}>
-                        {language === "pt" ? "Ainda aprendendo..." : "Still learning..."}
-                      </p>
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
-                        {language === "pt" ? "Use o chat, gere hooks e analise concorrentes — o produto aprende automaticamente." : "Use chat, generate hooks and analyze competitors — the product learns automatically."}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
 
           {tab === "security" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

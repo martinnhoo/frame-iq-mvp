@@ -261,7 +261,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
       liveMetaData || "",
-      `ANALYSES: ${analyses.length} total | avg hook score: ${avgScore ?? "—"}/10`,
+      // Analyses count removed — internal data, not actionable for user
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
@@ -411,10 +411,13 @@ For tools, auto-fill params from context whenever possible:
 - If account name is known → use it as product hint
 - Never ask "what product?" if you can infer it from their account data
 
-DASHBOARD: When asked for dashboard or message contains [DASHBOARD]:
+DASHBOARD: When asked for dashboard, "como está minha conta", "resumo", "performance" or message contains [DASHBOARD]:
 - ALWAYS generate "dashboard" type block
-- Use real numbers from context if available, otherwise use realistic estimates labeled "(estimativa)"
-- Include 4-6 metrics + a bar/line chart when possible
+- Use ONLY real Meta Ads numbers from INTELLIGENCE DIÁRIA context — spend, CTR, ads ativos, vencedores, perdedores
+- If Meta data not available, say "Conecte o Meta Ads para ver seu dashboard de performance"
+- NEVER use AdBrief internal data (analyses count, boards, etc) as metrics — these are irrelevant
+- Metrics should be: Spend 7d, CTR médio, Ads ativos, Para escalar, Para pausar, Ontem vs hoje
+- Chart: CTR evolution over the 7-day history if available
 
 ═══ RESPONSE FORMAT ═══
 Return ONLY a valid JSON array. Zero text outside the array.
@@ -491,4 +494,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603261700
+// redeploy 202603261800
