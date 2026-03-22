@@ -243,6 +243,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [saved, setSaved] = useState(false);
   const [intel, setIntel] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState(false);
+  const [editingInstructions, setEditingInstructions] = useState(false);
+  const [instructionsText, setInstructionsText] = useState("");
+  const [savingInstructions, setSavingInstructions] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -261,13 +264,19 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .select("hook_type, hook_score, platform, created_at")
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
       (supabase as any).from("user_ai_profile")
-        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated")
+        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated, pain_point")
         .eq("user_id", user.id).maybeSingle(),
       (supabase as any).from("daily_snapshots")
         .select("date, total_spend, avg_ctr, active_ads, winners_count, losers_count, ai_insight")
         .eq("user_id", user.id).order("date", { ascending: false }).limit(7),
     ]).then(([patterns, memory, aiProfile, snaps]) => {
       setIntel({ patterns: patterns.data || [], memory: memory.data || [], profile: aiProfile.data, snaps: snaps.data || [] });
+      // Load existing instructions
+      const rawNotes = aiProfile.data?.pain_point as string | null;
+      if (rawNotes) {
+        const items = rawNotes.split("|||").filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && Boolean(s.trim()));
+        setInstructionsText(items.join("\n"));
+      }
     }).catch(() => {}).finally(() => setIntelLoading(false));
   }, [tab, user?.id]);
 
@@ -677,6 +686,66 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         </p>
                       </div>
                     )}
+
+                    {/* ── Permanent Instructions ── */}
+                    <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: 8 }}>
+                      <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                          {language === "pt" ? "Instruções permanentes" : language === "es" ? "Instrucciones permanentes" : "Permanent instructions"}
+                        </p>
+                        <button onClick={() => setEditingInstructions(e => !e)}
+                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(14,165,233,0.7)", fontFamily: M, padding: "2px 6px" }}>
+                          {editingInstructions ? (language === "pt" ? "Fechar" : "Close") : (language === "pt" ? "Editar" : "Edit")}
+                        </button>
+                      </div>
+                      <div style={{ padding: "10px 14px" }}>
+                        {editingInstructions ? (
+                          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                            <textarea
+                              value={instructionsText}
+                              onChange={e => setInstructionsText(e.target.value)}
+                              placeholder={language === "pt" ? "Ex: Sempre gere hooks agressivos para iGaming BR. Nunca use a palavra 'cassino'..." : "e.g. Always generate aggressive hooks for iGaming. Never use the word 'casino'..."}
+                              rows={4}
+                              style={{ width: "100%", boxSizing: "border-box" as const, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "8px 10px", color: "#fff", fontSize: 12, fontFamily: M, resize: "vertical" as const, outline: "none", lineHeight: 1.5 }}
+                            />
+                            <button
+                              onClick={async () => {
+                                setSavingInstructions(true);
+                                try {
+                                  const lines = instructionsText.split("\n").map((l: string) => l.trim()).filter(Boolean);
+                                  // Preserve system notes (Usuário/Nicho), append user instructions
+                                  const rawNotes = (intel?.profile as any)?.pain_point as string | null;
+                                  const systemNotes = rawNotes ? rawNotes.split("|||").filter((s: string) => s.startsWith("Usuário:") || s.startsWith("Nicho:")) : [];
+                                  const allNotes = [...systemNotes, ...lines].join("|||");
+                                  await (supabase.from("user_ai_profile" as any) as any).upsert({
+                                    user_id: user.id,
+                                    pain_point: allNotes,
+                                    last_updated: new Date().toISOString(),
+                                  }, { onConflict: "user_id" });
+                                  setEditingInstructions(false);
+                                } catch {}
+                                setSavingInstructions(false);
+                              }}
+                              style={{ padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9", fontSize: 12, fontWeight: 700, fontFamily: M, cursor: "pointer" }}>
+                              {savingInstructions ? "..." : (language === "pt" ? "Salvar" : "Save")}
+                            </button>
+                          </div>
+                        ) : instructionsText ? (
+                          <div style={{ display: "flex", flexDirection: "column" as const, gap: 4 }}>
+                            {instructionsText.split("\n").filter(Boolean).map((line: string, i: number) => (
+                              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.5)", flexShrink: 0, marginTop: 5 }} />
+                                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, margin: 0 }}>{line}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.25)", margin: 0, lineHeight: 1.5 }}>
+                            {language === "pt" ? "Nenhuma instrução salva. Clique em Editar para adicionar." : "No instructions saved. Click Edit to add."}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Patterns backed by real data */}
                     {realPatterns.length > 0 && (

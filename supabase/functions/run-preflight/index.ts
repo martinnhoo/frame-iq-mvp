@@ -135,16 +135,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Load user AI profile for context ──
+    // ── Load full account intelligence for preflight context ──
     let userContext = "";
     if (user_id) {
-      const { data: profile } = await supabase
-        .from("user_ai_profile")
-        .select("avg_hook_score, top_performing_hooks, best_platforms, ai_recommendations")
-        .eq("user_id", user_id)
-        .maybeSingle();
+      const [profileRes, snapRes] = await Promise.allSettled([
+        supabase.from("user_ai_profile")
+          .select("avg_hook_score, top_performing_hooks, best_platforms, ai_recommendations, industry, pain_point, creative_style")
+          .eq("user_id", user_id).maybeSingle(),
+        supabase.from("daily_snapshots")
+          .select("date, avg_ctr, total_spend, top_ads, ai_insight")
+          .eq("user_id", user_id).order("date", { ascending: false }).limit(1),
+      ]);
+      const profile = profileRes.status === "fulfilled" ? profileRes.value.data : null;
+      const snap = snapRes.status === "fulfilled" ? snapRes.value.data?.[0] : null;
       if (profile) {
-        userContext = `\nUSER CREATIVE PROFILE: Avg hook score=${profile.avg_hook_score}/10, Best hook types=${(profile.top_performing_hooks || []).join(", ")}, Best platforms=${(profile.best_platforms || []).join(", ")}`;
+        const rawNotes = (profile.pain_point || "") as string;
+        const instructions = rawNotes.split("|||").filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && s.trim()).join(" | ");
+        userContext = `\n=== ACCOUNT PROFILE ===`;
+        if (profile.industry) userContext += `\nIndustry: ${profile.industry}`;
+        userContext += `\nAvg hook score: ${profile.avg_hook_score || "N/A"}/10, Best hooks: ${(profile.top_performing_hooks || []).join(", ")}, Best platforms: ${(profile.best_platforms || []).join(", ")}`;
+        if (profile.creative_style) userContext += `\nCreative style: ${profile.creative_style}`;
+        if (instructions) userContext += `\nPermanent instructions: ${instructions}`;
+      }
+      if (snap) {
+        const topAds = (snap.top_ads as any[]) || [];
+        const winners = topAds.filter((a: any) => a.isScalable || (a.ctr > 0.02)).slice(0, 3);
+        userContext += `\n\n=== META ADS BENCHMARK (${snap.date}) ===`;
+        userContext += `\nAccount avg CTR: ${((snap.avg_ctr||0)*100).toFixed(2)}% — use this as benchmark for scoring`;
+        if (winners.length) userContext += `\nWinning patterns on this account: ${winners.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(" | ")}`;
+        if (snap.ai_insight) userContext += `\nAccount insight: ${snap.ai_insight}`;
       }
     }
 

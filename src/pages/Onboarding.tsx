@@ -196,23 +196,49 @@ export default function Onboarding() {
   const saveProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/login"); return null; }
+
+    // Save profile
     await supabase.from("profiles").update({
       name: name || undefined,
       onboarding_completed: true,
-      onboarding_data: {
-        niche, completedAt: new Date().toISOString(),
-      },
+      onboarding_data: { niche, completedAt: new Date().toISOString() },
     } as never).eq("id", session.user.id);
+
+    // Create or update default persona with name + niche
+    const nicheObj = NICHES.find(n => n.value === niche);
+    const personaName = name
+      ? name.split(" ")[0]
+      : nicheObj ? nicheObj.label : "Minha conta";
+
+    const { data: existingPersonas } = await supabase
+      .from("personas").select("id").eq("user_id", session.user.id).limit(1);
+
+    if (!existingPersonas?.length) {
+      // No persona yet — create default one
+      await supabase.from("personas").insert({
+        user_id: session.user.id,
+        name: personaName,
+        headline: niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta",
+        result: {
+          preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US",
+          niche: niche,
+          industry: niche,
+        },
+      } as never).catch(() => {});
+    }
+
+    // Save to ai_profile for chat personalization
     if (niche || name) {
       await (supabase.from("user_ai_profile" as any) as any).upsert({
         user_id: session.user.id,
         industry: niche,
-        pain_point: name ? `Usuário: ${name}. Nicho: ${niche}` : `Nicho: ${niche}`,
+        pain_point: name ? `Usuário: ${name}. Nicho: ${nicheObj?.label || niche}` : `Nicho: ${nicheObj?.label || niche}`,
         last_updated: new Date().toISOString(),
       }, { onConflict: "user_id" }).catch(() => {});
     }
+
     supabase.functions.invoke("send-welcome-email", {
-      body: { user_id: session.user.id, first_name: name.trim().split(" ")[0], language: lang }
+      body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
     }).catch(() => {});
     return session;
   };

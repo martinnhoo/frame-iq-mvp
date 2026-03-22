@@ -55,26 +55,54 @@ Deno.serve(async (req) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-    // Fetch accumulated creative context from the loop
+    // ── Load full account intelligence in parallel ──────────────────────────
     let loopContext = "";
     if (effectiveUserId) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
       try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-        const loopRes = await fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
-          },
-          body: JSON.stringify({ action: "get_context", user_id: effectiveUserId }),
-        });
-        if (loopRes.ok) {
-          const loopData = await loopRes.json();
-          if (loopData.has_data && loopData.context) {
-            loopContext = `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (learned from this client's real ad data) ---\n${loopData.context}\n--- Use these insights to write scripts that align with proven winning patterns. ---`;
+        const [profileRes, snapshotRes, loopFetch] = await Promise.allSettled([
+          fetch(`${supabaseUrl}/rest/v1/user_ai_profile?user_id=eq.${effectiveUserId}&select=industry,pain_point,avg_hook_score,creative_style,top_performing_models`, { headers: restHeaders }),
+          fetch(`${supabaseUrl}/rest/v1/daily_snapshots?user_id=eq.${effectiveUserId}&select=date,avg_ctr,total_spend,top_ads,ai_insight&order=date.desc&limit=1`, { headers: restHeaders }),
+          fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` },
+            body: JSON.stringify({ action: "get_context", user_id: effectiveUserId }),
+          }),
+        ]);
+
+        if (profileRes.status === "fulfilled" && profileRes.value.ok) {
+          const profiles = await profileRes.value.json();
+          const p = Array.isArray(profiles) ? profiles[0] : profiles;
+          if (p) {
+            const rawNotes = (p.pain_point || "") as string;
+            const instructions = rawNotes.split("|||").filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && s.trim()).join(" | ");
+            loopContext += `\n\n=== ACCOUNT PROFILE ===`;
+            if (p.industry) loopContext += `\nIndustry: ${p.industry}`;
+            if (p.creative_style) loopContext += `\nCreative style: ${p.creative_style}`;
+            if (p.avg_hook_score) loopContext += `\nAvg hook score: ${p.avg_hook_score}/10`;
+            if (instructions) loopContext += `\nPermanent instructions: ${instructions}`;
           }
         }
-      } catch { /* loop context is optional */ }
+        if (snapshotRes.status === "fulfilled" && snapshotRes.value.ok) {
+          const snaps = await snapshotRes.value.json();
+          const s = Array.isArray(snaps) ? snaps[0] : snaps;
+          if (s) {
+            const top = ((s.top_ads as any[]) || []).filter((a: any) => a.isScalable || (a.ctr > 0.02)).slice(0, 3);
+            loopContext += `\n\n=== META ADS CONTEXT (${s.date}) ===`;
+            loopContext += `\nAccount CTR: ${((s.avg_ctr||0)*100).toFixed(2)}% | Spend: $${(s.total_spend||0).toFixed(0)}`;
+            if (top.length) loopContext += `\nTop ads: ${top.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(" | ")}`;
+            if (s.ai_insight) loopContext += `\nInsight: ${s.ai_insight}`;
+          }
+        }
+        if (loopFetch.status === "fulfilled" && loopFetch.value.ok) {
+          const loopData = await loopFetch.value.json();
+          if (loopData.has_data && loopData.context) {
+            loopContext += `\n\n=== PROVEN CREATIVE PATTERNS ===\n${loopData.context}\n=== Use winning patterns to write scripts. ===`;
+          }
+        }
+      } catch { /* context is optional */ }
     }
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";

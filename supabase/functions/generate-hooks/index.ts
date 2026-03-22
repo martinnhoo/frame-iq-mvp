@@ -73,30 +73,58 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Load user AI profile + loop context for personalization
+    // ── Load full account intelligence for hook personalization ──────────────
     let userContext = '';
     if (user_id) {
-      const { data: profile } = await supabase.from('user_ai_profile')
-        .select('top_performing_models, best_platforms, avg_hook_score, creative_style, ai_summary')
-        .eq('user_id', user_id).maybeSingle();
+      // Parallel: ai_profile + Meta snapshot + loop context
+      const [profileRes, snapshotRes, loopRes] = await Promise.allSettled([
+        supabase.from('user_ai_profile')
+          .select('top_performing_models, best_platforms, avg_hook_score, creative_style, ai_summary, industry, pain_point')
+          .eq('user_id', user_id).maybeSingle(),
+        supabase.from('daily_snapshots')
+          .select('date, total_spend, avg_ctr, active_ads, top_ads, ai_insight, winners_count, losers_count')
+          .eq('user_id', user_id).order('date', { ascending: false }).limit(1),
+        fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/creative-loop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}` },
+          body: JSON.stringify({ action: 'get_context', user_id, persona_id: persona_id || null }),
+        }),
+      ]);
+
+      // AI Profile
+      const profile = profileRes.status === 'fulfilled' ? profileRes.value.data : null;
       if (profile) {
-        userContext = `\nUSER CONTEXT: Their avg hook score is ${profile.avg_hook_score}/10. Best models: ${(profile.top_performing_models || []).join(', ')}. Creative style: ${profile.creative_style || 'unknown'}.`;
+        const industry = profile.industry ? `Industry: ${profile.industry}.` : '';
+        const style = profile.creative_style ? `Creative style: ${profile.creative_style}.` : '';
+        const score = profile.avg_hook_score ? `Avg hook score: ${profile.avg_hook_score}/10.` : '';
+        const models = (profile.top_performing_models || []).length ? `Best models: ${profile.top_performing_models.join(', ')}.` : '';
+        // Extract user instructions (non-system notes)
+        const rawNotes = profile.pain_point as string | null;
+        const userInstructions = rawNotes ? rawNotes.split('|||').filter((s: string) => !s.startsWith('Usuário:') && !s.startsWith('Nicho:') && s.trim()).join(' | ') : '';
+        userContext = `\n=== ACCOUNT PROFILE ===\n${industry} ${style} ${score} ${models}`.trim();
+        if (userInstructions) userContext += `\nUser permanent instructions: ${userInstructions}`;
       }
 
-      // Fetch loop context (learned patterns + creative memory)
+      // Meta Ads snapshot
+      const snapshot = snapshotRes.status === 'fulfilled' ? snapshotRes.value.data?.[0] : null;
+      if (snapshot) {
+        const topAds = (snapshot.top_ads as any[]) || [];
+        const winners = topAds.filter((a: any) => a.isScalable || (a.ctr > 0.02)).slice(0, 3);
+        const losers  = topAds.filter((a: any) => a.needsPause || (a.ctr < 0.005)).slice(0, 2);
+        userContext += `\n\n=== META ADS DATA (${snapshot.date}) ===`;
+        userContext += `\nAccount CTR: ${((snapshot.avg_ctr || 0) * 100).toFixed(2)}% | Spend: $${(snapshot.total_spend || 0).toFixed(0)} | Active ads: ${snapshot.active_ads || 0}`;
+        if (winners.length) userContext += `\nWINNING ADS (high CTR — learn from these hooks): ${winners.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
+        if (losers.length)  userContext += `\nUNDERPERFORMING (avoid these hook patterns): ${losers.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
+        if (snapshot.ai_insight) userContext += `\nAccount insight: ${snapshot.ai_insight}`;
+      }
+
+      // Creative loop patterns
       try {
-        const loopRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/creative-loop`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
-          },
-          body: JSON.stringify({ action: 'get_context', user_id, persona_id: persona_id || null }),
-        });
-        if (loopRes.ok) {
-          const loopData = await loopRes.json();
+        const loopResp = loopRes.status === 'fulfilled' ? loopRes.value : null;
+        if (loopResp && loopResp.ok) {
+          const loopData = await loopResp.json();
           if (loopData.has_data && loopData.context) {
-            userContext += `\n\n--- ACCOUNT CREATIVE INTELLIGENCE (from real ad data) ---\n${loopData.context}\n--- Use these patterns to generate hooks that match proven winners. ---`;
+            userContext += `\n\n=== PROVEN CREATIVE PATTERNS (from this account's real ad data) ===\n${loopData.context}\n=== Generate hooks that match and build on these winning patterns. ===`;
           }
         }
       } catch { /* optional */ }
