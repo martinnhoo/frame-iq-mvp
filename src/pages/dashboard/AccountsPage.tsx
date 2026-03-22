@@ -494,7 +494,7 @@ export default function AccountsPage() {
                     {/* Platform connections */}
                     <div>
                       <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Ad account connections</p>
-                      <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} language={lang} />
+                      <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} language={language} />
                     </div>
 
                     {/* Chat shortcut */}
