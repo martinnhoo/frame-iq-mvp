@@ -502,6 +502,16 @@ export default function AdBriefAI() {
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}`);
       setContextReady(true);
+      // Auto-trigger daily intelligence if Meta connected and no snapshot today
+      if(user?.id){
+        const today=new Date().toISOString().split("T")[0];
+        (supabase as any).from("daily_snapshots").select("date").eq("user_id",user.id).eq("date",today).maybeSingle().then((r:any)=>{
+          if(!r.data){
+            // No snapshot today — run intelligence in background
+            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id}}).catch(()=>{});
+          }
+        }).catch(()=>{});
+      }
     })();
   },[user?.id]);
 

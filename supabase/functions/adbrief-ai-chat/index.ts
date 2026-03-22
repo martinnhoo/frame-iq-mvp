@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
       { data: adsImports },
       { data: personaRow },
       { data: learnedPatterns },
+      { data: dailySnapshots },
     ] = await Promise.all([
       supabase.from("analyses")
         .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
@@ -265,6 +266,22 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
       learnedCtx ? `=== APRENDIZADO DA CONTA ===\n${learnedCtx}\n(Use esses padrões para personalizar hooks, scripts e recomendações)` : "",
+      (() => {
+        const snaps = (dailySnapshots || []) as any[];
+        if (!snaps.length) return "";
+        const latest = snaps[0];
+        const prev = snaps[1];
+        const ctrDelta = prev ? ((latest.avg_ctr - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001) * 100).toFixed(1) : null;
+        const spendDelta = prev && prev.total_spend > 0 ? ((latest.total_spend - prev.total_spend) / prev.total_spend * 100).toFixed(1) : null;
+        return [
+          `=== INTELLIGENCE DIÁRIA (${latest.date}) ===`,
+          `Spend 7d: R$${(latest.total_spend||0).toFixed(0)} | CTR médio: ${((latest.avg_ctr||0)*100).toFixed(2)}% | Ads ativos: ${latest.active_ads||0}`,
+          ctrDelta ? `vs semana anterior: CTR ${parseFloat(ctrDelta)>0?'+':''}${ctrDelta}%, Spend ${parseFloat(spendDelta||'0')>0?'+':''}${spendDelta||'0'}%` : '',
+          `Vencedores: ${latest.winners_count||0} | Precisam atenção: ${latest.losers_count||0}`,
+          latest.ai_insight ? `Insight: ${latest.ai_insight}` : '',
+          snaps.length > 1 ? `Histórico 7d: ${snaps.slice(0,5).map((s:any)=>`${s.date}: CTR ${((s.avg_ctr||0)*100).toFixed(2)}% / R$${(s.total_spend||0).toFixed(0)}`).join(' | ')}` : '',
+        ].filter(Boolean).join('\n');
+      })(),
       (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
       (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
@@ -369,6 +386,13 @@ ASSERTIVE RULES — follow these strictly:
 5. If the user asks to activate something already active → answer directly: "Já está ativa."
 6. Be direct. Never ask for confirmation for read queries. Never show empty blocks.
 
+INTELLIGENCE DIÁRIA — quando disponível no contexto:
+- Use os dados de performance REAIS para personalizar qualquer recomendação
+- Se há vencedores identificados → priorize padrões similares ao gerar hooks
+- Se há perdedores → proativamente sugira pausar (mas não execute sem confirmação)
+- Compare CTR/spend de ontem vs semana anterior para identificar tendências
+- O insight do dia já foi gerado pela IA — reforce ou expanda se o usuário perguntar sobre performance
+
 For tools, auto-fill params from context whenever possible:
 - If persona has market/niche info → use it in hooks/script params
 - If account name is known → use it as product hint
@@ -454,4 +478,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603261300
+// redeploy 202603261500
