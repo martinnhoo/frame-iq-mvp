@@ -469,7 +469,7 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
           {timeEmoji}
         </div>
         <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.01em" }}>{block.title}</span>
-        <span style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)" }}>AdBrief AI</span>
+
       </div>
       {/* Message */}
       <div style={{ paddingLeft: 40 }}>
@@ -1277,12 +1277,11 @@ export default function AdBriefAI() {
               </div>
             ):(
               <div>
-                {/* AI label */}
+                {/* AI avatar — minimal, just identifies the sender */}
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:7}}>
-                  <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <Sparkles size={8} color="#fff"/>
+                  <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,rgba(14,165,233,0.4),rgba(99,102,241,0.3))",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <Sparkles size={7} color="rgba(255,255,255,0.7)"/>
                   </div>
-                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em"}}>ADBRIEF AI</span>
                 </div>
                 {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>
