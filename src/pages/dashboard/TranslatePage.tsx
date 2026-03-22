@@ -218,14 +218,14 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       if (!rawTranscript.includes("failed")) {
         setStep("translating");
         setProgress(50);
-        const lang = LANGUAGES.find(l => l.code === targetLang)!;
+        const lang = LANGUAGES.find(l => l.code === targetLang) || LANGUAGES[0];
         try {
           console.log("Starting translation to", targetLang);
           const { data: tData, error: tError } = await supabase.functions.invoke("translate-text", {
             body: {
               source_text: rawTranscript,
               from_language: "auto", from_language_name: "Auto-detect",
-              to_language: targetLang, to_language_name: lang.name,
+              to_language: lang.code, to_language_name: lang.name,
               context: "Video transcript — preserve natural speech patterns",
               tone: "Conversational", user_id: userId,
             },
