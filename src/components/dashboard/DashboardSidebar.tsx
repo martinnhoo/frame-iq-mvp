@@ -3,6 +3,9 @@ import {
   Sparkles, CreditCard, Brain, Building2, FileText,
   Globe, LayoutDashboard, PenTool, Plane, BookOpen,
   ChevronRight, CheckCircle2, Circle,
+  // New precise icons
+  ScanEye, Clapperboard, Languages, ShieldCheck,
+  LayoutTemplate, Kanban, Cpu, Users2, TrendingUp,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -67,19 +70,19 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
 
   const PRIMARY_NAV = [
-    { url: "/dashboard/ai",          label: language==="pt"?"IA Chat":language==="es"?"IA Chat":"AI Chat",       icon: Brain,        exact: false, hot: true },
-    { url: "/dashboard/accounts",    label: language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts",      icon: Building2,    exact: false },
-    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrente",                                icon: Target,       exact: false },
-    { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: BarChart3,    exact: false },
+    { url: "/dashboard/ai",          label: language==="pt"?"IA Chat":language==="es"?"IA Chat":"AI Chat",       icon: Cpu,          exact: false, hot: true },
+    { url: "/dashboard/accounts",    label: language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts",      icon: Users2,       exact: false },
+    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrente",                                icon: ScanEye,      exact: false },
+    { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: TrendingUp,   exact: false },
   ];
 
   const TOOLS_NAV = [
-    { url: "/dashboard/hooks",        label: dt("nav_hooks")||"Gerador de Hooks",   icon: "⚡" },
-    { url: "/dashboard/script",       label: dt("nav_script")||"Roteiro",           icon: "✍️" },
-    { url: "/dashboard/translate",    label: dt("nav_translate")||"Traduzir",       icon: "🌍" },
-    { url: "/dashboard/preflight",    label: dt("nav_preflight")||"Check Criativo", icon: "✅" },
-    { url: "/dashboard/templates",    label: dt("nav_templates")||"Templates",      icon: "📐" },
-    { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",            icon: "🗂️" },
+    { url: "/dashboard/hooks",        label: dt("nav_hooks")||"Gerador de Hooks",   icon: Zap },
+    { url: "/dashboard/script",       label: dt("nav_script")||"Roteiro",           icon: Clapperboard },
+    { url: "/dashboard/translate",    label: dt("nav_translate")||"Traduzir",       icon: Languages },
+    { url: "/dashboard/preflight",    label: dt("nav_preflight")||"Check Criativo", icon: ShieldCheck },
+    { url: "/dashboard/templates",    label: dt("nav_templates")||"Templates",      icon: LayoutTemplate },
+    { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",            icon: Kanban },
   ];
 
   const sectionLabel = (txt: string) => (
@@ -111,8 +114,9 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     );
   };
 
-  const toolItem = (url: string, label: string, emoji: string) => {
+  const toolItem = (url: string, label: string, IconOrEmoji: any) => {
     const active = isActive(url);
+    const isComponent = typeof IconOrEmoji !== "string";
     return (
       <NavLink key={url} to={url} onClick={onClose}
         style={{
@@ -127,7 +131,12 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         onMouseEnter={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = SB.hoverBg; el.style.color = "rgba(255,255,255,0.75)"; }}}
         onMouseLeave={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = SB.idleText; }}}
       >
-        <span style={{ fontSize: 13, width: 18, textAlign: "center", flexShrink: 0 }}>{emoji}</span>
+        <span style={{ width: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {isComponent
+            ? <IconOrEmoji size={14} color={active ? SB.activeText : "rgba(255,255,255,0.35)"}/>
+            : <span style={{ fontSize: 13 }}>{IconOrEmoji}</span>
+          }
+        </span>
         <span style={{ flex: 1 }}>{label}</span>
       </NavLink>
     );

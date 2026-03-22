@@ -7,8 +7,9 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, Sparkles, RotateCcw, Brain,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
-  Upload, Zap, FileText, BarChart3, X,
-  TrendingUp, TrendingDown, AlertTriangle, BarChart2
+  ScanLine, Zap, Clapperboard, ScanEye, LayoutDashboard, X,
+  TrendingUp, TrendingDown, AlertTriangle, BarChart2,
+  Upload, FileText, BarChart3
 } from "lucide-react";
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,24 +50,24 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 };
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
-    { icon: Upload, label: "Upload ad",      action: "upload",     color: "#60a5fa" },
-    { icon: Zap,    label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
-    { icon: FileText, label: "Write script", action: "script",     color: "#34d399" },
-    { icon: BarChart3, label: "Competitor",  action: "competitor", color: "#a78bfa" },
-    { icon: BarChart2, label: "Dashboard",   action: "dashboard",  color: "#0ea5e9" },
+    { icon: ScanLine,       label: "Upload ad",      action: "upload",     color: "#60a5fa" },
+    { icon: Zap,            label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Write script",   action: "script",     color: "#34d399" },
+    { icon: ScanEye,        label: "Competitor",     action: "competitor", color: "#a78bfa" },
+    { icon: LayoutDashboard,label: "Dashboard",      action: "dashboard",  color: "#0ea5e9" },
   ],
   pt: [
-    { icon: Upload, label: "Upload anúncio",  action: "upload",     color: "#60a5fa" },
-    { icon: Zap,    label: "Gerar hooks",     action: "hooks",      color: "#06b6d4" },
-    { icon: FileText, label: "Escrever roteiro", action: "script",  color: "#34d399" },
-    { icon: BarChart3, label: "Concorrente",  action: "competitor", color: "#a78bfa" },
-    { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
+    { icon: ScanLine,       label: "Upload anúncio",    action: "upload",     color: "#60a5fa" },
+    { icon: Zap,            label: "Gerar hooks",        action: "hooks",      color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",     color: "#34d399" },
+    { icon: ScanEye,        label: "Concorrente",        action: "competitor", color: "#a78bfa" },
+    { icon: LayoutDashboard,label: "Dashboard",          action: "dashboard",  color: "#0ea5e9" },
   ],
   es: [
-    { icon: Upload, label: "Subir anuncio",   action: "upload",     color: "#60a5fa" },
-    { icon: Zap,    label: "Generar hooks",   action: "hooks",      color: "#06b6d4" },
-    { icon: FileText, label: "Escribir guión", action: "script",   color: "#34d399" },
-    { icon: BarChart3, label: "Competidor",   action: "competitor", color: "#a78bfa" },
+    { icon: ScanLine,       label: "Subir anuncio",     action: "upload",     color: "#60a5fa" },
+    { icon: Zap,            label: "Generar hooks",     action: "hooks",      color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Escribir guión",    action: "script",     color: "#34d399" },
+    { icon: ScanEye,        label: "Competidor",        action: "competitor", color: "#a78bfa" },
     { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
   ],
 };
