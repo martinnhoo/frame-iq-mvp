@@ -181,12 +181,18 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
         .limit(30),
-      // 8. Daily snapshots — last 7 days of Meta intelligence
+      // 8. Daily snapshots — last 7 days, persona-scoped when possible
       (supabase as any).from("daily_snapshots")
         .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
         .eq("user_id", user_id)
-        .order("date", { ascending: false })
-        .limit(7),
+        .then(async (r: any) => {
+          const all = (r.data || []) as any[];
+          if (!all.length) return { data: [] };
+          // Prefer persona-scoped snapshots, fall back to any
+          const scoped = persona_id ? all.filter((s: any) => s.persona_id === persona_id) : [];
+          const result = scoped.length ? scoped : all;
+          return { data: result.sort((a: any, b: any) => b.date.localeCompare(a.date)).slice(0, 7) };
+        }),
       // 9. Preflight history — last 10 runs to understand creative quality trend
       (supabase as any).from("preflight_results")
         .select("created_at, score, verdict, platform, market, format")
@@ -255,10 +261,15 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const winners = patterns.filter(p => p.is_winner && p.confidence > 0.2);
     const competitors = patterns.filter(p => p.pattern_key.startsWith('competitor_'));
     const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
+    const preflightPatterns = patterns.filter(p => p.pattern_key.startsWith('preflight_'));
+    const actionPatterns = patterns.filter(p => p.pattern_key.startsWith('action_'));
+
     const learnedCtx = [
       winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
       perfPatterns.length ? `PERFORMANCE HISTÓRICA:\n${perfPatterns.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      preflightPatterns.length ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
     ].filter(Boolean).join("\n\n");
 
     // ── 4b. Fetch live Meta Ads data ─────────────────────────────────────────
@@ -298,7 +309,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             liveMetaData = `LIVE META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})\n`;
 
             if (campsRaw?.error) {
-              liveMetaData += `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
+              const isExpired = campsRaw.error.code === 190 || String(campsRaw.error.type||"").includes("OAuthException");
+              if (isExpired) {
+                liveMetaData += `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`;
+              } else {
+                liveMetaData += `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
+              }
             } else if (campsRaw?.data?.length) {
               const lines = campsRaw.data.slice(0, 15).map((c: any) =>
                 `  ${c.name}: status=${c.status} budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "no budget set"} objective=${c.objective}`
@@ -308,14 +324,22 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada nesta conta. Respond directly with this fact.\n`;
             }
 
-            if (adsRaw?.data?.length) {
+            if (adsRaw?.error) {
+              // Detect token expiry (Meta error 190) and surface clearly
+              const isExpired = adsRaw.error.code === 190 || String(adsRaw.error.message||"").toLowerCase().includes("token") || String(adsRaw.error.type||"").includes("OAuthException");
+              if (isExpired) {
+                liveMetaData += `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`;
+              } else {
+                liveMetaData += `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
+              }
+            } else if (adsRaw?.data?.length) {
               const adLines = adsRaw.data.slice(0, 10).map((ad: any) => {
                 const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
                 const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
                 return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} cpc=$${parseFloat(ad.cpc||0).toFixed(2)} freq=${ad.frequency||"?"} purchases=${purchases}${hookRate?` hook_rate=${((parseInt(hookRate)/parseInt(ad.impressions||1))*100).toFixed(1)}%`:""}`;
               }).join("\n");
               liveMetaData += `AD PERFORMANCE (top by spend):\n${adLines}\n`;
-            } else if (!adsRaw?.error) {
+            } else {
               liveMetaData += `ADS: Nenhum gasto de anúncio nos últimos 30 dias.\n`;
             }
           } else {
@@ -384,7 +408,7 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
         ].filter(Boolean).join('\n');
       })(),
       pfCtx || "",
-      (aiProfile as any)?.summary ? `AI PROFILE: ${(aiProfile as any).summary}` : "",
+      (aiProfile as any)?.ai_summary ? `AI PROFILE: ${(aiProfile as any).ai_summary}` : "",
       (aiProfile as any)?.pain_point ? `USER PAIN POINT: ${(aiProfile as any).pain_point}` : "",
     ].filter(Boolean).join("\n");
 
@@ -585,4 +609,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603262100
+// redeploy 202603262200
