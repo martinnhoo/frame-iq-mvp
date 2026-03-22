@@ -101,7 +101,7 @@ const BS: Record<string,{color:string;bg:string;border:string}> = {
   hooks:       {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",   border:"rgba(6,182,212,0.16)"},
   warning:     {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",  border:"rgba(251,191,36,0.16)"},
   insight:     {color:"#34d399",bg:"rgba(52,211,153,0.06)",  border:"rgba(52,211,153,0.16)"},
-  off_topic:   {color:"rgba(255,255,255,0.25)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.06)"},
+  off_topic:   {color:"rgba(255,255,255,0.25)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.10)"},
   navigate:    {color:"#60a5fa",bg:"rgba(96,165,250,0.04)",  border:"rgba(96,165,250,0.18)"},
   tool_call:   {color:"#a78bfa",bg:"rgba(167,139,250,0.06)", border:"rgba(167,139,250,0.18)"},
   dashboard:   {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",  border:"rgba(14,165,233,0.15)"},
@@ -220,12 +220,12 @@ function DashboardBlock({block}:{block:Block}) {
             const isUp=metric.trend==="up",isDown=metric.trend==="down";
             const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
             return(
-              <div key={i} style={{padding:"16px 18px",background:"#13161f",position:"relative",overflow:"hidden"}}>
+              <div key={i} style={{padding:"16px 18px",background:"#181e2d",position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
                 <p style={{...m,fontSize:9,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
                 <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
                 {metric.delta&&(
-                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.07)"}`}}>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.10)"}`}}>
                     {isDown?<TrendingDown size={9} color="#f87171"/>:isUp?<TrendingUp size={9} color="#34d399"/>:null}
                     <span style={{...m,fontSize:10,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
                   </div>
@@ -309,7 +309,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   const icon=icons[block.meta_action||""]||"⚡";
 
   if(state==="done") return(
-    <div style={{borderRadius:12,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"14px 16px",marginBottom:10}}>
+    <div style={{borderRadius:14,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"14px 16px",marginBottom:10}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
         <span style={{fontSize:16}}>✅</span>
         <p style={{...j,fontSize:13,fontWeight:700,color:"#34d399",margin:0}}>{t.done}</p>
@@ -378,11 +378,11 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   };
 
   if(block.type==="navigate") return(
-    <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 14px"}}>
+    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 14px"}}>
       <p style={{...j,fontSize:12,fontWeight:700,color:s.color,marginBottom:5}}>{block.title}</p>
       {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.6,marginBottom:10}}>{block.content}</p>}
       <button onClick={()=>onNavigate(block.route!,block.params)}
-        style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"rgba(96,165,250,0.15)",color:s.color,border:`1px solid ${s.border}`,cursor:"pointer"}}>
+        style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:10,background:"rgba(96,165,250,0.15)",color:s.color,border:`1px solid ${s.border}`,cursor:"pointer"}}>
         {block.cta||"Open →"}
       </button>
     </div>
@@ -391,7 +391,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   const isHooks = block.type === "hooks";
 
   return(
-    <div style={{borderRadius:12,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
+    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
       <button onClick={()=>setOpen(o=>!o)}
         style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:"none",border:"none",cursor:"pointer"}}>
         <span style={{fontSize:14,flexShrink:0}}>{ICONS[block.type]||"•"}</span>
@@ -402,9 +402,9 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
         <div style={{padding:"0 14px 12px"}}>
           {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.68)",lineHeight:1.7,marginBottom:block.items?.length?8:0}}>{block.content}</p>}
           {block.items?.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.05)",alignItems:"flex-start"}}>
+            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",alignItems:"flex-start"}}>
               <span style={{color:s.color,fontSize:11,marginTop:3,flexShrink:0,fontWeight:700}}>{i+1}.</span>
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.78)",lineHeight:1.6,flex:1}}>{item}</span>
+              <span style={{...m,fontSize:13,color:"#d4d8e8",lineHeight:1.6,flex:1}}>{item}</span>
               {isHooks&&(
                 <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
                   <button onClick={()=>copyItem(item,i)}
@@ -631,7 +631,7 @@ export default function AdBriefAI() {
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0f1117",...j,overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#0e1118",...j,overflow:"hidden"}}>
 
       {/* ── Header ── */}
       <div style={{padding:"12px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
@@ -654,7 +654,7 @@ export default function AdBriefAI() {
             const active=connections.includes(p.id);
             return(
               <button key={p.id} onClick={()=>!p.soon&&!active&&handleConnect(p.id,p.fn)} disabled={!!p.soon||connectingId===p.id}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,border:`1px solid ${active?`${p.color}35`:"rgba(255,255,255,0.07)"}`,background:active?`${p.color}10`:"transparent",cursor:p.soon||active?"default":"pointer",transition:"all 0.15s"}}>
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,border:`1px solid ${active?`${p.color}35`:"rgba(255,255,255,0.10)"}`,background:active?`${p.color}10`:"transparent",cursor:p.soon||active?"default":"pointer",transition:"all 0.15s"}}>
                 <p.Icon active={active}/>
                 <span style={{...m,fontSize:10,fontWeight:600,color:active?p.color:"rgba(255,255,255,0.3)"}}>
                   {connectingId===p.id?L.connecting:p.soon?L.soon:p.label.replace(" Ads","")}
@@ -707,7 +707,7 @@ export default function AdBriefAI() {
               /* ── Connected — show suggestions ── */
               <>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-                  <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <div style={{width:28,height:28,borderRadius:10,background:"linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                     <Sparkles size={13} color="rgba(14,165,233,0.8)"/>
                   </div>
                   <p style={{...j,fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.65)",margin:0}}>
@@ -717,9 +717,9 @@ export default function AdBriefAI() {
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                   {SUGGS.map((s,i)=>(
                     <button key={i} onClick={()=>send(s)}
-                      style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:12,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
+                      style={{display:"flex",alignItems:"flex-start",gap:8,padding:"11px 13px",borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",textAlign:"left",...j,transition:"all 0.13s"}}
                       onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.07)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.transform="translateY(-1px)";}}
-                      onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.025)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.transform="translateY(0)";}}>
+                      onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.04)";el.style.borderColor="rgba(255,255,255,0.10)";el.style.transform="translateY(0)";}}>
                       <span style={{fontSize:13,opacity:0.5,flexShrink:0}}>{["📊","⚡","✍️","🎯"][i]}</span>
                       <span style={{fontSize:12,color:"rgba(255,255,255,0.65)",lineHeight:1.5,fontWeight:500}}>{s}</span>
                     </button>
@@ -763,11 +763,11 @@ export default function AdBriefAI() {
                 {/* 👍 👎 Copy Retry row */}
                 <div style={{display:"flex",alignItems:"center",gap:5,marginTop:5}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.10)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
                     <ThumbsUp size={11}/>
                   </button>
                   <button onClick={()=>handleFeedback(msg.id,"dislike",msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="dislike"?"rgba(248,113,113,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="dislike"?"rgba(248,113,113,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="dislike"?"#f87171":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="dislike"?"rgba(248,113,113,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="dislike"?"rgba(248,113,113,0.3)":"rgba(255,255,255,0.10)"}`,cursor:"pointer",color:feedback[msg.id]==="dislike"?"#f87171":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
                     <ThumbsDown size={11}/>
                   </button>
                   <button onClick={()=>handleCopy(msg.id,msg.blocks||[])}
@@ -809,9 +809,9 @@ export default function AdBriefAI() {
                 else if(tool.action==="dashboard") setActiveTool(a=>a==="dashboard"?null:"dashboard");
                 else setActiveTool(a=>a===tool.action?null:tool.action);
               }}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:8,
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:10,
                   background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.03)",
-                  border:`1px solid ${activeTool===tool.action?`${tool.color}35`:"rgba(255,255,255,0.06)"}`,
+                  border:`1px solid ${activeTool===tool.action?`${tool.color}35`:"rgba(255,255,255,0.10)"}`,
                   cursor:"pointer",transition:"all 0.13s",...m}}>
                 <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
                 <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
@@ -824,13 +824,13 @@ export default function AdBriefAI() {
           <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             placeholder={L.placeholder} rows={1}
-            style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:13,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}}
+            style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}}
             onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
             onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
             onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
           />
           <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady||!hasData}
-            style={{width:42,height:42,borderRadius:11,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+            style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
             {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>

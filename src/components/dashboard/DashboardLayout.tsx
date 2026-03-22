@@ -229,7 +229,7 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div style={{
-        minHeight: "100dvh", background: "#0a0d16", position: "fixed", inset: 0, zIndex: 9999,
+        minHeight: "100dvh", background: "#0e1118", position: "fixed", inset: 0, zIndex: 9999,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
@@ -251,29 +251,29 @@ export default function DashboardLayout() {
             <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "1px solid rgba(14,165,233,0.10)", animation: "ringPulse 2s ease-in-out infinite 0.4s" }} />
             {/* Icon container */}
             <div style={{
-              width: 56, height: 56, borderRadius: 16,
-              background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))",
-              border: "1px solid rgba(14,165,233,0.3)",
+              width: 64, height: 64, borderRadius: 20,
+              background: "linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.12))",
+              border: "1px solid rgba(14,165,233,0.35)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 40px rgba(14,165,233,0.15)",
+              boxShadow: "0 0 60px rgba(14,165,233,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
             }}>
-              <span style={{ fontSize: 22, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ab</span>
+              <span style={{ fontSize: 24, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ab</span>
             </div>
           </div>
 
           {/* Wordmark */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
             <div>
-              <span style={{ fontSize: 28, fontWeight: 700, color: "#fff", letterSpacing: "-0.04em" }}>ad</span>
-              <span style={{ fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
+              <span style={{ fontSize: 32, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em" }}>ad</span>
+              <span style={{ fontSize: 32, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em" }}>brief</span>
             </div>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase", margin: 0 }}>
+            <p style={{ fontSize: 11, color: "rgba(238,240,246,0.28)", letterSpacing: "0.14em", textTransform: "uppercase", margin: 0 }}>
               {dt("ov_loading")}
             </p>
           </div>
 
           {/* Progress bar */}
-          <div style={{ width: 180, height: 2, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
+          <div style={{ width: 200, height: 2, background: "rgba(255,255,255,0.08)", borderRadius: 99, overflow: "hidden", position: "relative" }}>
             <div style={{
               position: "absolute", left: 0, top: 0,
               width: "45%", height: "100%",
@@ -317,7 +317,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#0f1117", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#0e1118", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -332,7 +332,7 @@ export default function DashboardLayout() {
           height: 52, minHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
           padding: "0 16px",
-          background: "#111318",
+          background: "#131720",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           position: "sticky", top: 0, zIndex: 30,
           gap: 12,
@@ -352,7 +352,7 @@ export default function DashboardLayout() {
 
         {/* Account picker — like Meta Ads top bar */}
         <div className="sticky z-20 flex items-center gap-3 border-b"
-          style={{ top: 0, background: "#111318", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.07)", padding: "0 20px", height: 46 }}>
+          style={{ top: 0, background: "#131720", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.10)", padding: "0 20px", height: 52 }}>
           <div className="relative">
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
@@ -386,11 +386,11 @@ export default function DashboardLayout() {
               <div style={{
                 position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 99999,
                 width: 270, maxWidth: "calc(100vw - 32px)",
-                background: "#161b27", border: "1px solid rgba(255,255,255,0.12)",
+                background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, overflow: "hidden",
                 boxShadow: "0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
               }}>
-                <div style={{ padding: "11px 14px 9px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ padding: "11px 14px 9px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
                     {language === "pt" ? "Conta ativa" : language === "es" ? "Cuenta activa" : "Active account"}
                   </p>
@@ -433,7 +433,7 @@ export default function DashboardLayout() {
                         {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, boxShadow: "0 0 6px #0ea5e9" }} />}
                       </button>
                     ))}
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "7px 9px 4px", marginTop: 3 }}>
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", padding: "7px 9px 4px", marginTop: 3 }}>
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "3px 0" }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
@@ -473,7 +473,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#0f1117", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "#0e1118", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
         </main>
       </div>

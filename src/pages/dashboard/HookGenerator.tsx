@@ -226,7 +226,7 @@ export default function HookGenerator() {
                 className="flex flex-col items-center p-3 rounded-xl border text-center transition-all"
                 style={funnelStage === f.value
                   ? { background: f.bg, borderColor: f.border, color: f.color }
-                  : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" }}>
+                  : { background: "transparent", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.3)" }}>
                 <span className="text-xs font-bold font-mono">{f.label}</span>
                 <span className="text-[10px] mt-0.5 opacity-70">{f.full}</span>
                 <span className="text-[9px] mt-1 opacity-40 leading-tight hidden sm:block">{f.desc}</span>

@@ -154,7 +154,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   const content = (
     <div style={{ width: "100%", maxWidth: inline ? "100%" : 680, background: "#0a0b1a", border: "1px solid rgba(255,255,255,0.09)", borderRadius: inline ? 16 : 24, padding: inline ? "24px" : "36px 32px", boxShadow: inline ? "none" : "0 40px 100px rgba(0,0,0,0.6)", position: "relative" }}>
       {onClose && !inline && (
-        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.10)", border: "none", borderRadius: 8, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <X size={13} color="rgba(255,255,255,0.4)" />
         </button>
       )}
@@ -176,7 +176,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           const features = (plan.features as any)[lang] || (plan.features as any).en;
           const planKey = plan.name.toLowerCase();
           return (
-            <div key={plan.name} style={{ padding: "18px 16px", borderRadius: 14, background: plan.highlight ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
+            <div key={plan.name} style={{ padding: "18px 16px", borderRadius: 14, background: plan.highlight ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.10)"}`, display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
               {plan.highlight && (
                 <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 6, padding: "2px 12px", whiteSpace: "nowrap" }}>
                   <span style={{ ...j, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "#000", fontWeight: 800 }}>{MOST_POPULAR_TEXT[lang] || MOST_POPULAR_TEXT.en}</span>
@@ -199,7 +199,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
               </div>
               <button onClick={() => handlePlan(planKey, plan.action)}
                 disabled={loadingPlan === planKey}
-                style={{ ...j, width: "100%", padding: "11px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: plan.highlight ? BRAND : "rgba(255,255,255,0.06)", color: plan.highlight ? "#000" : "rgba(255,255,255,0.6)", border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.09)"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loadingPlan && loadingPlan !== planKey ? 0.5 : 1 }}>
+                style={{ ...j, width: "100%", padding: "11px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: plan.highlight ? BRAND : "rgba(255,255,255,0.10)", color: plan.highlight ? "#000" : "rgba(255,255,255,0.6)", border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.09)"}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loadingPlan && loadingPlan !== planKey ? 0.5 : 1 }}>
                 {loadingPlan === planKey ? <Loader2 size={12} className="animate-spin" /> : <>{START_TRIAL_TEXT[lang] || START_TRIAL_TEXT.en} <ArrowRight size={11} /></>}
               </button>
             </div>

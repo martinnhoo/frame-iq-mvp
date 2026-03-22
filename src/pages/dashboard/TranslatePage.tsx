@@ -332,7 +332,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
             </div>
             <span className="text-xs font-mono text-white/50">{overallProgress}%</span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.10)" }}>
             <div className="h-full rounded-full transition-all duration-500" style={{
               width: `${overallProgress}%`,
               background: "linear-gradient(90deg, #0ea5e9, #06b6d4)",
@@ -502,7 +502,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                   style={tone === t.id
                     ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.5)", color: "#0ea5e9" }
-                    : { background: "transparent", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}>
+                    : { background: "transparent", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.35)" }}>
                   {t.label}
                 </button>
               ))}
@@ -524,7 +524,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-left transition-all"
                     style={{
                       background: active ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.02)",
-                      border: `1px solid ${active ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.06)"}`,
+                      border: `1px solid ${active ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)"}`,
                       color: active ? "#fff" : "rgba(255,255,255,0.4)",
                     }}>
                     <span className="text-base">{l.flag}</span>

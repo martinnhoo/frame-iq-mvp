@@ -37,18 +37,18 @@ const PLANS: Record<string, { label: string; color: string }> = {
   scale:   { label: "Studio", color: "#0ea5e9" },
 };
 
-// Sidebar colors — inspired by Meta Ads Manager but dark
+// Sidebar colors v2 — more contrast, cleaner hierarchy
 const SB = {
-  bg:         "#111318",        // sidebar bg — dark but not pitch black
-  border:     "rgba(255,255,255,0.08)",
-  activeItem: "rgba(14,165,233,0.12)",
-  activeBorder: "rgba(14,165,233,0.35)",
-  activeText: "#e2f4ff",
-  activeIcon: "#0ea5e9",
-  idleText:   "rgba(255,255,255,0.58)",
-  idleIcon:   "rgba(255,255,255,0.35)",
-  hoverBg:    "rgba(255,255,255,0.06)",
-  divider:    "rgba(255,255,255,0.07)",
+  bg:           "#131720",
+  border:       "rgba(255,255,255,0.10)",
+  activeItem:   "rgba(14,165,233,0.12)",
+  activeBorder: "rgba(14,165,233,0.40)",
+  activeText:   "#cce8ff",
+  activeIcon:   "#38bdf8",
+  idleText:     "rgba(238,240,246,0.52)",
+  idleIcon:     "rgba(238,240,246,0.32)",
+  hoverBg:      "rgba(255,255,255,0.06)",
+  divider:    "rgba(255,255,255,0.10)",
   sectionLabel: "rgba(255,255,255,0.28)",
   footerBg:   "rgba(0,0,0,0.2)",
 };
@@ -94,8 +94,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     return (
       <NavLink key={url} to={url} end={exact} onClick={onClose}
         style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-          borderRadius: 7, margin: "1px 6px",
+          display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
+          borderRadius: 8, margin: "2px 6px",
           color: active ? SB.activeText : SB.idleText,
           background: active ? SB.activeItem : "transparent",
           border: active ? `1px solid ${SB.activeBorder}` : "1px solid transparent",
@@ -119,12 +119,12 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     return (
       <NavLink key={url} to={url} onClick={onClose}
         style={{
-          display: "flex", alignItems: "center", gap: 9, padding: "6px 12px",
-          borderRadius: 6, margin: "1px 6px",
+          display: "flex", alignItems: "center", gap: 9, padding: "8px 14px",
+          borderRadius: 8, margin: "2px 6px",
           color: active ? SB.activeText : SB.idleText,
           background: active ? SB.activeItem : "transparent",
           border: active ? `1px solid ${SB.activeBorder}` : "1px solid transparent",
-          fontSize: 12, fontWeight: active ? 500 : 400,
+          fontSize: 13, fontWeight: active ? 600 : 400,
           textDecoration: "none", transition: "all 0.12s", fontFamily: F,
         }}
         onMouseEnter={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = SB.hoverBg; el.style.color = "rgba(255,255,255,0.75)"; }}}
@@ -145,7 +145,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         style={{ width: 220, background: SB.bg, borderRight: `1px solid ${SB.border}`, fontFamily: F, display: "flex", flexDirection: "column" }}
       >
         {/* ── Logo ── */}
-        <div style={{ padding: "16px 14px 14px", borderBottom: `1px solid ${SB.divider}`, flexShrink: 0 }}>
+        <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${SB.divider}`, flexShrink: 0 }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "block" }}>
             <Logo size="md" />

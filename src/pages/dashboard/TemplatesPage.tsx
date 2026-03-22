@@ -1672,7 +1672,7 @@ const TemplatesPage = () => {
             className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all shrink-0 min-h-[36px]"
             style={activeCategory === cat.value
               ? { background: "#fff", color: "#000", borderColor: "#fff" }
-              : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.07)" }}
+              : { background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.10)" }}
           >
             <span>{cat.emoji}</span>
             {(language !== "en" ? getCategoryLabel(cat.value, language) : null) || cat.label}
@@ -1694,7 +1694,7 @@ const TemplatesPage = () => {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all min-h-[36px]"
             style={activeDuration === d
               ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.4)", color: "#0ea5e9" }
-              : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.35)" }}
+              : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.35)" }}
           >
             <Clock className="h-3 w-3" />{label}
           </button>
