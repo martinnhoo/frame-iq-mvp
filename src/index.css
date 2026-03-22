@@ -290,3 +290,34 @@ code, pre,
   /* Landing sections padding */
   section { padding-left: 16px !important; padding-right: 16px !important; }
 }
+
+/* ── Large screen responsiveness (1280px+) ───────────────────────────────────── */
+
+@media (min-width: 1280px) {
+  :root { --sidebar-w: 224px; }
+}
+
+@media (min-width: 1440px) {
+  :root { --sidebar-w: 236px; }
+
+  /* Chat content area wider on large screens */
+  .chat-messages-area { max-width: 800px !important; }
+  .chat-input-area    { max-width: 800px !important; }
+
+  /* Tool pages get more breathing room */
+  .max-w-4xl { max-width: 56rem; }  /* 896px */
+  .max-w-5xl { max-width: 68rem; }  /* 1088px */
+}
+
+@media (min-width: 1920px) {
+  :root { --sidebar-w: 256px; }
+
+  html, body { font-size: 15px; }
+
+  /* Chat wider on ultrawide */
+  .chat-messages-area { max-width: 900px !important; }
+  .chat-input-area    { max-width: 900px !important; }
+
+  /* More padding on large screens */
+  .dashboard-main { padding: 0; }
+}

@@ -800,7 +800,7 @@ export default function AdBriefAI() {
       {/* ── Input area ── */}
       <div style={{padding:"8px 20px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
         {/* Toolbar */}
-        <div style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",flexWrap:"wrap"}}>
+        <div className="chat-input-area" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",flexWrap:"wrap"}}>
           {TOOLS.map(tool=>{
             const isDashActive = activeTool==="dashboard";
             return(
@@ -820,7 +820,7 @@ export default function AdBriefAI() {
           })}
         </div>
         {/* Input */}
-        <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
+        <div className="chat-input-area" style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
           <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
             placeholder={L.placeholder} rows={1}
