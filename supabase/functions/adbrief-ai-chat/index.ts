@@ -61,7 +61,55 @@ Deno.serve(async (req) => {
       });
     }
 
-    const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics/i.test(message);
+    const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics|como está minha conta|how is my account|como vai/i.test(message);
+    
+    // Dashboard limits per plan (monthly)
+    const DASHBOARD_LIMITS: Record<string, number> = { free: 0, maker: 10, pro: 30, studio: -1 };
+    const dashLimit = DASHBOARD_LIMITS[planKey] ?? 0;
+
+    // If dashboard request — check limit and offer instead of auto-generating
+    if (isDashboardRequest && !message.includes("[DASHBOARD_CONFIRMED]")) {
+      const dashUsed = (profile as any)?.dashboard_count || 0;
+      const dashRemaining = dashLimit === -1 ? 999 : Math.max(0, dashLimit - dashUsed);
+      
+      if (dashLimit === 0 || (dashLimit !== -1 && dashUsed >= dashLimit)) {
+        // No dashboards left — return upgrade wall
+        const uLang = uiLang || 'pt';
+        const title = uLang === 'pt' ? 'Limite de dashboards atingido' : uLang === 'es' ? 'Límite de dashboards alcanzado' : 'Dashboard limit reached';
+        const content = uLang === 'pt' 
+          ? `Seu plano ${planKey} inclui ${dashLimit === 0 ? 'acesso a dashboards apenas no plano Maker ou superior' : dashLimit + ' dashboards/mês'}. Você usou ${dashUsed}.`
+          : `Your ${planKey} plan includes ${dashLimit === 0 ? 'dashboards on Maker plan or higher' : dashLimit + ' dashboards/month'}. You've used ${dashUsed}.`;
+        return new Response(JSON.stringify({ 
+          error: "dashboard_limit",
+          blocks: [{ type: "warning", title, content }]
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      
+      // Offer to generate dashboard — don't auto-generate
+      const uLang = uiLang || 'pt';
+      const offerTitle = uLang === 'pt' ? 'Gerar dashboard de performance?' : uLang === 'es' ? '¿Generar dashboard de rendimiento?' : 'Generate performance dashboard?';
+      const offerContent = uLang === 'pt'
+        ? `Posso gerar um dashboard com os dados reais da sua conta Meta Ads — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mês.`
+        : `I can generate a dashboard with your real Meta Ads data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? 's' : ''} this month.`;
+      
+      return new Response(JSON.stringify({
+        blocks: [{ 
+          type: "dashboard_offer",
+          title: offerTitle,
+          content: offerContent,
+          remaining: dashRemaining,
+          original_message: message,
+        }]
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    
+    // If confirmed dashboard — increment counter
+    if (message.includes("[DASHBOARD_CONFIRMED]")) {
+      const dashUsed = (profile as any)?.dashboard_count || 0;
+      if (dashLimit !== -1) {
+        await supabase.from("profiles").update({ dashboard_count: dashUsed + 1 } as any).eq("id", user_id);
+      }
+    }
 
     // Studio freeze time
     if (planKey === "studio" && dailyCount > 100) {
@@ -494,4 +542,4 @@ ABSOLUTE FORMAT RULES:
     });
   }
 });
-// redeploy 202603261800
+// redeploy 202603261900

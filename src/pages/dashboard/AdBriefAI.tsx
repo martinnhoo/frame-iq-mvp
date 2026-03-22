@@ -79,7 +79,9 @@ const SUGG: Record<string, string[]> = {
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer";
+  remaining?: number;
+  original_message?: string;
   title: string; content?: string; items?: string[];
   route?: string; params?: Record<string,string>; cta?: string;
   tool?: string; tool_params?: Record<string,string>;
@@ -444,6 +446,80 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
+
+// ── Dashboard Offer Block ─────────────────────────────────────────────────────
+function DashboardOfferBlock({ block, lang, onConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void }) {
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = () => {
+    setLoading(true);
+    onConfirm(`[DASHBOARD_CONFIRMED] ${block.original_message || "gerar dashboard"}`);
+  };
+
+  const labels: Record<string, Record<string, string>> = {
+    pt: { confirm: "Gerar dashboard", cancel: "Agora não", remaining: "restantes este mês" },
+    es: { confirm: "Generar dashboard", cancel: "Ahora no", remaining: "restantes este mes" },
+    en: { confirm: "Generate dashboard", cancel: "Not now", remaining: "remaining this month" },
+  };
+  const t = labels[lang] || labels.pt;
+
+  return (
+    <div style={{ borderRadius: 14, border: "1px solid rgba(14,165,233,0.25)", background: "rgba(14,165,233,0.05)", padding: "16px 18px", marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 16 }}>📊</span>
+        <p style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#eef0f6", margin: 0 }}>{block.title}</p>
+      </div>
+      <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.65)", lineHeight: 1.65, margin: "0 0 14px" }}>{block.content}</p>
+      {typeof block.remaining === "number" && block.remaining <= 3 && (
+        <p style={{ fontFamily: M, fontSize: 11, color: block.remaining === 0 ? "#f87171" : "#fbbf24", marginBottom: 12 }}>
+          {block.remaining === 0 ? "⚠️ " : "⚡ "}{block.remaining} {t.remaining}
+        </p>
+      )}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={handleConfirm} disabled={loading}
+          style={{ flex: 1, padding: "9px 14px", borderRadius: 9, background: loading ? "rgba(14,165,233,0.15)" : "#0ea5e9", border: "none", cursor: loading ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: loading ? "#0ea5e9" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
+          {loading ? <><Loader2 size={13} className="animate-spin"/> {lang === "pt" ? "Gerando..." : "Generating..."}</> : <><BarChart3 size={13}/> {t.confirm}</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard Limit Popup ─────────────────────────────────────────────────────
+function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: string; onClose: () => void }) {
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+  const navigate = useNavigate();
+
+  const msgs: Record<string, { title: string; sub: string; cta: string }> = {
+    pt: { title: "Dashboards do mês esgotados", sub: `Você atingiu o limite de dashboards do plano ${plan || "atual"}. Faça upgrade para continuar gerando dashboards com dados reais da sua conta.`, cta: "Ver planos" },
+    es: { title: "Dashboards del mes agotados", sub: `Alcanzaste el límite de dashboards del plan ${plan || "actual"}. Mejora tu plan para seguir generando dashboards.`, cta: "Ver planes" },
+    en: { title: "Monthly dashboards exhausted", sub: `You've reached the dashboard limit for the ${plan || "current"} plan. Upgrade to keep generating dashboards with real account data.`, cta: "View plans" },
+  };
+  const m = msgs[lang] || msgs.pt;
+
+  return (
+    <>
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }} onClick={onClose} />
+      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 201, width: 360, background: "#131720", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "28px 24px", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
+        <div style={{ fontSize: 36, marginBottom: 14, textAlign: "center" }}>📊</div>
+        <p style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#eef0f6", textAlign: "center", margin: "0 0 10px" }}>{m.title}</p>
+        <p style={{ fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.55)", lineHeight: 1.65, textAlign: "center", margin: "0 0 22px" }}>{m.sub}</p>
+        <button onClick={() => { navigate("/dashboard/ai"); onClose(); setTimeout(() => navigate("/pricing"), 50); }}
+          style={{ width: "100%", padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
+          {m.cta} →
+        </button>
+        <button onClick={onClose}
+          style={{ width: "100%", padding: "10px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.40)" }}>
+          {lang === "pt" ? "Fechar" : lang === "es" ? "Cerrar" : "Close"}
+        </button>
+      </div>
+    </>
+  );
+}
+
 export default function AdBriefAI() {
   const {user,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
@@ -463,6 +539,7 @@ export default function AdBriefAI() {
   const [activeTool,setActiveTool]=useState<string|null>(null);
   const [msgCounter,setMsgCounter]=useState(0);
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
+  const [showDashboardLimit,setShowDashboardLimit]=useState(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
@@ -670,6 +747,7 @@ export default function AdBriefAI() {
 
       // Show upgrade popup on daily limit
       if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
+      if(data?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
 
       // Strip all markdown from text fields
       const stripMd=(s:string)=>String(s)
@@ -932,6 +1010,7 @@ export default function AdBriefAI() {
                 {msg.blocks?.map((b,bi)=>
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
+                  b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)}/>:
                   (b as any)._pendingTool?null:
                   <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
@@ -1024,6 +1103,7 @@ export default function AdBriefAI() {
           <UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>
         </div>
       )}
+      {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}
     </div>
   );
 }

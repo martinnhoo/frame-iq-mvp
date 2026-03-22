@@ -47,3 +47,17 @@ create policy "Users see own snapshots" on daily_snapshots
   for all using (auth.uid() = user_id);
 
 create index if not exists daily_snapshots_user_date on daily_snapshots(user_id, date desc);
+
+-- Add dashboard_count to profiles (if not exists)
+alter table profiles add column if not exists dashboard_count integer default 0;
+alter table profiles add column if not exists dashboard_reset_date date default current_date;
+
+-- Reset dashboard_count monthly via cron
+select cron.schedule(
+  'adbrief-reset-dashboard-counts',
+  '0 0 1 * *',  -- 1st of every month at midnight UTC
+  $$
+  update profiles set dashboard_count = 0, dashboard_reset_date = current_date
+  where dashboard_reset_date < date_trunc('month', current_date);
+  $$
+);
