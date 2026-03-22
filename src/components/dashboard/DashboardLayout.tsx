@@ -8,6 +8,7 @@ import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
 
 export interface ActivePersona {
   id: string;
@@ -80,6 +81,7 @@ export default function DashboardLayout() {
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 1024);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
     try {
       const s = localStorage.getItem("frameiq_active_persona");
@@ -287,6 +289,7 @@ export default function DashboardLayout() {
         onProfileUpdate={(p) => setProfile(p as typeof profile)}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onOpenProfile={() => setProfileOpen(true)}
       />
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
@@ -410,8 +413,8 @@ export default function DashboardLayout() {
           {/* Flex spacer */}
           <div style={{ flex: 1 }} />
 
-          {/* User avatar — opens profile */}
-          <button onClick={() => navigate("/dashboard/settings")}
+          {/* User avatar — opens profile panel */}
+          <button onClick={() => setProfileOpen(true)}
             style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden" }}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -477,6 +480,17 @@ export default function DashboardLayout() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Profile panel — opened from topbar avatar */}
+      {user && (
+        <UserProfilePanel
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          user={user}
+          profile={profile as any}
+          onProfileUpdate={(p) => setProfile(p as typeof profile)}
+        />
       )}
     </div>
   );

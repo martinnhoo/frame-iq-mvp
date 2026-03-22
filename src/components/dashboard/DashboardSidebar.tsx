@@ -8,8 +8,6 @@ import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
-import { UserProfilePanel } from "./UserProfilePanel";
 import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
@@ -22,6 +20,7 @@ interface Profile {
 interface SidebarProps {
   user: SupaUser | null; profile: Profile | null;
   onProfileUpdate?: (p: Profile) => void; open: boolean; onClose: () => void;
+  onOpenProfile?: () => void;
 }
 
 const F = "'Inter', system-ui, sans-serif";
@@ -53,10 +52,9 @@ const SB = {
   footerBg:   "rgba(0,0,0,0.2)",
 };
 
-export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose }: SidebarProps) {
+export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose, onOpenProfile }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [profileOpen, setProfileOpen] = useState(false);
   const { language } = useLanguage();
   const dt = useDashT(language);
 
@@ -189,7 +187,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           </div>
 
           {/* Profile row — inspired by Meta's account switcher */}
-          <button onClick={() => setProfileOpen(true)}
+          <button onClick={() => onOpenProfile?.()}
             style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: F, width: "100%", textAlign: "left", transition: "all 0.12s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.09)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}>
@@ -210,15 +208,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         </div>
       </aside>
 
-      {user && (
-        <UserProfilePanel
-          open={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          user={user}
-          profile={profile as any}
-          onProfileUpdate={(p) => onProfileUpdate?.(p as unknown as Profile)}
-        />
-      )}
     </>
   );
 }
