@@ -540,6 +540,8 @@ export default function AdBriefAI() {
   const [msgCounter,setMsgCounter]=useState(0);
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
+  const [proactiveLoading,setProactiveLoading]=useState(false);
+  const proactiveFired=useRef(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
 
@@ -579,15 +581,26 @@ export default function AdBriefAI() {
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}`);
       setContextReady(true);
-      // Auto-trigger daily intelligence if Meta connected and no snapshot today
+      // Auto-trigger daily intelligence + proactive greeting
       if(user?.id){
         const today=new Date().toISOString().split("T")[0];
-        (supabase as any).from("daily_snapshots").select("date").eq("user_id",user.id).eq("date",today).maybeSingle().then((r:any)=>{
-          if(!r.data){
-            // No snapshot today — run intelligence in background
-            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id}}).catch(()=>{});
-          }
-        }).catch(()=>{});
+        (supabase as any).from("daily_snapshots")
+          .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_spend,yesterday_ctr,ai_insight,top_ads,raw_period")
+          .eq("user_id",user.id).eq("date",today).maybeSingle()
+          .then((r:any)=>{
+            if(!r.data){
+              // No snapshot today — run intelligence then greet
+              supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id}})
+                .then(()=>{
+                  // After intelligence runs, trigger proactive greeting
+                  if(!proactiveFired.current) triggerProactiveGreeting(null);
+                })
+                .catch(()=>{});
+            } else {
+              // Snapshot exists — trigger proactive greeting with real data
+              if(!proactiveFired.current) triggerProactiveGreeting(r.data);
+            }
+          }).catch(()=>{});
       }
     })();
   },[user?.id]);
@@ -653,6 +666,105 @@ export default function AdBriefAI() {
       });
     });
   },[messages]);
+
+  // ── Proactive greeting — fires when chat is empty and context is loaded ─────
+  const triggerProactiveGreeting = async (snapshot: any) => {
+    // Only fire once per session, only if chat is empty
+    if (proactiveFired.current) return;
+    proactiveFired.current = true;
+
+    // Don't greet if user has existing messages (returning user with history)
+    const existing = (() => { try { return JSON.parse(sessionStorage.getItem(SK) || "[]"); } catch { return []; } })();
+    if (existing.length > 0) return;
+
+    setProactiveLoading(true);
+    try {
+      const today = new Date();
+      const hour = today.getHours();
+      const greeting = lang === "pt"
+        ? hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite"
+        : lang === "es" ? (hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches")
+        : (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
+
+      let proactiveMsg = "";
+
+      if (snapshot && snapshot.total_spend > 0) {
+        // Has real Meta data — generate specific insight
+        const topAds = (snapshot.top_ads || []) as any[];
+        const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
+        const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
+        const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 1);
+        const ctrDelta = snapshot.yesterday_ctr > 0 && snapshot.avg_ctr > 0
+          ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100)
+          : null;
+
+        const parts = [
+          lang === "pt"
+            ? `${greeting}. Analisei sua conta — semana passada você gastou **R$${snapshot.total_spend?.toFixed(0)}** com CTR médio de **${(snapshot.avg_ctr * 100)?.toFixed(2)}%**.`
+            : lang === "es"
+            ? `${greeting}. Analicé tu cuenta — la semana pasada gastaste **$${snapshot.total_spend?.toFixed(0)}** con CTR promedio de **${(snapshot.avg_ctr * 100)?.toFixed(2)}%**.`
+            : `${greeting}. I analyzed your account — last week you spent **$${snapshot.total_spend?.toFixed(0)}** with **${(snapshot.avg_ctr * 100)?.toFixed(2)}%** avg CTR.`,
+        ];
+
+        if (ctrDelta !== null) {
+          const dir = ctrDelta > 0 ? "↑" : "↓";
+          parts.push(lang === "pt"
+            ? `CTR ${dir} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`
+            : `CTR ${dir} ${Math.abs(ctrDelta).toFixed(1)}% vs last week.`);
+        }
+
+        if (toScale.length) {
+          parts.push(lang === "pt"
+            ? `**${toScale[0].name?.slice(0, 35)}** está performando bem — considere escalar o budget.`
+            : `**${toScale[0].name?.slice(0, 35)}** is performing well — consider scaling budget.`);
+        }
+
+        if (toPause.length) {
+          parts.push(lang === "pt"
+            ? `**${toPause[0].name?.slice(0, 35)}** está com CTR ${(toPause[0].ctr * 100)?.toFixed(2)}% gastando R$${toPause[0].spend?.toFixed(0)} — provável desperdício.`
+            : `**${toPause[0].name?.slice(0, 35)}** has ${(toPause[0].ctr * 100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — likely waste.`);
+        }
+
+        if (fatigued.length) {
+          parts.push(lang === "pt"
+            ? `**${fatigued[0].name?.slice(0, 30)}** está em fadiga criativa (freq. ${fatigued[0].frequency?.toFixed(1)}x) — hora de trocar o criativo.`
+            : `**${fatigued[0].name?.slice(0, 30)}** has creative fatigue (${fatigued[0].frequency?.toFixed(1)}x freq).`);
+        }
+
+        if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
+        parts.push(lang === "pt" ? "O que quer analisar?" : lang === "es" ? "¿Qué quieres analizar?" : "What would you like to dig into?");
+        proactiveMsg = parts.join(" ");
+
+      } else {
+        // No Meta data yet — contextual greeting based on time/day
+        const isMonday = today.getDay() === 1;
+        const isFriday = today.getDay() === 5;
+        proactiveMsg = lang === "pt"
+          ? isMonday
+            ? `${greeting}! Semana nova, hora de escalar o que funcionou e pausar o que não funcionou. Conecte o Meta Ads para eu analisar sua conta com dados reais.`
+            : isFriday
+            ? `${greeting}! Sexta-feira — bom momento para revisar o que performou essa semana antes de fechar. Conecte o Meta Ads para ver um resumo completo.`
+            : `${greeting}! Conecte o Meta Ads para eu analisar sua conta — CTR, spend, o que escalar e o que pausar.`
+          : lang === "es"
+          ? `${greeting}! Conecta Meta Ads para analizar tu cuenta con datos reales.`
+          : `${greeting}! Connect Meta Ads so I can analyze your account with real data.`;
+      }
+
+      if (!proactiveMsg) return;
+
+      const aid = Date.now() + 1;
+      setMessages([{
+        role: "assistant",
+        blocks: [{ type: "insight", title: greeting, content: proactiveMsg }],
+        ts: aid, id: aid
+      }]);
+
+    } catch (e) {
+      console.error("proactive greeting failed:", e);
+    } finally {
+      setProactiveLoading(false);
+    }
+  };
 
   const handleConnect=async(id:string,fn:string)=>{
     // If no account selected, redirect to Accounts to create/select one first
@@ -926,7 +1038,16 @@ export default function AdBriefAI() {
 
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
-        {messages.length===0&&(
+        {messages.length===0&&proactiveLoading&&(
+          <div style={{maxWidth:680,margin:"24px auto 0"}}>
+            <ThinkingIndicator lang={lang} variant="chat" label={
+              lang==="pt"?"Analisando sua conta...":
+              lang==="es"?"Analizando tu cuenta...":
+              "Analyzing your account..."
+            }/>
+          </div>
+        )}
+        {messages.length===0&&!proactiveLoading&&(
           <div style={{maxWidth:620,margin:"16px auto 0"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
