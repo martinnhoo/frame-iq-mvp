@@ -613,6 +613,7 @@ export default function AdBriefAI() {
   // Proactive greeting — fires when connections are known (after context is ready)
   useEffect(()=>{
     if(!contextReady || proactiveFired.current) return;
+    if(!lang) return;
     if(!user?.id) return;
     // Wait a tick to let connections settle
     const timer = setTimeout(()=>{
@@ -811,12 +812,23 @@ export default function AdBriefAI() {
         proactiveMsg = parts.join(" ");
 
       } else if (snapshot) {
-        // ── Meta conectado mas sem campanhas ativas ───────────────────────────
-        proactiveMsg = lang === "pt"
-          ? `${greeting}. Sua conta Meta Ads está conectada mas não encontrei campanhas ativas nos últimos 7 dias. Você tem campanhas pausadas? Quer criar algo novo?`
-          : lang === "es"
-          ? `${greeting}. Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear algo nuevo?`
-          : `${greeting}. Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns? Want to create something new?`;
+        // ── Meta conectado mas sem campanhas ativas — usa histórico disponível ─
+        const histSpend = (snapshot.total_spend || 0) > 0;
+        const hasWinners = (snapshot.winners_count || 0) > 0;
+        const toPause = (snapshot.losers_count || 0);
+        if (lang === "pt") {
+          proactiveMsg = histSpend
+            ? `${greeting}. Nenhuma campanha ativa essa semana, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${toPause ? `, ${toPause} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou antes?`
+            : `${greeting}. Meta conectado. Sem dados essa semana ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
+        } else if (lang === "es") {
+          proactiveMsg = histSpend
+            ? `${greeting}. Sin campañas activas esta semana, pero tengo tu historial: $${snapshot.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`
+            : `${greeting}. Meta conectado. Sin datos esta semana — ¿genero hooks, escribo un guión o hago preflight?`;
+        } else {
+          proactiveMsg = histSpend
+            ? `${greeting}. No active campaigns this week, but I have your history: $${snapshot.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${toPause ? `, ${toPause} underperformers flagged` : ""}. Want to launch something new or review what worked?`
+            : `${greeting}. Meta connected. No data this week yet — want to generate hooks, write a script, or preflight a creative?`;
+        }
 
       } else if (hasMetaConn) {
         // ── Meta conectado mas sem campanhas ─────────────────────────────────
@@ -1197,10 +1209,22 @@ export default function AdBriefAI() {
         )}
 
         {messages.length===0&&proactiveLoading&&(
-          <div style={{maxWidth:680,margin:"24px auto 0"}}>
-            <ThinkingIndicator lang={lang} variant="chat" label={
-              lang==="pt"?"Pensando":lang==="es"?"Pensando":"Thinking"
-            }/>
+          <div style={{maxWidth:680,margin:"0 auto",paddingTop:24}}>
+            <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:16}}>
+              <div style={{width:28,height:28,borderRadius:8,background:"rgba(14,165,233,0.10)",flexShrink:0,animation:"skPulse 1.4s ease-in-out infinite"}}/>
+              <div style={{flex:1}}>
+                <div style={{height:10,width:72,borderRadius:6,background:"rgba(255,255,255,0.06)",marginBottom:10,animation:"skPulse 1.4s ease-in-out infinite"}}/>
+                <div style={{height:13,width:"90%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.1s ease-in-out infinite"}}/>
+                <div style={{height:13,width:"75%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.2s ease-in-out infinite"}}/>
+                <div style={{height:13,width:"55%",borderRadius:6,background:"rgba(255,255,255,0.04)",marginBottom:14,animation:"skPulse 1.4s 0.3s ease-in-out infinite"}}/>
+                <div style={{display:"flex",gap:8}}>
+                  {[96,84,88,78].map((w,i)=>(
+                    <div key={i} style={{height:26,width:w,borderRadius:20,background:"rgba(255,255,255,0.04)",animation:`skPulse 1.4s ${i*0.12}s ease-in-out infinite`}}/>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <style>{`@keyframes skPulse{0%,100%{opacity:0.35}50%{opacity:0.75}}`}</style>
           </div>
         )}
         {messages.length===0&&!proactiveLoading&&(
@@ -1297,7 +1321,15 @@ export default function AdBriefAI() {
 
         {loading&&<ThinkingIndicator lang={lang} variant="chat"/>}
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
-          <ThinkingIndicator lang={lang} variant="chat" label={lang==="pt"?"Gerando":lang==="es"?"Generando":"Generating"}/>
+          <ThinkingIndicator lang={lang} variant="chat" label={(() => {
+              const lastMsg = (messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||"").toLowerCase();
+              if(lastMsg.includes("hook")||lastMsg.includes("gancho")) return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
+              if(lastMsg.includes("roteiro")||lastMsg.includes("script")||lastMsg.includes("guión")) return lang==="pt"?"Escrevendo roteiro...":lang==="es"?"Escribiendo guión...":"Writing script...";
+              if(lastMsg.includes("pausa")||lastMsg.includes("pause")||lastMsg.includes("escal")) return lang==="pt"?"Verificando dados ao vivo...":lang==="es"?"Verificando datos...":"Checking live data...";
+              if(lastMsg.includes("roas")||lastMsg.includes("ctr")||lastMsg.includes("cpm")||lastMsg.includes("perform")) return lang==="pt"?"Analisando performance...":lang==="es"?"Analizando rendimiento...":"Analyzing performance...";
+              if(lastMsg.includes("camp")||lastMsg.includes("anunc")) return lang==="pt"?"Lendo campanhas...":lang==="es"?"Leyendo campañas...":"Reading campaigns...";
+              return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
+            })()}/>
         )}
         <div ref={bottomRef} style={{height:8}}/>
       </div>

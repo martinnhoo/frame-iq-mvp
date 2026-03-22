@@ -6,21 +6,33 @@ interface Props {
   label?: string;
 }
 
-const THINKING_STEPS: Record<string, string[][]> = {
+const THINKING_STEPS: Record<string, string[]> = {
   pt: [
-    ["Pensando", "Analisando", "Processando", "Trabalhando"],
-    ["Buscando dados", "Lendo contexto", "Verificando conta"],
-    ["Gerando", "Criando", "Construindo"],
+    "Lendo sua conta...",
+    "Analisando padrões...",
+    "Cruzando com histórico...",
+    "Verificando dados ao vivo...",
+    "Calculando...",
+    "Preparando recomendação...",
+    "Processando...",
   ],
   es: [
-    ["Pensando", "Analizando", "Procesando", "Trabajando"],
-    ["Buscando datos", "Leyendo contexto", "Verificando cuenta"],
-    ["Generando", "Creando", "Construyendo"],
+    "Leyendo tu cuenta...",
+    "Analizando patrones...",
+    "Cruzando con historial...",
+    "Verificando datos en vivo...",
+    "Calculando...",
+    "Preparando recomendación...",
+    "Procesando...",
   ],
   en: [
-    ["Thinking", "Analyzing", "Processing", "Working"],
-    ["Fetching data", "Reading context", "Checking account"],
-    ["Generating", "Creating", "Building"],
+    "Reading your account...",
+    "Analyzing patterns...",
+    "Checking live data...",
+    "Cross-referencing history...",
+    "Calculating...",
+    "Preparing recommendation...",
+    "Processing...",
   ],
 };
 
@@ -29,7 +41,7 @@ const F = "'Inter', sans-serif";
 export function ThinkingIndicator({ lang = "pt", variant = "chat", label }: Props) {
   const [phase, setPhase] = useState(0);
   const [dot, setDot] = useState(0);
-  const steps = THINKING_STEPS[lang][0];
+  const steps = THINKING_STEPS[lang] || THINKING_STEPS.en;
 
   useEffect(() => {
     const phraseTimer = setInterval(() => {
