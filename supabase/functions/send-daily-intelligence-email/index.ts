@@ -224,18 +224,11 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
 <tr><td align="center" style="padding:40px 16px 56px;">
 <table width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;">
 
-  <!-- LOGO + DATE header -->
-  <tr><td style="padding-bottom:28px;">
+  <!-- LOGO + DATE — matches landing page exactly -->
+  <tr><td style="padding-bottom:32px;">
     <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
       <td valign="middle">
-        <table cellpadding="0" cellspacing="0" border="0"><tr>
-          <td style="background:linear-gradient(135deg,#0ea5e9,#0284c7);width:32px;height:32px;border-radius:8px;text-align:center;vertical-align:middle;">
-            <span style="font-size:14px;font-weight:900;color:#fff;font-family:${F};display:block;line-height:32px;letter-spacing:-0.05em;">ab</span>
-          </td>
-          <td style="padding-left:9px;vertical-align:middle;">
-            <span style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.04em;font-family:${F};">ad</span><span style="font-size:17px;font-weight:800;color:#0ea5e9;letter-spacing:-0.04em;font-family:${F};">brief</span>
-          </td>
-        </tr></table>
+        <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:22px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
       </td>
       <td align="right" valign="middle">
         <p style="margin:0;font-size:11px;color:rgba(238,240,246,0.25);font-family:${M};">${today}</p>
@@ -344,4 +337,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
-// redeploy 202603262300
+// redeploy 202603270100

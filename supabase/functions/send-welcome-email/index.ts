@@ -152,14 +152,7 @@ function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string
 
   <!-- LOGO -->
   <tr><td style="padding-bottom:36px;">
-    <table cellpadding="0" cellspacing="0" border="0"><tr>
-      <td style="background:linear-gradient(135deg,#0ea5e9,#0284c7);width:34px;height:34px;border-radius:9px;text-align:center;vertical-align:middle;">
-        <span style="font-size:16px;font-weight:900;color:#fff;font-family:${F};display:block;line-height:34px;letter-spacing:-0.05em;">ab</span>
-      </td>
-      <td style="padding-left:10px;vertical-align:middle;">
-        <span style="font-size:19px;font-weight:800;color:#fff;letter-spacing:-0.04em;font-family:${F};">ad</span><span style="font-size:19px;font-weight:800;color:#0ea5e9;letter-spacing:-0.04em;font-family:${F};">brief</span>
-      </td>
-    </tr></table>
+    <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:22px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
   </td></tr>
 
   <!-- CARD -->
@@ -239,4 +232,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
-// redeploy 202603262200
+// redeploy 202603270100
