@@ -1,3 +1,4 @@
+// meta-oauth v2 — persona_id scoped pull_insights
 // meta-oauth edge function — v2 — redirect_uri uses adbrief.pro (no www)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -161,21 +162,35 @@ Deno.serve(async (req) => {
 
     // ── Action: pull_insights ─────────────────────────────────────────────────
     if (action === "pull_insights") {
-      // Get stored token
-      const { data: conn } = await supabase
-        .from("platform_connections" as any)
-        .select("access_token, ad_accounts")
-        .eq("user_id", user_id)
-        .eq("platform", "meta")
-        .single();
+      // Get stored token — scoped to persona_id if provided, fall back to global
+      let conn: any = null;
+      if (persona_id) {
+        const { data: specific } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("platform", "meta").eq("persona_id", persona_id)
+          .maybeSingle();
+        conn = specific;
+      }
+      if (!conn) {
+        const { data: global } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("platform", "meta").is("persona_id", null)
+          .maybeSingle();
+        conn = global;
+      }
 
       if (!conn) throw new Error("Meta not connected");
 
       const token = conn.access_token;
       const accounts = (conn.ad_accounts as any[]) || [];
-      
-      // Pull last 30 days insights for first active account
-      const activeAccount = accounts.find((a: any) => a.account_status === 1) || accounts[0];
+
+      // Use selected_account_id if set, otherwise first active account
+      const selectedId = conn.selected_account_id;
+      const activeAccount = (selectedId && accounts.find((a: any) => a.id === selectedId))
+        || accounts.find((a: any) => a.account_status === 1)
+        || accounts[0];
       if (!activeAccount) throw new Error("No active ad account found");
 
       const accountId = activeAccount.id;

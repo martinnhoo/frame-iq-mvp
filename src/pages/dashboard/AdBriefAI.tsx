@@ -542,7 +542,7 @@ export default function AdBriefAI() {
     setLoading(true);
     try{
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,user_language:lang,history}});
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history}});
       if(error||!data?.blocks)throw new Error(error?.message||"No response");
 
       // Show upgrade popup on daily limit

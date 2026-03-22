@@ -1,4 +1,4 @@
-// adbrief-ai-chat v8 — commercial system prompt, tools as arms, brand icons
+// adbrief-ai-chat v9 — persona_id scoped platform connections
 import Anthropic from "npm:@anthropic-ai/sdk@0.39.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -150,9 +150,24 @@ Deno.serve(async (req) => {
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(20),
       supabase.from("platform_connections" as any)
-        .select("platform, status, ad_accounts, connected_at")
+        .select("platform, status, ad_accounts, selected_account_id, connected_at")
         .eq("user_id", user_id).eq("status", "active")
-        .then((r: any) => r.error?.code === "42P01" ? { data: [], error: null } : r),
+        .then(async (r: any) => {
+          if (r.error?.code === "42P01") return { data: [], error: null };
+          // If persona_id given, prefer persona-specific connections, fall back to global (null)
+          const all = r.data || [];
+          if (persona_id) {
+            const specific = all.filter((c: any) => c.persona_id === persona_id);
+            const global = all.filter((c: any) => c.persona_id === null);
+            // Merge: specific takes priority per platform
+            const merged: any[] = [...specific];
+            global.forEach((g: any) => {
+              if (!merged.find((s: any) => s.platform === g.platform)) merged.push(g);
+            });
+            return { data: merged };
+          }
+          return { data: all.filter((c: any) => c.persona_id === null || !c.persona_id) };
+        }),
       supabase.from("ads_data_imports" as any)
         .select("platform, result, created_at" as any)
         .eq("user_id" as any, user_id)
@@ -198,7 +213,10 @@ Deno.serve(async (req) => {
 
     const connectedPlatforms = connections.map((c: any) => {
       const accounts = (c.ad_accounts as any[]) || [];
-      return `${c.platform}(${accounts.length} accounts)`;
+      const selectedId = c.selected_account_id || accounts[0]?.id;
+      const selectedAcc = accounts.find((a: any) => a.id === selectedId) || accounts[0];
+      const accLabel = selectedAcc ? `active:${selectedAcc.name||selectedAcc.id}` : `${accounts.length} accounts`;
+      return `${c.platform}(${accLabel})`;
     });
 
     const persona = personaRow as any;
