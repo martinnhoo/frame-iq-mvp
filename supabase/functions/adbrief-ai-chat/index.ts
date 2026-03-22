@@ -1,4 +1,4 @@
-// adbrief-ai-chat v10 — Lovable AI Gateway
+// adbrief-ai-chat v11 — Anthropic Claude via direct API
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -366,32 +366,32 @@ ABSOLUTE FORMAT RULES:
 
     const aiMessages = [...historyMessages, { role: "user" as const, content: message }];
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
-    const gatewayRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt + prefStr },
-          ...aiMessages,
-        ],
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1500,
+        system: systemPrompt + prefStr,
+        messages: aiMessages,
       }),
     });
 
-    if (!gatewayRes.ok) {
-      const errText = await gatewayRes.text();
-      console.error("AI Gateway error:", gatewayRes.status, errText);
-      throw new Error(`AI Gateway ${gatewayRes.status}`);
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      console.error("Anthropic error:", anthropicRes.status, errText);
+      throw new Error(`Anthropic ${anthropicRes.status}: ${errText.slice(0, 200)}`);
     }
 
-    const aiResult = await gatewayRes.json();
-    const raw = aiResult.choices?.[0]?.message?.content || "[]";
+    const anthropicResult = await anthropicRes.json();
+    const raw = anthropicResult.content?.[0]?.type === "text" ? anthropicResult.content[0].text : "[]";
     let blocks;
     try {
       blocks = JSON.parse(raw.replace(/```json|```/g, "").trim());
