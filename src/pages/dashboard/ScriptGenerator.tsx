@@ -108,7 +108,7 @@ export default function ScriptGenerator() {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("generate-script", {
-        body: { product, offer, audience, format, platform, market, duration, angle, extra_context: extraContext, user_id: user.id },
+        body: { product, offer, audience, format, platform, market, duration, angle, extra_context: extraContext, user_id: user.id, persona_id: selectedPersona?.id || null },
       });
       if (error) throw error;
       setResult(data);

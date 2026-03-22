@@ -282,6 +282,23 @@ function DashboardBlock({block}:{block:Block}) {
 function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Block)=>Promise<void>;lang:string}) {
   const [state, setState] = useState<"idle"|"running"|"done"|"cancelled">("idle");
   const [result, setResult] = useState("");
+
+  // Auto-execute read-only actions without user confirmation
+  useEffect(()=>{
+    if((block as any)._autoExec && state==="idle"){
+      setState("running");
+      onConfirm(block).then(()=>{setState("done");}).catch(()=>{setState("idle");});
+    }
+  },[]);
+
+  if((block as any)._autoExec && state==="running") return(
+    <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.15)",marginBottom:8}}>
+      <Loader2 size={13} color="#0ea5e9" className="animate-spin"/>
+      <span style={{...m,fontSize:12,color:"rgba(238,240,246,0.6)"}}>{lang==="pt"?"Buscando dados...":lang==="es"?"Buscando datos...":"Fetching data..."}</span>
+    </div>
+  );
+  if((block as any)._autoExec && state==="done") return null; // result shown by executeMetaAction callback
+
   const L: Record<string,Record<string,string>> = {
     en:{
       sure:"Are you sure you want to proceed with the action:",
@@ -596,14 +613,14 @@ export default function AdBriefAI() {
           });
           if(metrics.length>0)return{...c,type:"dashboard" as const,metrics,items:undefined};
         }
-        // Convert meta_action tool_call — read-only actions show as insight, destructive ones show confirm
+        // Convert meta_action tool_call — read-only: execute immediately, destructive: show confirm
         if(c.type==="tool_call"&&c.tool_params?.meta_action){
           const p=c.tool_params;
           const DESTRUCTIVE=["pause","enable","update_budget","publish","duplicate","delete","archive","rename","set_","change_"];
           const isDestructive=DESTRUCTIVE.some(d=>String(p.meta_action||"").toLowerCase().includes(d));
           if(!isDestructive){
-            // Read-only: don't show confirm dialog, treat as regular insight
-            return{...c,type:"insight" as const,title:p.meta_action||"",content:c.content||""};
+            // Mark for auto-execution — will be executed after blocks are rendered
+            return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value,_autoExec:true};
           }
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }

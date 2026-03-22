@@ -95,6 +95,7 @@ export default function HookGenerator() {
     try {
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
         body: { product, niche, market, platform, tone, user_id: user.id, count: hookCount,
+          persona_id: selectedPersona?.id || null,
           funnel_stage: funnelStage,
           persona_context: selectedPersona ? {
             name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,

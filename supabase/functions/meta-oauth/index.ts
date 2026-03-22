@@ -222,7 +222,59 @@ Deno.serve(async (req) => {
       });
     }
 
-    throw new Error(`Unknown action: ${action}`);
+    // ── Action: list_campaigns / list_ads / get_campaigns ─────────────────────
+    if (action === "list_campaigns" || action === "get_campaigns" || action === "list_ads" || action === "get_ads") {
+      let conn: any = null;
+      if (persona_id) {
+        const { data: specific } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("platform", "meta").eq("persona_id", persona_id)
+          .maybeSingle();
+        conn = specific;
+      }
+      if (!conn) {
+        const { data: global } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("platform", "meta").is("persona_id", null)
+          .maybeSingle();
+        conn = global;
+      }
+      if (!conn) throw new Error("Meta not connected");
+
+      const token = conn.access_token;
+      const accounts = (conn.ad_accounts as any[]) || [];
+      const selectedId = conn.selected_account_id;
+      const activeAccount = (selectedId && accounts.find((a: any) => a.id === selectedId))
+        || accounts.find((a: any) => a.account_status === 1)
+        || accounts[0];
+      if (!activeAccount) throw new Error("No active ad account");
+
+      const accountId = activeAccount.id;
+
+      if (action === "list_campaigns" || action === "get_campaigns") {
+        const url = `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,insights{spend,impressions,clicks,ctr}&limit=25&access_token=${token}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return new Response(JSON.stringify({ success: true, campaigns: data.data || [], account: activeAccount.name || accountId }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (action === "list_ads" || action === "get_ads") {
+        const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
+        const until = new Date().toISOString().split("T")[0];
+        const url = `https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpm,cpc,actions,frequency,reach&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return new Response(JSON.stringify({ success: true, ads: data.data || [], account: activeAccount.name || accountId, period: { since, until } }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {

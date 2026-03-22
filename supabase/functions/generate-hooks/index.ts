@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
   try {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const { product, niche, market, platform, tone, user_id, count = 10, persona_context, funnel_stage = "tofu" } = await req.json();
+    const { product, niche, market, platform, tone, user_id, persona_id, count = 10, persona_context, funnel_stage = "tofu" } = await req.json();
     
     // ── Cap hook count by plan ─────────────────────────────────────────────
     let effectiveCount = count;
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
           },
-          body: JSON.stringify({ action: 'get_context', user_id }),
+          body: JSON.stringify({ action: 'get_context', user_id, persona_id: persona_id || null }),
         });
         if (loopRes.ok) {
           const loopData = await loopRes.json();

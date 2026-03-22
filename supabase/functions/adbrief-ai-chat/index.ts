@@ -176,33 +176,26 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
     }).filter(Boolean).join("\n");
 
-    // ── 4b. Fetch live Meta Ads data if token available ───────────────────────
+    // ── 4b. Fetch live Meta Ads data ─────────────────────────────────────────
     let liveMetaData = "";
     const metaConn = (connections as any[]).find((c: any) => c.platform === "meta");
     if (metaConn) {
       try {
-        // Get token for this connection
-        const { data: tokenRow } = await supabase
+        const { data: allConns } = await supabase
           .from("platform_connections" as any)
-          .select("access_token, ad_accounts, selected_account_id")
-          .eq("user_id", user_id)
-          .eq("platform", "meta")
-          .eq("status", "active")
-          .then(async (r: any) => {
-            const all = r.data || [];
-            if (persona_id) {
-              const specific = all.find((c: any) => c.persona_id === persona_id);
-              if (specific) return { data: specific };
-            }
-            const global = all.find((c: any) => !c.persona_id);
-            return { data: global || null };
-          });
+          .select("access_token, ad_accounts, selected_account_id, persona_id")
+          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
+        const allC = (allConns as any[]) || [];
+        // Prefer persona-specific, fallback global, fallback first
+        const tokenRow = (persona_id && allC.find((c: any) => c.persona_id === persona_id))
+          || allC.find((c: any) => !c.persona_id)
+          || allC[0] || null;
 
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
           const accs = (tokenRow.ad_accounts as any[]) || [];
-          const selId = tokenRow.selected_account_id || accs[0]?.id;
-          const activeAcc = accs.find((a: any) => a.id === selId) || accs[0];
+          const selId = tokenRow.selected_account_id;
+          const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
             const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
@@ -214,29 +207,40 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective&limit=20&access_token=${token}`),
             ]);
 
-            const adsData = adsRes.status === "fulfilled" ? await adsRes.value.json() : null;
-            const campaignsData = campaignsRes.status === "fulfilled" ? await campaignsRes.value.json() : null;
+            const adsRaw = adsRes.status === "fulfilled" ? await adsRes.value.json() : null;
+            const campsRaw = campaignsRes.status === "fulfilled" ? await campaignsRes.value.json() : null;
 
-            if (adsData?.data?.length) {
-              const adLines = adsData.data.slice(0, 10).map((ad: any) => {
+            liveMetaData = `LIVE META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})\n`;
+
+            if (campsRaw?.error) {
+              liveMetaData += `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
+            } else if (campsRaw?.data?.length) {
+              const lines = campsRaw.data.slice(0, 15).map((c: any) =>
+                `  ${c.name}: status=${c.status} budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "no budget set"} objective=${c.objective}`
+              ).join("\n");
+              liveMetaData += `CAMPAIGNS (${campsRaw.data.length} found):\n${lines}\n`;
+            } else {
+              liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada nesta conta. Respond directly with this fact.\n`;
+            }
+
+            if (adsRaw?.data?.length) {
+              const adLines = adsRaw.data.slice(0, 10).map((ad: any) => {
                 const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
                 const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
-                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} cpc=$${parseFloat(ad.cpc||0).toFixed(2)} freq=${ad.frequency||"?"} reach=${ad.reach||"?"} purchases=${purchases}${hookRate?` hook_rate=${((parseInt(hookRate)/parseInt(ad.impressions||1))*100).toFixed(1)}%`:""}`;
+                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} cpc=$${parseFloat(ad.cpc||0).toFixed(2)} freq=${ad.frequency||"?"} purchases=${purchases}${hookRate?` hook_rate=${((parseInt(hookRate)/parseInt(ad.impressions||1))*100).toFixed(1)}%`:""}`;
               }).join("\n");
-
-              liveMetaData += `LIVE META ADS DATA (last 30 days) — Account: ${activeAcc.name || activeAcc.id}\nAD PERFORMANCE (top by spend):\n${adLines}\n`;
+              liveMetaData += `AD PERFORMANCE (top by spend):\n${adLines}\n`;
+            } else if (!adsRaw?.error) {
+              liveMetaData += `ADS: Nenhum gasto de anúncio nos últimos 30 dias.\n`;
             }
-
-            if (campaignsData?.data?.length) {
-              const campLines = campaignsData.data.slice(0, 10).map((c: any) =>
-                `  ${c.name}: status=${c.status} budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "?"} objective=${c.objective}`
-              ).join("\n");
-              liveMetaData += `CAMPAIGNS:\n${campLines}\n`;
-            }
+          } else {
+            liveMetaData = `META CONNECTED — no ad account selected. Tell user to go to Contas and select an ad account.`;
           }
+        } else {
+          liveMetaData = `META CONNECTED — token missing. Tell user to reconnect Meta Ads in Contas.`;
         }
       } catch (_e) {
-        // Silent — live data is bonus, not required
+        liveMetaData = `META CONNECTED — data fetch error: ${(_e as any)?.message || "unknown"}.`;
       }
     }
 
@@ -331,15 +335,13 @@ Auto-trigger tool_call when:
 - "traduz" / "translate" / "localiza" → tool: "translate"
 - "pause [X]" / "pausa [X]" → tool: "meta_action" with meta_action: "pause"
 - "aumenta budget" / "increase budget" → tool: "meta_action" with meta_action: "update_budget"
-- "lista campanhas" / "list campaigns" → tool: "meta_action" with meta_action: "list_campaigns"
-
 ASSERTIVE RULES — follow these strictly:
-1. Check context data FIRST before firing any tool_call. If the answer is already in the data, answer directly without a tool_call.
-2. If the user asks "tem anúncio ativo?" or "quais campanhas estão rodando?" and context shows no active campaigns → answer directly: respond with an insight block saying there are no active campaigns. Never show an empty tool result block.
-3. If the user asks to pause/stop something that context shows is already paused → answer directly: "Já está pausada." Do not fire the action.
-4. If the user asks to activate something that is already active → answer directly: "Já está ativa."
-5. When a read action (list, get, show) returns no data → ALWAYS include an assertive insight explaining the empty result. Example: "Nenhuma campanha ativa encontrada na sua conta." Never leave an empty block.
-6. Be direct and confident. Never ask for confirmation or show a loading block for read-only queries.
+1. NEVER emit tool_call for read-only queries (list, show, get, quais, tem, quantos). The data is ALREADY in your context above. Read it and answer directly.
+2. If context shows no campaigns/ads → answer directly with an insight block: "Nenhuma campanha encontrada na conta X." NEVER emit list_campaigns or any read tool_call.
+3. If context shows a META error → explain the error directly. Do NOT emit any tool_call.
+4. If the user asks to pause/stop something that context shows is already paused → answer directly: "Já está pausada."
+5. If the user asks to activate something already active → answer directly: "Já está ativa."
+6. Be direct. Never ask for confirmation for read queries. Never show empty blocks.
 
 For tools, auto-fill params from context whenever possible:
 - If persona has market/niche info → use it in hooks/script params
