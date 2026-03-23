@@ -1308,7 +1308,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
               <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "12px 24px", borderRadius: 10, background: "#fff", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "opacity 0.15s" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'} <ArrowRight size={14} />
+                {t.for_cta} <ArrowRight size={14} />
               </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
