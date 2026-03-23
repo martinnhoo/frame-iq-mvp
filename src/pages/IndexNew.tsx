@@ -949,7 +949,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
       <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
         <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
           {h1p[0]}
-          {h1p[1] && <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}> {h1p[1]}</span>}
+          {h1p[1] && <span style={{ background: 'linear-gradient(90deg, #ffffff 0%, #7dd3fc 55%, #38bdf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> {h1p[1]}</span>}
         </h1>
         <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(13px,1vw,15px)', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560 }}>{t.hero_sub}</p>
       </div>
