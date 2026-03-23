@@ -324,9 +324,9 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
     default: "transparent",
-    subtle:  "#101318",
-    dark:    "#0a0c10",
-    accent:  "#0e1520",
+    subtle:  "#0f1117",
+    dark:    "#080a0f",
+    accent:  "#0c1220",
   };
   return (
     <section
@@ -509,7 +509,7 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
             style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-            {t.nav_cta}
+            {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
           </button>
         </div>
       </div>
@@ -1124,7 +1124,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
@@ -1246,7 +1246,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
     <Section id="how" bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.how_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
         </div>
@@ -1283,39 +1283,41 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
     <Section id="for" bg="subtle">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.for_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 40 }}>
+        <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
           {profiles.map((pr, i) => (
             <button key={i} onClick={() => setActive(i)} style={{
-              fontFamily: F, fontSize: 13, fontWeight: 600, padding: "10px 22px", borderRadius: 999, cursor: "pointer", transition: "all 0.2s",
-              background: active === i ? `${pr.color}10` : "rgba(255,255,255,0.12)",
-              color: active === i ? pr.color : "rgba(255,255,255,0.62)",
-              border: `1px solid ${active === i ? pr.color + "28" : "rgba(255,255,255,0.12)"}`,
+              fontFamily: F, fontSize: 13, fontWeight: active === i ? 600 : 400,
+              padding: "8px 20px", borderRadius: 9, cursor: "pointer", transition: "all 0.18s",
+              background: active === i ? "rgba(255,255,255,0.10)" : "transparent",
+              color: active === i ? "#fff" : "rgba(255,255,255,0.4)",
+              border: "none",
             }}>
-              {pr.emoji} {pr.label}
+              {pr.label}
             </button>
           ))}
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={active} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}
+          <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-            <div style={{ padding: "36px 30px", borderRadius: 22, background: `${p.color}12`, border: `1px solid ${p.color}25` }}>
-              <span style={{ fontSize: 40, display: "block", marginBottom: 20 }}>{p.emoji}</span>
-              <h3 style={{ fontFamily: F, fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
-              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginBottom: 28 }}>{p.desc}</p>
-              <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "12px 24px", borderRadius: 12, background: "#fff", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                {t.for_cta} <ArrowRight size={14} />
+            <div style={{ padding: "36px 30px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+              <h3 style={{ fontFamily: F, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
+              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, marginBottom: 28 }}>{p.desc}</p>
+              <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "12px 24px", borderRadius: 10, background: "#fff", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "opacity 0.15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'} <ArrowRight size={14} />
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {p.points.map((point) => (
-                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${p.color}10`, border: `1px solid ${p.color}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                    <Check size={11} color={p.color} />
+                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <Check size={10} color="rgba(255,255,255,0.5)" />
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.72)", lineHeight: 1.5 }}>{point}</p>
+                  <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.5, margin: 0 }}>{point}</p>
                 </div>
               ))}
             </div>
@@ -1474,7 +1476,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
     <Section id="pricing" bg="accent">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.pricing_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,2.8vw,38px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 10px", color: "#fff" }}>{t.pricing_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
           {/* Toggle */}
@@ -1488,44 +1490,52 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>Economize 20%</span>
           </div>
         </div>
-        <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{
-              padding: "32px 28px", borderRadius: 22,
-              background: plan.highlight ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${plan.highlight ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
-              display: "flex", flexDirection: "column", gap: 22, position: "relative",
-              boxShadow: plan.highlight ? "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(14,165,233,0.07)" : "none",
+              padding: "28px 24px", borderRadius: 18,
+              background: plan.highlight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+              border: plan.highlight
+                ? "1px solid rgba(255,255,255,0.18)"
+                : "1px solid rgba(255,255,255,0.07)",
+              display: "flex", flexDirection: "column", gap: 20, position: "relative",
+              transform: plan.highlight ? "scale(1.02)" : "scale(1)",
+              zIndex: plan.highlight ? 2 : 1,
             }}>
               {plan.badge && (
-                <div style={{ position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", background: "#fff", borderRadius: 7, padding: "3px 14px", whiteSpace: "nowrap" }}>
-                  <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#000", fontWeight: 800 }}>{plan.badge}</span>
+                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#fff", borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap" as const }}>
+                  <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#000", fontWeight: 700 }}>{plan.badge}</span>
                 </div>
               )}
               <div>
-                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.55)", marginBottom: 8, fontWeight: 700, letterSpacing: "0.06em" }}>{plan.name.toUpperCase()}</p>
+                <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{plan.name}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  <span style={{ fontFamily: F, fontSize: 44, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
-                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{plan.desc}</span>
+                  <span style={{ fontFamily: F, fontSize: 42, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{plan.desc}</span>
                 </div>
               </div>
-              <div style={{ height: 1, background: "rgba(255,255,255,0.10)" }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
                 {plan.features.map(f => (
                   <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <Check size={13} color="rgba(255,255,255,0.55)" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.45 }}>{f}</span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+                      <circle cx="7" cy="7" r="6.5" stroke="rgba(255,255,255,0.12)"/>
+                      <path d="M4.5 7l1.8 1.8L9.5 5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
               </div>
               <button onClick={plan.action} style={{
-                fontFamily: F, width: "100%", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 700,
-                background: plan.highlight ? "#fff" : "rgba(255,255,255,0.10)",
-                color: plan.highlight ? "#000" : "rgba(255,255,255,0.6)",
-                border: `1px solid ${plan.highlight ? "transparent" : "rgba(255,255,255,0.06)"}`,
-                cursor: "pointer", transition: "all 0.2s",
-              }}>{t.pricing_cta}</button>
-              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.15)", textAlign: "center" }}>{t.pricing_note}</p>
+                fontFamily: F, width: "100%", padding: "13px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: plan.highlight ? "#fff" : "rgba(255,255,255,0.07)",
+                color: plan.highlight ? "#000" : "rgba(255,255,255,0.55)",
+                border: "none", cursor: "pointer", transition: "opacity 0.15s",
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+              >{t.pricing_cta}</button>
+              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
           ))}
         </div>
@@ -1542,7 +1552,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
     <Section bg="dark">
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.faq_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -1578,7 +1588,7 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
           <div style={{ position: "absolute", top: -120, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(14,165,233,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", bottom: -80, right: -60, width: 300, height: 300, background: "radial-gradient(ellipse, rgba(52,211,153,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
           <div style={{ position: "relative" }}>
-            <p style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", marginBottom: 20 }}>{t.final_label}</p>
+            <p style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)", marginBottom: 20 }}>{t.final_label}</p>
             <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4.5vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 16, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
             <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 40, lineHeight: 1.65 }}>{t.final_sub}</p>
             <button onClick={onCTA} style={{
