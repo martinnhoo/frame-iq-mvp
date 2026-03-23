@@ -392,9 +392,9 @@ const TOOLS_DATA: ToolDef[] = [
     input:   { pt: "Contexto da sua conta + produto", es: "Contexto de tu cuenta + producto", en: "Your account context + product" },
     badge:   { pt: "Output instantâneo", es: "Output instantáneo", en: "Instant output" },
     output:  {
-      pt: ['"Você pagou R$90/clique e nem sabe por quê."', '"3 dos seus 4 anúncios têm ROAS abaixo de 1x agora."', '"Seu melhor criativo parou há 9 dias. O concorrente está escalando."'],
-      es: ['"Pagaste $90/clic y no sabes por qué."', '"3 de tus 4 anuncios tienen ROAS bajo 1x ahora."', '"Tu mejor creativo lleva 9 días pausado. El competidor está escalando."'],
-      en: ['"You\'re paying $90/click and don\'t know why."', '"3 of your 4 top ads have ROAS below 1x right now."', '"Your best creative is paused 9 days. A competitor is scaling it."'],
+      pt: ['"Creative_019 converteu 2.4x mais essa semana. Veja o padrão."', '"Hook rate 38% — seu melhor criativo prende atenção nos primeiros 3s."', '"Escale R$120 → R$400/dia. Frequência 1.3x — tem muito espaço ainda."'],
+      es: ['"Creative_019 convirtió 2.4x más esta semana. Mira el patrón."', '"Hook rate 38% — tu mejor creativo retiene atención en los primeros 3s."', '"Escala $120 → $400/día. Frecuencia 1.3x — hay mucho espacio todavía."'],
+      en: ['"Creative_019 converted 2.4x more this week. Here\'s the pattern."', '"Hook rate 38% — your best creative holds attention in the first 3s."', '"Scale $120 → $400/day. Frequency 1.3x — still plenty of room to grow."'],
     },
   },
   {
@@ -406,9 +406,9 @@ const TOOLS_DATA: ToolDef[] = [
     input:   { pt: "Produto + plataforma + tom da marca", es: "Producto + plataforma + tono de marca", en: "Product + platform + brand tone" },
     badge:   { pt: "Script completo", es: "Script completo", en: "Full script" },
     output:  {
-      pt: ["[GANCHO] Você está investindo em tráfego e não sabe o que está funcionando?", "[DESENVOLVIMENTO] A maioria dos gestores descobre tarde demais...", "[CTA] Conecte sua conta agora. 30 segundos. Sem CSV."],
-      es: ["[GANCHO] ¿Estás invirtiendo en tráfico y no sabes qué funciona?", "[DESARROLLO] La mayoría de los gestores descubre demasiado tarde...", "[CTA] Conecta tu cuenta ahora. 30 segundos. Sin CSV."],
-      en: ["[HOOK] Spending on ads and not knowing what's working?", "[BODY] Most media buyers find out too late...", "[CTA] Connect your account now. 30 seconds. No CSV."],
+      pt: ["[GANCHO] Creative_019 converteu 2.4x mais essa semana. Veja o padrão.", "[DESENVOLVIMENTO] Gestores que escalam rápido têm uma coisa em comum — sabem exatamente qual criativo funciona.", "[CTA] Conecte sua conta agora. 30 segundos. Sem CSV."],
+      es: ["[GANCHO] Creative_019 convirtió 2.4x más esta semana. Mira el patrón.", "[DESARROLLO] Los gestores que escalan rápido tienen algo en común — saben exactamente qué creativo funciona.", "[CTA] Conecta tu cuenta ahora. 30 segundos. Sin CSV."],
+      en: ["[HOOK] Creative_019 converted 2.4x more this week. Here's the pattern.", "[BODY] Media buyers who scale fast all have one thing in common — they know exactly which creative is working.", "[CTA] Connect your account now. 30 seconds. No CSV."],
     },
   },
   {
@@ -837,88 +837,88 @@ function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
   const scenarios: Record<Lang, Array<{q: string; lines: Array<{text: string; accent?: boolean; highlight?: boolean}>}>> = {
     pt: [
       {
-        q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
+        q: "Qual meu melhor criativo essa semana?",
         lines: [
-          { text: "Identifiquei 3 causas na sua conta:" },
-          { text: "Creative_042 roda há 22 dias — hook rate caiu de 31% → 11%.", highlight: true },
-          { text: "BR-Mulheres-25-34 com frequência 4.8x. CPM subiu +38%." },
-          { text: "Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x).", accent: true },
+          { text: "Creative_019 está dominando sua conta:" },
+          { text: "Hook rate 38% — 2.4x acima da média. Prende nos primeiros 3s.", highlight: true },
+          { text: "ROAS 3.8x com frequência 1.3x — ainda tem espaço." },
+          { text: "Suba de R$120 → R$400/dia. Projeção: +R$1.080/dia.", accent: true },
         ]
       },
       {
-        q: "Quais anúncios devo pausar agora?",
+        q: "Quanto posso escalar essa semana?",
         lines: [
-          { text: "3 anúncios para pausar hoje:" },
-          { text: "Creative_038 — CPM R$91, CTR 0,4%, zero conversões em 7 dias.", highlight: true },
-          { text: "Creative_029 — hook rate 8%. 92% saem em 3 segundos." },
-          { text: "Pausar libera R$620/dia → redirecionar para Creative_019.", accent: true },
+          { text: "Headroom claro na sua conta:" },
+          { text: "Creative_019 — freq. 1.3x, ROAS 3.8x. Pode ir para R$400/dia.", highlight: true },
+          { text: "BR-Mulheres-25-34 — saturação baixa, CPM estável." },
+          { text: "Projeção conservadora: +R$2.200 de receita essa semana.", accent: true },
         ]
       },
       {
-        q: "Escreve 3 hooks dos meus melhores criativos.",
+        q: "Escreve hooks dos meus winners.",
         lines: [
-          { text: "Dos seus top converters (hook rate 34%, ROAS 3.1x+):" },
-          { text: "\"Você paga R$90/clique e não sabe por quê.\"", highlight: true },
-          { text: "\"3 dos seus 4 anúncios têm ROAS abaixo de 1x agora.\"" },
-          { text: "\"Seu melhor criativo está parado há 9 dias.\"", accent: true },
+          { text: "Padrão dos seus top converters (hook rate 34-38%):" },
+          { text: "\"Seu corpo mudou em 30 dias. A maioria desiste no 3º.\"", highlight: true },
+          { text: "\"Essa técnica aumentou conversão de leads em 3x para academias BR.\"" },
+          { text: "\"Por que 9 em 10 pagam a academia e não vão? Esse vídeo explica.\"", accent: true },
         ]
       },
     ],
     es: [
       {
-        q: "Mi ROAS bajó 40% esta semana. ¿Qué pasó?",
+        q: "¿Cuál es mi mejor creativo esta semana?",
         lines: [
-          { text: "Identifiqué 3 causas en tu cuenta:" },
-          { text: "Creative_042 lleva 22 días — hook rate cayó de 31% → 11%.", highlight: true },
-          { text: "MX-Mujeres-25-34 con frecuencia 4.8x. CPM subió +38%." },
-          { text: "Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x).", accent: true },
+          { text: "Creative_019 está dominando tu cuenta:" },
+          { text: "Hook rate 38% — 2.4x por encima del promedio. Retiene en los 3s.", highlight: true },
+          { text: "ROAS 3.8x con frecuencia 1.3x — todavía hay espacio." },
+          { text: "Sube de $120 → $400/día. Proyección: +$1,080/día.", accent: true },
         ]
       },
       {
-        q: "¿Cuáles anuncios pausar ahora mismo?",
+        q: "¿Cuánto puedo escalar esta semana?",
         lines: [
-          { text: "3 anuncios para pausar hoy:" },
-          { text: "Creative_038 — $18 CPM, 0.4% CTR, cero conversiones en 7 días.", highlight: true },
-          { text: "Creative_029 — hook rate 8%. 92% se van en 3 segundos." },
-          { text: "Pausar libera $620/día → redirigir a Creative_019.", accent: true },
+          { text: "Headroom claro en tu cuenta:" },
+          { text: "Creative_019 — freq. 1.3x, ROAS 3.8x. Puede ir a $400/día.", highlight: true },
+          { text: "MX-Mujeres-25-34 — saturación baja, CPM estable." },
+          { text: "Proyección conservadora: +$2,200 de ingresos esta semana.", accent: true },
         ]
       },
       {
-        q: "Escribe 3 hooks de mis mejores creativos.",
+        q: "Escribe hooks de mis winners.",
         lines: [
-          { text: "De tus top converters (hook rate 34%, ROAS 3.2x+):" },
-          { text: "\"Pagás $90/clic y no sabés por qué.\"", highlight: true },
-          { text: "\"3 de tus 4 anuncios top tienen ROAS bajo 1x ahora.\"" },
-          { text: "\"Tu mejor creativo lleva 9 días pausado.\"", accent: true },
+          { text: "Patrón de tus top converters (hook rate 34-38%):" },
+          { text: "\"Tu cuerpo cambió en 30 días. La mayoría abandona el 3ro.\"", highlight: true },
+          { text: "\"Esta técnica aumentó conversión de leads 3x en gimnasios MX.\"" },
+          { text: "\"¿Por qué 9 de 10 pagan el gym y no van? Este video explica.\"", accent: true },
         ]
       },
     ],
     en: [
       {
-        q: "My ROAS dropped 40% this week. What's happening?",
+        q: "What's my best creative this week?",
         lines: [
-          { text: "Found 3 causes in your account:" },
-          { text: "Creative_042 running 22 days — hook rate dropped 31% → 11%.", highlight: true },
-          { text: "US-Women-25-34 at 4.8x frequency. CPM up +38%." },
-          { text: "Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x).", accent: true },
+          { text: "Creative_019 is dominating your account:" },
+          { text: "Hook rate 38% — 2.4x above average. Holds attention in first 3s.", highlight: true },
+          { text: "ROAS 3.8x at 1.3x frequency — still plenty of room to scale." },
+          { text: "Scale from $120 → $400/day. Projection: +$1,080/day.", accent: true },
         ]
       },
       {
-        q: "Which ads should I pause right now?",
+        q: "How much can I scale this week?",
         lines: [
-          { text: "3 ads to pause today:" },
-          { text: "Creative_038 — $18 CPM, 0.4% CTR, zero conversions in 7 days.", highlight: true },
-          { text: "Creative_029 — hook rate 8%. 92% leave in first 3 seconds." },
-          { text: "Pausing frees $620/day → redirect to Creative_019.", accent: true },
+          { text: "Clear headroom in your account:" },
+          { text: "Creative_019 — 1.3x freq, 3.8x ROAS. Can go to $400/day.", highlight: true },
+          { text: "US-Women-25-34 — low saturation, stable CPM." },
+          { text: "Conservative projection: +$2,200 extra revenue this week.", accent: true },
         ]
       },
       {
-        q: "Write 3 hooks from my best creatives.",
+        q: "Write hooks from my best-converting creatives.",
         lines: [
-          { text: "From your top converters (hook rate 34%, ROAS 3.1x+):" },
-          { text: "\"You're paying $90/click and don't know why.\"", highlight: true },
-          { text: "\"3 of your 4 top-spend ads have ROAS below 1x right now.\"" },
-          { text: "\"Your best creative has been paused for 9 days.\"", accent: true },
+          { text: "Pattern from your top converters (hook rate 34-38%):" },
+          { text: "\"Your body changed in 30 days. Most people quit on day 3.\"", highlight: true },
+          { text: "\"This method increased gym lead conversion by 3x across the US.\"" },
+          { text: "\"Why do 9 in 10 pay for a gym and never go? This video explains.\"", accent: true },
         ]
       },
     ],
@@ -1740,12 +1740,16 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
           {/* Toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: F, fontSize: 13, color: annual ? "rgba(255,255,255,0.3)" : "#fff", fontWeight: 500, transition: "color 0.2s" }}>Monthly</span>
+            <span style={{ fontFamily: F, fontSize: 13, color: annual ? "rgba(255,255,255,0.3)" : "#fff", fontWeight: 500, transition: "color 0.2s" }}>
+              {lang === 'pt' ? 'Mensal' : lang === 'es' ? 'Mensual' : 'Monthly'}
+            </span>
             <button onClick={() => setAnnual(v => !v)}
               style={{ width: 46, height: 24, borderRadius: 12, background: annual ? "#fff" : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
               <span style={{ position: "absolute", top: 3, left: annual ? 24 : 3, width: 18, height: 18, borderRadius: "50%", background: annual ? "#000" : "#fff", transition: "left 0.2s", display: "block" }} />
             </button>
-            <span style={{ fontFamily: F, fontSize: 13, color: annual ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500, transition: "color 0.2s" }}>Annual</span>
+            <span style={{ fontFamily: F, fontSize: 13, color: annual ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500, transition: "color 0.2s" }}>
+              {lang === 'pt' ? 'Anual' : lang === 'es' ? 'Anual' : 'Annual'}
+            </span>
             <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>Economize 20%</span>
           </div>
         </div>
@@ -2011,8 +2015,8 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
-      <Tools t={t} lang={lang} />
       <HowItWorks t={t} lang={lang} />
+      <Tools t={t} lang={lang} />
       <ForWho onCTA={handleCTA} t={t} />
       <TelegramSection t={t} lang={lang} />
       <Pricing onCTA={handleCTA} t={t} lang={lang} />
