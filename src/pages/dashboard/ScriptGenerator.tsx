@@ -58,6 +58,13 @@ export default function ScriptGenerator() {
   useEffect(() => {
     if (!selectedPersona) { setPersonaApplied(false); return; }
     const p = selectedPersona;
+
+    // Product from persona name + description
+    if (p.name) {
+      const desc = p.description || (p as any)?.result?.description || "";
+      setProduct(desc ? `${p.name} — ${desc.slice(0, 100)}` : p.name);
+    }
+
     const m = deriveMarket(p.language_style);
     if (m) setMarket(m);
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Globe, Copy, Check, Video, X, ChevronDown, Loader2, Sparkles, Mic, FileText, Wand2, Languages, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -613,9 +613,18 @@ const AdaptMode = ({ userId }: { userId: string }) => {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TranslatePage = () => {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
   const { language } = useLanguage();
   const [mode, setMode] = useState<"transcribe" | "adapt">("transcribe");
+
+  // Auto-detect source lang from UI language
+  const defaultSource = language === "pt" ? "pt" : language === "es" ? "es" : "en";
+
+  // Map persona market to target language code
+  const marketToLang: Record<string, string> = {
+    BR: "pt", MX: "es", US: "en", IN: "hi", AR: "es",
+    CO: "es", ES: "es", UK: "en", FR: "fr", DE: "de",
+  };
 
   const L: Record<string, Record<string,string>> = {
     pt: { title: "Traduzir & Transcrever", sub: "Extraia o roteiro de qualquer vídeo · Adapte qualquer texto para qualquer mercado",

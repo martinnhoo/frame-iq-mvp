@@ -73,15 +73,23 @@ export default function HookGenerator() {
   const [platform, setPlatform] = useState("TikTok");
   const [searchParams] = useSearchParams();
   useEffect(() => {
-    // Pre-fill from ai_profile (industry/niche)
-    if (aiProfile?.industry && !niche) setNiche(aiProfile.industry);
-    // Pre-fill market — persona result > persona direct > language-based default
+    // Pre-fill product from persona name + description
+    if (selectedPersona?.name && !product) {
+      const desc = selectedPersona.description || (selectedPersona as any)?.result?.description || "";
+      const productStr = desc
+        ? `${selectedPersona.name} — ${desc.slice(0, 80)}`
+        : selectedPersona.name;
+      setProduct(productStr);
+    }
+    // Pre-fill niche from ai_profile or persona industry
+    const industryVal = aiProfile?.industry || (selectedPersona as any)?.industry || (selectedPersona as any)?.result?.industry || "";
+    if (industryVal && !niche) setNiche(industryVal);
+    // Pre-fill market
     const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
     const personaMarket = (
       (selectedPersona as any)?.result?.preferred_market ||
       selectedPersona?.preferred_market || ""
     ).toUpperCase();
-    // Derive market from UI language if no persona market
     const langMarket = (() => {
       const lang = (profile?.preferred_language || navigator.language || "").toLowerCase();
       if (lang.startsWith("pt")) return "BR";
@@ -90,6 +98,13 @@ export default function HookGenerator() {
     })();
     const mkt = valid.includes(personaMarket) ? personaMarket : langMarket;
     setMarket(mkt);
+    // Pre-fill platform from persona best_platforms
+    if (selectedPersona?.best_platforms?.length) {
+      const pl = selectedPersona.best_platforms[0];
+      if (["TikTok","Reels","YouTube Shorts","Meta Feed","YouTube","Snapchat"].includes(pl)) {
+        setPlatform(pl);
+      }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiProfile, profile, selectedPersona?.id]);
 

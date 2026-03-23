@@ -125,7 +125,7 @@ function Section({ label, content, onCopy, copied }: { label: string; content: s
 }
 
 export default function CompetitorDecoder() {
-  const { selectedPersona, user } = useOutletContext<DashboardContext>();
+  const { selectedPersona, user, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
   const { language } = useLanguage();
   const lang = (["pt","es","en"].includes(language) ? language : "pt") as "pt"|"es"|"en";
   const t = L[lang];
@@ -143,7 +143,7 @@ export default function CompetitorDecoder() {
   const [copied, setCopied] = useState<Record<string, boolean>>({});
   const [searchParams] = useSearchParams();
 
-  // Pre-fill from CompetitorTracker navigation
+  // Pre-fill from CompetitorTracker navigation + persona context
   useEffect(() => {
     const brand = searchParams.get("brand");
     const market = searchParams.get("market");
@@ -153,6 +153,25 @@ export default function CompetitorDecoder() {
       setTab("text");
     }
   }, []);
+
+  // Auto-set observation context from persona when no brand param
+  useEffect(() => {
+    if (!selectedPersona) return;
+    const brand = searchParams.get("brand");
+    if (brand) return; // don't override navigation param
+    const p = selectedPersona;
+    const mkt = (p.preferred_market || (p as any)?.result?.preferred_market || "").toUpperCase();
+    const industry = p.industry || (p as any)?.result?.industry || aiProfile?.industry || "";
+    if (mkt || industry) {
+      const ctx = [
+        industry ? `Nicho: ${industry}` : "",
+        mkt ? `Mercado: ${mkt}` : "",
+        p.name ? `Conta: ${p.name}` : "",
+      ].filter(Boolean).join(" | ");
+      setObservation(ctx);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPersona?.id]);
 
   const cp = async (key: string, text: string) => {
     await navigator.clipboard.writeText(text);
@@ -192,7 +211,12 @@ export default function CompetitorDecoder() {
     }
     setLoading(true); setResult(null);
     try {
-      const personaCtx = selectedPersona ? `Account: ${selectedPersona.name}.` : undefined;
+      const personaCtx = selectedPersona ? [
+        `Account: ${selectedPersona.name}.`,
+        selectedPersona.industry || (selectedPersona as any)?.result?.industry ? `Industry: ${selectedPersona.industry || (selectedPersona as any)?.result?.industry}.` : "",
+        selectedPersona.preferred_market ? `Market: ${selectedPersona.preferred_market}.` : "",
+        selectedPersona.pains?.length ? `Target pains: ${selectedPersona.pains.slice(0,2).join(", ")}.` : "",
+      ].filter(Boolean).join(" ") : undefined;
       const { data, error } = await supabase.functions.invoke("decode-competitor", {
         body: { ad_text: inputText, observation: observation.trim() || undefined, persona_context: personaCtx, ui_language: lang },
       });
