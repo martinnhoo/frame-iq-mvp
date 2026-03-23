@@ -23,7 +23,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
     hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
     hero_h1: "Stop burning budget.\nStart scaling what works.",
-    hero_sub: "Connect Meta Ads in 30 seconds. The AI reads your entire account and answers like a senior media buyer — with your real data.",
+    hero_sub: "Connect Meta Ads. The AI reads your account and answers with your real data.",
     hero_cta: "Try free for 1 day", hero_see: "See it in action",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
@@ -86,7 +86,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
     hero_h1: "Pare de queimar verba.\nEscale o que funciona.",
-    hero_sub: "Conecte o Meta Ads em 30 segundos. A IA lê toda sua conta e responde como um especialista sênior de mídia — com seus dados reais.",
+    hero_sub: "Conecte o Meta Ads. A IA lê sua conta e responde com seus dados reais.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver na prática",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
@@ -149,7 +149,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Deja de quemar presupuesto.\nEscala lo que funciona.",
-    hero_sub: "Conecta Meta Ads en 30 segundos. La IA lee toda tu cuenta y responde como un experto senior de medios — con tus datos reales.",
+    hero_sub: "Conecta Meta Ads. La IA lee tu cuenta y responde con tus datos reales.",
     hero_cta: "Probar gratis 1 día", hero_see: "Verlo en acción",
     hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
@@ -834,18 +834,18 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(56px,6vw,80px) clamp(16px,3vw,32px) clamp(32px,4vw,56px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(32px,4vw,52px) clamp(16px,3vw,32px) clamp(24px,3vw,40px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Ambient glow reacts to industry */}
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 50% at 50% -5%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
-      {/* ── HEADLINE ── */}
-      <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 860, width: '100%' }}>
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(28px,4.5vw,58px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.07, margin: '0 0 14px', color: '#fff' }}>
+      {/* ── HEADLINE — compact, one visual line ── */}
+      <div style={{ textAlign: 'center', marginBottom: 20, maxWidth: 960, width: '100%' }}>
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff', whiteSpace: 'nowrap' as const }}>
           {h1p[0]}
-          {h1p[1] && <> <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}>{h1p[1]}</span></>}
+          {h1p[1] && <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}> {h1p[1]}</span>}
         </h1>
-        <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.2vw,17px)', color: 'rgba(255,255,255,0.48)', lineHeight: 1.65, margin: '0 auto', maxWidth: 500 }}>{t.hero_sub}</p>
+        <p style={{ fontFamily: F, fontSize: 'clamp(13px,1vw,15px)', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560, whiteSpace: 'nowrap' as const }}>{t.hero_sub}</p>
       </div>
 
 
