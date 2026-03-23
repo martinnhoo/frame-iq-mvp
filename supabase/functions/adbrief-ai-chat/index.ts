@@ -610,8 +610,8 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     };
     const uiLang2 = (user_language as string) || "en";
     const personaMarket = (persona?.result as any)?.preferred_market || "";
-    const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang;
-    const uiLangName = LANG_NAMES[uiLang] || "English";
+    const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang2;
+    const uiLangName = LANG_NAMES[uiLang2] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
     // ── 5b. History ─────────────────────────────────────────────────────────
