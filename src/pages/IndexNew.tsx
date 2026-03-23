@@ -20,15 +20,15 @@ type Lang = "en" | "pt" | "es";
 const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
-    hero_badge: "AI FOR PERFORMANCE MARKETING",
+    hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
     hero_h1: "Stop burning budget.\nStart scaling what works.",
-    hero_sub: "Connect Meta Ads. Ask the AI what's draining your money — and exactly what to scale.",
-    hero_cta: "Try free for 1 day", hero_see: "See how it works",
+    hero_sub: "Connect Meta Ads in 30 seconds. The AI reads your entire account and answers like a senior media buyer — with your real data.",
+    hero_cta: "Try free for 1 day", hero_see: "See it in action",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
-    stat_1: "$2.4M+", stat_1_label: "Ad spend analyzed",
-    stat_2: "34,000+", stat_2_label: "Hooks generated",
-    stat_3: "4.8", stat_3_label: "Average rating",
-    stat_4: "+22%", stat_4_label: "Avg ROAS lift",
+    stat_1: "30s", stat_1_label: "To connect Meta Ads",
+    stat_2: "90 days", stat_2_label: "Of real data analyzed",
+    stat_3: "7", stat_3_label: "Integrated tools",
+    stat_4: "Telegram", stat_4_label: "Real-time alerts",
     demo_label: "LIVE DEMO",
     demo_q1_short: "My ROAS dropped 40%", demo_q1_full: "My fitness ads ROAS dropped 40% this week. What's happening?",
     demo_q2_short: "Which ads to pause?", demo_q2_full: "Which of my ads should I pause immediately?",
@@ -83,15 +83,15 @@ const T: Record<Lang, Record<string, string>> = {
   },
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
-    hero_badge: "IA PARA PERFORMANCE MARKETING",
+    hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
     hero_h1: "Pare de queimar verba.\nEscale o que funciona.",
-    hero_sub: "Conecte o Meta Ads. Pergunte à IA o que está drenando seu dinheiro — e o que escalar agora.",
-    hero_cta: "Testar grátis por 1 dia", hero_see: "Ver como funciona",
+    hero_sub: "Conecte o Meta Ads em 30 segundos. A IA lê toda sua conta e responde como um especialista sênior de mídia — com seus dados reais.",
+    hero_cta: "Testar grátis por 1 dia", hero_see: "Ver na prática",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
-    stat_1: "R$12M+", stat_1_label: "Budget analisado",
-    stat_2: "34.000+", stat_2_label: "Hooks gerados",
-    stat_3: "4.8", stat_3_label: "Avaliação média",
-    stat_4: "+22%", stat_4_label: "Melhoria de ROAS",
+    stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
+    stat_2: "90 dias", stat_2_label: "De dados reais analisados",
+    stat_3: "7", stat_3_label: "Ferramentas integradas",
+    stat_4: "Telegram", stat_4_label: "Alertas em tempo real",
     demo_label: "DEMO AO VIVO",
     demo_q1_short: "Meu ROAS caiu 40%", demo_q1_full: "Meu ROAS de fitness caiu 40% essa semana. O que está acontecendo?",
     demo_q2_short: "Quais anúncios pausar?", demo_q2_full: "Quais dos meus anúncios devo pausar imediatamente?",
@@ -146,10 +146,10 @@ const T: Record<Lang, Record<string, string>> = {
   },
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
-    hero_badge: "IA PARA PERFORMANCE MARKETING",
+    hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Deja de quemar presupuesto.\nEscala lo que funciona.",
-    hero_sub: "Conecta Meta Ads. Pregunta a la IA qué está drenando tu dinero — y qué escalar ahora.",
-    hero_cta: "Probar gratis 1 día", hero_see: "Ver cómo funciona",
+    hero_sub: "Conecta Meta Ads en 30 segundos. La IA lee toda tu cuenta y responde como un experto senior de medios — con tus datos reales.",
+    hero_cta: "Probar gratis 1 día", hero_see: "Verlo en acción",
     hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
     stat_2: "34,000+", stat_2_label: "Hooks generados",
@@ -798,10 +798,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   const h1p = h1.split('\n');
 
   const proofs: string[] = lang === 'pt'
-    ? ['Conecta ao Meta Ads em 1 clique', 'Respostas com seus dados reais', 'Cancele em 24h, sem cobrança']
+    ? ['Meta Ads conectado em 30s', 'Dados reais dos últimos 90 dias', 'Cancele antes de 24h, sem cobrança']
     : lang === 'es'
-    ? ['Conecta Meta Ads en 1 clic', 'Responde con tus datos reales', 'Cancela en 24h, sin cobro']
-    : ['Connects to Meta Ads in 1 click', 'Answers from your real data', 'Cancel in 24h, no charge'];
+    ? ['Meta Ads conectado en 30s', 'Datos reales de los últimos 90 días', 'Cancela antes de 24h, sin cobro']
+    : ['Meta Ads connected in 30s', 'Real data from last 90 days', 'Cancel before 24h, no charge'];
 
   return (
     <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(64px,7vw,88px) clamp(16px,4vw,32px) clamp(32px,4vw,48px)', position: 'relative', overflow: 'hidden' }}>
@@ -1045,9 +1045,9 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 // ─── How It Works ─────────────────────────────────────────────────────────────
 function HowItWorks({ t }: { t: Record<string, string> }) {
   const steps = [
-    { n: "01", icon: <Plug size={20} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc },
-    { n: "02", icon: <Users size={20} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc },
-    { n: "03", icon: <MessageSquare size={20} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc },
+    { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc },
+    { n: "02", icon: <Users size={22} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc },
+    { n: "03", icon: <MessageSquare size={22} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc },
   ];
   return (
     <Section id="how" bg="dark">
@@ -1059,11 +1059,13 @@ function HowItWorks({ t }: { t: Record<string, string> }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ padding: "36px 28px", borderRadius: 20, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: -25, right: -8, fontSize: 80, fontWeight: 900, color: "rgba(255,255,255,0.12)", fontFamily: F, lineHeight: 1, pointerEvents: "none" }}>{step.n}</div>
-              <div style={{ width: 44, height: 44, borderRadius: 13, background: `${step.color}10`, border: `1px solid ${step.color}18`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: step.color }}>{step.icon}</div>
-              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{step.title}</h3>
-              <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.7 }}>{step.desc}</p>
+            <div key={i} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = `${step.color}40`}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"}>
+              <div style={{ position: "absolute", top: -20, right: -4, fontSize: 88, fontWeight: 900, color: "rgba(255,255,255,0.05)", fontFamily: F, lineHeight: 1, pointerEvents: "none", letterSpacing: "-0.05em" }}>{step.n}</div>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: `${step.color}15`, border: `1px solid ${step.color}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22, color: step.color, boxShadow: `0 0 20px ${step.color}15` }}>{step.icon}</div>
+              <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 800, color: "#fff", marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
+              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.58)", lineHeight: 1.75 }}>{step.desc}</p>
             </div>
           ))}
         </div>
@@ -1140,8 +1142,11 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
     <Section bg="dark">
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.ba_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.ba_h2}</h2>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", textTransform: "uppercase" }}>{t.ba_label}</span>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.5vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.ba_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.45)", maxWidth: 440, margin: "0 auto" }}>
+            {lang === "pt" ? "Da análise manual ao insight em segundos." : lang === "es" ? "Del análisis manual al insight en segundos." : "From manual analysis to insight in seconds."}
+          </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
           <div style={{ padding: "12px 18px", borderRadius: "14px 14px 0 0", background: "rgba(255,255,255,0.12)", textAlign: "center" }}>
@@ -1152,11 +1157,13 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
           </div>
           {rows.map((row, i) => (
             <React.Fragment key={i}>
-              <div style={{ padding: "16px 18px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: i === rows.length - 1 ? "0 0 0 14px" : 0 }}>
-                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.55, margin: 0 }}>{row.before}</p>
+              <div style={{ padding: "16px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: i === rows.length - 1 ? "0 0 0 14px" : 0, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0 }}>😤</span>
+                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.48)", lineHeight: 1.6, margin: 0 }}>{row.before}</p>
               </div>
-              <div style={{ padding: "16px 18px", background: "rgba(52,211,153,0.03)", border: "1px solid rgba(52,211,153,0.08)", borderRadius: i === rows.length - 1 ? "0 0 14px 0" : 0 }}>
-                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 1.55, margin: 0 }}>{row.after}</p>
+              <div style={{ padding: "16px 20px", background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)", borderRadius: i === rows.length - 1 ? "0 0 14px 0" : 0, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0, color: "#34d399" }}>✓</span>
+                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{row.after}</p>
               </div>
             </React.Fragment>
           ))}
