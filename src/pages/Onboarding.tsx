@@ -224,7 +224,7 @@ export default function Onboarding() {
           niche: niche,
           industry: niche,
         },
-      } as never).catch(() => {});
+      } as never).then(() => {}).catch(() => {});
     }
 
     // Save to ai_profile for chat personalization

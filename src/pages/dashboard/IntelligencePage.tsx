@@ -667,7 +667,7 @@ export default function IntelligencePage() {
                 ].map(action => (
                   <button
                     key={action.label}
-                    onClick={() => navigate(action.path)}
+                    onClick={() => window.location.href = action.path}
                     className="flex flex-col items-start gap-2 p-4 rounded-xl text-left transition-all"
                     style={{ background: action.bg, border: `1px solid ${action.border}` }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = action.color + "50"; }}

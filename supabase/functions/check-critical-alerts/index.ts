@@ -35,13 +35,7 @@ function buildTelegramMessage(alerts: any[], userName: string): string {
     const ad = a.ad_name ? ` — <i>${a.ad_name}</i>` : "";
     return `${icon} ${a.detail}${ad}`;
   });
-  return `⚠️ <b>${greeting}, você tem ${alerts.length} alerta${alerts.length > 1 ? "s" : ""} na sua conta</b>
-
-${lines.join("
-
-")}
-
-/alertas para ver todos | /status para resumo`;
+  return `⚠️ <b>${greeting}, você tem ${alerts.length} alerta${alerts.length > 1 ? "s" : ""} na sua conta</b>\n\n${lines.join("\n\n")}\n\n/alertas para ver todos | /status para resumo`;
 }
 
 function buildTelegramButtons(alerts: any[]): object | undefined {
