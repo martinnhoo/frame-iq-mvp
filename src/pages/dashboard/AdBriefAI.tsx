@@ -1051,7 +1051,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             : lang==="es"
             ? `Tu Telegram aún no está conectado. ¿Quieres conectarlo para recibir alertas?`
             : `Your Telegram isn't connected yet. Want to connect to receive alerts and run commands?`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:"Telegram",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:"Telegram",content:txt}]}]);
         }
       } catch {
         const eid = Date.now().toString(36)+"e";
