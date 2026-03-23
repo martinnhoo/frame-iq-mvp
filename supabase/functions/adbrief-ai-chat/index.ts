@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         .order("created_at" as any, { ascending: false }).limit(20),
       // 4. Platform connections (persona-scoped)
       supabase.from("platform_connections" as any)
-        .select("platform, status, ad_accounts, selected_account_id, connected_at")
+        .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")
         .eq("user_id", user_id).eq("status", "active")
         .then(async (r: any) => {
           if (r.error?.code === "42P01") return { data: [], error: null };
