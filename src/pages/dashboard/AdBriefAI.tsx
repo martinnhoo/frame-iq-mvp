@@ -1451,7 +1451,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             const isDashActive = activeTool==="dashboard";
             return(
               <button key={tool.action} onClick={()=>{
-                if(tool.action==="upload") send("Upload an ad");
+                if(tool.action==="upload") navigate("/dashboard/analyses/new");
                 else if(tool.action==="dashboard") setActiveTool(a=>a==="dashboard"?null:"dashboard");
                 else setActiveTool(a=>a===tool.action?null:tool.action);
               }}
