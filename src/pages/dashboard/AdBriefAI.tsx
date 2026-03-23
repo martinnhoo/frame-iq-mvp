@@ -983,7 +983,7 @@ export default function AdBriefAI() {
           .select("chat_id, telegram_username, connected_at")
           .eq("user_id", user.id).eq("active", true).maybeSingle();
 
-        const aid = Date.now().toString(36)+"r";
+        const aid = Date.now()+1;
 
         if (tgConn?.chat_id) {
           // CONNECTED — confirm status and show commands
