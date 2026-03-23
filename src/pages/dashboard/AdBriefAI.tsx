@@ -1017,7 +1017,7 @@ Commands on @AdBriefAlertsBot:
 /pause [name] — pause a creative with confirmation
 
 To disconnect, click the Telegram icon at the top.`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
         } else if (/conect|ativ|quero|want|receb|alert|notif|quiero/i.test(msg)) {
           // NOT CONNECTED + wants to connect — generate pairing link
           const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
