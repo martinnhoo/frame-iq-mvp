@@ -1175,6 +1175,71 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
   );
 }
 
+
+// ─── Telegram Differentiator ──────────────────────────────────────────────────
+function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang }) {
+  const items = lang === "pt" ? [
+    { icon: "⚠️", title: "Alertas críticos automáticos", desc: "CTR caiu? CPM explodiu? Você recebe no Telegram antes de perder mais." },
+    { icon: "⏸️", title: "Pause anúncios pelo bot", desc: "/pausar [nome] — pede confirmação e executa via Meta API. Registrado no AdBrief." },
+    { icon: "📊", title: "Resumo diário", desc: "/status — spend, CTR, winners e losers. Tudo em uma mensagem." },
+    { icon: "🧠", title: "A IA aprende com cada ação", desc: "Criativos pausados, alertas dispensados — tudo vira contexto para as próximas respostas." },
+  ] : lang === "es" ? [
+    { icon: "⚠️", title: "Alertas críticos automáticos", desc: "¿CTR cayó? ¿CPM explotó? Lo recibes en Telegram antes de perder más." },
+    { icon: "⏸️", title: "Pausa anuncios desde el bot", desc: "/pausar [nombre] — pide confirmación y ejecuta vía Meta API. Registrado en AdBrief." },
+    { icon: "📊", title: "Resumen diario", desc: "/status — spend, CTR, ganadores y perdedores. Todo en un mensaje." },
+    { icon: "🧠", title: "La IA aprende con cada acción", desc: "Creativos pausados, alertas ignorados — todo se convierte en contexto para las próximas respuestas." },
+  ] : [
+    { icon: "⚠️", title: "Automatic critical alerts", desc: "CTR dropped? CPM spiked? You get it on Telegram before losing more." },
+    { icon: "⏸️", title: "Pause ads from the bot", desc: "/pause [name] — asks confirmation, executes via Meta API. Logged in AdBrief." },
+    { icon: "📊", title: "Daily summary", desc: "/status — spend, CTR, winners and losers. Everything in one message." },
+    { icon: "🧠", title: "AI learns from every action", desc: "Paused creatives, dismissed alerts — all becomes context for the next response." },
+  ];
+
+  return (
+    <Section bg="dark">
+      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/>
+                <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#27AEE1", textTransform: "uppercase" as const }}>
+              {lang === "pt" ? "TELEGRAM ALERTS" : lang === "es" ? "TELEGRAM ALERTS" : "TELEGRAM ALERTS"}
+            </span>
+          </div>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 14px", color: "#fff", lineHeight: 1.15 }}>
+            {lang === "pt" ? "O AdBrief chega no seu celular." : lang === "es" ? "AdBrief llega a tu celular." : "AdBrief comes to your phone."}
+          </h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 480, lineHeight: 1.65 }}>
+            {lang === "pt" ? "Sem app extra. Sem notificação perdida. O bot do AdBrief no Telegram monitora sua conta 24h e age quando você manda." : lang === "es" ? "Sin app extra. Sin notificación perdida. El bot de AdBrief en Telegram monitorea tu cuenta 24h y actúa cuando lo indicas." : "No extra app. No missed notification. The AdBrief Telegram bot monitors your account 24/7 and acts on your command."}
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="how-grid">
+          {items.map((item, i) => (
+            <div key={i} style={{ padding: "28px 28px", borderRadius: 20, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 18, alignItems: "flex-start" }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(39,175,225,0.1)", border: "1px solid rgba(39,175,225,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
+              <div>
+                <p style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.02em" }}>{item.title}</p>
+                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.52)", lineHeight: 1.65, margin: 0 }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 32, textAlign: "center" }}>
+          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
+            {lang === "pt" ? "Conecta em 30 segundos. Disponível em todos os planos." : lang === "es" ? "Conecta en 30 segundos. Disponible en todos los planes." : "Connects in 30 seconds. Available on all plans."}
+          </p>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 // ─── Pricing ──────────────────────────────────────────────────────────────────
 function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const navigate = useNavigate();
@@ -1303,23 +1368,26 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
   return (
     <Section bg="subtle">
       <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
-        <div style={{ padding: "72px 48px", borderRadius: 32, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.12)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: 500, height: 300, background: "radial-gradient(ellipse, rgba(14,165,233,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ padding: "72px 48px", borderRadius: 32, background: "linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(6,182,212,0.03) 100%)", border: "1px solid rgba(14,165,233,0.18)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: -120, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(14,165,233,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: -80, right: -60, width: 300, height: 300, background: "radial-gradient(ellipse, rgba(52,211,153,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
           <div style={{ position: "relative" }}>
             <p style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", marginBottom: 20 }}>{t.final_label}</p>
-            <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4.5vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 16, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
-            <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", marginBottom: 36 }}>{t.final_sub}</p>
+            <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4.5vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 16, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
+            <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 40, lineHeight: 1.65 }}>{t.final_sub}</p>
             <button onClick={onCTA} style={{
-              fontFamily: F, fontSize: 16, fontWeight: 800, padding: "17px 40px", borderRadius: 14, background: "#fff", color: "#000", border: "none", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 10, boxShadow: "0 0 60px rgba(255,255,255,0.06)",
+              fontFamily: F, fontSize: 16, fontWeight: 800, padding: "18px 44px", borderRadius: 14,
+              background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 10,
+              boxShadow: "0 0 40px rgba(14,165,233,0.28), 0 4px 24px rgba(0,0,0,0.3)",
               transition: "transform 0.2s, box-shadow 0.2s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 80px rgba(255,255,255,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 60px rgba(255,255,255,0.06)"; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 60px rgba(14,165,233,0.45), 0 8px 32px rgba(0,0,0,0.4)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(14,165,233,0.28), 0 4px 24px rgba(0,0,0,0.3)"; }}
             >
               {t.final_cta} <ArrowRight size={17} />
             </button>
-            <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.15)", marginTop: 16 }}>{t.final_fine}</p>
+            <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.18)", marginTop: 18, lineHeight: 1.6 }}>{t.final_fine}</p>
           </div>
         </div>
       </div>
@@ -1445,6 +1513,7 @@ export default function IndexNew() {
       <HowItWorks t={t} />
       <ForWho onCTA={handleCTA} t={t} />
       <BeforeAfter t={t} />
+      <TelegramSection t={t} lang={lang} />
       <Pricing onCTA={handleCTA} t={t} lang={lang} />
       <FAQ t={t} />
       <FinalCTA onCTA={handleCTA} t={t} />
