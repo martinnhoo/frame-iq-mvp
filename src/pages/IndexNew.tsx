@@ -1,4 +1,4 @@
-// v8 — landing redesign 2026-03-23
+// v8.1 — force redeploy 2026-03-23
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
