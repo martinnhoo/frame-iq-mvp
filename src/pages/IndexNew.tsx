@@ -538,87 +538,447 @@ const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: strin
 const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines: string[] }>>> = {
   igaming: {
     pt: [
-      { q: "Meu ROAS caiu 40% essa semana. O que aconteceu?", lines: ["Identifiquei 3 causas na sua conta:","**Fadiga criativa** — Ad_042 roda há 22 dias. Hook rate: 31% → 11%.","**Frequência 4.8x** — BR-Homens-25-34 saturado. CPM +38%.","Fix: pause Ad_042, relance Ad_019 (ROAS 3.2x, parado 9 dias)."] },
-      { q: "Quais anúncios devo pausar agora?", lines: ["3 anúncios para cortar hoje:","**Ad_038** — CPM R$91, CTR 0,4%, zero depósitos em 7 dias.","**Ad_029** — hook rate 8%. 92% saem em 3 segundos.","Pausar libera R$620/dia → redirecionar para Ad_019 (ROAS 3.2x)."] },
-      { q: "Escreve 3 hooks para o meu melhor público de iGaming.", lines: ["Dos seus top converters (hook rate 34%):", '"Você apostou R$50 e perdeu? Veja o que os vencedores fazem diferente."', '"Esse app pagou R$847 pra mim essa semana só apostando no celular."', '"Por que 92% dos apostadores perdem? Essa estratégia muda tudo."'] },
+      {
+        q: "Qual campanha está trazendo jogadores que mais depositam?",
+        lines: [
+          "**Campanha_Slots_BR_03** lidera em qualidade de jogador:",
+          "Depósito médio R$187 — 2.3x acima da média da conta.",
+          "Retenção D7: 41% — jogadores voltam na segunda semana.",
+          "Escale de R$200 → R$600/dia. LTV projetado: +R$3.400/semana.",
+        ]
+      },
+      {
+        q: "Meu CPR está ótimo, mas os jogadores não estão reativando. O que fazer?",
+        lines: [
+          "Padrão claro nos dados: aquisição forte, ativação fraca.",
+          "**Segmento dormentes D14+** — 2.847 jogadores registrados, 0 depósito.",
+          "Campanha de reativação com bônus R$20 converteu 22% no último teste.",
+          "Lance remarketing hoje. Potencial: +R$56k de depósitos essa semana.",
+        ]
+      },
+      {
+        q: "Escreve hooks para jogadores que já conhecem nossa plataforma.",
+        lines: [
+          "Padrão dos seus top ads para público warm (hook rate 39%):",
+          "\"Seu bônus de R$50 expira amanhã. 1.200 jogadores já resgataram hoje.\"",
+          "\"Você jogou semana passada e saiu no lucro. Seus slots favoritos estão rodando.\"",
+          "\"Torneio exclusivo começa em 2 horas. Últimas 47 vagas abertas.\"",
+        ]
+      },
     ],
     es: [
-      { q: "Mi ROAS bajó 40% esta semana. ¿Qué pasó?", lines: ["Identifiqué 3 causas en tu cuenta:","**Fatiga creativa** — Ad_042 lleva 22 días. Hook rate: 31% → 11%.","**Frecuencia 4.8x** — MX-Hombres-25-34 saturado. CPM +38%.","Fix: pausa Ad_042, relanza Ad_019 (ROAS 3.2x, pausado 9 días)."] },
-      { q: "¿Cuáles anuncios pausar ahora mismo?", lines: ["3 anuncios para cortar hoy:","**Ad_038** — $18 CPM, 0.4% CTR, cero depósitos en 7 días.","**Ad_029** — 8% hook rate. 92% se van en 3 segundos.","Pausar libera $620/día → redirigir a Ad_019 (ROAS 3.2x)."] },
-      { q: "Escribe 3 hooks para mi mejor público de iGaming.", lines: ["De tus top converters (hook rate 34%):","\"¿Apostaste $50 y perdiste? Mira lo que hacen diferente los ganadores.\"","\"Esta app me pagó $847 esta semana solo apostando en el celular.\"","\"¿Por qué el 92% de apostadores pierde? Esta estrategia cambia todo.\""] },
+      {
+        q: "¿Qué campaña trae jugadores que más depositan?",
+        lines: [
+          "**Campaña_Slots_MX_03** lidera en calidad de jugador:",
+          "Depósito promedio $187 — 2.3x por encima del promedio de la cuenta.",
+          "Retención D7: 41% — los jugadores vuelven en la segunda semana.",
+          "Escala de $200 → $600/día. LTV proyectado: +$3,400/semana.",
+        ]
+      },
+      {
+        q: "Mi CPR está perfecto, pero los jugadores no regresan. ¿Qué hago?",
+        lines: [
+          "Patrón claro en los datos: adquisición fuerte, activación débil.",
+          "**Segmento durmientes D14+** — 2,847 jugadores registrados, 0 depósito.",
+          "Campaña de reactivación con bono $20 convirtió 22% en el último test.",
+          "Lanza remarketing hoy. Potencial: +$56k en depósitos esta semana.",
+        ]
+      },
+      {
+        q: "Escribe hooks para jugadores que ya conocen nuestra plataforma.",
+        lines: [
+          "Patrón de tus top ads para público warm (hook rate 39%):",
+          "\"Tu bono de $50 expira mañana. 1,200 jugadores ya lo canjearon hoy.\"",
+          "\"Jugaste la semana pasada y saliste ganando. Tus slots favoritos están activos.\"",
+          "\"Torneo exclusivo empieza en 2 horas. Últimos 47 lugares disponibles.\"",
+        ]
+      },
     ],
     en: [
-      { q: "My ROAS dropped 40% this week. What happened?", lines: ["Found 3 causes in your account:","**Creative fatigue** — Ad_042 running 22 days. Hook rate: 31% → 11%.","**Frequency 4.8x** — US-Men-25-34 saturated. CPM +38%.","Fix: pause Ad_042, relaunch Ad_019 (ROAS 3.2x, paused 9 days)."] },
-      { q: "Which ads should I pause right now?", lines: ["3 ads to cut today:","**Ad_038** — $18 CPM, 0.4% CTR, zero deposits in 7 days.","**Ad_029** — 8% hook rate. 92% leave in first 3 seconds.","Pausing frees $620/day → redirect to Ad_019 (ROAS 3.2x)."] },
-      { q: "Write 3 hooks for my best iGaming audience.", lines: ["From your top converters (hook rate 34%):","\"You bet $50 and lost? See what winners do differently.\"","\"This app paid me $847 last week just betting on my phone.\"","\"Why do 92% of bettors lose? This strategy changes everything.\""] },
+      {
+        q: "Which campaign brings players who deposit the most?",
+        lines: [
+          "**Campaign_Slots_US_03** leads on player quality:",
+          "Average deposit $187 — 2.3x above account average.",
+          "D7 retention: 41% — players return in the second week.",
+          "Scale from $200 → $600/day. Projected LTV: +$3,400/week.",
+        ]
+      },
+      {
+        q: "My CPR is great but players aren't reactivating. What should I do?",
+        lines: [
+          "Clear pattern in the data: strong acquisition, weak activation.",
+          "**Dormant D14+ segment** — 2,847 registered players, 0 deposits.",
+          "Reactivation campaign with $20 bonus converted 22% in last test.",
+          "Launch remarketing today. Potential: +$56k in deposits this week.",
+        ]
+      },
+      {
+        q: "Write hooks for players who already know our platform.",
+        lines: [
+          "Pattern from your top ads for warm audiences (hook rate 39%):",
+          "\"Your $50 bonus expires tomorrow. 1,200 players already claimed it today.\"",
+          "\"You played last week and walked away ahead. Your favorite slots are live.\"",
+          "\"Exclusive tournament starts in 2 hours. Last 47 spots available.\"",
+        ]
+      },
     ],
   },
   ecomm: {
     pt: [
-      { q: "Quais produtos estão com ROAS abaixo do esperado?", lines: ["Analisei 41 campanhas. 3 categorias críticas:","**Calçados femininos** — ROAS 0.8x, CPM R$48. Pausar hoje.","**Bolsas premium** — CTR 0.3%. Criativo muito genérico.","**Recomendação:** escale Eletrônicos (ROAS 4.1x, margem boa)."] },
-      { q: "Qual anúncio devo escalar agora?", lines: ["Ad_Eletro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Está com orçamento R$80/dia. Pode ir para R$300 sem risco.","Público BR-Homens-30-45 tem espaço — frequência ainda em 1.2x.","Recomendo +R$200/dia por 3 dias e monitore o CPM."] },
-      { q: "Escreve 3 hooks de e-commerce para o público BR.", lines: ["Baseado nos seus top converters:","\"Frete grátis hoje? Descubra as 3 marcas que ainda oferecem.\"","\"Todo mundo comprou isso essa semana — e ainda não chegou pra você.\"","\"R$150 de desconto só até meia-noite. 847 pessoas compraram hoje.\""] },
+      {
+        q: "Qual produto está com a melhor margem de retorno essa semana?",
+        lines: [
+          "**Categoria Eletrônicos** está em outro nível:",
+          "ROAS 4.1x, ticket médio R$320, taxa de recompra 18% em 30 dias.",
+          "Ad_Eletro_07 com frequência 1.2x — ainda tem muito espaço.",
+          "Suba orçamento de R$80 → R$280/dia. Projeção: +R$900/dia líquido.",
+        ]
+      },
+      {
+        q: "Tenho muitos cliques mas poucas conversões. O problema é o anúncio ou a página?",
+        lines: [
+          "O dado aponta claramente para a landing, não o anúncio.",
+          "**CTR médio 3.2%** — acima do benchmark. O criativo está funcionando.",
+          "**Conversão pós-clique: 0.8%** — benchmark do setor é 2.4%.",
+          "Teste: troque o hero da página por vídeo do produto. Projeção: +3x conversão.",
+        ]
+      },
+      {
+        q: "Escreve hooks de e-commerce baseados nos meus top criativos.",
+        lines: [
+          "Padrão dos seus best sellers (hook rate 36%, ROAS 3.8x+):",
+          "\"Chegou ontem. Já tem 2.400 avaliações 5 estrelas. Ainda tem estoque.\"",
+          "\"Esse produto vendeu 840 unidades hoje. Sua cor favorita ainda está disponível.\"",
+          "\"Frete grátis + entrega em 24h para sua cidade. Só até hoje à meia-noite.\"",
+        ]
+      },
     ],
     es: [
-      { q: "¿Qué productos tienen ROAS por debajo de lo esperado?", lines: ["Analicé 38 campañas. 3 categorías críticas:","**Calzado femenino** — ROAS 0.8x, CPM $48. Pausar hoy.","**Bolsos premium** — CTR 0.3%. Creativo muy genérico.","**Recomendación:** escala Electrónica (ROAS 4.1x, buen margen)."] },
-      { q: "¿Cuál anuncio escalar ahora?", lines: ["Ad_Electro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Presupuesto actual $80/día. Puede ir a $300 sin riesgo.","Público MX-Hombres-30-45 tiene espacio — frecuencia en 1.2x.","Recomiendo +$200/día por 3 días y monitorea el CPM."] },
-      { q: "Escribe 3 hooks de e-commerce para México.", lines: ["Basado en tus top converters:","\"¿Envío gratis hoy? Descubre las 3 marcas que aún lo ofrecen.\"","\"Todo México compró esto esta semana — y todavía no llegó a ti.\"","\"$150 de descuento solo hasta medianoche. 847 personas compraron hoy.\""] },
+      {
+        q: "¿Qué producto tiene el mejor margen de retorno esta semana?",
+        lines: [
+          "**Categoría Electrónica** está en otro nivel:",
+          "ROAS 4.1x, ticket promedio $320, tasa de recompra 18% en 30 días.",
+          "Ad_Electro_07 con frecuencia 1.2x — aún hay mucho espacio.",
+          "Sube presupuesto de $80 → $280/día. Proyección: +$900/día neto.",
+        ]
+      },
+      {
+        q: "Tengo muchos clics pero pocas conversiones. ¿Es el anuncio o la página?",
+        lines: [
+          "El dato apunta claramente a la landing, no al anuncio.",
+          "**CTR promedio 3.2%** — por encima del benchmark. El creativo funciona.",
+          "**Conversión post-clic: 0.8%** — benchmark del sector es 2.4%.",
+          "Test: cambia el hero de la página por video del producto. Proyección: +3x conversión.",
+        ]
+      },
+      {
+        q: "Escribe hooks de e-commerce basados en mis mejores creativos.",
+        lines: [
+          "Patrón de tus best sellers (hook rate 36%, ROAS 3.8x+):",
+          "\"Llegó ayer. Ya tiene 2,400 reseñas de 5 estrellas. Aún hay stock.\"",
+          "\"Este producto vendió 840 unidades hoy. Tu color favorito sigue disponible.\"",
+          "\"Envío gratis + entrega en 24h a tu ciudad. Solo hasta hoy a medianoche.\"",
+        ]
+      },
     ],
     en: [
-      { q: "Which products have ROAS below target?", lines: ["Analyzed 29 campaigns. 3 critical categories:","**Women's shoes** — ROAS 0.8x, $48 CPM. Pause today.","**Premium bags** — CTR 0.3%. Creative too generic.","**Recommendation:** scale Electronics (ROAS 4.1x, good margin)."] },
-      { q: "Which ad should I scale right now?", lines: ["Ad_Electro_07 — ROAS 4.1x, CTR 2.8%, hook rate 38%.","Current budget $80/day. Can go to $300 safely.","US-Men-30-45 has room — frequency still at 1.2x.","Recommend +$200/day for 3 days and monitor CPM."] },
-      { q: "Write 3 e-commerce hooks for the US market.", lines: ["From your top converters:","\"Free shipping today? Discover the 3 brands still offering it.\"","\"Everyone bought this week — and it hasn't reached you yet.\"","\"$150 off until midnight only. 847 people bought today.\""] },
+      {
+        q: "Which product has the best return margin this week?",
+        lines: [
+          "**Electronics category** is in a league of its own:",
+          "ROAS 4.1x, average order $320, 18% repurchase rate in 30 days.",
+          "Ad_Electro_07 at 1.2x frequency — still plenty of room.",
+          "Scale budget from $80 → $280/day. Projection: +$900/day net.",
+        ]
+      },
+      {
+        q: "I have lots of clicks but few conversions. Is it the ad or the page?",
+        lines: [
+          "The data clearly points to the landing page, not the ad.",
+          "**Average CTR 3.2%** — above benchmark. The creative is working.",
+          "**Post-click conversion: 0.8%** — sector benchmark is 2.4%.",
+          "Test: swap page hero for product video. Projection: +3x conversion rate.",
+        ]
+      },
+      {
+        q: "Write e-commerce hooks based on my top creatives.",
+        lines: [
+          "Pattern from your best sellers (hook rate 36%, ROAS 3.8x+):",
+          "\"Arrived yesterday. Already has 2,400 5-star reviews. Still in stock.\"",
+          "\"This product sold 840 units today. Your favorite color is still available.\"",
+          "\"Free shipping + 24h delivery to your city. Only until midnight tonight.\"",
+        ]
+      },
     ],
   },
   fitness: {
     pt: [
-      { q: "Qual meu melhor criativo essa semana?", lines: ["Creative_019 está dominando sua conta:","**Hook rate 38%** — 2.4x acima da média. Prende a atenção nos primeiros 3s.","**ROAS 3.8x** com frequência 1.3x — ainda tem muito espaço pra escalar.","Recomendação: suba de R$120 → R$400/dia. Projeção: +R$1.080/dia de retorno."] },
-      { q: "Quanto posso escalar essa semana?", lines: ["Analisei sua conta. Você tem headroom claro:","**Creative_019** — frequência 1.3x, ROAS 3.8x. Pode ir para R$400/dia (+230%).","**BR-Mulheres-25-34** — saturação baixa, CPM estável. Público com espaço.","Projeção conservadora: +R$2.200 de receita extra essa semana sem risco."] },
-      { q: "Escreve hooks dos meus criativos que mais convertem.", lines: ["Baseado no padrão dos seus top performers (hook rate 34-38%):","\"Seu corpo mudou em 30 dias. A maioria desiste no 3º. Você não vai.\"","\"Essa técnica de treino aumentou a conversão de leads em 3x para academias BR.\"","\"Por que 9 em cada 10 pessoas pagam pela academia e não vão? Esse vídeo explica.\""] },
+      {
+        q: "Qual meu melhor criativo essa semana?",
+        lines: [
+          "**Creative_019** está dominando sua conta:",
+          "Hook rate 38% — 2.4x acima da média. Prende nos primeiros 3s.",
+          "ROAS 3.8x com frequência 1.3x — ainda tem muito espaço pra escalar.",
+          "Suba de R$120 → R$400/dia. Projeção: +R$1.080/dia de retorno.",
+        ]
+      },
+      {
+        q: "Qual público está respondendo melhor aos meus criativos de antes e depois?",
+        lines: [
+          "**BR-Mulheres-28-38** é seu público ouro para before/after:",
+          "CTR 4.1%, taxa de lead 8.3% — 3x acima da média da conta.",
+          "CPA R$18 — o mais baixo de todos os segmentos ativos.",
+          "Ainda em frequência 1.1x. Escale agressivamente: R$50 → R$220/dia.",
+        ]
+      },
+      {
+        q: "Escreve hooks para academia baseados nos meus criativos que mais convertem.",
+        lines: [
+          "Padrão dos seus top performers (hook rate 34-38%, ROAS 3.8x+):",
+          "\"Seu corpo mudou em 30 dias. A maioria desiste no 3º. Você não vai.\"",
+          "\"Essa técnica aumentou conversão de leads em 3x para academias BR.\"",
+          "\"Por que 9 em cada 10 pagam a academia e não vão? Esse vídeo explica.\"",
+        ]
+      },
     ],
     es: [
-      { q: "¿Cuál es mi mejor creativo esta semana?", lines: ["Creative_019 está dominando tu cuenta:","**Hook rate 38%** — 2.4x por encima del promedio. Retiene atención en los primeros 3s.","**ROAS 3.8x** con frecuencia 1.3x — todavía hay espacio para escalar.","Recomendación: sube de $120 → $400/día. Proyección: +$1,080/día de retorno."] },
-      { q: "¿Cuánto puedo escalar esta semana?", lines: ["Analicé tu cuenta. Tienes headroom claro:","**Creative_019** — frecuencia 1.3x, ROAS 3.8x. Puede ir a $400/día (+230%).","**MX-Mujeres-25-34** — saturación baja, CPM estable. Público con espacio.","Proyección conservadora: +$2,200 de ingresos extra esta semana sin riesgo."] },
-      { q: "Escribe hooks de mis creativos que más convierten.", lines: ["Basado en el patrón de tus top performers (hook rate 34-38%):","\"Tu cuerpo cambió en 30 días. La mayoría abandona en el 3ro. Tú no.\"","\"Esta técnica de entrenamiento aumentó la conversión de leads 3x en gimnasios MX.\"","\"¿Por qué 9 de cada 10 personas pagan el gym y no van? Este video explica.\""] },
+      {
+        q: "¿Cuál es mi mejor creativo esta semana?",
+        lines: [
+          "**Creative_019** está dominando tu cuenta:",
+          "Hook rate 38% — 2.4x por encima del promedio. Retiene en los primeros 3s.",
+          "ROAS 3.8x con frecuencia 1.3x — todavía hay espacio para escalar.",
+          "Sube de $120 → $400/día. Proyección: +$1,080/día de retorno.",
+        ]
+      },
+      {
+        q: "¿Qué público responde mejor a mis creativos de antes y después?",
+        lines: [
+          "**MX-Mujeres-28-38** es tu público oro para before/after:",
+          "CTR 4.1%, tasa de lead 8.3% — 3x por encima del promedio de la cuenta.",
+          "CPA $18 — el más bajo de todos los segmentos activos.",
+          "Aún en frecuencia 1.1x. Escala agresivamente: $50 → $220/día.",
+        ]
+      },
+      {
+        q: "Escribe hooks para gym basados en mis creativos que más convierten.",
+        lines: [
+          "Patrón de tus top performers (hook rate 34-38%, ROAS 3.8x+):",
+          "\"Tu cuerpo cambió en 30 días. La mayoría abandona el 3ro. Tú no.\"",
+          "\"Esta técnica aumentó conversión de leads 3x en gimnasios MX.\"",
+          "\"¿Por qué 9 de cada 10 pagan el gym y no van? Este video explica.\"",
+        ]
+      },
     ],
     en: [
-      { q: "What's my best creative this week?", lines: ["Creative_019 is dominating your account:","**Hook rate 38%** — 2.4x above average. Holds attention in the first 3 seconds.","**ROAS 3.8x** at 1.3x frequency — still plenty of room to scale.","Recommendation: raise from $120 → $400/day. Projection: +$1,080/day in returns."] },
-      { q: "How much can I scale this week?", lines: ["Analyzed your account. Clear headroom available:","**Creative_019** — 1.3x frequency, 3.8x ROAS. Can go to $400/day (+230%).","**US-Women-25-34** — low saturation, stable CPM. Audience has room to grow.","Conservative projection: +$2,200 extra revenue this week with no risk."] },
-      { q: "Write hooks from my best-converting creatives.", lines: ["Based on your top performers' patterns (hook rate 34-38%):","\"Your body changed in 30 days. Most people quit on day 3. You won't.\"","\"This training method increased gym lead conversion by 3x across the US.\"","\"Why do 9 out of 10 people pay for a gym and never go? This video explains.\""] },
+      {
+        q: "What's my best creative this week?",
+        lines: [
+          "**Creative_019** is dominating your account:",
+          "Hook rate 38% — 2.4x above average. Holds attention in the first 3 seconds.",
+          "ROAS 3.8x at 1.3x frequency — still plenty of room to scale.",
+          "Raise from $120 → $400/day. Projection: +$1,080/day in returns.",
+        ]
+      },
+      {
+        q: "Which audience responds best to my before & after creatives?",
+        lines: [
+          "**US-Women-28-38** is your gold audience for before/after content:",
+          "CTR 4.1%, lead rate 8.3% — 3x above account average.",
+          "CPA $18 — lowest of all active segments.",
+          "Still at 1.1x frequency. Scale aggressively: $50 → $220/day.",
+        ]
+      },
+      {
+        q: "Write gym hooks based on my best-converting creatives.",
+        lines: [
+          "Pattern from your top performers (hook rate 34-38%, ROAS 3.8x+):",
+          "\"Your body changed in 30 days. Most people quit on day 3. You won't.\"",
+          "\"This method increased gym lead conversion by 3x across the US.\"",
+          "\"Why do 9 out of 10 people pay for a gym and never go? This video explains.\"",
+        ]
+      },
     ],
   },
   finance: {
     pt: [
-      { q: "Meu CPL está 3x acima do esperado. Por quê?", lines: ["Analisei 14 campanhas. Problema claro:","**Landing page** — taxa de clique pós-lead caiu 68% vs semana passada.","**Público frio** — BR-Todos-18-65 gastando R$340/dia sem retorno.","Recomendação: pause público amplo, escale BR-Homens-35-55 (CPL R$12)."] },
-      { q: "Qual anúncio de finanças está performando melhor?", lines: ["Ad_Invest_03 está destruindo tudo:","ROAS 5.1x, CPL R$9.40, hook rate 41% — muito acima da conta.","Público: BR-Homens-35-55, renda alta. Frequência 1.8x — tem espaço.","Escale para R$500/dia. Potencial de R$2.500 de retorno/dia."] },
-      { q: "Escreve 3 hooks de finanças que convertem.", lines: ["Baseado nos seus melhores anúncios:","\"O Banco Central mudou as regras e 94% dos brasileiros não sabem ainda.\"","\"Esse tipo de investimento rendeu 180% em 2024 — e você nunca ouviu falar.\"","\"Quanto você perdeu esse mês por não saber isso sobre o CDI?\""] },
+      {
+        q: "Qual anúncio está trazendo leads de maior renda?",
+        lines: [
+          "**Ad_Invest_03** lidera em qualidade de lead:",
+          "CPL R$9.40, mas renda declarada média R$12.800/mês — 2.1x acima dos outros.",
+          "Taxa de qualificação: 68% — leads chegam sabendo o que querem.",
+          "Escale para R$500/dia. Potencial de R$2.500 de retorno diário.",
+        ]
+      },
+      {
+        q: "Meu custo por lead caiu, mas a taxa de conversão em cliente também. Por quê?",
+        lines: [
+          "Clássico trade-off de volume vs qualidade — seus dados confirmam.",
+          "**Campanha ampliada BR-Todos-18-65** trouxe CPL R$8, mas conv. 2.1% (era 9%).",
+          "**Campanha BR-Homens-35-55** mantém CPL R$18, conv. 14% — 6.7x melhor.",
+          "Retorne para segmento qualificado. Receita por lead: R$140 vs R$22.",
+        ]
+      },
+      {
+        q: "Escreve hooks de finanças que atraem investidores sérios.",
+        lines: [
+          "Padrão dos seus top ads para público de alta renda (hook rate 41%):",
+          "\"Seu dinheiro rendeu 11% ao ano na poupança. Esse ativo rendeu 180% em 2024.\"",
+          "\"O Banco Central mudou as regras do CDI. 94% dos brasileiros ainda não sabem.\"",
+          "\"Gestores de patrimônio cobram R$8k/mês para fazer isso. Você pode fazer sozinho.\"",
+        ]
+      },
     ],
     es: [
-      { q: "Mi CPL está 3x por encima del esperado. ¿Por qué?", lines: ["Analicé 11 campañas. Problema claro:","**Landing page** — tasa de conversión post-lead cayó 68%.","**Público frío** — MX-Todos-18-65 gastando $340/día sin retorno.","Recomendación: pausa público amplio, escala MX-Hombres-35-55 (CPL $12)."] },
-      { q: "¿Qué anuncio de finanzas está rindiendo mejor?", lines: ["Ad_Invest_03 está dominando:","ROAS 5.1x, CPL $9.40, hook rate 41% — muy por encima de la cuenta.","Público: MX-Hombres-35-55, ingreso alto. Frecuencia 1.8x — hay espacio.","Escala a $500/día. Potencial de $2,500 de retorno/día."] },
-      { q: "Escribe 3 hooks de finanzas que conviertan.", lines: ["Basado en tus mejores anuncios:","\"El Banco de México cambió las reglas y el 94% de los mexicanos no lo sabe.\"","\"Este tipo de inversión rindió 180% en 2024 — y nunca lo escuchaste.\"","\"¿Cuánto perdiste este mes por no saber esto sobre los CETES?\""] },
+      {
+        q: "¿Qué anuncio trae leads de mayor ingreso?",
+        lines: [
+          "**Ad_Invest_03** lidera en calidad de lead:",
+          "CPL $9.40, pero ingreso declarado promedio $12,800/mes — 2.1x por encima.",
+          "Tasa de calificación: 68% — los leads llegan sabiendo lo que quieren.",
+          "Escala a $500/día. Potencial de $2,500 de retorno diario.",
+        ]
+      },
+      {
+        q: "Mi costo por lead bajó, pero la tasa de conversión también. ¿Por qué?",
+        lines: [
+          "Clásico trade-off de volumen vs calidad — tus datos lo confirman.",
+          "**Campaña amplia MX-Todos-18-65** trajo CPL $8, pero conv. 2.1% (era 9%).",
+          "**Campaña MX-Hombres-35-55** mantiene CPL $18, conv. 14% — 6.7x mejor.",
+          "Regresa al segmento calificado. Ingresos por lead: $140 vs $22.",
+        ]
+      },
+      {
+        q: "Escribe hooks de finanzas que atraigan inversores serios.",
+        lines: [
+          "Patrón de tus top ads para público de alto ingreso (hook rate 41%):",
+          "\"Tu dinero rindió 11% anual en el banco. Este activo rindió 180% en 2024.\"",
+          "\"El Banco de México cambió las reglas de los CETES. El 94% no lo sabe aún.\"",
+          "\"Gestores de patrimonio cobran $8k/mes por hacer esto. Tú puedes hacerlo solo.\"",
+        ]
+      },
     ],
     en: [
-      { q: "My CPL is 3x above target. Why?", lines: ["Analyzed 19 campaigns. Clear problem:","**Landing page** — post-lead click rate dropped 68% vs last week.","**Cold audience** — US-All-18-65 spending $340/day with no return.","Recommendation: pause broad, scale US-Men-35-55 (CPL $12)."] },
-      { q: "Which finance ad is performing best?", lines: ["Ad_Invest_03 is dominating:","ROAS 5.1x, CPL $9.40, hook rate 41% — far above account average.","Audience: US-Men-35-55, high income. Frequency 1.8x — room to grow.","Scale to $500/day. Potential $2,500 return/day."] },
-      { q: "Write 3 finance hooks that convert.", lines: ["Based on your top ads:","\"The Fed changed the rules and 94% of Americans don't know yet.\"","\"This investment type returned 180% in 2024 — you've never heard of it.\"","\"How much did you lose this month by not knowing this about yield?\""] },
+      {
+        q: "Which ad is bringing in the highest-income leads?",
+        lines: [
+          "**Ad_Invest_03** leads on lead quality:",
+          "CPL $9.40, but average declared income $12,800/mo — 2.1x above others.",
+          "Qualification rate: 68% — leads arrive knowing what they want.",
+          "Scale to $500/day. Potential $2,500 return per day.",
+        ]
+      },
+      {
+        q: "My cost per lead dropped but so did my conversion rate. Why?",
+        lines: [
+          "Classic volume vs quality trade-off — your data confirms it.",
+          "**Broad campaign US-All-18-65** brought CPL $8, but conv. 2.1% (was 9%).",
+          "**Campaign US-Men-35-55** holds CPL $18, conv. 14% — 6.7x better.",
+          "Return to qualified segment. Revenue per lead: $140 vs $22.",
+        ]
+      },
+      {
+        q: "Write finance hooks that attract serious investors.",
+        lines: [
+          "Pattern from your top ads for high-income audiences (hook rate 41%):",
+          "\"Your money earned 11% a year in savings. This asset returned 180% in 2024.\"",
+          "\"The Fed changed the yield rules. 94% of Americans still haven't heard.\"",
+          "\"Wealth managers charge $8k/month to do this. You can do it yourself.\"",
+        ]
+      },
     ],
   },
   saas: {
     pt: [
-      { q: "Meu CAC de SaaS está muito alto. O que fazer?", lines: ["Analisei 9 campanhas. Diagnóstico:","**Trial → paid** — conversão de 2.1% (benchmark: 8%). Problema no onboarding.","**Anúncios** — 3 campanhas com CPL R$180+. Pausar imediatamente.","Foque em remarketing de trial (CPL R$23, conversão 14x maior)."] },
-      { q: "Qual campanha de SaaS devo escalar?", lines: ["Campanha_Remarketing_Trial está pronta pra escalar:","CPL R$23, trial-to-paid 11%, ROAS 6.8x — melhor da conta.","Orçamento atual R$40/dia. Pode ir para R$200 sem saturar.","Público: visitou pricing page + usou feature X. Expanda lookalike 1%."] },
-      { q: "Escreve 3 hooks de SaaS para gestores.", lines: ["Dos seus top ads (hook rate 38%):","\"Seu time gasta 3 horas por dia em tarefas que essa IA faz em 4 minutos.\"","\"Testei 12 ferramentas de gestão. Só uma reduziu meu CAC em 60%.\"","\"Por que empresas como a sua ainda pagam R$8k/mês por algo que custa R$49?\""] },
+      {
+        q: "Qual campanha está trazendo usuários que mais ativam o trial?",
+        lines: [
+          "**Campanha_Remarketing_Trial** lidera em ativação:",
+          "Trial-to-paid 11% — benchmark do setor é 4%. 2.75x acima.",
+          "CPL R$23 com ROAS 6.8x — melhor ratio da conta.",
+          "Suba de R$40 → R$200/dia. Projeção: +12 pagantes por semana.",
+        ]
+      },
+      {
+        q: "Meu trial está cheio, mas poucos convertem em pago. Onde está o problema?",
+        lines: [
+          "Os dados apontam para o momento de upgrade, não o onboarding.",
+          "**Usuários que usam feature X** convertem 14x mais que os demais.",
+          "**Usuários que não usam** — 89% cancelam no D7 sem tocar no produto.",
+          "Lance campanha in-app para ativação de feature X. Projeção: +34% paid.",
+        ]
+      },
+      {
+        q: "Escreve hooks de SaaS para gestores de tráfego.",
+        lines: [
+          "Padrão dos seus top ads para ICP (hook rate 38%, CPL R$23):",
+          "\"Seu time gasta 3 horas por dia em algo que essa IA faz em 4 minutos.\"",
+          "\"Testei 12 ferramentas de análise. Só uma conecta direto na conta de anúncios.\"",
+          "\"Por que gestores que escalam R$500k/mês usam IA diferente de você?\"",
+        ]
+      },
     ],
     es: [
-      { q: "Mi CAC de SaaS está muy alto. ¿Qué hacer?", lines: ["Analicé 8 campañas. Diagnóstico:","**Trial → paid** — conversión de 2.1% (benchmark: 8%). Problema en el onboarding.","**Anuncios** — 3 campañas con CPL $180+. Pausar inmediatamente.","Enfócate en remarketing de trial (CPL $23, conversión 14x mayor)."] },
-      { q: "¿Qué campaña de SaaS escalar?", lines: ["Campaña_Remarketing_Trial lista para escalar:","CPL $23, trial-to-paid 11%, ROAS 6.8x — mejor de la cuenta.","Presupuesto actual $40/día. Puede ir a $200 sin saturar.","Público: visitó pricing page + usó feature X. Expande lookalike 1%."] },
-      { q: "Escribe 3 hooks de SaaS para gerentes.", lines: ["De tus top ads (hook rate 38%):","\"Tu equipo gasta 3 horas al día en tareas que esta IA hace en 4 minutos.\"","\"Probé 12 herramientas de gestión. Solo una redujo mi CAC un 60%.\"","\"¿Por qué empresas como la tuya pagan $8k/mes por algo que cuesta $49?\""] },
+      {
+        q: "¿Qué campaña trae usuarios que más activan el trial?",
+        lines: [
+          "**Campaña_Remarketing_Trial** lidera en activación:",
+          "Trial-to-paid 11% — benchmark del sector es 4%. 2.75x por encima.",
+          "CPL $23 con ROAS 6.8x — mejor ratio de la cuenta.",
+          "Sube de $40 → $200/día. Proyección: +12 pagantes por semana.",
+        ]
+      },
+      {
+        q: "Mi trial está lleno, pero pocos convierten a pago. ¿Dónde está el problema?",
+        lines: [
+          "Los datos apuntan al momento de upgrade, no al onboarding.",
+          "**Usuarios que usan feature X** convierten 14x más que los demás.",
+          "**Usuarios que no la usan** — 89% cancelan en D7 sin tocar el producto.",
+          "Lanza campaña in-app para activación de feature X. Proyección: +34% pagos.",
+        ]
+      },
+      {
+        q: "Escribe hooks de SaaS para gestores de tráfico.",
+        lines: [
+          "Patrón de tus top ads para ICP (hook rate 38%, CPL $23):",
+          "\"Tu equipo gasta 3 horas al día en algo que esta IA hace en 4 minutos.\"",
+          "\"Probé 12 herramientas de análisis. Solo una conecta directo a la cuenta de anuncios.\"",
+          "\"¿Por qué gestores que escalan $500k/mes usan IA diferente a la tuya?\"",
+        ]
+      },
     ],
     en: [
-      { q: "My SaaS CAC is way too high. What should I do?", lines: ["Analyzed 12 campaigns. Diagnosis:","**Trial → paid** — 2.1% conversion (benchmark: 8%). Onboarding issue.","**Ads** — 3 campaigns with CPL $180+. Pause immediately.","Focus on trial remarketing (CPL $23, 14x higher conversion)."] },
-      { q: "Which SaaS campaign should I scale?", lines: ["Campaign_Remarketing_Trial is ready to scale:","CPL $23, trial-to-paid 11%, ROAS 6.8x — best in account.","Current budget $40/day. Can go to $200 without saturating.","Audience: visited pricing page + used feature X. Expand lookalike 1%."] },
-      { q: "Write 3 SaaS hooks for managers.", lines: ["From your top ads (hook rate 38%):","\"Your team spends 3 hours a day on tasks this AI handles in 4 minutes.\"","\"I tested 12 management tools. Only one reduced my CAC by 60%.\"","\"Why do companies like yours still pay $8k/month for something that costs $49?\""] },
+      {
+        q: "Which campaign brings users who activate their trial the most?",
+        lines: [
+          "**Campaign_Remarketing_Trial** leads on activation:",
+          "Trial-to-paid 11% — sector benchmark is 4%. 2.75x above.",
+          "CPL $23 with ROAS 6.8x — best ratio in the account.",
+          "Scale from $40 → $200/day. Projection: +12 paying users per week.",
+        ]
+      },
+      {
+        q: "My trial is full but few convert to paid. Where's the problem?",
+        lines: [
+          "The data points to the upgrade moment, not onboarding.",
+          "**Users who activate feature X** convert 14x more than others.",
+          "**Users who don't** — 89% churn on D7 without touching the product.",
+          "Launch in-app campaign for feature X activation. Projection: +34% paid.",
+        ]
+      },
+      {
+        q: "Write SaaS hooks for performance marketers.",
+        lines: [
+          "Pattern from your top ads for ICP (hook rate 38%, CPL $23):",
+          "\"Your team spends 3 hours a day on something this AI handles in 4 minutes.\"",
+          "\"I tested 12 analytics tools. Only one connects directly to the ad account.\"",
+          "\"Why do media buyers scaling $500k/month use a different AI than you?\"",
+        ]
+      },
     ],
   },
 };
