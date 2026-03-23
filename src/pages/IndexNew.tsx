@@ -572,19 +572,19 @@ const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines:
   },
   fitness: {
     pt: [
-      { q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?", lines: ["Identifiquei 3 causas na sua conta:","**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate: 31% → 11%.","**Frequência 4.8x** — BR-Mulheres-25-34 saturado. CPM +38%.","Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x, parado 9 dias)."] },
-      { q: "Quais anúncios devo pausar agora?", lines: ["3 anúncios para cortar hoje:","**Creative_038** — CPM R$91, CTR 0,4%, zero conversões em 7 dias.","**Creative_029** — hook rate 8%. 92% saem em 3 segundos.","Pausar libera R$620/dia → redirecionar para Creative_019 (ROAS 3.2x)."] },
-      { q: "Escreve 3 hooks dos meus melhores criativos de fitness.", lines: ["Dos seus top converters (hook rate 34%, ROAS 3.1x+):","\"Você paga R$90/clique e não sabe por quê. Seus dados têm a resposta.\"","\"3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x agora.\"","\"Seu melhor criativo está parado há 9 dias. O concorrente está escalando.\""] },
+      { q: "Qual meu melhor criativo essa semana?", lines: ["Creative_019 está dominando sua conta:","**Hook rate 38%** — 2.4x acima da média. Prende a atenção nos primeiros 3s.","**ROAS 3.8x** com frequência 1.3x — ainda tem muito espaço pra escalar.","Recomendação: suba de R$120 → R$400/dia. Projeção: +R$1.080/dia de retorno."] },
+      { q: "Quanto posso escalar essa semana?", lines: ["Analisei sua conta. Você tem headroom claro:","**Creative_019** — frequência 1.3x, ROAS 3.8x. Pode ir para R$400/dia (+230%).","**BR-Mulheres-25-34** — saturação baixa, CPM estável. Público com espaço.","Projeção conservadora: +R$2.200 de receita extra essa semana sem risco."] },
+      { q: "Escreve hooks dos meus criativos que mais convertem.", lines: ["Baseado no padrão dos seus top performers (hook rate 34-38%):","\"Seu corpo mudou em 30 dias. A maioria desiste no 3º. Você não vai.\"","\"Essa técnica de treino aumentou a conversão de leads em 3x para academias BR.\"","\"Por que 9 em cada 10 pessoas pagam pela academia e não vão? Esse vídeo explica.\""] },
     ],
     es: [
-      { q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?", lines: ["Identifiqué 3 causas en tu cuenta:","**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate: 31% → 11%.","**Frecuencia 4.8x** — MX-Mujeres-25-34 saturado. CPM +38%.","Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x, pausado 9 días)."] },
-      { q: "¿Cuáles anuncios pausar ahora mismo?", lines: ["3 anuncios para cortar hoy:","**Creative_038** — $18 CPM, 0.4% CTR, cero conversiones en 7 días.","**Creative_029** — 8% hook rate. 92% se van en 3 segundos.","Pausar libera $620/día → redirigir a Creative_019 (ROAS 3.2x)."] },
-      { q: "Escribe 3 hooks de fitness para México.", lines: ["De tus top converters (hook rate 34%):","\"Pagás $90/clic y no sabés por qué. Tus datos tienen la respuesta.\"","\"3 de tus 4 anuncios top gastan con ROAS bajo 1x ahora.\"","\"Tu mejor creativo lleva 9 días pausado. Un competidor lo está escalando.\""] },
+      { q: "¿Cuál es mi mejor creativo esta semana?", lines: ["Creative_019 está dominando tu cuenta:","**Hook rate 38%** — 2.4x por encima del promedio. Retiene atención en los primeros 3s.","**ROAS 3.8x** con frecuencia 1.3x — todavía hay espacio para escalar.","Recomendación: sube de $120 → $400/día. Proyección: +$1,080/día de retorno."] },
+      { q: "¿Cuánto puedo escalar esta semana?", lines: ["Analicé tu cuenta. Tienes headroom claro:","**Creative_019** — frecuencia 1.3x, ROAS 3.8x. Puede ir a $400/día (+230%).","**MX-Mujeres-25-34** — saturación baja, CPM estable. Público con espacio.","Proyección conservadora: +$2,200 de ingresos extra esta semana sin riesgo."] },
+      { q: "Escribe hooks de mis creativos que más convierten.", lines: ["Basado en el patrón de tus top performers (hook rate 34-38%):","\"Tu cuerpo cambió en 30 días. La mayoría abandona en el 3ro. Tú no.\"","\"Esta técnica de entrenamiento aumentó la conversión de leads 3x en gimnasios MX.\"","\"¿Por qué 9 de cada 10 personas pagan el gym y no van? Este video explica.\""] },
     ],
     en: [
-      { q: "My ROAS dropped 40% this week. What's happening?", lines: ["Found 3 causes in your account:","**Creative fatigue** — Creative_042 running 22 days. Hook rate: 31% → 11%.","**Frequency 4.8x** — US-Women-25-34 saturated. CPM +38%.","Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x, paused 9 days)."] },
-      { q: "Which ads should I pause right now?", lines: ["3 ads to cut today:","**Creative_038** — $18 CPM, 0.4% CTR, zero conversions in 7 days.","**Creative_029** — 8% hook rate. 92% leave in first 3 seconds.","Pausing frees $620/day → redirect to Creative_019 (ROAS 3.2x)."] },
-      { q: "Write 3 hooks from my best fitness creatives.", lines: ["From your top converters (hook rate 34%, ROAS 3.1x+):","\"You're paying $90/click and don't know why. Your data has the answer.\"","\"3 of your 4 top-spend ads have ROAS below 1x right now.\"","\"Your best creative is paused 9 days. A competitor is scaling it.\""] },
+      { q: "What's my best creative this week?", lines: ["Creative_019 is dominating your account:","**Hook rate 38%** — 2.4x above average. Holds attention in the first 3 seconds.","**ROAS 3.8x** at 1.3x frequency — still plenty of room to scale.","Recommendation: raise from $120 → $400/day. Projection: +$1,080/day in returns."] },
+      { q: "How much can I scale this week?", lines: ["Analyzed your account. Clear headroom available:","**Creative_019** — 1.3x frequency, 3.8x ROAS. Can go to $400/day (+230%).","**US-Women-25-34** — low saturation, stable CPM. Audience has room to grow.","Conservative projection: +$2,200 extra revenue this week with no risk."] },
+      { q: "Write hooks from my best-converting creatives.", lines: ["Based on your top performers' patterns (hook rate 34-38%):","\"Your body changed in 30 days. Most people quit on day 3. You won't.\"","\"This training method increased gym lead conversion by 3x across the US.\"","\"Why do 9 out of 10 people pay for a gym and never go? This video explains.\""] },
     ],
   },
   finance: {
@@ -1202,9 +1202,9 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   {lang === 'pt' ? 'ESTA SEMANA' : lang === 'es' ? 'ESTA SEMANA' : 'THIS WEEK'}
                 </p>
                 {[
-                  { label: 'ROAS', value: '2.1x', trend: '↓ 40%', bad: true },
-                  { label: 'CPM', value: 'R$91', trend: '↑ 38%', bad: true },
-                  { label: 'Hook rate', value: '11%', trend: '↓ 20pt', bad: true },
+                  { label: 'ROAS', value: '3.8x', trend: '↑ 22%', bad: false },
+                  { label: 'CTR', value: '3.2%', trend: '↑ 0.8pt', bad: false },
+                  { label: 'Hook rate', value: '38%', trend: '↑ 12pt', bad: false },
                 ].map((kpi, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 7, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 4 }}>
                     <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{kpi.label}</span>
@@ -1240,30 +1240,30 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '24px 0 16px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
                 <div style={{ maxWidth: 680, margin: '0 auto', width: '100%', padding: '0 28px', display: 'flex', flexDirection: 'column' as const, gap: 20 }}>
 
-                  {/* Greeting — starts with active diagnosis */}
+                  {/* Greeting — positive insight, winner found */}
                   <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                     <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
                       <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-                      {/* Alert card — ROAS problem */}
-                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                      {/* Win card */}
+                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)' }}>
                         <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, margin: 0 }}>
                           {lang === 'pt'
-                            ? <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS caiu 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> roda há 22 dias. Hook rate: 31% → 11%.</>
+                            ? <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 está convertendo 2.4x mais</span> que a semana passada. Hook rate: 38%, ROAS 3.8x.</>
                             : lang === 'es'
-                            ? <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS cayó 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> lleva 22 días. Hook rate: 31% → 11%.</>
-                            : <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS dropped 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> running 22 days. Hook rate: 31% → 11%.</>}
+                            ? <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 convierte 2.4x más</span> que la semana pasada. Hook rate: 38%, ROAS 3.8x.</>
+                            : <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 is converting 2.4x more</span> than last week. Hook rate: 38%, ROAS 3.8x.</>}
                         </p>
                       </div>
-                      {/* Fix card */}
+                      {/* Opportunity card */}
                       <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.15)' }}>
                         <p style={{ fontFamily: F, fontSize: 13, color: '#38bdf8', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                           {lang === 'pt'
-                            ? <>→ Pause Creative_042. Relance <strong>Creative_019</strong> (ROAS 3.2x, parado 9 dias). Libera R$620/dia.</>
+                            ? <>→ Frequência 1.3x — tem espaço. Escale de <strong>R$120 → R$400/dia</strong> sem risco de saturação.</>
                             : lang === 'es'
-                            ? <>→ Pausa Creative_042. Relanza <strong>Creative_019</strong> (ROAS 3.2x, pausado 9 días). Libera $620/día.</>
-                            : <>→ Pause Creative_042. Relaunch <strong>Creative_019</strong> (ROAS 3.2x, paused 9 days). Frees $620/day.</>}
+                            ? <>→ Frecuencia 1.3x — hay espacio. Escala de <strong>$120 → $400/día</strong> sin riesgo de saturación.</>
+                            : <>→ Frequency at 1.3x — room to grow. Scale from <strong>$120 → $400/day</strong> with no saturation risk.</>}
                         </p>
                       </div>
                       {/* Quick action pills */}
