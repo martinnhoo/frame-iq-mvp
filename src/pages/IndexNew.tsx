@@ -962,7 +962,7 @@ function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#0d1017', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 10px', borderRadius: 7, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '-0.03em' }}>
-              <span style={{ color: '#38bdf8' }}>ad</span><span style={{ color: '#eef0f6' }}>brief</span>
+              <span style={{ color: '#eef0f6' }}>ad</span><span style={{ color: '#38bdf8' }}>brief</span>
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
@@ -1164,8 +1164,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               {/* Logo */}
               <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
-                  <span style={{ fontWeight: 700, color: '#38bdf8' }}>ad</span>
-                  <span style={{ fontWeight: 900, color: '#eef0f6' }}>brief</span>
+                  <span style={{ fontWeight: 700, color: '#eef0f6' }}>ad</span>
+                  <span style={{ fontWeight: 900, color: '#38bdf8' }}>brief</span>
                 </span>
               </div>
 
