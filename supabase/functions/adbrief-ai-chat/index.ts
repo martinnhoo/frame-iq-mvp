@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
     
     // If confirmed dashboard — increment counter
     if (message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profile as any)?.dashboard_count || 0;
+      const dashUsed = (profileRow as any)?.dashboard_count || 0;
       if (dashLimit !== -1) {
         await supabase.from("profiles").update({ dashboard_count: dashUsed + 1 } as any).eq("id", user_id);
       }
