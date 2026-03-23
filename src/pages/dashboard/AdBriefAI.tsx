@@ -461,8 +461,7 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
     en: [["📊","Account summary"],["⚡","Generate hooks"],["✍️","Write script"],["🎯","What to pause?"]],
   };
   const actions = quickActions[lang] || quickActions.pt;
-  // Telegram suggestion — shown when no Telegram connected
-  const telegramLabel = lang==="pt" ? "Conectar Telegram para alertas" : lang==="es" ? "Conectar Telegram para alertas" : "Connect Telegram for alerts";
+
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
@@ -489,12 +488,7 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
               <span style={{ fontSize: 12 }}>{emoji}</span>{label}
             </button>
           ))}
-          <button onClick={() => onSend(lang==="pt" ? "quero conectar o telegram para receber alertas" : lang==="es" ? "quiero conectar telegram para alertas" : "I want to connect Telegram for alerts")}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.18)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(14,165,233,0.7)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.12)"; e.currentTarget.style.color = "#0ea5e9"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.05)"; e.currentTarget.style.color = "rgba(14,165,233,0.7)"; }}>
-            <span style={{ fontSize: 12 }}>✈️</span>{telegramLabel}
-          </button>
+
         </div>
       </div>
     </div>

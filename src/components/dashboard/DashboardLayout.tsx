@@ -82,6 +82,10 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 1024);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [telegramModalOpen, setTelegramModalOpen] = useState(false);
+  const [telegramConn, setTelegramConn] = useState<any>(null);
+  const [telegramPairingLink, setTelegramPairingLink] = useState<string|null>(null);
+  const [telegramLinkLoading, setTelegramLinkLoading] = useState(false);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
     try {
       const s = localStorage.getItem("frameiq_active_persona");
@@ -129,6 +133,10 @@ export default function DashboardLayout() {
 
       // Fetch profile in parallel with usage — don't wait sequentially
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      // Load telegram connection status
+      (supabase as any).from("telegram_connections").select("chat_id,telegram_username,active")
+        .eq("user_id", session.user.id).eq("active", true).maybeSingle()
+        .then(({ data }: any) => { if (mounted) setTelegramConn(data || null); });
       if (profileData && mounted) {
         // Test account: reset onboarding every login
         const TEST_EMAIL = "testadbrief@yopmail.com";
@@ -271,6 +279,10 @@ export default function DashboardLayout() {
         </div>
 
         <style>{`
+        @keyframes tgFadeIn { from { opacity:0 } to { opacity:1 } }
+        @keyframes tgSlideUp { from { opacity:0; transform:translateY(16px) scale(0.97) } to { opacity:1; transform:translateY(0) scale(1) } }
+      `}</style>
+      <style>{`
           @keyframes loadBar {
             0%   { transform: translateX(-120%); }
             100% { transform: translateX(500%); }
@@ -416,6 +428,26 @@ export default function DashboardLayout() {
           {/* Flex spacer */}
           <div style={{ flex: 1 }} />
 
+          {/* Telegram icon — opens modal */}
+          <button
+            onClick={() => setTelegramModalOpen(true)}
+            title="Telegram Alerts"
+            style={{
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)",
+              border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)",
+              cursor: "pointer", transition: "all 0.15s", marginRight: 6,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(39,175,225,0.18)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(39,175,225,0.4)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = telegramConn ? "rgba(39,175,225,0.3)" : "rgba(255,255,255,0.09)"; }}>
+            {/* Official Telegram logo SVG */}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill={telegramConn ? "#27AEE1" : "rgba(255,255,255,0.3)"}/>
+              <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
+            </svg>
+          </button>
+
           {/* User avatar — opens profile panel */}
           <button onClick={() => setProfileOpen(true)}
             style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden" }}>
@@ -480,6 +512,143 @@ export default function DashboardLayout() {
                 <PartyPopper className="inline h-4 w-4 mr-1.5 -mt-0.5" />
                 Vamos lá!
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Telegram Modal ── */}
+      {telegramModalOpen && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setTelegramModalOpen(false); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 99999,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20,
+            animation: "tgFadeIn 0.2s cubic-bezier(0.4,0,0.2,1)",
+          }}>
+          <div style={{
+            width: "100%", maxWidth: 400,
+            background: "#131827", border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 20, overflow: "hidden",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+            animation: "tgSlideUp 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+          }}>
+            {/* Header */}
+            <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.12)", border: "1px solid rgba(39,175,225,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/>
+                  <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 15, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                  AdBrief Alerts
+                </p>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                  @AdBriefAlertsBot
+                </p>
+              </div>
+              {telegramConn && (
+                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "#34d399", fontWeight: 600 }}>
+                    {language === "pt" ? "Ativo" : language === "es" ? "Activo" : "Active"}
+                  </span>
+                </div>
+              )}
+              <button onClick={() => setTelegramModalOpen(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 18, lineHeight: 1, padding: "2px 4px", flexShrink: 0 }}>×</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "18px 22px 22px" }}>
+              {telegramConn ? (
+                /* Connected state */
+                <div>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", lineHeight: 1.6 }}>
+                    {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : (language === "pt" ? "Conta conectada" : "Account connected")}
+                    {" — "}
+                    {language === "pt" ? "Recebendo alertas e comandos." : language === "es" ? "Recibiendo alertas y comandos." : "Receiving alerts and commands."}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 18 }}>
+                    {[
+                      language === "pt" ? "⚠️ Alertas críticos da conta" : language === "es" ? "⚠️ Alertas críticos de la cuenta" : "⚠️ Critical account alerts",
+                      language === "pt" ? "⚡ /pausar [criativo] com confirmação" : language === "es" ? "⚡ /pausar [creativo] con confirmación" : "⚡ /pause [creative] with confirmation",
+                      language === "pt" ? "📊 /status — resumo da conta" : language === "es" ? "📊 /status — resumen de cuenta" : "📊 /status — account summary",
+                    ].map((item, i) => (
+                      <p key={i} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item}</p>
+                    ))}
+                  </div>
+                  <button onClick={async () => {
+                    await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user?.id);
+                    setTelegramConn(null);
+                    setTelegramPairingLink(null);
+                  }} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>
+                    {language === "pt" ? "Desconectar" : language === "es" ? "Desconectar" : "Disconnect"}
+                  </button>
+                </div>
+              ) : telegramPairingLink ? (
+                /* Link generated */
+                <div>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: 1.6 }}>
+                    {language === "pt" ? "Clique no botão abaixo para abrir o bot e toque /start:" : language === "es" ? "Haz clic en el botón para abrir el bot y toca /start:" : "Click the button below to open the bot and tap /start:"}
+                  </p>
+                  <a href={telegramPairingLink} target="_blank" rel="noreferrer"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "13px 0", borderRadius: 12, background: "linear-gradient(135deg, #27AEE1, #1a8fc2)", color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Plus Jakarta Sans',sans-serif", textDecoration: "none", marginBottom: 10, boxSizing: "border-box" as const }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.3"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+                    {language === "pt" ? "Abrir @AdBriefAlertsBot" : language === "es" ? "Abrir @AdBriefAlertsBot" : "Open @AdBriefAlertsBot"}
+                  </a>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" as const, margin: 0 }}>
+                    {language === "pt" ? "Link expira em 10 minutos" : language === "es" ? "El enlace expira en 10 minutos" : "Link expires in 10 minutes"}
+                  </p>
+                </div>
+              ) : (
+                /* Not connected */
+                <div>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "0 0 16px", lineHeight: 1.7 }}>
+                    {language === "pt"
+                      ? "Receba alertas críticos da sua conta Meta Ads no Telegram e execute comandos direto por lá."
+                      : language === "es"
+                      ? "Recibe alertas críticos de tu cuenta Meta Ads en Telegram y ejecuta comandos directamente."
+                      : "Get critical Meta Ads alerts on Telegram and run commands directly from there."}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 7, marginBottom: 20 }}>
+                    {[
+                      { icon: "⚠️", text: language === "pt" ? "Alerta quando CTR cair ou CPM explodir" : language === "es" ? "Alerta cuando CTR baje o CPM explote" : "Alert when CTR drops or CPM spikes" },
+                      { icon: "⏸️", text: language === "pt" ? "Pause anúncios com 1 toque e confirmação" : language === "es" ? "Pausa anuncios con 1 toque y confirmación" : "Pause ads with 1 tap and confirmation" },
+                      { icon: "📊", text: language === "pt" ? "Resumo diário da performance" : language === "es" ? "Resumen diario de performance" : "Daily performance summary" },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
+                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button disabled={telegramLinkLoading} onClick={async () => {
+                    if (!user?.id) return;
+                    setTelegramLinkLoading(true);
+                    try {
+                      const tok = Math.random().toString(36).slice(2,8) + Math.random().toString(36).slice(2,8);
+                      await (supabase as any).from("telegram_pairing_tokens").insert({
+                        user_id: user.id, token: tok,
+                        expires_at: new Date(Date.now() + 10*60*1000).toISOString(),
+                      });
+                      setTelegramPairingLink("https://t.me/AdBriefAlertsBot?start=" + tok);
+                    } catch {}
+                    setTelegramLinkLoading(false);
+                  }} style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: telegramLinkLoading ? "rgba(39,175,225,0.15)" : "linear-gradient(135deg, #27AEE1, #1a8fc2)", border: "none", color: telegramLinkLoading ? "#27AEE1" : "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Plus Jakarta Sans',sans-serif", cursor: telegramLinkLoading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxSizing: "border-box" as const }}>
+                    {telegramLinkLoading ? "..." : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.3"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+                        {language === "pt" ? "Conectar Telegram" : language === "es" ? "Conectar Telegram" : "Connect Telegram"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
