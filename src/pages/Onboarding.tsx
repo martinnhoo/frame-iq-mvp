@@ -215,16 +215,18 @@ export default function Onboarding() {
 
     if (!existingPersonas?.length) {
       // No persona yet — create default one
-      await supabase.from("personas").insert({
-        user_id: session.user.id,
-        name: personaName,
-        headline: niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta",
-        result: {
-          preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US",
-          niche: niche,
-          industry: niche,
-        },
-      } as never).then(() => {}).catch(() => {});
+      try {
+        await supabase.from("personas").insert({
+          user_id: session.user.id,
+          name: personaName,
+          headline: niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta",
+          result: {
+            preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US",
+            niche: niche,
+            industry: niche,
+          },
+        } as never);
+      } catch {}
     }
 
     // Save to ai_profile for chat personalization
