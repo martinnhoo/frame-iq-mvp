@@ -1,4 +1,4 @@
-// v8.3 — no-animation section 2026-03-23
+// v8.4 — ux credibility overhaul 2026-03-23
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
@@ -324,9 +324,9 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
     default: "transparent",
-    subtle:  "rgba(255,255,255,0.022)",
-    dark:    "rgba(0,0,0,0.38)",
-    accent:  "rgba(14,165,233,0.04)",
+    subtle:  "#101318",
+    dark:    "#0a0c10",
+    accent:  "#0e1520",
   };
   return (
     <section
@@ -370,12 +370,12 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
 
 // ─── Tools data ───────────────────────────────────────────────────────────────
 const TOOLS_DATA = [
-  { id: "hooks", icon: <Zap size={18} />, name: { en: "Hook Generator", pt: "Gerador de Hooks", es: "Generador de Hooks" }, desc: { en: "AI-generated hooks based on your winning creatives.", pt: "Hooks gerados pela IA baseados nos seus melhores criativos.", es: "Hooks generados por IA basados en tus ganadores." }, color: "#0ea5e9" },
-  { id: "script", icon: <Play size={18} />, name: { en: "Video Script", pt: "Script de Vídeo", es: "Script de Video" }, desc: { en: "Full UGC and direct-response scripts tuned to your account.", pt: "Scripts completos calibrados para sua conta.", es: "Scripts completos calibrados para tu cuenta." }, color: "#a78bfa" },
-  { id: "brief", icon: <Layers size={18} />, name: { en: "Creative Brief", pt: "Brief Criativo", es: "Brief Creativo" }, desc: { en: "Data-backed briefs that tell your team what to produce next.", pt: "Briefs baseados em dados para seu time.", es: "Briefs basados en datos para tu equipo." }, color: "#34d399" },
-  { id: "competitor", icon: <Target size={18} />, name: { en: "Competitor Decode", pt: "Decodificador", es: "Decodificador" }, desc: { en: "Break down any competitor ad — hook, format, angle, CTA.", pt: "Desmonte qualquer anúncio concorrente.", es: "Desmonta cualquier anuncio competidor." }, color: "#f97316" },
-  { id: "translate", icon: <Globe size={18} />, name: { en: "Ad Translator", pt: "Tradutor de Anúncios", es: "Traductor" }, desc: { en: "Translate ads across markets with tone and platform adaptation.", pt: "Traduza anúncios adaptando tom e plataforma.", es: "Traduce anuncios adaptando tono y plataforma." }, color: "#ec4899" },
-  { id: "analysis", icon: <BarChart3 size={18} />, name: { en: "Campaign Analysis", pt: "Análise de Campanha", es: "Análisis" }, desc: { en: "Ask anything about your Meta Ads data. Direct diagnosis.", pt: "Pergunte sobre seus dados do Meta Ads.", es: "Pregunta sobre tus datos de Meta Ads." }, color: "#0ea5e9" },
+  { id: "hooks", icon: <Zap size={18} />, name: { en: "Hook Generator", pt: "Gerador de Hooks", es: "Generador de Hooks" }, tagline: { en: "From your winning creatives", pt: "Baseado nos seus criativos vencedores", es: "Basado en tus creativos ganadores" }, desc: { en: "AI-generated hooks based on your winning creatives.", pt: "Hooks gerados pela IA baseados nos seus melhores criativos.", es: "Hooks generados por IA basados en tus ganadores." }, color: "#0ea5e9" },
+  { id: "script", icon: <Play size={18} />, name: { en: "Video Script", pt: "Script de Vídeo", es: "Script de Video" }, tagline: { en: "UGC & direct-response, data-tuned", pt: "UGC calibrado pelos seus dados", es: "UGC calibrado con tus datos" }, desc: { en: "Full UGC and direct-response scripts tuned to your account.", pt: "Scripts completos calibrados para sua conta.", es: "Scripts completos calibrados para tu cuenta." }, color: "#a78bfa" },
+  { id: "brief", icon: <Layers size={18} />, name: { en: "Creative Brief", pt: "Brief Criativo", es: "Brief Creativo" }, tagline: { en: "Tell your team exactly what to produce", pt: "Diz ao time o que produzir depois", es: "Dice al equipo qué producir" }, desc: { en: "Data-backed briefs that tell your team what to produce next.", pt: "Briefs baseados em dados para seu time.", es: "Briefs basados en datos para tu equipo." }, color: "#34d399" },
+  { id: "competitor", icon: <Target size={18} />, name: { en: "Competitor Decode", pt: "Decodificador", es: "Decodificador" }, tagline: { en: "Hook, angle, format — reverse-engineered", pt: "Hook, ângulo, formato — desmontado", es: "Hook, ángulo, formato — desmontado" }, desc: { en: "Break down any competitor ad — hook, format, angle, CTA.", pt: "Desmonte qualquer anúncio concorrente.", es: "Desmonta cualquier anuncio competidor." }, color: "#f97316" },
+  { id: "translate", icon: <Globe size={18} />, name: { en: "Ad Translator", pt: "Tradutor de Anúncios", es: "Traductor" }, tagline: { en: "Tone and platform adapted per market", pt: "Tom e plataforma adaptados por mercado", es: "Tono y plataforma por mercado" }, desc: { en: "Translate ads across markets with tone and platform adaptation.", pt: "Traduza anúncios adaptando tom e plataforma.", es: "Traduce anuncios adaptando tono y plataforma." }, color: "#ec4899" },
+  { id: "analysis", icon: <BarChart3 size={18} />, name: { en: "Campaign Analysis", pt: "Análise de Campanha", es: "Análisis" }, tagline: { en: "Real Meta Ads data, instant diagnosis", pt: "Dados reais do Meta Ads, diagnóstico direto", es: "Datos reales de Meta Ads, diagnóstico directo" }, desc: { en: "Ask anything about your Meta Ads data. Direct diagnosis.", pt: "Pergunte sobre seus dados do Meta Ads.", es: "Pregunta sobre tus datos de Meta Ads." }, color: "#0ea5e9" },
 ];
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
@@ -839,6 +839,21 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
       {/* Ambient glow reacts to industry */}
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 50% at 50% -5%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
+      {/* ── SOCIAL PROOF — above headline ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+          <div style={{ display: 'flex', gap: 1 }}>
+            {[0,1,2,3,4].map(i => (
+              <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>
+            ))}
+          </div>
+          <span style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>4.9</span>
+          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+            {lang === 'pt' ? '· usado por 340+ gestores de tráfego' : lang === 'es' ? '· usado por 340+ media buyers' : '· used by 340+ media buyers'}
+          </span>
+        </div>
+      </div>
+
       {/* ── HEADLINE — compact, one visual line ── */}
       <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
         <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
@@ -917,7 +932,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   </div>
                   <div>
                     <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{account?.name || 'FitCore'}</p>
-                    <p style={{ fontFamily: F, fontSize: 10, color: industry.color, margin: 0, fontWeight: 600 }}>∞ Lifetime</p>
+                    <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.32)', margin: 0, fontWeight: 500 }}>{lang === 'pt' ? 'Pro · Conectado' : lang === 'es' ? 'Pro · Conectado' : 'Pro · Connected'}</p>
                   </div>
                 </div>
               </div>
@@ -1082,7 +1097,10 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                 onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.05)'; el.style.borderColor = 'rgba(255,255,255,0.12)'; }}}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.72)', flexShrink: 0 }}>{tool.icon}</div>
-                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0, flex: 1 }}>{tool.name[lang]}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.80)', margin: '0 0 2px' }}>{tool.name[lang]}</p>
+                    <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.32)', margin: 0, lineHeight: 1.3 }}>{tool.tagline[lang]}</p>
+                  </div>
                   <div style={{ color: 'rgba(255,255,255,0.2)', transition: 'transform 0.18s', transform: isOpen ? 'rotate(45deg)' : 'none', flexShrink: 0 }}>
                     <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
                   </div>
@@ -1250,6 +1268,57 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
           ))}
         </div>
 
+        <div style={{ marginTop: 48, maxWidth: 480, margin: "48px auto 0" }}>
+          {/* Telegram mock conversation */}
+          <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)", background: "#17212b" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", background: "#232e3c", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(39,175,225,0.2)", border: "1px solid rgba(39,175,225,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+              </div>
+              <div>
+                <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#fff", margin: 0 }}>AdBrief Alerts</p>
+                <p style={{ fontFamily: F, fontSize: 11, color: "#27AEE1", margin: 0 }}>bot</p>
+              </div>
+            </div>
+            {/* Messages */}
+            <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Bot alert */}
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(39,175,225,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+                </div>
+                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#232e3c" }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>⚠️ Alerta AdBrief</p>
+                  <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.55 }}>
+                    <strong style={{ color: "#fff" }}>Creative_042</strong> com frequência 4.8x. CTR caiu de 2.1% → 0.4% nas últimas 6h.<br/>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>FitCore Brasil · agora</span>
+                  </p>
+                </div>
+              </div>
+              {/* User message */}
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ maxWidth: "68%", padding: "9px 13px", borderRadius: "14px 14px 2px 14px", background: "#2b5278" }}>
+                  <p style={{ fontFamily: F, fontSize: 12.5, color: "#fff", margin: 0 }}>/pausar Creative_042</p>
+                </div>
+              </div>
+              {/* Bot confirmation */}
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(39,175,225,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+                </div>
+                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#232e3c" }}>
+                  <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.9)", margin: 0, lineHeight: 1.55 }}>
+                    ✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>
+                    Registrado no AdBrief às 14:32.<br/>
+                    <span style={{ color: "#34d399", fontSize: 11.5 }}>Economia estimada: R$180/dia</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style={{ marginTop: 32, textAlign: "center" }}>
           <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em" }}>
             {lang === "pt" ? "Conecta em 30 segundos. Disponível em todos os planos." : lang === "es" ? "Conecta en 30 segundos. Disponible en todos los planes." : "Connects in 30 seconds. Available on all plans."}
@@ -1279,7 +1348,9 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
     },
     {
       name: "Studio", price: annual ? "$119" : "$149", desc: annual ? "/mo billed annually" : "/mo",
-      features: [t.plan_studio_f0, t.plan_studio_f1, t.plan_studio_f2, t.plan_studio_f3, t.plan_studio_f4],
+      features: [t.plan_studio_f0, t.plan_studio_f1, t.plan_studio_f2, t.plan_studio_f3, t.plan_studio_f4,
+        lang === "pt" ? "Suporte prioritário via WhatsApp" : lang === "es" ? "Soporte prioritario por WhatsApp" : "Priority WhatsApp support"
+      ],
       highlight: false, badge: null,
       action: () => navigate("/signup?plan=studio"),
     },
@@ -1293,23 +1364,24 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.pricing_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
           {/* Toggle */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontFamily: F, fontSize: 13, color: annual ? "rgba(255,255,255,0.3)" : "#fff", fontWeight: 500, transition: "color 0.2s" }}>Monthly</span>
             <button onClick={() => setAnnual(v => !v)}
               style={{ width: 46, height: 24, borderRadius: 12, background: annual ? "#fff" : "rgba(255,255,255,0.08)", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
               <span style={{ position: "absolute", top: 3, left: annual ? 24 : 3, width: 18, height: 18, borderRadius: "50%", background: annual ? "#000" : "#fff", transition: "left 0.2s", display: "block" }} />
             </button>
             <span style={{ fontFamily: F, fontSize: 13, color: annual ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500, transition: "color 0.2s" }}>Annual</span>
-            {annual && <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>-20%</span>}
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>Economize 20%</span>
           </div>
         </div>
         <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{
               padding: "32px 28px", borderRadius: 22,
-              background: plan.highlight ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.07)",
-              border: `1px solid ${plan.highlight ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.10)"}`,
+              background: plan.highlight ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${plan.highlight ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
               display: "flex", flexDirection: "column", gap: 22, position: "relative",
+              boxShadow: plan.highlight ? "0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(14,165,233,0.07)" : "none",
             }}>
               {plan.badge && (
                 <div style={{ position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)", background: "#fff", borderRadius: 7, padding: "3px 14px", whiteSpace: "nowrap" }}>
