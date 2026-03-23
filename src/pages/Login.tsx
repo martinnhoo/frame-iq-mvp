@@ -66,8 +66,9 @@ const Login = () => {
       <motion.div 
         className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }}
-        animate={{ x: ['-30%', '20%', '-10%'], y: ['-20%', '30%', '-20%'] }}
-        transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+        animate={{ x: ['-20%', '15%', '-10%'], y: ['-15%', '20%', '-15%'] }}
+        transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+        style={{ willChange: 'transform' }}
       />
       <motion.div 
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"

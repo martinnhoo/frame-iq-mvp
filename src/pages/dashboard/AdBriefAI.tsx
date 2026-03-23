@@ -461,6 +461,8 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
     en: [["📊","Account summary"],["⚡","Generate hooks"],["✍️","Write script"],["🎯","What to pause?"]],
   };
   const actions = quickActions[lang] || quickActions.pt;
+  // Telegram suggestion — shown when no Telegram connected
+  const telegramLabel = lang==="pt" ? "Conectar Telegram para alertas" : lang==="es" ? "Conectar Telegram para alertas" : "Connect Telegram for alerts";
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
@@ -487,6 +489,12 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
               <span style={{ fontSize: 12 }}>{emoji}</span>{label}
             </button>
           ))}
+          <button onClick={() => onSend(lang==="pt" ? "quero conectar o telegram para receber alertas" : lang==="es" ? "quiero conectar telegram para alertas" : "I want to connect Telegram for alerts")}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.18)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(14,165,233,0.7)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.12)"; e.currentTarget.style.color = "#0ea5e9"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(14,165,233,0.05)"; e.currentTarget.style.color = "rgba(14,165,233,0.7)"; }}>
+            <span style={{ fontSize: 12 }}>✈️</span>{telegramLabel}
+          </button>
         </div>
       </div>
     </div>
@@ -754,12 +762,15 @@ export default function AdBriefAI() {
   // ── Dismiss an alert permanently ───────────────────────────────────────────
   const dismissAlert = async (alertId: string) => {
     setAlertsDismissing(prev => new Set([...prev, alertId]));
-    await supabase
-      .from("account_alerts" as any)
+    // Fire DB update in background
+    supabase.from("account_alerts" as any)
       .update({ dismissed_at: new Date().toISOString() } as any)
-      .eq("id", alertId);
-    setAccountAlerts(prev => prev.filter((a: any) => a.id !== alertId));
-    setAlertsDismissing(prev => { const s = new Set(prev); s.delete(alertId); return s; });
+      .eq("id", alertId).then(() => {});
+    // Wait for exit animation then remove from state
+    setTimeout(() => {
+      setAccountAlerts(prev => prev.filter((a: any) => a.id !== alertId));
+      setAlertsDismissing(prev => { const s = new Set(prev); s.delete(alertId); return s; });
+    }, 280);
   };
 
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
@@ -966,6 +977,47 @@ export default function AdBriefAI() {
   const send=async(text?:string)=>{
     let msg=(text??input).trim();
     if(!msg||loading||!contextReady)return;
+
+    // ── Intercept Telegram connect intent — generate real pairing link ──────
+    if (/telegram/i.test(msg) && /conect|alert|receb|notif|want|quero|quiero/i.test(msg) && user?.id) {
+      const uid = Date.now().toString(36);
+      setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
+      setInput("");
+      setLoading(true);
+      try {
+        const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
+        await (supabase.from("telegram_pairing_tokens" as any) as any).insert({
+          user_id:user.id, token:tok,
+          expires_at: new Date(Date.now()+10*60*1000).toISOString(),
+        });
+        const link=`https://t.me/AdBriefAlertsBot?start=${tok}`;
+        const aid=Date.now().toString(36)+"r";
+        const txt=lang==="pt"
+          ? `Simples. Clique no link abaixo — ele abre o @AdBriefAlertsBot já com o seu token. Toque em /start e pronto.
+
+🔗 ${link}
+
+Você vai receber alertas críticos da sua conta e pode pausar anúncios direto pelo Telegram. Tudo fica registrado aqui com data e hora.`
+          : lang==="es"
+          ? `Simple. Haz clic en el enlace de abajo — abre @AdBriefAlertsBot con tu token. Toca /start y listo.
+
+🔗 ${link}
+
+Recibirás alertas críticos y podrás pausar anuncios desde Telegram. Todo queda registrado aquí.`
+          : `Simple. Click the link below — it opens @AdBriefAlertsBot with your token. Tap /start and you're done.
+
+🔗 ${link}
+
+You'll get critical alerts and can pause ads from Telegram. Everything logged here with timestamp.`;
+        setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
+      } catch {
+        const eid=Date.now().toString(36)+"e";
+        setMessages(prev=>[...prev,{role:"assistant",id:eid,ts:eid,blocks:[{type:"warning",title:"Erro",content:lang==="pt"?"Não foi possível gerar o link. Tente em Configurações.":"Could not generate link. Try Settings."}]}]);
+      }
+      setLoading(false);
+      return;
+    }
+
     // If dashboard tool is active, prefix with dashboard intent
     if(activeTool==="dashboard"&&!text){
       const prefix=lang==="pt"?"[DASHBOARD] ":lang==="es"?"[DASHBOARD] ":"[DASHBOARD] ";
@@ -1177,13 +1229,25 @@ export default function AdBriefAI() {
                   background: isHigh ? "rgba(248,113,113,0.07)" : "rgba(251,191,36,0.07)",
                   border: `1px solid ${isHigh ? "rgba(248,113,113,0.25)" : "rgba(251,191,36,0.25)"}`,
                   display:"flex",alignItems:"flex-start",gap:10,
-                  opacity: isDismissing ? 0.4 : 1,
-                  transition:"opacity 0.2s"
+                  opacity: isDismissing ? 0 : 1,
+                  transform: isDismissing ? "translateX(12px) scale(0.97)" : "translateX(0) scale(1)",
+                  transition: isDismissing ? "all 0.25s cubic-bezier(0.4,0,0.2,1)" : "opacity 0.15s",
+                  pointerEvents: isDismissing ? "none" as const : "auto" as const
                 }}>
                   <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "🔴" : "🟡"}</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <p style={{margin:"0 0 2px",fontSize:11,fontWeight:700,color: isHigh ? "#f87171" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
-                      {alert.type?.replace(/_/g," ")}
+                    <p style={{margin:"0 0 2px",fontSize:11,fontWeight:700,color: isHigh ? "#f87171" : alert.type==="system" ? "rgba(14,165,233,0.8)" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
+                      {(() => {
+                        const t = alert.type;
+                        const labels: Record<string,Record<string,string>> = {
+                          critical:  { pt:"Alerta crítico",   es:"Alerta crítica",   en:"Critical alert"   },
+                          warning:   { pt:"Atenção",          es:"Atención",         en:"Warning"          },
+                          system:    { pt:"Sistema",          es:"Sistema",          en:"System"           },
+                          action:    { pt:"Ação registrada",  es:"Acción registrada",en:"Action logged"    },
+                          info:      { pt:"Info",             es:"Info",             en:"Info"             },
+                        };
+                        return labels[t]?.[lang] || labels[t]?.en || t?.replace(/_/g," ") || "Alert";
+                      })()}
                     </p>
                     {alert.ad_name && (
                       <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
