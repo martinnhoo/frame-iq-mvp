@@ -489,7 +489,7 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 62, padding: '0 clamp(16px,4vw,32px)' }}>
         <Logo size="lg" />
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, marginLeft: 44 }}>
-          {([[t.nav_how,'#how'],[t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
+          {([[t.nav_how,'#how'],['Casos de Uso' === t.nav_for ? 'Casos de Uso' : t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
             <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'; }}>
@@ -744,8 +744,7 @@ function InlineSuggestions({ qa, qi, jump, lang, industry }: {
   industry: typeof INDUSTRIES_DEMO[0];
 }) {
   const [visible, setVisible] = React.useState(false);
-  const label = lang === 'pt' ? 'Perguntar também:' : lang === 'es' ? 'Preguntar también:' : 'Ask next:';
-  const icons = ['📉','⚡','✍️'];
+  const label = lang === 'pt' ? 'Continuar com:' : lang === 'es' ? 'Continuar con:' : 'Continue with:';
 
   React.useEffect(() => {
     const t = setTimeout(() => setVisible(true), 320);
@@ -757,18 +756,17 @@ function InlineSuggestions({ qa, qi, jump, lang, industry }: {
   const others = qa.map((item, i) => ({ item, i })).filter(({ i }) => i !== qi);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingLeft: 36, animation: 'toolSlideIn 0.22s ease' }}>
-      <p style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em', margin: '0 0 3px', fontWeight: 500 }}>{label}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 40 }}>
+      <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em', margin: '0 0 4px', textTransform: 'uppercase' as const, fontWeight: 600 }}>{label}</p>
       {others.map(({ item, i }) => (
         <button key={i} onClick={() => { setVisible(false); jump(i); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid rgba(255,255,255,0.07)`, cursor: 'pointer', textAlign: 'left', transition: 'all 0.13s', fontFamily: F }}
-          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `${industry.color}10`; el.style.borderColor = `${industry.color}30`; }}
-          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.03)'; el.style.borderColor = 'rgba(255,255,255,0.07)'; }}>
-          <span style={{ fontSize: 14, flexShrink: 0 }}>{icons[i]}</span>
-          <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.58)', lineHeight: 1.35, letterSpacing: '-0.01em' }}>
-            {item.q.slice(0, 52)}{item.q.length > 52 ? '…' : ''}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, cursor: 'pointer', textAlign: 'left' as const, transition: 'all 0.15s', fontFamily: F }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.04)'; el.style.borderColor = 'rgba(255,255,255,0.10)'; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'rgba(255,255,255,0.06)'; }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', flexShrink: 0, fontFamily: 'monospace' }}>↗</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.48)', lineHeight: 1.4 }}>
+            {item.q.slice(0, 56)}{item.q.length > 56 ? '…' : ''}
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 10, color: industry.color, flexShrink: 0, opacity: 0.7 }}>→</span>
         </button>
       ))}
     </div>
@@ -925,11 +923,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 20px', color: '#fff', whiteSpace: 'pre-line' as const }}>
           {t.hero_h1}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 440 }}>{t.hero_sub}</p>
-        <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 32px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 440 }}>
+          {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como un analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
+        </p>
+        <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-          {t.hero_cta}
+          {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
         </button>
       </div>
 
@@ -1052,10 +1052,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   {/* User message */}
                   {phase !== 'idle' && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div style={{ maxWidth: '70%', padding: '9px 14px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.88)', lineHeight: 1.5, margin: 0 }}>
+                      <div style={{ maxWidth: '68%', padding: '10px 15px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, margin: 0 }}>
                           {typedQ}
-                          {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
+                          {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 1.5, height: 14, background: 'rgba(255,255,255,0.6)', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
                         </p>
                       </div>
                     </div>
@@ -1096,8 +1096,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
                 {qa.slice(0,3).map((item, i) => (
                   <button key={i} onClick={() => jump(i)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? `${industry.color}20` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color+'40' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' as const, fontFamily: F, fontSize: 11, color: qi === i ? industry.color : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400 }}>
-                    {['📉','⚡','✍️'][i]} {item.q.slice(0,22)}{item.q.length > 22 ? '…' : ''}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 6, background: qi === i ? `${industry.color}15` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color+'30' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' as const, fontFamily: F, fontSize: 11, color: qi === i ? industry.color : 'rgba(255,255,255,0.45)', fontWeight: qi === i ? 600 : 400 }}>
+                    {item.q.slice(0,28)}{item.q.length > 28 ? '…' : ''}
                   </button>
                 ))}
               </div>
@@ -1252,17 +1252,15 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s", display: "flex", flexDirection: "column" }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = `${step.color}40`}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"}>
-              <div style={{ position: "absolute", top: -20, right: -4, fontSize: 88, fontWeight: 900, color: "rgba(255,255,255,0.05)", fontFamily: F, lineHeight: 1, pointerEvents: "none", letterSpacing: "-0.05em" }}>{step.n}</div>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: `${step.color}15`, border: `1px solid ${step.color}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22, color: step.color, boxShadow: `0 0 20px ${step.color}15` }}>{step.icon}</div>
-              <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 800, color: "#fff", marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
-              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.58)", lineHeight: 1.75, flex: 1 }}>{step.desc}</p>
-              {/* Result badge */}
-              <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 10, background: `${step.color}0d`, border: `1px solid ${step.color}25` }}>
-                <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke={step.color} strokeOpacity="0.5" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke={step.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: F, fontSize: 11.5, color: step.color, fontWeight: 600, opacity: 0.9 }}>{step.result}</span>
+            <div key={i} style={{ padding: "36px 28px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid rgba(255,255,255,0.08)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s", display: "flex", flexDirection: "column" }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}30`; el.style.background = 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.background = 'rgba(255,255,255,0.04)'; }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "rgba(255,255,255,0.55)" }}>{step.icon}</div>
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
+              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1, marginBottom: 20 }}>{step.desc}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 8, background: `${step.color}08`, border: `1px solid ${step.color}18` }}>
+                <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke={step.color} strokeOpacity="0.4" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke={step.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span style={{ fontFamily: F, fontSize: 11.5, color: step.color, fontWeight: 500, opacity: 0.85 }}>{step.result}</span>
               </div>
             </div>
           ))}
@@ -1477,7 +1475,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9" }}>{t.pricing_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.pricing_h2}</h2>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(24px,2.8vw,38px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 10px", color: "#fff" }}>{t.pricing_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
           {/* Toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
