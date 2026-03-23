@@ -75,13 +75,20 @@ export default function HookGenerator() {
   useEffect(() => {
     // Pre-fill from ai_profile (industry/niche)
     if (aiProfile?.industry && !niche) setNiche(aiProfile.industry);
-    // Pre-fill market — persona takes priority over profile
+    // Pre-fill market — persona result > persona direct > language-based default
     const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
-    const personaMarket = (selectedPersona?.preferred_market || "").toUpperCase();
-    const profileMarket = (profile?.preferred_market || "").toUpperCase();
-    const mkt = valid.includes(personaMarket) ? personaMarket
-               : valid.includes(profileMarket) ? profileMarket
-               : "BR";
+    const personaMarket = (
+      (selectedPersona as any)?.result?.preferred_market ||
+      selectedPersona?.preferred_market || ""
+    ).toUpperCase();
+    // Derive market from UI language if no persona market
+    const langMarket = (() => {
+      const lang = (profile?.preferred_language || navigator.language || "").toLowerCase();
+      if (lang.startsWith("pt")) return "BR";
+      if (lang.startsWith("es")) return "MX";
+      return "US";
+    })();
+    const mkt = valid.includes(personaMarket) ? personaMarket : langMarket;
     setMarket(mkt);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiProfile, profile, selectedPersona?.id]);
