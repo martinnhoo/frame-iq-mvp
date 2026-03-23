@@ -1043,7 +1043,7 @@ Recibirás alertas críticos y podrás pausar anuncios desde Telegram.`
 🔗 ${link}
 
 You'll get critical alerts and can pause ads from Telegram. Everything logged here.`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
         } else {
           // NOT CONNECTED + just asking — inform
           const txt = lang==="pt"
