@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     // If dashboard request — check limit and offer instead of auto-generating
     if (isDashboardRequest && !message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profile as any)?.dashboard_count || 0;
+      const dashUsed = (profileRow as any)?.dashboard_count || 0;
       const dashRemaining = dashLimit === -1 ? 999 : Math.max(0, dashLimit - dashUsed);
       
       if (dashLimit === 0 || (dashLimit !== -1 && dashUsed >= dashLimit)) {
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
     
     // If confirmed dashboard — increment counter
     if (message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profile as any)?.dashboard_count || 0;
+      const dashUsed = (profileRow as any)?.dashboard_count || 0;
       if (dashLimit !== -1) {
         await supabase.from("profiles").update({ dashboard_count: dashUsed + 1 } as any).eq("id", user_id);
       }
@@ -608,10 +608,10 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es",
       IN: "en", US: "en", UK: "en", FR: "fr", DE: "de",
     };
-    const uiLang = (user_language as string) || "en";
+    const uiLang2 = (user_language as string) || "en";
     const personaMarket = (persona?.result as any)?.preferred_market || "";
-    const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang;
-    const uiLangName = LANG_NAMES[uiLang] || "English";
+    const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang2;
+    const uiLangName = LANG_NAMES[uiLang2] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
     // ── 5b. History ─────────────────────────────────────────────────────────
