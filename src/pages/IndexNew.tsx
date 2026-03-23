@@ -1028,6 +1028,29 @@ function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
   );
 }
 
+// ─── Animated KPI counter ─────────────────────────────────────────────────────
+function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; suffix?: string; duration?: number }) {
+  const [display, setDisplay] = React.useState(0);
+  const ref = React.useRef<HTMLSpanElement>(null);
+  React.useEffect(() => {
+    let start: number | null = null;
+    const from = 0;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setDisplay(parseFloat((from + (value - from) * ease).toFixed(1)));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { requestAnimationFrame(step); obs.disconnect(); }
+    }, { threshold: 0.5 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [value, duration]);
+  return <span ref={ref}>{display}{suffix}</span>;
+}
+
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero v12 — mobile + uau 2026-03-24 ──────────────────────────
@@ -1062,10 +1085,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     : ['Hook Generator','Video Script','Creative Brief'];
   const toolsLabel = lang === 'pt' ? 'FERRAMENTAS' : lang === 'es' ? 'HERRAMIENTAS' : 'TOOLS';
   const quickActions = lang === 'pt'
-    ? ['O que pausar hoje?', 'Gerar hooks', 'Por que o ROAS caiu?', 'Resumo da semana']
+    ? ['Qual meu melhor criativo?', 'Escreve hooks dos winners', 'Quanto posso escalar?']
     : lang === 'es'
-    ? ['¿Qué pausar hoy?', 'Generar hooks', '¿Por qué bajó el ROAS?', 'Resumen de la semana']
-    : ['What to pause today?', 'Generate hooks', 'Why did ROAS drop?', 'Weekly summary'];
+    ? ['¿Cuál es mi mejor creativo?', 'Escribe hooks de winners', '¿Cuánto puedo escalar?']
+    : ['What\'s my best creative?', 'Write hooks from winners', 'How much can I scale?'];
 
   // Render AI response — clean text, no colored cards
   const renderAI = () => {
@@ -1076,23 +1099,24 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
     return (
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+        <div className="ab-avatar" style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
           <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
           {allLines.map((line, i) => {
             const isAction = /^(Fix:|Ação:|Action:|Acción:|→)/i.test(line.replace(/\*\*/g, ''));
             const isLast = i === allLines.length - 1 && phase === 'streaming';
+            const isWin = /\+|↑|2\.4x|3\.8x|3\.2x|winner|melhor|dominando|escalando/i.test(line);
             return (
               <MdLine key={i} text={line} style={{
                 fontFamily: F,
                 fontSize: 14,
                 lineHeight: 1.65,
                 margin: 0,
-                color: isAction ? industry.color : i === 0 ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.85)',
+                color: isAction ? '#7dd3fc' : isWin ? '#a7f3d0' : i === 0 ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.88)',
                 fontWeight: isAction ? 600 : 400,
                 opacity: isLast ? 0.6 : 1,
-                transition: 'opacity 0.2s',
+                animation: `lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) ${i * 0.06}s both`,
               }} />
             );
           })}
@@ -1202,15 +1226,17 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   {lang === 'pt' ? 'ESTA SEMANA' : lang === 'es' ? 'ESTA SEMANA' : 'THIS WEEK'}
                 </p>
                 {[
-                  { label: 'ROAS', value: '3.8x', trend: '↑ 22%', bad: false },
-                  { label: 'CTR', value: '3.2%', trend: '↑ 0.8pt', bad: false },
-                  { label: 'Hook rate', value: '38%', trend: '↑ 12pt', bad: false },
+                  { label: 'ROAS', value: 3.8, suffix: 'x', trend: '+22%' },
+                  { label: 'CTR',  value: 3.2, suffix: '%', trend: '+0.8pt' },
+                  { label: 'Hook rate', value: 38, suffix: '%', trend: '+12pt' },
                 ].map((kpi, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 7, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 4 }}>
-                    <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{kpi.label}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ fontFamily: F, fontSize: 11, color: '#fff', fontWeight: 700 }}>{kpi.value}</span>
-                      <span style={{ fontFamily: F, fontSize: 9.5, color: kpi.bad ? '#f87171' : '#34d399', fontWeight: 600 }}>{kpi.trend}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 8, background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)', marginBottom: 5, animation: `kpiSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) ${0.1 + i * 0.1}s both` }}>
+                    <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{kpi.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontFamily: F, fontSize: 12, color: '#fff', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                        <AnimatedKPI value={kpi.value} suffix={kpi.suffix} duration={900 + i * 200} />
+                      </span>
+                      <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 700 }}>{kpi.trend}</span>
                     </div>
                   </div>
                 ))}
@@ -1242,37 +1268,37 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
                   {/* Greeting — positive insight, winner found */}
                   <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, boxShadow: '0 0 14px rgba(14,165,233,0.35)' }}>
                       <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-                      {/* Win card */}
-                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, margin: 0 }}>
+                      {/* Win card — stagger 0 */}
+                      <div style={{ padding: '11px 14px', borderRadius: 12, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.20)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
+                        <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6, margin: 0 }}>
                           {lang === 'pt'
-                            ? <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 está convertendo 2.4x mais</span> que a semana passada. Hook rate: 38%, ROAS 3.8x.</>
+                            ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 está convertendo 2.4x mais</span> que a semana passada. Hook rate: 38%, ROAS 3.8x.</>
                             : lang === 'es'
-                            ? <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 convierte 2.4x más</span> que la semana pasada. Hook rate: 38%, ROAS 3.8x.</>
-                            : <><span style={{ color: '#34d399', fontWeight: 600 }}>✦ Creative_019 is converting 2.4x more</span> than last week. Hook rate: 38%, ROAS 3.8x.</>}
+                            ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 convierte 2.4x más</span> que la semana pasada. Hook rate: 38%, ROAS 3.8x.</>
+                            : <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 is converting 2.4x more</span> than last week. Hook rate: 38%, ROAS 3.8x.</>}
                         </p>
                       </div>
-                      {/* Opportunity card */}
-                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.15)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: '#38bdf8', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                      {/* Opportunity card — stagger 1 */}
+                      <div style={{ padding: '11px 14px', borderRadius: 12, background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.18)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.28s both' }}>
+                        <p style={{ fontFamily: F, fontSize: 13.5, color: '#7dd3fc', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                           {lang === 'pt'
-                            ? <>→ Frequência 1.3x — tem espaço. Escale de <strong>R$120 → R$400/dia</strong> sem risco de saturação.</>
+                            ? <>→ Frequência 1.3x — tem espaço. Escale de <strong style={{ color: '#fff' }}>R$120 → R$400/dia</strong> sem risco de saturação.</>
                             : lang === 'es'
-                            ? <>→ Frecuencia 1.3x — hay espacio. Escala de <strong>$120 → $400/día</strong> sin riesgo de saturación.</>
-                            : <>→ Frequency at 1.3x — room to grow. Scale from <strong>$120 → $400/day</strong> with no saturation risk.</>}
+                            ? <>→ Frecuencia 1.3x — hay espacio. Escala de <strong style={{ color: '#fff' }}>$120 → $400/día</strong> sin riesgo de saturación.</>
+                            : <>→ Frequency at 1.3x — room to grow. Scale from <strong style={{ color: '#fff' }}>$120 → $400/day</strong> with no saturation risk.</>}
                         </p>
                       </div>
-                      {/* Quick action pills */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, paddingTop: 4 }}>
+                      {/* Quick action pills — stagger 2 */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, paddingTop: 4, animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.45s both' }}>
                         {quickActions.slice(0, 3).map((label, i) => (
                           <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                            style={{ padding: '5px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.38)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
-                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.07)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.18)'; e.currentTarget.style.color='rgba(255,255,255,0.72)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.38)'; }}>
+                            style={{ padding: '6px 13px', borderRadius: 7, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.45)', transition: 'all 0.18s', whiteSpace: 'nowrap' as const }}
+                            onMouseEnter={e => { const el = e.currentTarget; el.style.background='rgba(52,211,153,0.08)'; el.style.borderColor='rgba(52,211,153,0.22)'; el.style.color='rgba(255,255,255,0.85)'; el.style.transform='translateY(-1px)'; }}
+                            onMouseLeave={e => { const el = e.currentTarget; el.style.background='rgba(255,255,255,0.04)'; el.style.borderColor='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.45)'; el.style.transform='translateY(0)'; }}>
                             {label}
                           </button>
                         ))}
@@ -1910,6 +1936,18 @@ export default function IndexNew() {
         <style>{`          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
           
+          /* Line enter — used for AI response lines and greeting cards */
+          @keyframes lineEnter{
+            from{opacity:0;transform:translateY(10px)}
+            to{opacity:1;transform:translateY(0)}
+          }
+
+          /* KPI slide in from sidebar bottom */
+          @keyframes kpiSlideIn{
+            from{opacity:0;transform:translateX(-8px)}
+            to{opacity:1;transform:translateX(0)}
+          }
+          
           /* Demo window */
           .demo-window{box-shadow:0 40px 120px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06),inset 0 1px 0 rgba(255,255,255,0.06)}
           @keyframes msg-pop{0%{opacity:0;transform:translateY(6px) scale(0.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
@@ -1919,6 +1957,10 @@ export default function IndexNew() {
           .thinking-dot{animation:thinking-glow 1.1s ease-in-out infinite}
           @keyframes pulse{0%,100%{transform:scale(1);opacity:0.6}50%{transform:scale(1.5);opacity:1}}
           
+          /* AB avatar glow pulse */
+          @keyframes avatarGlow{0%,100%{box-shadow:0 0 10px rgba(14,165,233,0.25)}50%{box-shadow:0 0 22px rgba(14,165,233,0.55)}}
+          .ab-avatar{animation:avatarGlow 2.4s ease-in-out infinite}
+
           /* KPI floating cards */
           @keyframes kpiIn{from{opacity:0;transform:translateY(8px) scale(0.94)}to{opacity:1;transform:translateY(0) scale(1)}}
           .kpi-card{animation:kpiIn 0.5s cubic-bezier(0.16,1,0.3,1) both}
