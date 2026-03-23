@@ -947,11 +947,14 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
 
       {/* ── DEMO WINDOW ── */}
-      <div style={{ width: '100%', maxWidth: 1020 }}>
-        <div className="demo-window" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ width: '100%', maxWidth: 1060, position: 'relative' }}>
+        {/* Glow layer behind the window */}
+        <div style={{ position: 'absolute', inset: '-1px', borderRadius: 18, background: 'linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.10) 50%, rgba(14,165,233,0.06) 100%)', zIndex: 0, filter: 'blur(0px)' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: '10%', right: '10%', height: 80, background: 'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', zIndex: 0, filter: 'blur(20px)' }} />
+        <div className="demo-window" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.22)', boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4)', position: 'relative', zIndex: 1 }}>
 
           {/* Browser chrome */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#0b0e14', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#0d1017', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
             <div style={{ display: 'flex', gap: 5 }}>
               {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
             </div>
@@ -972,10 +975,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
             {/* ─ SIDEBAR — clean minimal ─ */}
             <div className="demo-sidebar-inner" style={{ width: 196, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
-              {/* Logo — correct brand rendering */}
-              <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontFamily: F, fontSize: 15, fontWeight: 900, letterSpacing: '-0.05em' }}>
-                  <span style={{ color: '#0ea5e9' }}>ad</span><span style={{ color: '#fff' }}>brief</span>
+              {/* Logo */}
+              <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
+                  <span style={{ fontWeight: 700, color: '#38bdf8' }}>ad</span>
+                  <span style={{ fontWeight: 900, color: '#eef0f6' }}>brief</span>
                 </span>
               </div>
               {/* Main nav — 3 items only */}
@@ -1074,13 +1078,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
                   {/* AI response */}
                   {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                    <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
-                        </div>
-                        {renderAI()}
-                      </div>
+                    <div style={{ flex: 1 }}>
+                      {renderAI()}
                     </div>
                   )}
 
@@ -1119,21 +1118,6 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Proof bar below demo */}
-        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }} className="hero-proofs">
-          {(lang === 'pt'
-            ? ['Meta Ads conectado em 30s', 'Dados reais dos últimos 90 dias', 'Cancele antes de 24h, sem cobrança']
-            : lang === 'es'
-            ? ['Meta Ads conectado en 30s', 'Datos reales de los últimos 90 días', 'Cancela antes de 24h, sin cobro']
-            : ['Meta Ads connected in 30s', 'Real data from last 90 days', 'Cancel before 24h, no charge']
-          ).map((pt, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.45)" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{pt}</span>
-            </div>
-          ))}
         </div>
       </div>
     </section>
