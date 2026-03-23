@@ -1410,16 +1410,14 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
     };
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { requestAnimationFrame(step); obs.disconnect(); }
-    }, { threshold: 0.5 });
+    }, { threshold: 0.1 });
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, [value, duration]);
   return <span ref={ref}>{display}{suffix}</span>;
 }
 
-// ─── Immersive Hero ───────────────────────────────────────────────────────────
-// ─── Immersive Hero ───────────────────────────────────────────────────────────
-// ─── Immersive Hero v12 — mobile + uau 2026-03-24 ──────────────────────────
+// ─── Immersive Hero ──────────────────────────────────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
@@ -1509,10 +1507,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
       {/* ── HEADLINE ── */}
       <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 900, width: '100%' }}>
-        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 20px', color: '#fff', whiteSpace: 'pre-line' as const }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,4.6vw,64px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 20px', color: '#fff', whiteSpace: 'pre-line' as const }}>
           {t.hero_h1}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 600, whiteSpace: 'nowrap' as const }}>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 600 }}>
           {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como un analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
         </p>
         <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '15px 40px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s, transform 0.15s', letterSpacing: '-0.025em' }}
@@ -2254,7 +2252,7 @@ function Footer({ t }: { t: Record<string, string> }) {
       <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         <Logo size="lg" />
         <div style={{ display: "flex", gap: 28 }}>
-          {[["Blog", "/blog"], ["Pricing", "#pricing"], ["FAQ", "#faq"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
+          {[["Pricing", "#pricing"], ["FAQ", "#faq"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
             <a key={href} href={href} style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.2)", textDecoration: "none", transition: "color 0.2s" }}
               onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.2)"; }}
