@@ -80,7 +80,7 @@ const SUGG: Record<string, string[]> = {
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
