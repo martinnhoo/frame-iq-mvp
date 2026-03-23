@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     // If dashboard request — check limit and offer instead of auto-generating
     if (isDashboardRequest && !message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profile as any)?.dashboard_count || 0;
+      const dashUsed = (profileRow as any)?.dashboard_count || 0;
       const dashRemaining = dashLimit === -1 ? 999 : Math.max(0, dashLimit - dashUsed);
       
       if (dashLimit === 0 || (dashLimit !== -1 && dashUsed >= dashLimit)) {
