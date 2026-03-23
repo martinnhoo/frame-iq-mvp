@@ -608,7 +608,7 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es",
       IN: "en", US: "en", UK: "en", FR: "fr", DE: "de",
     };
-    const uiLang = (user_language as string) || "en";
+    const uiLang2 = (user_language as string) || "en";
     const personaMarket = (persona?.result as any)?.preferred_market || "";
     const contentLangCode = MARKET_LANG_MAP[personaMarket?.toUpperCase()] || uiLang;
     const uiLangName = LANG_NAMES[uiLang] || "English";
