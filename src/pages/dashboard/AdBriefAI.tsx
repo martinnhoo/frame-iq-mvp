@@ -598,7 +598,9 @@ export default function AdBriefAI() {
   useEffect(()=>{
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
-    if(!pid){setConnections([]);return;}
+    // Don't clear connections immediately if no persona — wait for persona to load
+    // This prevents the flash of "Connect Meta" screen
+    if(!pid) return; // leave connections as-is until persona resolves
     // Check specific connection for this account, then fall back to global (null)
     Promise.all([
       supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).eq("persona_id",pid),
@@ -1228,7 +1230,7 @@ export default function AdBriefAI() {
             <style>{`@keyframes skPulse{0%,100%{opacity:0.35}50%{opacity:0.75}}`}</style>
           </div>
         )}
-        {messages.length===0&&!proactiveLoading&&(
+        {messages.length===0&&!proactiveLoading&&contextReady&&(
           <div style={{maxWidth:620,margin:"16px auto 0"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
