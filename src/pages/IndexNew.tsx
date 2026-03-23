@@ -742,7 +742,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
-// ─── Immersive Hero — pixel-fiel ao produto real ─────────────────────────────
+// ─── Immersive Hero v11 — vertical rhythm fix ───────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
@@ -834,13 +834,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(32px,4vw,52px) clamp(16px,3vw,32px) clamp(24px,3vw,40px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(60px,6vw,80px) clamp(16px,3vw,32px) clamp(24px,3vw,36px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Ambient glow reacts to industry */}
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 50% at 50% -5%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
       {/* ── HEADLINE — compact, one visual line ── */}
-      <div style={{ textAlign: 'center', marginBottom: 20, maxWidth: 960, width: '100%' }}>
+      <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
         <h1 style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff', whiteSpace: 'nowrap' as const }}>
           {h1p[0]}
           {h1p[1] && <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}> {h1p[1]}</span>}
@@ -872,7 +872,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body — exact replica of real product */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 430, maxHeight: 430, overflow: 'hidden' }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 400, maxHeight: 400, overflow: 'hidden' }} className="demo-app-body">
 
             {/* ─ SIDEBAR — faithful replica ─ */}
             <div className="demo-sidebar-inner" style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
