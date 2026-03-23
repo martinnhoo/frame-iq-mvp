@@ -49,7 +49,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Manage 10 clients like you have a full data team.", for_d0: "AdBrief connects to each client's ad account and gives your strategists real answers — which creatives to scale, which to kill, what to brief next.",
     for_h1: "Stop flying blind on creative decisions.", for_d1: "AdBrief gives you data-backed answers — which format is underperforming, what the winning hook pattern is, what to brief next.",
     for_h2b: "Your campaigns, finally speaking to each other.", for_d2: "Connect your company's ad accounts and give your whole team access to a shared AI that knows your performance history.",
-    for_cta: "Try free for 1 day",
+    for_cta: "Start for free",
     for_p0_0: "Per-client accounts with Meta Ads connection", for_p0_1: "Real-time performance in chat", for_p0_2: "Brief generation tuned to each brand", for_p0_3: "AI that learns each client's patterns",
     for_p1_0: "Real spend and CTR in every answer", for_p1_1: "Pattern detection across performers", for_p1_2: "Competitor analysis and benchmarking", for_p1_3: "Account memory that improves over time",
     for_p2_0: "Connected to your real data", for_p2_1: "Accounts for each product line", for_p2_2: "Brand context baked in", for_p2_3: "Team-wide shared intelligence",
@@ -112,7 +112,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
     for_h2b: "Suas campanhas finalmente conectadas.", for_d2: "Conecte as contas e dê ao time acesso a uma IA que conhece seu histórico de performance.",
-    for_cta: "Testar grátis por 1 dia",
+    for_cta: "Começar grátis",
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
@@ -175,7 +175,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gestiona 10 clientes como si tuvieras un equipo de datos.", for_d0: "AdBrief se conecta a cada cuenta y da respuestas reales — qué escalar, qué pausar, qué briefear.",
     for_h1: "Deja de decidir a ciegas.", for_d1: "AdBrief te da respuestas con datos — qué formato underperforma, cuál es el hook ganador.",
     for_h2b: "Tus campañas, finalmente conectadas.", for_d2: "Conecta las cuentas y da acceso a una IA que conoce tu historial de performance.",
-    for_cta: "Probar gratis 1 día",
+    for_cta: "Comenzar gratis",
     for_p0_0: "Cuentas por cliente con Meta Ads", for_p0_1: "Performance en tiempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Datos reales en cada respuesta", for_p1_1: "Detección de patrones", for_p1_2: "Análisis de competidores", for_p1_3: "Memoria que mejora",
     for_p2_0: "Conectado a datos reales", for_p2_1: "Personas por producto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligencia compartida",
@@ -923,12 +923,12 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 20px', color: '#fff', whiteSpace: 'pre-line' as const }}>
           {t.hero_h1}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 440 }}>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 520 }}>
           {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como un analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
         </p>
-        <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+        <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '15px 40px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s, transform 0.15s', letterSpacing: '-0.025em' }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '0.9'; el.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }}>
           {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
         </button>
       </div>
@@ -1282,7 +1282,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
   return (
     <Section id="for" bg="subtle">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
