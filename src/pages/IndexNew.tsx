@@ -878,26 +878,24 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (!allLines.length) return null;
 
     return (
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-        {/* AB avatar */}
-        <div style={{ width: 24, height: 24, borderRadius: 6, background: `linear-gradient(135deg, #0ea5e9, #6366f1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-          <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
           {allLines.map((line, i) => {
             const isAction = /^(Fix:|Ação:|Action:|Acción:|→)/i.test(line.replace(/\*\*/g, ''));
             const isLast = i === allLines.length - 1 && phase === 'streaming';
             return (
               <MdLine key={i} text={line} style={{
                 fontFamily: F,
-                fontSize: isAction ? 12.5 : 13,
-                lineHeight: 1.6,
+                fontSize: 14,
+                lineHeight: 1.65,
                 margin: 0,
-                color: isAction ? industry.color : i === 0 ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.88)',
+                color: isAction ? industry.color : i === 0 ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.85)',
                 fontWeight: isAction ? 600 : 400,
-                opacity: isLast ? 0.65 : 1,
+                opacity: isLast ? 0.6 : 1,
                 transition: 'opacity 0.2s',
-                paddingLeft: isAction ? 0 : 0,
               }} />
             );
           })}
@@ -913,41 +911,29 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 60% 45% at 50% -10%, ${industry.color}12 0%, transparent 60%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
       {/* ── SOCIAL PROOF ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, padding: '5px 12px 5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 1 }}>
-          {[0,1,2,3,4].map(i => <svg key={i} width="10" height="10" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
+          {[0,1,2,3,4].map(i => <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
         </div>
-        <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.01em' }}>
-          {lang === 'pt' ? '4.9 · 340+ gestores de tráfego' : lang === 'es' ? '4.9 · 340+ media buyers' : '4.9 · 340+ media buyers'}
+        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.01em' }}>
+          {lang === 'pt' ? '4.9 — 340+ gestores' : lang === 'es' ? '4.9 — 340+ media buyers' : '4.9 — 340+ media buyers'}
         </span>
       </div>
 
       {/* ── HEADLINE ── */}
       <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 900, width: '100%' }}>
-        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 16px', color: '#fff', whiteSpace: 'pre-line' as const }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 20px', color: '#fff', whiteSpace: 'pre-line' as const }}>
           {t.hero_h1}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.2vw,18px)', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, margin: '0 auto 28px', maxWidth: 480 }}>{t.hero_sub}</p>
-        {/* CTAs */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' as const }}>
-          <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: '13px 28px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-            {t.hero_cta}
-          </button>
-          <button onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
-            style={{ fontFamily: F, fontSize: 14, fontWeight: 500, padding: '13px 24px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.10)', cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '-0.01em' }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.10)'; el.style.color='rgba(255,255,255,0.8)'; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.6)'; }}>
-            {t.hero_see}
-          </button>
-        </div>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 auto 32px', maxWidth: 440 }}>{t.hero_sub}</p>
+        <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 32px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+          {t.hero_cta}
+        </button>
       </div>
 
-
-
-      {/* ── DEMO WINDOW ── */}
-      <div style={{ width: '100%', maxWidth: 1060, position: 'relative' }}>
+      <div style={{ marginTop: 52, width: '100%', maxWidth: 1060, position: 'relative' }}>
         {/* Glow layer behind the window */}
         <div style={{ position: 'absolute', inset: '-1px', borderRadius: 18, background: 'linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.10) 50%, rgba(14,165,233,0.06) 100%)', zIndex: 0, filter: 'blur(0px)' }} />
         <div style={{ position: 'absolute', bottom: -40, left: '10%', right: '10%', height: 80, background: 'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', zIndex: 0, filter: 'blur(20px)' }} />
@@ -970,11 +956,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
           </div>
 
-          {/* App body — exact replica of real product */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 400, maxHeight: 400, overflow: 'hidden' }} className="demo-app-body">
+          {/* App body — chat only, no sidebar */}
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 460, maxHeight: 460, overflow: 'hidden' }} className="demo-app-body">
 
-            {/* ─ SIDEBAR — clean minimal ─ */}
-            <div className="demo-sidebar-inner" style={{ width: 196, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
+            {/* ─ SIDEBAR — hidden on desktop, shown only in mobile context ─ */}
+            <div className="demo-sidebar-inner" style={{ display: 'none', width: 196, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', flexDirection: 'column', background: '#0b0f18' }}>
               {/* Logo */}
               <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
@@ -1034,29 +1020,28 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* Messages */}
-              <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '16px 0 12px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
-                <div style={{ maxWidth: 700, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+              <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '24px 0 16px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
+                <div style={{ maxWidth: 680, margin: '0 auto', width: '100%', padding: '0 28px', display: 'flex', flexDirection: 'column' as const, gap: 20 }}>
 
-                  {/* Greeting — AB avatar + short direct text */}
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                      <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+                  {/* Greeting */}
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                      <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 0 12px' }}>
+                      <p style={{ fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: '0 0 14px' }}>
                         {lang === 'pt'
-                          ? <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campanhas'}</strong> — identifiquei 3 alertas hoje.</>
+                          ? <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campanhas'}</strong> — identifiquei 3 alertas hoje.</>
                           : lang === 'es'
-                          ? <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campañas'}</strong> — identifiqué 3 alertas hoy.</>
-                          : <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campaigns'}</strong> — found 3 alerts today.</>}
+                          ? <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campañas'}</strong> — identifiqué 3 alertas hoy.</>
+                          : <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campaigns'}</strong> — found 3 alerts today.</>}
                       </p>
-                      {/* Quick action pills */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
-                        {quickActions.map((label, i) => (
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                        {quickActions.slice(0, 3).map((label, i) => (
                           <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                            style={{ padding: '5px 11px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.42)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const, fontWeight: 500 }}
-                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.22)'; e.currentTarget.style.color='rgba(255,255,255,0.78)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.42)'; }}>
+                            style={{ padding: '5px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.38)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
+                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.07)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.18)'; e.currentTarget.style.color='rgba(255,255,255,0.72)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; e.currentTarget.style.color='rgba(255,255,255,0.38)'; }}>
                             {label}
                           </button>
                         ))}
