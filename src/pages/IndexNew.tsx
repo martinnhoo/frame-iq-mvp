@@ -322,23 +322,21 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
-  const bgMap = {
+  const bgMap: Record<string, string> = {
     default: "transparent",
-    subtle:  "rgba(255,255,255,0.012)",
-    dark:    "rgba(0,0,0,0.25)",
-    accent:  "rgba(14,165,233,0.025)",
+    subtle:  "rgba(255,255,255,0.018)",
+    dark:    "rgba(0,0,0,0.32)",
+    accent:  "rgba(14,165,233,0.03)",
   };
   return (
     <motion.section
-      ref={ref}
       id={id}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={className}
-      style={noPadding ? { background: bgMap[bg] } : { padding: "clamp(32px,5vw,72px) clamp(16px,4vw,32px)", background: bgMap[bg] }}
+      style={noPadding ? { background: bgMap[bg] || "transparent" } : { padding: "clamp(48px,6vw,88px) clamp(16px,4vw,32px)", background: bgMap[bg] || "transparent" }}
     >
       {children}
     </motion.section>
