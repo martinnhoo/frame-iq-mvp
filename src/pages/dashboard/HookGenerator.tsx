@@ -61,7 +61,7 @@ const HOOK_CAPS: Record<string, number> = {
 };
 
 export default function HookGenerator() {
-  const { user, profile, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, profile, selectedPersona, aiProfile } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const plan = (profile as any)?.plan || "free";
   const hookCount = HOOK_CAPS[plan] ?? 3;
@@ -72,6 +72,18 @@ export default function HookGenerator() {
   const [market, setMarket] = useState("GLOBAL");
   const [platform, setPlatform] = useState("TikTok");
   const [searchParams] = useSearchParams();
+  useEffect(() => {
+    // Pre-fill from ai_profile (industry/niche)
+    if (aiProfile?.industry && !niche) setNiche(aiProfile.industry);
+    // Pre-fill market from profile
+    if (profile?.preferred_market) {
+      const mkt = profile.preferred_market.toUpperCase();
+      const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
+      if (valid.includes(mkt)) setMarket(mkt);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiProfile, profile]);
+
   useEffect(() => {
     const p = searchParams.get("product"); if (p) setProduct(p);
     const n = searchParams.get("niche"); if (n) setNiche(n);

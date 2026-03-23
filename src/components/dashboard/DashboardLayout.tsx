@@ -43,6 +43,7 @@ export interface DashboardContext {
   refreshUsage: () => Promise<void>;
   selectedPersona: ActivePersona | null;
   setSelectedPersona: (p: ActivePersona | null) => void;
+  aiProfile: { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
 }
 
 export interface Profile {
@@ -83,6 +84,7 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 1024);
   const [profileOpen, setProfileOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
+  const [aiProfile, setAiProfile] = useState<{ industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null>(null);
   const [telegramConn, setTelegramConn] = useState<any>(null);
   const [telegramPairingLink, setTelegramPairingLink] = useState<string|null>(null);
   const [telegramLinkLoading, setTelegramLinkLoading] = useState(false);
@@ -137,6 +139,11 @@ export default function DashboardLayout() {
       (supabase as any).from("telegram_connections").select("chat_id,telegram_username,active")
         .eq("user_id", session.user.id).eq("active", true).maybeSingle()
         .then(({ data }: any) => { if (mounted) setTelegramConn(data || null); });
+      // Load ai_profile for tool pre-fill
+      (supabase as any).from("user_ai_profile")
+        .select("industry, pain_point, avg_hook_score, creative_style")
+        .eq("user_id", session.user.id).maybeSingle()
+        .then(({ data }: any) => { if (mounted) setAiProfile(data || null); });
       if (profileData && mounted) {
         // Test account: reset onboarding every login
         const TEST_EMAIL = "testadbrief@yopmail.com";
@@ -472,7 +479,7 @@ export default function DashboardLayout() {
         )}
 
         <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 100%, rgba(14,165,233,0.04) 0%, transparent 65%), #080c12", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
-          <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona } satisfies DashboardContext} />
+          <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
         </main>
       </div>
 

@@ -240,6 +240,18 @@ export default function PreflightCheck() {
 
   useEffect(() => { loadHistory(); }, [user?.id]);
 
+  // Pre-fill from ai_profile — runs when profile loads
+  useEffect(() => {
+    if (!aiProfile) return;
+    if (aiProfile.industry && !product) setProduct(aiProfile.industry);
+    const rawNotes = (aiProfile.pain_point || "");
+    const instructions = rawNotes.split("|||")
+      .filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && s.trim())
+      .slice(0, 2).join(". ");
+    if (instructions && !complianceNotes) setComplianceNotes(instructions);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiProfile]);
+
   const wordCount = script.trim().split(/\s+/).filter(Boolean).length;
   const estimatedSeconds = Math.round(wordCount / 2.5);
 

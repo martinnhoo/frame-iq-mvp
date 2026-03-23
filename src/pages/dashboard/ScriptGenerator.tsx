@@ -27,7 +27,7 @@ function deriveMarket(lang?: string): string | null {
 }
 
 export default function ScriptGenerator() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
@@ -102,6 +102,17 @@ export default function ScriptGenerator() {
 
     setPersonaApplied(true);
   }, [selectedPersona]);
+
+  // Pre-fill extra context from ai_profile permanent instructions
+  useEffect(() => {
+    if (!aiProfile) return;
+    const rawNotes = aiProfile.pain_point || "";
+    const instructions = rawNotes.split("|||")
+      .filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && s.trim())
+      .slice(0, 3).join(". ");
+    if (instructions && !extraContext) setExtraContext(instructions);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiProfile]);
 
   const generate = async () => {
     if (!product.trim()) { toast.error("Enter a product/service description"); return; }
