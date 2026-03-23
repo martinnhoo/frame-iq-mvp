@@ -53,21 +53,21 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
     { icon: ScanLine,       label: "Upload ad",      action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Write script",   action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Competitor",     action: "competitor", color: "#a78bfa" },
+    { icon: ScanEye,        label: "Competitors",     action: "competitor", color: "#a78bfa" },
     { icon: LayoutDashboard,label: "Dashboard",      action: "dashboard",  color: "#0ea5e9" },
   ],
   pt: [
     { icon: ScanLine,       label: "Upload anúncio",    action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Gerar hooks",        action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Concorrente",        action: "competitor", color: "#a78bfa" },
+    { icon: ScanEye,        label: "Concorrentes",        action: "competitor", color: "#a78bfa" },
     { icon: LayoutDashboard,label: "Dashboard",          action: "dashboard",  color: "#0ea5e9" },
   ],
   es: [
     { icon: ScanLine,       label: "Subir anuncio",     action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Generar hooks",     action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Escribir guión",    action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Competidor",        action: "competitor", color: "#a78bfa" },
+    { icon: ScanEye,        label: "Competidores",        action: "competitor", color: "#a78bfa" },
     { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
   ],
 };
@@ -137,7 +137,7 @@ function InlineToolPanel({ action, onClose, onSend, lang }: {
     },
     competitor: {
       icon: "🔍", color: "#a78bfa",
-      title: { en: "Competitor Analysis", pt: "Análise de Concorrente", es: "Análisis de Competidor" },
+      title: { en: "Competitors Analysis", pt: "Análise de Concorrentes", es: "Análisis de Competidores" },
       placeholder: { en: "Paste competitor URL, describe their ad, or enter brand name…", pt: "Cole URL do concorrente, descreva o criativo, ou escreva a marca…", es: "Pega URL del competidor, describe su anuncio, o escribe la marca…" },
       cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
       buildMsg: (v: string) => `Analyze this competitor: "${v}". Give: 1) Hook type & formula, 2) Emotional trigger, 3) Creative model, 4) What makes it work, 5) How to beat it.`,
