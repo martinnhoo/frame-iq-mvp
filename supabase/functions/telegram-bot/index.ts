@@ -1,4 +1,4 @@
-// telegram-bot — recebe webhooks do Telegram, processa comandos, executa ações
+// telegram-bot v2 — recebe webhooks do Telegram, processa comandos, executa ações
 // Webhook URL: https://<project>.supabase.co/functions/v1/telegram-bot
 import { createClient } from "npm:@supabase/supabase-js@2";
 
