@@ -742,6 +742,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
+// ─── Immersive Hero — pixel-fiel ao produto real ─────────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
@@ -754,195 +755,296 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [lines, activeLine, phase]);
 
-  const ms: React.CSSProperties = { fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.85, margin: '0 0 6px', fontWeight: 400 };
+  const h1 = t.hero_h1 || '';
+  const h1p = h1.split('\n');
   const conn = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
   const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
   const note = lang === 'pt' ? 'Demo · Com sua conta, usa dados reais' : lang === 'es' ? 'Demo · Con tu cuenta, usa datos reales' : 'Demo · With your account, uses real data';
-  const h1 = t.hero_h1 || '';
-  const h1p = h1.split('\n');
 
-  // KPI cards per industry
-  const kpis: Record<string, Array<{label:string;value:string;delta:string;up:boolean}>> = {
-    fitness:  [{ label:'CTR', value:'2.4%', delta:'+0.8', up:true  }, { label:'ROAS', value:'3.1x', delta:'-0.9', up:false }, { label:'CPM', value:'R$38', delta:'-12%', up:true  }],
-    igaming:  [{ label:'CTR', value:'1.8%', delta:'-0.6', up:false }, { label:'ROAS', value:'2.8x', delta:'+0.4', up:true  }, { label:'CPA', value:'R$22', delta:'-8%',  up:true  }],
-    ecomm:    [{ label:'CTR', value:'3.1%', delta:'+1.2', up:true  }, { label:'ROAS', value:'4.1x', delta:'+0.6', up:true  }, { label:'CPM', value:'R$48', delta:'+18%', up:false }],
-    finance:  [{ label:'CPL', value:'R$9',  delta:'-42%', up:true  }, { label:'ROAS', value:'5.1x', delta:'+1.2', up:true  }, { label:'CTR', value:'1.4%', delta:'-0.3', up:false }],
-    saas:     [{ label:'CAC', value:'R$23', delta:'-61%', up:true  }, { label:'ROAS', value:'6.8x', delta:'+2.1', up:true  }, { label:'CTR', value:'2.9%', delta:'+0.7', up:true  }],
+  // Nav items faithful to the real product
+  const navMain = lang === 'pt'
+    ? ['IA Chat','Contas','Concorrentes','Análises']
+    : lang === 'es'
+    ? ['IA Chat','Cuentas','Competidores','Análisis']
+    : ['AI Chat','Accounts','Competitors','Analytics'];
+  const navTools = lang === 'pt'
+    ? ['Gerador de Hooks','Roteiro','Traduzir','Check Criativo','Templates','Boards']
+    : lang === 'es'
+    ? ['Generador de Hooks','Guion','Traducir','Check Creativo','Templates','Boards']
+    : ['Hook Generator','Script','Translate','Creative Check','Templates','Boards'];
+  const toolsLabel = lang === 'pt' ? 'FERRAMENTAS' : lang === 'es' ? 'HERRAMIENTAS' : 'TOOLS';
+  const greetLabel = lang === 'pt' ? 'Boa noite' : lang === 'es' ? 'Buenas noches' : 'Good evening';
+  const quickActions = lang === 'pt'
+    ? [['📊','Resumo da conta'],['⚡','Gerar hooks'],['✍️','Escrever roteiro'],['🎯','O que pausar?']]
+    : lang === 'es'
+    ? [['📊','Resumen'],['⚡','Generar hooks'],['✍️','Escribir guión'],['🎯','¿Qué pausar?']]
+    : [['📊','Account summary'],['⚡','Generate hooks'],['✍️','Write script'],['🎯','What to pause?']];
+
+  // Render AI lines as beautiful structured cards
+  const renderAI = () => {
+    if (phase === 'thinking') return <Dots />;
+    if (phase !== 'streaming' && phase !== 'done') return null;
+    const allLines = activeLine ? [...lines, activeLine] : lines;
+    if (!allLines.length) return null;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 7 }}>
+        {/* Intro */}
+        <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.65, margin: '0 0 4px' }}>
+          <MdLine text={allLines[0]} style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.65, margin: 0 }} />
+        </p>
+        {/* Cards */}
+        {allLines.slice(1).map((line, i) => {
+          const clean = line.replace(/\*\*/g, '');
+          const isAction = /^(Fix:|Ação:|Action:|Acción:|Pausar|Pause|Pausa|Recom|Total)/i.test(clean);
+          const isBold = line.startsWith('**') && line.includes('**—') || line.includes('**—');
+          const isLast = i === allLines.slice(1).length - 1 && phase === 'streaming';
+          const icons = ['🔴','📊','⚡','→'];
+          const icon = isAction ? '→' : icons[i] || '•';
+          const cardBg = isAction
+            ? `${industry.color}12`
+            : i === 0 ? 'rgba(248,113,113,0.06)'
+            : 'rgba(255,255,255,0.04)';
+          const cardBorder = isAction
+            ? `1px solid ${industry.color}35`
+            : i === 0 ? '1px solid rgba(248,113,113,0.18)'
+            : '1px solid rgba(255,255,255,0.07)';
+
+          return (
+            <div key={i} style={{
+              padding: '9px 13px 9px 11px',
+              borderRadius: 12,
+              background: cardBg,
+              border: cardBorder,
+              display: 'flex', gap: 9, alignItems: 'flex-start',
+              opacity: isLast ? 0.75 : 1,
+              transition: 'opacity 0.2s',
+            }}>
+              <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1, color: isAction ? industry.color : undefined }}>{icon}</span>
+              <MdLine text={line} style={{
+                fontFamily: F, fontSize: 13, lineHeight: 1.6, margin: 0,
+                color: isAction ? industry.color : 'rgba(255,255,255,0.85)',
+                fontWeight: isAction ? 600 : 400,
+              }} />
+            </div>
+          );
+        })}
+      </div>
+    );
   };
-  const cards = kpis[activeIndustry] || kpis.fitness;
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(64px,7vw,88px) clamp(16px,4vw,32px) clamp(32px,4vw,48px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(56px,6vw,80px) clamp(16px,3vw,32px) clamp(32px,4vw,56px)', position: 'relative', overflow: 'hidden' }}>
 
-      {/* ── Ambient background — shifts with industry ── */}
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 80% 60% at 50% -10%, ${industry.color}14 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -200, left: '50%', transform: 'translateX(-50%)', width: 900, height: 500, background: `radial-gradient(ellipse, ${industry.color}06 0%, transparent 70%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
+      {/* Ambient glow reacts to industry */}
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 50% at 50% -5%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
-      {/* ── Headline ── */}
-      <div style={{ textAlign: 'center', marginBottom: 'clamp(24px,3vw,36px)', maxWidth: 900, position: 'relative', width: '100%' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 20, background: `${industry.color}12`, border: `1px solid ${industry.color}28`, marginBottom: 18, transition: 'all 0.4s' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: industry.color, boxShadow: `0 0 8px ${industry.color}` }} />
-          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: industry.color, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>{t.hero_badge}</span>
-        </div>
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(26px,4vw,52px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.08, margin: '0 0 14px', color: '#fff' }}>
-          <span>{h1p[0] || h1}</span>
-          {h1p[1] && <> <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.6s' }}>{h1p[1]}</span></>}
+      {/* ── HEADLINE ── */}
+      <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 860, width: '100%' }}>
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(28px,4.5vw,58px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.07, margin: '0 0 14px', color: '#fff' }}>
+          {h1p[0]}
+          {h1p[1] && <> <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}>{h1p[1]}</span></>}
         </h1>
-        <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.3vw,17px)', color: 'rgba(255,255,255,0.52)', lineHeight: 1.6, margin: '0 auto', maxWidth: 560 }}>{t.hero_sub}</p>
+        <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.2vw,17px)', color: 'rgba(255,255,255,0.48)', lineHeight: 1.65, margin: '0 auto', maxWidth: 500 }}>{t.hero_sub}</p>
       </div>
 
-      {/* ── Demo + floating KPI cards ── */}
-      <div style={{ width: '100%', maxWidth: 1040, position: 'relative' }}>
+      {/* ── INDUSTRY TABS ── */}
+      <div style={{ display: 'flex', gap: 5, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {INDUSTRIES_DEMO.map(ind => {
+          const isAct = ind.id === activeIndustry;
+          return (
+            <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 13px', borderRadius: 999, fontFamily: F, fontSize: 12.5, fontWeight: isAct ? 700 : 400, color: isAct ? ind.color : 'rgba(255,255,255,0.38)', background: isAct ? `${ind.color}15` : 'rgba(255,255,255,0.04)', border: `1px solid ${isAct ? ind.color+'35' : 'rgba(255,255,255,0.07)'}`, cursor: 'pointer', transition: 'all 0.2s', letterSpacing: '-0.01em' }}>
+              <span style={{ fontSize: 13 }}>{ind.emoji}</span>
+              {ind.label[lang] || ind.label.en}
+              {isAct && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ind.color, boxShadow: `0 0 5px ${ind.color}` }} />}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Floating KPI cards — left */}
-        <div className="hero-kpi-cards" style={{ position: 'absolute', left: -10, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column' as const, gap: 10, zIndex: 10 }}>
-          {cards.slice(0, 2).map((card, i) => (
-            <div key={`${activeIndustry}-${i}`} className="kpi-card" style={{ padding: '10px 14px', borderRadius: 14, background: 'rgba(13,17,23,0.90)', border: `1px solid ${card.up ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`, backdropFilter: 'blur(16px)', minWidth: 112, boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)` }}>
-              <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '0 0 4px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{card.label}</p>
-              <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: '#fff', margin: '0 0 3px', letterSpacing: '-0.03em' }}>{card.value}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 10, color: card.up ? '#34d399' : '#f87171' }}>{card.up ? '▲' : '▼'}</span>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: card.up ? '#34d399' : '#f87171' }}>{card.delta}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Floating KPI card — right */}
-        <div className="hero-kpi-cards" style={{ position: 'absolute', right: -10, top: '38%', zIndex: 10 }}>
-          <div className="kpi-card" style={{ padding: '10px 14px', borderRadius: 14, background: 'rgba(13,17,23,0.90)', border: `1px solid ${cards[2]?.up ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`, backdropFilter: 'blur(16px)', minWidth: 112, boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)` }}>
-            <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '0 0 4px', letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>{cards[2]?.label}</p>
-            <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: '#fff', margin: '0 0 3px', letterSpacing: '-0.03em' }}>{cards[2]?.value}</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, color: cards[2]?.up ? '#34d399' : '#f87171' }}>{cards[2]?.up ? '▲' : '▼'}</span>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: cards[2]?.up ? '#34d399' : '#f87171' }}>{cards[2]?.delta}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Main browser window ── */}
-        <div className="demo-window" style={{ borderRadius: 18, overflow: 'hidden', border: `1px solid rgba(255,255,255,0.08)`, boxShadow: `0 0 0 1px ${industry.color}18, 0 40px 100px rgba(0,0,0,0.7), 0 0 60px ${industry.color}10`, transition: 'box-shadow 0.8s ease' }}>
+      {/* ── DEMO WINDOW ── */}
+      <div style={{ width: '100%', maxWidth: 1020 }}>
+        <div className="demo-window" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
 
           {/* Browser chrome */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#0d1117', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#0b0e14', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', gap: 5 }}>
-              {(['#ff5f57','#febc2e','#28c840'] as string[]).map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+              {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
             </div>
-            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 240, margin: '0 auto' }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px #34d399' }} />
-              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.38)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
+            <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 210, margin: '0 auto' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
+              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto', padding: '3px 8px', borderRadius: 6, background: `${industry.color}10`, border: `1px solid ${industry.color}20`, transition: 'all 0.4s' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: industry.color, boxShadow: `0 0 5px ${industry.color}` }} />
-              <span style={{ fontFamily: F, fontSize: 9.5, color: industry.color, fontWeight: 600 }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 6, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily: F, fontSize: 9.5, color: '#34d399', fontWeight: 600 }}>
                 {lang === 'pt' ? 'Meta conectado' : lang === 'es' ? 'Meta conectado' : 'Meta connected'}
               </span>
             </div>
           </div>
 
-          {/* App body */}
-          <div style={{ display: 'flex', background: '#0a0c10', minHeight: 420, maxHeight: 440, overflow: 'hidden' }} className="demo-app-body">
+          {/* App body — exact replica of real product */}
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 430, maxHeight: 430, overflow: 'hidden' }} className="demo-app-body">
 
-            {/* Sidebar */}
-            <div className="demo-sidebar-inner" style={{ width: 174, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, background: 'rgba(0,0,0,0.3)' }}>
-              <p style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.16)', letterSpacing: '0.14em', textTransform: 'uppercase', padding: '0 6px', marginBottom: 10 }}>
-                {lang === 'pt' ? 'Contas' : lang === 'es' ? 'Cuentas' : 'Accounts'}
-              </p>
-              {INDUSTRIES_DEMO.map(ind => {
-                const isAct = ind.id === activeIndustry;
-                const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
-                return (
-                  <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', borderRadius: 9, background: isAct ? `${ind.color}14` : 'transparent', border: `1px solid ${isAct ? ind.color+'30' : 'transparent'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                    onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 7, background: isAct ? `${ind.color}18` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>{ind.emoji}</div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontFamily: F, fontSize: 11.5, fontWeight: isAct ? 700 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.38)', margin: 0 }}>{ind.label[lang] || ind.label.en}</p>
-                      {isAct && acc && <p style={{ fontFamily: F, fontSize: 9, color: ind.color, margin: '1px 0 0', opacity: 0.8 }}>{acc.meta}</p>}
+            {/* ─ SIDEBAR — faithful replica ─ */}
+            <div className="demo-sidebar-inner" style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
+              {/* Logo */}
+              <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontFamily: F, fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em' }}>
+                  <span style={{ color: '#0ea5e9' }}>ad</span>brief
+                </span>
+              </div>
+              {/* Main nav */}
+              <div style={{ padding: '8px 8px 4px', flex: 1 }}>
+                {navMain.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 9, marginBottom: 1, background: i === 0 ? 'rgba(14,165,233,0.10)' : 'transparent', cursor: 'pointer' }}>
+                    <div style={{ width: 15, height: 15, borderRadius: 4, background: i === 0 ? 'rgba(14,165,233,0.2)' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: 1, background: i === 0 ? '#0ea5e9' : 'rgba(255,255,255,0.25)' }} />
                     </div>
-                    {isAct && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ind.color, flexShrink: 0, boxShadow: `0 0 6px ${ind.color}` }} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Chat panel */}
-            <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-
-              {/* Chat header with live metrics bar */}
-              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px 8px', background: 'rgba(0,0,0,0.2)' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 7, background: `linear-gradient(135deg, ${industry.color}35, ${industry.color}12)`, border: `1px solid ${industry.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: industry.color }}>✦</div>
-                  <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>AdBrief AI</span>
-                  <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.22)', marginLeft: 2 }}>· {account?.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto' }}>
-                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399', animation: 'pulse 2s ease-in-out infinite' }} />
-                    <span style={{ fontFamily: F, fontSize: 10, color: '#34d399', fontWeight: 600 }}>{conn}</span>
+                    <span style={{ fontFamily: F, fontSize: 12.5, color: i === 0 ? '#e2f4ff' : 'rgba(255,255,255,0.38)', fontWeight: i === 0 ? 600 : 400 }}>{item}</span>
+                    {i === 0 && <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9' }} />}
+                  </div>
+                ))}
+                {/* Tools section */}
+                <div style={{ margin: '10px 0 6px 9px' }}>
+                  <span style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.20)', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>{toolsLabel}</span>
+                </div>
+                {navTools.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 9px', borderRadius: 9, marginBottom: 1, cursor: 'pointer' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: 2, background: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                    <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', fontWeight: 400 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Bottom: language + user */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 7, background: 'rgba(255,255,255,0.04)', marginBottom: 8, width: 'fit-content' }}>
+                  <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em' }}>
+                    {lang === 'pt' ? 'BR PT' : lang === 'es' ? 'MX ES' : 'US EN'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                    {account?.name?.charAt(0) || 'F'}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{account?.name || 'FitCore'}</p>
+                    <p style={{ fontFamily: F, fontSize: 10, color: industry.color, margin: 0, fontWeight: 600 }}>∞ Lifetime</p>
                   </div>
                 </div>
-                {/* Live metrics strip */}
-                <div style={{ display: 'flex', gap: 0, padding: '0 16px 8px', background: 'rgba(0,0,0,0.15)' }}>
-                  {cards.map((card, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, paddingRight: 16, marginRight: 16, borderRight: i < cards.length-1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>{card.label}</span>
-                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: '#fff' }}>{card.value}</span>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: card.up ? '#34d399' : '#f87171' }}>{card.up ? '↑' : '↓'}{card.delta}</span>
-                    </div>
-                  ))}
+              </div>
+            </div>
+
+            {/* ─ CHAT PANEL ─ */}
+            <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+
+              {/* Topbar — account picker */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0d1117', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 10px 5px 8px', borderRadius: 8, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.20)', cursor: 'pointer' }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 5, background: `${industry.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: industry.color }}>
+                    {account?.name?.charAt(0) || 'F'}
+                  </div>
+                  <span style={{ fontFamily: F, fontSize: 12.5, fontWeight: 600, color: '#e2f4ff' }}>{account?.name || 'FitCore Brasil'}</span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                </div>
+                <div style={{ flex: 1 }} />
+                {/* Telegram icon */}
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(39,175,225,0.10)', border: '1px solid rgba(39,175,225,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
+                </div>
+                {/* Avatar */}
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff' }}>
+                  {account?.name?.charAt(0) || 'L'}
                 </div>
               </div>
 
               {/* Messages */}
-              <div ref={chatRef} className="demo-chat" style={{ flex: 1, padding: '14px 18px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {phase !== 'idle' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ maxWidth: '72%', padding: '10px 14px', borderRadius: '16px 16px 4px 16px', background: `linear-gradient(135deg, ${industry.color}22, ${industry.color}10)`, border: `1px solid ${industry.color}28` }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-                        {typedQ}
-                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: industry.color, marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
+              <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '16px 0 12px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
+                <div style={{ maxWidth: 700, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
+
+                  {/* Proactive greeting — exact match to real product */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
+                        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{greetLabel}</span>
+                      </div>
+                      <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.68)', lineHeight: 1.65, margin: '0 0 14px', maxWidth: 560 }}>
+                        {lang === 'pt'
+                          ? `Sua conta Meta Ads está conectada — ${account?.meta || 'Meta · 22 campanhas'}. Identifiquei 3 alertas hoje. O que você quer analisar?`
+                          : lang === 'es'
+                          ? `Tu cuenta Meta Ads está conectada — ${account?.meta || 'Meta · 22 campañas'}. Identifiqué 3 alertas hoy. ¿Qué quieres analizar?`
+                          : `Your Meta Ads account is connected — ${account?.meta || 'Meta · 22 campaigns'}. I found 3 alerts today. What do you want to analyze?`}
                       </p>
+                      {/* Quick action pills — exact match to real product */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                        {quickActions.map(([emoji, label], i) => (
+                          <button key={i} onClick={() => jump(i % qa.length)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(238,240,246,0.55)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
+                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.25)'; e.currentTarget.style.color='#eef0f6'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.09)'; e.currentTarget.style.color='rgba(238,240,246,0.55)'; }}>
+                            <span style={{ fontSize: 12 }}>{emoji}</span>{label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                )}
-                {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                  <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 8, background: `linear-gradient(135deg, ${industry.color}25, ${industry.color}10)`, border: `1px solid ${industry.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, fontSize: 12, color: industry.color }}>✦</div>
-                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px 16px 16px 16px', padding: '12px 14px' }}>
-                      {phase === 'thinking' && <Dots />}
-                      {(phase === 'streaming' || phase === 'done') && (
-                        <>
-                          {lines.map((line, i) => <MdLine key={i} text={line} style={{ ...ms, margin: i === lines.length-1 && !activeLine ? 0 : '0 0 6px' }} />)}
-                          {activeLine && <MdLine text={activeLine} style={{ ...ms, margin: 0 }} />}
-                        </>
-                      )}
+
+                  {/* User message */}
+                  {phase !== 'idle' && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div style={{ maxWidth: '72%', padding: '10px 15px', borderRadius: '18px 18px 4px 18px', background: `linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.15))`, border: '1px solid rgba(14,165,233,0.22)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+                          {typedQ}
+                          {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {phase === 'done' && <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />}
+                  )}
+
+                  {/* AI response */}
+                  {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
+                    <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
+                        </div>
+                        {renderAI()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Suggestion chips after done */}
+                  {phase === 'done' && (
+                    <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />
+                  )}
+                </div>
               </div>
 
-              {/* Bottom bar */}
-              <div className="demo-cta-bar" style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
-                <div className="demo-note" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, padding: '7px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
-                  <p style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.16)', margin: 0, fontStyle: 'italic' }}>{note}</p>
+              {/* Input bar — exact match to real product */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '8px 0 10px', flexShrink: 0 }}>
+                <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} className="demo-cta-bar">
+                    <div style={{ flex: 1, padding: '10px 14px', borderRadius: 14, background: '#1a2032', border: '1px solid rgba(255,255,255,0.09)' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.18)', margin: 0, fontStyle: 'italic' }}>{note}</p>
+                    </div>
+                    <button onClick={onCTA} className="demo-cta-btn"
+                      style={{ fontFamily: F, fontSize: 12.5, fontWeight: 800, padding: '10px 18px', borderRadius: 12, background: `linear-gradient(135deg, #0ea5e9, #06b6d4)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em', boxShadow: '0 0 20px rgba(14,165,233,0.25)' }}
+                      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)'; }}
+                      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.boxShadow='0 0 20px rgba(14,165,233,0.25)'; }}>
+                      {ctabtn} →
+                    </button>
+                  </div>
                 </div>
-                <button onClick={onCTA} className="demo-cta-btn"
-                  style={{ fontFamily: F, fontSize: 12, fontWeight: 800, padding: '10px 18px', borderRadius: 10, background: `linear-gradient(135deg, ${industry.color}, ${industry.color}cc)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.2s', letterSpacing: '-0.01em', boxShadow: `0 0 20px ${industry.color}30` }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow=`0 0 30px ${industry.color}50`; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.boxShadow=`0 0 20px ${industry.color}30`; }}>
-                  {ctabtn} →
-                </button>
               </div>
 
               {/* Mobile pills */}
               <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
                 {qa.slice(0,3).map((item, i) => (
                   <button key={i} onClick={() => jump(i)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? `${industry.color}20` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color+'40' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', fontFamily: F, fontSize: 11, color: qi === i ? industry.color : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400 }}>
-                    <span style={{ fontSize: 13 }}>{['📉','⚡','✍️'][i]}</span>
-                    {item.q.slice(0, 22)}{item.q.length > 22 ? '…' : ''}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, background: qi === i ? `${industry.color}20` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color+'40' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' as const, fontFamily: F, fontSize: 11, color: qi === i ? industry.color : 'rgba(255,255,255,0.55)', fontWeight: qi === i ? 600 : 400 }}>
+                    {['📉','⚡','✍️'][i]} {item.q.slice(0,22)}{item.q.length > 22 ? '…' : ''}
                   </button>
                 ))}
               </div>
@@ -950,16 +1052,19 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
         </div>
 
-        {/* Proofs below demo */}
-        <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }} className="hero-proofs">
-            {(lang === 'pt' ? ['Meta Ads conectado em 30s', 'Dados reais dos últimos 90 dias', 'Cancele antes de 24h, sem cobrança'] : lang === 'es' ? ['Meta Ads conectado en 30s', 'Datos reales de los últimos 90 días', 'Cancela antes de 24h, sin cobro'] : ['Meta Ads connected in 30s', 'Real data from last 90 days', 'Cancel before 24h, no charge']).map((pt, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.5)" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>{pt}</span>
-              </div>
-            ))}
-          </div>
+        {/* Proof bar below demo */}
+        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }} className="hero-proofs">
+          {(lang === 'pt'
+            ? ['Meta Ads conectado em 30s', 'Dados reais dos últimos 90 dias', 'Cancele antes de 24h, sem cobrança']
+            : lang === 'es'
+            ? ['Meta Ads conectado en 30s', 'Datos reales de los últimos 90 días', 'Cancela antes de 24h, sin cobro']
+            : ['Meta Ads connected in 30s', 'Real data from last 90 days', 'Cancel before 24h, no charge']
+          ).map((pt, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke="rgba(52,211,153,0.45)" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{pt}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
