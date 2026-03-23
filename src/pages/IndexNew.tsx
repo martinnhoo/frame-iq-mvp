@@ -742,7 +742,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
 
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
-// ─── Immersive Hero v11 — vertical rhythm fix ───────────────────────────────
+// ─── Immersive Hero v12 — mobile + uau 2026-03-24 ──────────────────────────
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
