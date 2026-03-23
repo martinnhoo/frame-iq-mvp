@@ -680,10 +680,13 @@ export default function AdBriefAI() {
         .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
         .eq("user_id", user.id)
         .order("date", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+        .limit(10) // fetch a few, then filter by persona_id client-side
         .then((r:any)=>{
-          const snap = r.data;
+          const all = (r.data || []) as any[];
+          // Prefer persona-scoped snapshot, fall back to any
+          const snap = pid
+            ? (all.find((s:any) => s.persona_id === pid) || all.find((s:any) => !s.persona_id) || all[0])
+            : all[0];
           const hasMetaConn = connections.includes("meta");
           if(!snap && hasMetaConn){
             // Has Meta but no snapshot yet — run intelligence first
@@ -691,8 +694,12 @@ export default function AdBriefAI() {
               .then(()=>{
                 (supabase as any).from("daily_snapshots")
                   .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
-                  .eq("user_id",user.id).order("date",{ascending:false}).limit(1).maybeSingle()
-                  .then((r2:any)=>{ if(!proactiveFired.current) triggerProactiveGreeting(r2.data, hasMetaConn); })
+                  .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
+                  .then((r2:any)=>{
+                    const all2 = (r2.data || []) as any[];
+                    const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
+                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn);
+                  })
                   .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
               })
               .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
