@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
