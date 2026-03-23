@@ -568,14 +568,16 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
       pfCtx || "",
       (aiProfile as any)?.ai_summary ? `PERFIL DO USUÁRIO: ${(aiProfile as any).ai_summary}` : "",
       (() => {
-        // Telegram connection status — IA deve saber isso
+        // Telegram connection status
         const tg = telegramConnection as any;
         if (tg) {
           const username = tg.telegram_username ? `@${tg.telegram_username}` : "conectado";
           const since = tg.connected_at ? new Date(tg.connected_at).toLocaleDateString("pt-BR") : "";
-          return `TELEGRAM: Conectado (${username}${since ? `, desde ${since}` : ""}). Se o usuário perguntar se o Telegram está conectado, confirme que SIM e informe o username. Comandos disponíveis no bot: /status, /alertas, /pausar [nome], /ajuda.`;
+          return `TELEGRAM: Conectado (${username}${since ? `, desde ${since}` : ""}).
+INSTRUÇÃO: Se o usuário perguntar sobre o Telegram, responda de forma curta e natural — como uma conversa, não como uma lista de comandos. Exemplo: "Sim, o Telegram já está conectado como ${username}. Você recebe alertas automáticos por lá e pode usar /pausar [nome] para pausar um criativo direto pelo bot." Não liste todos os comandos a menos que o usuário peça especificamente.`;
         } else {
-          return `TELEGRAM: Não conectado. Se o usuário perguntar sobre o Telegram ou quiser conectar, oriente a clicar no ícone do Telegram no topo da tela (ao lado do avatar).`;
+          return `TELEGRAM: Não conectado.
+INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de forma natural e direta. Exemplo: "É simples — clique no ícone do Telegram no topo da tela, ao lado do seu avatar. Ele abre um modal que gera o link de conexão para você." Não dê instruções longas.`;
         }
       })(),
       (() => {
