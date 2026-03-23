@@ -140,7 +140,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado ao Meta Ads. A IA usa esse contexto em cada resposta.",
     faq_q6: "Funciona com catálogo?", faq_a6: "Sim. Lê todos os tipos de campanha — DPA, catálogo, Advantage+.",
     faq_q7: "E se não funcionar?", faq_a7: "Cancele em 24h, sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
-    final_label: "COMECE HOJE", final_h2: "Sua conta de anúncios está cheia de insights.\nComece a perguntar.",
+    final_label: "COMECE HOJE", final_h2: "30 segundos para conectar.\nSua conta tem as respostas.",
     final_sub: "Conecte em 2 minutos. Cancele quando quiser.",
     final_cta: "Testar grátis por 1 dia", final_fine: "Qualquer plano · 1 dia grátis · Cancele antes de 24h",
     footer_copy: "© 2026 AdBrief",
@@ -841,7 +841,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
       {/* ── HEADLINE — compact, one visual line ── */}
       <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
           {h1p[0]}
           {h1p[1] && <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}> {h1p[1]}</span>}
         </h1>
@@ -1498,11 +1498,15 @@ export default function IndexNew() {
 
           /* ── Mobile ── */
           @media(max-width:768px){
+            /* Fix hero section overflow */
+            section:first-of-type{overflow-x:hidden!important}
+            /* Demo container — full width */
+            .demo-window{max-width:100%!important;border-radius:12px!important}
             /* Nav */
             .nav-links{display:none!important}
 
             /* Hero text — wrap naturally, smaller size */
-            h1{font-size:clamp(22px,6vw,32px)!important;white-space:normal!important;letter-spacing:-0.03em!important}
+            h1,.hero-h1{font-size:clamp(20px,6vw,30px)!important;white-space:normal!important;letter-spacing:-0.03em!important;line-height:1.15!important}
             .hero-sub-p{font-size:13px!important;white-space:normal!important;max-width:100%!important}
 
             /* Demo window */
@@ -1546,7 +1550,7 @@ export default function IndexNew() {
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
           }
           @media(max-width:480px){
-            h1{font-size:clamp(20px,7vw,28px)!important}
+            h1,.hero-h1{font-size:clamp(18px,7vw,26px)!important}
             .demo-chat-panel{height:320px!important;max-height:320px!important;min-height:320px!important}
             .demo-chat{height:200px!important;max-height:200px!important}
           }
