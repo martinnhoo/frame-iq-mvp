@@ -947,11 +947,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
       {/* ── HEADLINE — compact, one visual line ── */}
       <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
-        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(28px,3.8vw,52px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 1.05, margin: '0 0 8px', color: '#fff' }}>
           {h1p[0]}
-          {h1p[1] && <span style={{ color: '#fff', textShadow: '0 0 40px rgba(14,165,233,0.45), 0 0 80px rgba(14,165,233,0.2)' }}> {h1p[1]}</span>}
+          {h1p[1] && <span style={{ color: '#fff' }}> {h1p[1]}</span>}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(13px,1vw,15px)', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560 }}>{t.hero_sub}</p>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(14px,1.1vw,17px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 auto', maxWidth: 520 }}>{t.hero_sub}</p>
       </div>
 
 
