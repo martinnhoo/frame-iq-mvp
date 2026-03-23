@@ -1156,47 +1156,64 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
           </div>
 
-          {/* App body — chat only, no sidebar */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 460, maxHeight: 460, overflow: 'hidden' }} className="demo-app-body">
+          {/* App body — sidebar + chat */}
+          <div style={{ display: 'flex', background: '#0d1117', minHeight: 520, maxHeight: 520, overflow: 'hidden' }} className="demo-app-body">
 
-            {/* ─ SIDEBAR — hidden on desktop, shown only in mobile context ─ */}
-            <div className="demo-sidebar-inner" style={{ display: 'none', width: 196, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', flexDirection: 'column', background: '#0b0f18' }}>
+            {/* ─ SIDEBAR — context panel with KPIs ─ */}
+            <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
               {/* Logo */}
-              <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
+              <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
                   <span style={{ fontWeight: 700, color: '#38bdf8' }}>ad</span>
                   <span style={{ fontWeight: 900, color: '#eef0f6' }}>brief</span>
                 </span>
               </div>
-              {/* Main nav — 3 items only */}
-              <div style={{ padding: '10px 8px 0', flex: 1 }}>
-                {navMain.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 8, marginBottom: 2, background: i === 0 ? 'rgba(14,165,233,0.09)' : 'transparent' }}>
-                    <div style={{ width: 14, height: 14, borderRadius: 4, background: i === 0 ? 'rgba(14,165,233,0.25)' : 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
-                    <span style={{ fontFamily: F, fontSize: 12.5, color: i === 0 ? '#e2f4ff' : 'rgba(255,255,255,0.32)', fontWeight: i === 0 ? 600 : 400 }}>{item}</span>
-                    {i === 0 && <div style={{ marginLeft: 'auto', width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9' }} />}
-                  </div>
-                ))}
-                {/* Tools divider */}
-                <div style={{ margin: '14px 0 6px 9px' }}>
-                  <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>{toolsLabel}</span>
-                </div>
-                {navTools.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 9px', borderRadius: 8, marginBottom: 2 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: 2, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
-                    <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)' }}>{item}</span>
-                  </div>
-                ))}
+
+              {/* Industry selector */}
+              <div style={{ padding: '10px 10px 6px' }}>
+                <p style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, margin: '0 0 6px 4px' }}>
+                  {lang === 'pt' ? 'CONTA ATIVA' : lang === 'es' ? 'CUENTA ACTIVA' : 'ACTIVE ACCOUNT'}
+                </p>
+                {INDUSTRIES_DEMO.slice(0, 4).map(ind => {
+                  const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
+                  const isAct = ind.id === activeIndustry;
+                  return (
+                    <div key={ind.id} onClick={() => setActiveIndustry(ind.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 8, marginBottom: 2, background: isAct ? `${ind.color}12` : 'transparent', cursor: 'pointer', transition: 'all 0.15s' }}
+                      onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                      onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, background: isAct ? `${ind.color}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
+                        {ind.emoji}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontFamily: F, fontSize: 11.5, fontWeight: isAct ? 600 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.35)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                          {acc?.name || ind.id}
+                        </p>
+                        <p style={{ fontFamily: F, fontSize: 9.5, color: isAct ? ind.color : 'rgba(255,255,255,0.2)', margin: 0 }}>{acc?.meta || ''}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              {/* User row — minimal */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 7, background: `${industry.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: industry.color, flexShrink: 0 }}>
-                  {account?.name?.charAt(0) || 'F'}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{account?.name || 'FitCore'}</p>
-                  <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Pro</p>
-                </div>
+
+              {/* KPI cards */}
+              <div style={{ padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
+                <p style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, margin: '0 0 8px 4px' }}>
+                  {lang === 'pt' ? 'ESTA SEMANA' : lang === 'es' ? 'ESTA SEMANA' : 'THIS WEEK'}
+                </p>
+                {[
+                  { label: 'ROAS', value: '2.1x', trend: '↓ 40%', bad: true },
+                  { label: 'CPM', value: 'R$91', trend: '↑ 38%', bad: true },
+                  { label: 'Hook rate', value: '11%', trend: '↓ 20pt', bad: true },
+                ].map((kpi, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 7, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 4 }}>
+                    <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{kpi.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontFamily: F, fontSize: 11, color: '#fff', fontWeight: 700 }}>{kpi.value}</span>
+                      <span style={{ fontFamily: F, fontSize: 9.5, color: kpi.bad ? '#f87171' : '#34d399', fontWeight: 600 }}>{kpi.trend}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1275,20 +1292,16 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                 </div>
               </div>
 
-              {/* Input bar — exact match to real product */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '8px 0 10px', flexShrink: 0 }}>
-                <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 20px' }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} className="demo-cta-bar">
-                    <div style={{ flex: 1, padding: '10px 14px', borderRadius: 14, background: '#1a2032', border: '1px solid rgba(255,255,255,0.09)' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.18)', margin: 0, fontStyle: 'italic' }}>{note}</p>
-                    </div>
-                    <button onClick={onCTA} className="demo-cta-btn"
-                      style={{ fontFamily: F, fontSize: 12.5, fontWeight: 800, padding: '10px 18px', borderRadius: 12, background: `linear-gradient(135deg, #0ea5e9, #06b6d4)`, color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s', letterSpacing: '-0.01em', boxShadow: '0 0 20px rgba(14,165,233,0.25)' }}
-                      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)'; }}
-                      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.boxShadow='0 0 20px rgba(14,165,233,0.25)'; }}>
-                      {ctabtn} →
-                    </button>
-                  </div>
+              {/* Input bar — premium real-product look */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '10px 16px 12px', flexShrink: 0, background: '#0d1117' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '9px 12px 9px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                  <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.22)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
+                  <button onClick={onCTA}
+                    style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: '8px 16px', borderRadius: 10, background: '#0ea5e9', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                    {ctabtn} →
+                  </button>
                 </div>
               </div>
 
