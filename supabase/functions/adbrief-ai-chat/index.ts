@@ -18,11 +18,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── 1. Init Supabase FIRST ────────────────────────────────────────────────
+    // ── 1. Init Supabase + validate JWT matches user_id ───────────────────────
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Security: verify the auth token belongs to the claimed user_id
+    // Prevents one user from querying another user's data by spoofing user_id
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user || user.id !== user_id) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // ── 2. Plan check + smart rate limiting ──────────────────────────────────
     const { data: profileRow } = await supabase
