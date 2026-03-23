@@ -466,12 +466,9 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg,rgba(14,165,233,0.18),rgba(99,102,241,0.12))", border: "1px solid rgba(14,165,233,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>
-          {timeEmoji}
-        </div>
-        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.01em" }}>{block.title}</span>
-
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.6)", flexShrink: 0 }}/>
+        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.85)", letterSpacing: "-0.01em" }}>{block.title}</span>
       </div>
       {/* Message */}
       <div style={{ paddingLeft: 40 }}>
@@ -1387,11 +1384,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             ):(
               <div>
-                {/* AI avatar — minimal, just identifies the sender */}
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:7}}>
-                  <div style={{width:16,height:16,borderRadius:5,background:"linear-gradient(135deg,rgba(14,165,233,0.4),rgba(99,102,241,0.3))",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <Sparkles size={7} color="rgba(255,255,255,0.7)"/>
-                  </div>
+                {/* AI dot — minimal sender indicator */}
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(14,165,233,0.5)",flexShrink:0}}/>
                 </div>
                 {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>
@@ -1444,29 +1439,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 12px 14px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
-        {/* Toolbar */}
-        <div className="chat-input-area chat-quick-actions" style={{display:"flex",gap:5,marginBottom:8,maxWidth:680,margin:"0 auto 8px",overflowX:"auto",flexWrap:"nowrap",scrollbarWidth:"none",WebkitOverflowScrolling:"touch" as any}}>
-          {TOOLS.map(tool=>{
-            const isDashActive = activeTool==="dashboard";
-            return(
-              <button key={tool.action} onClick={()=>{
-                if(tool.action==="upload") navigate("/dashboard/analyses/new");
-                else if(tool.action==="dashboard") setActiveTool(a=>a==="dashboard"?null:"dashboard");
-                else setActiveTool(a=>a===tool.action?null:tool.action);
-              }}
-                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:10,
-                  background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.03)",
-                  border:`1px solid ${activeTool===tool.action?`${tool.color}35`:"rgba(255,255,255,0.10)"}`,
-                  cursor:"pointer",transition:"all 0.13s",...m}}>
-                <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.35)"}/>
-                <span style={{fontSize:11,fontWeight:600,color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)"}}>{tool.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      <div style={{padding:"8px 16px 12px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
+
         {/* Input */}
-        <div className="chat-input-area" style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"flex-end"}}>
+        <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
           {messages.length>0&&(
             <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} // alerts survive clear, greeting resets title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
               style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
@@ -1495,7 +1471,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
         @media(max-width:640px){
-          .chat-quick-actions{display:none!important}
           .chat-footer-hint{display:none!important}
           textarea::placeholder{font-size:12px!important;opacity:0.35!important}
         }
