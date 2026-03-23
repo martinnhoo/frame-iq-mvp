@@ -848,20 +848,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.2vw,17px)', color: 'rgba(255,255,255,0.48)', lineHeight: 1.65, margin: '0 auto', maxWidth: 500 }}>{t.hero_sub}</p>
       </div>
 
-      {/* ── INDUSTRY TABS ── */}
-      <div style={{ display: 'flex', gap: 5, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {INDUSTRIES_DEMO.map(ind => {
-          const isAct = ind.id === activeIndustry;
-          return (
-            <button key={ind.id} onClick={() => { setActiveIndustry(ind.id); jump(0); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 13px', borderRadius: 999, fontFamily: F, fontSize: 12.5, fontWeight: isAct ? 700 : 400, color: isAct ? ind.color : 'rgba(255,255,255,0.38)', background: isAct ? `${ind.color}15` : 'rgba(255,255,255,0.04)', border: `1px solid ${isAct ? ind.color+'35' : 'rgba(255,255,255,0.07)'}`, cursor: 'pointer', transition: 'all 0.2s', letterSpacing: '-0.01em' }}>
-              <span style={{ fontSize: 13 }}>{ind.emoji}</span>
-              {ind.label[lang] || ind.label.en}
-              {isAct && <div style={{ width: 4, height: 4, borderRadius: '50%', background: ind.color, boxShadow: `0 0 5px ${ind.color}` }} />}
-            </button>
-          );
-        })}
-      </div>
+
 
       {/* ── DEMO WINDOW ── */}
       <div style={{ width: '100%', maxWidth: 1020 }}>
@@ -980,7 +967,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       {/* Quick action pills — exact match to real product */}
                       <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                         {quickActions.map(([emoji, label], i) => (
-                          <button key={i} onClick={() => jump(i % qa.length)}
+                          <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(238,240,246,0.55)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
                             onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.25)'; e.currentTarget.style.color='#eef0f6'; }}
                             onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.09)'; e.currentTarget.style.color='rgba(238,240,246,0.55)'; }}>
