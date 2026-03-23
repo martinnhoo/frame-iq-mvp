@@ -870,7 +870,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     ? ['¿Qué pausar hoy?', 'Generar hooks', '¿Por qué bajó el ROAS?', 'Resumen de la semana']
     : ['What to pause today?', 'Generate hooks', 'Why did ROAS drop?', 'Weekly summary'];
 
-  // Render AI lines as beautiful structured cards
+  // Render AI response — clean text, no colored cards
   const renderAI = () => {
     if (phase === 'thinking') return <Dots />;
     if (phase !== 'streaming' && phase !== 'done') return null;
@@ -878,79 +878,70 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (!allLines.length) return null;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 7 }}>
-        {/* Intro */}
-        <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.65, margin: '0 0 4px' }}>
-          <MdLine text={allLines[0]} style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.65, margin: 0 }} />
-        </p>
-        {/* Cards */}
-        {allLines.slice(1).map((line, i) => {
-          const clean = line.replace(/\*\*/g, '');
-          const isAction = /^(Fix:|Ação:|Action:|Acción:|Pausar|Pause|Pausa|Recom|Total)/i.test(clean);
-          const isBold = line.startsWith('**') && line.includes('**—') || line.includes('**—');
-          const isLast = i === allLines.slice(1).length - 1 && phase === 'streaming';
-          const icons = ['🔴','📊','⚡','→'];
-          const icon = isAction ? '→' : icons[i] || '•';
-          const cardBg = isAction
-            ? `${industry.color}12`
-            : i === 0 ? 'rgba(248,113,113,0.06)'
-            : 'rgba(255,255,255,0.04)';
-          const cardBorder = isAction
-            ? `1px solid ${industry.color}35`
-            : i === 0 ? '1px solid rgba(248,113,113,0.18)'
-            : '1px solid rgba(255,255,255,0.07)';
-
-          return (
-            <div key={i} style={{
-              padding: '9px 13px 9px 11px',
-              borderRadius: 12,
-              background: cardBg,
-              border: cardBorder,
-              display: 'flex', gap: 9, alignItems: 'flex-start',
-              opacity: isLast ? 0.75 : 1,
-              transition: 'opacity 0.2s',
-            }}>
-              <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1, color: isAction ? industry.color : undefined }}>{icon}</span>
-              <MdLine text={line} style={{
-                fontFamily: F, fontSize: 13, lineHeight: 1.6, margin: 0,
-                color: isAction ? industry.color : 'rgba(255,255,255,0.85)',
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        {/* AB avatar */}
+        <div style={{ width: 24, height: 24, borderRadius: 6, background: `linear-gradient(135deg, #0ea5e9, #6366f1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+          <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+          {allLines.map((line, i) => {
+            const isAction = /^(Fix:|Ação:|Action:|Acción:|→)/i.test(line.replace(/\*\*/g, ''));
+            const isLast = i === allLines.length - 1 && phase === 'streaming';
+            return (
+              <MdLine key={i} text={line} style={{
+                fontFamily: F,
+                fontSize: isAction ? 12.5 : 13,
+                lineHeight: 1.6,
+                margin: 0,
+                color: isAction ? industry.color : i === 0 ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.88)',
                 fontWeight: isAction ? 600 : 400,
+                opacity: isLast ? 0.65 : 1,
+                transition: 'opacity 0.2s',
+                paddingLeft: isAction ? 0 : 0,
               }} />
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(60px,6vw,80px) clamp(16px,3vw,32px) clamp(24px,3vw,36px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,8vw,96px) clamp(16px,3vw,32px) clamp(32px,4vw,48px)', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Ambient glow reacts to industry */}
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 50% at 50% -5%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
+      {/* Ambient glow */}
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 60% 45% at 50% -10%, ${industry.color}12 0%, transparent 60%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
 
-      {/* ── SOCIAL PROOF — above headline ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-          <div style={{ display: 'flex', gap: 1 }}>
-            {[0,1,2,3,4].map(i => (
-              <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>
-            ))}
-          </div>
-          <span style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>4.9</span>
-          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-            {lang === 'pt' ? '· usado por 340+ gestores de tráfego' : lang === 'es' ? '· usado por 340+ media buyers' : '· used by 340+ media buyers'}
-          </span>
+      {/* ── SOCIAL PROOF ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, padding: '5px 12px 5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', gap: 1 }}>
+          {[0,1,2,3,4].map(i => <svg key={i} width="10" height="10" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
         </div>
+        <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.01em' }}>
+          {lang === 'pt' ? '4.9 · 340+ gestores de tráfego' : lang === 'es' ? '4.9 · 340+ media buyers' : '4.9 · 340+ media buyers'}
+        </span>
       </div>
 
-      {/* ── HEADLINE — compact, one visual line ── */}
-      <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
-        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(28px,3.8vw,52px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 1.05, margin: '0 0 8px', color: '#fff' }}>
-          {h1p[0]}
-          {h1p[1] && <span style={{ color: '#fff' }}> {h1p[1]}</span>}
+      {/* ── HEADLINE ── */}
+      <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 900, width: '100%' }}>
+        <h1 className="hero-h1" style={{ fontFamily: F, fontSize: 'clamp(36px,5.5vw,72px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.0, margin: '0 0 16px', color: '#fff', whiteSpace: 'pre-line' as const }}>
+          {t.hero_h1}
         </h1>
-        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(14px,1.1vw,17px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 auto', maxWidth: 520 }}>{t.hero_sub}</p>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(15px,1.2vw,18px)', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, margin: '0 auto 28px', maxWidth: 480 }}>{t.hero_sub}</p>
+        {/* CTAs */}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' as const }}>
+          <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: '13px 28px', borderRadius: 10, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s', letterSpacing: '-0.02em' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+            {t.hero_cta}
+          </button>
+          <button onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{ fontFamily: F, fontSize: 14, fontWeight: 500, padding: '13px 24px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.10)', cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '-0.01em' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.10)'; el.style.color='rgba(255,255,255,0.8)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.6)'; }}>
+            {t.hero_see}
+          </button>
+        </div>
       </div>
 
 
@@ -1042,26 +1033,26 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '16px 0 12px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
                 <div style={{ maxWidth: 700, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
 
-                  {/* Proactive greeting — short and direct */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
+                  {/* Greeting — AB avatar + short direct text */}
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                      <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+                    </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
-                        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.01em' }}>
-                          {lang === 'pt'
-                            ? `${account?.meta || 'Meta · 22 campanhas'} — 3 alertas hoje.`
-                            : lang === 'es'
-                            ? `${account?.meta || 'Meta · 22 campañas'} — 3 alertas hoy.`
-                            : `${account?.meta || 'Meta · 22 campaigns'} — 3 alerts today.`}
-                        </span>
-                      </div>
-                      {/* Quick action pills — no emoji, clean text */}
+                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 0 12px' }}>
+                        {lang === 'pt'
+                          ? <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campanhas'}</strong> — identifiquei 3 alertas hoje.</>
+                          : lang === 'es'
+                          ? <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campañas'}</strong> — identifiqué 3 alertas hoy.</>
+                          : <><strong style={{ color: '#fff' }}>{account?.meta || 'Meta · 22 campaigns'}</strong> — found 3 alerts today.</>}
+                      </p>
+                      {/* Quick action pills */}
                       <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
                         {quickActions.map((label, i) => (
                           <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                            style={{ padding: '5px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.45)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const, fontWeight: 500 }}
-                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.22)'; e.currentTarget.style.color='rgba(255,255,255,0.8)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.45)'; }}>
+                            style={{ padding: '5px 11px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.42)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const, fontWeight: 500 }}
+                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.22)'; e.currentTarget.style.color='rgba(255,255,255,0.78)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.42)'; }}>
                             {label}
                           </button>
                         ))}
@@ -1072,8 +1063,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   {/* User message */}
                   {phase !== 'idle' && (
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div style={{ maxWidth: '72%', padding: '10px 15px', borderRadius: '18px 18px 4px 18px', background: `linear-gradient(135deg, rgba(14,165,233,0.22), rgba(99,102,241,0.15))`, border: '1px solid rgba(14,165,233,0.22)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+                      <div style={{ maxWidth: '70%', padding: '9px 14px', borderRadius: '12px 12px 3px 12px', background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.88)', lineHeight: 1.5, margin: 0 }}>
                           {typedQ}
                           {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 2, height: 13, background: '#0ea5e9', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
                         </p>
@@ -1734,8 +1725,8 @@ export default function IndexNew() {
             .nav-links{display:none!important}
 
             /* Hero text — wrap naturally, smaller size */
-            h1,.hero-h1{font-size:clamp(20px,6vw,30px)!important;white-space:normal!important;letter-spacing:-0.03em!important;line-height:1.15!important}
-            .hero-sub-p{font-size:13px!important;white-space:normal!important;max-width:100%!important}
+            h1,.hero-h1{font-size:clamp(28px,7vw,38px)!important;white-space:normal!important;letter-spacing:-0.04em!important;line-height:1.1!important}
+            .hero-sub-p{font-size:14px!important;white-space:normal!important;max-width:100%!important}
 
             /* Demo window */
             .demo-window{border-radius:14px!important}
