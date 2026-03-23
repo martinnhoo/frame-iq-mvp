@@ -1236,11 +1236,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"12px 14px 8px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
-          <div style={{maxWidth:680,margin:"0 auto 16px",display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
             {accountAlerts.map((alert:any) => {
               const isHigh = alert.urgency === "high";
               const isDismissing = alertsDismissing.has(alert.id);
@@ -1297,7 +1297,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.length===0&&proactiveLoading&&(
-          <div style={{maxWidth:680,margin:"0 auto",paddingTop:24}}>
+          <div style={{maxWidth:720,margin:"0 auto",paddingTop:24,padding:"24px 16px 0"}}>
             <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:16}}>
               <div style={{width:28,height:28,borderRadius:8,background:"rgba(14,165,233,0.10)",flexShrink:0,animation:"skPulse 1.4s ease-in-out infinite"}}/>
               <div style={{flex:1}}>
@@ -1316,7 +1316,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
         {messages.length===0&&!proactiveLoading&&contextReady&&(
-          <div style={{maxWidth:620,margin:"16px auto 0"}}>
+          <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
               <div style={{textAlign:"center",padding:"32px 20px"}}>
@@ -1356,7 +1356,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} style={{maxWidth:680,margin:"0 auto 14px"}}>
+          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 14px",padding:"0 16px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end"}}>
                 <div style={{padding:"10px 14px",borderRadius:"14px 14px 4px 14px",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.2)",fontSize:13,color:"rgba(255,255,255,0.85)",...j,maxWidth:"82%",lineHeight:1.55}}>
@@ -1423,7 +1423,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div style={{padding:"8px 16px 12px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
 
         {/* Input */}
-        <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+        <div style={{display:"flex",gap:8,alignItems:"flex-end",maxWidth:720,margin:"0 auto"}}>
           {messages.length>0&&(
             <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} // alerts survive clear, greeting resets title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
               style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
@@ -1445,7 +1445,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
           </button>
         </div>
-        <p className="chat-footer-hint" style={{...m,fontSize:11,color:"rgba(255,255,255,0.10)",textAlign:"center",marginTop:5,letterSpacing:"0.03em"}}>{L.footer}</p>
+        <p className="chat-footer-hint" style={{...m,fontSize:11,color:"rgba(255,255,255,0.10)",textAlign:"center",marginTop:5,letterSpacing:"0.03em",maxWidth:720,margin:"5px auto 0"}}>{L.footer}</p>
       </div>
 
       <style>{`
