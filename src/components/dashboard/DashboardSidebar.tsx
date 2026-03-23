@@ -168,10 +168,10 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
           {PRIMARY_NAV.map(({ url, label, icon, exact, hot }) => primaryItem(url, label, icon, exact, hot))}
 
           {/* Divider */}
-          <div style={{ height: 1, background: SB.divider, margin: "10px 12px" }} />
+          <div style={{ height: 1, background: SB.divider, margin: "10px 12px 2px" }} />
 
-          {/* Tools section */}
-          {sectionLabel(language==="pt"?"Ferramentas":language==="es"?"Herramientas":"Tools")}
+          {/* Tools section — lower visual weight than primary nav */}
+          <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.20)", letterSpacing: "0.10em", textTransform: "uppercase", padding: "6px 16px 2px", margin: 0 }}>{language==="pt" ? "Ferramentas" : language==="es" ? "Herramientas" : "Tools"}</p>
           {TOOLS_NAV.map(({ url, label, icon }) => toolItem(url, label, icon))}
 
         </nav>

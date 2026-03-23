@@ -475,10 +475,12 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
-      {/* Greeting header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, boxShadow: "0 0 8px rgba(14,165,233,0.6)" }}/>
-        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{block.title}</span>
+      {/* Greeting header — AB avatar + title */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>AB</span>
+        </div>
+        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>{block.title}</span>
       </div>
 
       {/* If real data: show KPI callout row + message */}
@@ -810,12 +812,15 @@ export default function AdBriefAI() {
 
     setProactiveLoading(true);
     try {
-      const today = new Date();
-      const hour = today.getHours();
-      const greeting = lang === "pt"
-        ? hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite"
-        : lang === "es" ? (hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches")
-        : (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
+      // Neutral greeting — no time-of-day dependency
+      const greeting = lang === "pt" ? "AdBrief"
+        : lang === "es" ? "AdBrief"
+        : "AdBrief";
+
+      // Title shown bold at top of proactive block
+      const greetingTitle = lang === "pt" ? "Sua conta está pronta."
+        : lang === "es" ? "Tu cuenta está lista."
+        : "Your account is ready.";
 
       let proactiveMsg = "";
 
@@ -830,7 +835,7 @@ export default function AdBriefAI() {
 
         const parts: string[] = [];
         if (lang === "pt") {
-          parts.push(`${greeting}. Analisei sua conta — R$${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
+          parts.push(`Analisei sua conta — R$${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
           if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, R$${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
@@ -838,12 +843,12 @@ export default function AdBriefAI() {
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
           parts.push("O que quer fazer?");
         } else if (lang === "es") {
-          parts.push(`${greeting}. Analicé tu cuenta — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
+          parts.push(`Analicé tu cuenta — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
           parts.push("¿Qué quieres hacer?");
         } else {
-          parts.push(`${greeting}. Checked your account — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
+          parts.push(`Checked your account — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
           parts.push("What do you want to do?");
@@ -851,49 +856,41 @@ export default function AdBriefAI() {
         proactiveMsg = parts.join(" ");
 
       } else if (snapshot) {
-        // ── Meta conectado mas sem campanhas ativas — usa histórico disponível ─
         const histSpend = (snapshot.total_spend || 0) > 0;
         const hasWinners = (snapshot.winners_count || 0) > 0;
         const toPause = (snapshot.losers_count || 0);
         if (lang === "pt") {
           proactiveMsg = histSpend
-            ? `${greeting}. Nenhuma campanha ativa essa semana, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${toPause ? `, ${toPause} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou antes?`
-            : `${greeting}. Meta conectado. Sem dados essa semana ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
+            ? `Nenhuma campanha ativa essa semana, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${toPause ? `, ${toPause} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou antes?`
+            : `Meta conectado. Sem dados essa semana ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
         } else if (lang === "es") {
           proactiveMsg = histSpend
-            ? `${greeting}. Sin campañas activas esta semana, pero tengo tu historial: $${snapshot.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`
-            : `${greeting}. Meta conectado. Sin datos esta semana — ¿genero hooks, escribo un guión o hago preflight?`;
+            ? `Sin campañas activas esta semana, pero tengo tu historial: $${snapshot.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`
+            : `Meta conectado. Sin datos esta semana — ¿genero hooks, escribo un guión o hago preflight?`;
         } else {
           proactiveMsg = histSpend
-            ? `${greeting}. No active campaigns this week, but I have your history: $${snapshot.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${toPause ? `, ${toPause} underperformers flagged` : ""}. Want to launch something new or review what worked?`
-            : `${greeting}. Meta connected. No data this week yet — want to generate hooks, write a script, or preflight a creative?`;
+            ? `No active campaigns this week, but I have your history: $${snapshot.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${toPause ? `, ${toPause} underperformers flagged` : ""}. Want to launch something new or review what worked?`
+            : `Meta connected. No data this week yet — want to generate hooks, write a script, or preflight a creative?`;
         }
 
       } else if (hasMetaConn) {
-        // ── Meta conectado mas sem campanhas ─────────────────────────────────
         proactiveMsg = lang === "pt"
-          ? `${greeting}. Sua conta Meta Ads está conectada, mas não encontrei campanhas com dados nos últimos 7 dias. Você tem campanhas pausadas que quer reativar? Ou quer criar novos criativos?`
+          ? `Sua conta Meta Ads está conectada, mas não encontrei campanhas com dados nos últimos 7 dias. Você tem campanhas pausadas que quer reativar? Ou quer criar novos criativos?`
           : lang === "es"
-          ? `${greeting}. Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear nuevos creativos?`
-          : `${greeting}. Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns to reactivate?`;
+          ? `Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear nuevos creativos?`
+          : `Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns to reactivate?`;
       } else {
-        // ── Sem Meta conectado ────────────────────────────────────────────────
         proactiveMsg = lang === "pt"
-          ? `${greeting}. Para eu trabalhar de verdade preciso ver sua conta Meta Ads — sem isso só consigo respostas genéricas que não ajudam. Conecte e vejo CTR, spend, o que escalar e o que pausar em tempo real.`
+          ? `Para trabalhar de verdade preciso ver sua conta Meta Ads — sem isso só consigo respostas genéricas que não ajudam. Conecte e vejo CTR, spend, o que escalar e o que pausar em tempo real.`
           : lang === "es"
-          ? `${greeting}. Para trabajar bien necesito ver tu cuenta Meta Ads. Conéctala y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
-          : `${greeting}. To work properly I need to see your Meta Ads account. Connect it and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
+          ? `Para trabajar bien necesito ver tu cuenta Meta Ads. Conéctala y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
+          : `To work properly I need to see your Meta Ads account. Connect it and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
       }
-
-      // Remove greeting from content if it starts with it (avoids duplicate)
-      const cleanMsg = proactiveMsg.startsWith(greeting)
-        ? proactiveMsg.slice(greeting.length).replace(/^[.,!]\s*/, "").trim()
-        : proactiveMsg;
 
       const aid = Date.now() + 1;
       setMessages([{
         role: "assistant",
-        blocks: [{ type: "proactive" as any, title: greeting, content: cleanMsg }],
+        blocks: [{ type: "proactive" as any, title: greetingTitle, content: proactiveMsg }],
         ts: aid, id: aid
       }]);
 
@@ -1399,9 +1396,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             ):(
               <div>
-                {/* AI dot — minimal sender indicator */}
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                  <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(14,165,233,0.5)",flexShrink:0}}/>
+                {/* AB avatar — consistent with greeting */}
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <span style={{fontFamily:F,fontSize:8.5,fontWeight:800,color:"#fff",letterSpacing:"-0.02em"}}>AB</span>
+                  </div>
                 </div>
                 {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>

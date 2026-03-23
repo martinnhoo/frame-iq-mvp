@@ -356,10 +356,12 @@ export default function DashboardLayout() {
                 </>
               ) : (
                 <>
-                  <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.4)" }} />
+                  <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Users className="h-3 w-3" style={{ color: "#0ea5e9" }} />
                   </span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", fontFamily: "'Inter', sans-serif" }}>{dt("cm_no_account")}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
+                    {language === "pt" ? "Selecionar conta →" : language === "es" ? "Seleccionar cuenta →" : "Select account →"}
+                  </span>
                 </>
               )}
               <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", marginLeft: 2 }} />
