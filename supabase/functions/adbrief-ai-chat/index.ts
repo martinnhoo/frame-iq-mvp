@@ -225,6 +225,7 @@ Deno.serve(async (req) => {
       { data: dailySnapshots },
       { data: preflightHistory },
       { data: accountAlerts },
+      { data: telegramConnection },
     ] = await Promise.all([
       // 1. Recent analyses — last 15, full result for context
       supabase.from("analyses")
@@ -299,6 +300,13 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(5)
         .then((r: any) => r.error ? { data: [] } : r),
+      // 11. Telegram connection status
+      (supabase as any).from("telegram_connections")
+        .select("chat_id, telegram_username, connected_at")
+        .eq("user_id", user_id)
+        .eq("active", true)
+        .maybeSingle()
+        .then((r: any) => r.error ? { data: null } : r),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -559,6 +567,17 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
       })(),
       pfCtx || "",
       (aiProfile as any)?.ai_summary ? `PERFIL DO USUÁRIO: ${(aiProfile as any).ai_summary}` : "",
+      (() => {
+        // Telegram connection status — IA deve saber isso
+        const tg = telegramConnection as any;
+        if (tg) {
+          const username = tg.telegram_username ? `@${tg.telegram_username}` : "conectado";
+          const since = tg.connected_at ? new Date(tg.connected_at).toLocaleDateString("pt-BR") : "";
+          return `TELEGRAM: Conectado (${username}${since ? `, desde ${since}` : ""}). Se o usuário perguntar se o Telegram está conectado, confirme que SIM e informe o username. Comandos disponíveis no bot: /status, /alertas, /pausar [nome], /ajuda.`;
+        } else {
+          return `TELEGRAM: Não conectado. Se o usuário perguntar sobre o Telegram ou quiser conectar, oriente a clicar no ícone do Telegram no topo da tela (ao lado do avatar).`;
+        }
+      })(),
       (() => {
         const alerts = (accountAlerts || []) as any[];
         if (!alerts.length) return "";

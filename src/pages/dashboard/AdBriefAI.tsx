@@ -972,47 +972,96 @@ export default function AdBriefAI() {
     let msg=(text??input).trim();
     if(!msg||loading||!contextReady)return;
 
-    // ── Intercept Telegram connect intent — generate real pairing link ──────
-    if (/telegram/i.test(msg) && /conect|alert|receb|notif|want|quero|quiero/i.test(msg) && user?.id) {
+    // ── Intercept Telegram intent — check status first, respond accurately ──
+    if (/telegram/i.test(msg) && user?.id) {
       const uid = Date.now().toString(36);
       setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
       setInput("");
       setLoading(true);
       try {
-        const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
-        await (supabase.from("telegram_pairing_tokens" as any) as any).insert({
-          user_id:user.id, token:tok,
-          expires_at: new Date(Date.now()+10*60*1000).toISOString(),
-        });
-        const link=`https://t.me/AdBriefAlertsBot?start=${tok}`;
-        const aid=Date.now().toString(36)+"r";
-        const txt=lang==="pt"
-          ? `Simples. Clique no link abaixo — ele abre o @AdBriefAlertsBot já com o seu token. Toque em /start e pronto.
+        const { data: tgConn } = await (supabase.from("telegram_connections" as any) as any)
+          .select("chat_id, telegram_username, connected_at")
+          .eq("user_id", user.id).eq("active", true).maybeSingle();
+
+        const aid = Date.now().toString(36)+"r";
+
+        if (tgConn?.chat_id) {
+          // CONNECTED — confirm status and show commands
+          const username = tgConn.telegram_username ? `@${tgConn.telegram_username}` : null;
+          const since = tgConn.connected_at
+            ? new Date(tgConn.connected_at).toLocaleDateString(lang==="pt"?"pt-BR":"en", { day:"2-digit", month:"short", year:"numeric" })
+            : null;
+          const txt = lang==="pt"
+            ? `Sim, seu Telegram está conectado${username ? ` como ${username}` : ""}${since ? ` desde ${since}` : ""}.
+
+Comandos disponíveis no @AdBriefAlertsBot:
+/status — resumo da conta agora
+/alertas — ver alertas ativos
+/pausar [nome] — pausar criativo com confirmação
+
+Para desconectar, clique no ícone do Telegram no topo da tela.`
+            : lang==="es"
+            ? `Sí, tu Telegram está conectado${username ? ` como ${username}` : ""}${since ? ` desde ${since}` : ""}.
+
+Comandos en @AdBriefAlertsBot:
+/status — resumen de cuenta
+/alertas — ver alertas activos
+/pausar [nombre] — pausar creativo con confirmación
+
+Para desconectar, haz clic en el ícono de Telegram arriba.`
+            : `Yes, your Telegram is connected${username ? ` as ${username}` : ""}${since ? ` since ${since}` : ""}.
+
+Commands on @AdBriefAlertsBot:
+/status — account summary
+/alerts — see active alerts
+/pause [name] — pause a creative with confirmation
+
+To disconnect, click the Telegram icon at the top.`;
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
+        } else if (/conect|ativ|quero|want|receb|alert|notif|quiero/i.test(msg)) {
+          // NOT CONNECTED + wants to connect — generate pairing link
+          const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
+          await (supabase.from("telegram_pairing_tokens" as any) as any).insert({
+            user_id:user.id, token:tok,
+            expires_at: new Date(Date.now()+10*60*1000).toISOString(),
+          });
+          const link = `https://t.me/AdBriefAlertsBot?start=${tok}`;
+          const txt = lang==="pt"
+            ? `Simples. Clique no link — ele abre o @AdBriefAlertsBot com o seu token. Toque em /start e pronto.
 
 🔗 ${link}
 
-Você vai receber alertas críticos da sua conta e pode pausar anúncios direto pelo Telegram. Tudo fica registrado aqui com data e hora.`
-          : lang==="es"
-          ? `Simple. Haz clic en el enlace de abajo — abre @AdBriefAlertsBot con tu token. Toca /start y listo.
+Você vai receber alertas críticos e pode pausar anúncios direto pelo Telegram. Tudo fica registrado aqui com data e hora.`
+            : lang==="es"
+            ? `Simple. Haz clic en el enlace — abre @AdBriefAlertsBot con tu token. Toca /start y listo.
 
 🔗 ${link}
 
-Recibirás alertas críticos y podrás pausar anuncios desde Telegram. Todo queda registrado aquí.`
-          : `Simple. Click the link below — it opens @AdBriefAlertsBot with your token. Tap /start and you're done.
+Recibirás alertas críticos y podrás pausar anuncios desde Telegram.`
+            : `Simple. Click the link — it opens @AdBriefAlertsBot with your token. Tap /start and you're done.
 
 🔗 ${link}
 
-You'll get critical alerts and can pause ads from Telegram. Everything logged here with timestamp.`;
-        setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
+You'll get critical alerts and can pause ads from Telegram. Everything logged here.`;
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
+        } else {
+          // NOT CONNECTED + just asking — inform
+          const txt = lang==="pt"
+            ? `Seu Telegram não está conectado ainda. Quer conectar para receber alertas críticos e pausar anúncios direto pelo app?`
+            : lang==="es"
+            ? `Tu Telegram aún no está conectado. ¿Quieres conectarlo para recibir alertas?`
+            : `Your Telegram isn't connected yet. Want to connect to receive alerts and run commands?`;
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:"Telegram",content:txt}]}]);
+        }
       } catch {
-        const eid=Date.now().toString(36)+"e";
-        setMessages(prev=>[...prev,{role:"assistant",id:eid,ts:eid,blocks:[{type:"warning",title:"Erro",content:lang==="pt"?"Não foi possível gerar o link. Tente em Configurações.":"Could not generate link. Try Settings."}]}]);
+        const eid = Date.now().toString(36)+"e";
+        setMessages(prev=>[...prev,{role:"assistant",id:eid,ts:eid,blocks:[{type:"warning",title:"Erro",content:lang==="pt"?"Não foi possível verificar o Telegram. Tente novamente.":"Could not check Telegram status. Try again."}]}]);
       }
       setLoading(false);
       return;
     }
 
-    // If dashboard tool is active, prefix with dashboard intent
+        // If dashboard tool is active, prefix with dashboard intent
     if(activeTool==="dashboard"&&!text){
       const prefix=lang==="pt"?"[DASHBOARD] ":lang==="es"?"[DASHBOARD] ":"[DASHBOARD] ";
       msg=prefix+msg;
