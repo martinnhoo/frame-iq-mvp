@@ -854,22 +854,21 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
   // Nav items faithful to the real product
   const navMain = lang === 'pt'
-    ? ['IA Chat','Contas','Concorrentes','Análises']
+    ? ['IA Chat','Contas','Análises']
     : lang === 'es'
-    ? ['IA Chat','Cuentas','Competidores','Análisis']
-    : ['AI Chat','Accounts','Competitors','Analytics'];
+    ? ['IA Chat','Cuentas','Análisis']
+    : ['AI Chat','Accounts','Analytics'];
   const navTools = lang === 'pt'
-    ? ['Gerador de Hooks','Roteiro','Traduzir','Check Criativo','Templates','Boards']
+    ? ['Gerador de Hooks','Script de Vídeo','Brief Criativo']
     : lang === 'es'
-    ? ['Generador de Hooks','Guion','Traducir','Check Creativo','Templates','Boards']
-    : ['Hook Generator','Script','Translate','Creative Check','Templates','Boards'];
+    ? ['Generador de Hooks','Script de Video','Brief Creativo']
+    : ['Hook Generator','Video Script','Creative Brief'];
   const toolsLabel = lang === 'pt' ? 'FERRAMENTAS' : lang === 'es' ? 'HERRAMIENTAS' : 'TOOLS';
-  const greetLabel = lang === 'pt' ? 'Boa noite' : lang === 'es' ? 'Buenas noches' : 'Good evening';
   const quickActions = lang === 'pt'
-    ? [['📊','Resumo da conta'],['⚡','Gerar hooks'],['✍️','Escrever roteiro'],['🎯','O que pausar?']]
+    ? ['O que pausar hoje?', 'Gerar hooks', 'Por que o ROAS caiu?', 'Resumo da semana']
     : lang === 'es'
-    ? [['📊','Resumen'],['⚡','Generar hooks'],['✍️','Escribir guión'],['🎯','¿Qué pausar?']]
-    : [['📊','Account summary'],['⚡','Generate hooks'],['✍️','Write script'],['🎯','What to pause?']];
+    ? ['¿Qué pausar hoy?', 'Generar hooks', '¿Por qué bajó el ROAS?', 'Resumen de la semana']
+    : ['What to pause today?', 'Generate hooks', 'Why did ROAS drop?', 'Weekly summary'];
 
   // Render AI lines as beautiful structured cards
   const renderAI = () => {
@@ -980,51 +979,42 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           {/* App body — exact replica of real product */}
           <div style={{ display: 'flex', background: '#0d1117', minHeight: 400, maxHeight: 400, overflow: 'hidden' }} className="demo-app-body">
 
-            {/* ─ SIDEBAR — faithful replica ─ */}
-            <div className="demo-sidebar-inner" style={{ width: 210, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
-              {/* Logo */}
-              <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ fontFamily: F, fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em' }}>
-                  <span style={{ color: '#0ea5e9' }}>ad</span>brief
+            {/* ─ SIDEBAR — clean minimal ─ */}
+            <div className="demo-sidebar-inner" style={{ width: 196, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
+              {/* Logo — correct brand rendering */}
+              <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontFamily: F, fontSize: 15, fontWeight: 900, letterSpacing: '-0.05em' }}>
+                  <span style={{ color: '#0ea5e9' }}>ad</span><span style={{ color: '#fff' }}>brief</span>
                 </span>
               </div>
-              {/* Main nav */}
-              <div style={{ padding: '8px 8px 4px', flex: 1 }}>
+              {/* Main nav — 3 items only */}
+              <div style={{ padding: '10px 8px 0', flex: 1 }}>
                 {navMain.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 9, marginBottom: 1, background: i === 0 ? 'rgba(14,165,233,0.10)' : 'transparent', cursor: 'pointer' }}>
-                    <div style={{ width: 15, height: 15, borderRadius: 4, background: i === 0 ? 'rgba(14,165,233,0.2)' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: 1, background: i === 0 ? '#0ea5e9' : 'rgba(255,255,255,0.25)' }} />
-                    </div>
-                    <span style={{ fontFamily: F, fontSize: 12.5, color: i === 0 ? '#e2f4ff' : 'rgba(255,255,255,0.38)', fontWeight: i === 0 ? 600 : 400 }}>{item}</span>
-                    {i === 0 && <div style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9' }} />}
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 9px', borderRadius: 8, marginBottom: 2, background: i === 0 ? 'rgba(14,165,233,0.09)' : 'transparent' }}>
+                    <div style={{ width: 14, height: 14, borderRadius: 4, background: i === 0 ? 'rgba(14,165,233,0.25)' : 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
+                    <span style={{ fontFamily: F, fontSize: 12.5, color: i === 0 ? '#e2f4ff' : 'rgba(255,255,255,0.32)', fontWeight: i === 0 ? 600 : 400 }}>{item}</span>
+                    {i === 0 && <div style={{ marginLeft: 'auto', width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9' }} />}
                   </div>
                 ))}
-                {/* Tools section */}
-                <div style={{ margin: '10px 0 6px 9px' }}>
-                  <span style={{ fontFamily: F, fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.20)', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>{toolsLabel}</span>
+                {/* Tools divider */}
+                <div style={{ margin: '14px 0 6px 9px' }}>
+                  <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>{toolsLabel}</span>
                 </div>
                 {navTools.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 9px', borderRadius: 9, marginBottom: 1, cursor: 'pointer' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 2, background: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
-                    <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', fontWeight: 400 }}>{item}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 9px', borderRadius: 8, marginBottom: 2 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: 2, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
+                    <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)' }}>{item}</span>
                   </div>
                 ))}
               </div>
-              {/* Bottom: language + user */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '10px 12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 7, background: 'rgba(255,255,255,0.04)', marginBottom: 8, width: 'fit-content' }}>
-                  <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em' }}>
-                    {lang === 'pt' ? 'BR PT' : lang === 'es' ? 'MX ES' : 'US EN'}
-                  </span>
+              {/* User row — minimal */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 26, height: 26, borderRadius: 7, background: `${industry.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: industry.color, flexShrink: 0 }}>
+                  {account?.name?.charAt(0) || 'F'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                    {account?.name?.charAt(0) || 'F'}
-                  </div>
-                  <div>
-                    <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{account?.name || 'FitCore'}</p>
-                    <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.32)', margin: 0, fontWeight: 500 }}>{lang === 'pt' ? 'Pro · Conectado' : lang === 'es' ? 'Pro · Conectado' : 'Pro · Connected'}</p>
-                  </div>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{account?.name || 'FitCore'}</p>
+                  <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: 0 }}>Pro</p>
                 </div>
               </div>
             </div>
@@ -1032,23 +1022,19 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             {/* ─ CHAT PANEL ─ */}
             <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
 
-              {/* Topbar — account picker */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0d1117', flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 10px 5px 8px', borderRadius: 8, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.20)', cursor: 'pointer' }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, background: `${industry.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: industry.color }}>
+              {/* Topbar — minimal account selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0d1117', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 10px 4px 8px', borderRadius: 7, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 4, background: `${industry.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: industry.color }}>
                     {account?.name?.charAt(0) || 'F'}
                   </div>
-                  <span style={{ fontFamily: F, fontSize: 12.5, fontWeight: 600, color: '#e2f4ff' }}>{account?.name || 'FitCore Brasil'}</span>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                  <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>{account?.name || 'FitCore Brasil'}</span>
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="rgba(255,255,255,0.3)" strokeWidth="1.3" strokeLinecap="round"/></svg>
                 </div>
                 <div style={{ flex: 1 }} />
-                {/* Telegram icon */}
-                <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(39,175,225,0.10)', border: '1px solid rgba(39,175,225,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
-                </div>
-                {/* Avatar */}
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#0ea5e9,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff' }}>
-                  {account?.name?.charAt(0) || 'L'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.15)' }}>
+                  <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399' }} />
+                  <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(52,211,153,0.8)', fontWeight: 600 }}>Meta</span>
                 </div>
               </div>
 
@@ -1056,28 +1042,27 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '16px 0 12px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
                 <div style={{ maxWidth: 700, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
 
-                  {/* Proactive greeting — exact match to real product */}
+                  {/* Proactive greeting — short and direct */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
-                        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{greetLabel}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: industry.color, flexShrink: 0 }} />
+                        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.01em' }}>
+                          {lang === 'pt'
+                            ? `${account?.meta || 'Meta · 22 campanhas'} — 3 alertas hoje.`
+                            : lang === 'es'
+                            ? `${account?.meta || 'Meta · 22 campañas'} — 3 alertas hoy.`
+                            : `${account?.meta || 'Meta · 22 campaigns'} — 3 alerts today.`}
+                        </span>
                       </div>
-                      <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.68)', lineHeight: 1.65, margin: '0 0 14px', maxWidth: 560 }}>
-                        {lang === 'pt'
-                          ? `Sua conta Meta Ads está conectada — ${account?.meta || 'Meta · 22 campanhas'}. Identifiquei 3 alertas hoje. O que você quer analisar?`
-                          : lang === 'es'
-                          ? `Tu cuenta Meta Ads está conectada — ${account?.meta || 'Meta · 22 campañas'}. Identifiqué 3 alertas hoy. ¿Qué quieres analizar?`
-                          : `Your Meta Ads account is connected — ${account?.meta || 'Meta · 22 campaigns'}. I found 3 alerts today. What do you want to analyze?`}
-                      </p>
-                      {/* Quick action pills — exact match to real product */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-                        {quickActions.map(([emoji, label], i) => (
+                      {/* Quick action pills — no emoji, clean text */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
+                        {quickActions.map((label, i) => (
                           <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(238,240,246,0.55)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
-                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.25)'; e.currentTarget.style.color='#eef0f6'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.09)'; e.currentTarget.style.color='rgba(238,240,246,0.55)'; }}>
-                            <span style={{ fontSize: 12 }}>{emoji}</span>{label}
+                            style={{ padding: '5px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.45)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const, fontWeight: 500 }}
+                            onMouseEnter={e => { e.currentTarget.style.background='rgba(14,165,233,0.08)'; e.currentTarget.style.borderColor='rgba(14,165,233,0.22)'; e.currentTarget.style.color='rgba(255,255,255,0.8)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'; e.currentTarget.style.color='rgba(255,255,255,0.45)'; }}>
+                            {label}
                           </button>
                         ))}
                       </div>
