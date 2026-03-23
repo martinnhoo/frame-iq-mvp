@@ -435,6 +435,14 @@ export default function DashboardLayout() {
           {/* Flex spacer */}
           <div style={{ flex: 1 }} />
 
+          {/* User avatar — opens profile panel */}
+          <button onClick={() => setProfileOpen(true)}
+            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden", marginRight: 6 }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
+          </button>
+
           {/* Telegram icon — opens modal */}
           <button
             onClick={() => setTelegramModalOpen(true)}
@@ -444,23 +452,14 @@ export default function DashboardLayout() {
               display: "flex", alignItems: "center", justifyContent: "center",
               background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)",
               border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)",
-              cursor: "pointer", transition: "all 0.15s", marginRight: 6,
+              cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(39,175,225,0.18)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(39,175,225,0.4)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = telegramConn ? "rgba(39,175,225,0.3)" : "rgba(255,255,255,0.09)"; }}>
-            {/* Official Telegram logo SVG */}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill={telegramConn ? "#27AEE1" : "rgba(255,255,255,0.3)"}/>
               <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
             </svg>
-          </button>
-
-          {/* User avatar — opens profile panel */}
-          <button onClick={() => setProfileOpen(true)}
-            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden" }}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
           </button>
         </header>
 

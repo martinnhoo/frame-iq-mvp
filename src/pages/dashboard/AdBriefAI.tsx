@@ -1420,32 +1420,33 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 16px 12px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
-
-        {/* Input */}
-        <div style={{display:"flex",gap:8,alignItems:"flex-end",maxWidth:720,margin:"0 auto"}}>
-          {messages.length>0&&(
-            <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} // alerts survive clear, greeting resets title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-              style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
-              <RotateCcw size={14}/>
+      <div style={{padding:"8px 0 12px",flexShrink:0}}>
+        <div style={{maxWidth:720,margin:"0 auto",padding:"0 16px",borderTop:"1px solid rgba(255,255,255,0.07)",paddingTop:10}}>
+          {/* Input row: [textarea] [clear] [send] */}
+          <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+            <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+              placeholder={L.placeholder} rows={1}
+              style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}} className="chat-textarea"
+              onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
+              onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
+              onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
+            />
+            {messages.length>0&&(
+              <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+                style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
+                <RotateCcw size={14}/>
+              </button>
+            )}
+            <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady||!hasData}
+              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+              {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
             </button>
-          )}
-          <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
-            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-            placeholder={L.placeholder} rows={1}
-            style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}} className="chat-textarea"
-            onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
-            onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
-            onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
-          />
-          <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady||!hasData}
-            style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-            {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
-          </button>
+          </div>
         </div>
-        <p className="chat-footer-hint" style={{...m,fontSize:11,color:"rgba(255,255,255,0.10)",textAlign:"center",marginTop:5,letterSpacing:"0.03em",maxWidth:720,margin:"5px auto 0"}}>{L.footer}</p>
+
       </div>
 
       <style>{`
