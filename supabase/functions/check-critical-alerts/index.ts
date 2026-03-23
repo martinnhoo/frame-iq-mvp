@@ -27,6 +27,35 @@ const T = {
   PATTERN_CONF:     0.55,  // confiança mínima no padrão para usar no alerta
 };
 
+// ── Telegram message builder ─────────────────────────────────────────────────
+function buildTelegramMessage(alerts: any[], userName: string): string {
+  const greeting = userName ? `Oi ${userName.split(" ")[0]}` : "AdBrief Alerts";
+  const lines = alerts.slice(0, 3).map(a => {
+    const icon = a.urgency === "high" ? "🔴" : "🟡";
+    const ad = a.ad_name ? ` — <i>${a.ad_name}</i>` : "";
+    return `${icon} ${a.detail}${ad}`;
+  });
+  return `⚠️ <b>${greeting}, você tem ${alerts.length} alerta${alerts.length > 1 ? "s" : ""} na sua conta</b>
+
+${lines.join("
+
+")}
+
+/alertas para ver todos | /status para resumo`;
+}
+
+function buildTelegramButtons(alerts: any[]): object | undefined {
+  // If there's a pauseable ad, offer quick action button
+  const pauseable = alerts.find(a => a.ad_name && a.urgency === "high");
+  if (!pauseable) return undefined;
+  return {
+    inline_keyboard: [[
+      { text: `⏸ Pausar ${pauseable.ad_name?.slice(0, 20)}`, callback_data: `pause_confirm:${pauseable.ad_name}:${encodeURIComponent(pauseable.ad_name || "")}` },
+      { text: "✓ Ver alertas", callback_data: "dismiss_alert:all" },
+    ]],
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
@@ -372,6 +401,19 @@ Deno.serve(async (req) => {
           headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({ from: FROM_EMAIL, to: [profile.email], subject, html }),
         });
+
+        // Send Telegram notification (fire-and-forget)
+        const telegramPayload = {
+          user_id: userId,
+          alert_id: savedAlertIds[0] || null,
+          message: buildTelegramMessage(criticalAlerts, profile.name || ""),
+          reply_markup: buildTelegramButtons(criticalAlerts),
+        };
+        fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-telegram`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}` },
+          body: JSON.stringify(telegramPayload),
+        }).catch(() => {}); // silent fail
 
         if (emailRes.ok) {
           alertsFired++;

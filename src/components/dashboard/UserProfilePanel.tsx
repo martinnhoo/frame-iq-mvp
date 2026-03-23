@@ -246,6 +246,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [editingInstructions, setEditingInstructions] = useState(false);
   const [instructionsText, setInstructionsText] = useState("");
   const [savingInstructions, setSavingInstructions] = useState(false);
+  const [telegramConn, setTelegramConn] = useState<any>(null);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+  const [pairingLink, setPairingLink] = useState<string|null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -279,6 +282,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       }
     }).catch(() => {}).finally(() => setIntelLoading(false));
   }, [tab, user?.id]);
+
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    (supabase as any).from("telegram_connections")
+      .select("chat_id, telegram_username, connected_at")
+      .eq("user_id", user.id).eq("active", true).maybeSingle()
+      .then(({ data }: any) => setTelegramConn(data || null));
+  }, [open, user?.id]);
 
   // Sync fields when panel opens
   useEffect(() => {
@@ -521,6 +532,63 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+                {/* ── Telegram ── */}
+                <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                  <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0, flex: 1 }}>Telegram Alerts</p>
+                    {telegramConn && <span style={{ fontFamily: M, fontSize: 10, color: "#34d399", fontWeight: 600 }}>● Ativo</span>}
+                  </div>
+                  <div style={{ padding: "12px 14px" }}>
+                    {telegramConn ? (
+                      <div>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.6)", margin: "0 0 6px" }}>
+                          {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : "Conectado"}
+                          {telegramConn.connected_at ? ` · ${new Date(telegramConn.connected_at).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}` : ""}
+                        </p>
+                        <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "0 0 10px", lineHeight: 1.5 }}>Recebendo alertas via @AdBriefAlertsBot</p>
+                        <button onClick={async () => {
+                          await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user.id);
+                          setTelegramConn(null); setPairingLink(null);
+                        }} style={{ fontFamily: M, fontSize: 11, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                          Desconectar
+                        </button>
+                      </div>
+                    ) : pairingLink ? (
+                      <div>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.55)", margin: "0 0 8px", lineHeight: 1.5 }}>
+                          Abra o link no Telegram e toque <b>/start</b>:
+                        </p>
+                        <a href={pairingLink} target="_blank" rel="noreferrer"
+                          style={{ display: "block", fontFamily: M, fontSize: 11, color: "#0ea5e9", wordBreak: "break-all" as const, marginBottom: 6 }}>
+                          {pairingLink}
+                        </a>
+                        <p style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.2)", margin: 0 }}>Expira em 10 minutos</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "0 0 10px", lineHeight: 1.5 }}>
+                          Receba alertas críticos e execute comandos direto no Telegram. Tudo registrado no AdBrief.
+                        </p>
+                        <button disabled={telegramLoading} onClick={async () => {
+                          setTelegramLoading(true);
+                          try {
+                            const tok = Math.random().toString(36).slice(2,8) + Math.random().toString(36).slice(2,8);
+                            await (supabase as any).from("telegram_pairing_tokens").insert({
+                              user_id: user.id, token: tok,
+                              expires_at: new Date(Date.now() + 10*60*1000).toISOString(),
+                            });
+                            setPairingLink(`https://t.me/AdBriefAlertsBot?start=${tok}`);
+                          } catch {}
+                          setTelegramLoading(false);
+                        }} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9", fontSize: 12, fontWeight: 700, fontFamily: M, cursor: telegramLoading ? "not-allowed" : "pointer" }}>
+                          {telegramLoading ? "..." : "✈️ Conectar Telegram"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Current plan card */}
                 <div style={{ padding: "18px", borderRadius: 14, background: `${plan.color}12`, border: `1px solid ${plan.color}35`, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: `radial-gradient(circle, ${plan.color}20, transparent 70%)`, pointerEvents: "none" }} />
