@@ -16,6 +16,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
+
+// ── ABAvatar — logo real do adbrief (PNG asset) ───────────────────────────────
+function ABAvatar({ size = 28 }: { size?: number }) {
+  const r = Math.round(size * 0.28);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: r,
+      background: "#0a0c10",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, overflow: "hidden",
+    }}>
+      <img
+        src="/ab-avatar.png"
+        alt="AB"
+        width={size}
+        height={size}
+        style={{ display: "block", width: size, height: size, objectFit: "cover" }}
+      />
+    </div>
+  );
+}
 const j = { fontFamily: F } as const;
 const m = { fontFamily: M } as const;
 
@@ -475,11 +496,9 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
-      {/* Greeting header — AB avatar + title */}
+      {/* Greeting header — ABAvatar + title */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>AB</span>
-        </div>
+        <ABAvatar size={30} />
         <span style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>{block.title}</span>
       </div>
 
@@ -1396,13 +1415,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             ):(
               <div>
-                {/* AB avatar — consistent with greeting */}
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                    <div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <span style={{fontFamily:F,fontSize:8.5,fontWeight:800,color:"#fff",letterSpacing:"-0.02em"}}>AB</span>
-                    </div>
+                    <ABAvatar size={28} />
                   </div>
                 )}
                 {/* Blocks */}
