@@ -1,4 +1,4 @@
-// v8.1 — force redeploy 2026-03-23
+// v8.3 — no-animation section 2026-03-23
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
@@ -329,17 +329,13 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
     accent:  "rgba(14,165,233,0.03)",
   };
   return (
-    <motion.section
+    <section
       id={id}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={className}
       style={noPadding ? { background: bgMap[bg] || "transparent" } : { padding: "clamp(48px,6vw,88px) clamp(16px,4vw,32px)", background: bgMap[bg] || "transparent" }}
     >
       {children}
-    </motion.section>
+    </section>
   );
 }
 
