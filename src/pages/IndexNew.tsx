@@ -829,6 +829,205 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
   );
 }
 
+// ─── Mobile Demo Card — substitui o frame no mobile ─────────────────────────
+function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
+  const [active, setActive] = React.useState(0);
+  const [animating, setAnimating] = React.useState(false);
+
+  const scenarios: Record<Lang, Array<{q: string; lines: Array<{text: string; accent?: boolean; highlight?: boolean}>}>> = {
+    pt: [
+      {
+        q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
+        lines: [
+          { text: "Identifiquei 3 causas na sua conta:" },
+          { text: "Creative_042 roda há 22 dias — hook rate caiu de 31% → 11%.", highlight: true },
+          { text: "BR-Mulheres-25-34 com frequência 4.8x. CPM subiu +38%." },
+          { text: "Fix: pause Creative_042, relance Creative_019 (ROAS 3.2x).", accent: true },
+        ]
+      },
+      {
+        q: "Quais anúncios devo pausar agora?",
+        lines: [
+          { text: "3 anúncios para pausar hoje:" },
+          { text: "Creative_038 — CPM R$91, CTR 0,4%, zero conversões em 7 dias.", highlight: true },
+          { text: "Creative_029 — hook rate 8%. 92% saem em 3 segundos." },
+          { text: "Pausar libera R$620/dia → redirecionar para Creative_019.", accent: true },
+        ]
+      },
+      {
+        q: "Escreve 3 hooks dos meus melhores criativos.",
+        lines: [
+          { text: "Dos seus top converters (hook rate 34%, ROAS 3.1x+):" },
+          { text: "\"Você paga R$90/clique e não sabe por quê.\"", highlight: true },
+          { text: "\"3 dos seus 4 anúncios têm ROAS abaixo de 1x agora.\"" },
+          { text: "\"Seu melhor criativo está parado há 9 dias.\"", accent: true },
+        ]
+      },
+    ],
+    es: [
+      {
+        q: "Mi ROAS bajó 40% esta semana. ¿Qué pasó?",
+        lines: [
+          { text: "Identifiqué 3 causas en tu cuenta:" },
+          { text: "Creative_042 lleva 22 días — hook rate cayó de 31% → 11%.", highlight: true },
+          { text: "MX-Mujeres-25-34 con frecuencia 4.8x. CPM subió +38%." },
+          { text: "Fix: pausa Creative_042, relanza Creative_019 (ROAS 3.2x).", accent: true },
+        ]
+      },
+      {
+        q: "¿Cuáles anuncios pausar ahora mismo?",
+        lines: [
+          { text: "3 anuncios para pausar hoy:" },
+          { text: "Creative_038 — $18 CPM, 0.4% CTR, cero conversiones en 7 días.", highlight: true },
+          { text: "Creative_029 — hook rate 8%. 92% se van en 3 segundos." },
+          { text: "Pausar libera $620/día → redirigir a Creative_019.", accent: true },
+        ]
+      },
+      {
+        q: "Escribe 3 hooks de mis mejores creativos.",
+        lines: [
+          { text: "De tus top converters (hook rate 34%, ROAS 3.2x+):" },
+          { text: "\"Pagás $90/clic y no sabés por qué.\"", highlight: true },
+          { text: "\"3 de tus 4 anuncios top tienen ROAS bajo 1x ahora.\"" },
+          { text: "\"Tu mejor creativo lleva 9 días pausado.\"", accent: true },
+        ]
+      },
+    ],
+    en: [
+      {
+        q: "My ROAS dropped 40% this week. What's happening?",
+        lines: [
+          { text: "Found 3 causes in your account:" },
+          { text: "Creative_042 running 22 days — hook rate dropped 31% → 11%.", highlight: true },
+          { text: "US-Women-25-34 at 4.8x frequency. CPM up +38%." },
+          { text: "Fix: pause Creative_042, relaunch Creative_019 (ROAS 3.2x).", accent: true },
+        ]
+      },
+      {
+        q: "Which ads should I pause right now?",
+        lines: [
+          { text: "3 ads to pause today:" },
+          { text: "Creative_038 — $18 CPM, 0.4% CTR, zero conversions in 7 days.", highlight: true },
+          { text: "Creative_029 — hook rate 8%. 92% leave in first 3 seconds." },
+          { text: "Pausing frees $620/day → redirect to Creative_019.", accent: true },
+        ]
+      },
+      {
+        q: "Write 3 hooks from my best creatives.",
+        lines: [
+          { text: "From your top converters (hook rate 34%, ROAS 3.1x+):" },
+          { text: "\"You're paying $90/click and don't know why.\"", highlight: true },
+          { text: "\"3 of your 4 top-spend ads have ROAS below 1x right now.\"" },
+          { text: "\"Your best creative has been paused for 9 days.\"", accent: true },
+        ]
+      },
+    ],
+  };
+
+  const items = scenarios[lang] || scenarios.en;
+  const current = items[active];
+
+  const goTo = (i: number) => {
+    if (i === active || animating) return;
+    setAnimating(true);
+    setTimeout(() => { setActive(i); setAnimating(false); }, 180);
+  };
+
+  return (
+    <div style={{ width: '100%', padding: '0 16px' }}>
+      {/* Scenario dots */}
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 16 }}>
+        {items.map((_, i) => (
+          <button key={i} onClick={() => goTo(i)} style={{
+            width: active === i ? 20 : 6, height: 6,
+            borderRadius: 3, border: 'none', cursor: 'pointer',
+            background: active === i ? '#0ea5e9' : 'rgba(255,255,255,0.18)',
+            transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+            padding: 0,
+          }} />
+        ))}
+      </div>
+
+      {/* Chat card */}
+      <div style={{
+        borderRadius: 20,
+        overflow: 'hidden',
+        border: '1px solid rgba(14,165,233,0.18)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+        opacity: animating ? 0 : 1,
+        transform: animating ? 'translateY(6px)' : 'translateY(0)',
+        transition: 'opacity 0.18s ease, transform 0.18s ease',
+      }}>
+        {/* Header bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#0d1017', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 10px', borderRadius: 7, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '-0.03em' }}>
+              <span style={{ color: '#38bdf8' }}>ad</span><span style={{ color: '#eef0f6' }}>brief</span>
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(52,211,153,0.9)', fontWeight: 600 }}>Meta</span>
+          </div>
+        </div>
+
+        {/* Chat content */}
+        <div style={{ background: '#0d1117', padding: '20px 16px 16px' }}>
+
+          {/* User question */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+            <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
+              <p style={{ fontFamily: F, fontSize: 13.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, margin: 0 }}>{current.q}</p>
+            </div>
+          </div>
+
+          {/* AI response */}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+              <span style={{ fontFamily: F, fontSize: 8.5, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>AB</span>
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {current.lines.map((line, i) => (
+                <div key={i} style={{
+                  padding: line.accent || line.highlight ? '9px 12px' : '0',
+                  borderRadius: line.accent || line.highlight ? 9 : 0,
+                  background: line.accent ? 'rgba(14,165,233,0.08)' : line.highlight ? 'rgba(255,255,255,0.04)' : 'transparent',
+                  border: line.accent ? '1px solid rgba(14,165,233,0.18)' : line.highlight ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                }}>
+                  <p style={{
+                    fontFamily: F,
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    margin: 0,
+                    color: line.accent ? '#38bdf8' : i === 0 ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.82)',
+                    fontWeight: line.accent ? 600 : 400,
+                  }}>{line.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
+            <button onClick={onCTA} style={{
+              flex: 1, padding: '13px', borderRadius: 12,
+              background: '#fff', color: '#000', border: 'none',
+              fontFamily: F, fontSize: 14, fontWeight: 700,
+              cursor: 'pointer', letterSpacing: '-0.02em',
+            }}>
+              {lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account'}
+            </button>
+          </div>
+
+          <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>
+            {lang === 'pt' ? 'Demo · com sua conta, usa dados reais' : lang === 'es' ? 'Demo · con tu cuenta, usa datos reales' : 'Demo · with your account, uses real data'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero ───────────────────────────────────────────────────────────
 // ─── Immersive Hero v12 — mobile + uau 2026-03-24 ──────────────────────────
@@ -933,7 +1132,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         </button>
       </div>
 
-      <div style={{ marginTop: 52, width: '100%', maxWidth: 1060, position: 'relative' }}>
+      {/* ── DEMO — desktop frame ── */}
+      <div className="demo-desktop-only" style={{ marginTop: 52, width: '100%', maxWidth: 1060, position: 'relative' }}>
         {/* Glow layer behind the window */}
         <div style={{ position: 'absolute', inset: '-1px', borderRadius: 18, background: 'linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.10) 50%, rgba(14,165,233,0.06) 100%)', zIndex: 0, filter: 'blur(0px)' }} />
         <div style={{ position: 'absolute', bottom: -40, left: '10%', right: '10%', height: 80, background: 'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', zIndex: 0, filter: 'blur(20px)' }} />
@@ -1105,6 +1305,12 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
         </div>
       </div>
+
+      {/* ── MOBILE DEMO — card experience, shown only on mobile ── */}
+      <div className="demo-mobile-card" style={{ display: 'none', width: '100%', marginTop: 32 }}>
+        <MobileDemoCard onCTA={onCTA} lang={lang} />
+      </div>
+
     </section>
   );
 }
@@ -1696,8 +1902,6 @@ export default function IndexNew() {
           @media(max-width:768px){
             /* Fix hero section overflow */
             section:first-of-type{overflow-x:hidden!important}
-            /* Demo container — full width */
-            .demo-window{max-width:100%!important;border-radius:12px!important}
             /* Nav */
             .nav-links{display:none!important}
 
@@ -1705,37 +1909,9 @@ export default function IndexNew() {
             h1,.hero-h1{font-size:clamp(28px,7vw,38px)!important;white-space:normal!important;letter-spacing:-0.04em!important;line-height:1.1!important}
             .hero-sub-p{font-size:14px!important;white-space:normal!important;max-width:100%!important}
 
-            /* Demo window */
-            .demo-window{border-radius:14px!important}
-            .demo-app-body{
-              flex-direction:column!important;
-              min-height:0!important;max-height:none!important;
-              height:auto!important;overflow:visible!important
-            }
-            /* Hide sidebar — show only chat */
-            .demo-sidebar-inner{display:none!important}
-            /* Show mobile pills */
-            .demo-mobile-pills{display:flex!important}
-            /* Chat panel fixed height */
-            .demo-chat-panel{
-              height:360px!important;max-height:360px!important;
-              min-height:360px!important;flex:none!important;overflow:hidden!important
-            }
-            .demo-chat{
-              overflow-y:auto!important;
-              height:240px!important;max-height:240px!important;
-              padding:12px 14px!important
-            }
-            /* Input area: hide note, CTA full width */
-            .demo-note{display:none!important}
-            .demo-cta-bar{
-              flex-direction:column!important;
-              gap:8px!important;padding:10px 14px!important
-            }
-            .demo-cta-btn{
-              width:100%!important;justify-content:center!important;
-              font-size:14px!important;padding:12px 18px!important
-            }
+            /* Demo: hide desktop frame, show mobile card */
+            .demo-desktop-only{display:none!important}
+            .demo-mobile-card{display:block!important}
 
             /* Sections */
             .how-grid{grid-template-columns:1fr!important}
@@ -1743,14 +1919,9 @@ export default function IndexNew() {
             .pricing-grid{grid-template-columns:1fr!important}
             .tools-bento{grid-template-columns:1fr!important}
             .tools-io-grid{grid-template-columns:1fr!important}
-
-            /* Proof bar */
-            .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
           }
           @media(max-width:480px){
-            h1,.hero-h1{font-size:clamp(18px,7vw,26px)!important}
-            .demo-chat-panel{height:320px!important;max-height:320px!important;min-height:320px!important}
-            .demo-chat{height:200px!important;max-height:200px!important}
+            h1,.hero-h1{font-size:clamp(22px,7vw,30px)!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
