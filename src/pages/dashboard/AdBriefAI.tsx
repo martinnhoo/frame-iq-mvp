@@ -989,32 +989,13 @@ export default function AdBriefAI() {
             ? new Date(tgConn.connected_at).toLocaleDateString(lang==="pt"?"pt-BR":"en", { day:"2-digit", month:"short", year:"numeric" })
             : null;
           const txt = lang==="pt"
-            ? `Sim, seu Telegram está conectado${username ? ` como ${username}` : ""}${since ? ` desde ${since}` : ""}.
-
-Comandos disponíveis no @AdBriefAlertsBot:
-/status — resumo da conta agora
-/alertas — ver alertas ativos
-/pausar [nome] — pausar criativo com confirmação
-
-Para desconectar, clique no ícone do Telegram no topo da tela.`
+            ? `Sim, já está conectado${username ? ` como ${username}` : ""}. Você recebe alertas automáticos quando algo crítico acontece na conta e pode pausar criativos direto pelo bot.`
             : lang==="es"
-            ? `Sí, tu Telegram está conectado${username ? ` como ${username}` : ""}${since ? ` desde ${since}` : ""}.
-
-Comandos en @AdBriefAlertsBot:
-/status — resumen de cuenta
-/alertas — ver alertas activos
-/pausar [nombre] — pausar creativo con confirmación
-
-Para desconectar, haz clic en el ícono de Telegram arriba.`
-            : `Yes, your Telegram is connected${username ? ` as ${username}` : ""}${since ? ` since ${since}` : ""}.
-
-Commands on @AdBriefAlertsBot:
-/status — account summary
-/alerts — see active alerts
-/pause [name] — pause a creative with confirmation
+            ? `Sí, ya está conectado${username ? ` como ${username}` : ""}. Recibes alertas automáticos cuando algo crítico pasa en la cuenta y puedes pausar creativos directo desde el bot.`
+            : `Yes, it's connected${username ? ` as ${username}` : ""}. You get automatic alerts when something critical happens in your account and can pause creatives directly from the bot.
 
 To disconnect, click the Telegram icon at the top.`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:"",content:txt}]}]);
         } else if (/conect|ativ|quero|want|receb|alert|notif|quiero/i.test(msg)) {
           // NOT CONNECTED + wants to connect — generate pairing link
           const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
