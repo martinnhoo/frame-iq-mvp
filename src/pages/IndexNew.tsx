@@ -302,6 +302,18 @@ async function detectLang(): Promise<Lang> {
   }
 }
 
+// ─── Scroll reveal hook ───────────────────────────────────────────────────────
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef(null);
@@ -1087,10 +1099,11 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
           <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.55)', maxWidth: 360, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 8 }}>
-          {TOOLS_DATA.map(tool => {
+          {TOOLS_DATA.map((tool, idx) => {
             const isOpen = open === tool.id;
             return (
               <div key={tool.id}
+                className={`reveal reveal-delay-${(idx % 3) + 1}`}
                 onClick={() => setOpen(isOpen ? null : tool.id)}
                 style={{ borderRadius: 14, background: isOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
                 onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.07)'; el.style.borderColor = 'rgba(255,255,255,0.18)'; }}}
@@ -1125,11 +1138,16 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
-function HowItWorks({ t }: { t: Record<string, string> }) {
+function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
+  const results: Record<Lang, string[]> = {
+    pt: ["Meta Ads conectado em ~30 segundos", "IA calibrada para sua marca e mercado", "Respostas com dados reais da sua conta"],
+    es: ["Meta Ads conectado en ~30 segundos", "IA calibrada para tu marca y mercado", "Respuestas con datos reales de tu cuenta"],
+    en: ["Meta Ads connected in ~30 seconds", "AI calibrated to your brand and market", "Answers using real data from your account"],
+  };
   const steps = [
-    { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc },
-    { n: "02", icon: <Users size={22} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc },
-    { n: "03", icon: <MessageSquare size={22} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc },
+    { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
+    { n: "02", icon: <Users size={22} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
+    { n: "03", icon: <MessageSquare size={22} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
   ];
   return (
     <Section id="how" bg="dark">
@@ -1141,13 +1159,18 @@ function HowItWorks({ t }: { t: Record<string, string> }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s" }}
+            <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1)", display: "flex", flexDirection: "column" }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = `${step.color}40`}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"}>
               <div style={{ position: "absolute", top: -20, right: -4, fontSize: 88, fontWeight: 900, color: "rgba(255,255,255,0.05)", fontFamily: F, lineHeight: 1, pointerEvents: "none", letterSpacing: "-0.05em" }}>{step.n}</div>
               <div style={{ width: 48, height: 48, borderRadius: 14, background: `${step.color}15`, border: `1px solid ${step.color}30`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22, color: step.color, boxShadow: `0 0 20px ${step.color}15` }}>{step.icon}</div>
               <h3 style={{ fontFamily: F, fontSize: 17, fontWeight: 800, color: "#fff", marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
-              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.58)", lineHeight: 1.75 }}>{step.desc}</p>
+              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.58)", lineHeight: 1.75, flex: 1 }}>{step.desc}</p>
+              {/* Result badge */}
+              <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 10, background: `${step.color}0d`, border: `1px solid ${step.color}25` }}>
+                <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke={step.color} strokeOpacity="0.5" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke={step.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span style={{ fontFamily: F, fontSize: 11.5, color: step.color, fontWeight: 600, opacity: 0.9 }}>{step.result}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -1376,7 +1399,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
         </div>
         <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {plans.map((plan, i) => (
-            <div key={i} style={{
+            <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{
               padding: "32px 28px", borderRadius: 22,
               background: plan.highlight ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.04)",
               border: `1px solid ${plan.highlight ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
@@ -1519,6 +1542,7 @@ export default function IndexNew() {
 
   const t = T[lang];
   const handleCTA = () => navigate("/signup");
+  useReveal();
 
   const titleMap: Record<Lang, string> = {
     en: "AdBrief — Ask Your Meta Ads Anything. Get Real Answers.",
@@ -1552,6 +1576,13 @@ export default function IndexNew() {
         <html lang={lang} />
         <style>{`          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
+
+          /* Scroll reveal */
+          .reveal{opacity:0;transform:translateY(22px);transition:opacity 0.55s cubic-bezier(0.16,1,0.3,1),transform 0.55s cubic-bezier(0.16,1,0.3,1)}
+          .reveal.visible{opacity:1;transform:translateY(0)}
+          .reveal-delay-1{transition-delay:0.08s}
+          .reveal-delay-2{transition-delay:0.16s}
+          .reveal-delay-3{transition-delay:0.24s}
           
           /* Demo window */
           .demo-window{box-shadow:0 40px 120px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06),inset 0 1px 0 rgba(255,255,255,0.06)}
@@ -1646,7 +1677,7 @@ export default function IndexNew() {
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
       <Tools t={t} lang={lang} />
-      <HowItWorks t={t} />
+      <HowItWorks t={t} lang={lang} />
       <ForWho onCTA={handleCTA} t={t} />
       <TelegramSection t={t} lang={lang} />
       <Pricing onCTA={handleCTA} t={t} lang={lang} />
