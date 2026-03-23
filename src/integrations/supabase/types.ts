@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_alerts: {
+        Row: {
+          action_suggestion: string | null
+          ad_name: string | null
+          campaign_name: string | null
+          created_at: string | null
+          detail: string
+          dismissed_at: string | null
+          emailed_at: string | null
+          id: string
+          kpi_label: string | null
+          kpi_value: string | null
+          telegram_sent_at: string | null
+          type: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          action_suggestion?: string | null
+          ad_name?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          detail: string
+          dismissed_at?: string | null
+          emailed_at?: string | null
+          id?: string
+          kpi_label?: string | null
+          kpi_value?: string | null
+          telegram_sent_at?: string | null
+          type?: string
+          urgency?: string
+          user_id: string
+        }
+        Update: {
+          action_suggestion?: string | null
+          ad_name?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          detail?: string
+          dismissed_at?: string | null
+          emailed_at?: string | null
+          id?: string
+          kpi_label?: string | null
+          kpi_value?: string | null
+          telegram_sent_at?: string | null
+          type?: string
+          urgency?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ads_data_imports: {
         Row: {
           created_at: string | null
@@ -235,6 +286,39 @@ export type Database = {
           market?: string
           name?: string
           platform?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cost_alerts: {
+        Row: {
+          alert_date: string | null
+          cost_pct: number | null
+          estimated_cost: number | null
+          last_updated: string | null
+          monthly_msgs: number | null
+          plan: string | null
+          plan_revenue: number | null
+          user_id: string
+        }
+        Insert: {
+          alert_date?: string | null
+          cost_pct?: number | null
+          estimated_cost?: number | null
+          last_updated?: string | null
+          monthly_msgs?: number | null
+          plan?: string | null
+          plan_revenue?: number | null
+          user_id: string
+        }
+        Update: {
+          alert_date?: string | null
+          cost_pct?: number | null
+          estimated_cost?: number | null
+          last_updated?: string | null
+          monthly_msgs?: number | null
+          plan?: string | null
+          plan_revenue?: number | null
           user_id?: string
         }
         Relationships: []
@@ -494,16 +578,22 @@ export type Database = {
         Row: {
           chat_count: number
           last_reset: string
+          monthly_msg_count: number | null
+          monthly_reset: string | null
           user_id: string
         }
         Insert: {
           chat_count?: number
           last_reset?: string
+          monthly_msg_count?: number | null
+          monthly_reset?: string | null
           user_id: string
         }
         Update: {
           chat_count?: number
           last_reset?: string
+          monthly_msg_count?: number | null
+          monthly_reset?: string | null
           user_id?: string
         }
         Relationships: [
@@ -759,6 +849,42 @@ export type Database = {
         }
         Relationships: []
       }
+      preflight_results: {
+        Row: {
+          created_at: string | null
+          format: string | null
+          id: string
+          market: string | null
+          platform: string | null
+          result_json: Json | null
+          score: number | null
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          format?: string | null
+          id?: string
+          market?: string | null
+          platform?: string | null
+          result_json?: Json | null
+          score?: number | null
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          format?: string | null
+          id?: string
+          market?: string | null
+          platform?: string | null
+          result_json?: Json | null
+          score?: number | null
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -831,6 +957,63 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string
+        }
+        Relationships: []
+      }
+      telegram_connections: {
+        Row: {
+          active: boolean | null
+          chat_id: string
+          connected_at: string | null
+          id: string
+          telegram_first_name: string | null
+          telegram_username: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          chat_id: string
+          connected_at?: string | null
+          id?: string
+          telegram_first_name?: string | null
+          telegram_username?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          chat_id?: string
+          connected_at?: string | null
+          id?: string
+          telegram_first_name?: string | null
+          telegram_username?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      telegram_pairing_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          user_id?: string
         }
         Relationships: []
       }
