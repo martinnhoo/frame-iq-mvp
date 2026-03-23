@@ -841,11 +841,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
       {/* ── HEADLINE — compact, one visual line ── */}
       <div style={{ textAlign: 'center', marginBottom: 16, maxWidth: 960, width: '100%' }}>
-        <h1 style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff', whiteSpace: 'nowrap' as const }}>
+        <h1 style={{ fontFamily: F, fontSize: 'clamp(22px,2.8vw,38px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, margin: '0 0 8px', color: '#fff' }}>
           {h1p[0]}
           {h1p[1] && <span style={{ background: `linear-gradient(90deg, ${industry.color} 0%, #34d399 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', transition: 'background 0.7s' }}> {h1p[1]}</span>}
         </h1>
-        <p style={{ fontFamily: F, fontSize: 'clamp(13px,1vw,15px)', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560, whiteSpace: 'nowrap' as const }}>{t.hero_sub}</p>
+        <p className="hero-sub-p" style={{ fontFamily: F, fontSize: 'clamp(13px,1vw,15px)', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5, margin: '0 auto', maxWidth: 560 }}>{t.hero_sub}</p>
       </div>
 
 
@@ -1496,31 +1496,59 @@ export default function IndexNew() {
           .kpi-card:nth-child(1){animation-delay:0.2s}
           .kpi-card:nth-child(2){animation-delay:0.35s}
 
-          /* Mobile */
-          @media(max-width:900px){
-            .hero-kpi-cards{display:none!important}
-          }
+          /* ── Mobile ── */
           @media(max-width:768px){
+            /* Nav */
             .nav-links{display:none!important}
+
+            /* Hero text — wrap naturally, smaller size */
+            h1{font-size:clamp(22px,6vw,32px)!important;white-space:normal!important;letter-spacing:-0.03em!important}
+            .hero-sub-p{font-size:13px!important;white-space:normal!important;max-width:100%!important}
+
+            /* Demo window */
+            .demo-window{border-radius:14px!important}
+            .demo-app-body{
+              flex-direction:column!important;
+              min-height:0!important;max-height:none!important;
+              height:auto!important;overflow:visible!important
+            }
+            /* Hide sidebar — show only chat */
+            .demo-sidebar-inner{display:none!important}
+            /* Show mobile pills */
+            .demo-mobile-pills{display:flex!important}
+            /* Chat panel fixed height */
+            .demo-chat-panel{
+              height:360px!important;max-height:360px!important;
+              min-height:360px!important;flex:none!important;overflow:hidden!important
+            }
+            .demo-chat{
+              overflow-y:auto!important;
+              height:240px!important;max-height:240px!important;
+              padding:12px 14px!important
+            }
+            /* Input area: hide note, CTA full width */
+            .demo-note{display:none!important}
+            .demo-cta-bar{
+              flex-direction:column!important;
+              gap:8px!important;padding:10px 14px!important
+            }
+            .demo-cta-btn{
+              width:100%!important;justify-content:center!important;
+              font-size:14px!important;padding:12px 18px!important
+            }
+
+            /* Sections */
             .how-grid{grid-template-columns:1fr!important}
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
-            .hero-h1{font-size:clamp(24px,7vw,38px)!important}
-            .hero-sub{font-size:13px!important}
-            .demo-window{border-radius:14px!important}
-            .demo-app-body{flex-direction:column!important;min-height:0!important;max-height:none!important;height:auto!important;overflow:visible!important}
-            .demo-sidebar-inner{display:none!important}
-            .demo-mobile-pills{display:flex!important}
-            .demo-chat-panel{height:380px!important;max-height:380px!important;min-height:380px!important;flex:none!important;overflow:hidden!important}
-            .demo-chat{overflow-y:auto!important;height:260px!important;max-height:260px!important;padding:12px 14px!important}
-            .demo-cta-bar{padding:12px!important}
-            .demo-cta-btn{font-size:13px!important;padding:11px 18px!important;width:100%!important}
-            .demo-note{display:none!important}
+
+            /* Proof bar */
+            .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
           }
           @media(max-width:480px){
-            .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
-            .demo-chat-panel{height:340px!important;max-height:340px!important;min-height:340px!important}
-            .demo-chat{height:220px!important;max-height:220px!important}
+            h1{font-size:clamp(20px,7vw,28px)!important}
+            .demo-chat-panel{height:320px!important;max-height:320px!important;min-height:320px!important}
+            .demo-chat{height:200px!important;max-height:200px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
