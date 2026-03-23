@@ -302,18 +302,6 @@ async function detectLang(): Promise<Lang> {
   }
 }
 
-// ─── Scroll reveal hook ───────────────────────────────────────────────────────
-function useReveal() {
-  useEffect(() => {
-    const els = document.querySelectorAll('.reveal');
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
-}
-
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef(null);
@@ -381,13 +369,104 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
 }
 
 // ─── Tools data ───────────────────────────────────────────────────────────────
-const TOOLS_DATA = [
-  { id: "hooks", icon: <Zap size={18} />, name: { en: "Hook Generator", pt: "Gerador de Hooks", es: "Generador de Hooks" }, tagline: { en: "From your winning creatives", pt: "Baseado nos seus criativos vencedores", es: "Basado en tus creativos ganadores" }, desc: { en: "AI-generated hooks based on your winning creatives.", pt: "Hooks gerados pela IA baseados nos seus melhores criativos.", es: "Hooks generados por IA basados en tus ganadores." }, color: "#0ea5e9" },
-  { id: "script", icon: <Play size={18} />, name: { en: "Video Script", pt: "Script de Vídeo", es: "Script de Video" }, tagline: { en: "UGC & direct-response, data-tuned", pt: "UGC calibrado pelos seus dados", es: "UGC calibrado con tus datos" }, desc: { en: "Full UGC and direct-response scripts tuned to your account.", pt: "Scripts completos calibrados para sua conta.", es: "Scripts completos calibrados para tu cuenta." }, color: "#a78bfa" },
-  { id: "brief", icon: <Layers size={18} />, name: { en: "Creative Brief", pt: "Brief Criativo", es: "Brief Creativo" }, tagline: { en: "Tell your team exactly what to produce", pt: "Diz ao time o que produzir depois", es: "Dice al equipo qué producir" }, desc: { en: "Data-backed briefs that tell your team what to produce next.", pt: "Briefs baseados em dados para seu time.", es: "Briefs basados en datos para tu equipo." }, color: "#34d399" },
-  { id: "competitor", icon: <Target size={18} />, name: { en: "Competitor Decode", pt: "Decodificador", es: "Decodificador" }, tagline: { en: "Hook, angle, format — reverse-engineered", pt: "Hook, ângulo, formato — desmontado", es: "Hook, ángulo, formato — desmontado" }, desc: { en: "Break down any competitor ad — hook, format, angle, CTA.", pt: "Desmonte qualquer anúncio concorrente.", es: "Desmonta cualquier anuncio competidor." }, color: "#f97316" },
-  { id: "translate", icon: <Globe size={18} />, name: { en: "Ad Translator", pt: "Tradutor de Anúncios", es: "Traductor" }, tagline: { en: "Tone and platform adapted per market", pt: "Tom e plataforma adaptados por mercado", es: "Tono y plataforma por mercado" }, desc: { en: "Translate ads across markets with tone and platform adaptation.", pt: "Traduza anúncios adaptando tom e plataforma.", es: "Traduce anuncios adaptando tono y plataforma." }, color: "#ec4899" },
-  { id: "analysis", icon: <BarChart3 size={18} />, name: { en: "Campaign Analysis", pt: "Análise de Campanha", es: "Análisis" }, tagline: { en: "Real Meta Ads data, instant diagnosis", pt: "Dados reais do Meta Ads, diagnóstico direto", es: "Datos reales de Meta Ads, diagnóstico directo" }, desc: { en: "Ask anything about your Meta Ads data. Direct diagnosis.", pt: "Pergunte sobre seus dados do Meta Ads.", es: "Pregunta sobre tus datos de Meta Ads." }, color: "#0ea5e9" },
+type ToolDef = {
+  id: string;
+  color: string;
+  accent: string;
+  icon: React.ReactNode;
+  name: Record<Lang, string>;
+  tagline: Record<Lang, string>;
+  desc: Record<Lang, string>;
+  input: Record<Lang, string>;
+  output: Record<Lang, string[]>;
+  badge: Record<Lang, string>;
+};
+
+const TOOLS_DATA: ToolDef[] = [
+  {
+    id: "hooks", color: "#0ea5e9", accent: "rgba(14,165,233,0.10)",
+    icon: <Zap size={20} />,
+    name:    { pt: "Gerador de Hooks",      es: "Generador de Hooks",      en: "Hook Generator"       },
+    tagline: { pt: "Dos seus criativos que converteram", es: "De tus creativos que convirtieron", en: "From creatives that already converted" },
+    desc:    { pt: "Cola qualquer anúncio seu ou concorrente e receba hooks prontos — calibrados pelo padrão de engajamento dos seus melhores criativos.", es: "Pega cualquier anuncio tuyo o de la competencia y recibe hooks listos — calibrados por el patrón de engagement de tus mejores creativos.", en: "Paste any ad — yours or a competitor's — and get hooks ready to use, calibrated by your best-performing creative patterns." },
+    input:   { pt: "Contexto da sua conta + produto", es: "Contexto de tu cuenta + producto", en: "Your account context + product" },
+    badge:   { pt: "Output instantâneo", es: "Output instantáneo", en: "Instant output" },
+    output:  {
+      pt: ['"Você pagou R$90/clique e nem sabe por quê."', '"3 dos seus 4 anúncios têm ROAS abaixo de 1x agora."', '"Seu melhor criativo parou há 9 dias. O concorrente está escalando."'],
+      es: ['"Pagaste $90/clic y no sabes por qué."', '"3 de tus 4 anuncios tienen ROAS bajo 1x ahora."', '"Tu mejor creativo lleva 9 días pausado. El competidor está escalando."'],
+      en: ['"You\'re paying $90/click and don\'t know why."', '"3 of your 4 top ads have ROAS below 1x right now."', '"Your best creative is paused 9 days. A competitor is scaling it."'],
+    },
+  },
+  {
+    id: "script", color: "#a78bfa", accent: "rgba(167,139,250,0.10)",
+    icon: <Play size={20} />,
+    name:    { pt: "Script de Vídeo",  es: "Script de Video",  en: "Video Script"   },
+    tagline: { pt: "UGC e DR prontos para gravar", es: "UGC y DR listos para grabar", en: "UGC & DR ready to record" },
+    desc:    { pt: "Gera scripts completos de UGC ou direct-response com gancho, desenvolvimento e CTA — já adaptados ao nicho, mercado e tom da sua conta.", es: "Genera scripts completos de UGC o direct-response con gancho, desarrollo y CTA — ya adaptados al nicho, mercado y tono de tu cuenta.", en: "Generates complete UGC or direct-response scripts with hook, body, and CTA — already adapted to your account's niche, market, and tone." },
+    input:   { pt: "Produto + plataforma + tom da marca", es: "Producto + plataforma + tono de marca", en: "Product + platform + brand tone" },
+    badge:   { pt: "Script completo", es: "Script completo", en: "Full script" },
+    output:  {
+      pt: ["[GANCHO] Você está investindo em tráfego e não sabe o que está funcionando?", "[DESENVOLVIMENTO] A maioria dos gestores descobre tarde demais...", "[CTA] Conecte sua conta agora. 30 segundos. Sem CSV."],
+      es: ["[GANCHO] ¿Estás invirtiendo en tráfico y no sabes qué funciona?", "[DESARROLLO] La mayoría de los gestores descubre demasiado tarde...", "[CTA] Conecta tu cuenta ahora. 30 segundos. Sin CSV."],
+      en: ["[HOOK] Spending on ads and not knowing what's working?", "[BODY] Most media buyers find out too late...", "[CTA] Connect your account now. 30 seconds. No CSV."],
+    },
+  },
+  {
+    id: "brief", color: "#34d399", accent: "rgba(52,211,153,0.10)",
+    icon: <Layers size={20} />,
+    name:    { pt: "Brief Criativo",  es: "Brief Creativo",  en: "Creative Brief"   },
+    tagline: { pt: "Diz ao time o que produzir e por quê", es: "Dice al equipo qué producir y por qué", en: "Tells your team what to make and why" },
+    desc:    { pt: "Gera briefs completos baseados nos seus dados reais — formato que funciona, ângulo, referência de gancho e instrução para o editor. Elimina o vai-e-vem de revisão.", es: "Genera briefs completos basados en tus datos reales — formato que funciona, ángulo, referencia de gancho e instrucción para el editor. Elimina el ida y vuelta.", en: "Generates complete briefs based on your real data — winning format, angle, hook reference, and editor instruction. Eliminates revision back-and-forth." },
+    input:   { pt: "Conta ativa + campanha de referência", es: "Cuenta activa + campaña de referencia", en: "Active account + reference campaign" },
+    badge:   { pt: "Pronto para enviar", es: "Listo para enviar", en: "Ready to send" },
+    output:  {
+      pt: ["Formato: Vídeo UGC 9:16 · 30-45s", "Ângulo: Problema → Diagnóstico → Solução", "Referência: Creative_019 (ROAS 3.2x, hook rate 34%)", "Instrução: abrir com dado real, sem música no início"],
+      es: ["Formato: Video UGC 9:16 · 30-45s", "Ángulo: Problema → Diagnóstico → Solución", "Referencia: Creative_019 (ROAS 3.2x, hook rate 34%)", "Instrucción: abrir con dato real, sin música al inicio"],
+      en: ["Format: UGC Video 9:16 · 30-45s", "Angle: Problem → Diagnosis → Solution", "Reference: Creative_019 (ROAS 3.2x, hook rate 34%)", "Direction: open with real stat, no music at start"],
+    },
+  },
+  {
+    id: "competitor", color: "#f97316", accent: "rgba(249,115,22,0.10)",
+    icon: <Target size={20} />,
+    name:    { pt: "Decodificador",       es: "Decodificador",          en: "Competitor Decode"    },
+    tagline: { pt: "Desmonta qualquer anúncio concorrente", es: "Desmonta cualquier anuncio rival", en: "Reverse-engineer any competitor ad" },
+    desc:    { pt: "Cole a URL ou descreva um anúncio concorrente. A IA identifica o gancho, ângulo, formato, CTA e o que está funcionando — para você replicar com sua conta.", es: "Pega la URL o describe un anuncio rival. La IA identifica el gancho, ángulo, formato, CTA y lo que funciona — para que lo repliques con tu cuenta.", en: "Paste the URL or describe a competitor ad. The AI identifies the hook, angle, format, CTA, and what's working — so you can replicate with your account." },
+    input:   { pt: "URL ou descrição do anúncio", es: "URL o descripción del anuncio", en: "Ad URL or description" },
+    badge:   { pt: "Análise estrutural", es: "Análisis estructural", en: "Structural analysis" },
+    output:  {
+      pt: ["Gancho: dado numérico + problema específico", "Ângulo: medo de perda (FOMO financeiro)", "Formato: talking head com texto onscreen", "CTA: urgência implícita — sem prazo explícito"],
+      es: ["Gancho: dato numérico + problema específico", "Ángulo: miedo a perder (FOMO financiero)", "Formato: talking head con texto en pantalla", "CTA: urgencia implícita — sin plazo explícito"],
+      en: ["Hook: numeric stat + specific problem", "Angle: loss aversion (financial FOMO)", "Format: talking head with on-screen text", "CTA: implied urgency — no explicit deadline"],
+    },
+  },
+  {
+    id: "translate", color: "#ec4899", accent: "rgba(236,72,153,0.10)",
+    icon: <Globe size={20} />,
+    name:    { pt: "Tradutor de Anúncios",  es: "Traductor de Anuncios",  en: "Ad Translator"        },
+    tagline: { pt: "Tom e plataforma adaptados por mercado", es: "Tono y plataforma por mercado", en: "Tone and platform adapted per market" },
+    desc:    { pt: "Traduz anúncios entre mercados mantendo o tom, a gíria local e o poder de conversão. Não é só tradução — é adaptação cultural com contexto da sua conta.", es: "Traduce anuncios entre mercados manteniendo el tono, la jerga local y el poder de conversión. No es solo traducción — es adaptación cultural con contexto de tu cuenta.", en: "Translates ads across markets while keeping tone, local slang, and conversion power. Not just translation — cultural adaptation with your account context." },
+    input:   { pt: "Anúncio original + mercado de destino", es: "Anuncio original + mercado destino", en: "Original ad + target market" },
+    badge:   { pt: "PT · ES · EN · +4", es: "PT · ES · EN · +4", en: "PT · ES · EN · +4" },
+    output:  {
+      pt: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "Adaptação de CTA: \"Jogue agora\" → \"Pruébalo gratis\"", "Gíria local preservada: \"gestor de tráfego\" → \"media buyer\"", "Tom: mantido direto e urgente nos dois mercados"],
+      es: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "Adaptación de CTA: \"Jogue agora\" → \"Pruébalo gratis\"", "Jerga local preservada: \"gestor de tráfego\" → \"media buyer\"", "Tono: directo y urgente en ambos mercados"],
+      en: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "CTA adapted: \"Jogue agora\" → \"Pruébalo gratis\"", "Local slang preserved across markets", "Tone: kept direct and urgent in both markets"],
+    },
+  },
+  {
+    id: "analysis", color: "#60a5fa", accent: "rgba(96,165,250,0.10)",
+    icon: <BarChart3 size={20} />,
+    name:    { pt: "Análise de Campanha",  es: "Análisis de Campaña",  en: "Campaign Analysis"    },
+    tagline: { pt: "Diagnóstico em segundos, não em planilhas", es: "Diagnóstico en segundos, no en hojas de cálculo", en: "Diagnosis in seconds, not spreadsheets" },
+    desc:    { pt: "Pergunte qualquer coisa sobre seus dados do Meta Ads. A IA lê suas campanhas em tempo real e responde com diagnóstico específico — sem exportar CSV, sem fórmulas.", es: "Pregunta lo que quieras sobre tus datos de Meta Ads. La IA lee tus campañas en tiempo real y responde con diagnóstico específico — sin exportar CSV, sin fórmulas.", en: "Ask anything about your Meta Ads data. The AI reads your campaigns in real time and responds with a specific diagnosis — no CSV export, no formulas." },
+    input:   { pt: "Qualquer pergunta sobre sua conta", es: "Cualquier pregunta sobre tu cuenta", en: "Any question about your account" },
+    badge:   { pt: "Dados em tempo real", es: "Datos en tiempo real", en: "Real-time data" },
+    output:  {
+      pt: ["CPM médio: R$38 (+22% vs semana passada)", "3 campanhas com frequência acima de 4x → risco de fadiga", "Creative_019: melhor ROAS da conta (3.2x) — orçamento subutilizado", "Recomendação: pausar 2, escalar 1, renovar criativos em BR-F-25-34"],
+      es: ["CPM promedio: $38 (+22% vs semana pasada)", "3 campañas con frecuencia sobre 4x → riesgo de fatiga", "Creative_019: mejor ROAS de la cuenta (3.2x) — presupuesto subutilizado", "Recomendación: pausar 2, escalar 1, renovar creativos en MX-F-25-34"],
+      en: ["Avg CPM: $18 (+22% vs last week)", "3 campaigns with frequency above 4x → fatigue risk", "Creative_019: best ROAS in account (3.2x) — budget underused", "Recommendation: pause 2, scale 1, refresh creatives in US-F-25-34"],
+    },
+  },
 ];
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
@@ -1088,49 +1167,118 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
 // ─── Tools ─────────────────────────────────────────────────────────────────────
 function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const [active, setActive] = useState("hooks");
+  const tool = TOOLS_DATA.find(d => d.id === active)!;
+
+  const inputLabel: Record<Lang, string> = { pt: "Input", es: "Input", en: "Input" };
+  const outputLabel: Record<Lang, string> = { pt: "Output gerado", es: "Output generado", en: "Generated output" };
 
   return (
     <Section id="tools" bg="subtle">
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: '0.15em', fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase' }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '12px 0 10px', color: '#fff' }}>{t.tools_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: 'rgba(255,255,255,0.55)', maxWidth: 360, margin: '0 auto', lineHeight: 1.6 }}>{t.tools_sub}</p>
+      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 8 }}>
-          {TOOLS_DATA.map((tool, idx) => {
-            const isOpen = open === tool.id;
-            return (
-              <div key={tool.id}
-                className={`reveal reveal-delay-${(idx % 3) + 1}`}
-                onClick={() => setOpen(isOpen ? null : tool.id)}
-                style={{ borderRadius: 14, background: isOpen ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)', border: '1px solid ' + (isOpen ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.12)'), cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden' }}
-                onMouseEnter={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.07)'; el.style.borderColor = 'rgba(255,255,255,0.18)'; }}}
-                onMouseLeave={e => { if (!isOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.05)'; el.style.borderColor = 'rgba(255,255,255,0.12)'; }}}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.72)', flexShrink: 0 }}>{tool.icon}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.80)', margin: '0 0 2px' }}>{tool.name[lang]}</p>
-                    <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.32)', margin: 0, lineHeight: 1.3 }}>{tool.tagline[lang]}</p>
+
+        {/* Bento layout: pill nav left + preview right */}
+        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 12, alignItems: "start" }} className="tools-bento">
+
+          {/* Left — pill nav list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {TOOLS_DATA.map(d => {
+              const isAct = d.id === active;
+              return (
+                <button key={d.id} onClick={() => setActive(d.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
+                    borderRadius: 14, border: `1px solid ${isAct ? d.color + "40" : "rgba(255,255,255,0.07)"}`,
+                    background: isAct ? d.accent : "rgba(255,255,255,0.03)",
+                    cursor: "pointer", textAlign: "left" as const, transition: "all 0.18s", width: "100%",
+                  }}
+                  onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+                  onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: isAct ? d.color + "20" : "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: isAct ? d.color : "rgba(255,255,255,0.4)", flexShrink: 0, transition: "all 0.18s" }}>
+                    {d.icon}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.2)', transition: 'transform 0.18s', transform: isOpen ? 'rotate(45deg)' : 'none', flexShrink: 0 }}>
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: isAct ? "#fff" : "rgba(255,255,255,0.55)", margin: 0, transition: "color 0.18s" }}>{d.name[lang]}</p>
+                    <p style={{ fontFamily: F, fontSize: 11, color: isAct ? d.color : "rgba(255,255,255,0.25)", margin: "2px 0 0", lineHeight: 1.3, transition: "color 0.18s", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{d.tagline[lang]}</p>
+                  </div>
+                  {isAct && (
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: tool.color, flexShrink: 0 }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right — tool detail card */}
+          <AnimatePresence mode="wait">
+            <motion.div key={active}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{ borderRadius: 20, border: `1px solid ${tool.color}25`, background: `linear-gradient(135deg, ${tool.color}08 0%, rgba(255,255,255,0.03) 100%)`, overflow: "hidden" }}
+            >
+              {/* Card header */}
+              <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${tool.color}15` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: tool.color + "18", border: `1px solid ${tool.color}30`, display: "flex", alignItems: "center", justifyContent: "center", color: tool.color, flexShrink: 0 }}>
+                    {tool.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" as const }}>
+                      <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>{tool.name[lang]}</h3>
+                      <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20, background: tool.color + "18", color: tool.color, border: `1px solid ${tool.color}30`, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{tool.badge[lang]}</span>
+                    </div>
+                    <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, margin: 0 }}>{tool.desc[lang]}</p>
                   </div>
                 </div>
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}>
-                      <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, margin: '12px 0 0' }}>{tool.desc[lang]}</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
-            );
-          })}
+
+              {/* IO preview */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }} className="tools-io-grid">
+
+                {/* Input */}
+                <div style={{ padding: "20px 24px", borderRight: `1px solid ${tool.color}12` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{inputLabel[lang]}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: tool.color, flexShrink: 0, opacity: 0.7 }} />
+                    <span style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{tool.input[lang]}</span>
+                  </div>
+                </div>
+
+                {/* Output */}
+                <div style={{ padding: "20px 24px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, background: tool.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke={tool.color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: tool.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, opacity: 0.8 }}>{outputLabel[lang]}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                    {tool.output[lang].map((line, i) => (
+                      <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 12px", borderRadius: 9, background: i === 0 ? tool.color + "0d" : "rgba(255,255,255,0.03)", border: `1px solid ${i === 0 ? tool.color + "22" : "rgba(255,255,255,0.06)"}` }}>
+                        <span style={{ fontFamily: F, fontSize: 11, color: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 1, fontWeight: 700 }}>{i + 1}</span>
+                        <span style={{ fontFamily: F, fontSize: 12, color: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{line}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
+
       </div>
     </Section>
   );
@@ -1159,7 +1307,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1)", display: "flex", flexDirection: "column" }}
+            <div key={i} style={{ padding: "36px 28px", borderRadius: 22, background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid rgba(255,255,255,0.10)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s", display: "flex", flexDirection: "column" }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = `${step.color}40`}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"}>
               <div style={{ position: "absolute", top: -20, right: -4, fontSize: 88, fontWeight: 900, color: "rgba(255,255,255,0.05)", fontFamily: F, lineHeight: 1, pointerEvents: "none", letterSpacing: "-0.05em" }}>{step.n}</div>
@@ -1399,7 +1547,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
         </div>
         <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {plans.map((plan, i) => (
-            <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{
+            <div key={i} style={{
               padding: "32px 28px", borderRadius: 22,
               background: plan.highlight ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.04)",
               border: `1px solid ${plan.highlight ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
@@ -1542,7 +1690,6 @@ export default function IndexNew() {
 
   const t = T[lang];
   const handleCTA = () => navigate("/signup");
-  useReveal();
 
   const titleMap: Record<Lang, string> = {
     en: "AdBrief — Ask Your Meta Ads Anything. Get Real Answers.",
@@ -1576,13 +1723,6 @@ export default function IndexNew() {
         <html lang={lang} />
         <style>{`          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
-
-          /* Scroll reveal */
-          .reveal{opacity:0;transform:translateY(22px);transition:opacity 0.55s cubic-bezier(0.16,1,0.3,1),transform 0.55s cubic-bezier(0.16,1,0.3,1)}
-          .reveal.visible{opacity:1;transform:translateY(0)}
-          .reveal-delay-1{transition-delay:0.08s}
-          .reveal-delay-2{transition-delay:0.16s}
-          .reveal-delay-3{transition-delay:0.24s}
           
           /* Demo window */
           .demo-window{box-shadow:0 40px 120px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.06),inset 0 1px 0 rgba(255,255,255,0.06)}
@@ -1648,6 +1788,8 @@ export default function IndexNew() {
             .how-grid{grid-template-columns:1fr!important}
             .for-who-grid{grid-template-columns:1fr!important}
             .pricing-grid{grid-template-columns:1fr!important}
+            .tools-bento{grid-template-columns:1fr!important}
+            .tools-io-grid{grid-template-columns:1fr!important}
 
             /* Proof bar */
             .hero-proofs{flex-direction:column!important;align-items:center!important;gap:8px!important}
