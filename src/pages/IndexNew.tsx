@@ -1,4 +1,4 @@
-// v7 — mobile demo sidebar pills fix 2026-03-21
+// v8 — landing redesign 2026-03-23
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
