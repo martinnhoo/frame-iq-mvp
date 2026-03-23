@@ -1054,7 +1054,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:"Telegram",content:txt}]}]);
         }
       } catch {
-        const eid = Date.now().toString(36)+"e";
+        const eid = Date.now()+2;
         setMessages(prev=>[...prev,{role:"assistant",id:eid,ts:eid,blocks:[{type:"warning",title:"Erro",content:lang==="pt"?"Não foi possível verificar o Telegram. Tente novamente.":"Could not check Telegram status. Try again."}]}]);
       }
       setLoading(false);
