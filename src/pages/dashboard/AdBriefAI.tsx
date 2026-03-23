@@ -452,8 +452,6 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; onSend: (s: string) => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
-  const hour = new Date().getHours();
-  const timeEmoji = hour < 12 ? "🌅" : hour < 18 ? "☀️" : "🌙";
 
   const quickActions: Record<string, string[][]> = {
     pt: [["📊","Resumo da conta"],["⚡","Gerar hooks"],["✍️","Escrever roteiro"],["🎯","O que pausar?"]],
@@ -462,31 +460,67 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
   };
   const actions = quickActions[lang] || quickActions.pt;
 
+  // Detect if this is a "real data" greeting by looking for spend values
+  const content = block.content || "";
+  const hasRealData = /R\$[\d,]+|CTR\s[\d,.]+%|\$[\d,]+\s(spent|gastos|gastados)/i.test(content);
+
+  // Parse key numbers from content for visual callouts
+  const spendMatch = content.match(/R\$(\d+[\d.,]*)\s*(gastos|spent|gastados)/i) ||
+                     content.match(/\$(\d+[\d.,]*)\s*(spent|gastos|gastados)/i);
+  const ctrMatch   = content.match(/CTR\s(?:médio\s|promedio\s|avg\s)?(\d+[.,]\d+)%/i) ||
+                     content.match(/(\d+[.,]\d+)%\s*(?:avg\s)?CTR/i);
+
+  const spend = spendMatch?.[1];
+  const ctr   = ctrMatch?.[1];
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.6)", flexShrink: 0 }}/>
-        <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.85)", letterSpacing: "-0.01em" }}>{block.title}</span>
+      {/* Greeting header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, boxShadow: "0 0 8px rgba(14,165,233,0.6)" }}/>
+        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{block.title}</span>
       </div>
-      {/* Message */}
-      <div style={{ paddingLeft: 40 }}>
-        <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(238,240,246,0.78)", lineHeight: 1.72, margin: "0 0 14px" }}>
-          {block.content}
-        </p>
-        {/* Quick action pills */}
-        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
-          {actions.map(([emoji, label], i) => (
-            <button key={i} onClick={() => onSend(label)}
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.55)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "#eef0f6"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.55)"; }}>
-              <span style={{ fontSize: 12 }}>{emoji}</span>{label}
-            </button>
-          ))}
 
+      {/* If real data: show KPI callout row + message */}
+      {hasRealData && (spend || ctr) && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" as const }}>
+          {spend && (
+            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", flex: "1 1 120px", minWidth: 120 }}>
+              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+                {lang === "pt" ? "Esta semana" : lang === "es" ? "Esta semana" : "This week"}
+              </p>
+              <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>
+                {lang === "en" ? "$" : "R$"}{spend}
+              </p>
+            </div>
+          )}
+          {ctr && (
+            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", flex: "1 1 100px", minWidth: 100 }}>
+              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>CTR</p>
+              <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#34d399", margin: 0, letterSpacing: "-0.03em" }}>{ctr}%</p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Message body */}
+      <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(238,240,246,0.72)", lineHeight: 1.72, margin: "0 0 14px" }}>
+        {/* Strip spend/CTR from content since we showed them as cards */}
+        {hasRealData
+          ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
+          : content}
+      </p>
+
+      {/* Quick action pills */}
+      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+        {actions.map(([emoji, label], i) => (
+          <button key={i} onClick={() => onSend(label)}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.55)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "#eef0f6"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.55)"; }}>
+            <span style={{ fontSize: 12 }}>{emoji}</span>{label}
+          </button>
+        ))}
       </div>
     </div>
   );
