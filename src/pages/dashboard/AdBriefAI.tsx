@@ -80,7 +80,7 @@ const SUGG: Record<string, string[]> = {
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -974,7 +974,7 @@ export default function AdBriefAI() {
 
     // ── Intercept Telegram intent — check status first, respond accurately ──
     if (/telegram/i.test(msg) && user?.id) {
-      const uid = Date.now().toString(36);
+      const uid = Date.now();
       setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
       setInput("");
       setLoading(true);
@@ -983,7 +983,7 @@ export default function AdBriefAI() {
           .select("chat_id, telegram_username, connected_at")
           .eq("user_id", user.id).eq("active", true).maybeSingle();
 
-        const aid = Date.now().toString(36)+"r";
+        const aid = Date.now()+1;
 
         if (tgConn?.chat_id) {
           // CONNECTED — confirm status and show commands
@@ -1017,7 +1017,7 @@ Commands on @AdBriefAlertsBot:
 /pause [name] — pause a creative with confirmation
 
 To disconnect, click the Telegram icon at the top.`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Telegram conectado ✓":lang==="es"?"Telegram conectado ✓":"Telegram connected ✓",content:txt}]}]);
         } else if (/conect|ativ|quero|want|receb|alert|notif|quiero/i.test(msg)) {
           // NOT CONNECTED + wants to connect — generate pairing link
           const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
@@ -1043,7 +1043,7 @@ Recibirás alertas críticos y podrás pausar anuncios desde Telegram.`
 🔗 ${link}
 
 You'll get critical alerts and can pause ads from Telegram. Everything logged here.`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
         } else {
           // NOT CONNECTED + just asking — inform
           const txt = lang==="pt"
@@ -1051,10 +1051,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             : lang==="es"
             ? `Tu Telegram aún no está conectado. ¿Quieres conectarlo para recibir alertas?`
             : `Your Telegram isn't connected yet. Want to connect to receive alerts and run commands?`;
-          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text",title:"Telegram",content:txt}]}]);
+          setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:"Telegram",content:txt}]}]);
         }
       } catch {
-        const eid = Date.now().toString(36)+"e";
+        const eid = Date.now()+2;
         setMessages(prev=>[...prev,{role:"assistant",id:eid,ts:eid,blocks:[{type:"warning",title:"Erro",content:lang==="pt"?"Não foi possível verificar o Telegram. Tente novamente.":"Could not check Telegram status. Try again."}]}]);
       }
       setLoading(false);
