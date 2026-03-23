@@ -72,7 +72,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const PRIMARY_NAV = [
     { url: "/dashboard/ai",          label: language==="pt"?"IA Chat":language==="es"?"IA Chat":"AI Chat",       icon: Cpu,          exact: false, hot: true },
     { url: "/dashboard/accounts",    label: language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts",      icon: Users2,       exact: false },
-    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrente",                                icon: ScanEye,      exact: false },
+    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrentes",                                icon: ScanEye,      exact: false },
     { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: TrendingUp,   exact: false },
   ];
 

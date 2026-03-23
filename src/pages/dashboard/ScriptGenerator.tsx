@@ -27,7 +27,7 @@ function deriveMarket(lang?: string): string | null {
 }
 
 export default function ScriptGenerator() {
-  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [product, setProduct] = useState("");

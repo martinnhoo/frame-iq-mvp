@@ -61,7 +61,7 @@ const HOOK_CAPS: Record<string, number> = {
 };
 
 export default function HookGenerator() {
-  const { user, profile, selectedPersona, aiProfile } = useOutletContext<DashboardContext>();
+  const { user, profile, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
   const { language } = useLanguage();
   const plan = (profile as any)?.plan || "free";
   const hookCount = HOOK_CAPS[plan] ?? 3;

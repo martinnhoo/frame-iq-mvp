@@ -198,7 +198,7 @@ const Select = ({ value, onChange, options }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function PreflightCheck() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
   const { language } = useLanguage();
   const t = useDashT(language);
 
