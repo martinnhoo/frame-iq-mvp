@@ -974,8 +974,8 @@ export default function AdBriefAI() {
 
     // ── Intercept Telegram intent — check status first, respond accurately ──
     if (/telegram/i.test(msg) && user?.id) {
-      const uid = Date.now().toString(36);
-      setMessages(prev=>[...prev,{role:"user",id:uid,ts:Date.now(),userText:msg}]);
+      const uid = Date.now();
+      setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
       setInput("");
       setLoading(true);
       try {
