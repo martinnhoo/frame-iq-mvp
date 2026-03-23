@@ -90,15 +90,16 @@ export default function ScriptGenerator() {
     // Angle
     if (p.hook_angles?.length) setAngle(p.hook_angles.slice(0, 3).join(", "));
 
-    // Extra context
+    // Extra context — only include if there's real data beyond just the name
     const ctxParts = [
-      p.headline ? `Persona: ${p.name} — ${p.headline}` : `Persona: ${p.name}`,
-      p.triggers?.length ? `Purchase triggers: ${p.triggers.join(", ")}` : "",
+      p.headline ? `${p.name} — ${p.headline}` : "",
+      p.triggers?.length ? `Triggers: ${p.triggers.join(", ")}` : "",
       p.desires?.length ? `Desires: ${p.desires.join(", ")}` : "",
-      p.cta_style ? `CTA style: ${p.cta_style}` : "",
-      p.language_style ? `Language/tone: ${p.language_style}` : "",
+      p.cta_style ? `CTA: ${p.cta_style}` : "",
+      p.language_style ? `Tom: ${p.language_style}` : "",
     ].filter(Boolean);
-    if (ctxParts.length) setExtraContext(ctxParts.join("\n"));
+    // Only set if there's meaningful content (not just the name)
+    if (ctxParts.length > 0) setExtraContext(ctxParts.join("\n"));
 
     setPersonaApplied(true);
   }, [selectedPersona]);

@@ -75,14 +75,16 @@ export default function HookGenerator() {
   useEffect(() => {
     // Pre-fill from ai_profile (industry/niche)
     if (aiProfile?.industry && !niche) setNiche(aiProfile.industry);
-    // Pre-fill market from profile
-    if (profile?.preferred_market) {
-      const mkt = profile.preferred_market.toUpperCase();
-      const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
-      if (valid.includes(mkt)) setMarket(mkt);
-    }
+    // Pre-fill market — persona takes priority over profile
+    const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
+    const personaMarket = (selectedPersona?.preferred_market || "").toUpperCase();
+    const profileMarket = (profile?.preferred_market || "").toUpperCase();
+    const mkt = valid.includes(personaMarket) ? personaMarket
+               : valid.includes(profileMarket) ? profileMarket
+               : "BR";
+    setMarket(mkt);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiProfile, profile]);
+  }, [aiProfile, profile, selectedPersona?.id]);
 
   useEffect(() => {
     const p = searchParams.get("product"); if (p) setProduct(p);
