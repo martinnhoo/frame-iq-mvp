@@ -22,8 +22,8 @@ const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
     hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
-    hero_h1: "Stop burning budget.\nStart scaling what works.",
-    hero_sub: "Connect Meta Ads. The AI reads your account and answers with your real data.",
+    hero_h1: "Chat with your ads.\nGet real answers.",
+    hero_sub: "Connect Meta Ads and ask anything. The AI reads your account and answers like an analyst who knows every campaign.",
     hero_cta: "Try free for 1 day", hero_see: "See it in action",
     hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
@@ -85,8 +85,8 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
-    hero_h1: "Pare de queimar verba.\nEscale o que funciona.",
-    hero_sub: "Conecte o Meta Ads. A IA lê sua conta e responde com seus dados reais.",
+    hero_h1: "Converse com seus\nanúncios. A IA responde.",
+    hero_sub: "Conecte o Meta Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver na prática",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
@@ -148,8 +148,8 @@ const T: Record<Lang, Record<string, string>> = {
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
-    hero_h1: "Deja de quemar presupuesto.\nEscala lo que funciona.",
-    hero_sub: "Conecta Meta Ads. La IA lee tu cuenta y responde con tus datos reales.",
+    hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
+    hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
     hero_cta: "Probar gratis 1 día", hero_see: "Verlo en acción",
     hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
@@ -1320,10 +1320,16 @@ function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
       }}>
         {/* Header bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#0d1017', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 10px', borderRadius: 7, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '-0.03em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, letterSpacing: '-0.03em' }}>
               <span style={{ color: '#eef0f6' }}>ad</span><span style={{ color: '#38bdf8' }}>brief</span>
             </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)' }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#818cf8', animation: 'pulse 2s infinite' }} />
+              <span style={{ fontFamily: F, fontSize: 9.5, color: '#a5b4fc', fontWeight: 700 }}>
+                {lang === 'pt' ? 'IA · Chat' : lang === 'es' ? 'IA · Chat' : 'AI · Chat'}
+              </span>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
             <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s infinite' }} />
@@ -1430,7 +1436,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   const h1p = h1.split('\n');
   const conn = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
   const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
-  const note = lang === 'pt' ? 'Demo · Com sua conta, usa dados reais' : lang === 'es' ? 'Demo · Con tu cuenta, usa datos reales' : 'Demo · With your account, uses real data';
+  const note = lang === 'pt' ? 'Pergunte qualquer coisa sobre seus anúncios...' : lang === 'es' ? 'Pregunta lo que quieras sobre tus anuncios...' : 'Ask anything about your ads...';
 
   // Nav items faithful to the real product
   const navMain = lang === 'pt'
@@ -1497,7 +1503,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           {[0,1,2,3,4].map(i => <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
         </div>
         <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.01em' }}>
-          {lang === 'pt' ? '4.9 — 340+ gestores' : lang === 'es' ? '4.9 — 340+ media buyers' : '4.9 — 340+ media buyers'}
+          {lang === 'pt' ? '4.9 — 340+ gestores já conversam com a IA' : lang === 'es' ? '4.9 — 340+ media buyers ya usan el chat' : '4.9 — 340+ media buyers chatting with AI'}
         </span>
       </div>
 
@@ -1527,6 +1533,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#050710', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', gap: 5 }}>
               {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+            </div>
+            {/* AI Chat badge — anchors the mental model */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 6, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)', marginLeft: 4 }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#818cf8', animation: 'pulse 2s infinite' }} />
+              <span style={{ fontFamily: F, fontSize: 10.5, color: '#a5b4fc', fontWeight: 700, letterSpacing: '0.02em' }}>
+                {lang === 'pt' ? 'IA · Chat' : lang === 'es' ? 'IA · Chat' : 'AI · Chat'}
+              </span>
             </div>
             <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 7, maxWidth: 210, margin: '0 auto' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
