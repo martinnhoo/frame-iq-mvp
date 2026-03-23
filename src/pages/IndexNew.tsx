@@ -1132,6 +1132,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
 
 // ─── Before/After ─────────────────────────────────────────────────────────────
 function BeforeAfter({ t }: { t: Record<string, string> }) {
+  const { language } = useLanguage();
   const rows = [
     { before: t.ba_1_before, after: t.ba_1_after },
     { before: t.ba_2_before, after: t.ba_2_after },
@@ -1145,7 +1146,7 @@ function BeforeAfter({ t }: { t: Record<string, string> }) {
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#0ea5e9", textTransform: "uppercase" }}>{t.ba_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.5vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.ba_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.45)", maxWidth: 440, margin: "0 auto" }}>
-            {lang === "pt" ? "Da análise manual ao insight em segundos." : lang === "es" ? "Del análisis manual al insight en segundos." : "From manual analysis to insight in seconds."}
+            {language === "pt" ? "Da análise manual ao insight em segundos." : language === "es" ? "Del análisis manual al insight en segundos." : "From manual analysis to insight in seconds."}
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
