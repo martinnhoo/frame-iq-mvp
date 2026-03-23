@@ -1137,10 +1137,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         {/* Glow layer behind the window */}
         <div style={{ position: 'absolute', inset: '-1px', borderRadius: 18, background: 'linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(99,102,241,0.10) 50%, rgba(14,165,233,0.06) 100%)', zIndex: 0, filter: 'blur(0px)' }} />
         <div style={{ position: 'absolute', bottom: -40, left: '10%', right: '10%', height: 80, background: 'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', zIndex: 0, filter: 'blur(20px)' }} />
-        <div className="demo-window" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.22)', boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.4)', position: 'relative', zIndex: 1 }}>
+        <div className="demo-window" style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.35)', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 100px rgba(0,0,0,0.7), 0 0 60px rgba(14,165,233,0.08)', position: 'relative', zIndex: 1 }}>
 
           {/* Browser chrome */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#0d1017', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#050710', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', gap: 5 }}>
               {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
             </div>
@@ -1157,10 +1157,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* App body — sidebar + chat */}
-          <div style={{ display: 'flex', background: '#0d1117', minHeight: 520, maxHeight: 520, overflow: 'hidden' }} className="demo-app-body">
+          <div style={{ display: 'flex', background: '#07090f', minHeight: 520, maxHeight: 520, overflow: 'hidden' }} className="demo-app-body">
 
             {/* ─ SIDEBAR — context panel with KPIs ─ */}
-            <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', background: '#0b0f18' }}>
+            <div className="demo-sidebar-inner" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', background: '#060810' }}>
               {/* Logo */}
               <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
@@ -1221,7 +1221,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
 
               {/* Topbar — minimal account selector */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#0d1117', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#07090f', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '4px 10px 4px 8px', borderRadius: 7, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
                   <div style={{ width: 16, height: 16, borderRadius: 4, background: `${industry.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: industry.color }}>
                     {account?.name?.charAt(0) || 'F'}
@@ -1240,20 +1240,34 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '24px 0 16px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
                 <div style={{ maxWidth: 680, margin: '0 auto', width: '100%', padding: '0 28px', display: 'flex', flexDirection: 'column' as const, gap: 20 }}>
 
-                  {/* Greeting */}
+                  {/* Greeting — starts with active diagnosis */}
                   <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
                       <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: '0 0 14px' }}>
-                        {lang === 'pt'
-                          ? <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campanhas'}</strong> — identifiquei 3 alertas hoje.</>
-                          : lang === 'es'
-                          ? <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campañas'}</strong> — identifiqué 3 alertas hoy.</>
-                          : <><strong style={{ color: '#fff', fontWeight: 600 }}>{account?.meta || 'Meta · 22 campaigns'}</strong> — found 3 alerts today.</>}
-                      </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
+                      {/* Alert card — ROAS problem */}
+                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, margin: 0 }}>
+                          {lang === 'pt'
+                            ? <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS caiu 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> roda há 22 dias. Hook rate: 31% → 11%.</>
+                            : lang === 'es'
+                            ? <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS cayó 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> lleva 22 días. Hook rate: 31% → 11%.</>
+                            : <><span style={{ color: '#f87171', fontWeight: 600 }}>⚠ ROAS dropped 40%</span> — <strong style={{ color: '#fff' }}>Creative_042</strong> running 22 days. Hook rate: 31% → 11%.</>}
+                        </p>
+                      </div>
+                      {/* Fix card */}
+                      <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.15)' }}>
+                        <p style={{ fontFamily: F, fontSize: 13, color: '#38bdf8', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                          {lang === 'pt'
+                            ? <>→ Pause Creative_042. Relance <strong>Creative_019</strong> (ROAS 3.2x, parado 9 dias). Libera R$620/dia.</>
+                            : lang === 'es'
+                            ? <>→ Pausa Creative_042. Relanza <strong>Creative_019</strong> (ROAS 3.2x, pausado 9 días). Libera $620/día.</>
+                            : <>→ Pause Creative_042. Relaunch <strong>Creative_019</strong> (ROAS 3.2x, paused 9 days). Frees $620/day.</>}
+                        </p>
+                      </div>
+                      {/* Quick action pills */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, paddingTop: 4 }}>
                         {quickActions.slice(0, 3).map((label, i) => (
                           <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
                             style={{ padding: '5px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.38)', transition: 'all 0.13s', whiteSpace: 'nowrap' as const }}
@@ -1293,7 +1307,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* Input bar — premium real-product look */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '10px 16px 12px', flexShrink: 0, background: '#0d1117' }}>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '10px 16px 12px', flexShrink: 0, background: '#07090f' }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '9px 12px 9px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
                   <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.22)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
                   <button onClick={onCTA}
