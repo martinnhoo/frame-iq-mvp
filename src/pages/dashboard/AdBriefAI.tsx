@@ -415,7 +415,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
     <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
       <button onClick={()=>setOpen(o=>!o)}
         style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:"none",border:"none",cursor:"pointer"}}>
-        <span style={{fontSize:14,flexShrink:0}}>{ICONS[block.type]||"•"}</span>
+        {ICONS[block.type] && <span style={{fontSize:14,flexShrink:0}}>{ICONS[block.type]}</span>}
         <span style={{...j,flex:1,fontSize:12,fontWeight:700,color:s.color,textAlign:"left"}}>{block.title}</span>
         <span style={{...m,fontSize:10,color:s.color,opacity:0.6}}>{open?"▲":"▼"}</span>
       </button>
@@ -453,10 +453,10 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
 
-  const quickActions: Record<string, string[][]> = {
-    pt: [["📊","Resumo da conta"],["⚡","Gerar hooks"],["✍️","Escrever roteiro"],["🎯","O que pausar?"]],
-    es: [["📊","Resumen de cuenta"],["⚡","Generar hooks"],["✍️","Escribir guión"],["🎯","¿Qué pausar?"]],
-    en: [["📊","Account summary"],["⚡","Generate hooks"],["✍️","Write script"],["🎯","What to pause?"]],
+  const quickActions: Record<string, string[]> = {
+    pt: ["Resumo da conta", "Gerar hooks", "Escrever roteiro", "O que pausar?"],
+    es: ["Resumen de cuenta", "Generar hooks", "Escribir guión", "¿Qué pausar?"],
+    en: ["Account summary", "Generate hooks", "Write script", "What to pause?"],
   };
   const actions = quickActions[lang] || quickActions.pt;
 
@@ -515,12 +515,12 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
 
       {/* Quick action pills */}
       <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
-        {actions.map(([emoji, label], i) => (
+        {actions.map((label, i) => (
           <button key={i} onClick={() => onSend(label)}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 11px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.55)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "#eef0f6"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.55)"; }}>
-            <span style={{ fontSize: 12 }}>{emoji}</span>{label}
+            style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.50)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.07)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.20)"; e.currentTarget.style.color = "#eef0f6"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(238,240,246,0.50)"; }}>
+            {label}
           </button>
         ))}
       </div>
@@ -1397,11 +1397,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             ):(
               <div>
                 {/* AB avatar — consistent with greeting */}
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                  <div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <span style={{fontFamily:F,fontSize:8.5,fontWeight:800,color:"#fff",letterSpacing:"-0.02em"}}>AB</span>
+                {/* AB avatar — only for non-proactive (proactive renders its own) */}
+                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                    <div style={{width:26,height:26,borderRadius:7,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <span style={{fontFamily:F,fontSize:8.5,fontWeight:800,color:"#fff",letterSpacing:"-0.02em"}}>AB</span>
+                    </div>
                   </div>
-                </div>
+                )}
                 {/* Blocks */}
                 {msg.blocks?.map((b,bi)=>
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:

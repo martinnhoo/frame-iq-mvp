@@ -85,7 +85,7 @@ const T: Record<Lang, Record<string, string>> = {
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
     hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
-    hero_h1: "Converse com seus\nanúncios. A IA responde.",
+    hero_h1: "Converse com seus anúncios.\nA IA responde.",
     hero_sub: "Conecte o Meta Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
     hero_cta: "Testar grátis por 1 dia", hero_see: "Ver na prática",
     hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
@@ -1492,7 +1492,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,8vw,96px) clamp(16px,3vw,32px) clamp(32px,4vw,48px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(72px,8vw,96px) clamp(16px,3vw,32px) clamp(16px,2vw,24px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Ambient glow */}
       <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 60% 45% at 50% -10%, ${industry.color}12 0%, transparent 60%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
@@ -2229,13 +2229,13 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
             <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 40, lineHeight: 1.65 }}>{t.final_sub}</p>
             <button onClick={onCTA} style={{
               fontFamily: F, fontSize: 16, fontWeight: 800, padding: "18px 44px", borderRadius: 14,
-              background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer",
+              background: "#fff", color: "#000", border: "none", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 10,
-              boxShadow: "0 0 40px rgba(14,165,233,0.28), 0 4px 24px rgba(0,0,0,0.3)",
-              transition: "transform 0.2s, box-shadow 0.2s",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+              transition: "opacity 0.15s, transform 0.15s",
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 60px rgba(14,165,233,0.45), 0 8px 32px rgba(0,0,0,0.4)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(14,165,233,0.28), 0 4px 24px rgba(0,0,0,0.3)"; }}
+              onMouseEnter={e => { const el = e.currentTarget; el.style.opacity = "0.9"; el.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { const el = e.currentTarget; el.style.opacity = "1"; el.style.transform = "translateY(0)"; }}
             >
               {t.final_cta} <ArrowRight size={17} />
             </button>
