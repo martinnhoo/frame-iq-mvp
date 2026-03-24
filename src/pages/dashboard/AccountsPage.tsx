@@ -111,6 +111,17 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
   const saveManualAccount = async (platform: string, rawId: string) => {
     const id = rawId.trim().replace(/-/g, "");
     if (!id) return;
+    // Validate Google Ads Customer ID — must be exactly 10 digits
+    if (platform === "google") {
+      if (!/^\d{10}$/.test(id)) {
+        toast.error(language === "pt"
+          ? "Customer ID inválido — deve ter exatamente 10 dígitos (ex: 512-522-3131)"
+          : language === "es"
+          ? "Customer ID inválido — debe tener exactamente 10 dígitos"
+          : "Invalid Customer ID — must be exactly 10 digits (e.g. 512-522-3131)");
+        return;
+      }
+    }
     setChangingAccount(platform);
     const conn = connections[platform];
     const existing = conn?.accounts || [];
@@ -118,6 +129,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     const newAcc = already || { id, name: `Account ${id}` };
     const updated = already ? existing : [...existing, newAcc];
     await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
+    toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} saved.`);
     setManualAccountId(""); setExpandedPlatform(null); load(); setChangingAccount(null);
   };
 
