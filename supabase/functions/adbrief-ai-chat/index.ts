@@ -1,4 +1,4 @@
-// adbrief-ai-chat v12 — Meta API: 50 ads, adsets, time series, placements, cache 15min, history compression
+// adbrief-ai-chat v13 — Google Ads live data + cross-platform intelligence + persona_id scoped
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -601,6 +601,181 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       }
     }
 
+    // ── Google Ads live data ──────────────────────────────────────────────────
+    let liveGoogleData = "";
+    const googleConn = (connections as any[]).find((c: any) => c.platform === "google");
+    if (googleConn) {
+      try {
+        const { data: gConns } = await supabase
+          .from("platform_connections" as any)
+          .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id, persona_id")
+          .eq("user_id", user_id).eq("platform", "google").eq("status", "active");
+        const gC = (gConns as any[]) || [];
+        const gRow = persona_id ? gC.find((c: any) => c.persona_id === persona_id) || null : null;
+
+        if (gRow?.access_token) {
+          let token = gRow.access_token;
+
+          // Auto-refresh if expired
+          const expiresAt = gRow.expires_at ? new Date(gRow.expires_at).getTime() : 0;
+          if (expiresAt && expiresAt - Date.now() < 5 * 60 * 1000 && gRow.refresh_token) {
+            try {
+              const refreshRes = await fetch("https://oauth2.googleapis.com/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                  refresh_token: gRow.refresh_token,
+                  client_id: Deno.env.get("GOOGLE_CLIENT_ID") || "",
+                  client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
+                  grant_type: "refresh_token",
+                }),
+              });
+              const refreshData = await refreshRes.json();
+              if (refreshData.access_token) {
+                token = refreshData.access_token;
+                await supabase.from("platform_connections" as any).update({
+                  access_token: token,
+                  expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
+                }).eq("user_id", user_id).eq("platform", "google").eq("persona_id", persona_id);
+              }
+            } catch {}
+          }
+
+          const accs = (gRow.ad_accounts as any[]) || [];
+          const selId = gRow.selected_account_id;
+          const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
+
+          if (activeAcc?.id) {
+            const custId = activeAcc.id.replace(/-/g, "");
+            const devToken = Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN") || "";
+            const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600000).toISOString().split("T")[0];
+            const until = historicalUntil || new Date().toISOString().split("T")[0];
+
+            // Cache for Google too
+            const gCacheKey = `g:${custId}:${since}:${until}`;
+            if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
+            const gCached = (globalThis as any).__metaCache[gCacheKey];
+
+            let gCampaigns: any[] = [], gAds: any[] = [], gKeywords: any[] = [], gTimeSeries: any[] = [];
+
+            if (gCached && (Date.now() - gCached.ts) < 15 * 60 * 1000) {
+              gCampaigns   = gCached.campaigns;
+              gAds         = gCached.ads;
+              gKeywords    = gCached.keywords;
+              gTimeSeries  = gCached.timeSeries;
+            } else {
+              const gHeaders = {
+                Authorization: `Bearer ${token}`,
+                "developer-token": devToken,
+                "login-customer-id": custId,
+                "Content-Type": "application/json",
+              };
+              const gQuery = (query: string) =>
+                fetch(`https://googleads.googleapis.com/v17/customers/${custId}/googleAds:search`, {
+                  method: "POST", headers: gHeaders, body: JSON.stringify({ query }),
+                }).then(r => r.json());
+
+              const [cRes, aRes, kRes, tRes] = await Promise.allSettled([
+                // Campaigns
+                gQuery(`SELECT campaign.name, campaign.status, campaign.advertising_channel_type, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.roas FROM campaign WHERE segments.date BETWEEN '${since}' AND '${until}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`),
+                // Ads
+                gQuery(`SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group.name, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${until}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`),
+                // Keywords
+                gQuery(`SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM keyword_view WHERE segments.date BETWEEN '${since}' AND '${until}' ORDER BY metrics.cost_micros DESC LIMIT 20`),
+                // Time series — last 14 days
+                gQuery(`SELECT segments.date, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${new Date(Date.now()-14*86400000).toISOString().split("T")[0]}' AND '${until}' ORDER BY segments.date ASC LIMIT 14`),
+              ]);
+
+              const parse = (r: any) => r.status === "fulfilled" ? (r.value?.results || []) : [];
+              gCampaigns  = parse(cRes);
+              gAds        = parse(aRes);
+              gKeywords   = parse(kRes);
+              gTimeSeries = parse(tRes);
+
+              (globalThis as any).__metaCache[gCacheKey] = { ts: Date.now(), campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
+            }
+
+            liveGoogleData = `LIVE GOOGLE ADS — Account: ${activeAcc.name || custId} (${since} to ${until})\n`;
+
+            if (gCampaigns.length) {
+              const lines = gCampaigns.slice(0, 20).map((r: any) => {
+                const c = r.campaign || {};
+                const m = r.metrics || {};
+                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                const cpc = ((m.averageCpc || 0) / 1e6).toFixed(2);
+                const conv = m.conversions?.toFixed(1) || "0";
+                const roas = m.roas?.toFixed(2) || "—";
+                return `  ${c.name}: ${c.status} | spend=$${spend} ctr=${ctr}% cpc=$${cpc} conv=${conv} roas=${roas} type=${c.advertisingChannelType || "?"}`;
+              }).join("\n");
+              liveGoogleData += `CAMPAIGNS (${gCampaigns.length}):\n${lines}\n`;
+            }
+
+            if (gAds.length) {
+              const lines = gAds.slice(0, 20).map((r: any) => {
+                const a = r.adGroupAd?.ad || {};
+                const m = r.metrics || {};
+                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                return `  ${a.name || "Ad"} (${a.type || "?"}): spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
+              }).join("\n");
+              liveGoogleData += `ADS (${gAds.length}):\n${lines}\n`;
+            }
+
+            if (gKeywords.length) {
+              const lines = gKeywords.slice(0, 15).map((r: any) => {
+                const k = r.adGroupCriterion?.keyword || {};
+                const m = r.metrics || {};
+                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                return `  "${k.text}" [${k.matchType}]: spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
+              }).join("\n");
+              liveGoogleData += `TOP KEYWORDS:\n${lines}\n`;
+            }
+
+            if (gTimeSeries.length) {
+              const lines = gTimeSeries.map((r: any) => {
+                const m = r.metrics || {};
+                const s = r.segments || {};
+                return `  ${s.date}: spend=$${((m.costMicros||0)/1e6).toFixed(0)} ctr=${((m.ctr||0)*100).toFixed(2)}% conv=${m.conversions?.toFixed(1)||"0"}`;
+              }).join("\n");
+              liveGoogleData += `DAILY TREND:\n${lines}\n`;
+            }
+
+          } else {
+            liveGoogleData = "GOOGLE ADS CONNECTED — no account selected. Tell user to go to Contas and select a Google Ads account.";
+          }
+        } else {
+          liveGoogleData = "GOOGLE ADS CONNECTED — token missing. Tell user to reconnect Google Ads in Contas.";
+        }
+      } catch (_e) {
+        liveGoogleData = `GOOGLE ADS CONNECTED — data fetch error: ${(_e as any)?.message || "unknown"}.`;
+      }
+    }
+
+    // ── Cross-platform synthesis ──────────────────────────────────────────────
+    // When BOTH Meta and Google are connected for the same persona, build a
+    // synthesis block that the AI can use for cross-platform reasoning.
+    // No hard-coded rules — just structured data. The AI figures out the insights.
+    let crossPlatformCtx = "";
+    if (liveMetaData && liveGoogleData && !liveMetaData.includes("token") && !liveGoogleData.includes("token")) {
+      crossPlatformCtx = `
+=== CROSS-PLATFORM INTELLIGENCE — MESMA CONTA ===
+Esta persona tem Meta Ads E Google Ads conectados ao mesmo tempo.
+Você tem acesso aos dados de ambas as plataformas acima.
+
+Use esses dados para:
+- Comparar performance de ângulos/formatos entre plataformas
+- Identificar o que funciona em Meta mas não em Google (ou vice-versa)
+- Detectar keywords do Google que viraram bons hooks no Meta
+- Sugerir onde redistribuir verba com base em ROAS comparativo
+- Detectar audiências que saturaram em uma plataforma e ainda têm espaço na outra
+- Cruzar o CTR de criativos: se um ângulo funciona em Meta, hipótese para Google Display/YouTube
+
+Não use regras fixas. Use os dados reais acima e raciocine sobre o que está acontecendo.
+=== FIM CROSS-PLATFORM ===`;
+    }
+
     // ── Preflight history context ─────────────────────────────────────────────
     const pfHistory = (preflightHistory || []) as any[];
     const pfCtx = (() => {
@@ -623,6 +798,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
       liveMetaData || "",
+      liveGoogleData || "",
+      crossPlatformCtx || "",
       // Analyses count removed — internal data, not actionable for user
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
@@ -794,24 +971,41 @@ Você é tudo isso ao mesmo tempo — e ainda aprende a cada uso.
 1. LÊ A CONTA EM TEMPO REAL
    Antes de cada resposta, você leu: campanhas ativas, CTR de cada ad, spend dos últimos
    30 dias, frequência, o que está escalando e o que está morrendo. Dados reais, não estimativas.
+   Se Google Ads também está conectado: leu campanhas, keywords, ads e tendência diária do Google também.
 
-2. AGE DIRETAMENTE NO META
-   Pausa campanha, aumenta budget, ativa anúncio — direto, sem o usuário abrir o Gerenciador.
+2. AGE DIRETAMENTE NO META (e lê Google Ads)
+   Pausa campanha, aumenta budget, ativa anúncio — direto no Meta, sem o usuário abrir o Gerenciador.
+   Google Ads por enquanto é leitura — análise, diagnóstico, cruzamento de dados.
 
-3. CRIA CRIATIVOS COM BASE NO QUE JÁ FUNCIONOU
+3. CRUZA META E GOOGLE ADS QUANDO AMBOS ESTÃO CONECTADOS
+   Quando a persona tem Meta E Google conectados, você vê os dados de ambos ao mesmo tempo.
+   Você raciocina sobre o que está acontecendo entre as plataformas — sem regras fixas.
+   Exemplos do que você pode observar e comentar naturalmente:
+   - Um ângulo que funciona bem no Meta mas não aparece nas keywords do Google — vale testar.
+   - Keywords com alto CTR no Google que não viraram hooks no Meta ainda.
+   - ROAS muito diferente entre plataformas para a mesma campanha.
+   - Frequência alta no Meta + oportunidade de escalar no Google com o mesmo criativo.
+   - Audiência saturada no Meta que ainda tem espaço no Google Display/YouTube.
+   Você não fala sobre isso com regras ou checklists. Você observa, conecta, e comenta como
+   alguém que está olhando para os dois painéis ao mesmo tempo — natural, direto, útil.
+
+4. CRIA CRIATIVOS COM BASE NO QUE JÁ FUNCIONOU
    Hooks, scripts, briefs gerados com padrões desta conta específica.
    Não são templates. São criados para este mercado, este produto, este público.
+   Se o Google Ads está conectado: considera keywords de alto CTR como matéria-prima para hooks.
 
-4. TEM MEMÓRIA REAL E PERSISTENTE — cresce a cada uso:
+5. TEM MEMÓRIA REAL E PERSISTENTE — cresce a cada uso:
    - Conectou o Meta? Analisei seus últimos 90 dias, identifiquei vencedores e perdedores.
+   - Conectou o Google Ads? Li suas campanhas, keywords e tendências.
    - Gerou hooks? Memorizado. Próximos hooks já sabem o que você prefere.
    - Analisou criativo? Score salvo. Vejo a tendência de melhora ao longo do tempo.
    - Executou ação no Meta (pausou, escalou)? Registrado. Aprendo o que você prioriza.
    - Rodou preflight? Score guardado. Sei se seus scripts estão melhorando.
    - Analisou concorrente? Padrão salvo. Sei o que o mercado está fazendo.
+   - Identifiquei padrão cross-platform? Salvo. Próxima vez já sei o que funciona onde.
 
-5. BUSCA QUALQUER PERÍODO HISTÓRICO
-   Perguntou sobre janeiro? Busco direto na API do Meta. Qualquer mês, qualquer período.
+6. BUSCA QUALQUER PERÍODO HISTÓRICO
+   Perguntou sobre janeiro? Busco direto na API do Meta ou Google Ads. Qualquer mês, qualquer período.
 
 ═══ COMO RESPONDER QUANDO PERGUNTAREM SOBRE VOCÊ ═══
 NUNCA diga "não tenho memória entre conversas".

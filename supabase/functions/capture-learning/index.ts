@@ -143,6 +143,44 @@ Deno.serve(async (req) => {
         }
         break;
       }
+
+      // ── Cross-platform insight: fired when AI detects patterns across Meta+Google
+      case 'cross_platform_insight': {
+        // data: { platform_a, platform_b, angle, result_a, result_b, insight, persona_id }
+        const { platform_a, platform_b, angle, result_a, result_b, insight } = data;
+        if (!angle || !insight) break;
+        const key = `cross_${(platform_a||'meta').toLowerCase()}_${(platform_b||'google').toLowerCase()}_${(angle||'').toLowerCase().replace(/\s+/g,'_').slice(0,30)}`;
+        const { data: ex } = await (sb as any).from('learned_patterns')
+          .select('id,sample_size,variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+        const entry = {
+          angle: angle?.slice(0,100),
+          result_a, result_b,
+          insight: insight?.slice(0,200),
+          date: new Date().toISOString().split('T')[0],
+        };
+        if (ex) {
+          const entries = ((ex.variables as any)?.entries || []);
+          entries.unshift(entry);
+          await (sb as any).from('learned_patterns').update({
+            sample_size: (ex.sample_size||0) + 1,
+            confidence: Math.min(1, ((ex.sample_size||0)+1) / 5),
+            insight_text: `Cross [${platform_a}↔${platform_b}] "${angle?.slice(0,40)}": ${insight?.slice(0,100)}`,
+            last_updated: new Date().toISOString(),
+            variables: { platform_a, platform_b, angle, entries: entries.slice(0, 20) },
+          }).eq('id', ex.id);
+        } else {
+          await (sb as any).from('learned_patterns').insert({
+            user_id,
+            pattern_key: key,
+            persona_id: data.persona_id || null,
+            sample_size: 1,
+            confidence: 0.2,
+            insight_text: `Cross [${platform_a}↔${platform_b}] "${angle?.slice(0,40)}": ${insight?.slice(0,100)}`,
+            variables: { platform_a, platform_b, angle, entries: [entry] },
+          });
+        }
+        break;
+      }
     }
 
     // Rebuild AI profile summary

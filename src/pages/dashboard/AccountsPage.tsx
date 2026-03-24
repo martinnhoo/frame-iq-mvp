@@ -34,7 +34,7 @@ const PLATFORM_ICONS: Record<string, React.ReactNode> = {
 const PLATFORMS = [
   { id: "meta",   label: "Meta Ads",   color: "#1877F2", fn: "meta-oauth"   },
   { id: "tiktok", label: "TikTok Ads", color: "#fff",    fn: "tiktok-oauth", soon: true },
-  { id: "google", label: "Google Ads", color: "#4285F4", fn: "google-oauth",  soon: true },
+  { id: "google", label: "Google Ads", color: "#4285F4", fn: "google-oauth",  soon: false },
 ];
 
 interface Account {
