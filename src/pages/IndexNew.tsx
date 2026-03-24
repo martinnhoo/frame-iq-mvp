@@ -1430,69 +1430,51 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [lines, activeLine, phase]);
 
-  const h1 = t.hero_h1 || '';
-  const h1p = h1.split('\n');
-  const conn = lang === 'pt' ? 'conectado' : lang === 'es' ? 'conectado' : 'connected';
   const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
-  const note = lang === 'pt' ? 'Pergunte qualquer coisa sobre seus anúncios...' : lang === 'es' ? 'Pregunta lo que quieras sobre tus anuncios...' : 'Ask anything about your ads...';
+  const note = lang === 'pt' ? 'Pergunte qualquer coisa sobre seus anúncios...' : lang === 'es' ? 'Pregunta lo que quieras...' : 'Ask anything about your ads...';
 
-  const navMain = lang === 'pt'
-    ? ['IA Chat','Contas','Análises']
-    : lang === 'es'
-    ? ['IA Chat','Cuentas','Análisis']
-    : ['AI Chat','Accounts','Analytics'];
-  const navTools = lang === 'pt'
-    ? ['Gerador de Hooks','Script de Vídeo','Brief Criativo']
-    : lang === 'es'
-    ? ['Generador de Hooks','Script de Video','Brief Creativo']
-    : ['Hook Generator','Video Script','Creative Brief'];
-  const toolsLabel = lang === 'pt' ? 'FERRAMENTAS' : lang === 'es' ? 'HERRAMIENTAS' : 'TOOLS';
   const quickActions = lang === 'pt'
-    ? ['Qual meu melhor criativo?', 'Escreve hooks dos winners', 'Quanto posso escalar?']
+    ? ['Qual meu melhor criativo?', 'O que posso escalar?', 'O que pausar agora?']
     : lang === 'es'
-    ? ['¿Cuál es mi mejor creativo?', 'Escribe hooks de winners', '¿Cuánto puedo escalar?']
-    : ['What\'s my best creative?', 'Write hooks from winners', 'How much can I scale?'];
+    ? ['¿Cuál es mi mejor creativo?', '¿Qué puedo escalar?', '¿Qué pausar ahora?']
+    : ['What\'s my best creative?', 'What can I scale?', 'What to pause now?'];
 
-  // Bullets — what you get
   const bullets = lang === 'pt' ? [
-    { icon: '⚡', bold: 'Respostas instantâneas', rest: ' sobre CTR, ROAS e gasto' },
-    { icon: '🎯', bold: 'Descubra o que pausar', rest: ' e o que escalar agora' },
-    { icon: '✍️', bold: 'Gere hooks e roteiros', rest: ' direto dos seus winners' },
-    { icon: '🔔', bold: 'Alertas em tempo real', rest: ' via Telegram' },
+    { bold: 'Respostas em segundos', rest: ' sobre CTR, ROAS e gasto' },
+    { bold: 'Sabe o que pausar', rest: ' e o que escalar agora' },
+    { bold: 'Gera hooks e roteiros', rest: ' dos seus anúncios winners' },
+    { bold: 'Alerta proativo', rest: ' quando algo crítico acontece' },
   ] : lang === 'es' ? [
-    { icon: '⚡', bold: 'Respuestas instantáneas', rest: ' sobre CTR, ROAS y gasto' },
-    { icon: '🎯', bold: 'Descubre qué pausar', rest: ' y qué escalar ahora' },
-    { icon: '✍️', bold: 'Genera hooks y guiones', rest: ' directo de tus winners' },
-    { icon: '🔔', bold: 'Alertas en tiempo real', rest: ' via Telegram' },
+    { bold: 'Respuestas en segundos', rest: ' sobre CTR, ROAS y gasto' },
+    { bold: 'Sabe qué pausar', rest: ' y qué escalar ahora' },
+    { bold: 'Genera hooks y guiones', rest: ' de tus ads ganadores' },
+    { bold: 'Alerta proactiva', rest: ' cuando algo crítico ocurre' },
   ] : [
-    { icon: '⚡', bold: 'Instant answers', rest: ' on CTR, ROAS and spend' },
-    { icon: '🎯', bold: 'Know what to pause', rest: ' and what to scale now' },
-    { icon: '✍️', bold: 'Generate hooks and scripts', rest: ' from your winners' },
-    { icon: '🔔', bold: 'Real-time alerts', rest: ' via Telegram' },
+    { bold: 'Instant answers', rest: ' on CTR, ROAS and spend' },
+    { bold: 'Knows what to pause', rest: ' and what to scale now' },
+    { bold: 'Generates hooks and scripts', rest: ' from your winning ads' },
+    { bold: 'Proactive alerts', rest: ' when something critical happens' },
   ];
 
-  const connectsLabel = lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with';
-
-  // Render AI response
   const renderAI = () => {
     if (phase === 'thinking') return <Dots />;
     if (phase !== 'streaming' && phase !== 'done') return null;
     const allLines = activeLine ? [...lines, activeLine] : lines;
     if (!allLines.length) return null;
     return (
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <div className="ab-avatar" style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
           {allLines.map((line, i) => {
             const isAction = /^(Fix:|Ação:|Action:|Acción:|→)/i.test(line.replace(/\*\*/g, ''));
             const isLast = i === allLines.length - 1 && phase === 'streaming';
             const isWin = /\+|↑|2\.4x|3\.8x|3\.2x|winner|melhor|dominando|escalando/i.test(line);
             return (
               <MdLine key={i} text={line} style={{
-                fontFamily: F, fontSize: 14, lineHeight: 1.65, margin: 0,
-                color: isAction ? '#7dd3fc' : isWin ? '#a7f3d0' : i === 0 ? 'rgba(255,255,255,0.58)' : 'rgba(255,255,255,0.88)',
+                fontFamily: F, fontSize: 13, lineHeight: 1.6, margin: 0,
+                color: isAction ? '#7dd3fc' : isWin ? '#a7f3d0' : i === 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.85)',
                 fontWeight: isAction ? 600 : 400, opacity: isLast ? 0.6 : 1,
                 animation: `lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) ${i * 0.06}s both`,
               }} />
@@ -1504,281 +1486,222 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,4vw,60px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Ambient glow */}
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 55% 50% at 70% 50%, ${industry.color}10 0%, transparent 65%)`, transition: 'background 0.8s ease', pointerEvents: 'none' }} />
+      {/* Ambient glow — subtle, tied to active industry */}
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 50% 60% at 75% 50%, ${industry.color}0d 0%, transparent 65%)`, transition: 'background 1s ease', pointerEvents: 'none' }} />
 
-      {/* ── 2-COLUMN GRID ── */}
-      <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.15fr', gap: 'clamp(32px,4vw,72px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
+      {/* 2-column grid */}
+      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
 
-        {/* ── LEFT COLUMN — text, bullets, CTA ── */}
+        {/* ── LEFT — lean text ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
           {/* Social proof */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 18 }}>
             <div style={{ display: 'flex', gap: 1 }}>
-              {[0,1,2,3,4].map(i => <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
+              {[0,1,2,3,4].map(i => <svg key={i} width="10" height="10" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
             </div>
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.01em' }}>
-              {lang === 'pt' ? '4.9 — 340+ gestores já conversam com a IA' : lang === 'es' ? '4.9 — 340+ media buyers ya usan el chat' : '4.9 — 340+ media buyers chatting with AI'}
+            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+              {lang === 'pt' ? '340+ gestores já usam' : lang === 'es' ? '340+ media buyers ya usan' : '340+ media buyers using it'}
             </span>
           </div>
 
-          {/* Headline */}
-          <h1 style={{ fontFamily: F, fontSize: 'clamp(34px,3.8vw,58px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 16px', color: '#fff', whiteSpace: 'pre-line' as const }}>
+          {/* Headline — 2 lines max */}
+          <h1 style={{ fontFamily: F, fontSize: 'clamp(32px,3.2vw,52px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
             {t.hero_h1}
           </h1>
 
-          {/* Subheadline */}
-          <p style={{ fontFamily: F, fontSize: 'clamp(14px,1.1vw,17px)', color: 'rgba(255,255,255,0.4)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 480 }}>
-            {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como un analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
+          {/* Subheadline — 1 line */}
+          <p style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, margin: '0 0 28px', maxWidth: 420 }}>
+            {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
           </p>
 
-          {/* 4 Bullet points */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 32 }}>
+          {/* Bullets — clean, no emoji */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
             {bullets.map((b, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{b.icon}</span>
-                <p style={{ fontFamily: F, fontSize: 14.5, color: 'rgba(255,255,255,0.8)', margin: 0, lineHeight: 1.4 }}>
-                  <strong style={{ color: '#fff', fontWeight: 700 }}>{b.bold}</strong>
-                  <span style={{ color: 'rgba(255,255,255,0.45)' }}>{b.rest}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0 }} />
+                <p style={{ fontFamily: F, fontSize: 14, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                  <strong style={{ color: '#fff', fontWeight: 600 }}>{b.bold}</strong>
+                  <span style={{ color: 'rgba(255,255,255,0.38)' }}>{b.rest}</span>
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Connects with — Meta logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.02em' }}>{connectsLabel}</span>
-            {/* Meta */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(24,119,242,0.1)', border: '1px solid rgba(24,119,242,0.25)' }}>
-              <svg width="14" height="9" viewBox="0 0 36 18" fill="none"><path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0z" fill="#1877F2"/></svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: '#1877F2', fontWeight: 600 }}>Meta Ads</span>
+          {/* Connects with — minimal */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
+            <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.02em' }}>
+              {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
+            </span>
+            {/* Meta Ads — official logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(24,119,242,0.1)', border: '1px solid rgba(24,119,242,0.22)' }}>
+              <svg width="14" height="14" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M25 0C11.19 0 0 11.19 0 25s11.19 25 25 25 25-11.19 25-25S38.81 0 25 0z" fill="#1877F2"/>
+                <path d="M34.7 16.3c-.9-3.5-3.7-5.3-6.9-5.3-2.5 0-4.4.9-5.7 2.5-1.1 1.4-1.6 3.1-1.6 5v1.7h-3.4v4.5h3.4V37h5.1V24.7h3.3l.5-4.5h-3.8v-1.5c0-1.2.3-1.9 2-1.9h1.9v-4.1c-.3 0-1.4-.1-2.7-.1-2.8 0-5.8 1.6-5.8 5.8v1.7h-3.4v4.5h3.4V37" fill="white"/>
+              </svg>
+              <span style={{ fontFamily: F, fontSize: 11.5, color: '#5b9cf6', fontWeight: 600 }}>Meta Ads</span>
             </div>
-            {/* Google — soon */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.28)', fontWeight: 500 }}>Google</span>
-              <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.2)', fontWeight: 600, letterSpacing: '0.06em' }}>SOON</span>
+              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>Google</span>
+              <span style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>SOON</span>
             </div>
-            {/* TikTok — soon */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <svg width="11" height="11" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.88a8.18 8.18 0 004.77 1.52V7.01a4.85 4.85 0 01-1-.32z" fill="rgba(255,255,255,0.3)"/></svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.28)', fontWeight: 500 }}>TikTok</span>
-              <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.2)', fontWeight: 600, letterSpacing: '0.06em' }}>SOON</span>
+              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>TikTok</span>
+              <span style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em' }}>SOON</span>
             </div>
           </div>
 
           {/* CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' as const }}>
-            <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '15px 40px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s, transform 0.15s', letterSpacing: '-0.025em', flexShrink: 0 }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s, transform 0.15s', letterSpacing: '-0.025em', flexShrink: 0 }}
               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '0.9'; el.style.transform = 'translateY(-1px)'; }}
               onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }}>
               {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
             </button>
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.22)' }}>
-              {lang === 'pt' ? '1 dia grátis · Cancele quando quiser' : lang === 'es' ? '1 día gratis · Cancela cuando quieras' : '1-day free · Cancel anytime'}
+            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.20)' }}>
+              {lang === 'pt' ? '1 dia grátis · Sem cobrar' : lang === 'es' ? '1 día gratis · Sin cobrar' : '1-day free · No charge'}
             </span>
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN — demo interativa ── */}
-        <div style={{ position: 'relative' }} className="hero-demo-col">
-          {/* Glow behind window */}
-          <div style={{ position: 'absolute', inset: '-1px', borderRadius: 18, background: `linear-gradient(135deg, ${industry.color}18 0%, rgba(99,102,241,0.10) 50%, rgba(14,165,233,0.06) 100%)`, zIndex: 0, transition: 'background 0.8s' }} />
-          <div style={{ position: 'absolute', bottom: -32, left: '10%', right: '10%', height: 60, background: `radial-gradient(ellipse, ${industry.color}20 0%, transparent 70%)`, zIndex: 0, filter: 'blur(16px)', transition: 'background 0.8s' }} />
+        {/* ── RIGHT — demo clean ── */}
+        <div className="hero-demo-col" style={{ position: 'relative' }}>
 
-          <div className="demo-window" style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${industry.color}40`, boxShadow: `0 0 0 1px rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.65), 0 0 40px ${industry.color}12`, position: 'relative', zIndex: 1 }}>
+          {/* Glow */}
+          <div style={{ position: 'absolute', inset: '0', borderRadius: 16, background: `linear-gradient(135deg, ${industry.color}14 0%, transparent 60%)`, zIndex: 0, transition: 'background 0.8s', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -24, left: '15%', right: '15%', height: 48, background: `radial-gradient(ellipse, ${industry.color}1a 0%, transparent 70%)`, zIndex: 0, filter: 'blur(16px)', transition: 'background 0.8s' }} />
 
-            {/* Browser chrome */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: '#050710', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ display: 'flex', gap: 5 }}>
-                {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />)}
+          {/* Window */}
+          <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid rgba(255,255,255,0.09)`, boxShadow: `0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)`, position: 'relative', zIndex: 1 }}>
+
+            {/* Browser bar — minimal */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', background: '#040508', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '2px 9px', borderRadius: 5, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.22)', marginLeft: 4 }}>
-                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#818cf8', animation: 'pulse 2s infinite' }} />
-                <span style={{ fontFamily: F, fontSize: 9.5, color: '#a5b4fc', fontWeight: 700, letterSpacing: '0.02em' }}>
-                  {lang === 'pt' ? 'IA · Chat' : lang === 'es' ? 'IA · Chat' : 'AI · Chat'}
-                </span>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 5, maxWidth: 180, margin: '0 auto' }}>
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399' }} />
+                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.28)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
               </div>
-              <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 6, maxWidth: 190, margin: '0 auto' }}>
-                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 5px #34d399' }} />
-                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.32)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
-                <div style={{ width: 3.5, height: 3.5, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s ease-in-out infinite' }} />
-                <span style={{ fontFamily: F, fontSize: 9, color: '#34d399', fontWeight: 600 }}>
-                  {lang === 'pt' ? 'Meta conectado' : lang === 'es' ? 'Meta conectado' : 'Meta connected'}
-                </span>
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(24,119,242,0.1)', border: '1px solid rgba(24,119,242,0.2)' }}>
+                <svg width="10" height="10" viewBox="0 0 50 50" fill="none"><path d="M25 0C11.19 0 0 11.19 0 25s11.19 25 25 25 25-11.19 25-25S38.81 0 25 0z" fill="#1877F2"/><path d="M34.7 16.3c-.9-3.5-3.7-5.3-6.9-5.3-2.5 0-4.4.9-5.7 2.5-1.1 1.4-1.6 3.1-1.6 5v1.7h-3.4v4.5h3.4V37h5.1V24.7h3.3l.5-4.5h-3.8v-1.5c0-1.2.3-1.9 2-1.9h1.9v-4.1c-.3 0-1.4-.1-2.7-.1-2.8 0-5.8 1.6-5.8 5.8v1.7h-3.4v4.5h3.4V37" fill="white"/></svg>
+                <span style={{ fontFamily: F, fontSize: 9, color: '#5b9cf6', fontWeight: 600 }}>Meta</span>
               </div>
             </div>
 
-            {/* App body */}
-            <div style={{ display: 'flex', background: '#07090f', minHeight: 460, maxHeight: 460, overflow: 'hidden' }} className="demo-app-body">
+            {/* App — no sidebar, full-width chat */}
+            <div style={{ background: '#06080e', minHeight: 440, maxHeight: 440, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-              {/* Sidebar */}
-              <div className="demo-sidebar-inner" style={{ width: 200, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', background: '#060810' }}>
-                <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, letterSpacing: '-0.04em', display: 'inline-flex', alignItems: 'baseline' }}>
-                    <span style={{ fontWeight: 700, color: '#eef0f6' }}>ad</span>
-                    <span style={{ fontWeight: 900, color: '#38bdf8' }}>brief</span>
-                  </span>
-                </div>
-                <div style={{ padding: '8px 8px 4px' }}>
-                  <p style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, margin: '0 0 5px 4px' }}>
-                    {lang === 'pt' ? 'CONTA ATIVA' : lang === 'es' ? 'CUENTA ACTIVA' : 'ACTIVE ACCOUNT'}
-                  </p>
-                  {INDUSTRIES_DEMO.slice(0, 4).map(ind => {
+              {/* Chat topbar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#06080e', flexShrink: 0 }}>
+                {/* Account selector pills — clickable */}
+                <div style={{ display: 'flex', gap: 5, overflowX: 'auto', flex: 1 }}>
+                  {INDUSTRIES_DEMO.slice(0, 3).map(ind => {
                     const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
                     const isAct = ind.id === activeIndustry;
                     return (
-                      <div key={ind.id} onClick={() => setActiveIndustry(ind.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 7px', borderRadius: 7, marginBottom: 2, background: isAct ? `${ind.color}12` : 'transparent', cursor: 'pointer', transition: 'all 0.15s' }}
-                        onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                        onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 5, background: isAct ? `${ind.color}20` : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>{ind.emoji}</div>
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: isAct ? 600 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.35)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{acc?.name || ind.id}</p>
-                          <p style={{ fontFamily: F, fontSize: 9, color: isAct ? ind.color : 'rgba(255,255,255,0.2)', margin: 0 }}>{acc?.meta || ''}</p>
-                        </div>
-                      </div>
+                      <button key={ind.id} onClick={() => setActiveIndustry(ind.id)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: isAct ? `${ind.color}14` : 'rgba(255,255,255,0.04)', border: `1px solid ${isAct ? ind.color+'28' : 'rgba(255,255,255,0.07)'}`, cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0, fontFamily: F, fontSize: 11, fontWeight: isAct ? 600 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.38)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' as const }}>
+                        <span style={{ fontSize: 10 }}>{ind.emoji}</span>
+                        {acc?.name || ind.id}
+                      </button>
                     );
                   })}
                 </div>
-                <div style={{ padding: '6px 8px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
-                  <p style={{ fontFamily: F, fontSize: 8.5, fontWeight: 700, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, margin: '0 0 6px 4px' }}>
-                    {lang === 'pt' ? 'ESTA SEMANA' : lang === 'es' ? 'ESTA SEMANA' : 'THIS WEEK'}
-                  </p>
-                  {[
-                    { label: 'ROAS', value: 3.8, suffix: 'x', trend: '+22%' },
-                    { label: 'CTR',  value: 3.2, suffix: '%', trend: '+0.8pt' },
-                    { label: 'Hook rate', value: 38, suffix: '%', trend: '+12pt' },
-                  ].map((kpi, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 7, background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.12)', marginBottom: 4, animation: `kpiSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) ${0.1 + i * 0.1}s both` }}>
-                      <span style={{ fontFamily: F, fontSize: 9.5, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{kpi.label}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ fontFamily: F, fontSize: 11, color: '#fff', fontWeight: 800, letterSpacing: '-0.03em' }}>
-                          <AnimatedKPI value={kpi.value} suffix={kpi.suffix} duration={900 + i * 200} />
-                        </span>
-                        <span style={{ fontFamily: F, fontSize: 9, color: '#34d399', fontWeight: 700 }}>{kpi.trend}</span>
-                      </div>
+                {/* KPIs inline — compact */}
+                <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                  {[{ l: 'CTR', v: '3.2%', c: '#34d399' }, { l: 'ROAS', v: '3.8x', c: '#34d399' }].map((k, i) => (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: k.c }}>{k.v}</span>
+                      <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>{k.l}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Chat panel */}
-              <div className="demo-chat-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#07090f', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 9px 3px 7px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}>
-                    <div style={{ width: 14, height: 14, borderRadius: 3, background: `${industry.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: industry.color }}>{account?.name?.charAt(0) || 'F'}</div>
-                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>{account?.name || 'FitCore Brasil'}</span>
-                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="rgba(255,255,255,0.3)" strokeWidth="1.3" strokeLinecap="round"/></svg>
-                  </div>
-                  <div style={{ flex: 1 }} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 4, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.15)' }}>
-                    <div style={{ width: 3.5, height: 3.5, borderRadius: '50%', background: '#34d399' }} />
-                    <span style={{ fontFamily: F, fontSize: 9, color: 'rgba(52,211,153,0.8)', fontWeight: 600 }}>Meta</span>
-                  </div>
-                </div>
+              {/* Messages */}
+              <div ref={chatRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 12px', display: 'flex', flexDirection: 'column' as const, gap: 14 }}>
 
-                <div ref={chatRef} className="demo-chat" style={{ flex: 1, overflowY: 'auto', padding: '18px 0 12px', display: 'flex', flexDirection: 'column' as const, gap: 0 }}>
-                  <div style={{ maxWidth: 600, margin: '0 auto', width: '100%', padding: '0 20px', display: 'flex', flexDirection: 'column' as const, gap: 16 }}>
-                    {/* Greeting */}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, boxShadow: '0 0 12px rgba(14,165,233,0.3)' }}>
-                        <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
-                      </div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
-                        <div style={{ padding: '9px 12px', borderRadius: 10, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.20)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
-                          <p style={{ fontFamily: F, fontSize: 12.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6, margin: 0 }}>
-                            {lang === 'pt'
-                              ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 está convertendo 2.4x mais</span> que a semana passada. Hook rate: 38%, ROAS 3.8x.</>
-                              : lang === 'es'
-                              ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 convierte 2.4x más</span> que la semana pasada. Hook rate: 38%, ROAS 3.8x.</>
-                              : <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 is converting 2.4x more</span> than last week. Hook rate: 38%, ROAS 3.8x.</>}
-                          </p>
-                        </div>
-                        <div style={{ padding: '9px 12px', borderRadius: 10, background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.18)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.28s both' }}>
-                          <p style={{ fontFamily: F, fontSize: 12.5, color: '#7dd3fc', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-                            {lang === 'pt'
-                              ? <>→ Frequência 1.3x — tem espaço. Escale de <strong style={{ color: '#fff' }}>R$120 → R$400/dia</strong> sem risco de saturação.</>
-                              : lang === 'es'
-                              ? <>→ Frecuencia 1.3x — hay espacio. Escala de <strong style={{ color: '#fff' }}>$120 → $400/día</strong> sin riesgo.</>
-                              : <>→ Frequency at 1.3x — room to grow. Scale from <strong style={{ color: '#fff' }}>$120 → $400/day</strong> safely.</>}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, paddingTop: 2, animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.45s both' }}>
-                          {quickActions.slice(0, 3).map((label, i) => (
-                            <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                              style={{ padding: '5px 11px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)', transition: 'all 0.18s', whiteSpace: 'nowrap' as const }}
-                              onMouseEnter={e => { const el = e.currentTarget; el.style.background='rgba(52,211,153,0.08)'; el.style.borderColor='rgba(52,211,153,0.22)'; el.style.color='rgba(255,255,255,0.85)'; }}
-                              onMouseLeave={e => { const el = e.currentTarget; el.style.background='rgba(255,255,255,0.04)'; el.style.borderColor='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.45)'; }}>
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                {/* Greeting cards */}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: 8, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>AB</span>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
+                    <div style={{ padding: '10px 13px', borderRadius: 10, background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.16)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.88)', lineHeight: 1.55, margin: 0 }}>
+                        {lang === 'pt'
+                          ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 convertendo 2.4x mais</span> — Hook rate: 38%, ROAS 3.8x.</>
+                          : lang === 'es'
+                          ? <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 convirtiendo 2.4x más</span> — Hook rate: 38%, ROAS 3.8x.</>
+                          : <><span style={{ color: '#34d399', fontWeight: 700 }}>✦ Creative_019 converting 2.4x more</span> — Hook rate: 38%, ROAS 3.8x.</>}
+                      </p>
                     </div>
-
-                    {/* User message */}
-                    {phase !== 'idle' && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <div style={{ maxWidth: '70%', padding: '9px 13px', borderRadius: 9, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                          <p style={{ fontFamily: F, fontSize: 12.5, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, margin: 0 }}>
-                            {typedQ}
-                            {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 1.5, height: 13, background: 'rgba(255,255,255,0.6)', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* AI response */}
-                    {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                      <div style={{ flex: 1 }}>{renderAI()}</div>
-                    )}
-
-                    {/* Suggestion chips */}
-                    {phase === 'done' && (
-                      <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />
-                    )}
+                    <div style={{ padding: '10px 13px', borderRadius: 10, background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.14)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: '#7dd3fc', lineHeight: 1.55, margin: 0 }}>
+                        {lang === 'pt'
+                          ? <>→ Escale de <strong style={{ color: '#fff' }}>R$120 → R$400/dia</strong>. Frequência 1.3x, sem risco.</>
+                          : lang === 'es'
+                          ? <>→ Escala de <strong style={{ color: '#fff' }}>$120 → $400/día</strong>. Frecuencia 1.3x, sin riesgo.</>
+                          : <>→ Scale from <strong style={{ color: '#fff' }}>$120 → $400/day</strong>. Frequency 1.3x, safe.</>}
+                      </p>
+                    </div>
+                    {/* Quick pills */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both' }}>
+                      {quickActions.map((label, i) => (
+                        <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
+                          style={{ padding: '5px 11px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.4)', transition: 'all 0.15s', whiteSpace: 'nowrap' as const }}
+                          onMouseEnter={e => { const el = e.currentTarget; el.style.background='rgba(52,211,153,0.07)'; el.style.borderColor='rgba(52,211,153,0.2)'; el.style.color='rgba(255,255,255,0.8)'; }}
+                          onMouseLeave={e => { const el = e.currentTarget; el.style.background='rgba(255,255,255,0.04)'; el.style.borderColor='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.4)'; }}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Input bar */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '8px 12px 10px', flexShrink: 0, background: '#07090f' }}>
-                  <div style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '8px 10px 8px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                    <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.22)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
-                    <button onClick={onCTA}
-                      style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '7px 14px', borderRadius: 9, background: '#0ea5e9', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'opacity 0.15s', letterSpacing: '-0.01em' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                      {ctabtn} →
-                    </button>
+                {/* User message */}
+                {phase !== 'idle' && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ maxWidth: '65%', padding: '9px 13px', borderRadius: 9, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, margin: 0 }}>
+                        {typedQ}
+                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 1.5, height: 13, background: 'rgba(255,255,255,0.6)', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Mobile pills */}
-                <div className="demo-mobile-pills" style={{ display: 'none', gap: 6, padding: '7px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', flexShrink: 0 }}>
-                  {qa.slice(0,3).map((item, i) => (
-                    <button key={i} onClick={() => jump(i)}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: qi === i ? `${industry.color}15` : 'rgba(255,255,255,0.05)', border: `1px solid ${qi === i ? industry.color+'30' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' as const, fontFamily: F, fontSize: 10.5, color: qi === i ? industry.color : 'rgba(255,255,255,0.45)', fontWeight: qi === i ? 600 : 400 }}>
-                      {item.q.slice(0,28)}{item.q.length > 28 ? '…' : ''}
-                    </button>
-                  ))}
+                {/* AI response */}
+                {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
+                  <div style={{ flex: 1 }}>{renderAI()}</div>
+                )}
+
+                {phase === 'done' && (
+                  <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />
+                )}
+              </div>
+
+              {/* Input bar */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '8px 12px 10px', flexShrink: 0, background: '#06080e' }}>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '8px 10px 8px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.20)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
+                  <button onClick={onCTA}
+                    style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: '7px 14px', borderRadius: 9, background: '#0ea5e9', color: '#000', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'opacity 0.15s' }}>
+                    {ctabtn} →
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
-
-
     </section>
   );
 }
-
 
 // ─── Tools ─────────────────────────────────────────────────────────────────────
 function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
