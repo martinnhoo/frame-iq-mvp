@@ -266,10 +266,18 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                   {/* Manual ID input */}
                   <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
                     <input value={manualAccountId} onChange={e => setManualAccountId(e.target.value)}
-                      placeholder={p.id === "google" ? "Customer ID (ex: 1234567890)" : "act_XXXXXXXXX"}
+                      placeholder={p.id === "google" ? (language === "pt" ? "Customer ID (10 dígitos, ex: 512-522-3131)" : "Customer ID (10 digits, e.g. 512-522-3131)") : "act_XXXXXXXXX"}
                       onKeyDown={e => { if (e.key === "Enter") saveManualAccount(p.id, manualAccountId); }}
                       style={{ flex: 1, fontFamily: F, fontSize: 11, padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }} />
-                    <button onClick={() => saveManualAccount(p.id, manualAccountId)} disabled={!manualAccountId.trim() || changingAccount === p.id}
+                    {p.id === "google" && (
+                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>
+                        {language === "pt" ? "Onde achar: " : "Where to find: "}
+                        <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(14,165,233,0.6)", textDecoration: "none" }}>
+                          {language === "pt" ? "Google Ads → canto superior direito" : "Google Ads → top right corner"}
+                        </a>
+                      </p>
+                    )}
+                      <button onClick={() => saveManualAccount(p.id, manualAccountId)} disabled={!manualAccountId.trim() || changingAccount === p.id}
                       style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "8px 14px", borderRadius: 7, background: manualAccountId.trim() ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() ? "#fff" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() ? "pointer" : "default" }}>
                       {changingAccount === p.id ? "..." : t.save}
                     </button>
@@ -601,11 +609,11 @@ export default function AccountsPage() {
                     {/* Chat shortcut */}
                     <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                       <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0 }}>
-                        Ready to ask the AI about this account?
+                        {language === "pt" ? "Pronto para perguntar à IA sobre essa conta?" : language === "es" ? "¿Listo para preguntar a la IA sobre esta cuenta?" : "Ready to ask the AI about this account?"}
                       </p>
                       <button onClick={() => navigate("/dashboard/ai")}
                         style={{ fontFamily: F, fontSize: 12, fontWeight: 600, padding: "8px 16px", borderRadius: 8, background: `linear-gradient(135deg, ${BLUE}, #06b6d4)`, color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                        Open AI chat →
+                        {language === "pt" ? "Abrir AI chat →" : language === "es" ? "Abrir AI chat →" : "Open AI chat →"}
                       </button>
                     </div>
                   </>

@@ -170,8 +170,8 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
             <Users2 size={15} style={{ color: isAccountsActive ? SB.activeIcon : SB.idleIcon, flexShrink: 0 }} />
             <span style={{ flex: 1 }}>{language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts"}</span>
             {selectedPersona && (
-              <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(14,165,233,0.8)", background: "rgba(14,165,233,0.08)", borderRadius: 4, padding: "1px 5px", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {selectedPersona.name}
+              <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.9)", background: "rgba(14,165,233,0.1)", borderRadius: 4, padding: "2px 6px", flexShrink: 0, letterSpacing: "0.03em", border: "1px solid rgba(14,165,233,0.2)" }}>
+                {selectedPersona.name.split(" ").map((w: string) => w[0]).slice(0, 3).join("").toUpperCase()}
               </span>
             )}
           </NavLink>

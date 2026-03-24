@@ -73,13 +73,9 @@ export default function HookGenerator() {
   const [platform, setPlatform] = useState("TikTok");
   const [searchParams] = useSearchParams();
   useEffect(() => {
-    // Pre-fill product from persona name + description
+    // Pre-fill product — only name, not full description (too verbose)
     if (selectedPersona?.name && !product) {
-      const desc = selectedPersona.description || (selectedPersona as any)?.result?.description || "";
-      const productStr = desc
-        ? `${selectedPersona.name} — ${desc.slice(0, 80)}`
-        : selectedPersona.name;
-      setProduct(productStr);
+      setProduct(selectedPersona.name);
     }
     // Pre-fill niche from ai_profile or persona industry
     const industryVal = aiProfile?.industry || (selectedPersona as any)?.industry || (selectedPersona as any)?.result?.industry || "";
