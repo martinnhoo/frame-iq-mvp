@@ -524,7 +524,7 @@ export const TEMPLATES: Template[] = [
   T("gaming-community", "Gaming Community", "Tribe-based gaming ad.", "gaming", 30,
     `Gaming community ad. 'For the ones who take gaming seriously'. Community footage. Pro gamer angle. Product as membership badge. CTA.`),
   T("gaming-tournament", "Tournament Ready", "Competition preparation ad.", "gaming", 60,
-    `Tournament prep. 'Tournament starts in 24 hours'. Mental prep, physical prep, gear check. Product as gear. 'Are you ready?'. CTA.`),
+    `Tournament prep. 'Tournament starts in 72 hours (3 days)'. Mental prep, physical prep, gear check. Product as gear. 'Are you ready?'. CTA.`),
   T("gaming-parent", "For Parents", "Gaming product for concerned parents.", "gaming", 30,
     `Parent-targeted gaming. Parent perspective. Child's passion for gaming. Product that makes it safe/better/educational. Parent peace of mind. CTA.`),
   T("gaming-streamer", "Streamer Style", "Streaming-format gaming ad.", "gaming", 30,

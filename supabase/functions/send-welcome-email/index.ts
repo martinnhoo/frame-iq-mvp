@@ -44,7 +44,7 @@ const T: Record<Lang, {
     s3t: "Ask anything",
     s3d: "\"What's killing my ROAS?\" · \"Which creative should I pause?\" · \"Write 3 hooks for my account\"",
     cta: "Open AdBrief →",
-    ps: "1-day trial starts when you pick a plan. Full access. Cancel within 24 hours and pay nothing.",
+    ps: "1-day trial starts when you pick a plan. Full access. Cancel within 72 hours (3 days) and pay nothing.",
     footer: "You signed up at adbrief.pro",
   },
   es: {
@@ -95,7 +95,7 @@ const T: Record<Lang, {
     s3t: "Frag alles",
     s3d: "\"Was tötet meinen ROAS?\" · \"Welches Creative pausieren?\" · \"Schreib 3 Hooks für mein Konto\"",
     cta: "AdBrief öffnen →",
-    ps: "1-Tage-Test beginnt wenn du einen Plan wählst. Voller Zugang. Kündige in 24h und zahle nichts.",
+    ps: "1-Tage-Test beginnt wenn du einen Plan wählst. Voller Zugang. Kündige in 72h und zahle nichts.",
     footer: "Du hast dich bei adbrief.pro registriert",
   },
 };

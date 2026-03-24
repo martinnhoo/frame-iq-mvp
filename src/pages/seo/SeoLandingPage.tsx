@@ -31,7 +31,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
         <h1 style={{ ...j, fontSize: 38, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 16 }}>{headline}</h1>
         <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 32 }}>{subheadline}</p>
         <div style={{ display: "flex", gap: 12, marginBottom: 48 }}>
-          <button onClick={() => navigate("/signup")} style={{ ...j, padding: "13px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: `linear-gradient(135deg,${accentColor},#06b6d4)`, color: "#000", border: "none", cursor: "pointer" }}>Try free for 1 day</button>
+          <button onClick={() => navigate("/signup")} style={{ ...j, padding: "13px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: `linear-gradient(135deg,${accentColor},#06b6d4)`, color: "#000", border: "none", cursor: "pointer" }}>Try free for 3 days</button>
           <button onClick={() => navigate("/pricing")} style={{ ...j, padding: "13px 22px", borderRadius: 999, fontSize: 14, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>See pricing</button>
         </div>
         <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 40 }} />
@@ -69,7 +69,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
         )}
         <div style={{ borderRadius: 20, padding: "32px 28px", textAlign: "center", background: "linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.05))", border: "1px solid rgba(139,92,246,0.15)" }}>
           <h3 style={{ ...j, fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Ready to improve your ad creative?</h3>
-          <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 20, fontSize: 14 }}>1-day free trial on all plans. Card required, no charge for 24h.</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", marginBottom: 20, fontSize: 14 }}>3-day free trial on all plans. Card required, no charge for 24h.</p>
           <button onClick={() => navigate("/signup")} style={{ ...j, padding: "13px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>Start free →</button>
         </div>
       </div>

@@ -51,7 +51,7 @@ const faqItems = [
   },
   {
     q: "Do you offer a free trial?",
-    a: "Every paid plan includes a 1-day free trial. Card required upfront, but you are not charged for 24 hours. Cancel before the trial ends and pay nothing. Plans start at $19/mo.",
+    a: "Every paid plan includes a 3-day free trial. Card required upfront, but you are not charged for 72 hours (3 days). Cancel before the trial ends and pay nothing. Plans start at $19/mo.",
   },
   {
     q: "What languages does Auto Translation support?",
@@ -86,7 +86,7 @@ const FAQ = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 1 day</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 3 days</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -169,7 +169,7 @@ const FAQ = () => {
           >
             <h2 className="text-2xl font-bold mb-3">Still have questions?</h2>
             <p className="text-secondary mb-6">
-              Our team is here to help. Reach out and we'll get back to you within 24 hours.
+              Our team is here to help. Reach out and we'll get back to you within 72 hours (3 days).
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button

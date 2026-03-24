@@ -13,11 +13,11 @@ interface SeoCTAProps {
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const CTX: Record<string, { headline: string; sub: string; primaryLabel: string }> = {
-  tool:    { headline: "Try it free for 1 day", sub: "Create an account and use this tool instantly. 1-day free trial on any plan.", primaryLabel: "Start free trial" },
+  tool:    { headline: "Try it free for 3 days", sub: "Create an account and use this tool instantly. 3-day free trial on any plan.", primaryLabel: "Start free trial" },
   guide:   { headline: "Put this into practice in 60 seconds", sub: "Connect your ad account and get AI answers about your real campaign data.", primaryLabel: "Try AdBrief free" },
-  compare: { headline: "See why teams switch to AdBrief", sub: "1-day free trial. Card required. Cancel anytime before 24h and pay nothing.", primaryLabel: "Try AdBrief free" },
-  market:  { headline: "Built for your market", sub: "AdBrief calibrates outputs to your market, language, and audience. Try free for 1 day.", primaryLabel: "Start free trial" },
-  default: { headline: "The AI that knows your ad account", sub: "Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. 1-day free trial.", primaryLabel: "Start free trial" },
+  compare: { headline: "See why teams switch to AdBrief", sub: "3-day free trial. Card required. Cancel anytime before 24h and pay nothing.", primaryLabel: "Try AdBrief free" },
+  market:  { headline: "Built for your market", sub: "AdBrief calibrates outputs to your market, language, and audience. Try free for 3 days.", primaryLabel: "Start free trial" },
+  default: { headline: "The AI that knows your ad account", sub: "Connect Meta, TikTok or Google Ads. Ask anything about your campaigns. 3-day free trial.", primaryLabel: "Start free trial" },
 };
 
 export function SeoCTA({ headline, sub, primaryLabel, primaryHref = "/signup", secondaryLabel, secondaryHref = "/features", context = "default" }: SeoCTAProps) {

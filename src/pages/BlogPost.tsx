@@ -51,7 +51,7 @@ const blogPosts: Record<string, {
       "More importantly, the insights are objective and data-driven rather than based on one person's opinion about what 'looks good.'",
       "## Getting Started",
       "Whether you're a solo Creative Strategist or leading a 20-person performance marketing team, the shift to AI-powered competitor analysis is inevitable. The teams that adopt it first gain a compounding advantage: faster insights, more tests, better creative, higher ROAS.",
-      "Start analyzing competitor ads in seconds with AdBrief. 1-day free trial on all plans.",
+      "Start analyzing competitor ads in seconds with AdBrief. 3-day free trial on all plans.",
     ],
   },
   "hook-framework-ctr": {
@@ -208,7 +208,7 @@ const blogPosts: Record<string, {
       "## Early Results",
       "Beta testers reported: 85% reduction in briefing time, 3x increase in concepts tested per week, 40% fewer revision rounds with editors, and editors preferred AI-generated briefs over manual ones (clearer, more specific).",
       "## Pricing",
-      "Board Generation is included in all paid plans: Maker, Pro, and Studio. 1-day free trial available on all plans.",
+      "Board Generation is included in all paid plans: Maker, Pro, and Studio. 3-day free trial available on all plans.",
       "## Try It Today",
       "Board Generation is live for all AdBrief users. Log in to your dashboard or start a free account to generate your first board in 30 seconds.",
     ],
@@ -582,7 +582,7 @@ const blogPosts: Record<string, {
       "## Key Takeaways",
       "1. Agencies sell time, AI sells output. You're paying for deliverables, not hours. 2. The 80/20 rule applies: AI handles 80% of the volume, humans handle the 20% that matters most. 3. Speed compounds. More variations → more data → better decisions → higher ROAS. 4. It's not for everyone. Marcus is tech-savvy and understands performance marketing deeply. Complete beginners might still need agency support.",
       "## Your Turn",
-      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with AdBrief's 1-day free trial and see how much competitive intelligence you can gather in 30 minutes.",
+      "You don't need to fire your agency tomorrow. Start by running AI tools alongside your current setup for one month. Compare the output, quality, and cost. Let the data decide. Start with AdBrief's 3-day free trial and see how much competitive intelligence you can gather in 30 minutes.",
     ],
   },
   "cost-creative-strategist-vs-ai": {
@@ -687,7 +687,7 @@ const blogPosts: Record<string, {
       "Run traffic from a consistent source to a consistent destination. If CTR held but CVR dropped, the problem isn't your Meta ads — it's your landing page, your offer, or your price.",
       "## The Fastest Way to Diagnose Today",
       "If you're running Meta Ads and want a faster diagnostic process, AdBrief connects directly to your account and reads your real campaign data. Ask it: 'What's driving my ROAS drop this week?' and get a plain-English breakdown of which ads are fatigued, which audiences are exhausted, and what to fix first.",
-      "Start with a 1-day free trial on any plan. No guessing, no CSV exports — just real answers from your real data.",
+      "Start with a 3-day free trial on any plan. No guessing, no CSV exports — just real answers from your real data.",
       "**Related:** See also: [creative fatigue detection](/blog/creative-fatigue-meta-ads), [hook rate guide](/blog/what-is-hook-rate-meta-ads), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief's ROAS analysis](/use-case/analyze-meta-campaign).",
     ],
   },
@@ -810,7 +810,7 @@ const blogPosts: Record<string, {
       "## How AdBrief Generates Hooks From Your Own Data",
       "The hooks above are frameworks. What makes them powerful is tailoring them to your specific audience and account's winning patterns. AdBrief connects to your Meta Ads and generates hooks based on the angles, formats, and CTR patterns that have already worked in your specific account.",
       "Instead of starting from templates, you start from proof. Ask AdBrief: 'Write 5 hooks for my next campaign based on my top performers' — and get hooks built from your winners, not someone else's.",
-      "Try AdBrief free for 1 day. Connect your Meta account and generate your first data-backed hooks in under 5 minutes.",
+      "Try AdBrief free for 3 days. Connect your Meta account and generate your first data-backed hooks in under 5 minutes.",
       "**Related:** See also: [creative brief guide](/blog/meta-ads-creative-brief-guide), [hook rate metric](/blog/what-is-hook-rate-meta-ads), [creative fatigue](/blog/creative-fatigue-meta-ads), and [AdBrief hook generator](/use-case/generate-ad-hooks).",
     ],
   },
@@ -882,7 +882,7 @@ const blogPosts: Record<string, {
       "## The Stack That Actually Works",
       "Based on what's producing real ROAS improvement: use an account intelligence tool (AdBrief) as your primary interface with your campaign data. Use generative AI (Claude, GPT-4) for creative production with briefs built from your account data. Use competitor research tools periodically for inspiration, not constantly for direction.",
       "The question to ask about any AI tool: does it know my specific account, or is it giving general advice? If the answer is general advice, its value is limited.",
-      "AdBrief connects to your Meta Ads and answers from your data. Try it free for 1 day on any plan — no credit card required during the trial window.",
+      "AdBrief connects to your Meta Ads and answers from your data. Try it free for 3 days on any plan — no credit card required during the trial window.",
       "**Related:** See also: [ROAS diagnostic](/blog/meta-ads-roas-dropped), [creative fatigue guide](/blog/creative-fatigue-meta-ads), [AdBrief vs ChatGPT](/compare/adbrief-vs-chatgpt), and [AdBrief for media buyers](/for/media-buyer-ai-tool).",
     ],
   },
@@ -952,7 +952,7 @@ const blogPosts: Record<string, {
       "## From Hook Rate to Brief in One Step",
       "When AdBrief connects to your Meta Ads account, it monitors hook rate trends across all your active creatives automatically. Instead of pulling custom columns and calculating trends manually, ask 'Which of my ads are showing hook rate decline?' and get a list with the specific numbers and a recommendation for what to brief next.",
       "The brief it generates is built from the hook patterns that drove your highest hook rates historically — so the replacement has a data-backed starting point.",
-      "Connect your Meta Ads and run your first hook rate audit in under 5 minutes. 1-day free trial on any AdBrief plan.",
+      "Connect your Meta Ads and run your first hook rate audit in under 5 minutes. 3-day free trial on any AdBrief plan.",
       "**Related:** See also: [creative fatigue guide](/blog/creative-fatigue-meta-ads), [hook writing](/blog/how-to-write-meta-ads-hooks), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief creative monitoring](/use-case/detect-creative-fatigue).",
     ],
   },
@@ -986,7 +986,7 @@ const blogPosts: Record<string, {
       "AI tools are compressing the expertise gap that used to favor agencies. A sophisticated in-house media buyer with access to account intelligence AI can now do analysis that previously required a team of analysts.",
       "Specifically, tools that connect to your ad account and answer performance questions in plain English (like AdBrief) are giving in-house teams the analytical depth that used to be an agency advantage.",
       "The new calculation: a solo in-house media buyer + AdBrief can do the work of a 3-person analytics team. This makes the in-house option viable at lower spend thresholds than it used to be.",
-      "If you're managing Meta Ads in-house and want the analytical depth that used to require an agency, try AdBrief free for 1 day. Ask it anything about your account — it answers from your real data.",
+      "If you're managing Meta Ads in-house and want the analytical depth that used to require an agency, try AdBrief free for 3 days. Ask it anything about your account — it answers from your real data.",
       "**Related:** See also: [media buyer checklist](/blog/meta-ads-media-buyer-checklist), [AI tools for media buyers](/blog/ai-tools-for-media-buyers-2026), [AdBrief for agencies](/for/agency-founder-tool), and [AdBrief for in-house teams](/for/performance-marketing-manager).",
     ],
   },
@@ -1080,7 +1080,7 @@ const blogPosts: Record<string, {
       "## How to Diagnose Your ROAS Drop in 10 Minutes",
       "Manual diagnosis means checking 6 different dashboards in sequence. AdBrief connects directly to your Meta Ads account and answers diagnostic questions in plain English.",
       "Ask 'Why did my ROAS drop this week?' and AdBrief reads your actual campaign data — frequency, CPM trends, CTR changes, audience overlap — and tells you exactly which of these causes is driving your drop.",
-      "Try AdBrief free for 1 day. Connect your Meta Ads account and get your ROAS diagnosis in under 10 minutes.",
+      "Try AdBrief free for 3 days. Connect your Meta Ads account and get your ROAS diagnosis in under 10 minutes.",
     ],
   },
 
@@ -1122,7 +1122,7 @@ const blogPosts: Record<string, {
       "5. Check your creative pipeline. Do you have new hooks ready to launch?",
       "## Automate Your Fatigue Detection",
       "The manual audit above takes about 20 minutes across all your accounts. AdBrief does this automatically — connect your Meta Ads account and ask 'Which of my ads are in creative fatigue right now?' You get a list of fatigued ad sets by name, with the specific metrics driving the diagnosis.",
-      "Try AdBrief free for 1 day. Stop catching creative fatigue too late.",
+      "Try AdBrief free for 3 days. Stop catching creative fatigue too late.",
     ],
   },
 
@@ -1148,7 +1148,7 @@ const blogPosts: Record<string, {
       "This analysis tells you exactly what your audience responds to. Your UGC brief should replicate the structural pattern — not the specific words — of your winners.",
       "## Step 2: Write the Brief Around Outcomes, Not Instructions",
       "The most common brief mistake is telling creators what to say instead of what the viewer should feel.",
-      "**Weak brief:** 'Say that AdBrief helps media buyers save time analyzing their Meta Ads. Mention the 1-day free trial. Keep it under 60 seconds.'",
+      "**Weak brief:** 'Say that AdBrief helps media buyers save time analyzing their Meta Ads. Mention the 3-day free trial. Keep it under 60 seconds.'",
       "**Strong brief:** 'The person watching this is a media buyer who's frustrated that their ROAS dropped and they don't know why. By second 10, they should feel like you understand exactly what they're going through. By second 40, they should feel confident that AdBrief will give them the answer. End with something that makes them feel like trying it is low-risk.'",
       "The strong brief gives the creator emotional guardrails. They fill in the authentic delivery.",
       "## Step 3: The 6-Part UGC Brief Structure",
@@ -1163,7 +1163,7 @@ const blogPosts: Record<string, {
       "AdBrief lets you describe your brief concept and ask 'Does this match the hook pattern from my top performers?' The AI compares your brief against your actual winning ads and flags misalignments before you spend on production.",
       "## Getting More Out of Every UGC Creator",
       "A well-briefed creator delivers 2-3x more usable footage and requires half the revisions. The brief is your highest-leverage asset — 30 minutes writing a strong brief saves you days of back-and-forth and produces ads that actually convert.",
-      "Try AdBrief free for 1 day. Connect your Meta Ads account and extract your winning hook patterns in minutes.",
+      "Try AdBrief free for 3 days. Connect your Meta Ads account and extract your winning hook patterns in minutes.",
     ],
   },
 
@@ -1201,7 +1201,7 @@ const blogPosts: Record<string, {
       "## Knowing When Frequency Is the Problem vs. Something Else",
       "High frequency is the cause of creative fatigue — but not every ROAS drop is a frequency problem. Before acting on frequency, confirm that your CTR and hook rate are dropping proportionally. If CPM is rising but CTR is stable, the problem might be audience saturation or increased competition, not fatigue.",
       "AdBrief connects to your Meta account and answers exactly this question. Ask 'Is my ROAS drop caused by frequency or something else?' and get a data-backed answer based on your actual campaign metrics.",
-      "Try AdBrief free for 1 day. Stop guessing what's causing your performance drop.",
+      "Try AdBrief free for 3 days. Stop guessing what's causing your performance drop.",
     ],
   },
 
@@ -1240,7 +1240,7 @@ const blogPosts: Record<string, {
       "## Using Your Own Account Data to Write Better Hooks",
       "The most reliable hook data isn't industry benchmarks — it's your own account history. Your audience has told you exactly what kinds of openings they respond to, through their behavior on your past ads.",
       "AdBrief extracts this signal directly from your Meta account. Ask 'What hook types are performing best in my account right now?' and get a specific answer based on your actual data — not generic advice.",
-      "Try AdBrief free for 1 day. Discover which hooks your specific audience responds to.",
+      "Try AdBrief free for 3 days. Discover which hooks your specific audience responds to.",
     ],
   },
 
@@ -1280,7 +1280,7 @@ const blogPosts: Record<string, {
       "## AdBrief: Built Specifically for This Use Case",
       "AdBrief connects directly to your Meta Ads account via OAuth and answers your questions in plain English. Ask what's fatigued, what your top hooks have in common, why your ROAS dropped, or what to brief next. The AI reads your actual account data and responds with specific answers.",
       "It's built for media buyers who need fast, reliable answers — not for general marketers who want inspiration.",
-      "Try AdBrief free for 1 day. No CSV exports. No copy-pasting. Just ask.",
+      "Try AdBrief free for 3 days. No CSV exports. No copy-pasting. Just ask.",
     ],
   },
 
@@ -1321,7 +1321,7 @@ const blogPosts: Record<string, {
       "Audience quality: Your campaign may have drifted into lower-quality audience segments after a budget increase or learning reset. Audience Insights will show demographic shifts.",
       "## Getting the Right Diagnosis Fast",
       "The 4-step diagnostic above takes 30-45 minutes across all your accounts and ad sets. With AdBrief connected to your Meta account, ask 'Why is my CPA rising?' and get a specific diagnosis based on your actual funnel metrics — which step broke, when it started, and what changed.",
-      "Try AdBrief free for 1 day. Diagnose your CPA problem in 10 minutes instead of an hour.",
+      "Try AdBrief free for 3 days. Diagnose your CPA problem in 10 minutes instead of an hour.",
     ],
   },
 
@@ -1365,7 +1365,7 @@ const blogPosts: Record<string, {
       "The ceiling is usually determined by audience size and creative depth. To raise it: new product angles, new audiences, or new markets.",
       "## Tracking Your Scaling Performance in Real Time",
       "Scaling decisions require daily monitoring — watching CPM trends, frequency, ROAS by ad set, and creative performance simultaneously. AdBrief connects to your Meta account and lets you ask 'Is this campaign ready to scale?' The AI checks your frequency, creative fatigue, learning status, and ROAS stability and gives you a direct answer.",
-      "Try AdBrief free for 1 day. Know exactly when and how to scale your Meta campaigns.",
+      "Try AdBrief free for 3 days. Know exactly when and how to scale your Meta campaigns.",
     ],
   },
 
@@ -1403,7 +1403,7 @@ const blogPosts: Record<string, {
       "## AdBrief for Agency Teams",
       "AdBrief supports multiple ad account connections, making it practical for agency workflows. Connect each client account and ask questions specific to each client's campaigns — creative fatigue status, ROAS diagnostics, hook performance, brief generation.",
       "The Studio plan supports unlimited ad accounts and includes an agency workspace for team access.",
-      "Try AdBrief free for 1 day. See what AI-powered creative intelligence looks like across your client accounts.",
+      "Try AdBrief free for 3 days. See what AI-powered creative intelligence looks like across your client accounts.",
     ],
   },
 
@@ -1449,7 +1449,7 @@ const blogPosts: Record<string, {
       "## Getting Your Recovery Right the First Time",
       "The biggest recovery mistake is making changes in the wrong order — fixing creative when the problem is in checkout, expanding audiences when the problem is CPM spikes from competition, resetting campaigns when fatigue would have resolved with a creative refresh.",
       "AdBrief connects to your Meta account and runs through this diagnostic framework for you. Ask 'What's wrong with my account?' and get a sequenced diagnosis based on your actual funnel data.",
-      "Try AdBrief free for 1 day. Get your recovery plan from your account data, not from generic advice.",
+      "Try AdBrief free for 3 days. Get your recovery plan from your account data, not from generic advice.",
     ],
   },
 
@@ -1526,7 +1526,7 @@ const BlogPost = () => {
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 1 day</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 3 days</Button>
           </div>
           <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher />
@@ -1604,7 +1604,7 @@ const BlogPost = () => {
                   className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                   onClick={() => navigate("/signup")}
                 >
-                  Try free for 1 day <ArrowRight className="w-4 h-4 ml-2" />
+                  Try free for 3 days <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 <Button
                   variant="outline"

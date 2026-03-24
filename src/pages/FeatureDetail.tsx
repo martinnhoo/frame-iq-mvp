@@ -535,7 +535,7 @@ const FeatureDetail = () => {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-secondary hover:text-foreground" onClick={() => navigate("/login")}>Sign in</Button>
-            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 1 day</Button>
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0" onClick={() => navigate("/signup")}>Try free for 3 days</Button>
           </div>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">

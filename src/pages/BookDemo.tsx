@@ -145,7 +145,7 @@ const BookDemo = () => {
           </div>
           <h1 className="text-3xl font-bold mb-4">You're all set!</h1>
           <p className="text-secondary text-lg mb-2">
-            Thanks, {contactInfo.name}. We'll reach out within 24 hours to schedule your personalized demo.
+            Thanks, {contactInfo.name}. We'll reach out within 72 hours (3 days) to schedule your personalized demo.
           </p>
           <p className="text-muted-foreground text-sm mb-8">
             Check your inbox at {contactInfo.email}

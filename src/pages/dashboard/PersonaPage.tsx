@@ -1389,7 +1389,7 @@ export default function PersonaPage() {
             style={{ padding: "12px 28px", borderRadius: 12, background: BRAND, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: F }}>
             Upgrade to create personas →
           </button>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>1-day free trial on any plan</p>
+          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>3-day free trial on any plan</p>
         </div>
       </div>
     );

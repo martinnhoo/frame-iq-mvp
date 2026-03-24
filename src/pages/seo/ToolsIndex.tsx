@@ -19,7 +19,7 @@ export default function ToolsIndex() {
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ad creatives</span>
           </h1>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
-            Built for performance marketers and media buyers. 1-day free trial.
+            Built for performance marketers and media buyers. 3-day free trial.
           </p>
         </div>
 

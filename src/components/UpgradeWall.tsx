@@ -48,7 +48,7 @@ const MESSAGES: Record<string, Record<string, { icon: string; title: string; sub
 };
 
 const TRIAL_TEXT: Record<string, string> = {
-  en: "1-day free trial on any plan · Cancel anytime",
+  en: "3-day free trial on any plan · Cancel anytime",
   pt: "1 dia de teste grátis em qualquer plano · Cancele quando quiser",
   es: "1 día de prueba gratis en cualquier plan · Cancela cuando quieras",
   fr: "1 jour d'essai gratuit sur n'importe quel plan · Annulez à tout moment",
@@ -56,9 +56,9 @@ const TRIAL_TEXT: Record<string, string> = {
 };
 
 const FOOTER_TEXT: Record<string, string> = {
-  en: "Card required · No charge for 24 hours · Cancel before trial ends and pay nothing",
-  pt: "Cartão obrigatório · Sem cobrança por 24 horas · Cancele antes do trial terminar e não pague nada",
-  es: "Tarjeta requerida · Sin cargo por 24 horas · Cancela antes de que termine el trial y no pagas nada",
+  en: "Card required · No charge for 72 hours (3 days) · Cancel within 3 days and pay nothing",
+  pt: "Cartão obrigatório · Sem cobrança por 72 horas (3 dias) · Cancele dentro de 3 dias e não pague nada",
+  es: "Tarjeta requerida · Sin cargo por 72 horas (3 dias) · Cancela dentro de 3 días y no pagas nada",
   fr: "Carte requise · Aucun frais pendant 24 heures · Annulez avant la fin de l'essai et ne payez rien",
   de: "Karte erforderlich · 24 Stunden keine Gebühr · Kündigen Sie vor Ende des Tests und zahlen Sie nichts",
 };

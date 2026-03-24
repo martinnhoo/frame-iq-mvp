@@ -129,7 +129,7 @@ const Pricing = () => {
     },
     {
       q: "Is there a free trial for paid plans?",
-      a: "Yes. All paid plans come with a 1-day free trial. No charge until the trial ends. Cancel anytime.",
+      a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
     },
     {
       q: "How does billing work?",
@@ -170,7 +170,7 @@ const Pricing = () => {
               Simple, transparent pricing
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              1-day free trial on all plans. Card required. Cancel anytime before 24h and pay nothing.
+              3-day free trial on all plans. Card required. Cancel anytime before 24h and pay nothing.
             </p>
 
             {/* Annual/Monthly Toggle */}
@@ -354,7 +354,7 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All paid plans include a 1-day free trial. Annual plans billed as one payment.
+              Prices shown in USD. All paid plans include a 3-day free trial. Annual plans billed as one payment.
               You may cancel at any time before the trial expires.
             </p>
             <p className="pt-2">

@@ -18,9 +18,9 @@ const ANTHROPIC_KEY  = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // Thresholds — não mudar levianamente
 const T = {
   FREQ_CRITICAL:    4.0,   // frequência absoluta para alerta imediato
-  CTR_DROP_PCT:     45,    // % de queda em 24h para ser crítico (não 40 — muito sensível)
+  CTR_DROP_PCT:     45,    // % de queda em 72h para ser crítico (não 40 — muito sensível)
   CTR_DROP_MIN:     0.006, // CTR mínimo anterior para validar queda (filtra ads com CTR já baixo)
-  SPEND_NO_CONV:    80,    // spend sem conversão em 24h (era 50 — muito baixo para BR)
+  SPEND_NO_CONV:    80,    // spend sem conversão em 72h (era 50 — muito baixo para BR)
   SCALE_CTR:        0.030, // CTR mínimo para sugestão de escala
   SCALE_SPEND_MAX:  50,    // budget atual máximo para ser "subescalado"
   SCALE_SPEND_MIN:  8,     // spend mínimo para validar (não alertar sobre ads novos)
@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
           if (primaryKpi === 'roas' && roas !== null && prevRoas !== null && prevRoas > 1.0 && roas < prevRoas * 0.6) {
             const drop = Math.round(((prevRoas - roas) / prevRoas) * 100);
             push("ROAS_COLAPSOU",
-              `ROAS caiu ${drop}% em 24h: ${prevRoas.toFixed(2)}x → ${roas.toFixed(2)}x. ` +
+              `ROAS caiu ${drop}% em 72h: ${prevRoas.toFixed(2)}x → ${roas.toFixed(2)}x. ` +
               `Criativo perdendo força ou audiência saturando.`,
               "🔴");
           }
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
               prevCtr !== null && prevCtr >= T.CTR_DROP_MIN && ctr < prevCtr * ((100 - T.CTR_DROP_PCT) / 100)) {
             const drop = Math.round(((prevCtr - ctr) / prevCtr) * 100);
             push("CTR_COLAPSOU",
-              `CTR caiu ${drop}% em 24h: ${(prevCtr*100).toFixed(2)}% → ${(ctr*100).toFixed(2)}%. ` +
+              `CTR caiu ${drop}% em 72h: ${(prevCtr*100).toFixed(2)}% → ${(ctr*100).toFixed(2)}%. ` +
               `Cheque frequência e copy.`,
               "🔴");
           }

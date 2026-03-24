@@ -24,7 +24,7 @@ const Contact = () => {
     setSending(true);
     // Simulate sending
     await new Promise(r => setTimeout(r, 1200));
-    toast.success("Message sent! We'll get back to you within 24h.");
+    toast.success("Message sent! We'll get back to you within 72h.");
     setForm({ name: "", email: "", message: "" });
     setSending(false);
   };
@@ -55,7 +55,7 @@ const Contact = () => {
               className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0"
               onClick={() => navigate("/signup")}
             >
-              Try free for 1 day
+              Try free for 3 days
             </Button>
           </div>
 

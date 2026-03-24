@@ -14,7 +14,7 @@ export const SEO_TOOLS = [
     description: "Generate 10 high-converting ad hooks for any product in seconds.",
     longDescription: "Describe your product and target audience, pick a platform and tone — AdBrief generates 10 proven hook formulas with predicted hook scores (0–10), platform fit tags, and CTA suggestions. Know which hook converts before you spend on production.",
     metaTitle: "Free Ad Hook Generator — AdBrief",
-    metaDescription: "Generate high-converting ad hooks for TikTok, Facebook, and Instagram in seconds. 1-day free trial on all plans.",
+    metaDescription: "Generate high-converting ad hooks for TikTok, Facebook, and Instagram in seconds. 3-day free trial on all plans.",
     keywords: ["ad hook generator", "tiktok hook ideas", "free ad hook generator", "hook generator for ads", "tiktok ad hooks"],
     isFree: true,
     requiresAuth: false,
@@ -247,7 +247,7 @@ export const SEO_COMPARISONS = [
     keywords: ["adbrief vs adspy", "adspy alternative", "adspy competitor", "best ad intelligence tool 2025"],
     summary: "AdSpy is a massive Facebook and Instagram ad database — great for spying on what competitors are running. AdBrief is an AI-powered creative analyzer that scores your own ads, generates scripts, and decodes competitor frameworks. They do fundamentally different jobs. If you want to browse what others are running: AdSpy. If you want to understand why ads work and make better ones: AdBrief.",
     verdict: "AdBrief wins for creative teams who want to improve performance. AdSpy wins for teams who need a competitor ad database at scale.",
-    adbriefPros: ["AI hook scoring (0–10) on any video", "Full creative analysis in 60 seconds", "Script and brief generator built-in", "Pre-flight check — catch errors before launch", "Translation and transcription tools", "1-day free trial on all plans"],
+    adbriefPros: ["AI hook scoring (0–10) on any video", "Full creative analysis in 60 seconds", "Script and brief generator built-in", "Pre-flight check — catch errors before launch", "Translation and transcription tools", "3-day free trial on all plans"],
     competitorPros: ["Massive Facebook/Instagram ad database", "Long historical ad data", "Country, language, and engagement filters"],
     adbriefCons: ["No competitor ad database (browse function)", "Focused on video creative — less for static ads"],
     competitorCons: ["$149/mo minimum — expensive entry point", "No AI analysis — only shows the ads", "No script generation or production tools"],
@@ -257,7 +257,7 @@ export const SEO_COMPARISONS = [
       { feature: "Competitor ad database",    adbrief: "✗ No",  competitor: "✓ Yes" },
       { feature: "Script / brief generator",  adbrief: "✓ Yes", competitor: "✗ No" },
       { feature: "Translation tools",         adbrief: "✓ Yes", competitor: "✗ No" },
-      { feature: "Free trial",                adbrief: "✓ 1 day", competitor: "✗ No" },
+      { feature: "Free trial",                adbrief: "✓ ✓ 3 days", competitor: "✗ No" },
       { feature: "Monthly price",             adbrief: "From $19", competitor: "$149" },
     ],
   },
@@ -272,7 +272,7 @@ export const SEO_COMPARISONS = [
     keywords: ["adbrief vs bigspy", "bigspy alternative", "bigspy vs adbrief", "bigspy competitor"],
     summary: "BigSpy covers more platforms than most ad spy tools — TikTok, Facebook, Instagram, YouTube, Twitter, Pinterest. If you're a dropshipper looking for product ideas and trending creatives to model, BigSpy is a solid choice at a low price. AdBrief takes a different angle: instead of showing you what competitors are running, it tells you WHY ads work and helps you make better ones.",
     verdict: "BigSpy for researching trending product ads. AdBrief for improving your own creative performance with AI analysis.",
-    adbriefPros: ["AI creative analysis and hook scoring", "Scene-by-scene production breakdown", "Script generation and market adaptation", "Competitor framework decoding", "1-day free trial"],
+    adbriefPros: ["AI creative analysis and hook scoring", "Scene-by-scene production breakdown", "Script generation and market adaptation", "Competitor framework decoding", "3-day free trial"],
     competitorPros: ["Multi-platform ad library (9 platforms)", "Lower entry price ($9/mo)", "Filter by engagement, country, category"],
     adbriefCons: ["No ad database browsing", "Requires video upload for analysis"],
     competitorCons: ["No AI analysis — data only", "No creative generation tools", "Interface can be overwhelming"],
@@ -296,7 +296,7 @@ export const SEO_COMPARISONS = [
     keywords: ["adbrief vs minea", "minea alternative", "minea vs adbrief", "minea competitor 2025"],
     summary: "Minea is primarily built for dropshippers doing product research — it shows trending products and the ads running behind them. AdBrief is built for performance marketers and creative teams who need to analyze, score, and improve their own ads with AI. If you're validating products: Minea. If you're running paid media and want better creative performance: AdBrief.",
     verdict: "Minea for product discovery. AdBrief for creative performance. They serve different audiences entirely.",
-    adbriefPros: ["AI hook scoring and analysis", "Full creative brief generation", "Translation to 18+ languages and markets", "Hook generator with predicted scores", "1-day free trial · card required"],
+    adbriefPros: ["AI hook scoring and analysis", "Full creative brief generation", "Translation to 18+ languages and markets", "Hook generator with predicted scores", "3-day free trial · card required"],
     competitorPros: ["Product research features", "Influencer ad discovery", "Pinterest and TikTok shop coverage"],
     adbriefCons: ["No product research functionality", "No influencer database"],
     competitorCons: ["No AI creative analysis", "Starts at $49/mo — no free trial", "Focused on ecommerce/dropshipping only"],
@@ -305,7 +305,7 @@ export const SEO_COMPARISONS = [
       { feature: "Product research",          adbrief: "✗ No",     competitor: "✓ Yes" },
       { feature: "Creative brief generator",  adbrief: "✓ Yes",    competitor: "✗ No" },
       { feature: "Influencer ad discovery",   adbrief: "✗ No",     competitor: "✓ Yes" },
-      { feature: "Free trial",                adbrief: "✓ 1 day", competitor: "✗ No" },
+      { feature: "Free trial",                adbrief: "✓ ✓ 3 days", competitor: "✗ No" },
       { feature: "Monthly price",             adbrief: "From $19", competitor: "From $49" },
     ],
   },
@@ -320,7 +320,7 @@ export const SEO_COMPARISONS = [
     keywords: ["adbrief vs motion app", "motion app alternative", "motion app competitor", "ad creative analytics tool"],
     summary: "Motion App is a creative analytics dashboard that connects to your ad accounts and tracks performance by creative. AdBrief is an AI-powered creative analyzer that works without ad account access — upload any video and get an instant analysis. Motion is better for teams with large existing ad spend. AdBrief is better for teams who want AI-powered creative intelligence without the setup complexity.",
     verdict: "Motion for tracking performance at scale across ad accounts. AdBrief for AI-powered creative analysis before and after launch.",
-    adbriefPros: ["No ad account connection needed", "AI analysis of any video in 60s", "Hook scoring before you launch", "Script and brief generation", "1-day free trial"],
+    adbriefPros: ["No ad account connection needed", "AI analysis of any video in 60s", "Hook scoring before you launch", "Script and brief generation", "3-day free trial"],
     competitorPros: ["Deep ad account integration", "Creative performance tracking at scale", "Team collaboration features"],
     adbriefCons: ["No direct ad account connection", "No historical performance tracking"],
     competitorCons: ["Requires ad account access — setup time", "Starts at $99/mo", "No AI creative analysis", "No script generation"],
@@ -329,7 +329,7 @@ export const SEO_COMPARISONS = [
       { feature: "Ad account integration",    adbrief: "✗ No",     competitor: "✓ Yes" },
       { feature: "Creative analysis pre-launch", adbrief: "✓ Yes", competitor: "✗ No" },
       { feature: "Script generator",          adbrief: "✓ Yes",    competitor: "✗ No" },
-      { feature: "Free trial",                adbrief: "✓ 1 day", competitor: "✗ No" },
+      { feature: "Free trial",                adbrief: "✓ ✓ 3 days", competitor: "✗ No" },
       { feature: "Monthly price",             adbrief: "From $19", competitor: "From $99" },
     ],
   },
@@ -654,7 +654,7 @@ export const SEO_PLATFORM_PAGES = [
     faqs: [
       { q: "How do I analyze a TikTok ad?", a: "Upload your video to AdBrief. The AI scores the hook from 0–10, identifies your creative format, checks TikTok safe zones, and gives you 3 specific improvements — all in under 60 seconds." },
       { q: "What's a good hook score for TikTok?", a: "A hook score above 7.0 is strong for TikTok. Scores of 8.0+ correlate with above-average retention and CTR. Most ads score between 4.5 and 6.5." },
-      { q: "Is the TikTok ad analyzer free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
+      { q: "Is the TikTok ad analyzer free?", a: "Every paid plan includes a 3-day free trial. Plans start at $19/mo." },
       { q: "Can I analyze competitor TikTok ads?", a: "Yes — upload any TikTok video and AdBrief will analyze it. You can also use the Competitor Ad Decoder for script-based analysis." },
     ],
   },
@@ -684,7 +684,7 @@ export const SEO_PLATFORM_PAGES = [
     intro: "Instagram Reels has become the most competitive short-form placement in the Meta ecosystem. Vertical format, sound-on viewing, and a younger audience make it different from feed — and most teams repurpose feed ads without adjusting for Reels, leaving performance on the table.",
     faqs: [
       { q: "How is a Reels ad different from a feed video ad?", a: "Reels are vertical (9:16), viewed sound-on, and compete with organic creator content. The hook needs to feel native. AdBrief flags non-native creative patterns specific to Reels." },
-      { q: "Is the Reels ad analyzer free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
+      { q: "Is the Reels ad analyzer free?", a: "Every paid plan includes a 3-day free trial. Plans start at $19/mo." },
     ],
   },
   {
@@ -768,7 +768,7 @@ export const SEO_USECASE_PAGES = [
     faqs: [
       { q: "How is the hook score calculated?", a: "AdBrief's hook score (0–10) is based on: emotional trigger type, specificity of the claim, curiosity gap strength, pattern interrupt quality, platform alignment, and CTA proximity." },
       { q: "What makes a hook score 9 or 10?", a: "A 9+ hook creates immediate unresolved tension — the viewer physically cannot scroll because their brain needs resolution. It's specific, creates a clear promise, and feels native to the platform." },
-      { q: "Is the hook score tool free?", a: "Every paid plan includes a 1-day free trial. Plans start at $19/mo." },
+      { q: "Is the hook score tool free?", a: "Every paid plan includes a 3-day free trial. Plans start at $19/mo." },
     ],
   },
   {
@@ -794,7 +794,7 @@ export const SEO_USECASE_PAGES = [
     intro: "Launching an ad with a weak hook, missing CTA, or safe zone violation is expensive. AdBrief's Pre-Flight Ad Check runs a systematic review of any video ad before launch — scoring the hook, checking safe zones, validating CTA placement, and flagging any issues that will hurt performance.",
     faqs: [
       { q: "What does a pre-flight ad check include?", a: "AdBrief's pre-flight check covers: hook score (0–10), safe zone compliance for each platform, CTA presence and placement, creative format detection, and platform policy risk signals." },
-      { q: "Is the pre-flight check free?", a: "Every paid plan includes a 1-day free trial. Platform-specific reports included in all plans." },
+      { q: "Is the pre-flight check free?", a: "Every paid plan includes a 3-day free trial. Platform-specific reports included in all plans." },
     ],
   },
   {
@@ -807,7 +807,7 @@ export const SEO_USECASE_PAGES = [
     intro: "UGC ads are the highest-performing creative format on TikTok and Facebook — but briefing UGC creators is notoriously difficult. AdBrief's UGC Script Generator produces creator-ready scripts: spoken dialogue, emotional cues, on-screen text, and a binary CTA — formatted to paste directly into a creator briefing message.",
     faqs: [
       { q: "What's included in a UGC ad script?", a: "AdBrief generates: opening hook line (spoken), emotional arc notes, key message points, on-screen text suggestions, visual/setting notes, and CTA line — all formatted for non-professional creators." },
-      { q: "Is the UGC script generator free?", a: "Every paid plan includes a 1-day free trial. Persona-specific scripts and market variations included in all plans." },
+      { q: "Is the UGC script generator free?", a: "Every paid plan includes a 3-day free trial. Persona-specific scripts and market variations included in all plans." },
     ],
   },
 ];
@@ -1211,7 +1211,7 @@ export function findCompareBySlug(slug: string) {
     verdict: `AdBrief gives you a real-time AI that reads your actual campaign data. ${exp.competitor} serves a different purpose in the stack. Choose based on whether you need creative intelligence or their core offering.`,
     faqs: [
       { q: `What's the main difference between AdBrief and ${exp.competitor}?`, a: exp.desc },
-      { q: "Does AdBrief offer a free trial?", a: "Yes. Every AdBrief plan includes a 1-day free trial. Card required, no charge for 24 hours." },
+      { q: "Does AdBrief offer a free trial?", a: "Yes. Every AdBrief plan includes a 3-day free trial. Card required, no charge for 72 hours (3 days)." },
     ],
   };
 }

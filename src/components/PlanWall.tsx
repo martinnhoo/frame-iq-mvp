@@ -37,11 +37,11 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
             {feature ? `"${feature}" requires a plan` : "Start your free trial"}
           </h2>
           <p style={{ ...j, fontSize: 14, color: "rgba(255,255,255,0.38)", lineHeight: 1.6 }}>
-            Every plan includes a <strong style={{ color: "rgba(255,255,255,0.7)" }}>1-day free trial</strong>. No charge until it's over. Cancel anytime.
+            Every plan includes a <strong style={{ color: "rgba(255,255,255,0.7)" }}>3-day free trial</strong>. No charge until it's over. Cancel anytime.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "7px 14px", borderRadius: 9, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
             <span style={{ fontSize: 13 }}>💳</span>
-            <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Card required · <strong style={{ color: "#fff" }}>No charge for 24 hours</strong></span>
+            <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Card required · <strong style={{ color: "#fff" }}>No charge for 72 hours (3 days)</strong></span>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
         </div>
 
         <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: 20 }}>
-          By starting a trial you agree to our Terms of Service. Cancel before 24 hours and you won't be charged.
+          By starting a trial you agree to our Terms of Service. Cancel before 72 hours (3 days) and you won't be charged.
         </p>
       </div>
     </div>
