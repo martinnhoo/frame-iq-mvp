@@ -1460,10 +1460,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   // accent: indigo/violet for AI, amber for wins, slate for neutral
   const WIN_COLOR = '#c4b5fd';    // violet-300 — AI wins
   const ACT_COLOR = '#a78bfa';    // violet-400 — actions
-  const CARD_WIN = 'rgba(139,92,246,0.08)';
-  const CARD_WIN_B = 'rgba(139,92,246,0.18)';
-  const CARD_INS = 'rgba(255,255,255,0.04)';
-  const CARD_INS_B = 'rgba(255,255,255,0.09)';
+  const CARD_WIN = 'rgba(139,92,246,0.14)';
+  const CARD_WIN_B = 'rgba(139,92,246,0.28)';
+  const CARD_INS = 'rgba(255,255,255,0.07)';
+  const CARD_INS_B = 'rgba(255,255,255,0.14)';
 
   const renderAI = () => {
     if (phase === 'thinking') return <Dots />;
@@ -1497,7 +1497,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
     <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Subtle radial glow — violet, not green */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 60% at 72% 45%, rgba(139,92,246,0.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 60% at 72% 45%, rgba(139,92,246,0.11) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
       {/* Grid */}
       <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
@@ -1521,7 +1521,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </h1>
 
           {/* Subheadline */}
-          <p style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 420 }}>
+          <p style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 420 }}>
             {lang === 'pt' ? 'Conecte o Meta Ads. A IA lê seus dados e responde como um analista sênior.' : lang === 'es' ? 'Conecta Meta Ads. La IA lee tus datos y responde como analista senior.' : 'Connect Meta Ads. The AI reads your data and answers like a senior analyst.'}
           </p>
 
@@ -1529,10 +1529,10 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
             {bullets.map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
                 <p style={{ fontFamily: F, fontSize: 14, margin: 0 }}>
-                  <strong style={{ color: 'rgba(255,255,255,0.88)', fontWeight: 600 }}>{b.bold}</strong>
-                  <span style={{ color: 'rgba(255,255,255,0.32)' }}>{b.rest}</span>
+                  <strong style={{ color: '#fff', fontWeight: 700 }}>{b.bold}</strong>
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>{b.rest}</span>
                 </p>
               </div>
             ))}
@@ -1548,12 +1548,12 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 36 18" fill="none">
                 <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
               </svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>Meta Ads</span>
+              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>Meta Ads</span>
             </div>
-            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
               Google <span style={{ fontSize: 8.5, letterSpacing: '0.06em', opacity: 0.6 }}>SOON</span>
             </div>
-            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
               TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.06em', opacity: 0.6 }}>SOON</span>
             </div>
           </div>
@@ -1575,16 +1575,16 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <div className="hero-demo-col" style={{ position: 'relative' }}>
 
           {/* Window chrome */}
-          <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)', position: 'relative', zIndex: 1 }}>
+          <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.14)', boxShadow: '0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)', position: 'relative', zIndex: 1 }}>
 
             {/* Titlebar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', background: '#0b0d14', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', background: '#0e1118', borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
               <div style={{ display: 'flex', gap: 5 }}>
                 {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 8.5, height: 8.5, borderRadius: '50%', background: c }} />)}
               </div>
               <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 5, maxWidth: 180, margin: '0 auto' }}>
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
-                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.28)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
+                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.50)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
               </div>
               {/* Meta badge — official */}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(24,119,242,0.10)', border: '1px solid rgba(24,119,242,0.22)' }}>
@@ -1596,17 +1596,17 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </div>
 
             {/* App body */}
-            <div style={{ background: '#080a12', minHeight: 440, maxHeight: 440, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ background: '#0d1017', minHeight: 440, maxHeight: 440, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
               {/* Account topbar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#080a12', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', background: '#0d1017', flexShrink: 0 }}>
                 <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                   {INDUSTRIES_DEMO.slice(0, 3).map(ind => {
                     const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
                     const isAct = ind.id === activeIndustry;
                     return (
                       <button key={ind.id} onClick={() => setActiveIndustry(ind.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: isAct ? 'rgba(255,255,255,0.08)' : 'transparent', border: `1px solid ${isAct ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`, cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0, fontFamily: F, fontSize: 11, fontWeight: isAct ? 600 : 400, color: isAct ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' as const }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: isAct ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isAct ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0, fontFamily: F, fontSize: 11, fontWeight: isAct ? 600 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.55)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' as const }}>
                         <span style={{ fontSize: 10, opacity: isAct ? 1 : 0.5 }}>{ind.emoji}</span>
                         {acc?.name || ind.id}
                       </button>
@@ -1618,7 +1618,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                   {[{ l: 'CTR', v: '3.2%' }, { l: 'ROAS', v: '3.8x' }].map((k,i) => (
                     <div key={i} style={{ textAlign: 'right' }}>
                       <div style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.02em' }}>{k.v}</div>
-                      <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.22)' }}>{k.l}</div>
+                      <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>{k.l}</div>
                     </div>
                   ))}
                 </div>
@@ -1634,7 +1634,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     style={{ width: 26, height: 26, borderRadius: 7, objectFit: 'cover', flexShrink: 0, marginTop: 2 }} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
                     {/* Win card — violet accent, editorial */}
-                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.16)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
+                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.28)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
                       <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, margin: 0 }}>
                         {lang === 'pt'
                           ? <><span style={{ color: WIN_COLOR, fontWeight: 600 }}>Creative_019 convertendo 2.4x mais</span> — hook rate 38%, ROAS 3.8x.</>
@@ -1644,8 +1644,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                       </p>
                     </div>
                     {/* Action card — white accent */}
-                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: 0 }}>
+                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
+                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, margin: 0 }}>
                         {lang === 'pt'
                           ? <>→ Escale de <strong style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>R$120 → R$400/dia</strong>. Frequência 1.3x, seguro.</>
                           : lang === 'es'
@@ -1657,9 +1657,9 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
                     <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both' }}>
                       {quickActions.map((label, i) => (
                         <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                          style={{ padding: '5px 11px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)', transition: 'all 0.15s', whiteSpace: 'nowrap' as const }}
-                          onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.18)'; el.style.color='rgba(255,255,255,0.7)'; }}
-                          onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.35)'; }}>
+                          style={{ padding: '5px 11px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.55)', transition: 'all 0.15s', whiteSpace: 'nowrap' as const }}
+                          onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.25)'; el.style.color='rgba(255,255,255,0.9)'; }}
+                          onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.12)'; el.style.color='rgba(255,255,255,0.55)'; }}>
                           {label}
                         </button>
                       ))}
@@ -1689,11 +1689,11 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
 
               {/* Input */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '8px 14px 10px', flexShrink: 0, background: '#080a12' }}>
-                <div style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '8px 10px 8px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.09)', padding: '8px 14px 10px', flexShrink: 0, background: '#0d1017' }}>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '8px 10px 8px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
                   <button onClick={onCTA}
-                    style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: '7px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s' }}
+                    style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: '7px 14px', borderRadius: 8, background: 'rgba(139,92,246,0.20)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(139,92,246,0.30)', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s' }}
                     onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.12)'; el.style.color='#fff'; }}
                     onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.7)'; }}>
                     {ctabtn} →
