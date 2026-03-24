@@ -292,6 +292,10 @@ const NewAnalysis = () => {
       setProgress(100);
       refreshUsage();
       toast.success("Analysis complete!");
+      // Auto-trigger learn — closes the loop after each new analysis
+      supabase.functions.invoke("creative-loop", {
+        body: { action: "learn", user_id: user.id }
+      }).catch(() => {}); // fire and forget
       setTimeout(() => navigate(`/dashboard/analyses/${record.id}`), 800);
     } catch (err: any) {
       toast.error(err.message || "Unexpected error");

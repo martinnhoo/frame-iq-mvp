@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1695,10 +1695,26 @@ const TemplatesPage = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [translateModal, setTranslateModal] = useState<Template | null>(null);
+  const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
+
+  // Load template usage counts — sort by popularity
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("template_usage" as never)
+      .select("template_id")
+      .then(({ data }: any) => {
+        if (!data) return;
+        const counts: Record<string, number> = {};
+        data.forEach((row: any) => {
+          counts[row.template_id] = (counts[row.template_id] || 0) + 1;
+        });
+        setUsageCounts(counts);
+      });
+  }, [user?.id]);
 
   const filtered = useMemo(() => {
     setPage(1);
-    return TEMPLATES.filter((t) => {
+    const result = TEMPLATES.filter((t) => {
       if (activeCategory !== "all" && t.category !== activeCategory) return false;
       if (activeDuration !== "all" && String(t.duration) !== activeDuration) return false;
       if (search) {
@@ -1710,7 +1726,9 @@ const TemplatesPage = () => {
       }
       return true;
     });
-  }, [activeCategory, activeDuration, search, language]);
+    // Sort by usage count descending — most used first
+    return result.sort((a, b) => (usageCounts[b.id] || 0) - (usageCounts[a.id] || 0));
+  }, [activeCategory, activeDuration, search, language, usageCounts]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -1840,9 +1858,16 @@ const TemplatesPage = () => {
                 <div className="p-4 sm:p-4 flex flex-col flex-1">
                   {/* Category + Duration */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
-                      {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold ${meta?.color || "text-white/40 border-white/10"}`}>
+                        {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
+                      </span>
+                      {(usageCounts[template.id] || 0) >= 3 && (
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", letterSpacing: "0.06em" }}>
+                          🔥 POPULAR
+                        </span>
+                      )}
+                    </div>
                     <span className="flex items-center gap-1 text-[10px] text-white/45" style={mono}>
                       <Clock className="h-3 w-3" />{template.duration}s
                     </span>
