@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
+    const market = (formData.get('market') as string) || '';
 
     console.log('analyze-video called:', { 
       hasFile: !!videoFile, 

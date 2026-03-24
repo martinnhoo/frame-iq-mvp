@@ -246,8 +246,8 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id).eq("status", "completed")
         .order("created_at", { ascending: false }).limit(15),
       // 2. AI profile
-      supabase.from("user_ai_profile" as any)
-        .select("*").eq("user_id" as any, user_id).maybeSingle(),
+      (supabase as any).from("user_ai_profile")
+        .select("*").eq("user_id", user_id).maybeSingle(),
       // 3. Creative memory
       supabase.from("creative_memory" as any)
         .select("hook_type, hook_score, platform, notes, created_at" as any)

@@ -432,8 +432,8 @@ Deno.serve(async (req) => {
             : "Verificar oportunidade",
           emailed_at: emailRes.ok ? new Date().toISOString() : null,
         }));
-        if (alertRows.length > 0) {
-          await sb.from("account_alerts" as any).insert(alertRows).catch(() => {});
+        if (dbAlertRows.length > 0) {
+          try { await sb.from("account_alerts" as any).insert(dbAlertRows as any); } catch { /* silent */ }
         }
 
       } catch (e) {

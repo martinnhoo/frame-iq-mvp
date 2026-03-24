@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
             }),
             created_at: new Date().toISOString(),
           }));
-          await supabase.from("creative_memory" as any).insert(memRows).catch(() => {});
+          try { await supabase.from("creative_memory" as any).insert(memRows as any); } catch { /* silent */ }
         }
       } catch (_e) { /* silent */ }
     })();
