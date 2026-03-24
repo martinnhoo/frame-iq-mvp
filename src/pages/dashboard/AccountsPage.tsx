@@ -76,6 +76,10 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     });
     setConnections(map);
     setLoading(false);
+    // Auto-expand Google panel if connected but no account selected
+    if (map["google"]?.connected && !map["google"]?.selectedId) {
+      setExpandedPlatform("google");
+    }
   };
 
   useEffect(() => { load(); }, [accountId]);
@@ -211,6 +215,24 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
             </div>
 
             {/* Account switcher panel */}
+            {/* ⚠️ Google connected but no Customer ID — show mandatory banner */}
+            {connected && p.id === "google" && !selId && expandedPlatform !== p.id && (
+              <div style={{ borderTop: "1px solid rgba(251,191,36,0.2)", padding: "10px 16px", background: "rgba(251,191,36,0.05)", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 14 }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "#fbbf24", margin: 0 }}>
+                    {language === "pt" ? "Customer ID obrigatório" : language === "es" ? "Customer ID requerido" : "Customer ID required"}
+                  </p>
+                  <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>
+                    {language === "pt" ? "Adicione seu ID para a IA acessar seus dados reais do Google Ads" : language === "es" ? "Agrega tu ID para que la IA acceda a tus datos reales de Google Ads" : "Add your ID so the AI can access your real Google Ads data"}
+                  </p>
+                </div>
+                <button onClick={() => setExpandedPlatform(p.id)}
+                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "6px 12px", borderRadius: 7, background: "#fbbf24", color: "#000", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                  {language === "pt" ? "Adicionar" : language === "es" ? "Agregar" : "Add ID"}
+                </button>
+              </div>
+            )}
             {connected && expandedPlatform === p.id && (
               <div style={{ borderTop: `1px solid ${p.color}15`, padding: "10px 16px 12px", background: "rgba(0,0,0,0.2)" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
