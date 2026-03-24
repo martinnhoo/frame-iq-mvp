@@ -95,14 +95,21 @@ Deno.serve(async (req) => {
             headers: { Authorization: `Bearer ${access_token}`, "developer-token": DEV_TOKEN, "login-customer-id": cid },
           });
           if (detailRes.ok) {
-            const detail = await detailRes.json();
-            if (!detail.error && detail.descriptiveName) {
-              ad_accounts[i].name = detail.descriptiveName;
-              ad_accounts[i].currency = detail.currencyCode;
-              ad_accounts[i].manager = detail.manager || false;
+            const text = await detailRes.text();
+            try {
+              const detail = JSON.parse(text);
+              if (!detail.error && detail.descriptiveName) {
+                ad_accounts[i].name = detail.descriptiveName;
+                ad_accounts[i].currency = detail.currencyCode;
+                ad_accounts[i].manager = detail.manager || false;
+              }
+            } catch {
+              console.warn(`enrichment for ${cid}: non-JSON response (${text.slice(0, 100)})`);
             }
+          } else {
+            console.warn(`enrichment for ${cid}: status ${detailRes.status}`);
           }
-        } catch { /* best-effort, skip if fails */ }
+        } catch (e: any) { console.warn("enrichment skip:", e.message); }
       }
 
       // Upsert scoped to persona_id — always save the connection even if no accounts found
