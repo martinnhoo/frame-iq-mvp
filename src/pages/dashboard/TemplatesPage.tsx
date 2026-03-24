@@ -1497,6 +1497,125 @@ Scene 2 (4-9s): Auto-ship setup
 Scene 3 (10-12s): Discount on subscription
 Scene 4 (13-15s): Set up auto-ship CTA
 Tone: Convenient.`),
+
+  // ── ANALYSIS TEMPLATES (GoMarble-inspired) ──────────────────────────────────
+  T("analysis-weekly-review", "Weekly Performance Review", "Full account review — what worked, what to cut.", "analysis", 15,
+    `Analyze this ad account for the past 7 days. Structure:
+1. TOP PERFORMERS: List top 3 ads by CTR and ROAS. For each: what's the hook, why it's working.
+2. WHAT TO PAUSE: List underperformers (CTR < 1% or ROAS < 1.5x). Be direct about why.
+3. BUDGET MOVES: Where to increase spend and by how much. Where to pull back.
+4. ONE BIG INSIGHT: The single most important thing this account showed you this week.
+Be specific. Use numbers. Skip fluff.`),
+
+  T("analysis-creative-fatigue", "Creative Fatigue Detector", "Find which ads are burning out before it costs you.", "analysis", 15,
+    `Identify creative fatigue in this account. For each active ad:
+- Frequency: flag anything above 2.5x in last 7 days
+- CTR trend: dropping more than 30% week-over-week?
+- Hook rate vs 2 weeks ago: below 25% = fatiguing
+Output: list of fatiguing ads + recommended action (pause / refresh hook / new angle). Include estimated daily waste from keeping fatigue ads running.`),
+
+  T("analysis-scaling-readiness", "Scaling Readiness Check", "Know exactly which campaigns are ready to scale.", "analysis", 15,
+    `Evaluate scaling readiness for each campaign. A campaign is READY TO SCALE if:
+- ROAS ≥ 2.0x over last 7 days
+- Frequency ≤ 2.0x
+- CTR ≥ 1.5%
+- Spend ≥ R$50/day (has enough data)
+For each ready campaign: recommended new budget, expected ROAS at that budget, and risk level (low/medium/high). For campaigns NOT ready: what's blocking them.`),
+
+  T("analysis-hook-breakdown", "Hook Rate Analysis", "Which hooks are grabbing attention and which aren't.", "analysis", 15,
+    `Analyze hook performance across all active video ads.
+For each ad: estimated hook rate (3-second view rate), thumb-stop ratio, and average watch time.
+Rank ads by hook strength. For top 3 hooks: identify what makes them work (question / shock / relatability / social proof / before-after).
+For bottom 3: what's failing (too slow / no pattern interrupt / irrelevant opening).
+Recommend: 2 new hook angles to test based on what's working.`),
+
+  T("analysis-audience-overlap", "Audience Overlap Check", "Find where you're bidding against yourself.", "analysis", 15,
+    `Identify audience overlap and cannibalization in this account.
+Check: which ad sets are targeting the same audiences. Which campaigns might be competing in the same auction.
+Flag: any ad sets with identical or overlapping interest targeting. Broad vs lookalike overlap.
+Recommend: consolidation opportunities. Which ad sets to merge or pause to reduce self-competition and lower CPM.`),
+
+  T("analysis-spend-efficiency", "Spend Efficiency Audit", "Find where every dollar is being wasted.", "analysis", 15,
+    `Audit spend efficiency across the full account.
+1. Cost per result by campaign — flag any campaign with CPA more than 2x account average.
+2. Placement efficiency — which placements (Feed, Reels, Stories) are wasting money.
+3. Day-of-week patterns — are there days where spend is high but results are low?
+4. Time-of-day — peak conversion windows vs dead zones.
+Output: specific recommendations to shift budget in time, placement, and campaign level. Estimate monthly savings from implementing changes.`),
+
+  T("analysis-competitor-gap", "Competitor Creative Gap", "Spot what competitors are doing that you're not.", "analysis", 15,
+    `Based on this account's niche and top-performing ads, identify creative gaps vs likely competitors.
+1. Formats: what formats (UGC / static / carousel / video) are underused in this account?
+2. Angles: what emotional angles (fear / aspiration / social proof / education) are missing?
+3. Offers: what offer structures (free trial / bundle / guarantee / comparison) could be tested?
+4. Hooks: what hook types is this account not testing?
+For each gap: estimate difficulty to produce + potential CTR uplift. Prioritize top 3 to test next.`),
+
+  T("analysis-ctr-drop", "CTR Drop Diagnosis", "Why your CTR dropped and how to fix it.", "analysis", 15,
+    `Diagnose the recent CTR drop in this account. Structure your analysis as:
+ROOT CAUSE: Was it creative fatigue, audience saturation, new competition, or seasonal?
+EVIDENCE: What data points confirm this? (frequency, impression share, CPM change)
+CAMPAIGN BREAKDOWN: Which specific campaigns drove the drop?
+FIX PLAN: Exact steps to recover CTR in the next 7 days.
+PREVENTION: What to monitor weekly to catch this earlier next time.`),
+
+  T("analysis-roas-recovery", "ROAS Recovery Plan", "Step-by-step plan to bring ROAS back up.", "analysis", 15,
+    `Build a ROAS recovery plan for this account.
+DIAGNOSIS: Why is ROAS down? (creative fatigue / audience exhaustion / landing page / CPM spike / seasonal)
+IMMEDIATE ACTIONS (next 48h): What to pause, what to keep, what budget to reallocate.
+SHORT-TERM (7 days): New creatives to launch, new audiences to test, offer adjustments.
+TRACKING: What metrics to watch daily to confirm recovery is working.
+TARGET: What ROAS is realistic in 14 days given current account size?`),
+
+  T("analysis-new-account", "New Account Setup Audit", "Validate structure before spending real money.", "analysis", 15,
+    `Audit this new ad account structure before scaling spend.
+CHECK: Campaign objective alignment (conversion campaigns for conversion goals?). Ad set structure (1-3 ad sets per campaign, 3-5 ads per ad set?). Audience size per ad set (too narrow = limited reach, too broad = wasted spend).
+PIXEL: Is the Meta pixel firing correctly? Are all conversion events tracked?
+BUDGET: Starting budget recommendation by campaign. How long to run before making decisions (minimum data threshold).
+RED FLAGS: List any structural issues that would waste money before launch.`),
+
+  T("strategy-ab-test", "A/B Test Design", "Design a clean split test with actionable results.", "analysis", 15,
+    `Design a structured A/B test for this account.
+TEST VARIABLE: What single element should we test? (hook / offer / format / CTA / audience)
+HYPOTHESIS: If we change X, CTR/ROAS will improve by Y% because Z.
+SETUP: Exact ad set duplication instructions. Budget per variant. Audience isolation rules.
+DURATION: How many days to run before statistical confidence. Minimum spend per variant.
+SUCCESS METRICS: What numbers confirm the winner? What's the decision threshold?
+NEXT STEPS: What to do with winner / what to test next.`),
+
+  T("strategy-launch-plan", "New Creative Launch Plan", "Systematic process to launch and validate new creatives.", "analysis", 15,
+    `Build a new creative launch plan for this account.
+PHASE 1 — TESTING (Days 1-5): Launch budget per creative, number of creatives in test, ad set structure for clean data.
+PHASE 2 — VALIDATION (Days 6-10): Decision criteria — what CTR/ROAS qualifies a creative as a winner?
+PHASE 3 — SCALING (Days 11+): Budget increase cadence for winners. How fast to scale without spiking CPM.
+KILL RULES: When to cut a creative that's not working. What data point triggers a cut.
+CREATIVE PIPELINE: How many new creatives to test per week to sustain performance.`),
+
+  T("strategy-monthly-plan", "30-Day Growth Plan", "Full month roadmap based on account data.", "analysis", 30,
+    `Build a 30-day growth plan for this account based on current performance data.
+WEEK 1: Stabilization — what to fix, pause, and optimize immediately.
+WEEK 2: Testing — new creatives to launch, new audiences to validate.
+WEEK 3: Scaling — double down on winners, cut losers aggressively.
+WEEK 4: Compounding — budget reallocation based on 3 weeks of data.
+KEY METRICS to hit by end of month: ROAS target, CTR target, CPA target.
+RISKS: What could derail this plan and how to mitigate.`),
+
+  T("strategy-creative-brief", "Data-Driven Creative Brief", "Brief your creative team using real account data.", "analysis", 15,
+    `Generate a creative brief based on this account's best-performing data.
+OBJECTIVE: What this ad needs to achieve (CTR > X%, ROAS > Y).
+AUDIENCE INSIGHT: Who's clicking and converting based on account data. What they care about.
+WINNING FORMULA: Based on top performers — hook style, video length, format, tone.
+REQUIRED ELEMENTS: Hook (first 3s), pain point to address, offer to feature, CTA.
+AVOID: What's underperforming in this account (formats, angles, lengths).
+REFERENCE: Top 2 performers in the account to use as creative direction.`),
+
+  T("strategy-budget-allocation", "Budget Allocation Matrix", "Optimal budget split across campaigns.", "analysis", 15,
+    `Recommend optimal budget allocation across this account's campaigns.
+METHODOLOGY: 70% to proven performers (ROAS > 2x), 20% to testing (new creatives/audiences), 10% to experimentation (new formats/offers).
+CURRENT vs RECOMMENDED: Map each campaign's current budget to recommended budget. Flag over-indexed and under-indexed campaigns.
+PRIORITY ORDER: Which campaigns to fund first if total budget increases by 20%.
+SCALING TRIGGERS: What ROAS/CTR threshold justifies a budget increase per campaign.
+MONTHLY REVIEW: What to check every 30 days to rebalance allocation.`),
 ];
 
 
@@ -1532,6 +1651,7 @@ export const CAT_META: Record<string, { label: string; color: string; emoji: str
   hr:         { label: "HR",           color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "👥" },
   ngo:        { label: "NGO",          color: "text-rose-300 bg-rose-300/10 border-rose-300/25",        emoji: "❤️" },
   pet:        { label: "Pet",          color: "text-amber-300 bg-amber-300/10 border-amber-300/25",     emoji: "🐾" },
+  analysis:   { label: "Analysis",     color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "📊" },
 };
 
 const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [

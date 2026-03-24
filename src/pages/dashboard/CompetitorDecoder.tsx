@@ -24,7 +24,7 @@ interface Result {
 const L: Record<string, Record<string, string>> = {
   pt: {
     title: "Concorrente", sub: "Analise qualquer anúncio como um CS sênior",
-    tab_video: "Upload vídeo", tab_text: "Colar texto / link",
+    tab_video: "Upload vídeo", tab_text: "Colar texto / link", tab_brand: "Buscar marca",
     drop_title: "Arraste o vídeo aqui ou clique para selecionar",
     drop_sub: "MP4, MOV, AVI — baixe o vídeo do TikTok/Insta e suba aqui",
     transcribing: "Transcrevendo vídeo...",
@@ -44,10 +44,14 @@ const L: Record<string, Record<string, string>> = {
     empty_sub: "Vídeo do TikTok, Instagram, Meta Ads ou qualquer copy de anúncio",
     remove: "Remover",
     video_ready: "Vídeo pronto para análise",
+    brand_label: "Nome da marca ou empresa",
+    brand_placeholder: "Ex: Nike, iFood, Nubank...",
+    brand_btn: "Ver anúncios na Meta Ad Library →",
+    brand_tip: "Abre a biblioteca de anúncios do Meta filtrada por essa marca. Copie o texto do anúncio e cole na aba ao lado para analisar.",
   },
   es: {
     title: "Competidor", sub: "Analiza cualquier anuncio como un CS senior",
-    tab_video: "Subir video", tab_text: "Pegar texto / link",
+    tab_video: "Subir video", tab_text: "Pegar texto / link", tab_brand: "Buscar marca",
     drop_title: "Arrastra el video aquí o haz clic para seleccionar",
     drop_sub: "MP4, MOV, AVI — descarga el video de TikTok/Instagram y súbelo aquí",
     transcribing: "Transcribiendo video...",
@@ -67,10 +71,14 @@ const L: Record<string, Record<string, string>> = {
     empty_sub: "Video de TikTok, Instagram, Meta Ads o cualquier copy de anuncio",
     remove: "Eliminar",
     video_ready: "Video listo para analizar",
+    brand_label: "Nombre de la marca o empresa",
+    brand_placeholder: "Ej: Nike, Rappi, Mercado Libre...",
+    brand_btn: "Ver anuncios en Meta Ad Library →",
+    brand_tip: "Abre la biblioteca de anuncios de Meta filtrada por esa marca. Copia el texto del anuncio y pégalo en la pestaña de texto para analizar.",
   },
   en: {
     title: "Competitor", sub: "Analyze any ad like a senior CS",
-    tab_video: "Upload video", tab_text: "Paste text / link",
+    tab_video: "Upload video", tab_text: "Paste text / link", tab_brand: "Search brand",
     drop_title: "Drag video here or click to select",
     drop_sub: "MP4, MOV, AVI — download the TikTok/Instagram video and upload here",
     transcribing: "Transcribing video...",
@@ -90,6 +98,10 @@ const L: Record<string, Record<string, string>> = {
     empty_sub: "TikTok, Instagram, Meta Ads video or any ad copy",
     remove: "Remove",
     video_ready: "Video ready to analyze",
+    brand_label: "Brand or company name",
+    brand_placeholder: "E.g. Nike, Amazon, Apple...",
+    brand_btn: "View ads in Meta Ad Library →",
+    brand_tip: "Opens Meta's Ad Library filtered by this brand. Copy the ad text and paste it in the text tab to analyze.",
   },
 };
 
@@ -131,7 +143,7 @@ export default function CompetitorDecoder() {
   const t = L[lang];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [tab, setTab] = useState<"video"|"text">("video");
+  const [tab, setTab] = useState<"video"|"text"|"brand">("video");
   const [adText, setAdText] = useState("");
   const [observation, setObservation] = useState("");
   const [isDragging, setIsDragging] = useState(false);
@@ -141,6 +153,7 @@ export default function CompetitorDecoder() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [copied, setCopied] = useState<Record<string, boolean>>({});
+  const [brandQuery, setBrandQuery] = useState("");
   const [searchParams] = useSearchParams();
 
   // Pre-fill from CompetitorTracker navigation + persona context
@@ -205,7 +218,7 @@ export default function CompetitorDecoder() {
   };
 
   const analyze = async () => {
-    const inputText = tab === "video" ? transcript : adText.trim();
+    const inputText = tab === "video" ? transcript : tab === "brand" ? "" : adText.trim();
     if (!inputText || inputText.length < 15) {
       toast.error(lang === "pt" ? "Cole ou transcreva o conteúdo do anúncio primeiro" : "Add the ad content first"); return;
     }
@@ -234,7 +247,7 @@ export default function CompetitorDecoder() {
     finally { setLoading(false); }
   };
 
-  const canAnalyze = tab === "video" ? (transcript.length > 15) : (adText.trim().length > 15);
+  const canAnalyze = tab === "video" ? (transcript.length > 15) : tab === "brand" ? false : (adText.trim().length > 15);
 
   return (
     <div style={{ padding: "20px 24px 60px", maxWidth: 720, margin: "0 auto" }}>
@@ -252,15 +265,57 @@ export default function CompetitorDecoder() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, marginBottom: 14, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, width: "fit-content" }}>
-        {(["video","text"] as const).map(tp => (
-          <button key={tp} onClick={() => { setTab(tp); setResult(null); }}
+        {(["video","text","brand"] as const).map(tp => (
+          <button key={tp} onClick={() => { setTab(tp as any); setResult(null); }}
             style={{ padding: "7px 16px", borderRadius: 7, border: "none", cursor: "pointer", ...M, fontSize: 12, fontWeight: 600, transition: "all 0.15s",
               background: tab === tp ? "rgba(255,255,255,0.10)" : "transparent",
               color: tab === tp ? "#eef0f6" : "rgba(238,240,246,0.40)" }}>
-            {tp === "video" ? t.tab_video : t.tab_text}
+            {tp === "video" ? t.tab_video : tp === "text" ? t.tab_text : t.tab_brand}
           </button>
         ))}
       </div>
+
+      {/* Brand search tab */}
+      {tab === "brand" && (
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ ...M, display: "block", fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 6 }}>{t.brand_label}</label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <input
+              value={brandQuery}
+              onChange={e => setBrandQuery(e.target.value)}
+              placeholder={t.brand_placeholder}
+              onKeyDown={e => { if (e.key === "Enter" && brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+              style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 9, padding: "10px 14px", color: "#eef0f6", ...M, fontSize: 13, outline: "none", transition: "border-color 0.15s" }}
+              onFocus={e => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.40)"; }}
+              onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
+            />
+            <button
+              onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+              disabled={!brandQuery.trim()}
+              style={{ padding: "10px 18px", borderRadius: 9, border: "none", cursor: brandQuery.trim() ? "pointer" : "not-allowed", background: brandQuery.trim() ? "rgba(139,92,246,0.20)" : "rgba(255,255,255,0.04)", color: brandQuery.trim() ? "#c4b5fd" : "rgba(255,255,255,0.2)", ...M, fontSize: 12, fontWeight: 600, transition: "all 0.15s", whiteSpace: "nowrap" as const }}>
+              {t.brand_btn}
+            </button>
+          </div>
+          {/* Quick country filters */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
+            {[{ code: "BR", flag: "🇧🇷", label: "Brasil" }, { code: "MX", flag: "🇲🇽", label: "México" }, { code: "IN", flag: "🇮🇳", label: "India" }, { code: "US", flag: "🇺🇸", label: "US" }, { code: "ALL", flag: "🌍", label: "Global" }].map(c => (
+              <button key={c.code}
+                onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${c.code === "ALL" ? "ALL" : c.code}&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+                disabled={!brandQuery.trim()}
+                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: brandQuery.trim() ? "pointer" : "default", ...M, fontSize: 11, color: brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)", transition: "all 0.15s" }}
+                onMouseEnter={e => { if (brandQuery.trim()) { e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)"; e.currentTarget.style.color = "#eef0f6"; }}}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)"; }}>
+                <span>{c.flag}</span> {c.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: "11px 14px", borderRadius: 9, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.14)" }}>
+            <p style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.5)", margin: 0, lineHeight: 1.6 }}>
+              💡 {t.brand_tip}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Video tab */}
       {tab === "video" && (
