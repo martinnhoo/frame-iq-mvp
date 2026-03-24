@@ -128,7 +128,15 @@ export default function DashboardLayout() {
   useEffect(() => {
     let mounted = true;
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Try to get existing session — autoRefreshToken handles JWT renewal automatically
+      let { data: { session } } = await supabase.auth.getSession();
+
+      // If no session in memory, try refreshing from stored refresh token
+      if (!session) {
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        session = refreshData.session;
+      }
+
       if (!session) { navigate("/login"); return; }
       if (!mounted) return;
       setUser(session.user);
@@ -239,9 +247,13 @@ export default function DashboardLayout() {
     // Safety timeout — if init takes >6s on mobile, force show dashboard
     const timeout = setTimeout(() => { setLoading(false); }, 6000);
     init().finally(() => clearTimeout(timeout));
-    // Only redirect on explicit sign-out events, NOT during initial hydration
+    // Handle auth state changes — keep session alive, redirect only on explicit sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") navigate("/login");
+      if (event === "SIGNED_OUT") { navigate("/login"); return; }
+      // On token refresh, update user object silently
+      if (event === "TOKEN_REFRESHED" && session?.user) {
+        setUser(session.user);
+      }
     });
     return () => { mounted = false; subscription.unsubscribe(); };
   }, [navigate]);
