@@ -1839,34 +1839,34 @@ function PainSection({ onCTA, lang }: { onCTA: () => void; lang: "pt" | "es" | "
       title: "Gestores desperdiçam horas\nanalisando dados.",
       pains: [
         { icon: "⏳", text: "Você monta relatórios manualmente toda semana" },
-        { icon: "📊", text: "Dados em 5 ferramentas diferentes, nenhuma fala com a outra" },
-        { icon: "❓", text: "Não sabe exatamente o que pausar e o que escalar agora" },
-        { icon: "🔥", text: "Descobre criativos em fadiga tarde demais — depois de perder verba" },
+        { icon: "📊", text: "Dados em 5 ferramentas diferentes que não se conversam" },
+        { icon: "❓", text: "Você não sabe exatamente o que pausar e escalar agora" },
+        { icon: "🔥", text: "Descobre fadiga criativa tarde demais — depois de queimar verba" },
       ],
-      divider: "O AdBrief resolve isso.",
+      divider: "AdBrief resolve isso.",
       solutions: [
         { icon: "⚡", text: "Responde qualquer pergunta sobre sua conta em segundos" },
         { icon: "🎯", text: "Diz exatamente o que pausar e o que escalar agora" },
-        { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios winners" },
-        { icon: "🔔", text: "Alerta proativo no Telegram antes de você perder verba" },
+        { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
+        { icon: "🔔", text: "Alertas proativos no Telegram antes de queimar verba" },
       ],
-      cta: "Ver na prática",
+      cta: "Ver em ação",
     },
     es: {
       label: "EL PROBLEMA",
-      title: "Los gestores desperdician horas\nanalizando datos.",
+      title: "Los gestores pierden horas\nanalizando datos.",
       pains: [
-        { icon: "⏳", text: "Armas reportes manualmente cada semana" },
-        { icon: "📊", text: "Datos en 5 herramientas distintas, ninguna se conecta" },
+        { icon: "⏳", text: "Construyes reportes manualmente cada semana" },
+        { icon: "📊", text: "Datos en 5 herramientas distintas que no se comunican" },
         { icon: "❓", text: "No sabes exactamente qué pausar y qué escalar ahora" },
-        { icon: "🔥", text: "Descubres creativos en fatiga tarde — después de perder presupuesto" },
+        { icon: "🔥", text: "Descubres la fatiga creativa tarde — después de quemar presupuesto" },
       ],
-      divider: "AdBrief resuelve eso.",
+      divider: "AdBrief lo resuelve.",
       solutions: [
         { icon: "⚡", text: "Responde cualquier pregunta sobre tu cuenta en segundos" },
         { icon: "🎯", text: "Te dice exactamente qué pausar y qué escalar ahora" },
         { icon: "✍️", text: "Genera hooks y guiones de tus anuncios ganadores" },
-        { icon: "🔔", text: "Alerta proactiva en Telegram antes de perder presupuesto" },
+        { icon: "🔔", text: "Alertas proactivas en Telegram antes de quemar presupuesto" },
       ],
       cta: "Ver en acción",
     },
@@ -1893,64 +1893,120 @@ function PainSection({ onCTA, lang }: { onCTA: () => void; lang: "pt" | "es" | "
   const c = copy[lang];
 
   return (
-    <Section bg="subtle">
-      <div style={{ maxWidth: 880, margin: "0 auto" }}>
+    <section style={{
+      position: "relative",
+      padding: "96px 24px",
+      overflow: "hidden",
+      background: "linear-gradient(180deg, #080c14 0%, #0b1120 40%, #080c14 100%)",
+    }}>
+      {/* Background radial glows */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", top: "10%", left: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: "10%", right: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.15), transparent)" }} />
+      </div>
+
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
 
         {/* Label */}
-        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase" as const, textAlign: "center", marginBottom: 20 }}>
-          {c.label}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 20 }}>
+          <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
+          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>
+            {c.label}
+          </p>
+          <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
+        </div>
 
         {/* Title */}
-        <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 40 }}>
+        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(28px,3.5vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 56 }}>
           {c.title}
         </h2>
 
-        {/* 2-column: pains left, solutions right */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(24px,3vw,48px)", alignItems: "start" }} className="pain-grid">
+        {/* 2-column grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(16px,2.5vw,40px)", alignItems: "center" }} className="pain-grid">
 
-          {/* PAINS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* PAINS column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+                {lang === "pt" ? "Sem AdBrief" : lang === "es" ? "Sin AdBrief" : "Without AdBrief"}
+              </span>
+            </div>
             {c.pains.map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)" }}>
-                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{p.icon}</span>
-                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5 }}>{p.text}</p>
+              <div key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                padding: "14px 16px", borderRadius: 12,
+                background: "linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0.02) 100%)",
+                border: "1px solid rgba(239,68,68,0.12)",
+                backdropFilter: "blur(8px)",
+                transition: "border-color 0.2s",
+              }}>
+                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 2, opacity: 0.7 }}>{p.icon}</span>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.55 }}>{p.text}</p>
               </div>
             ))}
           </div>
 
-          {/* DIVIDER */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 8 }}>
-            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.15))" }} />
-            <div style={{ padding: "6px 14px", borderRadius: 20, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.30)" }}>
-              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "#38bdf8", letterSpacing: "0.02em" }}>{c.divider}</span>
+          {/* CENTER DIVIDER */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+            <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.08))", minHeight: 60 }} />
+            <div style={{
+              padding: "8px 16px", borderRadius: 24,
+              background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))",
+              border: "1px solid rgba(14,165,233,0.30)",
+              boxShadow: "0 0 20px rgba(14,165,233,0.15)",
+              backdropFilter: "blur(8px)",
+              whiteSpace: "nowrap" as const,
+            }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#38bdf8", letterSpacing: "0.02em" }}>{c.divider}</span>
             </div>
-            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, rgba(255,255,255,0.15), transparent)" }} />
+            <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, rgba(255,255,255,0.08), transparent)", minHeight: 60 }} />
           </div>
 
-          {/* SOLUTIONS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* SOLUTIONS column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", display: "inline-block", boxShadow: "0 0 6px #0ea5e9" }} />
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+                {lang === "pt" ? "Com AdBrief" : lang === "es" ? "Con AdBrief" : "With AdBrief"}
+              </span>
+            </div>
             {c.solutions.map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)" }}>
-                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{s.icon}</span>
-                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.82)", margin: 0, lineHeight: 1.5 }}>{s.text}</p>
+              <div key={i} style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                padding: "14px 16px", borderRadius: 12,
+                background: "linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(99,102,241,0.04) 100%)",
+                border: "1px solid rgba(14,165,233,0.16)",
+                backdropFilter: "blur(8px)",
+              }}>
+                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{s.icon}</span>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "rgba(255,255,255,0.82)", margin: 0, lineHeight: 1.55 }}>{s.text}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* CTA */}
-        <div style={{ textAlign: "center", marginTop: 36 }}>
-          <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "13px 32px", borderRadius: 11, background: "rgba(14,165,233,0.15)", color: "#38bdf8", border: "1px solid rgba(14,165,233,0.35)", cursor: "pointer", letterSpacing: "-0.01em", transition: "all 0.15s" }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14,165,233,0.25)"; el.style.color = "#fff"; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14,165,233,0.15)"; el.style.color = "#38bdf8"; }}>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <button onClick={onCTA} style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700,
+            padding: "13px 32px", borderRadius: 11,
+            background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))",
+            color: "#38bdf8", border: "1px solid rgba(14,165,233,0.30)",
+            cursor: "pointer", letterSpacing: "-0.01em", transition: "all 0.15s",
+            boxShadow: "0 0 20px rgba(14,165,233,0.08)",
+          }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(14,165,233,0.25), rgba(99,102,241,0.20))"; el.style.color = "#fff"; el.style.borderColor = "rgba(14,165,233,0.5)"; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))"; el.style.color = "#38bdf8"; el.style.borderColor = "rgba(14,165,233,0.30)"; }}>
             {c.cta} →
           </button>
         </div>
       </div>
-    </Section>
+    </section>
   );
 }
+
 
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const results: Record<Lang, string[]> = {
