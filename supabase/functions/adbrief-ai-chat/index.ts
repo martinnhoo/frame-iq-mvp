@@ -1,4 +1,4 @@
-// adbrief-ai-chat v11 — Anthropic Claude via direct API
+// adbrief-ai-chat v12 — Meta API: 50 ads, adsets, time series, placements, cache 15min, history compression
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -464,55 +464,132 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
-            // Use historical range if detected, otherwise default 30 days
             const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
             const until = historicalUntil || new Date().toISOString().split("T")[0];
-            const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
 
-            const [adsRes, campaignsRes] = await Promise.allSettled([
-              fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective&limit=20&access_token=${token}`),
-            ]);
+            // ── FIX 6: In-memory cache (15 min per account) ─────────────────
+            // Prevents 2x redundant Meta API calls on every message
+            const cacheKey = `${activeAcc.id}:${since}:${until}`;
+            const now_ts = Date.now();
+            const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+            if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
+            const cached = (globalThis as any).__metaCache[cacheKey];
+            let adsRaw: any = null, campsRaw: any = null, adsetsRaw: any = null,
+                timeSeriesRaw: any = null, placementRaw: any = null;
 
-            const adsRaw = adsRes.status === "fulfilled" ? await adsRes.value.json() : null;
-            const campsRaw = campaignsRes.status === "fulfilled" ? await campaignsRes.value.json() : null;
+            if (cached && (now_ts - cached.ts) < CACHE_TTL) {
+              adsRaw       = cached.adsRaw;
+              campsRaw     = cached.campsRaw;
+              adsetsRaw    = cached.adsetsRaw;
+              timeSeriesRaw = cached.timeSeriesRaw;
+              placementRaw  = cached.placementRaw;
+            } else {
+              // ── FIX 1: Limit 20→50 ads + FIX 4: Add adsets + FIX 3: Time series + FIX 2: Placements
+              const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+              const [r1, r2, r3, r4, r5] = await Promise.allSettled([
+                // FIX 1: 50 ads (was 20)
+                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
+                // Campaigns: 50 (was 20)
+                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
+                // FIX 4: Adsets with targeting + budget + status
+                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=50&access_token=${token}`),
+                // FIX 3: Time series — daily CTR, spend, impressions for last 14 days
+                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${new Date(Date.now()-14*24*3600000).toISOString().split("T")[0]}","until":"${until}"}&time_increment=1&limit=14&access_token=${token}`),
+                // FIX 2: Placement breakdown
+                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
+              ]);
+              adsRaw        = r1.status === "fulfilled" ? await r1.value.json() : null;
+              campsRaw      = r2.status === "fulfilled" ? await r2.value.json() : null;
+              adsetsRaw     = r3.status === "fulfilled" ? await r3.value.json() : null;
+              timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
+              placementRaw  = r5.status === "fulfilled" ? await r5.value.json() : null;
+
+              // Cache results
+              (globalThis as any).__metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw };
+            }
 
             liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
 
+            // Campaigns
             if (campsRaw?.error) {
               const isExpired = campsRaw.error.code === 190 || String(campsRaw.error.type||"").includes("OAuthException");
-              if (isExpired) {
-                liveMetaData += `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`;
-              } else {
-                liveMetaData += `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
-              }
+              liveMetaData += isExpired
+                ? `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`
+                : `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
             } else if (campsRaw?.data?.length) {
-              const lines = campsRaw.data.slice(0, 15).map((c: any) =>
-                `  ${c.name}: status=${c.status} budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "no budget set"} objective=${c.objective}`
+              const lines = campsRaw.data.slice(0, 30).map((c: any) =>
+                `  ${c.name}: ${c.effective_status||c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "no budget"} | ${c.objective}`
               ).join("\n");
-              liveMetaData += `CAMPAIGNS (${campsRaw.data.length} found):\n${lines}\n`;
+              liveMetaData += `CAMPAIGNS (${campsRaw.data.length}):\n${lines}\n`;
             } else {
-              liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada nesta conta. Respond directly with this fact.\n`;
+              liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada.\n`;
             }
 
-            if (adsRaw?.error) {
-              // Detect token expiry (Meta error 190) and surface clearly
-              const isExpired = adsRaw.error.code === 190 || String(adsRaw.error.message||"").toLowerCase().includes("token") || String(adsRaw.error.type||"").includes("OAuthException");
-              if (isExpired) {
-                liveMetaData += `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`;
-              } else {
-                liveMetaData += `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
-              }
-            } else if (adsRaw?.data?.length) {
-              const adLines = adsRaw.data.slice(0, 10).map((ad: any) => {
-                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
-                const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
-                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} cpc=$${parseFloat(ad.cpc||0).toFixed(2)} freq=${ad.frequency||"?"} purchases=${purchases}${hookRate?` hook_rate=${((parseInt(hookRate)/parseInt(ad.impressions||1))*100).toFixed(1)}%`:""}`;
+            // FIX 4: Adsets with targeting intel
+            if (adsetsRaw?.data?.length) {
+              const adsetLines = adsetsRaw.data.slice(0, 20).map((s: any) => {
+                const age = s.targeting?.age_min && s.targeting?.age_max ? `${s.targeting.age_min}-${s.targeting.age_max}` : null;
+                const interests = (s.targeting?.flexible_spec?.[0]?.interests || []).slice(0,3).map((i:any)=>i.name).join(", ");
+                const geos = (s.targeting?.geo_locations?.countries || []).join(",");
+                const budget = s.daily_budget ? `$${(parseInt(s.daily_budget)/100).toFixed(0)}/day` : s.lifetime_budget ? `$${(parseInt(s.lifetime_budget)/100).toFixed(0)} total` : "no budget";
+                return `  ${s.name}: ${s.effective_status||s.status} | ${budget} | ${s.optimization_goal||""}${age?` | age ${age}`:""}${geos?` | geo:${geos}`:""}${interests?` | interests:${interests}`:""}`;
               }).join("\n");
-              liveMetaData += `AD PERFORMANCE (top by spend):\n${adLines}\n`;
-            } else {
-              liveMetaData += `ADS: Nenhum gasto de anúncio nos últimos 30 dias.\n`;
+              liveMetaData += `ADSETS (${adsetsRaw.data.length}):\n${adsetLines}\n`;
             }
+
+            // Ads performance
+            if (adsRaw?.error) {
+              const isExpired = adsRaw.error.code === 190 || String(adsRaw.error.message||"").toLowerCase().includes("token") || String(adsRaw.error.type||"").includes("OAuthException");
+              liveMetaData += isExpired
+                ? `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`
+                : `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
+            } else if (adsRaw?.data?.length) {
+              // FIX 1: Show all 50 with smarter truncation
+              const adLines = adsRaw.data.slice(0, 50).map((ad: any) => {
+                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
+                const leads = ad.actions?.find((a: any) => a.action_type === "lead")?.value || "";
+                const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
+                const hr = hookRate ? ` hook=${((parseInt(hookRate)/Math.max(parseInt(ad.impressions||1),1))*100).toFixed(1)}%` : "";
+                const conv = leads ? ` leads=${leads}` : purchases !== "0" ? ` purch=${purchases}` : "";
+                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} freq=${ad.frequency||"?"}${hr}${conv}`;
+              }).join("\n");
+              liveMetaData += `ADS (${adsRaw.data.length} found, top by spend):\n${adLines}\n`;
+            } else {
+              liveMetaData += `ADS: Nenhum gasto de anúncio no período.\n`;
+            }
+
+            // FIX 3: Time series — daily trend
+            if (timeSeriesRaw?.data?.length) {
+              const series = timeSeriesRaw.data
+                .filter((d: any) => parseFloat(d.spend||0) > 0)
+                .slice(-14)
+                .map((d: any) => {
+                  const purch = d.actions?.find((a:any)=>a.action_type==="purchase")?.value || "";
+                  return `  ${d.date_start}: spend=$${parseFloat(d.spend||0).toFixed(0)} ctr=${parseFloat(d.ctr||0).toFixed(2)}% cpm=$${parseFloat(d.cpm||0).toFixed(1)}${purch?` purch=${purch}`:""}`;
+                }).join("\n");
+              if (series) {
+                // Compute trend
+                const days = timeSeriesRaw.data.filter((d:any)=>parseFloat(d.spend||0)>0);
+                const half = Math.floor(days.length/2);
+                const firstHalf = days.slice(0,half);
+                const secondHalf = days.slice(half);
+                const avgCtr1 = firstHalf.reduce((s:number,d:any)=>s+parseFloat(d.ctr||0),0)/Math.max(firstHalf.length,1);
+                const avgCtr2 = secondHalf.reduce((s:number,d:any)=>s+parseFloat(d.ctr||0),0)/Math.max(secondHalf.length,1);
+                const trend = avgCtr2 > avgCtr1*1.05 ? "↑ melhorando" : avgCtr2 < avgCtr1*0.95 ? "↓ piorando" : "→ estável";
+                liveMetaData += `TENDÊNCIA DIÁRIA (${trend} CTR):\n${series}\n`;
+              }
+            }
+
+            // FIX 2: Placement breakdown
+            if (placementRaw?.data?.length) {
+              const placements = placementRaw.data
+                .filter((p:any) => parseFloat(p.spend||0) > 0)
+                .slice(0, 10)
+                .map((p:any) => `  ${p.publisher_platform||""}/${p.platform_position||""}: spend=$${parseFloat(p.spend||0).toFixed(0)} ctr=${parseFloat(p.ctr||0).toFixed(2)}% cpm=$${parseFloat(p.cpm||0).toFixed(1)}`)
+                .join("\n");
+              if (placements) liveMetaData += `PLACEMENT BREAKDOWN:\n${placements}\n`;
+            }
+
           } else {
             liveMetaData = `META CONNECTED — no ad account selected. Tell user to go to Contas and select an ad account.`;
           }
@@ -627,13 +704,45 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     const uiLangName = LANG_NAMES[uiLang2] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
-    // ── 5b. History ─────────────────────────────────────────────────────────
+    // ── 5b. History — FIX 5: smart compression ──────────────────────────────
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
-      for (const h of history.slice(-16)) {
-        if (h.role === "user" || h.role === "assistant") {
+      const raw = history.filter(h => h.role === "user" || h.role === "assistant");
+
+      if (raw.length <= 16) {
+        // Short conversation — keep full, just truncate long assistant messages
+        for (const h of raw) {
           let content = String(h.content || "").trim();
-          if (h.role === "assistant" && content.length > 600) content = content.slice(0, 600) + "…";
+          if (h.role === "assistant" && content.length > 800) content = content.slice(0, 800) + "…";
+          if (content) historyMessages.push({ role: h.role, content });
+        }
+      } else {
+        // Long conversation — compress middle, keep recent 10 intact
+        const recent = raw.slice(-10);
+        const older = raw.slice(0, -10);
+
+        // Summarize older messages into a compact digest
+        const digest = older
+          .filter(h => h.role === "user")
+          .slice(-8) // last 8 user questions from the older block
+          .map(h => `- ${String(h.content || "").slice(0, 120)}`)
+          .join("\n");
+
+        if (digest) {
+          historyMessages.push({
+            role: "user",
+            content: `[RESUMO DAS ÚLTIMAS ${older.length} MENSAGENS ANTERIORES — para contexto, não responda isso]\n${digest}`,
+          });
+          historyMessages.push({
+            role: "assistant",
+            content: "[Entendido. Tenho o contexto das mensagens anteriores.]",
+          });
+        }
+
+        // Add recent messages in full
+        for (const h of recent) {
+          let content = String(h.content || "").trim();
+          if (h.role === "assistant" && content.length > 1000) content = content.slice(0, 1000) + "…";
           if (content) historyMessages.push({ role: h.role, content });
         }
       }
