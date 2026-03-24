@@ -237,7 +237,7 @@ const NewAnalysis = () => {
 
     const { data: record, error: insertErr } = await supabase
       .from("analyses")
-      .insert({ user_id: user.id, title: title || file?.name || "Untitled Analysis", video_url: videoUrl || null, status: "processing" })
+      .insert({ user_id: user.id, persona_id: selectedPersona?.id || null, title: title || file?.name || "Untitled Analysis", video_url: videoUrl || null, status: "processing" })
       .select().single();
 
     if (insertErr || !record) { toast.error("Failed to create analysis"); return; }

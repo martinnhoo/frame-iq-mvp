@@ -240,11 +240,18 @@ Deno.serve(async (req) => {
       { data: accountAlerts },
       { data: telegramConnection },
     ] = await Promise.all([
-      // 1. Recent analyses — last 15, full result for context
-      supabase.from("analyses")
-        .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
-        .eq("user_id", user_id).eq("status", "completed")
-        .order("created_at", { ascending: false }).limit(15),
+      // 1. Recent analyses — scoped to this persona/account
+      (persona_id
+        ? supabase.from("analyses")
+            .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
+            .eq("user_id", user_id).eq("persona_id" as any, persona_id).eq("status", "completed")
+            .order("created_at", { ascending: false }).limit(15)
+        : supabase.from("analyses")
+            .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
+            .eq("user_id", user_id).eq("status", "completed")
+            .is("persona_id" as any, null)
+            .order("created_at", { ascending: false }).limit(15)
+      ),
       // 2. AI profile
       (supabase as any).from("user_ai_profile")
         .select("*").eq("user_id", user_id).maybeSingle(),

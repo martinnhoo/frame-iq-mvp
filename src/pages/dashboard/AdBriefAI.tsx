@@ -784,16 +784,16 @@ export default function AdBriefAI() {
     const pid=selectedPersona?.id||null;
     (async()=>{
       const[analysesRes,patternsRes,personaRes,entriesRes,snapRes]=await Promise.all([
-        supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200),
+        (pid ? supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id" as any,pid) : supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id" as any,null)).order("created_at",{ascending:false}).limit(50),
         (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
         supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
-        (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
+        (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
         (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight").eq("user_id",user.id).order("date",{ascending:false}).limit(7),
       ]);
       const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
-      const patterns=(patternsRes.data||[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
+      const patterns=((patternsRes.data||[]) as any[]).filter((p:any)=>!p.persona_id||p.persona_id===pid).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
       const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result as any||{};return`Name:${personaRes.data.name}|Age:${r.age_range}|Pain:${(r.pain_points||[]).slice(0,3).join(",")}|Platforms:${(r.platforms||[]).join("+")}`})();
-      const entries=entriesRes.data||[];
+      const entries=((entriesRes.data||[]) as any[]).filter((e:any)=>!e.persona_id||e.persona_id===pid);
       const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
       entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
