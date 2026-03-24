@@ -172,6 +172,16 @@ export default function LoopImportPage() {
 
       setResults({ parsed: entries.length, skipped, entries: entries.slice(0, 5) });
       toast.success(`Imported ${entries.length} creatives`);
+
+      // ── Auto-trigger learn after import — closes the loop automatically ──
+      // Fire and forget — user doesn't need to manually trigger learn
+      if (entries.length > 0) {
+        supabase.functions.invoke("creative-loop", {
+          body: { action: "learn", user_id: user.id }
+        }).then(() => {
+          toast.success("AI learning updated automatically", { duration: 3000 });
+        }).catch(() => {}); // silent fail — import already succeeded
+      }
     } catch (e: any) {
       toast.error(e.message || "Import failed");
     } finally {

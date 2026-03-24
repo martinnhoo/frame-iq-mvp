@@ -78,8 +78,8 @@ Deno.serve(async (req) => {
     // ── Load full account intelligence for hook personalization ──────────────
     let userContext = '';
     if (user_id) {
-      // Parallel: ai_profile + Meta snapshot + loop context
-      const [profileRes, snapshotRes, loopRes] = await Promise.allSettled([
+      // Parallel: ai_profile + Meta snapshot + loop context + winner patterns
+      const [profileRes, snapshotRes, loopRes, winnersRes] = await Promise.allSettled([
         supabase.from('user_ai_profile')
           .select('top_performing_models, best_platforms, avg_hook_score, creative_style, ai_summary, industry, pain_point')
           .eq('user_id', user_id).maybeSingle(),
@@ -91,6 +91,13 @@ Deno.serve(async (req) => {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}` },
           body: JSON.stringify({ action: 'get_context', user_id, persona_id: persona_id || null }),
         }),
+        // NEW: fetch winner patterns directly — hook types that actually convert
+        supabase.from('learned_patterns')
+          .select('pattern_key, insight_text, avg_ctr, avg_roas, confidence, hook_type')
+          .eq('user_id', user_id)
+          .eq('is_winner', true)
+          .order('confidence', { ascending: false })
+          .limit(8),
       ]);
 
       // AI Profile
@@ -130,6 +137,22 @@ Deno.serve(async (req) => {
           }
         }
       } catch { /* optional */ }
+
+      // Winner hook types from learned_patterns — highest priority signal
+      const winnerPatterns = winnersRes.status === 'fulfilled' ? winnersRes.value.data || [] : [];
+      if (winnerPatterns.length > 0) {
+        const winnerLines = winnerPatterns
+          .filter((p: any) => p.insight_text)
+          .map((p: any) => {
+            const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
+            const roas = p.avg_roas ? ` ROAS ${p.avg_roas.toFixed(1)}x` : '';
+            const conf = p.confidence ? ` (confidence: ${Math.round(p.confidence * 100)}%)` : '';
+            return `• [${p.pattern_key || p.hook_type || 'pattern'}]${conf}: ${p.insight_text}${ctr}${roas}`;
+          }).join('\n');
+        if (winnerLines) {
+          userContext += `\n\n=== WINNING HOOK PATTERNS — PRIORITIZE THESE ===\nThese hook types have proven to convert for this specific account. Build on them:\n${winnerLines}\n=== END WINNER PATTERNS ===`;
+        }
+      }
     }
 
     if (!ANTHROPIC_API_KEY) {

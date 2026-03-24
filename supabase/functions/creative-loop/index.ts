@@ -152,6 +152,24 @@ serve(async (req) => {
       const avg = (arr: any[], field: string) =>
         arr.length ? arr.reduce((s: number, i: any) => s + Number(i[field]), 0) / arr.length : null;
 
+      // Time-decay weighted average — recent data matters more
+      const weightedAvg = (arr: any[], field: string) => {
+        const valid = arr.filter((i: any) => i[field] != null && Number(i[field]) > 0);
+        if (!valid.length) return null;
+        const now = Date.now();
+        let totalWeight = 0;
+        let weightedSum = 0;
+        for (const item of valid) {
+          const ageMs = now - new Date(item.created_at || now).getTime();
+          const ageDays = ageMs / (1000 * 60 * 60 * 24);
+          // Half-life of 60 days — data from 60 days ago weighs 50%, 120 days ago 25%
+          const weight = Math.pow(0.5, ageDays / 60);
+          weightedSum += Number(item[field]) * weight;
+          totalWeight += weight;
+        }
+        return totalWeight > 0 ? weightedSum / totalWeight : null;
+      };
+
       const patterns = Object.entries(groups)
         .filter(([_, items]) => items.length >= 2)
         .map(([key, items]) => {
@@ -164,9 +182,9 @@ serve(async (req) => {
           return {
             pattern_key: key,
             variables: { platform, hook_type, market, audience_temp, creative_type },
-            avg_ctr: avg(withCtr, "ctr"),
-            avg_cpc: avg(withCpc, "cpc"),
-            avg_roas: avg(withRoas, "roas"),
+            avg_ctr: weightedAvg(withCtr, "ctr"),
+            avg_cpc: weightedAvg(withCpc, "cpc"),
+            avg_roas: weightedAvg(withRoas, "roas"),
             avg_thumb_stop: avg(withThumb, "thumb_stop_rate"),
             sample_size: items.length,
             confidence: Math.round(confidence * 100) / 100,
