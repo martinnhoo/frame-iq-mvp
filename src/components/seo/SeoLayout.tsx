@@ -48,9 +48,13 @@ const FOOTER_LINKS = {
     { label: "Creative Testing",    href: "/guides/tiktok-ad-testing-guide" },
   ],
   Compare: [
-    { label: "vs AdSpy",   href: "/compare/adbrief-vs-adspy" },
-    { label: "vs BigSpy",  href: "/compare/adbrief-vs-bigspy" },
-    { label: "vs Minea",   href: "/compare/adbrief-vs-minea" },
+    { label: "vs AdSpy",        href: "/compare/adbrief-vs-adspy" },
+    { label: "vs BigSpy",       href: "/compare/adbrief-vs-bigspy" },
+    { label: "vs Minea",        href: "/compare/adbrief-vs-minea" },
+    { label: "vs GoMarble",     href: "/compare/adbrief-vs-gomarble" },
+    { label: "vs Madgicx",      href: "/compare/adbrief-vs-madgicx" },
+    { label: "vs Triple Whale", href: "/compare/adbrief-vs-triple-whale" },
+    { label: "vs Supermetrics", href: "/compare/adbrief-vs-supermetrics" },
   ],
 };
 
