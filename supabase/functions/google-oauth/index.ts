@@ -1,4 +1,4 @@
-// google-oauth v2 — persona_id isolation, Google Ads API v17
+// google-oauth v2.1 — persona_id isolation, Google Ads API v17, force redeploy
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -75,30 +75,29 @@ Deno.serve(async (req) => {
       });
       const custData = await custRes.json();
 
-      // Fetch account details for each customer
+      // Build accounts from customer list — best-effort detail enrichment
       const customerIds: string[] = (custData.resourceNames || []).map((r: string) => r.replace("customers/", ""));
-      const ad_accounts: any[] = [];
+      const ad_accounts: any[] = customerIds.slice(0, 20).map((cid: string) => ({
+        id: cid,
+        name: `Google Ads ${cid}`,
+      }));
 
-      for (const cid of customerIds.slice(0, 20)) {
+      // Try to enrich first 3 accounts with name/currency (best-effort)
+      for (let i = 0; i < Math.min(ad_accounts.length, 3); i++) {
         try {
+          const cid = ad_accounts[i].id;
           const detailRes = await fetch(`https://googleads.googleapis.com/${GADS_VERSION}/customers/${cid}`, {
             headers: { Authorization: `Bearer ${access_token}`, "developer-token": DEV_TOKEN, "login-customer-id": cid },
           });
-          const detail = await detailRes.json();
-          if (!detail.error) {
-            ad_accounts.push({
-              id: cid,
-              name: detail.descriptiveName || detail.id || cid,
-              currency: detail.currencyCode,
-              timezone: detail.timeZone,
-              manager: detail.manager || false,
-            });
-          } else {
-            ad_accounts.push({ id: cid, name: `Account ${cid}` });
+          if (detailRes.ok) {
+            const detail = await detailRes.json();
+            if (!detail.error && detail.descriptiveName) {
+              ad_accounts[i].name = detail.descriptiveName;
+              ad_accounts[i].currency = detail.currencyCode;
+              ad_accounts[i].manager = detail.manager || false;
+            }
           }
-        } catch {
-          ad_accounts.push({ id: cid, name: `Account ${cid}` });
-        }
+        } catch { /* best-effort, skip if fails */ }
       }
 
       // Upsert scoped to persona_id
@@ -160,6 +159,7 @@ Deno.serve(async (req) => {
 
     throw new Error(`Unknown action: ${action}`);
   } catch (e: any) {
+    console.error("google-oauth error:", e.message, e.stack);
     return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
   }
 });
