@@ -2363,50 +2363,98 @@ function FAQ({ t }: { t: Record<string, string> }) {
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   return (
-    <Section bg="subtle">
-      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
-        <div style={{ padding: "72px 48px", borderRadius: 32, background: "linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(6,182,212,0.03) 100%)", border: "1px solid rgba(14,165,233,0.18)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", top: -120, left: "50%", transform: "translateX(-50%)", width: 600, height: 400, background: "radial-gradient(ellipse, rgba(14,165,233,0.10) 0%, transparent 65%)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -80, right: -60, width: 300, height: 300, background: "radial-gradient(ellipse, rgba(52,211,153,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
-          <div style={{ position: "relative" }}>
-            <p style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)", marginBottom: 20 }}>{t.final_label}</p>
-            <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4.5vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 16, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
-            <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 40, lineHeight: 1.65 }}>{t.final_sub}</p>
-            <button onClick={onCTA} style={{
-              fontFamily: F, fontSize: 16, fontWeight: 800, padding: "18px 44px", borderRadius: 14,
-              background: "#fff", color: "#000", border: "none", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 10,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
-              transition: "opacity 0.15s, transform 0.15s",
-            }}
-              onMouseEnter={e => { const el = e.currentTarget; el.style.opacity = "0.9"; el.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { const el = e.currentTarget; el.style.opacity = "1"; el.style.transform = "translateY(0)"; }}
-            >
-              {t.final_cta} <ArrowRight size={17} />
-            </button>
-            <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.18)", marginTop: 18, lineHeight: 1.6 }}>{t.final_fine}</p>
-          </div>
+    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(180deg, #080c14 0%, #0a0f1e 100%)" }}>
+      {/* Grid pattern overlay */}
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
+      {/* Top glow */}
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.3), transparent)" }} />
+      {/* Center radial */}
+      <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 500, background: "radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
+        {/* Label */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 28 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9", display: "inline-block" }} />
+          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.9)", letterSpacing: "0.12em" }}>{t.final_label}</span>
+        </div>
+
+        <h2 style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
+
+        <button onClick={onCTA} style={{
+          fontFamily: F, fontSize: 16, fontWeight: 800, padding: "18px 48px", borderRadius: 14,
+          background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", cursor: "pointer",
+          display: "inline-flex", alignItems: "center", gap: 10,
+          boxShadow: "0 0 40px rgba(14,165,233,0.3), 0 4px 24px rgba(0,0,0,0.4)",
+          transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { const el = e.currentTarget; el.style.transform = "translateY(-2px)"; el.style.boxShadow = "0 0 60px rgba(14,165,233,0.4), 0 8px 32px rgba(0,0,0,0.5)"; }}
+          onMouseLeave={e => { const el = e.currentTarget; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 0 40px rgba(14,165,233,0.3), 0 4px 24px rgba(0,0,0,0.4)"; }}
+        >
+          {t.final_cta} <ArrowRight size={17} />
+        </button>
+
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.22)", marginTop: 20, lineHeight: 1.6 }}>{t.final_fine}</p>
+
+        {/* Trust badges */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
+          {["No credit card until day 4", "Cancel anytime", "Setup in 2 minutes"].map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: "#34d399", fontSize: 13 }}>✓</span>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{item}</span>
+            </div>
+          ))}
         </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer({ t }: { t: Record<string, string> }) {
   return (
-    <footer style={{ borderTop: "1px solid rgba(255,255,255,0.10)", padding: "36px clamp(16px,4vw,40px)" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-        <Logo size="lg" />
-        <div style={{ display: "flex", gap: 28 }}>
-          {[["Pricing", "#pricing"], ["FAQ", "#faq"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
-            <a key={href} href={href} style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.2)", textDecoration: "none", transition: "color 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.2)"; }}
-            >{label}</a>
-          ))}
+    <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "#060810", padding: "48px clamp(16px,4vw,40px) 32px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 40, flexWrap: "wrap" as const, marginBottom: 40 }}>
+          {/* Brand */}
+          <div style={{ maxWidth: 260 }}>
+            <Logo size="lg" />
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.65, marginTop: 12 }}>
+              The AI that knows your ad account. Stop guessing, start scaling.
+            </p>
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              {["Meta Ads", "Google Ads"].map(p => (
+                <span key={p} style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
+              ))}
+            </div>
+          </div>
+          {/* Links */}
+          <div style={{ display: "flex", gap: 48, flexWrap: "wrap" as const }}>
+            <div>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Product</p>
+              {[["Pricing", "/pricing"], ["How it works", "#how"], ["Who it's for", "#for"], ["Tools", "/tools"]].map(([l, h]) => (
+                <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+                >{l}</a>
+              ))}
+            </div>
+            <div>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Legal</p>
+              {[["Privacy", "/privacy"], ["Terms", "/terms"], ["FAQ", "#faq"]].map(([l, h]) => (
+                <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+                >{l}</a>
+              ))}
+            </div>
+          </div>
         </div>
-        <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.12)" }}>{t.footer_copy}</p>
+        {/* Bottom bar */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 12 }}>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>Built for performance marketers who move fast.</p>
+        </div>
       </div>
     </footer>
   );
