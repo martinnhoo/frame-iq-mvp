@@ -20,12 +20,12 @@ type Lang = "en" | "pt" | "es";
 
 const T: Record<Lang, Record<string, string>> = {
   en: {
-    nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 1 day",
+    nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
     hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
     hero_sub: "Connect Meta Ads and ask anything. The AI reads your account and answers like an analyst who knows every campaign.",
-    hero_cta: "Try free for 1 day", hero_see: "See it in action",
-    hero_fine: "1-day free trial · No charge for 24h · Cancel anytime",
+    hero_cta: "Try free for 3 days", hero_see: "See it in action",
+    hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
     stat_2: "90 days", stat_2_label: "Of real data analyzed",
     stat_3: "7", stat_3_label: "Integrated tools",
@@ -61,34 +61,34 @@ const T: Record<Lang, Record<string, string>> = {
     ba_2_before: "Manually compare CTR across 20 ad sets", ba_2_after: "Ask: \"Which ads are underperforming?\" — instant",
     ba_3_before: "Guess why ROAS dropped", ba_3_after: "Ask: \"Why did ROAS drop?\" — specific diagnosis",
     ba_4_before: "Write hooks from scratch, no data", ba_4_after: "\"Write 5 hooks based on my top converters\"",
-    pricing_label: "PRICING", pricing_h2: "Start with a free day. Stay because it works.",
-    pricing_sub: "Every plan includes a 1-day free trial. No charge until it's over.",
-    pricing_cta: "Start free trial", pricing_note: "1 day trial · Cancel anytime",
+    pricing_label: "PRICING", pricing_h2: "3 days free. Stay because it works.",
+    pricing_sub: "Every plan includes a 3-day free trial. Card required. No charge until day 4.",
+    pricing_cta: "Start 3-day trial", pricing_note: "3 days free · Cancel anytime",
     plan_badge_pro: "Most popular",
     plan_maker_f0: "50 AI messages / day", plan_maker_f1: "1 ad account", plan_maker_f2: "Basic tools", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 AI messages / day", plan_pro_f1: "3 ad accounts", plan_pro_f2: "All tools unlocked", plan_pro_f3: "Unlimited brands", plan_pro_f4: "Multi-market",
     plan_studio_f0: "Unlimited AI messages", plan_studio_f1: "Unlimited ad accounts", plan_studio_f2: "All tools unlocked", plan_studio_f3: "Unlimited brands", plan_studio_f4: "Agency workspace",
     faq_label: "FAQ", faq_h2: "Common questions",
-    faq_q0: "How does the 1-day free trial work?", faq_a0: "When you sign up for any plan, you get full access for 24 hours at no charge. If you cancel within that period, you won't be billed.",
+    faq_q0: "How does the 3-day free trial work?", faq_a0: "When you sign up, you get full access for 3 days at no charge. If you cancel within that period, you won't be billed.",
     faq_q1: "Why do I need a card to start?", faq_a1: "Requiring a card filters for serious users and lets us give you genuine full access. We don't charge anything for 24 hours.",
     faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads, TikTok Ads, and Google Ads. Once connected, AdBrief reads your campaign data in real time.",
     faq_q3: "Is my data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your credentials. Tokens are encrypted at rest.",
     faq_q4: "Can I use it for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts, Studio unlimited. Most agencies use one persona per brand.",
     faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its own Meta Ads data. The AI uses this context to personalize every answer.",
     faq_q6: "Works with catalog ads?", faq_a6: "Yes. AdBrief reads all campaign types from Meta — including DPA, catalog, and Advantage+ Shopping.",
-    faq_q7: "What if it doesn't work?", faq_a7: "Cancel within 24h and you won't be charged. On a paid plan, email us — we handle refunds case by case.",
+    faq_q7: "What if it doesn't work?", faq_a7: "Cancel within 72h (3 days) and you won't be charged. On a paid plan, email us — we handle refunds case by case.",
     final_label: "START TODAY", final_h2: "Your ad account is full of insights.\nStart asking.",
     final_sub: "Connect in 2 minutes. Cancel anytime.",
-    final_cta: "Try free for 1 day", final_fine: "Any plan · 1-day free trial · Cancel before 24h, pay nothing",
+    final_cta: "Try free for 3 days", final_fine: "Any plan · 3-day free trial · Cancel before day 4, pay nothing",
     footer_copy: "© 2026 AdBrief",
   },
   pt: {
-    nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 1 dia",
+    nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
     hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com seus anúncios.\nA IA responde.",
     hero_sub: "Conecte o Meta Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
-    hero_cta: "Testar grátis por 1 dia", hero_see: "Ver na prática",
-    hero_fine: "1 dia grátis · Sem cobrança por 24h · Cancele quando quiser",
+    hero_cta: "Testar grátis por 3 dias", hero_see: "Ver na prática",
+    hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
     stat_2: "90 dias", stat_2_label: "De dados reais analisados",
     stat_3: "7", stat_3_label: "Ferramentas integradas",
@@ -124,34 +124,34 @@ const T: Record<Lang, Record<string, string>> = {
     ba_2_before: "Comparar CTR de 20 conjuntos manualmente", ba_2_after: "\"Quais anúncios estão underperformando?\" — instantâneo",
     ba_3_before: "Adivinhar por que o ROAS caiu", ba_3_after: "\"Por que o ROAS caiu?\" — diagnóstico específico",
     ba_4_before: "Escrever hooks do zero, sem dados", ba_4_after: "\"5 hooks baseados nos meus melhores criativos\"",
-    pricing_label: "PREÇOS", pricing_h2: "Comece com um dia grátis. Fique porque funciona.",
-    pricing_sub: "Todo plano inclui 1 dia de teste. Sem cobrança enquanto durar.",
-    pricing_cta: "Começar teste grátis", pricing_note: "1 dia de teste · Cancele quando quiser",
+    pricing_label: "PREÇOS", pricing_h2: "3 dias grátis. Fique porque funciona.",
+    pricing_sub: "Todo plano inclui 3 dias de teste. Cartão necessário. Sem cobrança até o 4º dia.",
+    pricing_cta: "Começar teste grátis", pricing_note: "3 dias grátis · Cancele quando quiser",
     plan_badge_pro: "Mais popular",
     plan_maker_f0: "50 mensagens / dia", plan_maker_f1: "1 conta de anúncios", plan_maker_f2: "Ferramentas básicas", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 mensagens / dia", plan_pro_f1: "3 contas conectadas", plan_pro_f2: "Todas as ferramentas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
     plan_studio_f0: "Mensagens ilimitadas", plan_studio_f1: "Contas ilimitadas", plan_studio_f2: "Todas as ferramentas", plan_studio_f3: "Marcas ilimitadas", plan_studio_f4: "Workspace agência",
     faq_label: "PERGUNTAS FREQUENTES", faq_h2: "Dúvidas comuns",
-    faq_q0: "Como funciona o teste grátis?", faq_a0: "Ao se cadastrar, você tem acesso completo por 24h sem cobrança. Cancele dentro desse período e não será cobrado.",
+    faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
     faq_q1: "Por que preciso de cartão?", faq_a1: "Filtra usuários sérios e te dá acesso genuíno. Não cobramos nada em 24h.",
     faq_q2: "O que conecta?", faq_a2: "Meta Ads, TikTok Ads e Google Ads. Lê seus dados em tempo real.",
     faq_q3: "Meus dados são seguros?", faq_a3: "Sim. Usamos OAuth. Nunca armazenamos suas credenciais. Tokens criptografados.",
     faq_q4: "Posso usar para vários clientes?", faq_a4: "Sim. Pro: 3 contas. Studio: ilimitado. A maioria usa uma persona por marca.",
     faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado ao Meta Ads. A IA usa esse contexto em cada resposta.",
     faq_q6: "Funciona com catálogo?", faq_a6: "Sim. Lê todos os tipos de campanha — DPA, catálogo, Advantage+.",
-    faq_q7: "E se não funcionar?", faq_a7: "Cancele em 24h, sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
+    faq_q7: "E se não funcionar?", faq_a7: "Cancele em 72h (3 dias), sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
     final_label: "COMECE HOJE", final_h2: "30 segundos para conectar.\nSua conta tem as respostas.",
     final_sub: "Conecte em 2 minutos. Cancele quando quiser.",
-    final_cta: "Testar grátis por 1 dia", final_fine: "Qualquer plano · 1 dia grátis · Cancele antes de 24h",
+    final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
     footer_copy: "© 2026 AdBrief",
   },
   es: {
-    nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 1 día",
+    nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
     hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
-    hero_cta: "Probar gratis 1 día", hero_see: "Verlo en acción",
-    hero_fine: "1 día gratis · Sin cobro por 24h · Cancela cuando quieras",
+    hero_cta: "Probar gratis 3 días", hero_see: "Verlo en acción",
+    hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
     stat_2: "34,000+", stat_2_label: "Hooks generados",
     stat_3: "4.8", stat_3_label: "Valoración media",
@@ -187,25 +187,25 @@ const T: Record<Lang, Record<string, string>> = {
     ba_2_before: "Comparar CTR de 20 conjuntos", ba_2_after: "\"¿Cuáles anuncios underperforman?\" — instantáneo",
     ba_3_before: "Adivinar por qué bajó el ROAS", ba_3_after: "\"¿Por qué bajó el ROAS?\" — diagnóstico específico",
     ba_4_before: "Escribir hooks sin datos", ba_4_after: "\"5 hooks de mis mejores creativos\"",
-    pricing_label: "PRECIOS", pricing_h2: "Empieza gratis. Quédate porque funciona.",
-    pricing_sub: "Todos incluyen 1 día gratis. Sin cargo hasta que termine.",
+    pricing_label: "PRECIOS", pricing_h2: "3 días gratis. Quédate porque funciona.",
+    pricing_sub: "Todos incluyen 3 días gratis. Sin cargo hasta el día 4.",
     pricing_cta: "Empezar prueba gratis", pricing_note: "1 día de prueba · Cancela cuando quieras",
     plan_badge_pro: "Más popular",
     plan_maker_f0: "50 mensajes / día", plan_maker_f1: "1 cuenta de anuncios", plan_maker_f2: "Herramientas básicas", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 mensajes / día", plan_pro_f1: "3 cuentas conectadas", plan_pro_f2: "Todas las herramientas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
     plan_studio_f0: "Mensajes ilimitados", plan_studio_f1: "Cuentas ilimitadas", plan_studio_f2: "Todas las herramientas", plan_studio_f3: "Marcas ilimitadas", plan_studio_f4: "Workspace agencia",
     faq_label: "PREGUNTAS FRECUENTES", faq_h2: "Preguntas comunes",
-    faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 24h sin cargo. Cancela y no se te cobra.",
+    faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 3 días sin cargo. Cancela y no se te cobra.",
     faq_q1: "¿Por qué necesito tarjeta?", faq_a1: "Filtra usuarios serios y te da acceso completo. No cobramos nada en 24h.",
     faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads, TikTok Ads y Google Ads. Lee tus datos en tiempo real.",
     faq_q3: "¿Mis datos son seguros?", faq_a3: "Sí. OAuth + tokens cifrados. Nunca almacenamos credenciales.",
     faq_q4: "¿Puedo usar para varios clientes?", faq_a4: "Sí. Pro: 3 cuentas. Studio: ilimitado.",
     faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a Meta Ads. La IA personaliza cada respuesta.",
     faq_q6: "¿Funciona con catálogo?", faq_a6: "Sí. Todos los tipos de campaña de Meta — DPA, catálogo, Advantage+.",
-    faq_q7: "¿Si no funciona?", faq_a7: "Cancela en 24h, sin cargo. En plan pago, escríbenos.",
+    faq_q7: "¿Si no funciona?", faq_a7: "Cancela en 72h (3 días), sin cargo. En plan pago, escríbenos.",
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta está llena de insights.\nEmpieza a preguntar.",
     final_sub: "Conéctate en 2 minutos. Cancela cuando quieras.",
-    final_cta: "Probar gratis 1 día", final_fine: "Cualquier plan · 1 día gratis · Cancela antes de 24h",
+    final_cta: "Probar gratis 3 días", final_fine: "Cualquier plan · 3 días gratis · Cancela antes del día 4",
     footer_copy: "© 2026 AdBrief",
   },
 };
@@ -1566,7 +1566,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
             </button>
             <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)' }}>
-              {lang === 'pt' ? '1 dia grátis · Sem cobrar' : lang === 'es' ? '1 día gratis' : '1-day free trial'}
+              {lang === 'pt' ? '3 dias grátis · Sem cobrar' : lang === 'es' ? '3 días gratis' : '3-day free trial'}
             </span>
           </div>
         </div>
@@ -1830,6 +1830,127 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
+// ─── Pain → Solution section ──────────────────────────────────────────────────
+function PainSection({ onCTA, lang }: { onCTA: () => void; lang: "pt" | "es" | "en" }) {
+  const copy = {
+    pt: {
+      label: "O PROBLEMA",
+      title: "Gestores desperdiçam horas\nanalisando dados.",
+      pains: [
+        { icon: "⏳", text: "Você monta relatórios manualmente toda semana" },
+        { icon: "📊", text: "Dados em 5 ferramentas diferentes, nenhuma fala com a outra" },
+        { icon: "❓", text: "Não sabe exatamente o que pausar e o que escalar agora" },
+        { icon: "🔥", text: "Descobre criativos em fadiga tarde demais — depois de perder verba" },
+      ],
+      divider: "O AdBrief resolve isso.",
+      solutions: [
+        { icon: "⚡", text: "Responde qualquer pergunta sobre sua conta em segundos" },
+        { icon: "🎯", text: "Diz exatamente o que pausar e o que escalar agora" },
+        { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios winners" },
+        { icon: "🔔", text: "Alerta proativo no Telegram antes de você perder verba" },
+      ],
+      cta: "Ver na prática",
+    },
+    es: {
+      label: "EL PROBLEMA",
+      title: "Los gestores desperdician horas\nanalizando datos.",
+      pains: [
+        { icon: "⏳", text: "Armas reportes manualmente cada semana" },
+        { icon: "📊", text: "Datos en 5 herramientas distintas, ninguna se conecta" },
+        { icon: "❓", text: "No sabes exactamente qué pausar y qué escalar ahora" },
+        { icon: "🔥", text: "Descubres creativos en fatiga tarde — después de perder presupuesto" },
+      ],
+      divider: "AdBrief resuelve eso.",
+      solutions: [
+        { icon: "⚡", text: "Responde cualquier pregunta sobre tu cuenta en segundos" },
+        { icon: "🎯", text: "Te dice exactamente qué pausar y qué escalar ahora" },
+        { icon: "✍️", text: "Genera hooks y guiones de tus anuncios ganadores" },
+        { icon: "🔔", text: "Alerta proactiva en Telegram antes de perder presupuesto" },
+      ],
+      cta: "Ver en acción",
+    },
+    en: {
+      label: "THE PROBLEM",
+      title: "Media buyers waste hours\nanalyzing data.",
+      pains: [
+        { icon: "⏳", text: "You build reports manually every single week" },
+        { icon: "📊", text: "Data across 5 different tools, none of them talk to each other" },
+        { icon: "❓", text: "You don't know exactly what to pause and what to scale right now" },
+        { icon: "🔥", text: "You discover creative fatigue too late — after burning budget" },
+      ],
+      divider: "AdBrief fixes that.",
+      solutions: [
+        { icon: "⚡", text: "Answers any question about your account in seconds" },
+        { icon: "🎯", text: "Tells you exactly what to pause and what to scale now" },
+        { icon: "✍️", text: "Generates hooks and scripts from your winning ads" },
+        { icon: "🔔", text: "Proactive Telegram alerts before you burn budget" },
+      ],
+      cta: "See it in action",
+    },
+  };
+
+  const c = copy[lang];
+
+  return (
+    <Section bg="subtle">
+      <div style={{ maxWidth: 880, margin: "0 auto" }}>
+
+        {/* Label */}
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)", textTransform: "uppercase" as const, textAlign: "center", marginBottom: 20 }}>
+          {c.label}
+        </p>
+
+        {/* Title */}
+        <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 40 }}>
+          {c.title}
+        </h2>
+
+        {/* 2-column: pains left, solutions right */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(24px,3vw,48px)", alignItems: "start" }} className="pain-grid">
+
+          {/* PAINS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {c.pains.map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)" }}>
+                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{p.icon}</span>
+                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5 }}>{p.text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* DIVIDER */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 8 }}>
+            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.15))" }} />
+            <div style={{ padding: "6px 14px", borderRadius: 20, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
+              <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "#c4b5fd", letterSpacing: "0.02em" }}>{c.divider}</span>
+            </div>
+            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, rgba(255,255,255,0.15), transparent)" }} />
+          </div>
+
+          {/* SOLUTIONS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {c.solutions.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.16)" }}>
+                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{s.icon}</span>
+                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.82)", margin: 0, lineHeight: 1.5 }}>{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{ textAlign: "center", marginTop: 36 }}>
+          <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "13px 32px", borderRadius: 11, background: "rgba(139,92,246,0.18)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.35)", cursor: "pointer", letterSpacing: "-0.01em", transition: "all 0.15s" }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(139,92,246,0.28)"; el.style.color = "#fff"; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(139,92,246,0.18)"; el.style.color = "#c4b5fd"; }}>
+            {c.cta} →
+          </button>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const results: Record<Lang, string[]> = {
     pt: ["Meta Ads conectado em ~30 segundos", "IA calibrada para sua marca e mercado", "Respostas com dados reais da sua conta"],
@@ -2253,8 +2374,8 @@ export default function IndexNew() {
     es: "AdBrief — Pregunta todo sobre tu cuenta de anuncios. IA con datos reales.",
   };
   const descMap: Record<Lang, string> = {
-    en: "Connect Meta Ads and ask anything. AdBrief reads your real account data and answers like a senior media buyer — ROAS, hooks, what to pause, what to scale. 1-day free trial.",
-    pt: "Conecte o Meta Ads e pergunte qualquer coisa. O AdBrief lê sua conta real e responde como um especialista — ROAS, hooks, o que pausar, o que escalar. Teste grátis por 1 dia.",
+    en: "Connect Meta Ads and ask anything. AdBrief reads your real account data and answers like a senior media buyer — ROAS, hooks, what to pause, what to scale. 3-day free trial.",
+    pt: "Conecte o Meta Ads e pergunte qualquer coisa. O AdBrief lê sua conta real e responde como um especialista — ROAS, hooks, o que pausar, o que escalar. Teste grátis por 3 dias.",
     es: "Conecta Meta Ads y pregunta lo que quieras. AdBrief lee tu cuenta real y responde como un experto — ROAS, hooks, qué pausar, qué escalar. Prueba gratis 1 día.",
   };
 
@@ -2315,6 +2436,8 @@ export default function IndexNew() {
           @media(max-width:860px){
             .hero-grid{grid-template-columns:1fr!important;gap:0!important}
             .hero-demo-col{display:none!important}
+            .pain-grid{grid-template-columns:1fr!important}
+            .pain-grid>div:nth-child(2){display:none!important}
           }
           @media(max-width:480px){
             section:first-of-type{padding:72px 20px 40px!important}
@@ -2362,6 +2485,7 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
+      <PainSection onCTA={handleCTA} lang={lang} />
       <HowItWorks t={t} lang={lang} />
       <Tools t={t} lang={lang} />
       <ForWho onCTA={handleCTA} t={t} />
