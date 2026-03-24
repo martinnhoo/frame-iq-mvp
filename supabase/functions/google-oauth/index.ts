@@ -66,53 +66,7 @@ Deno.serve(async (req) => {
 
       const { access_token, refresh_token, expires_in } = tokenData;
 
-      // Get accessible customer accounts
-      const custRes = await fetch(`https://googleads.googleapis.com/${GADS_VERSION}/customers:listAccessibleCustomers`, {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-          "developer-token": DEV_TOKEN,
-        },
-      });
-      const custData = await custRes.json();
-
-      // Log any errors from customer list (for debugging)
-      if (custData.error) {
-        console.error("listAccessibleCustomers error:", JSON.stringify(custData.error));
-      }
-
-      // Build accounts from customer list — best-effort detail enrichment
-      const customerIds: string[] = (custData.resourceNames || []).map((r: string) => r.replace("customers/", ""));
-      const ad_accounts: any[] = customerIds.slice(0, 20).map((cid: string) => ({
-        id: cid,
-        name: `Google Ads ${cid}`,
-      }));
-
-      // Try to enrich first 3 accounts with name/currency (best-effort)
-      for (let i = 0; i < Math.min(ad_accounts.length, 3); i++) {
-        try {
-          const cid = ad_accounts[i].id;
-          const detailRes = await fetch(`https://googleads.googleapis.com/${GADS_VERSION}/customers/${cid}`, {
-            headers: { Authorization: `Bearer ${access_token}`, "developer-token": DEV_TOKEN, "login-customer-id": cid },
-          });
-          if (detailRes.ok) {
-            const text = await detailRes.text();
-            try {
-              const detail = JSON.parse(text);
-              if (!detail.error && detail.descriptiveName) {
-                ad_accounts[i].name = detail.descriptiveName;
-                ad_accounts[i].currency = detail.currencyCode;
-                ad_accounts[i].manager = detail.manager || false;
-              }
-            } catch {
-              console.warn(`enrichment for ${cid}: non-JSON response (${text.slice(0, 100)})`);
-            }
-          } else {
-            console.warn(`enrichment for ${cid}: status ${detailRes.status}`);
-          }
-        } catch (e: any) { console.warn("enrichment skip:", e.message); }
-      }
-
-      // Upsert scoped to persona_id — always save the connection even if no accounts found
+      // Save connection IMMEDIATELY — no Google Ads API calls before this
       const payload = {
         user_id: storedUserId,
         platform: "google",
@@ -120,32 +74,28 @@ Deno.serve(async (req) => {
         access_token,
         refresh_token,
         expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
-        ad_accounts,
+        ad_accounts: [],
         status: "active",
         connected_at: new Date().toISOString(),
       };
 
-      let { error: upsertError } = await sb.from("platform_connections" as any)
+      console.log("google-oauth: attempting upsert for user", storedUserId, "persona", storedPersonaId);
+
+      const { error: upsertError } = await sb.from("platform_connections" as any)
         .upsert(payload, { onConflict: "user_id,platform,persona_id" });
 
       if (upsertError) {
         console.error("upsert error:", JSON.stringify(upsertError));
-        // Try insert/update fallback
-        const { error: updateError } = await sb.from("platform_connections" as any)
-          .update(payload)
-          .eq("user_id", storedUserId)
-          .eq("platform", "google")
-          .eq("persona_id", storedPersonaId);
-        if (updateError) {
-          console.error("update fallback error:", JSON.stringify(updateError));
-          // Last resort: plain insert
-          const { error: insertError } = await sb.from("platform_connections" as any).insert(payload);
-          if (insertError) console.error("insert error:", JSON.stringify(insertError));
+        // Fallback: try plain insert
+        const { error: insertError } = await sb.from("platform_connections" as any).insert(payload);
+        if (insertError) {
+          console.error("insert fallback error:", JSON.stringify(insertError));
+          throw new Error("Failed to save connection: " + (insertError.message || JSON.stringify(insertError)));
         }
       }
 
-      console.log("google-oauth: connection saved, ad_accounts:", ad_accounts.length);
-      return new Response(JSON.stringify({ success: true, ad_accounts }), { headers: { ...cors, "Content-Type": "application/json" } });
+      console.log("SAVED");
+      return new Response(JSON.stringify({ success: true, ad_accounts: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     // ── refresh_token ─────────────────────────────────────────────────────────
