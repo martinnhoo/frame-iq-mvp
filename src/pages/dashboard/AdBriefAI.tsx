@@ -647,6 +647,22 @@ export default function AdBriefAI() {
   const proactiveFired=useRef(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
+  const prevPersonaId=useRef<string|null>(null);
+
+  // ── Reset chat when account changes ──────────────────────────────────────────
+  useEffect(()=>{
+    const newId = selectedPersona?.id || null;
+    if(prevPersonaId.current !== null && prevPersonaId.current !== newId) {
+      // Account switched — clear chat, reset greeting, re-fire proactive
+      setMessages([]);
+      sessionStorage.removeItem(SK);
+      proactiveFired.current = false;
+      setContextReady(false);
+      setConnections([]);
+      setGreetingKey(k => k + 1);
+    }
+    prevPersonaId.current = newId;
+  },[selectedPersona?.id]);
 
   // Load connections — scoped to selected account, fallback to global
   useEffect(()=>{
@@ -844,9 +860,10 @@ export default function AdBriefAI() {
         : "AdBrief";
 
       // Title shown bold at top of proactive block
-      const greetingTitle = lang === "pt" ? "Sua conta está pronta."
-        : lang === "es" ? "Tu cuenta está lista."
-        : "Your account is ready.";
+      const accountName = selectedPersona?.name || null;
+      const greetingTitle = accountName
+        ? (lang === "pt" ? `${accountName} está pronta.` : lang === "es" ? `${accountName} está lista.` : `${accountName} is ready.`)
+        : (lang === "pt" ? "Sua conta está pronta." : lang === "es" ? "Tu cuenta está lista." : "Your account is ready.");
 
       let proactiveMsg = "";
 

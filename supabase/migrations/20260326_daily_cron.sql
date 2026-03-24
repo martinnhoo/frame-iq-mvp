@@ -61,3 +61,16 @@ select cron.schedule(
   where dashboard_reset_date < date_trunc('month', current_date);
   $$
 );
+
+-- Weekly report — every Sunday at 8:00 AM UTC
+select cron.schedule(
+  'weekly-report-sunday',
+  '0 8 * * 0',
+  $$
+  select net.http_post(
+    url := 'https://mtrovtowcpttdqygtrwq.supabase.co/functions/v1/weekly-report',
+    headers := jsonb_build_object('Authorization', 'Bearer ' || current_setting('app.service_role_key', true)),
+    body := '{}'::jsonb
+  )
+  $$
+);
