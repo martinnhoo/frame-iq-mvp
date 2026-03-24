@@ -1516,7 +1516,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: F, fontSize: 'clamp(32px,3.2vw,52px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
+          <h1 style={{ fontFamily: F, fontSize: 'clamp(30px,2.7vw,44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
             {t.hero_h1}
           </h1>
 
@@ -1545,16 +1545,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
             </span>
             {/* Meta Ads — official logo SVG */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 40 40">
-                <path d="M16.5 8c-3.58 0-6.25 1.8-8.08 4.44A15.3 15.3 0 0 0 5.5 20c0 2.64.78 5.02 2.1 6.88C9.47 29.52 12.32 31 16 31c2.9 0 5.2-1.13 7.08-3.04L20 24.5l-3.08 3.46C15.56 29.28 14.14 30 12.5 30c-2.37 0-4.12-1.18-5.35-2.96A12.3 12.3 0 0 1 5.5 20c0-2.34.61-4.52 1.68-6.22C8.54 11.63 10.54 10 13.5 10c1.56 0 2.87.56 4.08 1.62L20 14l2.42-2.38C23.73 10.4 25.44 9 28 9c2.88 0 4.96 1.68 6.32 3.78C35.56 14.7 36.5 17.2 36.5 20c0 2.36-.63 4.46-1.68 5.96C33.82 27.5 32.5 28.5 31 28.5c-1.56 0-2.5-.82-2.5-2.5V14h-2v12c0 2.76 1.74 4.5 4.5 4.5 2.42 0 4.55-1.36 6.08-3.62A15.5 15.5 0 0 0 39.5 20c0-3.2-1.06-6.28-2.86-8.6C34.8 8.8 32.1 7 28.5 7c-2.96 0-5.4 1.4-7.2 3.36L20 11.5l-1.3-1.14C17.04 9.08 14.96 8 12.5 8h4z" fill="#1877F2"/>
-                <path d="M20 14l-2.42-2.38C16.37 10.56 15.06 10 13.5 10c-2.96 0-4.96 1.63-6.32 3.78A13.5 13.5 0 0 0 5.5 20c0 2.64.72 5.02 2.1 6.88C8.9 28.82 10.65 30 12.5 30c1.64 0 3.06-.72 4.42-2.04L20 24.5l3.08 3.46C24.8 29.87 26.5 31 28.5 31c1.5 0 2.82-1 3.82-2.54a12.45 12.45 0 0 0 1.68-5.96 13.7 13.7 0 0 0-1.86-7.22C30.78 13.18 28.7 11.5 25.82 11.5c-2.56 0-4.27 1.4-5.82 2.5z" fill="url(#mGrad)"/>
-                <defs>
-                  <linearGradient id="mGrad" x1="5.5" y1="20" x2="34.5" y2="20" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#0064E0"/>
-                    <stop offset="40%" stopColor="#0064E0"/>
-                    <stop offset="100%" stopColor="#0082FB"/>
-                  </linearGradient>
-                </defs>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 36 18" fill="none">
+                <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
               </svg>
               <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>Meta Ads</span>
             </div>
@@ -1596,8 +1588,8 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </div>
               {/* Meta badge — official */}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(24,119,242,0.10)', border: '1px solid rgba(24,119,242,0.22)' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 40 40">
-                  <path d="M16.5 8c-3.58 0-6.25 1.8-8.08 4.44A15.3 15.3 0 0 0 5.5 20c0 2.64.78 5.02 2.1 6.88C9.47 29.52 12.32 31 16 31c2.9 0 5.2-1.13 7.08-3.04L20 24.5l-3.08 3.46C15.56 29.28 14.14 30 12.5 30c-2.37 0-4.12-1.18-5.35-2.96A12.3 12.3 0 0 1 5.5 20c0-2.34.61-4.52 1.68-6.22C8.54 11.63 10.54 10 13.5 10c1.56 0 2.87.56 4.08 1.62L20 14l2.42-2.38C23.73 10.4 25.44 9 28 9c2.88 0 4.96 1.68 6.32 3.78C35.56 14.7 36.5 17.2 36.5 20c0 2.36-.63 4.46-1.68 5.96C33.82 27.5 32.5 28.5 31 28.5c-1.56 0-2.5-.82-2.5-2.5V14h-2v12c0 2.76 1.74 4.5 4.5 4.5 2.42 0 4.55-1.36 6.08-3.62A15.5 15.5 0 0 0 39.5 20c0-3.2-1.06-6.28-2.86-8.6C34.8 8.8 32.1 7 28.5 7c-2.96 0-5.4 1.4-7.2 3.36L20 11.5l-1.3-1.14C17.04 9.08 14.96 8 12.5 8h4z" fill="#1877F2"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 36 18" fill="none">
+                  <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
                 </svg>
                 <span style={{ fontFamily: F, fontSize: 9, color: '#5b9cf6', fontWeight: 600 }}>Meta</span>
               </div>
@@ -2321,9 +2313,11 @@ export default function IndexNew() {
 
           /* ── Mobile ── */
           @media(max-width:860px){
-            /* Hero: stack to single column */
-            .hero-grid{grid-template-columns:1fr!important;gap:36px!important}
+            .hero-grid{grid-template-columns:1fr!important;gap:0!important}
             .hero-demo-col{display:none!important}
+          }
+          @media(max-width:480px){
+            section:first-of-type{padding:72px 20px 40px!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */
