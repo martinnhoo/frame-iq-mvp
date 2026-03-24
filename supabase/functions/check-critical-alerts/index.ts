@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
 
       <!-- Alerts -->
       <tr><td>
-        <table width="100%" cellpadding="0" cellspacing="0">${alertRows}</table>
+        <table width="100%" cellpadding="0" cellspacing="0">${emailAlertRows}</table>
       </td></tr>
 
       <!-- CTA -->
