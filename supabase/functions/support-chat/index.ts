@@ -20,7 +20,7 @@ const SYSTEM_PROMPT = `You are AdBrief's support assistant. Your only job is to 
 
 ## What you help with
 - How features work (AI chat, hook generator, script generator, brief generator, analyze, competitor, translate, persona, preflight, boards)
-- Plans and billing: Maker ($19/mo), Pro ($49/mo), Studio ($149/mo). All include a 3-day free trial. Card required, no charge for 24h. Cancel anytime. Manage billing at dashboard → Settings.
+- Plans and billing: Maker ($19/mo), Pro ($49/mo), Studio ($149/mo). All include a 1-day free trial. Card required. Cancel anytime. Manage billing at dashboard → Settings.
 - Account issues: login, password reset, email change
 - How to connect Meta Ads (dashboard → AI → platform badge)
 - Technical problems: direct to team@adbrief.pro with a screenshot
@@ -83,9 +83,9 @@ serve(async (req) => {
 Use this to give more personalized answers.`;
     }
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!apiKey) {
+    if (!LOVABLE_API_KEY) {
       return new Response(
         JSON.stringify({
           reply:
@@ -97,27 +97,41 @@ Use this to give more personalized answers.`;
       );
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "google/gemini-2.5-flash-lite",
         max_tokens: 400,
-        system: systemPrompt,
-        messages: (messages || []).map((m: { role: string; content: string }) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...(messages || []).map((m: { role: string; content: string }) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        ],
       }),
     });
 
+    if (response.status === 429) {
+      return new Response(
+        JSON.stringify({ reply: language === "pt" ? "Muitas requisições. Tente novamente em instantes." : "Too many requests. Please try again shortly." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (response.status === 402) {
+      return new Response(
+        JSON.stringify({ reply: language === "pt" ? "Serviço temporariamente indisponível. Email: team@adbrief.pro" : "Service temporarily unavailable. Email: team@adbrief.pro" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const data = await response.json();
     const reply =
-      data.content?.[0]?.text ||
+      data.choices?.[0]?.message?.content ||
       (language === "pt"
         ? "Vou encaminhar isso para a equipe. Email: team@adbrief.pro"
         : "I'll escalate this to the team. Email team@adbrief.pro");
