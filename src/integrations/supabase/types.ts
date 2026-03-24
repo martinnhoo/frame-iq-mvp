@@ -619,6 +619,7 @@ export type Database = {
           is_winner: boolean | null
           last_updated: string | null
           pattern_key: string
+          persona_id: string | null
           sample_size: number | null
           user_id: string
           variables: Json
@@ -635,6 +636,7 @@ export type Database = {
           is_winner?: boolean | null
           last_updated?: string | null
           pattern_key: string
+          persona_id?: string | null
           sample_size?: number | null
           user_id: string
           variables?: Json
@@ -651,6 +653,7 @@ export type Database = {
           is_winner?: boolean | null
           last_updated?: string | null
           pattern_key?: string
+          persona_id?: string | null
           sample_size?: number | null
           user_id?: string
           variables?: Json
