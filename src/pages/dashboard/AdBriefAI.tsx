@@ -54,7 +54,7 @@ const PLATFORMS = [
         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.72a4.85 4.85 0 0 1-1.01-.03z"/>
       </svg>
     )},
-  { id: "google", label: "Google Ads", fn: "google-oauth", color: "#4285F4", soon: true,
+  { id: "google", label: "Google Ads", fn: "google-oauth", color: "#4285F4", soon: false,
     Icon: ({ active }: { active: boolean }) => (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill={active ? "#4285F4" : "rgba(255,255,255,0.3)"}/>

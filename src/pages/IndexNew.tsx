@@ -23,7 +23,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
     hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
-    hero_sub: "Connect Meta Ads and ask anything. The AI reads your account and answers like an analyst who knows every campaign.",
+    hero_sub: "Connect Meta Ads or Google Ads and ask anything. The AI reads your account and answers like an analyst who knows every campaign.",
     hero_cta: "Try free for 3 days", hero_see: "See it in action",
     hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
@@ -42,7 +42,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_label: "HOW IT WORKS", how_h2: "Three steps. Zero friction.",
     how_sub: "No CSV uploads. No manual data. Just connect and ask.",
     how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
-    how_s2_title: "Set up your account", how_s2_desc: "Create an account for each brand or client. Add website, description, and connect Meta Ads — the AI uses this context for every answer.",
+    how_s2_title: "Set up your account", how_s2_desc: "Create an account for each brand or client. Add website, description, and connect Meta Ads or Google Ads — the AI uses this context for every answer.",
     how_s3_title: "Ask anything. Get real answers.", how_s3_desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next.",
     for_label: "WHO IT'S FOR", for_h2: "Built for performance teams.",
     for_tab0: "Agencies", for_tab1: "Media Buyers", for_tab2: "In-house Teams",
@@ -74,7 +74,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads, TikTok Ads, and Google Ads. Once connected, AdBrief reads your campaign data in real time.",
     faq_q3: "Is my data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your credentials. Tokens are encrypted at rest.",
     faq_q4: "Can I use it for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts, Studio unlimited. Most agencies use one persona per brand.",
-    faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its own Meta Ads data. The AI uses this context to personalize every answer.",
+    faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its ad accounts (Meta Ads, Google Ads). The AI uses this context to personalize every answer.",
     faq_q6: "Works with catalog ads?", faq_a6: "Yes. AdBrief reads all campaign types from Meta — including DPA, catalog, and Advantage+ Shopping.",
     faq_q7: "What if it doesn't work?", faq_a7: "Cancel within 72h (3 days) and you won't be charged. On a paid plan, email us — we handle refunds case by case.",
     final_label: "START TODAY", final_h2: "Your ad account is full of insights.\nStart asking.",
@@ -86,7 +86,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
     hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com seus anúncios.\nA IA responde.",
-    hero_sub: "Conecte o Meta Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
+    hero_sub: "Conecte Meta Ads ou Google Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
     hero_cta: "Testar grátis por 3 dias", hero_see: "Ver na prática",
     hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
@@ -105,7 +105,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_label: "COMO FUNCIONA", how_h2: "Três passos. Zero fricção.",
     how_sub: "Sem CSV. Sem entrada manual. Conecte e pergunte.",
     how_s1_title: "Conecte suas contas", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha em tempo real.",
-    how_s2_title: "Configure sua conta", how_s2_desc: "Crie uma conta para cada marca. Adicione site, descrição e conecte o Meta Ads — a IA usa esse contexto.",
+    how_s2_title: "Configure sua conta", how_s2_desc: "Crie uma conta para cada marca. Adicione site, descrição e conecte Meta Ads ou Google Ads — a IA usa esse contexto.",
     how_s3_title: "Pergunte qualquer coisa.", how_s3_desc: "Converse como no ChatGPT — mas o AdBrief conhece sua conta. Pergunte o que funciona, o que cortar, o que produzir.",
     for_label: "PARA QUEM", for_h2: "Feito para equipes de performance.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
@@ -137,7 +137,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "O que conecta?", faq_a2: "Meta Ads, TikTok Ads e Google Ads. Lê seus dados em tempo real.",
     faq_q3: "Meus dados são seguros?", faq_a3: "Sim. Usamos OAuth. Nunca armazenamos suas credenciais. Tokens criptografados.",
     faq_q4: "Posso usar para vários clientes?", faq_a4: "Sim. Pro: 3 contas. Studio: ilimitado. A maioria usa uma persona por marca.",
-    faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado ao Meta Ads. A IA usa esse contexto em cada resposta.",
+    faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado às suas contas de anúncios (Meta Ads, Google Ads). A IA usa esse contexto em cada resposta.",
     faq_q6: "Funciona com catálogo?", faq_a6: "Sim. Lê todos os tipos de campanha — DPA, catálogo, Advantage+.",
     faq_q7: "E se não funcionar?", faq_a7: "Cancele em 72h (3 dias), sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
     final_label: "COMECE HOJE", final_h2: "30 segundos para conectar.\nSua conta tem as respostas.",
@@ -149,7 +149,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
-    hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
+    hero_sub: "Conecta Meta Ads o Google Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
     hero_cta: "Probar gratis 3 días", hero_see: "Verlo en acción",
     hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
     stat_1: "$2.4M+", stat_1_label: "Budget analizado",
@@ -168,7 +168,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos. Cero fricción.",
     how_sub: "Sin CSV. Sin entrada manual. Conecta y pregunta.",
     how_s1_title: "Conecta tus cuentas", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales en tiempo real.",
-    how_s2_title: "Configura tu cuenta", how_s2_desc: "Crea una cuenta por marca. Agrega sitio web, descripción y conecta Meta Ads.",
+    how_s2_title: "Configura tu cuenta", how_s2_desc: "Crea una cuenta por marca. Agrega sitio web, descripción y conecta Meta Ads o Google Ads.",
     how_s3_title: "Pregunta lo que quieras.", how_s3_desc: "Chatea como en ChatGPT — pero AdBrief conoce tu cuenta. Pregunta qué funciona, qué pausar, qué producir.",
     for_label: "PARA QUIÉN", for_h2: "Hecho para equipos de performance.",
     for_tab0: "Agencias", for_tab1: "Media Buyers", for_tab2: "Equipos Internos",
@@ -200,7 +200,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads, TikTok Ads y Google Ads. Lee tus datos en tiempo real.",
     faq_q3: "¿Mis datos son seguros?", faq_a3: "Sí. OAuth + tokens cifrados. Nunca almacenamos credenciales.",
     faq_q4: "¿Puedo usar para varios clientes?", faq_a4: "Sí. Pro: 3 cuentas. Studio: ilimitado.",
-    faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a Meta Ads. La IA personaliza cada respuesta.",
+    faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a tus cuentas de anuncios (Meta Ads, Google Ads). La IA personaliza cada respuesta.",
     faq_q6: "¿Funciona con catálogo?", faq_a6: "Sí. Todos los tipos de campaña de Meta — DPA, catálogo, Advantage+.",
     faq_q7: "¿Si no funciona?", faq_a7: "Cancela en 72h (3 días), sin cargo. En plan pago, escríbenos.",
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta está llena de insights.\nEmpieza a preguntar.",
@@ -1550,8 +1550,9 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
               </svg>
               <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>Meta Ads</span>
             </div>
-            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-              Google <span style={{ fontSize: 8.5, letterSpacing: '0.06em', opacity: 0.6 }}>SOON</span>
+            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>Google Ads</span>
             </div>
             <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
               TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.06em', opacity: 0.6 }}>SOON</span>
