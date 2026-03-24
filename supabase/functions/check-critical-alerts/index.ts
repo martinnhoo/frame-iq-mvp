@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
           ? `⚠️ ${urgent} alerta${urgent > 1 ? "s" : ""} crítico${urgent > 1 ? "s" : ""} detectado${urgent > 1 ? "s" : ""} — AdBrief`
           : `💡 Oportunidade identificada na sua conta — AdBrief`;
 
-        const alertRows = sorted.map(a => `
+        const emailAlertRows = sorted.map(a => `
           <tr>
             <td style="padding:14px 20px;border-bottom:1px solid #13132a;">
               <table width="100%" cellpadding="0" cellspacing="0">
