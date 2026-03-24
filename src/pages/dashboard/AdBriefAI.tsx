@@ -717,23 +717,20 @@ export default function AdBriefAI() {
     prevPersonaId.current = newId;
   },[selectedPersona?.id]);
 
-  // Load connections — scoped to selected account, fallback to global
+  // Load connections — STRICT: only scoped to this account, NO global fallback
   useEffect(()=>{
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
-    // Don't clear connections immediately if no persona — wait for persona to load
-    // This prevents the flash of "Connect Meta" screen
-    if(!pid) return; // leave connections as-is until persona resolves
-    // Check specific connection for this account, then fall back to global (null)
-    Promise.all([
-      supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).eq("persona_id",pid),
-      supabase.from("platform_connections" as any).select("platform,status").eq("user_id",user.id).is("persona_id",null),
-    ]).then(([specific,global])=>{
-      const s=((specific.data||[]) as any[]).filter(c=>c.status==="active").map(c=>c.platform);
-      const g=((global.data||[]) as any[]).filter(c=>c.status==="active").map(c=>c.platform);
-      // specific takes priority; merge with globals not already covered by specific
-      setConnections([...new Set([...s,...g])]);
-    });
+    if(!pid){setConnections([]);return;}
+    supabase.from("platform_connections" as any)
+      .select("platform,status")
+      .eq("user_id",user.id)
+      .eq("persona_id",pid)
+      .eq("status","active")
+      .then(({data})=>{
+        const platforms=((data||[]) as any[]).map(c=>c.platform);
+        setConnections(platforms);
+      });
   },[user?.id,selectedPersona?.id]);
 
   // Proactive greeting — fires when connections are known (after context is ready)
@@ -781,15 +778,17 @@ export default function AdBriefAI() {
     return () => clearTimeout(timer);
   },[contextReady, connections.length, user?.id, greetingKey]);
 
-  // Load context
+  // Load context — scoped to active account, re-runs when account changes
   useEffect(()=>{
     if(!user?.id)return;
+    const pid=selectedPersona?.id||null;
     (async()=>{
-      const[analysesRes,patternsRes,personaRes,entriesRes]=await Promise.all([
+      const[analysesRes,patternsRes,personaRes,entriesRes,snapRes]=await Promise.all([
         supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).order("created_at",{ascending:false}).limit(200),
         (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
         supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
         (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
+        (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight").eq("user_id",user.id).order("date",{ascending:false}).limit(7),
       ]);
       const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
       const patterns=(patternsRes.data||[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
@@ -798,11 +797,17 @@ export default function AdBriefAI() {
       const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
       entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
-      setContext(`=== PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length}) ===\n${analyses||"None"}\n\n=== PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS ===\n${edSummary||"None"}`);
+      // Recent snapshots summary
+      const snaps=(snapRes.data||[]);
+      const snapSummary=snaps.length?snaps.map((s:any)=>`${s.date}: spend=$${s.total_spend?.toFixed(0)} CTR=${(s.avg_ctr*100)?.toFixed(2)}% ROAS=${s.avg_roas?.toFixed(2)}x ads=${s.active_ads} winners=${s.winners_count}`).join("\n"):"No snapshot data yet";
+      const lastSnap=snaps[0];
+      const perfSummary=lastSnap?`Recent: $${lastSnap.total_spend?.toFixed(0)} spent, ${(lastSnap.avg_ctr*100)?.toFixed(2)}% CTR, ${lastSnap.avg_roas?.toFixed(2)}x ROAS, ${lastSnap.active_ads} active ads, ${lastSnap.winners_count} winners`:"No performance data yet";
+      // Active account info
+      const accountInfo=selectedPersona?`Account: ${selectedPersona.name}${selectedPersona.website?` | Website: ${selectedPersona.website}`:""}${(selectedPersona as any).description?` | Description: ${(selectedPersona as any).description}`:""}`:pid?"Account ID: "+pid:"No account selected";
+      setContext(`=== ACTIVE ACCOUNT ===\n${accountInfo}\n\n=== RECENT PERFORMANCE ===\n${perfSummary}\n\n=== PERFORMANCE HISTORY (last 7 days) ===\n${snapSummary}\n\n=== AUDIENCE PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length} total) ===\n${analyses||"None"}\n\n=== LEARNED PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS PERFORMANCE ===\n${edSummary||"None"}`);
       setContextReady(true);
-      // Proactive greeting now fires from the connections useEffect (after connections load)
     })();
-  },[user?.id]);
+  },[user?.id,selectedPersona?.id]);
 
   useEffect(()=>{
     try{

@@ -177,17 +177,22 @@ Deno.serve(async (req) => {
 
     // ── Transcribe-only mode ──────────────────────────────────────────────
     if (transcribe_only) {
-      if (!transcript || transcript.startsWith('[')) {
-        const reason = !OPENAI_API_KEY 
-          ? 'OPENAI_API_KEY not configured' 
-          : !videoFile 
-            ? 'No video file received' 
-            : `Whisper failed: ${transcript}`;
+      // Fail only if truly no transcript at all or no AI key available
+      const hasKey = LOVABLE_API_KEY || OPENAI_API_KEY;
+      const transcriptFailed = !transcript || (transcript.startsWith('[') && (
+        transcript.includes('failed') || transcript.includes('exhausted') || transcript.includes('Rate limited') || transcript.includes('error')
+      ));
+      if (!hasKey || !videoFile) {
+        const reason = !videoFile ? 'No video file received' : 'No AI API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)';
         console.error('transcribe_only failed:', reason);
         return new Response(JSON.stringify({ 
-          error: 'transcription_failed',
-          transcript: '',
-          message: reason
+          error: 'transcription_failed', transcript: '', message: reason
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (transcriptFailed) {
+        console.error('transcribe_only failed: transcript error:', transcript);
+        return new Response(JSON.stringify({ 
+          error: 'transcription_failed', transcript: '', message: transcript || 'Transcription failed — try again or paste text manually'
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ 
