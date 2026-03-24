@@ -625,9 +625,10 @@ export default function AdBriefAI() {
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
-  const SK="adbrief_ai_v4";
+  // SK scoped per persona — each account has its own persistent chat history
+  const SK=`adbrief_chat_v1_${selectedPersona?.id||"default"}`;
 
-  const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(sessionStorage.getItem(SK)||"[]")}catch{return[]}});
+  const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(localStorage.getItem(SK)||"[]")}catch{return[]}});
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
@@ -649,13 +650,17 @@ export default function AdBriefAI() {
   const textareaRef=useRef<HTMLTextAreaElement>(null);
   const prevPersonaId=useRef<string|null>(null);
 
-  // ── Reset chat when account changes ──────────────────────────────────────────
+  // ── Load correct chat history when account changes (no reset — each account has its own history) ──
   useEffect(()=>{
     const newId = selectedPersona?.id || null;
-    if(prevPersonaId.current !== null && prevPersonaId.current !== newId) {
-      // Account switched — clear chat, reset greeting, re-fire proactive
-      setMessages([]);
-      sessionStorage.removeItem(SK);
+    if(prevPersonaId.current !== newId) {
+      // Load this account's saved history from localStorage
+      const newSK = `adbrief_chat_v1_${newId||"default"}`;
+      try {
+        const saved = JSON.parse(localStorage.getItem(newSK)||"[]");
+        setMessages(saved);
+      } catch { setMessages([]); }
+      // Reset context so greeting fires for this account
       proactiveFired.current = false;
       setContextReady(false);
       setConnections([]);
@@ -760,7 +765,7 @@ export default function AdBriefAI() {
           : b
         )
       }));
-      sessionStorage.setItem(SK,JSON.stringify(toSave));
+      localStorage.setItem(SK,JSON.stringify(toSave));
     }catch{}
   },[messages]);
 
@@ -848,7 +853,7 @@ export default function AdBriefAI() {
     proactiveFired.current = true;
 
     // Returning user with real conversation history — don't interrupt
-    const existing = (() => { try { return JSON.parse(sessionStorage.getItem(SK) || "[]"); } catch { return []; } })();
+    const existing = (() => { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } catch { return []; } })();
     const hasRealHistory = existing.some((m: any) => m.role === "user");
     if (hasRealHistory) return;
 
@@ -1509,7 +1514,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
             />
             {messages.length>0&&(
-              <button onClick={()=>{setMessages([]);sessionStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+              <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
                 style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
                 onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
                 onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
