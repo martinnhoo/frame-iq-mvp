@@ -101,7 +101,7 @@ const SUGG: Record<string, string[]> = {
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -111,6 +111,7 @@ interface Block {
   metrics?: { label:string; value:string; delta?:string; trend?:"up"|"down"|"flat" }[];
   table?: { headers:string[]; rows:string[][] };
   chart?: { type:"bar"; labels:string[]; values:number[]; colors?:string[] };
+  trend?: { dates:string[]; ctr:number[]; roas:number[]; spend:number[] };
 }
 interface AIMessage {
   role: "user"|"assistant";
@@ -280,6 +281,41 @@ function DashboardBlock({block}:{block:Block}) {
           })}
         </div>
       )}
+      {block.trend&&block.trend.dates.length>1&&(()=>{
+        const d=block.trend;
+        const n=d.dates.length;
+        const W=340,H=80,PAD=8;
+        // Sparkline path helper
+        const path=(vals:number[],color:string)=>{
+          const min=Math.min(...vals),max=Math.max(...vals);
+          const range=max-min||1;
+          const pts=vals.map((v,i)=>`${PAD+(i/(n-1))*(W-PAD*2)},${H-PAD-(v-min)/range*(H-PAD*2)}`);
+          return <polyline key={color} points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>;
+        };
+        const lastCtr=d.ctr[n-1],firstCtr=d.ctr[0];
+        const lastRoas=d.roas[n-1],firstRoas=d.roas[0];
+        const ctrDelta=firstCtr>0?((lastCtr-firstCtr)/firstCtr*100):0;
+        const roasDelta=firstRoas>0?((lastRoas-firstRoas)/firstRoas*100):0;
+        const totalSpend=d.spend.reduce((a,b)=>a+b,0);
+        return(
+          <div style={{padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+            <div style={{display:"flex",gap:16,marginBottom:10}}>
+              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:10,color:ctrDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:10,color:roasDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>Spend {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>${totalSpend.toFixed(0)}</span></div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",maxWidth:W}}>
+              {d.ctr.some(v=>v>0)&&path(d.ctr,"#0ea5e9")}
+              {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#4ade80")}
+            </svg>
+            <div style={{display:"flex",gap:12,marginTop:6}}>
+              <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0ea5e9",display:"inline-block",borderRadius:1}}/> CTR</span>
+              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:10,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
+              <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
+            </div>
+          </div>
+        );
+      })()}
       {block.table&&(
         <div style={{overflowX:"auto",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -1146,6 +1182,39 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
       const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
+      // Detect trend/evolution requests — auto-inject sparkline from snapshots
+      const isTrendReq = /roas.*tempo|ctr.*tempo|evolu|tendên|trend|histórico.*performance|30.*dias|semanas?.*performance|performance.*semana|como.*está.*indo/i.test(msg);
+      if (isTrendReq && user?.id) {
+        // Fire and forget — load snapshots and prepend trend block
+        (supabase as any).from("daily_snapshots")
+          .select("date,avg_ctr,avg_roas,total_spend")
+          .eq("user_id", user.id)
+          .order("date", { ascending: true })
+          .limit(30)
+          .then((r: any) => {
+            const rows = (r.data || []).filter((d: any) => d.date);
+            if (rows.length >= 2) {
+              const trendBlock: Block = {
+                type: "trend_chart",
+                title: lang === "pt" ? "Evolução da conta" : lang === "es" ? "Evolución de cuenta" : "Account evolution",
+                trend: {
+                  dates: rows.map((d: any) => d.date.slice(5)), // MM-DD
+                  ctr: rows.map((d: any) => d.avg_ctr || 0),
+                  roas: rows.map((d: any) => d.avg_roas || 0),
+                  spend: rows.map((d: any) => d.total_spend || 0),
+                }
+              };
+              // Prepend trend block to the AI response
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return [...prev.slice(0, -1), { ...last, blocks: [trendBlock, ...(last.blocks || [])] }];
+                }
+                return prev;
+              });
+            }
+          }).catch(() => {});
+      }
 
       // Title translation map — converts technical API terms to human-readable labels
       const TITLE_MAP: Record<string, Record<string, string>> = {
@@ -1315,7 +1384,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px",background:"rgba(255,255,255,0.018)",borderRadius:"12px 12px 0 0",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (

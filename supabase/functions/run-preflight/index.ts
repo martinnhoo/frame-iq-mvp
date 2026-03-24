@@ -138,16 +138,31 @@ Deno.serve(async (req) => {
     // ── Load full account intelligence for preflight context ──
     let userContext = "";
     if (user_id) {
-      const [profileRes, snapRes] = await Promise.allSettled([
+      const [profileRes, snapRes, winnersRes, recsRes] = await Promise.allSettled([
         supabase.from("user_ai_profile")
           .select("avg_hook_score, top_performing_hooks, best_platforms, ai_recommendations, industry, pain_point, creative_style")
           .eq("user_id", user_id).maybeSingle(),
         supabase.from("daily_snapshots")
           .select("date, avg_ctr, total_spend, top_ads, ai_insight")
           .eq("user_id", user_id).order("date", { ascending: false }).limit(1),
+        // Winner patterns — what actually converts on this account
+        supabase.from("learned_patterns")
+          .select("pattern_key, insight_text, avg_ctr, avg_roas, confidence")
+          .eq("user_id", user_id)
+          .eq("is_winner", true)
+          .order("confidence", { ascending: false })
+          .limit(5),
+        // AI recommendations — current strategic context
+        supabase.from("ai_recommendations")
+          .select("recommendation, priority, category")
+          .eq("user_id", user_id)
+          .order("created_at", { ascending: false })
+          .limit(3),
       ]);
       const profile = profileRes.status === "fulfilled" ? profileRes.value.data : null;
       const snap = snapRes.status === "fulfilled" ? snapRes.value.data?.[0] : null;
+      const winners = winnersRes.status === "fulfilled" ? winnersRes.value.data || [] : [];
+      const recs = recsRes.status === "fulfilled" ? recsRes.value.data || [] : [];
       if (profile) {
         const rawNotes = (profile.pain_point || "") as string;
         const instructions = rawNotes.split("|||").filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && s.trim()).join(" | ");
@@ -165,7 +180,22 @@ Deno.serve(async (req) => {
         if (winners.length) userContext += `\nWinning patterns on this account: ${winners.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(" | ")}`;
         if (snap.ai_insight) userContext += `\nAccount insight: ${snap.ai_insight}`;
       }
-    }
+
+      // Winner patterns — compare this creative against what works
+      if (winners.length > 0) {
+        const winnerLines = winners
+          .filter((w: any) => w.insight_text)
+          .map((w: any) => `• ${w.pattern_key}: ${w.insight_text} (CTR ${w.avg_ctr ? (w.avg_ctr*100).toFixed(2)+'%' : 'N/A'}, confidence ${w.confidence ? Math.round(w.confidence*100)+'%' : 'N/A'})`)
+          .join("\n");
+        if (winnerLines) userContext += `\n\n=== WINNING CREATIVE PATTERNS (score higher if this ad matches these) ===\n${winnerLines}`;
+      }
+
+      // Strategic recommendations — current account context
+      if (recs.length > 0) {
+        const recLines = recs.map((r: any) => `• [${r.priority||'medium'}] ${r.recommendation}`).join("\n");
+        userContext += `\n\n=== CURRENT STRATEGIC CONTEXT ===\n${recLines}`;
+      }
+    } // end if (user_id)
 
     // ── Platform + Market rules ──
     const platformRules: Record<string, string> = {
