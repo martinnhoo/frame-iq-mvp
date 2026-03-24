@@ -1424,7 +1424,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px",background:"rgba(255,255,255,0.018)",borderRadius:"12px 12px 0 0",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px",background:"rgba(255,255,255,0.05)",borderRadius:"12px 12px 0 0",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.07)"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -1630,9 +1630,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <RotateCcw size={14}/>
               </button>
             )}
-            <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady||!hasData}
-              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&hasData?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&!loading&&hasData?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-              {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&hasData?"#fff":"rgba(255,255,255,0.2)"}/>}
+            <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
+              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+              {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
             </button>
           </div>
         </div>
