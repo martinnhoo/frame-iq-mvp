@@ -253,23 +253,22 @@ Deno.serve(async (req) => {
         .select("hook_type, hook_score, platform, notes, created_at" as any)
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(20),
-      // 4. Platform connections (persona-scoped)
+      // 4. Platform connections — STRICT persona scope, no global fallback
+      // Each account has its own isolated connections
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")
-        .eq("user_id", user_id).eq("status", "active")
+        .eq("user_id", user_id)
+        .eq("status", "active")
         .then(async (r: any) => {
           if (r.error?.code === "42P01") return { data: [], error: null };
-          const all = r.data || [];
+          const all = (r.data || []) as any[];
+          // STRICT: only return connections for this specific persona
+          // If no persona_id, return nothing (force account selection)
           if (persona_id) {
-            const specific = all.filter((c: any) => c.persona_id === persona_id);
-            const global = all.filter((c: any) => c.persona_id === null);
-            const merged: any[] = [...specific];
-            global.forEach((g: any) => {
-              if (!merged.find((s: any) => s.platform === g.platform)) merged.push(g);
-            });
-            return { data: merged };
+            const scoped = all.filter((c: any) => c.persona_id === persona_id);
+            return { data: scoped };
           }
-          return { data: all.filter((c: any) => c.persona_id === null || !c.persona_id) };
+          return { data: [] };
         }),
       // 5. Ads data imports
       supabase.from("ads_data_imports" as any)
@@ -453,9 +452,10 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           .select("access_token, ad_accounts, selected_account_id, persona_id")
           .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
         const allC = (allConns as any[]) || [];
-        const tokenRow = (persona_id && allC.find((c: any) => c.persona_id === persona_id))
-          || allC.find((c: any) => !c.persona_id)
-          || allC[0] || null;
+        // STRICT: only use connection scoped to this persona — no global fallback
+        const tokenRow = persona_id
+          ? allC.find((c: any) => c.persona_id === persona_id) || null
+          : null;
 
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;

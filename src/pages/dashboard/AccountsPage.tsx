@@ -53,32 +53,37 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
   const [connections, setConnections] = useState<Record<string, { connected: boolean; accounts: any[]; selectedId: string | null; isGlobal?: boolean }>>({});
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
 
   const TL: Record<string, Record<string,string>> = {
-    pt: { not_connected: "Não conectado", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Em breve", active: "Ativo", accounts_switch: "contas — trocar" },
-    es: { not_connected: "Sin conectar", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Próximamente", active: "Activo", accounts_switch: "cuentas — cambiar" },
-    en: { not_connected: "Not connected", connect_btn: "Connect", connecting: "Connecting…", coming_soon: "Coming soon", active: "Active", accounts_switch: "accounts — switch" },
+    pt: { not_connected: "Não conectado", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Em breve", active: "Ativo", accounts_switch: "contas — trocar", disconnect: "Desconectar", disconnecting: "Desconectando..." },
+    es: { not_connected: "Sin conectar", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Próximamente", active: "Activo", accounts_switch: "cuentas — cambiar", disconnect: "Desconectar", disconnecting: "Desconectando..." },
+    en: { not_connected: "Not connected", connect_btn: "Connect", connecting: "Connecting…", coming_soon: "Coming soon", active: "Active", accounts_switch: "accounts — switch", disconnect: "Disconnect", disconnecting: "Disconnecting…" },
   };
   const tl = TL[language] || TL.en;
 
   const load = async () => {
     if (!accountId) return;
     const map: Record<string, any> = {};
-    // 1. Global connections (persona_id IS NULL) as fallback
-    const { data: global } = await supabase.from("platform_connections" as any)
-      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId).is("persona_id", null);
-    (global || []).forEach((r: any) => {
-      const accs = (r.ad_accounts as any[]) || [];
-      map[r.platform] = { connected: true, accounts: accs, selectedId: r.selected_account_id || accs[0]?.id || null, isGlobal: true };
-    });
-    // 2. Account-specific connections override global
+    // STRICT: only load connections scoped to THIS account (persona_id = accountId)
+    // No global fallback — each account manages its own connections
     const { data: specific } = await supabase.from("platform_connections" as any)
-      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId).eq("persona_id", accountId);
+      .select("id, platform, ad_accounts, selected_account_id, connection_label, connected_at")
+      .eq("user_id", userId)
+      .eq("persona_id", accountId)
+      .eq("status", "active");
     (specific || []).forEach((r: any) => {
       const accs = (r.ad_accounts as any[]) || [];
-      map[r.platform] = { connected: true, accounts: accs, selectedId: r.selected_account_id || accs[0]?.id || null, isGlobal: false };
+      map[r.platform] = {
+        connected: true,
+        connectionId: r.id,
+        accounts: accs,
+        selectedId: r.selected_account_id || accs[0]?.id || null,
+        label: r.connection_label,
+        connectedAt: r.connected_at,
+      };
     });
     setConnections(map);
     setLoading(false);
@@ -100,19 +105,31 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     }
   };
 
+  const disconnect = async (platform: string) => {
+    if (!confirm(language === "pt" ? `Desconectar ${platform} desta conta?` : `Disconnect ${platform} from this account?`)) return;
+    setDisconnecting(platform);
+    try {
+      await supabase.from("platform_connections" as any)
+        .delete()
+        .eq("user_id", userId)
+        .eq("platform", platform)
+        .eq("persona_id", accountId);
+      toast.success(language === "pt" ? "Desconectado" : "Disconnected");
+      load();
+    } catch {
+      toast.error("Disconnect failed");
+    }
+    setDisconnecting(null);
+  };
+
   const selectAccount = async (platform: string, accountId2: string) => {
     setChangingAccount(platform);
-    // Try specific connection first, fall back to global (persona_id=null)
-    const { count } = await (supabase.from("platform_connections" as any) as any)
+    // STRICT: only update the connection scoped to this persona
+    await supabase.from("platform_connections" as any)
       .update({ selected_account_id: accountId2 })
-      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform)
-      .select("id", { count: "exact", head: true });
-    if (!count) {
-      // No specific row found — update global connection
-      await supabase.from("platform_connections" as any)
-        .update({ selected_account_id: accountId2 })
-        .eq("user_id", userId).is("persona_id", null).eq("platform", platform);
-    }
+      .eq("user_id", userId)
+      .eq("persona_id", accountId)
+      .eq("platform", platform);
     load();
     setChangingAccount(null);
   };
@@ -140,9 +157,14 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                   {(p as any).soon && <span style={{ marginLeft: 7, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.06em", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "1px 5px" }}>SOON</span>}
                 </p>
                 <p style={{ fontFamily: F, fontSize: 11, color: connected ? `${p.color}cc` : "rgba(255,255,255,0.22)", margin: "2px 0 0" }}>
-                  {connected ? (selAcc ? selAcc.name || selAcc.id : `${accs.length} ${tl.accounts_switch}`) : tl.not_connected}
+                  {connected
+                    ? (accs.length > 1
+                        ? `${selAcc?.name || selAcc?.id || "?"} · ${accs.length} ${tl.accounts_switch}`
+                        : selAcc?.name || selAcc?.id || "Connected")
+                    : tl.not_connected}
                 </p>
               </div>
+              {/* Connect button */}
               {!connected && !(p as any).soon && (
                 <button onClick={() => connect(p.id, p.fn)} disabled={connecting === p.id}
                   style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, background: "#0ea5e9", color: "#000", border: "none", cursor: "pointer", flexShrink: 0 }}>
@@ -152,11 +174,30 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
               {!connected && (p as any).soon && (
                 <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{tl.coming_soon}</span>
               )}
-              {connected && accs.length <= 1 && (
-                <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: `${p.color}12`, color: p.color, border: `1px solid ${p.color}22`, letterSpacing: "0.06em" }}>{tl.active.toUpperCase()}</span>
+              {/* Connected: active badge + disconnect button */}
+              {connected && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                  <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: `${p.color}12`, color: p.color, border: `1px solid ${p.color}22`, letterSpacing: "0.06em" }}>
+                    {tl.active.toUpperCase()}
+                  </span>
+                  <button
+                    onClick={() => disconnect(p.id)}
+                    disabled={disconnecting === p.id}
+                    title={tl.disconnect}
+                    style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.18)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s", flexShrink: 0 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.16)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(248,113,113,0.08)"; }}
+                  >
+                    {disconnecting === p.id
+                      ? <Loader2 size={11} color="#f87171" className="animate-spin" />
+                      : <Link2 size={11} color="#f87171" style={{ transform: "rotate(135deg)" }} />
+                    }
+                  </button>
+                </div>
               )}
             </div>
 
+            {/* Ad account switcher */}
             {connected && accs.length > 1 && (
               <>
                 <button onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
