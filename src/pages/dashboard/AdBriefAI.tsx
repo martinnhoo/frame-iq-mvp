@@ -1520,29 +1520,38 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
-              <div style={{textAlign:"center",padding:"32px 20px"}}>
-                <div style={{width:52,height:52,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
-                  <Sparkles size={22} color="#0ea5e9"/>
+              <div style={{textAlign:"center",padding:"40px 20px"}}>
+                {/* Icon */}
+                <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 32px rgba(14,165,233,0.08)"}}>
+                  <Sparkles size={26} color="#0ea5e9"/>
                 </div>
-                <h3 style={{...j,fontSize:17,fontWeight:800,color:"#fff",margin:"0 0 8px",letterSpacing:"-0.02em"}}>
-                  {lang==="pt"?"Conecte o Meta Ads para começar":lang==="es"?"Conecta Meta Ads para empezar":"Connect Meta Ads to start"}
+                <h3 style={{...j,fontSize:18,fontWeight:900,color:"#fff",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
+                  {lang==="pt"?"Conecte sua conta de anúncios":lang==="es"?"Conecta tu cuenta de anuncios":"Connect your ad account"}
                 </h3>
-                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.45)",lineHeight:1.6,margin:"0 0 22px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>
-                  {lang==="pt"?"A IA só responde com os seus dados reais. Sem a conexão, você recebe respostas genéricas que não ajudam.":lang==="es"?"La IA solo responde con tus datos reales. Sin la conexión recibes respuestas genéricas que no sirven.":"The AI only works with your real data. Without connection, you get generic answers that don't help."}
+                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.65,margin:"0 0 28px",maxWidth:340,marginLeft:"auto",marginRight:"auto"}}>
+                  {lang==="pt"?"Sem conexão, a IA só consegue responder de forma genérica. Com sua conta, ela vê CTR, spend, o que pausar e o que escalar.":lang==="es"?"Sin conexión la IA responde de forma genérica. Con tu cuenta ve CTR, spend, qué pausar y escalar.":"Without connection, AI gives generic answers. With your account it sees CTR, spend, what to pause and scale."}
                 </p>
                 {selectedPersona ? (
-                  <button onClick={()=>handleConnect("meta","meta-oauth")}
-                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"11px 22px",borderRadius:11,background:"linear-gradient(135deg,#1877F2,#0ea5e9)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.01em",boxShadow:"0 0 24px rgba(14,165,233,0.25)"}}>
-                    {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
-                  </button>
+                  <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
+                    <button onClick={()=>handleConnect("meta","meta-oauth")}
+                      style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:11,background:"linear-gradient(135deg,#1877F2,#0ea5e9)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 24px rgba(14,165,233,0.2)",transition:"all 0.2s"}}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
+                      {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
+                    </button>
+                    <button onClick={()=>navigate("/dashboard/accounts")}
+                      style={{...j,display:"inline-flex",alignItems:"center",gap:6,padding:"9px 20px",borderRadius:10,background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:500}}>
+                      {lang==="pt"?"Ou conectar Google Ads →":lang==="es"?"O conectar Google Ads →":"Or connect Google Ads →"}
+                    </button>
+                  </div>
                 ) : (
                   <button onClick={()=>navigate("/dashboard/accounts")}
-                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"11px 22px",borderRadius:11,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"-0.01em"}}>
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:11,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer",fontSize:13,fontWeight:700}}>
                     {lang==="pt"?"Criar conta primeiro →":lang==="es"?"Crear cuenta primero →":"Create account first →"}
                   </button>
                 )}
-                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:14}}>
-                  {lang==="pt"?"Leva 30 segundos":lang==="es"?"30 segundos":"30 seconds"}
+                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.15)",marginTop:16}}>
+                  {lang==="pt"?"Conectar leva menos de 2 minutos":lang==="es"?"Conectar toma menos de 2 minutos":"Takes less than 2 minutes to connect"}
                 </p>
               </div>
             ) : null}

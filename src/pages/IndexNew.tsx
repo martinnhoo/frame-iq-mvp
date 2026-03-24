@@ -1561,14 +1561,17 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
           {/* CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 12, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s, transform 0.15s', letterSpacing: '-0.025em' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.opacity='0.9'; el.style.transform='translateY(-1px)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.opacity='1'; el.style.transform='translateY(0)'; }}>
-              {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
+            <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 12, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: '#fff', border: 'none', cursor: 'pointer', transition: 'all 0.2s', letterSpacing: '-0.025em', boxShadow: '0 0 32px rgba(14,165,233,0.25)' }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(-2px)'; el.style.boxShadow='0 0 48px rgba(14,165,233,0.4)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.boxShadow='0 0 32px rgba(14,165,233,0.25)'; }}>
+              {lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
             </button>
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)' }}>
-              {lang === 'pt' ? '3 dias grátis · Sem cobrar' : lang === 'es' ? '3 días gratis' : '3-day free trial'}
-            </span>
+            <button onClick={() => document.querySelector('#how')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.7)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.04)'; el.style.color='rgba(255,255,255,0.45)'; }}>
+              {lang === 'pt' ? 'Ver como funciona' : lang === 'es' ? 'Ver cómo funciona' : 'See how it works'}
+            </button>
           </div>
         </div>
 
@@ -2268,24 +2271,27 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <span style={{ fontFamily: F, fontSize: 13, color: annual ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500, transition: "color 0.2s" }}>
               {lang === 'pt' ? 'Anual' : lang === 'es' ? 'Anual' : 'Annual'}
             </span>
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>Economize 20%</span>
+            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>{lang === "pt" ? "Economize 20%" : lang === "es" ? "Ahorra 20%" : "Save 20%"}</span>
           </div>
         </div>
         <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {plans.map((plan, i) => (
             <div key={i} style={{
               padding: "28px 24px", borderRadius: 18,
-              background: plan.highlight ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+              background: plan.highlight
+                ? "linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(99,102,241,0.08) 100%)"
+                : "rgba(255,255,255,0.02)",
               border: plan.highlight
-                ? "1px solid rgba(255,255,255,0.18)"
-                : "1px solid rgba(255,255,255,0.07)",
+                ? "1px solid rgba(14,165,233,0.30)"
+                : "1px solid rgba(255,255,255,0.06)",
               display: "flex", flexDirection: "column", gap: 20, position: "relative",
-              transform: plan.highlight ? "scale(1.02)" : "scale(1)",
+              transform: plan.highlight ? "scale(1.03)" : "scale(1)",
               zIndex: plan.highlight ? 2 : 1,
+              boxShadow: plan.highlight ? "0 0 40px rgba(14,165,233,0.12), 0 24px 48px rgba(0,0,0,0.3)" : "none",
             }}>
               {plan.badge && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#fff", borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap" as const }}>
-                  <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "#000", fontWeight: 700 }}>{plan.badge}</span>
+                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 6, padding: "4px 14px", whiteSpace: "nowrap" as const, boxShadow: "0 0 16px rgba(14,165,233,0.4)" }}>
+                  <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#fff", fontWeight: 800 }}>{plan.badge}</span>
                 </div>
               )}
               <div>
@@ -2309,12 +2315,16 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
               </div>
               <button onClick={plan.action} style={{
                 fontFamily: F, width: "100%", padding: "13px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                background: plan.highlight ? "#fff" : "rgba(255,255,255,0.07)",
-                color: plan.highlight ? "#000" : "rgba(255,255,255,0.55)",
-                border: "none", cursor: "pointer", transition: "opacity 0.15s",
+                background: plan.highlight
+                  ? "linear-gradient(135deg, #0ea5e9, #6366f1)"
+                  : "rgba(255,255,255,0.06)",
+                color: plan.highlight ? "#fff" : "rgba(255,255,255,0.5)",
+                border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)",
+                cursor: "pointer", transition: "all 0.15s",
+                boxShadow: plan.highlight ? "0 0 20px rgba(14,165,233,0.25)" : "none",
               }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)';}else{el.style.opacity='0.8';} }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(14,165,233,0.25)':'none'; }}
               >{t.pricing_cta}</button>
               <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
