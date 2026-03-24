@@ -398,10 +398,10 @@ Deno.serve(async (req) => {
 
         // Send Telegram notification (fire-and-forget)
         const telegramPayload = {
-          user_id: userId,
-          alert_id: savedAlertIds[0] || null,
-          message: buildTelegramMessage(criticalAlerts, profile.name || ""),
-          reply_markup: buildTelegramButtons(criticalAlerts),
+          user_id: conn.user_id,
+          alert_id: null as string | null,
+          message: buildTelegramMessage(sorted, (profile as any).name || ""),
+          reply_markup: buildTelegramButtons(sorted),
         };
         fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-telegram`, {
           method: "POST",
