@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
           ? `⚠️ ${urgent} alerta${urgent > 1 ? "s" : ""} crítico${urgent > 1 ? "s" : ""} detectado${urgent > 1 ? "s" : ""} — AdBrief`
           : `💡 Oportunidade identificada na sua conta — AdBrief`;
 
-        const alertRows = sorted.map(a => `
+        const emailAlertRows = sorted.map(a => `
           <tr>
             <td style="padding:14px 20px;border-bottom:1px solid #13132a;">
               <table width="100%" cellpadding="0" cellspacing="0">
@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
 
       <!-- Alerts -->
       <tr><td>
-        <table width="100%" cellpadding="0" cellspacing="0">${alertRows}</table>
+        <table width="100%" cellpadding="0" cellspacing="0">${emailAlertRows}</table>
       </td></tr>
 
       <!-- CTA -->
@@ -398,10 +398,10 @@ Deno.serve(async (req) => {
 
         // Send Telegram notification (fire-and-forget)
         const telegramPayload = {
-          user_id: userId,
-          alert_id: savedAlertIds[0] || null,
-          message: buildTelegramMessage(criticalAlerts, profile.name || ""),
-          reply_markup: buildTelegramButtons(criticalAlerts),
+          user_id: conn.user_id,
+          alert_id: null as string | null,
+          message: buildTelegramMessage(sorted, (profile as any).name || ""),
+          reply_markup: buildTelegramButtons(sorted),
         };
         fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-telegram`, {
           method: "POST",
@@ -418,7 +418,7 @@ Deno.serve(async (req) => {
 
         // Save alerts to account_alerts table — regardless of email success
         // These persist until user explicitly dismisses them in the chat
-        const alertRows = sorted.map(a => ({
+        const dbAlertRows = sorted.map(a => ({
           user_id: conn.user_id,
           type: a.type,
           urgency: a.urgency === "🔴" ? "high" : "medium",
@@ -432,8 +432,8 @@ Deno.serve(async (req) => {
             : "Verificar oportunidade",
           emailed_at: emailRes.ok ? new Date().toISOString() : null,
         }));
-        if (alertRows.length > 0) {
-          await sb.from("account_alerts" as any).insert(alertRows).catch(() => {});
+        if (dbAlertRows.length > 0) {
+          try { await sb.from("account_alerts" as any).insert(dbAlertRows as any); } catch { /* silent */ }
         }
 
       } catch (e) {

@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
             loser_names: losers.map((a: any) => a.ad_name?.slice(0, 50)),
           },
           last_updated: new Date().toISOString(),
-        }, { onConflict: "user_id,pattern_key" }).catch(() => {});
+        }, { onConflict: "user_id,pattern_key" }).then(() => {}).catch(() => {});
 
         if (winners.length) {
           const memRows = winners.slice(0, 5).map((a: any) => ({
@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
             }),
             created_at: new Date().toISOString(),
           }));
-          await supabase.from("creative_memory" as any).insert(memRows).catch(() => {});
+          try { await supabase.from("creative_memory" as any).insert(memRows as any); } catch { /* silent */ }
         }
       } catch (_e) { /* silent */ }
     })();
