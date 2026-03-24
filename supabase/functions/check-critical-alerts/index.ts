@@ -418,7 +418,7 @@ Deno.serve(async (req) => {
 
         // Save alerts to account_alerts table — regardless of email success
         // These persist until user explicitly dismisses them in the chat
-        const alertRows = sorted.map(a => ({
+        const dbAlertRows = sorted.map(a => ({
           user_id: conn.user_id,
           type: a.type,
           urgency: a.urgency === "🔴" ? "high" : "medium",
