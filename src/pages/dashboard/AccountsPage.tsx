@@ -56,6 +56,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
+  const [manualAccountId, setManualAccountId] = useState<string>("");
 
   const TL: Record<string, Record<string,string>> = {
     pt: { not_connected: "Não conectado", connect_btn: "Conectar", connecting: "Conectando...", coming_soon: "Em breve", active: "Ativo", accounts_switch: "contas — trocar", disconnect: "Desconectar", disconnecting: "Desconectando..." },
@@ -134,6 +135,27 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     setChangingAccount(null);
   };
 
+  const saveManualAccount = async (platform: string, rawId: string) => {
+    const id = rawId.trim().replace(/-/g, ""); // strip dashes from customer IDs
+    if (!id) return;
+    setChangingAccount(platform);
+    // Add account to ad_accounts array and set as selected
+    const conn = connections[platform];
+    const existing = conn?.accounts || [];
+    const already = existing.find((a: any) => a.id === id);
+    const newAcc = already || { id, name: `Account ${id}` };
+    const updated = already ? existing : [...existing, newAcc];
+    await supabase.from("platform_connections" as any)
+      .update({ ad_accounts: updated, selected_account_id: id })
+      .eq("user_id", userId)
+      .eq("persona_id", accountId)
+      .eq("platform", platform);
+    setManualAccountId("");
+    setExpandedPlatform(null);
+    load();
+    setChangingAccount(null);
+  };
+
   if (loading) return <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}><Loader2 size={14} color="rgba(255,255,255,0.3)" className="animate-spin" /></div>;
 
   return (
@@ -197,12 +219,14 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
               )}
             </div>
 
-            {/* Ad account switcher */}
-            {connected && accs.length > 1 && (
+            {/* Ad account switcher — for all connected platforms */}
+            {connected && (accs.length > 0 || p.id === "google" || p.id === "meta") && (
               <>
                 <button onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 13px", background: "transparent", border: "none", borderTop: `1px solid ${p.color}12`, cursor: "pointer" }}>
-                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{accs.length} {tl.accounts_switch}</span>
+                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                    {accs.length > 0 ? `${accs.length} ${tl.accounts_switch}` : (lang === "pt" ? "Adicionar ID da conta" : lang === "es" ? "Agregar ID de cuenta" : "Add account ID")}
+                  </span>
                   <ChevronDown size={12} color="rgba(255,255,255,0.3)" style={{ transform: expandedPlatform === p.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                 </button>
                 {expandedPlatform === p.id && (
@@ -222,6 +246,22 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                         </button>
                       );
                     })}
+                    {/* Manual account ID input */}
+                    <div style={{ display: "flex", gap: 6, marginTop: accs.length > 0 ? 4 : 0 }}>
+                      <input
+                        value={manualAccountId}
+                        onChange={e => setManualAccountId(e.target.value)}
+                        placeholder={p.id === "google" ? "Customer ID (ex: 1234567890)" : "act_XXXXXXXXX"}
+                        style={{ flex: 1, fontFamily: F, fontSize: 11, padding: "7px 10px", borderRadius: 7, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                        onKeyDown={e => { if (e.key === "Enter") saveManualAccount(p.id, manualAccountId); }}
+                      />
+                      <button
+                        onClick={() => saveManualAccount(p.id, manualAccountId)}
+                        disabled={!manualAccountId.trim() || changingAccount === p.id}
+                        style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "7px 12px", borderRadius: 7, background: manualAccountId.trim() ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() ? "#000" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() ? "pointer" : "default", transition: "all 0.15s", flexShrink: 0 }}>
+                        {changingAccount === p.id ? "..." : (lang === "pt" ? "Salvar" : lang === "es" ? "Guardar" : "Save")}
+                      </button>
+                    </div>
                   </div>
                 )}
               </>
