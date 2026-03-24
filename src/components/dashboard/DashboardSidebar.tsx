@@ -2,10 +2,10 @@ import {
   MessageSquare, BarChart3, Zap, Search, Settings, Target,
   Sparkles, CreditCard, Brain, Building2, FileText,
   Globe, LayoutDashboard, PenTool, Plane, BookOpen,
-  ChevronRight, CheckCircle2, Circle,
+  ChevronRight, CheckCircle2, Circle, ChevronDown,
   // New precise icons
   ScanEye, Clapperboard, Languages, ShieldCheck,
-  LayoutTemplate, Kanban, Cpu, Users2, TrendingUp,
+  LayoutTemplate, Kanban, Cpu, Users2, TrendingUp, Plus,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -15,15 +15,22 @@ import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useState } from "react";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
   plan: string | null; [key: string]: unknown;
 }
+interface ActivePersona {
+  id: string; name: string; logo_url: string | null; website?: string | null; description?: string | null;
+}
 interface SidebarProps {
   user: SupaUser | null; profile: Profile | null;
   onProfileUpdate?: (p: Profile) => void; open: boolean; onClose: () => void;
   onOpenProfile?: () => void;
+  savedPersonas?: ActivePersona[];
+  selectedPersona?: ActivePersona | null;
+  onSelectPersona?: (p: ActivePersona) => void;
 }
 
 const F = "'Inter', system-ui, sans-serif";
@@ -55,11 +62,12 @@ const SB = {
   footerBg:   "rgba(0,0,0,0.2)",
 };
 
-export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose, onOpenProfile }: SidebarProps) {
+export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose, onOpenProfile, savedPersonas = [], selectedPersona, onSelectPersona }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
   const dt = useDashT(language);
+  const [accountsExpanded, setAccountsExpanded] = useState(false);
 
   const plan = profile?.plan || "free";
   const isLifetime = LIFETIME.includes(user?.email || "");
@@ -68,10 +76,10 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const displayName = profile?.name || user?.email?.split("@")[0] || "Account";
   const isActive = (url: string, exact = false) =>
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
+  const isAccountsActive = isActive("/dashboard/accounts");
 
   const PRIMARY_NAV = [
     { url: "/dashboard/ai",          label: language==="pt"?"IA Chat":language==="es"?"IA Chat":"AI Chat",       icon: Cpu,          exact: false, hot: true },
-    { url: "/dashboard/accounts",    label: language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts",      icon: Users2,       exact: false },
     { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrentes",                                icon: ScanEye,      exact: false },
     { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: TrendingUp,   exact: false },
   ];
@@ -84,10 +92,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { url: "/dashboard/templates",    label: dt("nav_templates")||"Templates",      icon: LayoutTemplate },
     { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",            icon: Kanban },
   ];
-
-  const sectionLabel = (txt: string) => (
-    <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: SB.sectionLabel, letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 12px 5px" }}>{txt}</p>
-  );
 
   const primaryItem = (url: string, label: string, Icon: any, exact = false, hot = false) => {
     const active = isActive(url, exact);
@@ -142,6 +146,109 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     );
   };
 
+  // Accounts item with inline persona switcher
+  const accountsItem = () => {
+    const active = isAccountsActive || accountsExpanded;
+    return (
+      <div style={{ margin: "2px 6px" }}>
+        {/* Main row */}
+        <div style={{ display: "flex", alignItems: "center", borderRadius: 8 }}>
+          <NavLink to="/dashboard/accounts" onClick={onClose}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "9px 10px 9px 14px",
+              borderRadius: accountsExpanded ? "8px 0 0 0" : 8,
+              color: isAccountsActive ? SB.activeText : SB.idleText,
+              background: isAccountsActive ? SB.activeItem : "transparent",
+              border: isAccountsActive ? `1px solid ${SB.activeBorder}` : "1px solid transparent",
+              borderRight: "none",
+              fontSize: 13, fontWeight: isAccountsActive ? 600 : 400,
+              textDecoration: "none", transition: "all 0.12s", fontFamily: F,
+            }}
+            onMouseEnter={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = SB.hoverBg; el.style.color = "rgba(255,255,255,0.82)"; }}}
+            onMouseLeave={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = SB.idleText; }}}
+          >
+            <Users2 size={15} style={{ color: isAccountsActive ? SB.activeIcon : SB.idleIcon, flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>{language==="pt"?"Contas":language==="es"?"Cuentas":"Accounts"}</span>
+            {selectedPersona && (
+              <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(14,165,233,0.8)", background: "rgba(14,165,233,0.08)", borderRadius: 4, padding: "1px 5px", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedPersona.name}
+              </span>
+            )}
+          </NavLink>
+          {/* Chevron toggle for persona list */}
+          {savedPersonas.length > 0 && (
+            <button
+              onClick={() => setAccountsExpanded(e => !e)}
+              style={{
+                width: 28, height: 37, display: "flex", alignItems: "center", justifyContent: "center",
+                background: isAccountsActive ? SB.activeItem : accountsExpanded ? "rgba(255,255,255,0.06)" : "transparent",
+                border: isAccountsActive ? `1px solid ${SB.activeBorder}` : "1px solid transparent",
+                borderLeft: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "0 8px 8px 0",
+                cursor: "pointer", transition: "all 0.12s", flexShrink: 0,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isAccountsActive ? SB.activeItem : accountsExpanded ? "rgba(255,255,255,0.06)" : "transparent"; }}
+            >
+              <ChevronDown size={12} color="rgba(255,255,255,0.4)" style={{ transform: accountsExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+            </button>
+          )}
+        </div>
+
+        {/* Expanded persona list */}
+        {accountsExpanded && savedPersonas.length > 0 && (
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" }}>
+            {savedPersonas.map(p => {
+              const isSel = p.id === selectedPersona?.id;
+              return (
+                <button key={p.id}
+                  onClick={() => {
+                    onSelectPersona?.(p);
+                    navigate("/dashboard/ai");
+                    onClose();
+                    setAccountsExpanded(false);
+                  }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 8,
+                    padding: "8px 14px", background: isSel ? "rgba(14,165,233,0.08)" : "transparent",
+                    border: "none", borderBottom: "1px solid rgba(255,255,255,0.04)",
+                    cursor: "pointer", fontFamily: F, transition: "background 0.1s",
+                  }}
+                  onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  {/* Avatar */}
+                  <div style={{ width: 22, height: 22, borderRadius: 5, background: isSel ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                    {p.logo_url
+                      ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <span style={{ fontSize: 10, fontWeight: 700, color: isSel ? "#38bdf8" : "rgba(255,255,255,0.5)" }}>{p.name.charAt(0).toUpperCase()}</span>
+                    }
+                  </div>
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: isSel ? 600 : 400, color: isSel ? "#e2f4ff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>{p.name}</span>
+                  {isSel && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#38bdf8", flexShrink: 0 }} />}
+                </button>
+              );
+            })}
+            {/* Add new account shortcut */}
+            <button
+              onClick={() => { navigate("/dashboard/accounts"); onClose(); setAccountsExpanded(false); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", background: "transparent", border: "none", cursor: "pointer", fontFamily: F }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <Plus size={11} color="rgba(255,255,255,0.25)" />
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{language==="pt"?"Nova conta":language==="es"?"Nueva cuenta":"New account"}</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const sectionLabel = (txt: string) => (
+    <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: SB.sectionLabel, letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 12px 5px" }}>{txt}</p>
+  );
+
   return (
     <>
       {open && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm" onClick={onClose} />}
@@ -166,6 +273,9 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
 
           {/* Primary */}
           {PRIMARY_NAV.map(({ url, label, icon, exact, hot }) => primaryItem(url, label, icon, exact, hot))}
+
+          {/* Accounts with inline persona switcher */}
+          {accountsItem()}
 
           {/* Divider */}
           <div style={{ height: 1, background: SB.divider, margin: "10px 12px 2px" }} />

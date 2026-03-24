@@ -324,6 +324,9 @@ export default function DashboardLayout() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onOpenProfile={() => setProfileOpen(true)}
+        savedPersonas={savedPersonas}
+        selectedPersona={selectedPersona}
+        onSelectPersona={(p) => setSelectedPersona(p)}
       />
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>

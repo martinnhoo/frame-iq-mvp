@@ -664,7 +664,16 @@ export default function AdBriefAI() {
   // SK scoped per persona — each account has its own persistent chat history
   const SK=`adbrief_chat_v1_${selectedPersona?.id||"default"}`;
 
-  const [messages,setMessages]=useState<AIMessage[]>(()=>{try{return JSON.parse(localStorage.getItem(SK)||"[]")}catch{return[]}});
+  const [messages,setMessages]=useState<AIMessage[]>(()=>{
+    try {
+      const saved = JSON.parse(localStorage.getItem(SK)||"[]");
+      // Sanitize — strip trend_chart blocks (can't serialize SVG state properly)
+      return saved.map((m: any) => ({
+        ...m,
+        blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
+      }));
+    } catch { return []; }
+  });
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
@@ -694,7 +703,10 @@ export default function AdBriefAI() {
       const newSK = `adbrief_chat_v1_${newId||"default"}`;
       try {
         const saved = JSON.parse(localStorage.getItem(newSK)||"[]");
-        setMessages(saved);
+        setMessages(saved.map((m: any) => ({
+          ...m,
+          blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
+        })));
       } catch { setMessages([]); }
       // Reset context so greeting fires for this account
       proactiveFired.current = false;
@@ -745,6 +757,7 @@ export default function AdBriefAI() {
             ? (all.find((s:any) => s.persona_id === pid) || all.find((s:any) => !s.persona_id) || all[0])
             : all[0];
           const hasMetaConn = connections.includes("meta");
+          const hasGoogleConn = connections.includes("google");
           if(!snap && hasMetaConn){
             // Has Meta but no snapshot yet — run intelligence first
             supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
@@ -755,15 +768,15 @@ export default function AdBriefAI() {
                   .then((r2:any)=>{
                     const all2 = (r2.data || []) as any[];
                     const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
-                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn);
+                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
                   })
-                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
+                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
               })
-              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn); });
+              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
           } else {
-            if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn);
+            if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn);
           }
-        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta")); });
+        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta"), connections.includes("google")); });
     }, 300); // 300ms — let connections settle
     return () => clearTimeout(timer);
   },[contextReady, connections.length, user?.id, greetingKey]);
@@ -884,7 +897,7 @@ export default function AdBriefAI() {
   };
 
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
-  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean) => {
+  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean) => {
     if (proactiveFired.current) return;
     proactiveFired.current = true;
 
@@ -895,21 +908,40 @@ export default function AdBriefAI() {
 
     setProactiveLoading(true);
     try {
-      // Neutral greeting — no time-of-day dependency
-      const greeting = lang === "pt" ? "AdBrief"
-        : lang === "es" ? "AdBrief"
-        : "AdBrief";
-
-      // Title shown bold at top of proactive block
       const accountName = selectedPersona?.name || null;
       const greetingTitle = accountName
         ? (lang === "pt" ? `${accountName} está pronta.` : lang === "es" ? `${accountName} está lista.` : `${accountName} is ready.`)
         : (lang === "pt" ? "Sua conta está pronta." : lang === "es" ? "Tu cuenta está lista." : "Your account is ready.");
 
+      // Returning user with real conversation history — show a brief switch notice
+      const existing = (() => { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } catch { return []; } })();
+      const hasRealHistory = existing.some((m: any) => m.role === "user");
+      if (hasRealHistory) {
+        // Just show a minimal "switched to X" toast-like message
+        const switchMsg = lang === "pt"
+          ? `Trocou para ${accountName || "esta conta"}. Histórico da conversa carregado.`
+          : lang === "es"
+          ? `Cambiado a ${accountName || "esta cuenta"}. Historial cargado.`
+          : `Switched to ${accountName || "this account"}. Conversation history loaded.`;
+        const aid = Date.now() + 1;
+        setMessages(prev => [...prev, {
+          role: "assistant", ts: aid, id: aid,
+          blocks: [{ type: "insight" as const, title: greetingTitle, content: switchMsg }]
+        }]);
+        setProactiveLoading(false);
+        return;
+      }
+
+      // Build platform context string
+      const platforms: string[] = [];
+      if (hasMetaConn) platforms.push("Meta Ads");
+      if (hasGoogleConn) platforms.push("Google Ads");
+      const platformStr = platforms.join(" + ") || "";
+
       let proactiveMsg = "";
 
       if (snapshot && snapshot.total_spend > 0) {
-        // ── Meta conectado com campanhas ativas ───────────────────────────────
+        // ── Conta com dados ativos ─────────────────────────────────────────────
         const topAds = (snapshot.top_ads || []) as any[];
         const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
         const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
@@ -919,7 +951,7 @@ export default function AdBriefAI() {
 
         const parts: string[] = [];
         if (lang === "pt") {
-          parts.push(`Analisei sua conta — R$${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
+          parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — R$${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
           if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, R$${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
@@ -927,48 +959,56 @@ export default function AdBriefAI() {
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
           parts.push("O que quer fazer?");
         } else if (lang === "es") {
-          parts.push(`Analicé tu cuenta — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
+          parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
           parts.push("¿Qué quieres hacer?");
         } else {
-          parts.push(`Checked your account — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
+          parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
           parts.push("What do you want to do?");
         }
         proactiveMsg = parts.join(" ");
 
-      } else if (snapshot) {
-        const histSpend = (snapshot.total_spend || 0) > 0;
-        const hasWinners = (snapshot.winners_count || 0) > 0;
-        const toPause = (snapshot.losers_count || 0);
+      } else if (snapshot || platforms.length > 0) {
+        // ── Conectado mas sem dados ativos ─────────────────────────────────────
+        const histSpend = (snapshot?.total_spend || 0) > 0;
+        const hasWinners = (snapshot?.winners_count || 0) > 0;
+        const pausedCount = snapshot?.losers_count || 0;
         if (lang === "pt") {
-          proactiveMsg = histSpend
-            ? `Nenhuma campanha ativa essa semana, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${toPause ? `, ${toPause} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou antes?`
-            : `Meta conectado. Sem dados essa semana ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
+          if (histSpend) {
+            proactiveMsg = `Nenhuma campanha ativa essa semana em ${accountName || "sua conta"}, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${pausedCount ? `, ${pausedCount} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou?`;
+          } else if (platforms.length > 0) {
+            proactiveMsg = `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "essa conta"}. Sem dados de campanha ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
+          } else {
+            proactiveMsg = `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads ou Google Ads.`;
+          }
         } else if (lang === "es") {
-          proactiveMsg = histSpend
-            ? `Sin campañas activas esta semana, pero tengo tu historial: $${snapshot.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`
-            : `Meta conectado. Sin datos esta semana — ¿genero hooks, escribo un guión o hago preflight?`;
+          if (histSpend) {
+            proactiveMsg = `Sin campañas activas esta semana en ${accountName || "tu cuenta"}, pero tengo tu historial: $${snapshot?.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`;
+          } else if (platforms.length > 0) {
+            proactiveMsg = `${platformStr} conectado${platforms.length > 1 ? "s" : ""} en ${accountName || "esta cuenta"}. Sin datos de campaña aún — ¿genero hooks, escribo un guión o hago preflight?`;
+          } else {
+            proactiveMsg = `${accountName ? `${accountName} cargada.` : "Cuenta cargada."} Sin plataformas conectadas — ve a Cuentas para conectar Meta Ads o Google Ads.`;
+          }
         } else {
-          proactiveMsg = histSpend
-            ? `No active campaigns this week, but I have your history: $${snapshot.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${toPause ? `, ${toPause} underperformers flagged` : ""}. Want to launch something new or review what worked?`
-            : `Meta connected. No data this week yet — want to generate hooks, write a script, or preflight a creative?`;
+          if (histSpend) {
+            proactiveMsg = `No active campaigns this week for ${accountName || "this account"}, but I have your history: $${snapshot?.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${pausedCount ? `, ${pausedCount} underperformers flagged` : ""}. Want to launch something new or review what worked?`;
+          } else if (platforms.length > 0) {
+            proactiveMsg = `${platformStr} connected for ${accountName || "this account"}. No campaign data yet — want to generate hooks, write a script, or preflight a creative?`;
+          } else {
+            proactiveMsg = `${accountName ? `${accountName} loaded.` : "Account loaded."} No ad platforms connected yet — go to Accounts to connect Meta Ads or Google Ads.`;
+          }
         }
 
-      } else if (hasMetaConn) {
-        proactiveMsg = lang === "pt"
-          ? `Sua conta Meta Ads está conectada, mas não encontrei campanhas com dados nos últimos 7 dias. Você tem campanhas pausadas que quer reativar? Ou quer criar novos criativos?`
-          : lang === "es"
-          ? `Tu cuenta Meta Ads está conectada pero no encontré campañas activas en los últimos 7 días. ¿Tienes campañas pausadas? ¿Quieres crear nuevos creativos?`
-          : `Your Meta Ads account is connected but I found no active campaigns in the last 7 days. Do you have paused campaigns to reactivate?`;
       } else {
+        // ── Sem nada conectado ─────────────────────────────────────────────────
         proactiveMsg = lang === "pt"
-          ? `Para trabalhar de verdade preciso ver sua conta Meta Ads — sem isso só consigo respostas genéricas que não ajudam. Conecte e vejo CTR, spend, o que escalar e o que pausar em tempo real.`
+          ? `Para trabalhar de verdade preciso ver sua conta de anúncios — sem isso só consigo respostas genéricas. Conecte Meta Ads ou Google Ads e vejo CTR, spend, o que escalar e o que pausar em tempo real.`
           : lang === "es"
-          ? `Para trabajar bien necesito ver tu cuenta Meta Ads. Conéctala y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
-          : `To work properly I need to see your Meta Ads account. Connect it and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
+          ? `Para trabajar bien necesito ver tu cuenta de anuncios. Conecta Meta Ads o Google Ads y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
+          : `To give you real insights I need to see your ad account data. Connect Meta Ads or Google Ads and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
       }
 
       const aid = Date.now() + 1;
