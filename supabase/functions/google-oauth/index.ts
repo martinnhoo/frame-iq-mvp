@@ -1,4 +1,4 @@
-// google-oauth v2.1 — persona_id isolation, Google Ads API v17, force redeploy
+// google-oauth v2.2 — log errors, always save connection, insert fallback
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -75,6 +75,11 @@ Deno.serve(async (req) => {
       });
       const custData = await custRes.json();
 
+      // Log any errors from customer list (for debugging)
+      if (custData.error) {
+        console.error("listAccessibleCustomers error:", JSON.stringify(custData.error));
+      }
+
       // Build accounts from customer list — best-effort detail enrichment
       const customerIds: string[] = (custData.resourceNames || []).map((r: string) => r.replace("customers/", ""));
       const ad_accounts: any[] = customerIds.slice(0, 20).map((cid: string) => ({
@@ -100,7 +105,7 @@ Deno.serve(async (req) => {
         } catch { /* best-effort, skip if fails */ }
       }
 
-      // Upsert scoped to persona_id
+      // Upsert scoped to persona_id — always save the connection even if no accounts found
       const payload = {
         user_id: storedUserId,
         platform: "google",
@@ -117,13 +122,22 @@ Deno.serve(async (req) => {
         .upsert(payload, { onConflict: "user_id,platform,persona_id" });
 
       if (upsertError) {
-        await sb.from("platform_connections" as any)
+        console.error("upsert error:", JSON.stringify(upsertError));
+        // Try insert/update fallback
+        const { error: updateError } = await sb.from("platform_connections" as any)
           .update(payload)
           .eq("user_id", storedUserId)
           .eq("platform", "google")
           .eq("persona_id", storedPersonaId);
+        if (updateError) {
+          console.error("update fallback error:", JSON.stringify(updateError));
+          // Last resort: plain insert
+          const { error: insertError } = await sb.from("platform_connections" as any).insert(payload);
+          if (insertError) console.error("insert error:", JSON.stringify(insertError));
+        }
       }
 
+      console.log("google-oauth: connection saved, ad_accounts:", ad_accounts.length);
       return new Response(JSON.stringify({ success: true, ad_accounts }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
 
