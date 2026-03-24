@@ -767,6 +767,7 @@ export type Database = {
           access_token: string
           ad_accounts: Json | null
           connected_at: string | null
+          connection_label: string | null
           created_at: string | null
           expires_at: string | null
           id: string
@@ -782,6 +783,7 @@ export type Database = {
           access_token: string
           ad_accounts?: Json | null
           connected_at?: string | null
+          connection_label?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
@@ -797,6 +799,7 @@ export type Database = {
           access_token?: string
           ad_accounts?: Json | null
           connected_at?: string | null
+          connection_label?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
