@@ -326,7 +326,7 @@ export default function DashboardLayout() {
         onOpenProfile={() => setProfileOpen(true)}
         savedPersonas={savedPersonas}
         selectedPersona={selectedPersona}
-        onSelectPersona={(p) => setSelectedPersona(p)}
+        onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
       />
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>

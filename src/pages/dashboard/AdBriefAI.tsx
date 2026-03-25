@@ -1013,7 +1013,7 @@ export default function AdBriefAI() {
           parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
-          parts.push(lang === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
+          parts.push((lang as string) === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
         }
         proactiveMsg = parts.join(" ");
 
