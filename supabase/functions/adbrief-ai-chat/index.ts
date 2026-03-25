@@ -11,7 +11,121 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, context, user_id, persona_id, history, user_language, user_prefs } = await req.json();
+    const body = await req.json();
+    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
+
+    // ── Panel Data mode — skip Claude, return structured ad data for LivePanel ──
+    if (panel_data && user_id && persona_id) {
+      const sbPanel = createClient(Deno.env.get("SUPABASE_URL")??"", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")??"");
+      const platforms: string[] = body.platforms || [];
+      const result: Record<string, any> = {};
+      const today = new Date().toISOString().split("T")[0];
+      const since = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+
+      // Meta Ads
+      if (platforms.includes("meta")) {
+        const { data: mc } = await sbPanel.from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("persona_id", persona_id).eq("platform", "meta").eq("status", "active").maybeSingle();
+        if (mc?.access_token) {
+          const token = mc.access_token;
+          const acc = (mc.ad_accounts||[]).find((a:any)=>a.id===mc.selected_account_id)||(mc.ad_accounts||[])[0];
+          if (acc) {
+            const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+            const [r1,r2,r3] = await Promise.allSettled([
+              fetch(`https://graph.facebook.com/v19.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v19.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v19.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
+            ]);
+            const ads   = r1.status==="fulfilled"?await r1.value.json():null;
+            const camps = r2.status==="fulfilled"?await r2.value.json():null;
+            const ts    = r3.status==="fulfilled"?await r3.value.json():null;
+            if (ads?.error?.code===190||camps?.error?.code===190) {
+              result.meta = { error: "token_expired", account_name: acc.name||acc.id };
+            } else {
+              const adsData: any[] = ads?.data||[];
+              const totalSpend = adsData.reduce((s:number,a:any)=>s+parseFloat(a.spend||0),0);
+              const totalImpr  = adsData.reduce((s:number,a:any)=>s+parseInt(a.impressions||0),0);
+              const totalClicks= adsData.reduce((s:number,a:any)=>s+parseInt(a.clicks||0),0);
+              const avgCTR = totalImpr>0?(totalClicks/totalImpr*100):0;
+              const avgCPM = totalImpr>0?(totalSpend/totalImpr*1000):0;
+              const avgFreq= adsData.length>0?adsData.reduce((s:number,a:any)=>s+parseFloat(a.frequency||0),0)/adsData.length:0;
+              const totalConv = adsData.reduce((s:number,a:any)=>{
+                const p=parseFloat(a.actions?.find((x:any)=>x.action_type==="purchase")?.value||0);
+                const l=parseFloat(a.actions?.find((x:any)=>x.action_type==="lead")?.value||0);
+                return s+p+l;
+              },0);
+              const enriched = adsData.map((a:any)=>{
+                const spend=parseFloat(a.spend||0),ctr=parseFloat(a.ctr||0)*100,freq=parseFloat(a.frequency||0);
+                const hookRate=()=>{const plays=a.video_play_actions?.find((x:any)=>x.action_type==="video_play")?.value;const impr=parseInt(a.impressions||0);return plays&&impr?parseFloat(plays)/impr*100:null;};
+                return {name:a.ad_name,campaign:a.campaign_name,spend,ctr,cpm:parseFloat(a.cpm||0),freq,hookRate:hookRate(),
+                  conv:parseFloat(a.actions?.find((x:any)=>x.action_type==="purchase")?.value||a.actions?.find((x:any)=>x.action_type==="lead")?.value||0),
+                  isRisk:freq>3.5||(ctr<0.5&&spend>20),isWinner:ctr>1.5&&freq<3&&spend>5};
+              }).sort((a:any,b:any)=>b.spend-a.spend);
+              result.meta = {
+                account_name: acc.name||acc.id, period: `${since} → ${today}`,
+                kpis: { spend:totalSpend.toFixed(2), ctr:avgCTR.toFixed(2), cpm:avgCPM.toFixed(2), frequency:avgFreq.toFixed(1), conversions:totalConv.toFixed(0), active_ads:adsData.length },
+                winners: enriched.filter((a:any)=>a.isWinner).slice(0,5),
+                at_risk:  enriched.filter((a:any)=>a.isRisk).slice(0,5),
+                top_ads:  enriched.slice(0,10),
+                campaigns: (camps?.data||[]).slice(0,10).map((c:any)=>({
+                  name:c.name, status:c.effective_status||c.status,
+                  budget:c.daily_budget?`R$${(parseInt(c.daily_budget)/100).toFixed(0)}/dia`:c.lifetime_budget?`R$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total`:"—",
+                  objective:c.objective
+                })),
+                time_series: (ts?.data||[]).filter((d:any)=>parseFloat(d.spend||0)>0).map((d:any)=>({
+                  date:d.date_start, spend:parseFloat(d.spend||0), ctr:parseFloat(d.ctr||0)*100, cpm:parseFloat(d.cpm||0)
+                })),
+              };
+            }
+          } else { result.meta = { error: "no_account_selected" }; }
+        } else { result.meta = { error: "not_connected" }; }
+      }
+
+      // Google Ads
+      if (platforms.includes("google")) {
+        const { data: gc } = await sbPanel.from("platform_connections" as any)
+          .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id")
+          .eq("user_id", user_id).eq("persona_id", persona_id).eq("platform", "google").eq("status", "active").maybeSingle();
+        if (gc?.access_token) {
+          let token = gc.access_token;
+          if (gc.expires_at && new Date(gc.expires_at)<new Date()) {
+            const rr = await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:Deno.env.get("GOOGLE_CLIENT_ID")??"",client_secret:Deno.env.get("GOOGLE_CLIENT_SECRET")??"",refresh_token:gc.refresh_token??"",grant_type:"refresh_token"})});
+            const rd = await rr.json();
+            if (rd.access_token) { token = rd.access_token; await sbPanel.from("platform_connections" as any).update({access_token:token,expires_at:new Date(Date.now()+(rd.expires_in||3600)*1000).toISOString()}).eq("user_id",user_id).eq("persona_id",persona_id).eq("platform","google"); }
+          }
+          const acc = (gc.ad_accounts||[]).find((a:any)=>a.id===gc.selected_account_id)||(gc.ad_accounts||[])[0];
+          if (acc) {
+            const custId = acc.id.replace(/-/g,"");
+            const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??"","login-customer-id":custId};
+            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v17/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
+            const [cr,ar,tr] = await Promise.allSettled([
+              gq(`SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
+              gq(`SELECT ad_group_ad.ad.name,ad_group_ad.ad.type,campaign.name,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
+              gq(`SELECT segments.date,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC LIMIT 14`),
+            ]);
+            const parse=(r:any)=>r.status==="fulfilled"?(r.value?.results||[]):[];
+            const gcs=parse(cr),gas=parse(ar),gts=parse(tr);
+            const totSpend=gcs.reduce((s:number,r:any)=>s+((r.metrics?.costMicros||0)/1e6),0);
+            const totConv=gcs.reduce((s:number,r:any)=>s+(r.metrics?.conversions||0),0);
+            const totClk=gcs.reduce((s:number,r:any)=>s+(r.metrics?.clicks||0),0);
+            const totImpr=gcs.reduce((s:number,r:any)=>s+(r.metrics?.impressions||0),0);
+            result.google = {
+              account_name:acc.name||custId, period:`${since} → ${today}`,
+              kpis:{spend:totSpend.toFixed(2),ctr:totImpr>0?(totClk/totImpr*100).toFixed(2):"0",cpc:totClk>0?(totSpend/totClk).toFixed(2):"0",conversions:totConv.toFixed(0),impressions:totImpr.toLocaleString(),active_campaigns:gcs.length},
+              campaigns:gcs.slice(0,10).map((r:any)=>({name:r.campaign?.name||"—",status:r.campaign?.status||"—",spend:((r.metrics?.costMicros||0)/1e6).toFixed(2),ctr:((r.metrics?.ctr||0)*100).toFixed(2),conversions:(r.metrics?.conversions||0).toFixed(1)})),
+              top_ads:gas.slice(0,10).map((r:any)=>({name:r.adGroupAd?.ad?.name||"Ad",campaign:r.campaign?.name||"—",spend:((r.metrics?.costMicros||0)/1e6).toFixed(2),ctr:((r.metrics?.ctr||0)*100).toFixed(2),conversions:(r.metrics?.conversions||0).toFixed(1)})),
+              time_series:gts.map((r:any)=>({date:r.segments?.date,spend:(r.metrics?.costMicros||0)/1e6,ctr:(r.metrics?.ctr||0)*100})).filter((d:any)=>d.spend>0),
+            };
+          } else { result.google = { error: "no_account_selected" }; }
+        } else { result.google = { error: "not_connected" }; }
+      }
+
+      return new Response(JSON.stringify({ success: true, data: result }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    // ── End panel_data mode ──────────────────────────────────────────────────
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {

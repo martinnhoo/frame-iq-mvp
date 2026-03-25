@@ -814,8 +814,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     if(!user?.id||!selectedPersona?.id) return;
     setLoading(true); setErr(null);
     try {
-      const { data: res, error: e } = await (supabase.functions.invoke as any)("live-panel", {
-        body: { user_id: user.id, persona_id: selectedPersona.id, platforms: connections }
+      const { data: res, error: e } = await (supabase.functions.invoke as any)("adbrief-ai-chat", {
+        body: { panel_data: true, user_id: user.id, persona_id: selectedPersona.id, platforms: connections }
       });
       if(e) throw new Error(e.message||"Erro");
       if(res?.success) { setPanelData(res.data); setStamp(new Date()); }
@@ -1009,9 +1009,31 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </div>
         )}
 
+        {/* No account selected */}
+        {pd?.error==="no_account_selected"&&(
+          <div style={{padding:"10px 14px",borderRadius:10,
+            background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)"}}>
+            <span style={{...J,fontSize:12,color:"rgba(255,255,255,0.35)"}}>
+              Nenhuma conta selecionada. <a href="/dashboard/accounts" style={{color:"#0ea5e9"}}>Configure em Contas →</a>
+            </span>
+          </div>
+        )}
+
         {/* Data */}
         {pd&&!pd.error&&!err&&(
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+            {/* Empty state — connected but no campaigns */}
+            {parseInt(k.active_ads||k.active_campaigns||"0")===0&&(pd.top_ads||[]).length===0&&(pd.campaigns||[]).length===0&&(
+              <div style={{padding:"16px 0 4px",textAlign:"center"}}>
+                <p style={{...J,fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.5)",margin:"0 0 4px"}}>
+                  Sem campanhas ativas no período
+                </p>
+                <p style={{...M,fontSize:11,color:"rgba(255,255,255,0.2)",margin:0}}>
+                  Conectado a {pd.account_name||"sua conta"} · {pd.period||"últimos 14 dias"}
+                </p>
+              </div>
+            )}
 
             {/* Alerts */}
             {alerts.length>0&&(
