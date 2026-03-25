@@ -465,29 +465,37 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
   // ── WARNING block ──
   if(block.type==="warning") return(
-    <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
-      <span style={{fontSize:14,flexShrink:0,marginTop:1}}>⚠️</span>
-      <p style={{...m,fontSize:15,color:"rgba(251,191,36,0.88)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+    <div style={{marginBottom:8,padding:"11px 14px",borderRadius:10,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.18)",display:"flex",gap:10,alignItems:"flex-start",boxShadow:"inset 2px 0 0 rgba(251,191,36,0.4)"}}>
+      <span style={{fontSize:13,flexShrink:0,marginTop:1}}>⚠️</span>
+      <p style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(251,191,36,0.9)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
     </div>
   );
 
   // ── HOOKS block — numbered list with copy/script buttons ──
   if(block.type==="hooks") return(
     <div style={{marginBottom:8}}>
-      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{display:"flex",flexDirection:"column",gap:5}}>
         {block.items?.map((item,i)=>(
-          <div key={i} style={{display:"flex",gap:12,padding:"11px 14px",borderRadius:10,background:"rgba(6,182,212,0.04)",border:"1px solid rgba(6,182,212,0.1)",alignItems:"flex-start",transition:"border-color 0.15s"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.2)";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.1)";}}>
-            <span style={{...m,fontSize:11,fontWeight:700,color:"rgba(6,182,212,0.5)",marginTop:2,flexShrink:0,width:16,textAlign:"right"}}>{i+1}</span>
-            <span style={{...m,fontSize:15,color:"rgba(255,255,255,0.85)",lineHeight:1.6,flex:1}}>{item}</span>
-            <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
+          <div key={i}
+            style={{display:"flex",gap:0,borderRadius:12,background:"rgba(6,182,212,0.04)",border:"1px solid rgba(6,182,212,0.12)",alignItems:"stretch",overflow:"hidden",transition:"border-color 0.15s,background 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.25)";(e.currentTarget as HTMLElement).style.background="rgba(6,182,212,0.07)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.12)";(e.currentTarget as HTMLElement).style.background="rgba(6,182,212,0.04)";}}>
+            {/* Number gutter */}
+            <div style={{width:36,flexShrink:0,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:13,borderRight:"1px solid rgba(6,182,212,0.10)"}}>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,fontWeight:700,color:"rgba(6,182,212,0.45)"}}>{i+1}</span>
+            </div>
+            {/* Content */}
+            <div style={{flex:1,padding:"11px 13px",minWidth:0}}>
+              <span style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(255,255,255,0.88)",lineHeight:1.65,display:"block"}}>{item}</span>
+            </div>
+            {/* Actions */}
+            <div style={{display:"flex",flexDirection:"column",gap:4,padding:"10px 10px",flexShrink:0,justifyContent:"center"}}>
               <button onClick={()=>copyItem(item,i)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.3)",...m,transition:"all 0.12s"}}>
+                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:copiedIdx===i?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${copiedIdx===i?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.08)"}`,cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",transition:"all 0.12s",whiteSpace:"nowrap" as const}}>
                 <Copy size={9}/>{copiedIdx===i?"✓":(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
               </button>
               <button onClick={()=>useAsScript(item)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(6,182,212,0.08)",border:"1px solid rgba(6,182,212,0.15)",cursor:"pointer",fontSize:10,color:"rgba(6,182,212,0.8)",...m,transition:"all 0.12s"}}>
+                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:"rgba(6,182,212,0.08)",border:"1px solid rgba(6,182,212,0.18)",cursor:"pointer",fontSize:10,color:"rgba(6,182,212,0.85)",fontFamily:"'Inter',sans-serif",transition:"all 0.12s",whiteSpace:"nowrap" as const}}>
                 {lang==="pt"?"→ Roteiro":lang==="es"?"→ Guión":"→ Script"}
               </button>
             </div>
@@ -499,9 +507,9 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
   // ── ACTION block — compact success state ──
   if(block.type==="action") return(
-    <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
-      <span style={{fontSize:14,flexShrink:0,marginTop:1}}>✅</span>
-      <p style={{...m,fontSize:15,color:"rgba(52,211,153,0.88)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+    <div style={{marginBottom:8,padding:"11px 14px",borderRadius:10,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.18)",display:"flex",gap:10,alignItems:"flex-start",boxShadow:"inset 2px 0 0 rgba(52,211,153,0.4)"}}>
+      <span style={{fontSize:13,flexShrink:0,marginTop:1}}>✅</span>
+      <p style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(52,211,153,0.9)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
     </div>
   );
 
@@ -510,16 +518,16 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   const hasItems = block.items && block.items.length > 0;
 
   return(
-    <div style={{marginBottom:hasItems?8:4}}>
+    <div style={{marginBottom:hasItems?10:4}}>
       {block.content&&(
-        <p style={{...m,fontSize:15,color:"rgba(238,240,246,0.82)",lineHeight:1.7,margin:hasItems?"0 0 10px":"0"}}>{block.content}</p>
+        <p style={{fontFamily:"'Inter',sans-serif",fontSize:14.5,color:"rgba(238,240,246,0.88)",lineHeight:1.75,margin:hasItems?"0 0 12px":"0",letterSpacing:"-0.01em"}}>{block.content}</p>
       )}
       {hasItems&&(
-        <div style={{display:"flex",flexDirection:"column",gap:5,marginTop:block.content?6:0}}>
+        <div style={{display:"flex",flexDirection:"column",gap:6,marginTop:block.content?4:0}}>
           {block.items!.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-              <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:3,flexShrink:0}}>•</span>
-              <span style={{...m,fontSize:13,color:"rgba(238,240,246,0.72)",lineHeight:1.65,flex:1}}>{item}</span>
+            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"7px 10px",borderRadius:8,background:"rgba(255,255,255,0.03)"}}>
+              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(14,165,233,0.5)",marginTop:3,flexShrink:0,fontWeight:600}}>{String(i+1).padStart(2,"0")}</span>
+              <span style={{fontFamily:"'Inter',sans-serif",fontSize:13.5,color:"rgba(238,240,246,0.78)",lineHeight:1.65,flex:1}}>{item}</span>
             </div>
           ))}
         </div>
@@ -586,7 +594,7 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
       )}
 
       {/* Message body */}
-      <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(238,240,246,0.72)", lineHeight: 1.72, margin: "0 0 14px" }}>
+      <p style={{ fontFamily: M, fontSize: 14, color: "rgba(238,240,246,0.80)", lineHeight: 1.75, margin: "0 0 16px", letterSpacing: "-0.01em" }}>
         {/* Strip spend/CTR from content since we showed them as cards */}
         {hasRealData
           ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
@@ -597,9 +605,9 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
       <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
         {actions.map((label, i) => (
           <button key={i} onClick={() => onSend(label)}
-            style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.50)", transition: "all 0.13s", whiteSpace: "nowrap" as const }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.07)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.20)"; e.currentTarget.style.color = "#eef0f6"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(238,240,246,0.50)"; }}>
+            style={{ padding: "6px 14px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.45)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.09)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "rgba(238,240,246,0.9)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.45)"; }}>
             {label}
           </button>
         ))}
@@ -1506,7 +1514,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"16px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -1635,10 +1643,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px"}}>
+          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 20px",padding:"0 20px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end"}}>
-                <div style={{padding:"10px 16px",borderRadius:"16px 16px 4px 16px",background:"rgba(255,255,255,0.07)",fontSize:15,color:"rgba(255,255,255,0.9)",...m,maxWidth:"82%",lineHeight:1.6,boxShadow:"none"}}>
+                <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.09)",border:"1px solid rgba(255,255,255,0.10)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,maxWidth:"78%",lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
                   {msg.userText}
                 </div>
               </div>
@@ -1646,9 +1654,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div>
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                    <ABAvatar size={24} />
-                    <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",fontWeight:500,letterSpacing:"0.02em"}}>AdBrief</span>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                    <ABAvatar size={26} />
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",letterSpacing:"0.06em",textTransform:"uppercase" as const}}>AdBrief</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -1673,22 +1681,31 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                <div style={{display:"flex",alignItems:"center",gap:5,marginTop:5}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:2}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.10)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
-                    <ThumbsUp size={11}/>
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
+                    onMouseEnter={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
+                    onMouseLeave={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
+                    <ThumbsUp size={10}/>
                   </button>
                   <button onClick={()=>handleFeedback(msg.id,"dislike",msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:26,height:24,borderRadius:6,background:feedback[msg.id]==="dislike"?"rgba(248,113,113,0.1)":"transparent",border:`1px solid ${feedback[msg.id]==="dislike"?"rgba(248,113,113,0.3)":"rgba(255,255,255,0.10)"}`,cursor:"pointer",color:feedback[msg.id]==="dislike"?"#f87171":"rgba(255,255,255,0.35)",transition:"all 0.12s"}}>
-                    <ThumbsDown size={11}/>
+                    style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="dislike"?"rgba(248,113,113,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="dislike"?"rgba(248,113,113,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="dislike"?"#f87171":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
+                    onMouseEnter={e=>{if(feedback[msg.id]!=="dislike")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
+                    onMouseLeave={e=>{if(feedback[msg.id]!=="dislike")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
+                    <ThumbsDown size={10}/>
                   </button>
+                  <div style={{width:1,height:14,background:"rgba(255,255,255,0.07)",margin:"0 2px"}}/>
                   <button onClick={()=>handleCopy(msg.id,msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",gap:4,height:24,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.35)",fontSize:10,...m,transition:"all 0.12s"}}>
-                    <Copy size={10}/>{copiedId===msg.id?"✓":"Copy"}
+                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:copiedId===msg.id?"#34d399":"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
+                    <Copy size={9}/>{copiedId===msg.id?"✓":"Copy"}
                   </button>
                   <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
-                    style={{display:"flex",alignItems:"center",gap:4,height:24,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.35)",fontSize:10,...m,transition:"all 0.12s"}}>
-                    <RefreshCw size={10}/>Retry
+                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
+                    <RefreshCw size={9}/>Retry
                   </button>
                 </div>
                 )}
@@ -1713,8 +1730,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 0 12px",flexShrink:0}}>
-        <div style={{maxWidth:720,margin:"0 auto",padding:"0 16px",borderTop:"1px solid rgba(255,255,255,0.07)",paddingTop:10}}>
+      <div style={{padding:"8px 0 14px",flexShrink:0}}>
+        <div style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
           {/* Input row: [textarea] [clear] [send] */}
           <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
