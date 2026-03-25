@@ -825,7 +825,7 @@ export default function AdBriefAI() {
     const pid=selectedPersona?.id||null;
     (async()=>{
       const[analysesRes,patternsRes,personaRes,entriesRes,snapRes]=await Promise.all([
-        (pid ? supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id" as any,pid) : supabase.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id" as any,null)).order("created_at",{ascending:false}).limit(50),
+        (pid ? (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id",pid) : (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id",null)).order("created_at",{ascending:false}).limit(50),
         (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text").eq("user_id",user.id).order("confidence",{ascending:false}).limit(50),
         supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
         (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).order("ctr",{ascending:false}).limit(500),
@@ -1013,7 +1013,7 @@ export default function AdBriefAI() {
           parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
-          parts.push(lang === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
+          parts.push((lang as string) === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
         }
         proactiveMsg = parts.join(" ");
 
@@ -1042,15 +1042,15 @@ export default function AdBriefAI() {
           if (histSpend) {
             proactiveMsg = `No active campaigns this week for ${accountName || "this account"}, but I have your history: $${snapshot?.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${pausedCount ? `, ${pausedCount} underperformers flagged` : ""}. Want to launch something new or review what worked?`;
           } else if (platforms.length > 0) {
-            proactiveMsg = lang === "pt"
+            proactiveMsg = (lang as string) === "pt"
               ? `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "essa conta"}. Sem dados de campanha ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`
-              : lang === "es"
+              : (lang as string) === "es"
               ? `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "esta cuenta"}. Sin datos de campaña aún — ¿genero hooks, escribo un guión o hago preflight?`
               : `${platformStr} connected for ${accountName || "this account"}. No campaign data yet — want to generate hooks, write a script, or preflight a creative?`;
           } else {
-            proactiveMsg = lang === "pt"
+            proactiveMsg = (lang as string) === "pt"
               ? `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads ou Google Ads.`
-              : lang === "es"
+              : (lang as string) === "es"
               ? `${accountName ? `${accountName} cargada.` : "Cuenta cargada."} Sin plataformas conectadas — ve a Cuentas para conectar Meta Ads o Google Ads.`
               : `${accountName ? `${accountName} loaded.` : "Account loaded."} No ad platforms connected yet — go to Accounts to connect Meta Ads or Google Ads.`;
           }

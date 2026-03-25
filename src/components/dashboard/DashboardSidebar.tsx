@@ -22,7 +22,8 @@ interface Profile {
   plan: string | null; [key: string]: unknown;
 }
 interface ActivePersona {
-  id: string; name: string; logo_url: string | null; website?: string | null; description?: string | null;
+  id: string; name: string; logo_url?: string | null; website?: string | null; description?: string | null;
+  [key: string]: unknown;
 }
 interface SidebarProps {
   user: SupaUser | null; profile: Profile | null;
