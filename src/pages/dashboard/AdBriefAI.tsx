@@ -698,455 +698,463 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
     </>
   );
 }
-// ─── Live Panel v3 ────────────────────────────────────────────────────────────
-// Design: barra compacta no topo que expande / colapsa com 1 clique
+// ─── Live Panel v4 ────────────────────────────────────────────────────────────
+// Design: editorial dark, Geist + Inter, Linear/Vercel-inspired
+// Fontes carregadas via @import no style tag abaixo
 
-function Spark({ d, c="#3b82f6", w=60, h=22 }: { d:number[]; c?:string; w?:number; h?:number }) {
+const LP_STYLE = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  .lp-root * { box-sizing: border-box; }
+  .lp-kpi:hover { background: rgba(255,255,255,0.045) !important; }
+  .lp-row:hover { background: rgba(255,255,255,0.04) !important; }
+  .lp-action:hover { background: rgba(99,102,241,0.12) !important; border-color: rgba(99,102,241,0.3) !important; color: #a5b4fc !important; }
+  .lp-alert:hover { opacity: 0.78; }
+  .lp-collapse:hover { color: rgba(255,255,255,0.6) !important; }
+  .lp-tab:hover { color: rgba(255,255,255,0.7) !important; }
+  @keyframes lp-breathe { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+  @keyframes lp-spin { to{transform:rotate(360deg)} }
+  @keyframes lp-fade { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes lp-skel { 0%,100%{opacity:0.25} 50%{opacity:0.55} }
+`;
+
+// Font stacks
+const GD = { fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" };
+const MO = { fontFamily: "'SF Mono', 'Fira Code', 'Fira Mono', monospace" };
+
+// ── Micro sparkline ──────────────────────────────────────────────────────────
+function Spark({ d, color = "#6366f1", w = 56, h = 24 }: { d: number[]; color?: string; w?: number; h?: number }) {
   if (!d || d.length < 2) return null;
   const mn = Math.min(...d), mx = Math.max(...d), r = mx - mn || 1;
-  const pts = d.map((v,i) => `${(i/(d.length-1))*w},${h-2-((v-mn)/r)*(h-4)}`).join(" ");
-  const up = d[d.length-1] >= d[d.length-2];
+  const pts = d.map((v, i) => `${(i / (d.length - 1)) * w},${h - 2 - ((v - mn) / r) * (h - 4)}`).join(" ");
+  const lx = w, ly = h - 2 - ((d[d.length - 1] - mn) / r) * (h - 4);
+  const up = d[d.length - 1] >= d[d.length - 2];
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{display:"block",overflow:"visible"}}>
-      <polyline points={pts} fill="none" stroke={c} strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" opacity="0.8"/>
-      <circle cx={(d.length-1)/(d.length-1)*w} cy={h-2-((d[d.length-1]-mn)/r)*(h-4)} r="2" fill={up?"#34d399":"#f87171"}/>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block", overflow: "visible", flexShrink: 0 }}>
+      <defs>
+        <linearGradient id={`lp-g-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#lp-g-${color.replace("#", "")})`} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={lx} cy={ly} r="2.5" fill={up ? "#34d399" : "#fb7185"} style={{ filter: `drop-shadow(0 0 3px ${up ? "#34d399" : "#fb7185"})` }} />
     </svg>
   );
 }
 
-function Kpi({ label, val, sub, warn, spark, sparkColor }: {
-  label:string; val:string; sub?:string; warn?:boolean; spark?:number[]; sparkColor?:string;
+// ── KPI card ─────────────────────────────────────────────────────────────────
+function Stat({ label, value, sub, trend, spark, color = "#6366f1", warn = false }: {
+  label: string; value: string; sub?: string; trend?: "up" | "down" | "flat";
+  spark?: number[]; color?: string; warn?: boolean;
 }) {
+  const accent = warn ? "#fb7185" : color;
+  const valColor = warn ? "#fb7185" : "#f1f5f9";
+  const subColor = warn ? "#fb7185" : trend === "up" ? "#34d399" : trend === "down" ? "#fb7185" : "#64748b";
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,minWidth:0,
-      padding:"12px 14px", background: warn?"rgba(248,113,113,0.06)":"rgba(255,255,255,0.03)",
-      border:`1px solid ${warn?"rgba(248,113,113,0.18)":"rgba(255,255,255,0.07)"}`,borderRadius:11}}>
-      <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:600,
-        color:"rgba(255,255,255,0.28)",letterSpacing:"0.1em",textTransform:"uppercase"}}>{label}</span>
-      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:6}}>
-        <div>
-          <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:19,fontWeight:900,
-            letterSpacing:"-0.04em",lineHeight:1,color:warn?"#f87171":"#fff"}}>{val}</div>
-          {sub && <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,marginTop:5,
-            color:warn?"#f87171":"rgba(255,255,255,0.3)"}}>{sub}</div>}
+    <div className="lp-kpi" style={{
+      flex: 1, minWidth: 0, padding: "14px 16px",
+      background: warn ? "rgba(251,113,133,0.04)" : "rgba(255,255,255,0.02)",
+      border: `1px solid ${warn ? "rgba(251,113,133,0.15)" : "rgba(255,255,255,0.06)"}`,
+      borderRadius: 12, display: "flex", flexDirection: "column", gap: 12,
+      transition: "background 0.15s, border-color 0.15s", cursor: "default",
+    }}>
+      <span style={{ ...GD, fontSize: 10, fontWeight: 500, color: "#475569", letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ ...GD, fontSize: 22, fontWeight: 600, color: valColor, letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</div>
+          {sub && <div style={{ ...GD, fontSize: 11, fontWeight: 400, color: subColor, marginTop: 5, display: "flex", alignItems: "center", gap: 3 }}>
+            {trend === "up" && <span style={{ fontSize: 9 }}>↑</span>}
+            {trend === "down" && <span style={{ fontSize: 9 }}>↓</span>}
+            {sub}
+          </div>}
         </div>
-        {spark && <Spark d={spark} c={sparkColor||"#3b82f6"} />}
+        {spark && spark.length >= 2 && <Spark d={spark} color={accent} />}
       </div>
     </div>
   );
 }
 
-function Creative({ a, kind, ask }: { a:any; kind:"winner"|"risk"|"normal"; ask:(q:string)=>void }) {
-  const isW=kind==="winner", isR=kind==="risk";
-  const dot = isW?"#34d399":isR?"#f87171":"rgba(255,255,255,0.2)";
-  const bg  = isW?"rgba(52,211,153,0.06)":isR?"rgba(248,113,113,0.05)":"rgba(255,255,255,0.02)";
-  const br  = isW?"rgba(52,211,153,0.14)":isR?"rgba(248,113,113,0.12)":"rgba(255,255,255,0.05)";
-  const ctr = parseFloat(a.ctr||0).toFixed(2);
-  const fr  = a.freq!=null?parseFloat(a.freq).toFixed(1):null;
-  const sp  = parseFloat(a.spend||0).toFixed(0);
+// ── Creative row ─────────────────────────────────────────────────────────────
+function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; ask: (q: string) => void }) {
+  const isW = kind === "winner", isR = kind === "risk";
+  const dot = isW ? "#34d399" : isR ? "#fb7185" : "#334155";
+  const ctr = parseFloat(a.ctr || 0).toFixed(2);
+  const fr = a.freq != null ? parseFloat(a.freq).toFixed(1) : null;
+  const sp = parseFloat(a.spend || 0).toFixed(0);
   return (
-    <div onClick={()=>ask(`Me explica o criativo "${a.name}" — por que está ${isW?"performando bem":isR?"em risco":"assim"}?`)}
-      style={{display:"flex",alignItems:"center",gap:9,padding:"7px 10px",borderRadius:9,
-        background:bg,border:`1px solid ${br}`,cursor:"pointer",transition:"opacity 0.15s"}}
-      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.75";}}
-      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";}}>
-      <span style={{width:6,height:6,borderRadius:"50%",background:dot,flexShrink:0,
-        boxShadow:isW?"0 0 6px #34d399":isR?"0 0 6px #f87171":"none"}}/>
-      <div style={{flex:1,minWidth:0}}>
-        <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,fontWeight:600,
-          color:"rgba(255,255,255,0.82)",margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.name||"—"}</p>
-        {a.campaign&&<p style={{fontFamily:"'DM Mono',monospace",fontSize:9,
-          color:"rgba(255,255,255,0.22)",margin:"2px 0 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.campaign}</p>}
+    <div className="lp-row" onClick={() => ask(`Me explica o criativo "${a.name}" — está ${isW ? "ganhando" : isR ? "em risco" : "assim"} por quê?`)}
+      style={{
+        display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
+        borderRadius: 8, cursor: "pointer", transition: "background 0.12s",
+        background: isW ? "rgba(52,211,153,0.04)" : isR ? "rgba(251,113,133,0.04)" : "transparent",
+        border: `1px solid ${isW ? "rgba(52,211,153,0.1)" : isR ? "rgba(251,113,133,0.1)" : "rgba(255,255,255,0.04)"}`,
+      }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0, boxShadow: isW ? "0 0 6px #34d399" : isR ? "0 0 6px #fb7185" : "none" }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ ...GD, fontSize: 12, fontWeight: 500, color: "#cbd5e1", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || "—"}</p>
+        {a.campaign && <p style={{ ...GD, fontSize: 10, fontWeight: 400, color: "#334155", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
-      <div style={{display:"flex",gap:7,flexShrink:0,fontFamily:"'DM Mono',monospace",fontSize:10}}>
-        <span style={{color:parseFloat(ctr)>1.5?"#34d399":parseFloat(ctr)<0.5?"#f87171":"rgba(255,255,255,0.35)"}}>{ctr}%</span>
-        {fr&&<span style={{color:parseFloat(fr)>3.5?"#f87171":"rgba(255,255,255,0.22)"}}>f{fr}</span>}
-        <span style={{color:"rgba(255,255,255,0.38)"}}>R${sp}</span>
+      <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "center" }}>
+        <span style={{ ...MO, fontSize: 11, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#64748b" }}>{ctr}%</span>
+        {fr && <span style={{ ...MO, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "#334155" }}>f{fr}</span>}
+        <span style={{ ...MO, fontSize: 11, color: "#475569" }}>R${sp}</span>
       </div>
     </div>
   );
 }
 
-function Camp({ c }: { c:any }) {
-  const on = c.status==="ACTIVE"||c.status==="ENABLED";
+// ── Campaign row ─────────────────────────────────────────────────────────────
+function CampRow({ c }: { c: any }) {
+  const on = c.status === "ACTIVE" || c.status === "ENABLED";
   return (
-    <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderRadius:8,
-      background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)"}}>
-      <span style={{width:5,height:5,borderRadius:"50%",flexShrink:0,
-        background:on?"#34d399":"rgba(255,255,255,0.12)"}}/>
-      <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,
-        color:on?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)",
-        flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</span>
-      {c.budget&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.28)",flexShrink:0}}>{c.budget}</span>}
-      {c.ctr&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,flexShrink:0,
-        color:parseFloat(c.ctr)>1.5?"#34d399":"rgba(255,255,255,0.28)"}}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "#1e293b", flexShrink: 0, boxShadow: on ? "0 0 4px #34d399" : "none" }} />
+      <span style={{ ...GD, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "#334155", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+      {c.budget && <span style={{ ...MO, fontSize: 10, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
+      {c.ctr && <span style={{ ...MO, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "#475569", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
 
-function smartAlerts(d:any) {
-  if(!d||d.error) return [];
-  const k=d.kpis||{}, W=d.winners||[], R=d.at_risk||[];
-  const fr=parseFloat(k.frequency||0), ctr=parseFloat(k.ctr||0), sp=parseFloat(k.spend||0);
-  const out:Array<{t:"warn"|"ok"|"info";title:string;detail:string;q:string}>=[];
-  if(fr>3.5) out.push({t:"warn",title:"Frequência crítica",detail:`${fr.toFixed(1)}x — risco de fadiga`,q:"Minha frequência está alta demais. O que fazer agora?"});
-  if(ctr<0.5&&sp>50) out.push({t:"warn",title:"CTR abaixo do esperado",detail:`${ctr.toFixed(2)}% — revise os hooks`,q:"Por que meu CTR está baixo? Quais criativos estão puxando para baixo?"});
-  if(R.length>0) out.push({t:"warn",title:`${R.length} criativo${R.length>1?"s":""} em risco`,detail:"Fadiga detectada",q:"Quais criativos devo pausar agora e por quê?"});
-  if(W.length>0) out.push({t:"ok",title:`${W.length} criativo${W.length>1?"s":""} pra escalar`,detail:"CTR alto + freq baixa",q:"Quais criativos posso escalar agora e como?"});
-  if(out.length===0&&ctr>1.5&&fr<2.5) out.push({t:"ok",title:"Conta saudável",detail:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x`,q:"Minha conta está bem. Como aproveitar esse momento para crescer?"});
+// ── Section label ────────────────────────────────────────────────────────────
+function SLabel({ children, color = "#475569" }: { children: React.ReactNode; color?: string }) {
+  return <p style={{ ...GD, fontSize: 10, fontWeight: 600, color, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 6 }}>{children}</p>;
+}
+
+// ── Alert banner ─────────────────────────────────────────────────────────────
+function Alerts({ items, ask }: { items: Array<{ t: "warn" | "ok" | "info"; title: string; detail: string; q: string }>; ask: (q: string) => void }) {
+  if (!items.length) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {items.map((a, i) => {
+        const c = a.t === "warn"
+          ? { bg: "rgba(251,113,133,0.05)", br: "rgba(251,113,133,0.15)", dot: "#fb7185", tx: "#fb7185" }
+          : a.t === "ok"
+          ? { bg: "rgba(52,211,153,0.05)", br: "rgba(52,211,153,0.12)", dot: "#34d399", tx: "#34d399" }
+          : { bg: "rgba(99,102,241,0.05)", br: "rgba(99,102,241,0.15)", dot: "#818cf8", tx: "#818cf8" };
+        return (
+          <div key={i} className="lp-alert" onClick={() => ask(a.q)} style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
+            borderRadius: 10, cursor: "pointer", background: c.bg, border: `1px solid ${c.br}`,
+            transition: "opacity 0.12s", animation: "lp-fade 0.2s ease",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}`, flexShrink: 0 }} />
+            <span style={{ ...GD, fontSize: 12, fontWeight: 600, color: c.tx }}>{a.title}</span>
+            <span style={{ ...GD, fontSize: 12, fontWeight: 400, color: "#475569" }}>·</span>
+            <span style={{ ...GD, fontSize: 12, fontWeight: 400, color: "#64748b", flex: 1 }}>{a.detail}</span>
+            <span style={{ ...GD, fontSize: 10, color: "#334155", flexShrink: 0 }}>perguntar →</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Smart alert generator ─────────────────────────────────────────────────────
+function mkAlerts(d: any) {
+  if (!d || d.error) return [];
+  const k = d.kpis || {}, W = d.winners || [], R = d.at_risk || [];
+  const fr = parseFloat(k.frequency || 0), ctr = parseFloat(k.ctr || 0), sp = parseFloat(k.spend || 0);
+  const out: Array<{ t: "warn" | "ok" | "info"; title: string; detail: string; q: string }> = [];
+  if (fr > 3.5) out.push({ t: "warn", title: "Frequência crítica", detail: `${fr.toFixed(1)}x — fadiga se aproximando`, q: "Minha frequência está alta. O que devo fazer agora?" });
+  if (ctr < 0.5 && sp > 50) out.push({ t: "warn", title: "CTR abaixo do esperado", detail: `${ctr.toFixed(2)}% — hooks precisam de revisão`, q: "Por que meu CTR está baixo? Quais criativos estão puxando para baixo?" });
+  if (R.length > 0) out.push({ t: "warn", title: `${R.length} criativo${R.length > 1 ? "s" : ""} em risco`, detail: "Fadiga detectada — pausa recomendada", q: "Quais criativos devo pausar agora e por quê?" });
+  if (W.length > 0) out.push({ t: "ok", title: `${W.length} criativo${W.length > 1 ? "s" : ""} prontos para escalar`, detail: "CTR alto · freq baixa · janela aberta", q: "Quais criativos posso escalar agora e como faço isso?" });
+  if (!out.length && ctr > 1.5 && fr < 2.5) out.push({ t: "ok", title: "Conta saudável", detail: `CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x`, q: "Minha conta está bem. Como aproveitar esse momento para crescer?" });
   return out;
 }
 
+// ── Main LivePanel ────────────────────────────────────────────────────────────
 function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
-  user:any; selectedPersona:any; connections:string[]; lang:string; onSend:(m:string)=>void;
+  user: any; selectedPersona: any; connections: string[]; lang: string; onSend: (m: string) => void;
 }) {
-  const [panelData, setPanelData] = React.useState<any>(null);
-  const [loading,   setLoading]   = React.useState(false);
-  const [err,       setErr]       = React.useState<string|null>(null);
-  const [open,      setOpen]      = React.useState(true); // expanded by default
-  const [tab,       setTab]       = React.useState<"meta"|"google">(connections.includes("meta")?"meta":"google");
-  const [stamp,     setStamp]     = React.useState<Date|null>(null);
+  const [pd, setPd]         = React.useState<any>(null);
+  const [busy, setBusy]     = React.useState(false);
+  const [fail, setFail]     = React.useState<string | null>(null);
+  const [open, setOpen]     = React.useState(true);
+  const [tab, setTab]       = React.useState<"meta" | "google">(connections.includes("meta") ? "meta" : "google");
+  const [ts, setTs]         = React.useState<Date | null>(null);
 
-  const hasMeta   = connections.includes("meta");
+  const hasMeta = connections.includes("meta");
   const hasGoogle = connections.includes("google");
 
   const load = React.useCallback(async () => {
-    if(!user?.id||!selectedPersona?.id) return;
-    setLoading(true); setErr(null);
+    if (!user?.id || !selectedPersona?.id) return;
+    setBusy(true); setFail(null);
     try {
-      const { data: res, error: e } = await (supabase.functions.invoke as any)("adbrief-ai-chat", {
+      const { data: r, error: e } = await (supabase.functions.invoke as any)("adbrief-ai-chat", {
         body: { panel_data: true, user_id: user.id, persona_id: selectedPersona.id, platforms: connections }
       });
-      if(e) throw new Error(e.message||"Erro");
-      if(res?.success) { setPanelData(res.data); setStamp(new Date()); }
-      else throw new Error(res?.error||"Resposta inválida");
-    } catch(e:any) { setErr(e.message||"Falha na conexão"); }
-    finally { setLoading(false); }
+      if (e) throw new Error(e.message || "Erro");
+      if (r?.success) { setPd(r.data); setTs(new Date()); }
+      else throw new Error(r?.error || "Resposta inválida");
+    } catch (e: any) { setFail(e.message || "Falha"); }
+    finally { setBusy(false); }
   }, [user?.id, selectedPersona?.id, connections.join(",")]);
 
   React.useEffect(() => { load(); }, [load]);
 
-  const J = {fontFamily:"'Plus Jakarta Sans',sans-serif"};
-  const M = {fontFamily:"'DM Mono',monospace"};
+  const data = pd?.[tab];
+  const k = data?.kpis || {};
+  const spS = (data?.time_series || []).map((d: any) => d.spend);
+  const cS  = (data?.time_series || []).map((d: any) => d.ctr);
+  const sTr = spS.length >= 2 ? (spS[spS.length - 1] > spS[0] ? "up" : "down") as "up" | "down" : "flat";
+  const cTr = cS.length   >= 2 ? (cS[cS.length - 1]   > cS[0]   ? "up" : "down") as "up" | "down" : "flat";
+  const alerts = tab === "meta" ? mkAlerts(data) : [];
+  const isEmpty = data && !data.error && parseInt(k.active_ads || k.active_campaigns || "0") === 0 && !(data.top_ads?.length) && !(data.campaigns?.length);
 
-  const pd  = panelData?.[tab];
-  const k   = pd?.kpis||{};
-  const spS = (pd?.time_series||[]).map((d:any)=>d.spend);
-  const cS  = (pd?.time_series||[]).map((d:any)=>d.ctr);
-  const sTr = spS.length>=2?(spS[spS.length-1]>spS[0]?"↑":"↓"):"";
-  const cTr = cS.length>=2?(cS[cS.length-1]>cS[0]?"↑":"↓"):"";
-  const alerts = tab==="meta"?smartAlerts(pd):[];
+  const tabCfg: Record<string, { label: string; color: string }> = {
+    meta:   { label: "Meta Ads",   color: "#3b82f6" },
+    google: { label: "Google Ads", color: "#4285f4" },
+  };
 
   // ── Collapsed bar ──────────────────────────────────────────────────────────
-  const collapsedBar = (
-    <div
-      onClick={()=>setOpen(true)}
-      style={{
-        display:"flex",alignItems:"center",gap:16,padding:"0 16px",
-        height:38,cursor:"pointer",
-        background:"rgba(0,0,0,0.25)",
-        borderBottom:"1px solid rgba(255,255,255,0.05)",
-        transition:"background 0.15s",userSelect:"none",
+  if (!open) {
+    return (
+      <div onClick={() => setOpen(true)} style={{
+        ...GD, display: "flex", alignItems: "center", gap: 16, padding: "0 20px",
+        height: 36, cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "rgba(15,23,42,0.6)", backdropFilter: "blur(12px)",
+        transition: "background 0.15s",
       }}
-      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)";}}
-      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.25)";}}>
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(15,23,42,0.6)"; }}>
+        <style>{LP_STYLE}</style>
 
-      {/* Platform dot + name */}
-      <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-        <span style={{width:6,height:6,borderRadius:"50%",
-          background:loading?"rgba(255,255,255,0.2)":err?"#f87171":"#34d399",
-          boxShadow:(!loading&&!err)?"0 0 5px #34d399":"none"}}/>
-        <span style={{...M,fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.06em"}}>
-          {tab==="meta"?"META ADS":"GOOGLE ADS"}
-        </span>
-      </div>
-
-      {/* Inline KPIs — only when data available */}
-      {pd&&!pd.error&&!loading&&(
-        <div style={{display:"flex",alignItems:"center",gap:20,flex:1,overflow:"hidden"}}>
-          {k.spend&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
-            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>SPEND</span>
-            <span style={{...M,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.65)"}}>R${parseFloat(k.spend).toFixed(0)}</span>
-            {sTr&&<span style={{...M,fontSize:9,color:sTr==="↑"?"#34d399":"#f87171"}}>{sTr}</span>}
-          </div>}
-          {k.ctr&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
-            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>CTR</span>
-            <span style={{...M,fontSize:11,fontWeight:700,color:parseFloat(k.ctr)>1.5?"#34d399":parseFloat(k.ctr)<0.5?"#f87171":"rgba(255,255,255,0.65)"}}>{parseFloat(k.ctr).toFixed(2)}%</span>
-            {cTr&&<span style={{...M,fontSize:9,color:cTr==="↑"?"#34d399":"#f87171"}}>{cTr}</span>}
-          </div>}
-          {k.frequency&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
-            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>FREQ</span>
-            <span style={{...M,fontSize:11,fontWeight:700,color:parseFloat(k.frequency)>3.5?"#f87171":"rgba(255,255,255,0.65)"}}>{parseFloat(k.frequency).toFixed(1)}x</span>
-          </div>}
-          {k.conversions&&k.conversions!=="0"&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
-            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>CONV</span>
-            <span style={{...M,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.65)"}}>{k.conversions}</span>
-          </div>}
-          {/* Alert dots */}
-          {alerts.filter(a=>a.t==="warn").length>0&&(
-            <div style={{display:"flex",alignItems:"center",gap:4}}>
-              <span style={{width:5,height:5,borderRadius:"50%",background:"#f87171",boxShadow:"0 0 5px #f87171"}}/>
-              <span style={{...M,fontSize:9,color:"#f87171"}}>{alerts.filter(a=>a.t==="warn").length} alerta{alerts.filter(a=>a.t==="warn").length>1?"s":""}</span>
-            </div>
-          )}
-          {(pd.winners||[]).length>0&&(
-            <div style={{display:"flex",alignItems:"center",gap:4}}>
-              <span style={{width:5,height:5,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 5px #34d399"}}/>
-              <span style={{...M,fontSize:9,color:"#34d399"}}>{(pd.winners||[]).length} pra escalar</span>
-            </div>
-          )}
+        {/* Platform */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "#475569" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px #34d399" : "none", flexShrink: 0 }} />
+          <span style={{ fontSize: 10, fontWeight: 600, color: "#64748b", letterSpacing: "0.08em", textTransform: "uppercase" }}>{tabCfg[tab]?.label}</span>
         </div>
-      )}
-      {loading&&<span style={{...M,fontSize:9,color:"rgba(255,255,255,0.2)",flex:1}}>carregando...</span>}
-      {err&&!loading&&<span style={{...M,fontSize:9,color:"#f87171",flex:1}}>erro — clique para ver</span>}
 
-      {/* Expand hint */}
-      <ChevronDown size={12} style={{color:"rgba(255,255,255,0.2)",flexShrink:0}}/>
-    </div>
-  );
+        {/* KPIs inline */}
+        {data && !data.error && !busy && (
+          <div style={{ display: "flex", gap: 20, flex: 1, overflow: "hidden", alignItems: "center" }}>
+            {k.spend && <div style={{ display: "flex", gap: 5, alignItems: "baseline" }}>
+              <span style={{ fontSize: 10, fontWeight: 500, color: "#334155", textTransform: "uppercase", letterSpacing: "0.06em" }}>Spend</span>
+              <span style={{ ...MO, fontSize: 12, fontWeight: 600, color: "#94a3b8" }}>R${parseFloat(k.spend).toFixed(0)}</span>
+              {sTr !== "flat" && <span style={{ fontSize: 9, color: sTr === "up" ? "#34d399" : "#fb7185" }}>{sTr === "up" ? "↑" : "↓"}</span>}
+            </div>}
+            {k.ctr && <div style={{ display: "flex", gap: 5, alignItems: "baseline" }}>
+              <span style={{ fontSize: 10, fontWeight: 500, color: "#334155", textTransform: "uppercase", letterSpacing: "0.06em" }}>CTR</span>
+              <span style={{ ...MO, fontSize: 12, fontWeight: 600, color: parseFloat(k.ctr) > 1.5 ? "#34d399" : parseFloat(k.ctr) < 0.5 ? "#fb7185" : "#94a3b8" }}>{parseFloat(k.ctr).toFixed(2)}%</span>
+            </div>}
+            {k.frequency && <div style={{ display: "flex", gap: 5, alignItems: "baseline" }}>
+              <span style={{ fontSize: 10, fontWeight: 500, color: "#334155", textTransform: "uppercase", letterSpacing: "0.06em" }}>Freq</span>
+              <span style={{ ...MO, fontSize: 12, fontWeight: 600, color: parseFloat(k.frequency) > 3.5 ? "#fb7185" : "#94a3b8" }}>{parseFloat(k.frequency).toFixed(1)}x</span>
+            </div>}
+            {alerts.some(a => a.t === "warn") && (
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fb7185", boxShadow: "0 0 5px #fb7185" }} />
+                <span style={{ fontSize: 10, fontWeight: 500, color: "#fb7185" }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
+              </div>
+            )}
+            {(data.winners || []).length > 0 && (
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 5px #34d399" }} />
+                <span style={{ fontSize: 10, fontWeight: 500, color: "#34d399" }}>{(data.winners || []).length} pra escalar</span>
+              </div>
+            )}
+          </div>
+        )}
+        {busy && <span style={{ fontSize: 10, color: "#334155", flex: 1 }}>atualizando...</span>}
+        {fail && !busy && <span style={{ fontSize: 10, color: "#fb7185", flex: 1 }}>erro ao carregar</span>}
+
+        <ChevronDown size={12} style={{ color: "#334155", flexShrink: 0 }} />
+      </div>
+    );
+  }
 
   // ── Expanded panel ─────────────────────────────────────────────────────────
-  const expandedPanel = (
-    <div style={{background:"rgba(10,12,17,0.6)",backdropFilter:"blur(8px)",
-      borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+  return (
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(10,14,23,0.75)", backdropFilter: "blur(16px)", animation: "lp-fade 0.2s ease" }}>
+      <style>{LP_STYLE}</style>
 
       {/* Header */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
-        padding:"10px 18px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
 
         {/* Tabs */}
-        <div style={{display:"flex",gap:4}}>
-          {[hasMeta&&"meta", hasGoogle&&"google"].filter(Boolean).map((p:any)=>{
-            const active = tab===p;
-            const cfg = p==="meta"
-              ? {label:"Meta Ads",   clr:"#1877F2"}
-              : {label:"Google Ads", clr:"#4285f4"};
-            const hasErr = panelData?.[p]?.error;
+        <div style={{ display: "flex", gap: 2 }}>
+          {[hasMeta && "meta", hasGoogle && "google"].filter(Boolean).map((p: any) => {
+            const active = tab === p;
+            const cfg = tabCfg[p];
+            const hasErr = pd?.[p]?.error;
             return (
-              <button key={p} onClick={()=>setTab(p)} style={{
-                ...J,display:"flex",alignItems:"center",gap:5,padding:"5px 12px",
-                borderRadius:8,fontSize:11,fontWeight:active?700:400,cursor:"pointer",
-                border:active?`1px solid ${cfg.clr}28`:"1px solid transparent",
-                background:active?`${cfg.clr}12`:"transparent",
-                color:active?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.15s",
+              <button key={p} className="lp-tab" onClick={() => setTab(p)} style={{
+                ...GD, display: "flex", alignItems: "center", gap: 6, padding: "5px 12px",
+                borderRadius: 8, border: active ? `1px solid ${cfg.color}25` : "1px solid transparent",
+                background: active ? `${cfg.color}0e` : "transparent",
+                color: active ? "#e2e8f0" : "#475569",
+                fontSize: 12, fontWeight: active ? 500 : 400, cursor: "pointer",
+                transition: "all 0.15s",
               }}>
-                <span style={{width:5,height:5,borderRadius:"50%",
-                  background:loading?"rgba(255,255,255,0.2)":hasErr?"#f87171":active?cfg.clr:"rgba(255,255,255,0.12)"}}/>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "#334155" : hasErr ? "#fb7185" : active ? cfg.color : "#1e293b", boxShadow: active && !hasErr && !busy ? `0 0 6px ${cfg.color}` : "none" }} />
                 {cfg.label}
               </button>
             );
           })}
         </div>
 
-        {/* Right controls */}
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:5}}>
-            {loading
-              ? <Loader2 size={9} style={{color:"#0ea5e9",animation:"spin 1s linear infinite"}}/>
-              : <span style={{width:5,height:5,borderRadius:"50%",
-                  background:err?"#f87171":"#34d399",
-                  boxShadow:err?"none":"0 0 5px #34d399",
-                  animation:err?"none":"lp-pulse 2s ease-in-out infinite"}}/>
+        {/* Right — live + refresh + collapse */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {busy
+              ? <Loader2 size={9} style={{ color: "#475569", animation: "lp-spin 1s linear infinite" }} />
+              : <span style={{ width: 5, height: 5, borderRadius: "50%", background: fail ? "#fb7185" : "#34d399", boxShadow: !fail ? "0 0 5px #34d399" : "none", animation: !fail ? "lp-breathe 2.5s ease-in-out infinite" : "none" }} />
             }
-            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.2)"}}>
-              {loading?"buscando...":stamp?stamp.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"ao vivo"}
+            <span style={{ ...GD, fontSize: 10, fontWeight: 400, color: "#334155" }}>
+              {busy ? "atualizando..." : ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "ao vivo"}
             </span>
           </div>
-          <button onClick={(e)=>{e.stopPropagation();load();}} disabled={loading} title="Atualizar"
-            style={{background:"none",border:"none",cursor:loading?"wait":"pointer",
-              color:"rgba(255,255,255,0.2)",display:"flex",padding:2,transition:"color 0.15s"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.6)";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
-            <RefreshCw size={11} style={{animation:loading?"spin 1s linear infinite":"none"}}/>
+          <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-collapse"
+            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "#334155", display: "flex", padding: 2, transition: "color 0.15s" }}>
+            <RefreshCw size={11} style={{ animation: busy ? "lp-spin 1s linear infinite" : "none" }} />
           </button>
-          <button onClick={()=>setOpen(false)} title="Recolher"
-            style={{background:"none",border:"none",cursor:"pointer",
-              color:"rgba(255,255,255,0.2)",display:"flex",padding:2,transition:"color 0.15s"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.6)";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
-            <ChevronUp size={13}/>
+          <button onClick={() => setOpen(false)} className="lp-collapse"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#334155", display: "flex", padding: 2, transition: "color 0.15s" }}>
+            <ChevronUp size={12} />
           </button>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{padding:"14px 18px 16px"}}>
+      <div style={{ padding: "16px 20px 18px" }}>
 
         {/* Skeleton */}
-        {loading&&!panelData&&(
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <div style={{display:"flex",gap:8}}>
-              {[1,2,3,4,5].map(i=>(
-                <div key={i} style={{flex:1,height:66,borderRadius:11,
-                  background:"rgba(255,255,255,0.04)",
-                  animation:`skPulse 1.4s ${i*0.1}s ease-in-out infinite`}}/>
+        {busy && !pd && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} style={{ flex: 1, height: 72, borderRadius: 12, background: "rgba(255,255,255,0.03)", animation: `lp-skel 1.6s ${i * 0.1}s ease-in-out infinite` }} />
               ))}
             </div>
-            <div style={{height:90,borderRadius:10,background:"rgba(255,255,255,0.02)",
-              animation:"skPulse 1.4s 0.5s ease-in-out infinite"}}/>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[1, 2].map(i => <div key={i} style={{ height: 100, borderRadius: 10, background: "rgba(255,255,255,0.02)", animation: `lp-skel 1.6s ${0.5 + i * 0.1}s ease-in-out infinite` }} />)}
+            </div>
           </div>
         )}
 
         {/* Error */}
-        {err&&!loading&&(
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
-            padding:"10px 14px",borderRadius:10,
-            background:"rgba(248,113,113,0.06)",border:"1px solid rgba(248,113,113,0.15)"}}>
-            <span style={{...J,fontSize:12,color:"#f87171"}}>{err}</span>
-            <button onClick={load} style={{...J,fontSize:11,fontWeight:700,padding:"5px 12px",
-              borderRadius:7,background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.2)",
-              color:"#f87171",cursor:"pointer"}}>Tentar novamente</button>
+        {fail && !busy && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(251,113,133,0.05)", border: "1px solid rgba(251,113,133,0.12)" }}>
+            <span style={{ ...GD, fontSize: 12, fontWeight: 400, color: "#f87171" }}>{fail}</span>
+            <button onClick={load} style={{ ...GD, fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, background: "rgba(251,113,133,0.1)", border: "1px solid rgba(251,113,133,0.18)", color: "#f87171", cursor: "pointer" }}>Tentar novamente</button>
           </div>
         )}
 
         {/* Token expired */}
-        {pd?.error==="token_expired"&&(
-          <div style={{padding:"10px 14px",borderRadius:10,
-            background:"rgba(251,146,60,0.06)",border:"1px solid rgba(251,146,60,0.18)"}}>
-            <span style={{...J,fontSize:12,color:"#fb923c"}}>
-              Token expirado — <a href="/dashboard/accounts" style={{color:"#fb923c",fontWeight:700}}>reconecte em Contas →</a>
+        {data?.error === "token_expired" && (
+          <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(251,146,60,0.05)", border: "1px solid rgba(251,146,60,0.14)" }}>
+            <span style={{ ...GD, fontSize: 12, color: "#fb923c" }}>
+              Token expirado — <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 500 }}>reconecte em Contas →</a>
             </span>
           </div>
         )}
 
         {/* No account selected */}
-        {pd?.error==="no_account_selected"&&(
-          <div style={{padding:"10px 14px",borderRadius:10,
-            background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)"}}>
-            <span style={{...J,fontSize:12,color:"rgba(255,255,255,0.35)"}}>
-              Nenhuma conta selecionada. <a href="/dashboard/accounts" style={{color:"#0ea5e9"}}>Configure em Contas →</a>
+        {data?.error === "no_account_selected" && (
+          <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <span style={{ ...GD, fontSize: 12, color: "#475569" }}>
+              Nenhuma conta selecionada — <a href="/dashboard/accounts" style={{ color: "#6366f1" }}>configure em Contas →</a>
             </span>
           </div>
         )}
 
         {/* Data */}
-        {pd&&!pd.error&&!err&&(
-          <div style={{display:"flex",flexDirection:"column",gap:14}}>
-
-            {/* Empty state — connected but no campaigns */}
-            {parseInt(k.active_ads||k.active_campaigns||"0")===0&&(pd.top_ads||[]).length===0&&(pd.campaigns||[]).length===0&&(
-              <div style={{padding:"16px 0 4px",textAlign:"center"}}>
-                <p style={{...J,fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.5)",margin:"0 0 4px"}}>
-                  Sem campanhas ativas no período
-                </p>
-                <p style={{...M,fontSize:11,color:"rgba(255,255,255,0.2)",margin:0}}>
-                  Conectado a {pd.account_name||"sua conta"} · {pd.period||"últimos 14 dias"}
-                </p>
-              </div>
-            )}
+        {data && !data.error && !fail && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {/* Alerts */}
-            {alerts.length>0&&(
-              <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                {alerts.map((a,i)=>{
-                  const co={warn:{bg:"rgba(248,113,113,0.05)",br:"rgba(248,113,113,0.18)",dt:"#f87171",tx:"#f87171"},
-                             ok:{bg:"rgba(52,211,153,0.05)",br:"rgba(52,211,153,0.14)",dt:"#34d399",tx:"#34d399"},
-                            info:{bg:"rgba(14,165,233,0.05)",br:"rgba(14,165,233,0.14)",dt:"#0ea5e9",tx:"#0ea5e9"}}[a.t];
-                  return(
-                    <div key={i} onClick={()=>onSend(a.q)} style={{
-                      display:"flex",alignItems:"center",gap:10,padding:"8px 12px",
-                      borderRadius:10,cursor:"pointer",background:co.bg,border:`1px solid ${co.br}`,
-                      transition:"opacity 0.15s",
-                    }}
-                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.7";}}
-                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";}}>
-                      <span style={{width:6,height:6,borderRadius:"50%",background:co.dt,flexShrink:0,
-                        boxShadow:`0 0 7px ${co.dt}`}}/>
-                      <span style={{...J,fontSize:11,fontWeight:700,color:co.tx}}>{a.title}</span>
-                      <span style={{...J,fontSize:11,color:"rgba(255,255,255,0.35)",marginLeft:2}}>{a.detail}</span>
-                      <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.18)",marginLeft:"auto",flexShrink:0}}>perguntar →</span>
-                    </div>
-                  );
-                })}
+            <Alerts items={alerts} ask={onSend} />
+
+            {/* KPIs */}
+            {tab === "meta" && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <Stat label="Spend 14d" value={`R$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? "crescendo" : sTr === "down" ? "caindo" : "estável"} />
+                <Stat label="CTR médio" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color={parseFloat(k.ctr || 0) > 1.5 ? "#34d399" : "#fb7185"} sub={cTr === "up" ? "subindo" : cTr === "down" ? "caindo" : "estável"} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
+                <Stat label="CPM" value={`R$${parseFloat(k.cpm || 0).toFixed(1)}`} color="#8b5cf6" sub="por mil impressões" />
+                <Stat label="Frequência" value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} color="#f59e0b" sub={parseFloat(k.frequency || 0) > 3.5 ? "atenção — fadiga" : parseFloat(k.frequency || 0) > 2.5 ? "monitorar" : "saudável"} />
+                <Stat label="Conversões" value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ads ativos`} />
+              </div>
+            )}
+            {tab === "google" && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <Stat label="Spend 14d" value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? "crescendo" : "caindo"} />
+                <Stat label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} spark={cS} color="#34d399" />
+                <Stat label="CPC médio" value={`$${parseFloat(k.cpc || 0).toFixed(2)}`} color="#f59e0b" />
+                <Stat label="Conversões" value={k.conversions || "0"} color="#34d399" />
+                <Stat label="Campanhas" value={k.active_campaigns || "0"} color="#6366f1" sub="ativas" />
               </div>
             )}
 
-            {/* KPIs */}
-            {tab==="meta"&&(
-              <div style={{display:"flex",gap:8}}>
-                <Kpi label="Spend 14d" val={`R$${parseFloat(k.spend||0).toFixed(0)}`}
-                  sub={sTr==="↑"?"crescendo":sTr==="↓"?"caindo":"estável"}
-                  spark={spS} sparkColor="#3b82f6"/>
-                <Kpi label="CTR médio" val={`${parseFloat(k.ctr||0).toFixed(2)}%`}
-                  sub={cTr==="↑"?"subindo":cTr==="↓"?"caindo":"estável"}
-                  warn={parseFloat(k.ctr||0)<0.5}
-                  spark={cS} sparkColor={parseFloat(k.ctr||0)>1.5?"#34d399":"#f87171"}/>
-                <Kpi label="CPM" val={`R$${parseFloat(k.cpm||0).toFixed(1)}`} sub="por mil"/>
-                <Kpi label="Frequência" val={`${parseFloat(k.frequency||0).toFixed(1)}x`}
-                  sub={parseFloat(k.frequency||0)>3.5?"alta — fadiga":parseFloat(k.frequency||0)>2.5?"atenção":"saudável"}
-                  warn={parseFloat(k.frequency||0)>3.5}/>
-                <Kpi label="Conversões" val={k.conversions||"0"} sub={`${k.active_ads||0} ads`}/>
-              </div>
-            )}
-            {tab==="google"&&(
-              <div style={{display:"flex",gap:8}}>
-                <Kpi label="Spend 14d" val={`$${parseFloat(k.spend||0).toFixed(0)}`} spark={spS} sparkColor="#4285f4"/>
-                <Kpi label="CTR" val={`${parseFloat(k.ctr||0).toFixed(2)}%`} spark={cS} sparkColor="#34a853"/>
-                <Kpi label="CPC médio" val={`$${parseFloat(k.cpc||0).toFixed(2)}`}/>
-                <Kpi label="Conversões" val={k.conversions||"0"}/>
-                <Kpi label="Campanhas" val={k.active_campaigns||"0"} sub="ativas"/>
+            {/* Empty state */}
+            {isEmpty && (
+              <div style={{ padding: "12px 0 4px", textAlign: "center" }}>
+                <p style={{ ...GD, fontSize: 13, fontWeight: 500, color: "#334155", margin: "0 0 4px" }}>Sem campanhas ativas nos últimos 14 dias</p>
+                <p style={{ ...GD, fontSize: 11, fontWeight: 400, color: "#1e293b", margin: 0 }}>{data.account_name || "conta conectada"}</p>
               </div>
             )}
 
             {/* Criativos + Campanhas */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-              <div>
-                {tab==="meta"&&(pd.winners||[]).length>0&&(
-                  <div style={{marginBottom:10}}>
-                    <p style={{...J,fontSize:9,fontWeight:700,color:"#34d399",letterSpacing:"0.1em",
-                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>▲ escalar agora</p>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {(pd.winners||[]).slice(0,3).map((a:any,i:number)=><Creative key={i} a={a} kind="winner" ask={onSend}/>)}
+            {!isEmpty && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+                {/* Criativos */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {tab === "meta" && (data.winners || []).length > 0 && (
+                    <div>
+                      <SLabel color="#34d399">▲ Escalar agora</SLabel>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        {(data.winners || []).slice(0, 3).map((a: any, i: number) => <AdRow key={i} a={a} kind="winner" ask={onSend} />)}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {tab==="meta"&&(pd.at_risk||[]).length>0&&(
-                  <div>
-                    <p style={{...J,fontSize:9,fontWeight:700,color:"#f87171",letterSpacing:"0.1em",
-                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>▼ risco de fadiga</p>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {(pd.at_risk||[]).slice(0,3).map((a:any,i:number)=><Creative key={i} a={a} kind="risk" ask={onSend}/>)}
+                  )}
+                  {tab === "meta" && (data.at_risk || []).length > 0 && (
+                    <div>
+                      <SLabel color="#fb7185">▼ Risco de fadiga</SLabel>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        {(data.at_risk || []).slice(0, 3).map((a: any, i: number) => <AdRow key={i} a={a} kind="risk" ask={onSend} />)}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {((tab==="meta"&&!(pd.winners||[]).length&&!(pd.at_risk||[]).length)||(tab==="google"))&&(pd.top_ads||[]).length>0&&(
-                  <div>
-                    <p style={{...J,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",
-                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>top anúncios</p>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                      {(pd.top_ads||[]).slice(0,5).map((a:any,i:number)=><Creative key={i} a={{...a,freq:undefined}} kind="normal" ask={onSend}/>)}
+                  )}
+                  {(tab === "google" || (!(data.winners?.length) && !(data.at_risk?.length))) && (data.top_ads || []).length > 0 && (
+                    <div>
+                      <SLabel>Top anúncios</SLabel>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        {(data.top_ads || []).slice(0, 5).map((a: any, i: number) => <AdRow key={i} a={{ ...a, freq: undefined }} kind="normal" ask={onSend} />)}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-              <div>
-                <p style={{...J,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",
-                  textTransform:"uppercase",margin:"0 0 6px 2px"}}>campanhas</p>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  {(pd.campaigns||[]).slice(0,6).map((c:any,i:number)=><Camp key={i} c={c}/>)}
+                  )}
                 </div>
+
+                {/* Campanhas */}
+                {(data.campaigns || []).length > 0 && (
+                  <div>
+                    <SLabel>Campanhas</SLabel>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {(data.campaigns || []).slice(0, 6).map((c: any, i: number) => <CampRow key={i} c={c} />)}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Quick actions */}
-            <div style={{display:"flex",gap:6,flexWrap:"wrap",
-              paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
               {[
-                {e:"📊",l:"Resumo da semana",q:"Qual o resumo da minha conta essa semana?"},
-                {e:"⚡",l:"O que escalar?",  q:"O que posso escalar agora com segurança?"},
-                {e:"⏸", l:"O que pausar?",   q:"O que devo pausar hoje e por quê?"},
-                {e:"🎯",l:"Próximo criativo",q:"Com base nos meus winners, o que criar agora?"},
-                {e:"📉",l:"Por que caiu?",   q:"Por que meu ROAS caiu? Qual a causa raiz?"},
-              ].map(({e,l,q})=>(
-                <button key={q} onClick={()=>onSend(q)} style={{
-                  ...J,fontSize:10,fontWeight:500,padding:"5px 10px",borderRadius:16,
-                  background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",
-                  color:"rgba(255,255,255,0.42)",cursor:"pointer",transition:"all 0.15s",
-                  display:"flex",alignItems:"center",gap:4,
-                }}
-                  onMouseEnter={e2=>{const el=e2.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.08)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.color="#0ea5e9";}}
-                  onMouseLeave={e2=>{const el=e2.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.03)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.color="rgba(255,255,255,0.42)";}}>
-                  <span style={{fontSize:11}}>{e}</span>{l}
+                { e: "↗", l: "Resumo da semana",  q: "Qual o resumo da minha conta essa semana?" },
+                { e: "↗", l: "O que escalar?",     q: "O que posso escalar agora com segurança?" },
+                { e: "↗", l: "O que pausar?",      q: "O que devo pausar hoje e por quê?" },
+                { e: "↗", l: "Próximo criativo",   q: "Com base nos meus winners, o que criar agora?" },
+                { e: "↗", l: "Por que caiu?",      q: "Por que meu ROAS caiu? Qual a causa raiz?" },
+              ].map(({ l, q }) => (
+                <button key={q} className="lp-action" onClick={() => onSend(q)} style={{
+                  ...GD, fontSize: 11, fontWeight: 500, padding: "6px 12px", borderRadius: 20,
+                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                  color: "#475569", cursor: "pointer", transition: "all 0.15s",
+                }}>
+                  {l}
                 </button>
               ))}
             </div>
@@ -1154,17 +1162,10 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes lp-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.45;transform:scale(0.85)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes skPulse{0%,100%{opacity:0.28}50%{opacity:0.65}}
-      `}</style>
     </div>
   );
-
-  return open ? expandedPanel : collapsedBar;
 }
+
 
 
 export default function AdBriefAI() {
