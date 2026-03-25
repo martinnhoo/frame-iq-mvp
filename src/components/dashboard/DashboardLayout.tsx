@@ -331,110 +331,96 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
-        {/* ── Topbar: account picker + user ── */}
+        {/* ── Topbar: mobile-first, clean ── */}
         <header style={{
           height: 52, minHeight: 52, maxHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
-          paddingLeft: 20, paddingRight: 14, gap: 8,
-          background: "#0b0f18", borderRight: "1px solid rgba(255,255,255,0.06)",
+          paddingLeft: 12, paddingRight: 12, gap: 8,
+          background: "#0b0f18",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
           position: "sticky", top: 0, zIndex: 100,
-          overflow: "hidden",
         }}>
-          {/* Mobile hamburger + logo (hidden on desktop) */}
-          <div className="flex items-center gap-3 lg:hidden" style={{ flexShrink: 0 }}>
-            <button onClick={() => setSidebarOpen(s => !s)}
-              style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 7, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", color: "rgba(255,255,255,0.55)" }}>
-              <Menu className="h-4 w-4" />
-            </button>
+
+          {/* Mobile hamburger (hidden on desktop) */}
+          <button
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(s => !s)}
+            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", color: "rgba(255,255,255,0.55)", flexShrink: 0 }}>
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* Logo (mobile only, desktop has sidebar) */}
+          <div className="lg:hidden" style={{ flexShrink: 0 }}>
             <Logo size="sm" />
           </div>
 
-          {/* Account picker — left aligned */}
-          <div className="relative" style={{ flexShrink: 0 }}>
+          {/* Account picker */}
+          <div className="relative" style={{ flexShrink: 0, minWidth: 0 }}>
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
-              className="flex items-center gap-2.5 transition-all"
               style={{
-                padding: "5px 10px 5px 8px", borderRadius: 8,
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "5px 8px 5px 6px", borderRadius: 8,
                 background: selectedPersona ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)",
-                border: selectedPersona ? "1px solid rgba(14,165,233,0.22)" : "1px solid rgba(255,255,255,0.09)",
-                cursor: "pointer",
-              }}
-            >
-              {selectedPersona ? (
-                <>
-                  <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0, overflow: "hidden", fontWeight: 800, color: "#0ea5e9" }}>
-                    {selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
-                  </span>
-                  <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPersona.name}</span>
-                  <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>{language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}</span>
-                </>
-              ) : (
-                <>
-                  <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Users className="h-3 w-3" style={{ color: "#0ea5e9" }} />
-                  </span>
-                  <span className="hidden lg:inline" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
-                    {language === "pt" ? "Selecionar conta →" : language === "es" ? "Seleccionar cuenta →" : "Select account →"}
-                  </span>
-                  <span className="lg:hidden" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
-                    {language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}
-                  </span>
-                </>
-              )}
-              <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", marginLeft: 2 }} />
+                border: selectedPersona ? "1px solid rgba(14,165,233,0.20)" : "1px solid rgba(255,255,255,0.09)",
+                cursor: "pointer", maxWidth: "min(220px, calc(100vw - 130px))",
+              }}>
+              {/* Initials badge */}
+              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.4)", flexShrink: 0, overflow: "hidden" }}>
+                {selectedPersona
+                  ? (selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: 22, height: 22, objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A"))
+                  : <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.4)" }} />
+                }
+              </span>
+              {/* Name — mobile shows "Contas", desktop shows full name */}
+              <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {selectedPersona ? selectedPersona.name : (language === "pt" ? "Selecionar conta" : language === "es" ? "Seleccionar" : "Select account")}
+              </span>
+              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>
+                {language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}
+              </span>
+              <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
             </button>
 
+            {/* Dropdown */}
             {personaPickerOpen && (
               <div style={{
-                position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 99999,
-                width: 270, maxWidth: "calc(100vw - 32px)",
+                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 99999,
+                width: 260, maxWidth: "calc(100vw - 24px)",
                 background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, overflow: "hidden",
-                boxShadow: "0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
               }}>
-                <div style={{ padding: "11px 14px 9px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
+                <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
+                  <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
                     {language === "pt" ? "Conta ativa" : language === "es" ? "Cuenta activa" : "Active account"}
                   </p>
                 </div>
                 {savedPersonas.length === 0 ? (
                   <div style={{ padding: "16px 14px", textAlign: "center" }}>
                     <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>
-                      {language === "pt" ? "Nenhuma conta ainda" : language === "es" ? "Sin cuentas aún" : "No accounts yet"}
+                      {language === "pt" ? "Nenhuma conta ainda" : "No accounts yet"}
                     </p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
                       style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
-                      <Sparkles className="h-3 w-3" /> {language === "pt" ? "Criar primeira conta" : language === "es" ? "Crear primera cuenta" : "Add first account"}
+                      <Sparkles className="h-3 w-3" /> {language === "pt" ? "Criar conta" : "Add account"}
                     </button>
                   </div>
                 ) : (
                   <div style={{ padding: "5px", maxHeight: 260, overflowY: "auto" }}>
-                    {selectedPersona && (
-                      <button onClick={() => { setSelectedPersona(null); setPersonaPickerOpen(false); }}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", marginBottom: 2 }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>✕</span>
-                        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "'Inter', sans-serif" }}>
-                          {language === "pt" ? "Limpar conta ativa" : language === "es" ? "Limpiar cuenta activa" : "Clear active account"}
-                        </span>
-                      </button>
-                    )}
                     {savedPersonas.map(p => (
                       <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: selectedPersona?.id === p.id ? "1px solid rgba(14,165,233,0.18)" : "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
                         onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                         onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 800, color: "#0ea5e9", overflow: "hidden" }}>
+                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 800, color: "#0ea5e9", overflow: "hidden" }}>
                           {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 500, color: "#e8e8f0", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
                           {p.website && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
                         </div>
-                        {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, boxShadow: "0 0 6px #0ea5e9" }} />}
+                        {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
                       </button>
                     ))}
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", padding: "7px 9px 4px", marginTop: 3 }}>
@@ -442,7 +428,7 @@ export default function DashboardLayout() {
                         style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "3px 0" }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.38)"; }}>
-                        <Sparkles className="h-3 w-3" /> {language === "pt" ? "Gerenciar contas" : language === "es" ? "Gestionar cuentas" : "Manage accounts"}
+                        <Sparkles className="h-3 w-3" /> {language === "pt" ? "Gerenciar contas" : "Manage accounts"}
                       </button>
                     </div>
                   </div>
@@ -456,33 +442,28 @@ export default function DashboardLayout() {
           {/* Flex spacer */}
           <div style={{ flex: 1 }} />
 
-          {/* User avatar — opens profile panel */}
-          <button onClick={() => setProfileOpen(o => !o)}
-            style={{ width: 30, height: 30, minWidth: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden", marginRight: 6 }}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: 30, height: 30, minWidth: 30, objectFit: "cover", display: "block", borderRadius: "50%" }} />
-              : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
-          </button>
-
-          {/* Telegram icon — opens modal — hidden on mobile to prevent overflow */}
+          {/* Telegram (desktop only) */}
           <button
-            onClick={() => setTelegramModalOpen(true)}
-            title="Telegram Alerts"
             className="hidden lg:flex"
-            style={{
-              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              alignItems: "center", justifyContent: "center",
-              background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)",
-              border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)",
-              cursor: "pointer", transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(39,175,225,0.18)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(39,175,225,0.4)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = telegramConn ? "rgba(39,175,225,0.3)" : "rgba(255,255,255,0.09)"; }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            onClick={() => setTelegramModalOpen(true)}
+            title="Telegram"
+            style={{ width: 32, height: 32, minWidth: 32, borderRadius: 8, flexShrink: 0, alignItems: "center", justifyContent: "center", background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)", border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill={telegramConn ? "#27AEE1" : "rgba(255,255,255,0.3)"}/>
               <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
             </svg>
           </button>
+
+          {/* Avatar — toggle profile panel */}
+          <button
+            onClick={() => setProfileOpen(o => !o)}
+            title="Profile"
+            style={{ width: 32, height: 32, minWidth: 32, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: profileOpen ? "2px solid rgba(14,165,233,0.6)" : "2px solid transparent", cursor: "pointer", color: "#fff", overflow: "hidden", padding: 0, transition: "border-color 0.15s" }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, objectFit: "cover", display: "block", borderRadius: "50%", flexShrink: 0 }} />
+              : <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>}
+          </button>
+
         </header>
 
         {/* Alerts */}

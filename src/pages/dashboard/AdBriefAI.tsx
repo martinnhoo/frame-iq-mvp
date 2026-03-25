@@ -467,7 +467,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   if(block.type==="warning") return(
     <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
       <span style={{fontSize:14,flexShrink:0,marginTop:1}}>⚠️</span>
-      <p style={{...m,fontSize:13,color:"rgba(251,191,36,0.85)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+      <p style={{...m,fontSize:15,color:"rgba(251,191,36,0.88)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
     </div>
   );
 
@@ -480,7 +480,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.2)";}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.1)";}}>
             <span style={{...m,fontSize:11,fontWeight:700,color:"rgba(6,182,212,0.5)",marginTop:2,flexShrink:0,width:16,textAlign:"right"}}>{i+1}</span>
-            <span style={{...m,fontSize:13,color:"rgba(255,255,255,0.82)",lineHeight:1.6,flex:1}}>{item}</span>
+            <span style={{...m,fontSize:15,color:"rgba(255,255,255,0.85)",lineHeight:1.6,flex:1}}>{item}</span>
             <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
               <button onClick={()=>copyItem(item,i)}
                 style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.3)",...m,transition:"all 0.12s"}}>
@@ -501,7 +501,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   if(block.type==="action") return(
     <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
       <span style={{fontSize:14,flexShrink:0,marginTop:1}}>✅</span>
-      <p style={{...m,fontSize:13,color:"rgba(52,211,153,0.85)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+      <p style={{...m,fontSize:15,color:"rgba(52,211,153,0.88)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
     </div>
   );
 
@@ -512,7 +512,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   return(
     <div style={{marginBottom:hasItems?8:4}}>
       {block.content&&(
-        <p style={{...m,fontSize:13.5,color:"rgba(238,240,246,0.78)",lineHeight:1.75,margin:hasItems?"0 0 8px":"0"}}>{block.content}</p>
+        <p style={{...m,fontSize:15,color:"rgba(238,240,246,0.82)",lineHeight:1.7,margin:hasItems?"0 0 10px":"0"}}>{block.content}</p>
       )}
       {hasItems&&(
         <div style={{display:"flex",flexDirection:"column",gap:5,marginTop:block.content?6:0}}>
@@ -1638,7 +1638,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           <div key={msg.id} style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end"}}>
-                <div style={{padding:"10px 16px",borderRadius:"16px 16px 4px 16px",background:"rgba(255,255,255,0.07)",fontSize:13,color:"rgba(255,255,255,0.88)",...m,maxWidth:"78%",lineHeight:1.6,boxShadow:"none"}}>
+                <div style={{padding:"10px 16px",borderRadius:"16px 16px 4px 16px",background:"rgba(255,255,255,0.07)",fontSize:15,color:"rgba(255,255,255,0.9)",...m,maxWidth:"82%",lineHeight:1.6,boxShadow:"none"}}>
                   {msg.userText}
                 </div>
               </div>
@@ -1709,7 +1709,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:44,maxHeight:120}} className="chat-textarea"
+              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:46,maxHeight:120}} className="chat-textarea"
               onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
               onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}

@@ -426,7 +426,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[61] flex flex-col profile-panel-width"
-        style={{ width: "min(400px, calc(100vw - 60px))", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
+        style={{ width: "min(400px, 100vw)", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
 
         {/* Header */}
         <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
