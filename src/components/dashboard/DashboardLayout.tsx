@@ -333,13 +333,13 @@ export default function DashboardLayout() {
 
         {/* ── Topbar: account picker + user ── */}
         <header style={{
-          height: 52, minHeight: 52, flexShrink: 0,
+          height: 52, minHeight: 52, maxHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
-          paddingLeft: 20, paddingRight: 14, gap: 10,
+          paddingLeft: 20, paddingRight: 14, gap: 8,
           background: "#0b0f18", borderRight: "1px solid rgba(255,255,255,0.06)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
           position: "sticky", top: 0, zIndex: 100,
-          overflow: "visible",
+          overflow: "hidden",
         }}>
           {/* Mobile hamburger + logo (hidden on desktop) */}
           <div className="flex items-center gap-3 lg:hidden" style={{ flexShrink: 0 }}>
@@ -367,7 +367,7 @@ export default function DashboardLayout() {
                   <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0, overflow: "hidden", fontWeight: 800, color: "#0ea5e9" }}>
                     {selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif" }}>{selectedPersona.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", maxWidth: "calc(100vw - 180px)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{selectedPersona.name}</span>
                 </>
               ) : (
                 <>
@@ -454,19 +454,20 @@ export default function DashboardLayout() {
 
           {/* User avatar — opens profile panel */}
           <button onClick={() => setProfileOpen(true)}
-            style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden", marginRight: 6 }}>
+            style={{ width: 30, height: 30, minWidth: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden", marginRight: 6 }}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ? <img src={profile.avatar_url} alt="" style={{ width: 30, height: 30, minWidth: 30, objectFit: "cover", display: "block", borderRadius: "50%" }} />
               : (profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U")}
           </button>
 
-          {/* Telegram icon — opens modal */}
+          {/* Telegram icon — opens modal — hidden on mobile to prevent overflow */}
           <button
             onClick={() => setTelegramModalOpen(true)}
             title="Telegram Alerts"
+            className="hidden lg:flex"
             style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              alignItems: "center", justifyContent: "center",
               background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)",
               border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)",
               cursor: "pointer", transition: "all 0.15s",

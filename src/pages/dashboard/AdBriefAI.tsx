@@ -1250,22 +1250,36 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
       if(error) {
-        // Try to parse body from error context (Supabase wraps 4xx in error)
+        // Try multiple ways to parse the 429 body from Supabase edge function errors
         let parsedErr: any = null;
         try {
           const ctx = (error as any).context;
-          if (ctx) {
-            const txt = typeof ctx === "string" ? ctx : await ctx.text?.() || JSON.stringify(ctx);
+          if (ctx instanceof Response) {
+            const txt = await ctx.clone().text();
             parsedErr = JSON.parse(txt);
+          } else if (typeof ctx === "string") {
+            parsedErr = JSON.parse(ctx);
+          } else if (ctx && typeof ctx === "object") {
+            // ctx might already be parsed
+            parsedErr = ctx;
           }
-        } catch {}
+        } catch {
+          // Last resort: try parsing the error message itself
+          try { parsedErr = JSON.parse(error?.message || "{}"); } catch {}
+        }
         if(parsedErr?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
         if(parsedErr?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
         if(parsedErr?.error==="monthly_softcap"){
-          // Show softcap warning as a message, not a hard wall
           const aid=Date.now()+1;
           const warningBlocks=parsedErr.blocks||[{type:"warning",title:lang==="pt"?"Limite mensal":lang==="es"?"Límite mensual":"Monthly limit",content:lang==="pt"?"Você está se aproximando do limite do plano. Considere fazer upgrade.":"You're approaching your plan limit. Consider upgrading."}];
           setMessages(prev=>[...prev,{role:"assistant",blocks:warningBlocks,ts:aid,id:aid}]);
+          setLoading(false);
+          return;
+        }
+        // If error has blocks in it, show them instead of crashing
+        if(parsedErr?.blocks){
+          const aid=Date.now()+1;
+          setMessages(prev=>[...prev,{role:"assistant",blocks:parsedErr.blocks,ts:aid,id:aid}]);
           setLoading(false);
           return;
         }
