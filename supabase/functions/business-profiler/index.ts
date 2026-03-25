@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: { 'x-api-key': ANTHROPIC, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
         system: `Você é um especialista em análise de negócios e compliance de marketing digital no Brasil e LATAM.
 Analise as informações e construa um perfil honesto. Se incerto, diga explicitamente.
