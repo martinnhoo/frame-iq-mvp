@@ -234,7 +234,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
   // ── DESKTOP: centered modal ───────────────────────────────────────────────
   const DesktopModal = () => (
-    <div style={{ width: "100%", maxWidth: 640, background: inline ? "transparent" : "#0d1117", border: inline ? "none" : "1px solid rgba(255,255,255,0.08)", borderRadius: inline ? 0 : 24, padding: inline ? "0" : "36px 32px", boxShadow: inline ? "none" : "0 40px 100px rgba(0,0,0,0.7)", position: "relative", maxHeight: inline ? "none" : "90vh", overflowY: inline ? "visible" : "auto" }}>
+    <div style={{ width: "100%", maxWidth: 640, background: inline ? "transparent" : "#0d1117", border: inline ? "none" : "1px solid rgba(255,255,255,0.08)", borderRadius: inline ? 0 : 24, padding: inline ? "0" : "36px 32px", boxShadow: inline ? "none" : "0 40px 100px rgba(0,0,0,0.7)", position: "relative" }}>
       {onClose && !inline && (
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <X size={13} color="rgba(255,255,255,0.4)" />
@@ -317,7 +317,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
       `}</style>
 
       {/* Mobile bottom sheet */}
-      <div className="upgrade-mobile" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "flex-end", justifyContent: "center" }}>
+      <div className="upgrade-mobile" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "flex-end", justifyContent: "center", overflowY: "auto" }}>
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }} onClick={onClose} />
         <div style={{ position: "relative", width: "100%" }}>
           <MobileSheet />
@@ -325,7 +325,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
       </div>
 
       {/* Desktop centered modal */}
-      <div className="upgrade-desktop" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div className="upgrade-desktop" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "flex-start", justifyContent: "center", padding: "24px 24px 40px", overflowY: "auto" }}>
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }} onClick={onClose} />
         <div style={{ position: "relative" }}>
           <DesktopModal />
