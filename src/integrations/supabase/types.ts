@@ -132,6 +132,7 @@ export type Database = {
           hook_strength: string | null
           id: string
           improvement_suggestions: string[] | null
+          persona_id: string | null
           processing_time_seconds: number | null
           recommended_platforms: string[] | null
           result: Json | null
@@ -147,6 +148,7 @@ export type Database = {
           hook_strength?: string | null
           id?: string
           improvement_suggestions?: string[] | null
+          persona_id?: string | null
           processing_time_seconds?: number | null
           recommended_platforms?: string[] | null
           result?: Json | null
@@ -162,6 +164,7 @@ export type Database = {
           hook_strength?: string | null
           id?: string
           improvement_suggestions?: string[] | null
+          persona_id?: string | null
           processing_time_seconds?: number | null
           recommended_platforms?: string[] | null
           result?: Json | null
@@ -171,7 +174,15 @@ export type Database = {
           video_duration_seconds?: number | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "analyses_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       boards: {
         Row: {
