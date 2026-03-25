@@ -1486,7 +1486,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             niche:p.niche||p.product||"iGaming",
             market:p.market||lang.toUpperCase()||"BR",
             platform:p.platform||"Meta Feed",
-            tone:p.tone||"Aggressive / Urgent",
+            tone:p.tone||"human, credible, specific",
             count:p.count||5,
             context:p.context||p.angle||"",
             angle:p.angle||"",

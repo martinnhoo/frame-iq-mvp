@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
         max_tokens: 3000,
         messages: [{
           role: 'user',
-          content: `You are a senior creative strategist at a performance agency. You write hooks that earn attention because they're true and relevant — not because they're loud.
+          content: `You are a senior creative strategist. Your job is to understand the person on the other side of the ad before writing a single word.
 
 ${userContext}
 ${persona_context ? `\nAUDIENCE:\n- ${persona_context.name} (${persona_context.age}) | pains: ${persona_context.pains?.join(', ')} | desires: ${persona_context.desires?.join(', ')}\n- Language style: ${persona_context.language_style}\n` : ''}
@@ -188,30 +188,39 @@ Generate ${effectiveCount} hooks for:
 - Niche: ${niche || 'general'}
 - Market: ${market || 'global'}
 - Platform: ${platform || 'Meta/TikTok'}
-- Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, specific, credible'}
+- Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, credible, specific'}
 ${angle ? `- Angle: ${angle}` : ''}
 ${context ? `- Context/account patterns: ${context}` : ''}
 
-SITUATIONAL INTELLIGENCE — read the room before writing:
-Before writing any hook, ask: who is this person, what are they already feeling, and what would actually help them take action?
+STEP 1 — READ THE ROOM:
+Before writing, ask:
+- What is this person already feeling when they see this ad?
+- What does their life look like right now because of this problem?
+- What do they need — hope, validation, information, relief, confidence?
 
-Example of NOT reading the room:
-- Niche: pé diabético treatment clinic
-- Bad: "Seu pé diabético tem 48h antes da amputação" — this person already lives in fear of losing their foot. Amplifying that fear = trauma, not conversion.
-- Good: "60 anos cuidando de feridas que outros desistiram" — credibility + hope, without exploiting suffering they already live with.
+If someone is already scared (chronic illness, financial trouble, relationship pain):
+→ Do NOT amplify the fear. They're living in it. You're not revealing anything new — you're just being cruel.
+→ Instead: offer credibility, calm authority, a path forward.
 
-WHAT GREAT HOOKS LOOK LIKE:
-- Authority + outcome: "Tratamos feridas que não cicatrizam há meses — veja o protocolo"
-- Contrast: "A maioria dos curativos piora a ferida. Aqui está o porquê"
-- Credibility: "60 anos especializados em pé diabético na Zona Sul"
-- Patient truth: "Você não precisa conviver com essa dor"
+If someone doesn't know they have the problem yet:
+→ Pattern interrupts and contrast work. Create awareness of something they haven't noticed.
 
-WHAT TO AVOID:
-- ALL CAPS for shock ("MÉDICOS ESCONDEM", "ÚLTIMO AVISO") — marks you as amateur, not authority
-- Invented statistics ("90% dos diabéticos") — destroys trust, especially in health niches
-- Fake urgency exploiting fear the audience already has — predatory, not persuasive
-- "Doctors don't want you to know" tropes — overused, burns credibility
-- Platform mismatch: Google Search = mirror search intent (max 30 chars headline), not interrupt
+STEP 2 — WHAT EARNS TRUST IN SENSITIVE NICHES (health, finance, mental health):
+- Specificity of experience: "Feridas que não cicatrizam há meses" (they recognize themselves)
+- Earned credibility: "60 anos tratando esse tipo de ferida"
+- Outcome without exploitation: "Pacientes que voltaram a andar" not "evite amputação"
+- Normalization: "Você não está sozinho nisso"
+
+STEP 3 — WHAT DESTROYS TRUST IN ANY NICHE:
+- ALL CAPS: "MÉDICOS ESCONDEM", "ÚLTIMO AVISO" — looks like a scam
+- Invented numbers: "90% dos pacientes", "2.847 casos" — immediately distrusted
+- Fear amplification of what they already feel: predatory, not persuasive
+- "Doctors don't want you to know" — overused by spam for 15 years
+- Mismatch with platform: Google = confirm search intent (max 30 chars). Meta/TikTok = interrupt + intrigue
+
+STEP 4 — VARY THE APPROACH:
+Give ${effectiveCount} hooks with genuinely different mechanisms — not the same hook reworded:
+curiosity | social_proof | authority | contrast | story_opener | outcome | question | relief
 
 Return ONLY valid JSON:
 {
