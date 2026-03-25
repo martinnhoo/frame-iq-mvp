@@ -1,4 +1,4 @@
-// v8.4 — ux credibility overhaul 2026-03-23
+// v8.5 — footer i18n + CTA smooth loading 2026-03-25
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
@@ -14,6 +14,95 @@ const CARD_BG = "rgba(255,255,255,0.12)";
 const CARD_BORDER = "rgba(255,255,255,0.1)";
 const TEXT_MUTED = "rgba(255,255,255,0.62)";
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+
+// ─── CTA Button ──────────────────────────────────────────────────────────────
+function CTAButton({
+  onClick, loading = false, label, size = "md", variant = "primary", icon
+}: {
+  onClick: () => void;
+  loading?: boolean;
+  label: string;
+  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "ghost" | "white";
+  icon?: React.ReactNode;
+}) {
+  const pad = size === "lg" ? "18px 48px" : size === "sm" ? "10px 20px" : "14px 36px";
+  const fs  = size === "lg" ? 16 : size === "sm" ? 13 : 15;
+  const br  = size === "lg" ? 14 : size === "sm" ? 9 : 12;
+
+  const baseStyle: React.CSSProperties = {
+    fontFamily: F, fontSize: fs, fontWeight: 700, padding: pad, borderRadius: br,
+    border: "none", cursor: loading ? "wait" : "pointer",
+    transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
+    letterSpacing: "-0.025em", display: "inline-flex", alignItems: "center", gap: 8,
+    opacity: loading ? 0.72 : 1,
+    transform: "translateY(0)",
+    userSelect: "none" as const,
+    position: "relative" as const, overflow: "hidden" as const,
+  };
+
+  const variants: Record<string, React.CSSProperties> = {
+    primary: { background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", boxShadow: "0 0 32px rgba(14,165,233,0.25)" },
+    ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
+    white:   { background: "#fff", color: "#000" },
+  };
+
+  const hoverStyle = {
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(14,165,233,0.4)" },
+    ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
+    white:   { opacity: "0.88" },
+  };
+
+  const handleEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (loading) return;
+    const el = e.currentTarget;
+    Object.assign(el.style, hoverStyle[variant]);
+  };
+  const handleLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const el = e.currentTarget;
+    el.style.transform = "translateY(0)";
+    el.style.boxShadow = variants[variant].boxShadow as string || "";
+    el.style.background = variants[variant].background as string;
+    el.style.color = variants[variant].color as string;
+    el.style.opacity = "1";
+  };
+
+  return (
+    <button
+      onClick={loading ? undefined : onClick}
+      style={{ ...baseStyle, ...variants[variant] }}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      disabled={loading}
+    >
+      {loading ? (
+        <>
+          <span style={{
+            width: 14, height: 14, borderRadius: "50%",
+            border: "2px solid rgba(255,255,255,0.25)",
+            borderTopColor: "#fff",
+            animation: "cta-spin 0.65s linear infinite",
+            flexShrink: 0,
+          }} />
+          <span style={{ opacity: 0.8 }}>{label}</span>
+        </>
+      ) : (
+        <>
+          {label}
+          {icon}
+        </>
+      )}
+    </button>
+  );
+}
+
+// Keyframe injection (once)
+if (typeof document !== "undefined" && !document.getElementById("cta-spin-style")) {
+  const s = document.createElement("style");
+  s.id = "cta-spin-style";
+  s.textContent = "@keyframes cta-spin { to { transform: rotate(360deg); } }";
+  document.head.appendChild(s);
+}
 
 // ─── Types & Translations ────────────────────────────────────────────────────
 type Lang = "en" | "pt" | "es";
@@ -81,6 +170,17 @@ const T: Record<Lang, Record<string, string>> = {
     final_sub: "Connect in 2 minutes. Cancel anytime.",
     final_cta: "Try free for 3 days", final_fine: "Any plan · 3-day free trial · Cancel before day 4, pay nothing",
     footer_copy: "© 2026 AdBrief",
+    footer_tagline: "The AI that knows your ad account. Stop guessing, start scaling.",
+    footer_product: "Product",
+    footer_legal: "Legal",
+    footer_pricing: "Pricing",
+    footer_how: "How it works",
+    footer_for: "Who it's for",
+    footer_tools: "Tools",
+    footer_privacy: "Privacy",
+    footer_terms: "Terms",
+    footer_faq: "FAQ",
+    footer_built: "Built for performance marketers who move fast.",
   },
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
@@ -144,6 +244,17 @@ const T: Record<Lang, Record<string, string>> = {
     final_sub: "Conecte em 2 minutos. Cancele quando quiser.",
     final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
     footer_copy: "© 2026 AdBrief",
+    footer_tagline: "A IA que conhece sua conta de anúncios. Pare de adivinhar, comece a escalar.",
+    footer_product: "Produto",
+    footer_legal: "Legal",
+    footer_pricing: "Preços",
+    footer_how: "Como funciona",
+    footer_for: "Para quem",
+    footer_tools: "Ferramentas",
+    footer_privacy: "Privacidade",
+    footer_terms: "Termos",
+    footer_faq: "FAQ",
+    footer_built: "Feito para gestores de tráfego que movem rápido.",
   },
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
@@ -207,6 +318,17 @@ const T: Record<Lang, Record<string, string>> = {
     final_sub: "Conéctate en 2 minutos. Cancela cuando quieras.",
     final_cta: "Probar gratis 3 días", final_fine: "Cualquier plan · 3 días gratis · Cancela antes del día 4",
     footer_copy: "© 2026 AdBrief",
+    footer_tagline: "La IA que conoce tu cuenta de anuncios. Para de adivinar, empieza a escalar.",
+    footer_product: "Producto",
+    footer_legal: "Legal",
+    footer_pricing: "Precios",
+    footer_how: "Cómo funciona",
+    footer_for: "Para quién",
+    footer_tools: "Herramientas",
+    footer_privacy: "Privacidad",
+    footer_terms: "Términos",
+    footer_faq: "FAQ",
+    footer_built: "Hecho para gestores de tráfico que se mueven rápido.",
   },
 };
 
@@ -470,7 +592,7 @@ const TOOLS_DATA: ToolDef[] = [
 ];
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
-function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string, string>; lang: Lang; setLang: (l: Lang) => void }) {
+function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Record<string, string>; lang: Lang; setLang: (l: Lang) => void; ctaLoading?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -505,12 +627,13 @@ function Nav({ onCTA, t, lang, setLang }: { onCTA: () => void; t: Record<string,
             onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.4)'; el.style.borderColor = 'rgba(255,255,255,0.15)'; }}>
             {t.nav_signin}
           </button>
-          <button onClick={onCTA}
-            style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 9, background: '#fff', color: '#000', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-            {lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
-          </button>
+          <CTAButton
+            onClick={onCTA}
+            loading={ctaLoading}
+            label={lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
+            size="sm"
+            variant="white"
+          />
         </div>
       </div>
     </nav>
@@ -1197,7 +1320,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
 }
 
 // ─── Mobile Demo Card — substitui o frame no mobile ─────────────────────────
-function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
+function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: Lang; ctaLoading?: boolean }) {
   const [active, setActive] = React.useState(0);
   const [animating, setAnimating] = React.useState(false);
 
@@ -1382,14 +1505,13 @@ function MobileDemoCard({ onCTA, lang }: { onCTA: () => void; lang: Lang }) {
 
           {/* CTA */}
           <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
-            <button onClick={onCTA} style={{
-              flex: 1, padding: '13px', borderRadius: 12,
-              background: '#fff', color: '#000', border: 'none',
-              fontFamily: F, fontSize: 14, fontWeight: 700,
-              cursor: 'pointer', letterSpacing: '-0.02em',
-            }}>
-              {lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account'}
-            </button>
+            <CTAButton
+              onClick={onCTA}
+              loading={ctaLoading}
+              label={lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account'}
+              size="md"
+              variant="white"
+            />
           </div>
 
           <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>
@@ -1456,7 +1578,7 @@ function playPop(vol = 0.05) {
 }
 
 
-function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
+function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: Record<string, string>; lang: Lang; ctaLoading?: boolean }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
   const account = INDUSTRY_ACCOUNTS[activeIndustry]?.[lang] || INDUSTRY_ACCOUNTS.fitness[lang];
@@ -1599,11 +1721,13 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
 
           {/* CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button onClick={onCTA} style={{ fontFamily: F, fontSize: 15, fontWeight: 700, padding: '14px 36px', borderRadius: 12, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: '#fff', border: 'none', cursor: 'pointer', transition: 'all 0.2s', letterSpacing: '-0.025em', boxShadow: '0 0 32px rgba(14,165,233,0.25)' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(-2px)'; el.style.boxShadow='0 0 48px rgba(14,165,233,0.4)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.boxShadow='0 0 32px rgba(14,165,233,0.25)'; }}>
-              {lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
-            </button>
+            <CTAButton
+              onClick={onCTA}
+              loading={ctaLoading}
+              label={lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
+              size="md"
+              variant="primary"
+            />
             <button onClick={() => document.querySelector('#how')?.scrollIntoView({ behavior: 'smooth' })}
               style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 }}
               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.7)'; }}
@@ -1873,7 +1997,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
 // ─── Pain → Solution section ──────────────────────────────────────────────────
-function PainSection({ onCTA, lang }: { onCTA: () => void; lang: "pt" | "es" | "en" }) {
+function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt" | "es" | "en"; ctaLoading?: boolean }) {
   const copy = {
     pt: {
       label: "O PROBLEMA",
@@ -2030,18 +2154,7 @@ function PainSection({ onCTA, lang }: { onCTA: () => void; lang: "pt" | "es" | "
 
         {/* CTA */}
         <div style={{ textAlign: "center", marginTop: 48 }}>
-          <button onClick={onCTA} style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700,
-            padding: "13px 32px", borderRadius: 11,
-            background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))",
-            color: "#38bdf8", border: "1px solid rgba(14,165,233,0.30)",
-            cursor: "pointer", letterSpacing: "-0.01em", transition: "all 0.15s",
-            boxShadow: "0 0 20px rgba(14,165,233,0.08)",
-          }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(14,165,233,0.25), rgba(99,102,241,0.20))"; el.style.color = "#fff"; el.style.borderColor = "rgba(14,165,233,0.5)"; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))"; el.style.color = "#38bdf8"; el.style.borderColor = "rgba(14,165,233,0.30)"; }}>
-            {c.cta} →
-          </button>
+          <CTAButton onClick={onCTA} loading={ctaLoading} label={`${c.cta} →`} size="md" variant="primary" />
         </div>
       </div>
     </section>
@@ -2089,7 +2202,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 }
 
 // ─── For Who ──────────────────────────────────────────────────────────────────
-function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
+function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   const [active, setActive] = useState(0);
   const profiles = [
     { emoji: "🏢", label: t.for_tab0, color: "#0ea5e9", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
@@ -2123,11 +2236,7 @@ function ForWho({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) 
             <div style={{ padding: "36px 30px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
               <h3 style={{ fontFamily: F, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, marginBottom: 28 }}>{p.desc}</p>
-              <button onClick={onCTA} style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "12px 24px", borderRadius: 10, background: "#fff", color: "#000", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "opacity 0.15s" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.88'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                {t.for_cta} <ArrowRight size={14} />
-              </button>
+              <CTAButton onClick={onCTA} loading={ctaLoading} label={t.for_cta} size="sm" variant="white" icon={<ArrowRight size={14} />} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {p.points.map((point) => (
@@ -2578,7 +2687,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
   );
 }
 
-function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
+function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   return (
     <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(180deg, #080c14 0%, #0a0f1e 100%)" }}>
       {/* Grid pattern overlay */}
@@ -2599,18 +2708,14 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
         <h2 style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
 
-        <button onClick={onCTA} style={{
-          fontFamily: F, fontSize: 16, fontWeight: 800, padding: "18px 48px", borderRadius: 14,
-          background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", border: "none", cursor: "pointer",
-          display: "inline-flex", alignItems: "center", gap: 10,
-          boxShadow: "0 0 40px rgba(14,165,233,0.3), 0 4px 24px rgba(0,0,0,0.4)",
-          transition: "all 0.2s",
-        }}
-          onMouseEnter={e => { const el = e.currentTarget; el.style.transform = "translateY(-2px)"; el.style.boxShadow = "0 0 60px rgba(14,165,233,0.4), 0 8px 32px rgba(0,0,0,0.5)"; }}
-          onMouseLeave={e => { const el = e.currentTarget; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 0 40px rgba(14,165,233,0.3), 0 4px 24px rgba(0,0,0,0.4)"; }}
-        >
-          {t.final_cta} <ArrowRight size={17} />
-        </button>
+        <CTAButton
+          onClick={onCTA}
+          loading={ctaLoading}
+          label={t.final_cta}
+          size="lg"
+          variant="primary"
+          icon={<ArrowRight size={17} />}
+        />
 
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.22)", marginTop: 20, lineHeight: 1.6 }}>{t.final_fine}</p>
 
@@ -2638,7 +2743,7 @@ function Footer({ t }: { t: Record<string, string> }) {
           <div style={{ maxWidth: 260 }}>
             <Logo size="lg" />
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.65, marginTop: 12 }}>
-              The AI that knows your ad account. Stop guessing, start scaling.
+              {t.footer_tagline}
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               {["Meta Ads", "Google Ads"].map(p => (
@@ -2649,8 +2754,8 @@ function Footer({ t }: { t: Record<string, string> }) {
           {/* Links */}
           <div style={{ display: "flex", gap: 48, flexWrap: "wrap" as const }}>
             <div>
-              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Product</p>
-              {[["Pricing", "/pricing"], ["How it works", "#how"], ["Who it's for", "#for"], ["Tools", "/tools"]].map(([l, h]) => (
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_product}</p>
+              {([[t.footer_pricing, "/pricing"], [t.footer_how, "#how"], [t.footer_for, "#for"], [t.footer_tools, "/tools"]] as [string, string][]).map(([l, h]) => (
                 <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
@@ -2658,8 +2763,8 @@ function Footer({ t }: { t: Record<string, string> }) {
               ))}
             </div>
             <div>
-              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Legal</p>
-              {[["Privacy", "/privacy"], ["Terms", "/terms"], ["FAQ", "#faq"]].map(([l, h]) => (
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_legal}</p>
+              {([[t.footer_privacy, "/privacy"], [t.footer_terms, "/terms"], [t.footer_faq, "#faq"]] as [string, string][]).map(([l, h]) => (
                 <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
@@ -2671,7 +2776,7 @@ function Footer({ t }: { t: Record<string, string> }) {
         {/* Bottom bar */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 12 }}>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</p>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>Built for performance marketers who move fast.</p>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>{t.footer_built}</p>
         </div>
       </div>
     </footer>
@@ -2683,13 +2788,18 @@ export default function IndexNew() {
   const navigate = useNavigate();
   const [lang, setLang] = useState<Lang>("en");
   const [ready, setReady] = useState(false);
+  const [ctaLoading, setCtaLoading] = useState(false);
 
   useEffect(() => {
     detectLang().then(l => { setLang(l); setReady(true); });
   }, []);
 
   const t = T[lang];
-  const handleCTA = () => navigate("/signup");
+  const handleCTA = () => {
+    if (ctaLoading) return;
+    setCtaLoading(true);
+    navigate("/signup");
+  };
 
   const titleMap: Record<Lang, string> = {
     en: "AdBrief — Ask Your Meta Ads Anything. Get Real Answers.",
@@ -2817,17 +2927,17 @@ export default function IndexNew() {
           "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "127" }
         })}</script>
       </Helmet>
-      <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
-      <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
+      <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} ctaLoading={ctaLoading} />
+      <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} ctaLoading={ctaLoading} />
       <MobileDemoSection lang={lang} />
-      <PainSection onCTA={handleCTA} lang={lang} />
+      <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
       <HowItWorks t={t} lang={lang} />
       <Tools t={t} lang={lang} />
-      <ForWho onCTA={handleCTA} t={t} />
+      <ForWho onCTA={handleCTA} t={t} ctaLoading={ctaLoading} />
       <TelegramSection t={t} lang={lang} />
       <Pricing onCTA={handleCTA} t={t} lang={lang} />
       <FAQ t={t} />
-      <FinalCTA onCTA={handleCTA} t={t} />
+      <FinalCTA onCTA={handleCTA} t={t} ctaLoading={ctaLoading} />
       <Footer t={t} />
       <CookieConsent />
     </div>
