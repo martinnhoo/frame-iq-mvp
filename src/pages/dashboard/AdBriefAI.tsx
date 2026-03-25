@@ -211,7 +211,7 @@ function InlineToolPanel({ action, onClose, onSend, lang }: {
           </div>
         )}
         <textarea value={val} onChange={e=>setVal(e.target.value)} placeholder={cfg.placeholder[l]} rows={3} autoFocus
-          style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:"10px 12px",color:"#fff",fontSize:13,lineHeight:1.6,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box"}}
+          style={{width:"100%",background:"#1c2128",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 12px",color:"#fff",fontSize:13,lineHeight:1.6,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box"}}
           onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}45`;}}
           onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
           onKeyDown={e=>{if(e.key==="Enter"&&e.metaKey)submit();}}
@@ -241,7 +241,7 @@ function DashboardBlock({block}:{block:Block}) {
         <span style={{...m,fontSize:10,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
       </div>
       {block.metrics && block.metrics.length>0 && (
-        <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.04)"}}>
+        <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"#1c2128"}}>
           {block.metrics.map((metric,i)=>{
             const isUp=metric.trend==="up",isDown=metric.trend==="down";
             const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
@@ -430,7 +430,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
           {state==="running"?<><Loader2 size={13} className="animate-spin"/>{t.running}</>:t.confirm}
         </button>
         <button onClick={()=>setState("cancelled")}
-          style={{...m,fontSize:12,padding:"10px 16px",borderRadius:10,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontWeight:500}}>
+          style={{...m,fontSize:12,padding:"10px 16px",borderRadius:10,background:"#1c2128",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontWeight:500}}>
           {t.cancel}
         </button>
       </div>
@@ -477,8 +477,8 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
       <div style={{display:"flex",flexDirection:"column",gap:5}}>
         {block.items?.map((item,i)=>(
           <div key={i}
-            style={{display:"flex",gap:0,borderRadius:12,background:"rgba(6,182,212,0.04)",border:"1px solid rgba(6,182,212,0.12)",alignItems:"stretch",overflow:"hidden",transition:"border-color 0.15s,background 0.15s"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.25)";(e.currentTarget as HTMLElement).style.background="rgba(6,182,212,0.07)";}}
+            style={{display:"flex",gap:0,borderRadius:12,background:"#1c2128",border:"1px solid rgba(6,182,212,0.12)",alignItems:"stretch",overflow:"hidden",transition:"border-color 0.15s,background 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.25)";(e.currentTarget as HTMLElement).style.background="#20262f";}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.12)";(e.currentTarget as HTMLElement).style.background="rgba(6,182,212,0.04)";}}>
             {/* Number gutter */}
             <div style={{width:36,flexShrink:0,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:13,borderRight:"1px solid rgba(6,182,212,0.10)"}}>
@@ -526,7 +526,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
       {hasItems&&(
         <div style={{display:"flex",flexDirection:"column",gap:6,marginTop:block.content?4:0}}>
           {block.items!.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"7px 10px",borderRadius:8,background:"rgba(255,255,255,0.03)"}}>
+            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"7px 10px",borderRadius:8,background:"#1c2128"}}>
               <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(14,165,233,0.5)",marginTop:3,flexShrink:0,fontWeight:600}}>{String(i+1).padStart(2,"0")}</span>
               <span style={{fontFamily:"'Inter',sans-serif",fontSize:13.5,color:"rgba(238,240,246,0.78)",lineHeight:1.65,flex:1}}>{item}</span>
             </div>
@@ -1515,7 +1515,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#1c2130",position:"relative" as const}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#161b22",position:"relative" as const}}>
       
 
       {/* ── Messages ── */}
@@ -1587,10 +1587,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <div style={{height:10,width:72,borderRadius:6,background:"rgba(255,255,255,0.06)",marginBottom:10,animation:"skPulse 1.4s ease-in-out infinite"}}/>
                 <div style={{height:13,width:"90%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.1s ease-in-out infinite"}}/>
                 <div style={{height:13,width:"75%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.2s ease-in-out infinite"}}/>
-                <div style={{height:13,width:"55%",borderRadius:6,background:"rgba(255,255,255,0.04)",marginBottom:14,animation:"skPulse 1.4s 0.3s ease-in-out infinite"}}/>
+                <div style={{height:13,width:"55%",borderRadius:6,background:"#1c2128",marginBottom:14,animation:"skPulse 1.4s 0.3s ease-in-out infinite"}}/>
                 <div style={{display:"flex",gap:8}}>
                   {[96,84,88,78].map((w,i)=>(
-                    <div key={i} style={{height:26,width:w,borderRadius:20,background:"rgba(255,255,255,0.04)",animation:`skPulse 1.4s ${i*0.12}s ease-in-out infinite`}}/>
+                    <div key={i} style={{height:26,width:w,borderRadius:20,background:"#1c2128",animation:`skPulse 1.4s ${i*0.12}s ease-in-out infinite`}}/>
                   ))}
                 </div>
               </div>
@@ -1622,7 +1622,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
                     </button>
                     <button onClick={()=>navigate("/dashboard/accounts")}
-                      style={{...j,display:"inline-flex",alignItems:"center",gap:6,padding:"9px 20px",borderRadius:10,background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:500}}>
+                      style={{...j,display:"inline-flex",alignItems:"center",gap:6,padding:"9px 20px",borderRadius:10,background:"#1c2128",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:500}}>
                       {lang==="pt"?"Ou conectar Google Ads →":lang==="es"?"O conectar Google Ads →":"Or connect Google Ads →"}
                     </button>
                   </div>
@@ -1666,7 +1666,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.09)",border:"1px solid rgba(255,255,255,0.10)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"#1c2128",border:"1px solid rgba(255,255,255,0.07)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
                     {msg.userText}
                   </div>
                 </div>
@@ -1759,14 +1759,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:46,maxHeight:120}} className="chat-textarea"
+              style={{flex:1,background:"#1c2128",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:46,maxHeight:120}} className="chat-textarea"
               onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
               onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
             />
             {messages.length>0&&(
               <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
+                style={{width:42,height:42,borderRadius:12,background:"#1c2128",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
                 onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
                 onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
                 <RotateCcw size={14}/>
