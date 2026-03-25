@@ -50,15 +50,15 @@ Deno.serve(async (req) => {
   // ── exchange_code ───────────────────────────────────────────────────────────
   if (action === "exchange_code") {
     // Decode state to get persona_id and connection_label
-    let storedPersonaId: string | null = null;
-    let storedLabel: string | null = null;
+    let storedPersonaId: string | null = persona_id || null;
+    let storedLabel: string | null = connection_label || null;
     let storedUserId: string = user_id;
 
     try {
       if (state) {
         const decoded = JSON.parse(atob(state));
-        storedPersonaId = decoded.persona_id || null;
-        storedLabel = decoded.connection_label || null;
+        storedPersonaId = decoded.persona_id || storedPersonaId;
+        storedLabel = decoded.connection_label || storedLabel;
         storedUserId = decoded.user_id || user_id;
       }
     } catch {}
