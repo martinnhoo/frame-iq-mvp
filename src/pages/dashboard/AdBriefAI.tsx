@@ -363,8 +363,8 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   const L: Record<string,Record<string,string>> = {
     en:{
       sure:"Are you sure you want to proceed with the action:",
-      confirm:"Yes, proceed",cancel:"Cancel",running:"Executing...",done:"Done ✓",
-      pause:"Pause",enable:"Activate",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate",
+      confirm:lang==="es"?"Sí, continuar":"Sim, continuar",cancel:lang==="es"?"Cancelar":"Cancelar",running:lang==="es"?"Ejecutando...":"Executando...",done:lang==="es"?"Listo ✓":"Pronto ✓",
+      pause:lang==="es"?"Pausar":"Pausar",enable:lang==="es"?"Activar":"Ativar",update_budget:lang==="es"?"Actualizar budget":"Atualizar budget",publish:lang==="es"?"Publicar":"Publicar",duplicate:lang==="es"?"Duplicar":"Duplicar",
       warning:"This action will be logged and cannot be undone.",
     },
     pt:{
@@ -502,7 +502,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
                 style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:copied?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${copied?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:10,color:copied?"#34d399":"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.15s",whiteSpace:"nowrap" as const,transform:copied?"scale(1.04)":"scale(1)"}}>
                 {copied
                   ?<><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>{lang==="pt"?"Copiado":lang==="es"?"Copiado":"Copied"}</span></>
-                  :<><Copy size={9}/><span>{lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy"}</span></>
+                  :<><Copy size={9}/><span>{lang==="pt"?"Copiar":lang==="es"?"Copiar":lang==="es"?"Copiar":"Copiar"}</span></>
                 }
               </button>
               <button onClick={()=>useAsScript(item)}
@@ -891,7 +891,7 @@ export default function AdBriefAI() {
                 }}).catch(()=>{});
               }
             }else if(fn==="generate-script"&&(data?.script||data?.content)){
-              nb[bi]={type:"insight",title:lang==="pt"?"Roteiro":"Script",content:data.script||data.content};
+              nb[bi]={type:"insight",title:lang==="es"?"Guión":"Roteiro",content:data.script||data.content};
             }else if(fn==="generate-brief"&&(data?.brief||data?.content)){
               nb[bi]={type:"insight",title:"Brief",content:data.brief||data.content};
             }else{
@@ -904,7 +904,7 @@ export default function AdBriefAI() {
           setMessages(prev=>prev.map(m=>{
             if(m.id!==msg.id)return m;
             const nb=[...(m.blocks||[])];
-            nb[bi]={type:"warning",title:"Falha",content:String((e as any)?.message||"Error")};
+            nb[bi]={type:"warning",title:lang==="es"?"Fallo":"Falha",content:String((e as any)?.message||"Erro")};
             return{...m,blocks:nb};
           }));
         }
@@ -956,8 +956,8 @@ export default function AdBriefAI() {
     try {
       const accountName = selectedPersona?.name || null;
       const greetingTitle = accountName
-        ? (lang === "pt" ? `${accountName} está pronta.` : lang === "es" ? `${accountName} está lista.` : `${accountName} is ready.`)
-        : (lang === "pt" ? "Sua conta está pronta." : lang === "es" ? "Tu cuenta está lista." : "Your account is ready.");
+        ? (lang === "es" ? `${accountName} está lista.` : `${accountName} está pronta.`)
+        : (lang === "es" ? "Tu cuenta está lista." : "Sua conta está pronta.");
 
       // Returning user with real conversation history — show a brief switch notice
       const existing = (() => { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } catch { return []; } })();
@@ -1013,7 +1013,7 @@ export default function AdBriefAI() {
           parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
-          parts.push("What do you want to do?");
+          parts.push(lang === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
         }
         proactiveMsg = parts.join(" ");
 
@@ -1058,11 +1058,9 @@ export default function AdBriefAI() {
 
       } else {
         // ── Sem nada conectado ─────────────────────────────────────────────────
-        proactiveMsg = lang === "pt"
-          ? `Para trabalhar de verdade preciso ver sua conta de anúncios — sem isso só consigo respostas genéricas. Conecte Meta Ads ou Google Ads e vejo CTR, spend, o que escalar e o que pausar em tempo real.`
-          : lang === "es"
+        proactiveMsg = lang === "es"
           ? `Para trabajar bien necesito ver tu cuenta de anuncios. Conecta Meta Ads o Google Ads y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
-          : `To give you real insights I need to see your ad account data. Connect Meta Ads or Google Ads and I'll analyze CTR, spend, what to scale and what to pause in real time.`;
+          : `Para trabalhar de verdade preciso ver sua conta de anúncios — sem isso só consigo respostas genéricas. Conecte Meta Ads ou Google Ads e vejo CTR, spend, o que escalar e o que pausar em tempo real.`;
       }
 
       const aid = Date.now() + 1;
@@ -1517,7 +1515,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const LABEL: Record<string,Record<string,string>>={
     pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte algo...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
     es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta algo...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:lang==="es"?"Pregunta algo...":"Pergunte algo...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -1728,7 +1726,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     onMouseEnter={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
                     onMouseLeave={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
                     {copiedId===msg.id?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
-                    {copiedId===msg.id?"Copiado!":"Copy"}
+                    {copiedId===msg.id?"Copiado!":lang==="es"?"Copiar":"Copiar"}
                   </button>
                   <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
                     style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
