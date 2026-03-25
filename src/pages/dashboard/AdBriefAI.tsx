@@ -491,8 +491,9 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
             {/* Actions */}
             <div style={{display:"flex",flexDirection:"column",gap:4,padding:"10px 10px",flexShrink:0,justifyContent:"center"}}>
               <button onClick={()=>copyItem(item,i)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:copiedIdx===i?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${copiedIdx===i?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.08)"}`,cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",transition:"all 0.12s",whiteSpace:"nowrap" as const}}>
-                <Copy size={9}/>{copiedIdx===i?"✓":(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:copiedIdx===i?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${copiedIdx===i?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.08)"}`,cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",transition:"all 0.18s",whiteSpace:"nowrap" as const,transform:copiedIdx===i?"scale(1.06)":"scale(1)"}}>
+                {copiedIdx===i?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
+                {copiedIdx===i?(lang==="pt"?"Copiado!":lang==="es"?"¡Copiado!":"Copied!"):(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
               </button>
               <button onClick={()=>useAsScript(item)}
                 style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:"rgba(6,182,212,0.08)",border:"1px solid rgba(6,182,212,0.18)",cursor:"pointer",fontSize:10,color:"rgba(6,182,212,0.85)",fontFamily:"'Inter',sans-serif",transition:"all 0.12s",whiteSpace:"nowrap" as const}}>
@@ -1175,6 +1176,7 @@ export default function AdBriefAI() {
       const uid = Date.now();
       setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
       setInput("");
+      requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
       setLoading(true);
       try {
         const { data: tgConn } = await (supabase.from("telegram_connections" as any) as any)
@@ -1251,6 +1253,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     const uid=Date.now();
     setMsgCounter(c=>c+1);
     setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid}]);
+    // Scroll imediato ao enviar — não espera a resposta
+    requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);
     try{
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
@@ -1652,8 +1656,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.2)",marginRight:4}}>
                       {new Date(typeof msg.ts === "number" ? msg.ts : Date.now()).toLocaleTimeString(lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"})}
                     </span>
-                    <button onClick={()=>{navigator.clipboard.writeText(msg.userText||"");}}
-                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
+                    <button onClick={(e)=>{navigator.clipboard.writeText(msg.userText||"");const b=e.currentTarget;b.style.color="#34d399";b.style.borderColor="rgba(52,211,153,0.3)";b.style.background="rgba(52,211,153,0.08)";b.style.transform="scale(1.06)";setTimeout(()=>{b.style.color="rgba(255,255,255,0.3)";b.style.borderColor="rgba(255,255,255,0.08)";b.style.background="rgba(255,255,255,0.05)";b.style.transform="scale(1)";},1600);}}
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.18s"}}>
                       <Copy size={9}/>Copy
                     </button>
                     <button onClick={()=>send(msg.userText||"")}
@@ -1712,10 +1716,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </button>
                   <div style={{width:1,height:14,background:"rgba(255,255,255,0.07)",margin:"0 2px"}}/>
                   <button onClick={()=>handleCopy(msg.id,msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:copiedId===msg.id?"#34d399":"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
-                    <Copy size={9}/>{copiedId===msg.id?"✓":"Copy"}
+                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:copiedId===msg.id?"rgba(52,211,153,0.08)":"transparent",border:`1px solid ${copiedId===msg.id?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:copiedId===msg.id?"#34d399":"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.18s",transform:copiedId===msg.id?"scale(1.06)":"scale(1)"}}
+                    onMouseEnter={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
+                    onMouseLeave={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
+                    {copiedId===msg.id?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
+                    {copiedId===msg.id?"Copiado!":"Copy"}
                   </button>
                   <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
                     style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
