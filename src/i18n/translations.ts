@@ -137,6 +137,12 @@ type TranslationKeys = {
   auth_create: string;
   auth_google: string;
   auth_or_email: string;
+  auth_name_placeholder: string;
+  auth_legal: string;
+  auth_legal_terms: string;
+  auth_legal_and: string;
+  auth_legal_privacy: string;
+  auth_trust: string;
 
   // Confirm email
   confirm_title: string;
@@ -366,6 +372,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "Create account",
     auth_google: "Continue with Google",
     auth_or_email: "Or continue with email",
+    auth_name_placeholder: "Your full name",
+    auth_legal: "By signing up, you agree to our",
+    auth_legal_terms: "Terms of Service",
+    auth_legal_and: "and",
+    auth_legal_privacy: "Privacy Policy",
+    auth_trust: "3-day free trial · No charge until day 4 · Cancel anytime",
 
     confirm_title: "Check your inbox",
     confirm_text: "We sent a verification link to",
@@ -606,6 +618,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "Crear cuenta",
     auth_google: "Continuar con Google",
     auth_or_email: "O continúa con email",
+    auth_name_placeholder: "Tu nombre completo",
+    auth_legal: "Al registrarte, aceptas nuestros",
+    auth_legal_terms: "Términos de Servicio",
+    auth_legal_and: "y",
+    auth_legal_privacy: "Política de Privacidad",
+    auth_trust: "3 días gratis · Sin cobro hasta el día 4 · Cancela cuando quieras",
 
     confirm_title: "Revisa tu bandeja de entrada",
     confirm_text: "Enviamos un enlace de verificación a",
@@ -841,6 +859,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "Créer un compte",
     auth_google: "Continuer avec Google",
     auth_or_email: "Ou continuer par email",
+    auth_name_placeholder: "Votre nom complet",
+    auth_legal: "En vous inscrivant, vous acceptez nos",
+    auth_legal_terms: "Conditions d'utilisation",
+    auth_legal_and: "et",
+    auth_legal_privacy: "Politique de confidentialité",
+    auth_trust: "3 jours gratuits · Pas de facturation avant le 4ème jour · Annulez quand vous voulez",
 
     confirm_title: "Vérifiez votre boîte de réception",
     confirm_text: "Nous avons envoyé un lien de vérification à",
@@ -1074,6 +1098,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "Konto erstellen",
     auth_google: "Weiter mit Google",
     auth_or_email: "Oder per E-Mail fortfahren",
+    auth_name_placeholder: "Ihr vollständiger Name",
+    auth_legal: "Mit der Registrierung stimmen Sie unseren",
+    auth_legal_terms: "Nutzungsbedingungen",
+    auth_legal_and: "und",
+    auth_legal_privacy: "Datenschutzrichtlinie",
+    auth_trust: "3 Tage kostenlos · Keine Abbuchung bis Tag 4 · Jederzeit kündbar",
 
     confirm_title: "Prüfen Sie Ihren Posteingang",
     confirm_text: "Wir haben einen Bestätigungslink gesendet an",
@@ -1307,6 +1337,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "إنشاء حساب",
     auth_google: "المتابعة مع Google",
     auth_or_email: "أو المتابعة بالبريد الإلكتروني",
+    auth_name_placeholder: "اسمك الكامل",
+    auth_legal: "بالتسجيل، أنت توافق على",
+    auth_legal_terms: "شروط الخدمة",
+    auth_legal_and: "و",
+    auth_legal_privacy: "سياسة الخصوصية",
+    auth_trust: "3 أيام مجانية · بدون رسوم حتى اليوم 4 · إلغاء في أي وقت",
 
     confirm_title: "تحقق من بريدك الوارد",
     confirm_text: "أرسلنا رابط التحقق إلى",
@@ -1540,6 +1576,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "创建账户",
     auth_google: "使用Google继续",
     auth_or_email: "或使用邮箱继续",
+    auth_name_placeholder: "您的全名",
+    auth_legal: "注册即表示您同意我们的",
+    auth_legal_terms: "服务条款",
+    auth_legal_and: "和",
+    auth_legal_privacy: "隐私政策",
+    auth_trust: "免费3天 · 第4天才收费 · 随时取消",
 
     confirm_title: "查看您的收件箱",
     confirm_text: "我们已发送验证链接至",
@@ -1773,6 +1815,12 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_create: "Criar conta",
     auth_google: "Continuar com Google",
     auth_or_email: "Ou continue com email",
+    auth_name_placeholder: "Seu nome completo",
+    auth_legal: "Ao se cadastrar, você concorda com nossos",
+    auth_legal_terms: "Termos de Serviço",
+    auth_legal_and: "e",
+    auth_legal_privacy: "Política de Privacidade",
+    auth_trust: "3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser",
 
     confirm_title: "Verifique sua caixa de entrada",
     confirm_text: "Enviamos um link de verificação para",
