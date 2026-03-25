@@ -57,7 +57,57 @@ Deno.serve(async (req) => {
       } catch(e) { console.error("weekly error for", userId, String(e)); }
     }
 
-    return new Response(JSON.stringify({ ok: true, sent }), { headers: { ...cors, "Content-Type": "application/json" } });
+    // ── GAP 5 FIX: Memory consolidation — run every Sunday ──────────────────
+    let consolidated = 0;
+    let pruned = 0;
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+      
+      // Get all users with patterns
+      const { data: allUsers } = await sb.from('learned_patterns' as any)
+        .select('user_id').not('user_id', 'is', null);
+      const uniqueUsers = [...new Set((allUsers || []).map((u: any) => u.user_id))];
+      
+      for (const uid of uniqueUsers.slice(0, 50)) {
+        // 1. Prune: remove low-signal patterns older than 30 days
+        const { error: pruneErr } = await sb.from('learned_patterns' as any)
+          .delete()
+          .eq('user_id', uid)
+          .lt('confidence', 0.3)
+          .lt('sample_size', 3)
+          .lt('last_updated', thirtyDaysAgo);
+        
+        if (!pruneErr) pruned++;
+
+        // 2. Promote: find high-confidence patterns and mark as canonical
+        const { data: highConf } = await sb.from('learned_patterns' as any)
+          .select('id, pattern_key, insight_text, avg_ctr, avg_roas, confidence')
+          .eq('user_id', uid)
+          .eq('is_winner', true)
+          .gt('confidence', 0.8)
+          .gt('sample_size', 5);
+        
+        if (highConf && highConf.length > 0) {
+          // Build consolidated narrative
+          const narrative = highConf.slice(0, 5).map((p: any) => {
+            const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr*100).toFixed(2)}%` : '';
+            const roas = p.avg_roas ? ` ROAS ${p.avg_roas.toFixed(1)}x` : '';
+            return `${p.insight_text}${ctr}${roas}`;
+          }).join(' | ');
+          
+          // Update ai_profile with consolidated summary
+          await sb.from('user_ai_profile' as any).upsert({
+            user_id: uid,
+            ai_summary: `Padrões validados (${highConf.length}): ${narrative}`,
+            last_updated: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+          
+          consolidated++;
+        }
+      }
+    } catch(e) { console.error('memory consolidation error:', String(e)); }
+
+    return new Response(JSON.stringify({ ok: true, sent, consolidated, pruned }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch(e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
   }

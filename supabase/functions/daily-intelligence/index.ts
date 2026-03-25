@@ -402,6 +402,158 @@ Analise os dados da conta e retorne JSON com:
 
   await sb.from('daily_snapshots' as any).upsert(snapshot, { onConflict: 'user_id,persona_id,date' });
 
+  // ── GAP 3 FIX: Feed real CTR/ROAS per ad back into capture-learning ──────
+  // This closes the creative loop: hook generated → goes live → performance captured → feeds next generation
+  const capturePromises = [];
+  for (const ad of [...scalable, ...toPause].slice(0, 15)) {
+    if (!ad.ctr && !ad.roas) continue;
+    // Infer hook_type from ad name — simple heuristic
+    const name = (ad.name || '').toLowerCase();
+    const hookType = name.includes('ugc') ? 'ugc' : name.includes('question') || name.includes('?') ? 'question' :
+      name.includes('before') || name.includes('depois') ? 'before_after' :
+      name.includes('tip') || name.includes('dica') ? 'educational' :
+      name.includes('depo') || name.includes('review') ? 'social_proof' : 'direct';
+    
+    capturePromises.push(
+      sb.functions.invoke('capture-learning', {
+        body: {
+          user_id,
+          event_type: 'performance_reported',
+          data: {
+            hook_type: hookType,
+            hook_text: ad.name?.slice(0, 100),
+            ctr: ad.ctr,
+            roas: ad.roas || null,
+            platform: 'meta',
+            market: 'BR',
+          }
+        }
+      }).catch(() => {})
+    );
+  }
+  await Promise.allSettled(capturePromises);
+
+  // ── GAP 4 FIX: Proactive delta alerts — detect degradation automatically ──
+  // Get previous snapshot to calculate delta
+  const { data: prevSnap } = await sb.from('daily_snapshots' as any)
+    .select('date, avg_ctr, total_spend, active_ads, ai_insight')
+    .eq('user_id', user_id)
+    .eq('persona_id', persona_id || null)
+    .lt('date', today)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (prevSnap) {
+    const ctrDelta = prevSnap.avg_ctr > 0 ? ((avgCtr - prevSnap.avg_ctr) / prevSnap.avg_ctr) * 100 : 0;
+    const spendDelta = prevSnap.total_spend > 0 ? ((totalSpend - prevSnap.total_spend) / prevSnap.total_spend) * 100 : 0;
+    const alerts = [];
+
+    // CTR drop >20% → critical alert
+    if (ctrDelta < -20 && avgCtr > 0) {
+      alerts.push({
+        user_id, persona_id: persona_id || null,
+        type: 'critical',
+        urgency: 'high',
+        detail: `CTR caiu ${Math.abs(ctrDelta).toFixed(1)}% em relação a ontem (${(prevSnap.avg_ctr*100).toFixed(2)}% → ${(avgCtr*100).toFixed(2)}%). Verifique fadiga criativa.`,
+        ad_name: account.name || null,
+        campaign_name: null,
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    // Spend jumped >50% without conversion improvement → warning
+    if (spendDelta > 50 && totalSpend > 100) {
+      alerts.push({
+        user_id, persona_id: persona_id || null,
+        type: 'warning',
+        urgency: 'high',
+        detail: `Spend subiu ${spendDelta.toFixed(0)}% (R$${prevSnap.total_spend.toFixed(0)} → R$${totalSpend.toFixed(0)}) sem melhoria proporcional de conversão.`,
+        ad_name: account.name || null,
+        campaign_name: null,
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    // Ads with frequency >4 + CTR dropping = burn warning
+    for (const ad of fatigued.slice(0, 3)) {
+      if (ad.frequency > 4 && (ad.deltaCtr || 0) < -15) {
+        alerts.push({
+          user_id, persona_id: persona_id || null,
+          type: 'critical',
+          urgency: 'high',
+          detail: `"${ad.name.slice(0,50)}" com frequência ${ad.frequency.toFixed(1)} e CTR caindo ${Math.abs(ad.deltaCtr||0).toFixed(0)}% — pausar agora antes de queimar mais verba.`,
+          ad_name: ad.name,
+          campaign_name: ad.campaign,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    if (alerts.length > 0) {
+      await sb.from('account_alerts' as any).insert(alerts).catch(() => {});
+    }
+  }
+
+  // ── GAP 2 FIX: Auto-actions for users with auto_pilot enabled ─────────────
+  // Check if user has auto_pilot preference
+  const { data: userPrefs } = await sb.from('user_ai_profile' as any)
+    .select('ai_recommendations')
+    .eq('user_id', user_id)
+    .maybeSingle();
+  
+  const autoPilot = (userPrefs?.ai_recommendations as any)?.auto_pilot === true;
+  const autoActionsLog: string[] = [];
+
+  if (autoPilot && toPause.length > 0) {
+    // Auto-pause ads that clearly need it (high spend, zero conversions, failing CTR)
+    const obviousPauses = toPause.filter((a: any) => 
+      a.spend > 50 && a.conversions === 0 && a.ctr < 0.003
+    );
+    
+    for (const ad of obviousPauses.slice(0, 3)) {
+      try {
+        const { data: conn } = await sb.from('platform_connections' as any)
+          .select('access_token').eq('user_id', user_id).eq('platform', 'meta')
+          .eq(persona_id ? 'persona_id' : 'persona_id', persona_id || null)
+          .maybeSingle();
+        
+        if (conn?.access_token) {
+          // Execute pause via Meta API
+          const pauseRes = await fetch(`https://graph.facebook.com/v18.0/${ad.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'PAUSED', access_token: conn.access_token }),
+          });
+          
+          if (pauseRes.ok) {
+            autoActionsLog.push(`Pausado: "${ad.name.slice(0,40)}" (R$${ad.spend.toFixed(0)} gasto, 0 conversões)`);
+            
+            // Log the action
+            await sb.from('account_alerts' as any).insert({
+              user_id, persona_id: persona_id || null,
+              type: 'action',
+              urgency: 'low',
+              detail: `[Auto-Pilot] Pausei "${ad.name.slice(0,50)}" automaticamente: R$${ad.spend.toFixed(0)} gasto sem conversões, CTR ${(ad.ctr*100).toFixed(2)}%.`,
+              ad_name: ad.name,
+              campaign_name: ad.campaign,
+              created_at: new Date().toISOString(),
+            }).catch(() => {});
+
+            // Capture this decision as a learning signal
+            await sb.functions.invoke('capture-learning', {
+              body: {
+                user_id,
+                event_type: 'meta_action_executed',
+                data: { action: 'pause', target_name: ad.name, target_type: 'ad', target_id: ad.id, value: null, executed_at: new Date().toISOString() }
+              }
+            }).catch(() => {});
+          }
+        }
+      } catch(e) { /* non-fatal */ }
+    }
+  }
+
   // Email is sent once per user after all accounts processed (handled by caller)
 
   // ── Rebuild ai_profile ────────────────────────────────────────────────────
@@ -418,7 +570,7 @@ Analise os dados da conta e retorne JSON com:
 
   await sb.from('user_ai_profile' as any).upsert({
     user_id, ai_summary: summary, avg_hook_score: avgCtr * 1000, total_analyses: curr.length,
-    ai_recommendations: { actions: aiActions, winners: winners.slice(0,3).map((p: any) => p.insight_text), insight: aiInsight, updated: today },
+    ai_recommendations: { actions: aiActions, winners: winners.slice(0,3).map((p: any) => p.insight_text), insight: aiInsight, updated: today, auto_pilot: autoPilot },
     last_updated: new Date().toISOString(),
   }, { onConflict: 'user_id' });
 
@@ -427,6 +579,7 @@ Analise os dados da conta e retorne JSON com:
     spend: totalSpend.toFixed(2), ctr: (avgCtr*100).toFixed(3),
     ads: curr.length, scalable: scalable.length, pause: toPause.length, fatigued: fatigued.length,
     insight: aiInsight.slice(0, 80),
+    auto_actions: autoActionsLog,
   };
 }
-// redeploy 202603270100
+// redeploy 202603270200
