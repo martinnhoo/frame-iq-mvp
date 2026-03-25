@@ -441,94 +441,101 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 // ── Block card ────────────────────────────────────────────────────────────────
 function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
+  const F="'Plus Jakarta Sans',sans-serif";
+  const M="'Inter',sans-serif";
+  const MONO="'DM Mono',monospace";
 
   const copyItem=(text:string,idx:number)=>{
     navigator.clipboard.writeText(text);
     setCopiedIdx(idx);
     setTimeout(()=>setCopiedIdx(null),1800);
   };
-
   const useAsScript=(text:string)=>{
     onNavigate("/dashboard/script",{product:text.slice(0,120)});
   };
 
-  // ── NAVIGATE block — inline CTA button ──
+  // ── NAVIGATE ──
   if(block.type==="navigate") return(
-    <div style={{marginBottom:8,padding:"12px 14px",borderRadius:12,background:"rgba(96,165,250,0.05)",border:"1px solid rgba(96,165,250,0.15)"}}>
-      {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.6)",lineHeight:1.6,marginBottom:10}}>{block.content}</p>}
+    <div style={{margin:"4px 0 8px"}}>
+      {block.content&&<p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.55)",lineHeight:1.65,marginBottom:10}}>{block.content}</p>}
       <button onClick={()=>onNavigate(block.route!,block.params)}
-        style={{...j,fontSize:12,fontWeight:600,padding:"7px 14px",borderRadius:8,background:"rgba(96,165,250,0.12)",color:"#60a5fa",border:"1px solid rgba(96,165,250,0.2)",cursor:"pointer"}}>
-        {block.cta||"Open →"}
+        style={{fontFamily:F,fontSize:12,fontWeight:700,padding:"7px 16px",borderRadius:8,background:"rgba(14,165,233,0.1)",color:"rgba(14,165,233,0.9)",border:"1px solid rgba(14,165,233,0.2)",cursor:"pointer",letterSpacing:"-0.01em",transition:"all 0.15s"}}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.18)"}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.1)"}}>
+        {block.cta||"Abrir →"}
       </button>
     </div>
   );
 
-  // ── WARNING block ──
+  // ── WARNING — linha colorida discreta, sem caixa ──
   if(block.type==="warning") return(
-    <div style={{marginBottom:8,padding:"11px 14px",borderRadius:10,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.18)",display:"flex",gap:10,alignItems:"flex-start",borderLeft:"2px solid rgba(251,191,36,0.5)",boxShadow:"none"}}>
-      <span style={{fontSize:13,flexShrink:0,marginTop:1}}>⚠️</span>
-      <p style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(251,191,36,0.9)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
+    <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"10px 14px",borderRadius:8,background:"rgba(251,191,36,0.06)",border:"1px solid rgba(251,191,36,0.15)"}}>
+      <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}>⚠</span>
+      <p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.8)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
     </div>
   );
 
-  // ── HOOKS block — numbered list with copy/script buttons ──
+  // ── HOOKS — inspirado em Claude.ai: lista limpa, sem caixas ──
   if(block.type==="hooks") return(
-    <div style={{marginBottom:8}}>
-      <div style={{display:"flex",flexDirection:"column",gap:5}}>
-        {block.items?.map((item,i)=>(
+    <div style={{marginBottom:4}}>
+      {block.items?.map((item,i)=>{
+        const copied = copiedIdx===i;
+        return(
           <div key={i}
-            style={{display:"flex",gap:0,borderRadius:8,background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.07)",alignItems:"stretch",overflow:"hidden",transition:"border-color 0.15s,background 0.15s"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.13)";(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.045)";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)";(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.025)";}}>
-            {/* Number gutter */}
-            <div style={{width:36,flexShrink:0,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:13,borderRight:"1px solid rgba(255,255,255,0.06)"}}>
-              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.2)"}}>{i+1}</span>
+            style={{display:"flex",alignItems:"flex-start",gap:0,borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.12s"}}
+            className="hook-item"
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent"}}>
+            {/* Número */}
+            <div style={{width:32,paddingTop:14,paddingBottom:12,flexShrink:0,display:"flex",justifyContent:"flex-end",paddingRight:8}}>
+              <span style={{fontFamily:MONO,fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:"0.02em"}}>{i+1}</span>
             </div>
-            {/* Content */}
-            <div style={{flex:1,padding:"11px 13px",minWidth:0}}>
-              <span style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(255,255,255,0.88)",lineHeight:1.65,display:"block"}}>{item}</span>
+            {/* Texto */}
+            <div style={{flex:1,padding:"12px 12px 12px 0",minWidth:0}}>
+              <span style={{fontFamily:M,fontSize:14,color:"rgba(255,255,255,0.9)",lineHeight:1.65,display:"block",letterSpacing:"-0.01em"}}>{item}</span>
             </div>
-            {/* Actions */}
-            <div style={{display:"flex",flexDirection:"column",gap:4,padding:"10px 10px",flexShrink:0,justifyContent:"center"}}>
+            {/* Ações — aparecem no hover via opacity */}
+            <div style={{display:"flex",alignItems:"center",gap:4,padding:"0 4px",paddingTop:12,flexShrink:0,opacity:0.6,transition:"opacity 0.12s"}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
               <button onClick={()=>copyItem(item,i)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:copiedIdx===i?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${copiedIdx===i?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.08)"}`,cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",transition:"all 0.18s",whiteSpace:"nowrap" as const,transform:copiedIdx===i?"scale(1.06)":"scale(1)"}}>
-                {copiedIdx===i?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
-                {copiedIdx===i?(lang==="pt"?"Copiado!":lang==="es"?"¡Copiado!":"Copied!"):(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:copied?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${copied?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:10,color:copied?"#34d399":"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.15s",whiteSpace:"nowrap" as const,transform:copied?"scale(1.04)":"scale(1)"}}>
+                {copied
+                  ?<><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>{lang==="pt"?"Copiado":lang==="es"?"Copiado":"Copied"}</span></>
+                  :<><Copy size={9}/><span>{lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy"}</span></>
+                }
               </button>
               <button onClick={()=>useAsScript(item)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"4px 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.09)",cursor:"pointer",fontSize:10,color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif",transition:"all 0.12s",whiteSpace:"nowrap" as const}}>
-                {lang==="pt"?"→ Roteiro":lang==="es"?"→ Guión":"→ Script"}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontSize:10,color:"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.12s",whiteSpace:"nowrap" as const}}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.2)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.1)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}>
+                {lang==="pt"?"Roteiro":lang==="es"?"Guión":"Script"}
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 
-  // ── ACTION block — compact success state ──
+  // ── ACTION — inline, sem caixa verde ──
   if(block.type==="action") return(
-    <div style={{marginBottom:8,padding:"11px 14px",borderRadius:10,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.18)",display:"flex",gap:10,alignItems:"flex-start",borderLeft:"2px solid rgba(52,211,153,0.5)",boxShadow:"none"}}>
-      <span style={{fontSize:13,flexShrink:0,marginTop:1}}>✅</span>
-      <p style={{fontFamily:"'Inter',sans-serif",fontSize:14,color:"rgba(52,211,153,0.9)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
-    </div>
+    <p style={{fontFamily:M,fontSize:14,color:"rgba(255,255,255,0.75)",lineHeight:1.7,margin:"0 0 4px"}}>{block.content||block.title}</p>
   );
 
-  // ── DEFAULT: insight / pattern / text / off_topic / tool_call ──
-  // Render as clean prose — no card chrome, no label, no collapse
+  // ── DEFAULT: insight / prose — texto é rei ──
   const hasItems = block.items && block.items.length > 0;
-
   return(
     <div style={{marginBottom:hasItems?10:4}}>
       {block.content&&(
-        <p style={{fontFamily:"'Inter',sans-serif",fontSize:14.5,color:"rgba(238,240,246,0.88)",lineHeight:1.75,margin:hasItems?"0 0 12px":"0",letterSpacing:"-0.01em"}}>{block.content}</p>
+        <p style={{fontFamily:M,fontSize:15,color:"rgba(255,255,255,0.88)",lineHeight:1.78,margin:hasItems?"0 0 14px":"0",letterSpacing:"-0.01em"}}>{block.content}</p>
       )}
       {hasItems&&(
-        <div style={{display:"flex",flexDirection:"column",gap:6,marginTop:block.content?4:0}}>
+        <div style={{display:"flex",flexDirection:"column",gap:0,marginTop:block.content?2:0}}>
           {block.items!.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"7px 10px",borderRadius:8,background:"rgba(255,255,255,0.03)"}}>
-              <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(14,165,233,0.5)",marginTop:3,flexShrink:0,fontWeight:600}}>{String(i+1).padStart(2,"0")}</span>
-              <span style={{fontFamily:"'Inter',sans-serif",fontSize:13.5,color:"rgba(238,240,246,0.78)",lineHeight:1.65,flex:1}}>{item}</span>
+            <div key={i} style={{display:"flex",gap:0,alignItems:"flex-start",borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"9px 0"}}>
+              <span style={{fontFamily:MONO,fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:3,flexShrink:0,width:24,letterSpacing:"0.02em"}}>{String(i+1).padStart(2,"0")}</span>
+              <span style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.78)",lineHeight:1.68,flex:1,letterSpacing:"-0.01em"}}>{item}</span>
             </div>
           ))}
         </div>
@@ -1658,15 +1665,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       {new Date(typeof msg.ts === "number" ? msg.ts : Date.now()).toLocaleTimeString(lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"})}
                     </span>
                     <button onClick={(e)=>{navigator.clipboard.writeText(msg.userText||"");const b=e.currentTarget;b.style.color="#34d399";b.style.borderColor="rgba(52,211,153,0.3)";b.style.background="rgba(52,211,153,0.08)";b.style.transform="scale(1.06)";setTimeout(()=>{b.style.color="rgba(255,255,255,0.3)";b.style.borderColor="rgba(255,255,255,0.08)";b.style.background="rgba(255,255,255,0.05)";b.style.transform="scale(1)";},1600);}}
-                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.18s"}}>
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.18s"}}>
                       <Copy size={9}/>Copy
                     </button>
                     <button onClick={()=>send(msg.userText||"")}
-                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
                     {msg.userText}
                   </div>
                 </div>
@@ -1677,7 +1684,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                     <ABAvatar size={26} />
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.35)",letterSpacing:"0.06em",textTransform:"uppercase" as const}}>AdBrief</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"rgba(14,165,233,0.6)",letterSpacing:"0.10em",textTransform:"uppercase" as const}}>AdBrief</span>
                   </div>
                 )}
                 {/* Blocks */}
