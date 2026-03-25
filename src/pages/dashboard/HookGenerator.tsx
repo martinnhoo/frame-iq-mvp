@@ -9,9 +9,9 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 
 const FUNNEL_STAGES = [
-  { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Awareness — cold audience, no brand knowledge", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Consideration — warm, evaluating options", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
-  { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Conversion — hot, ready to decide", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+  { value: "tofu", label: "ToFu", full: "Top of Funnel", desc: "Conscientização — audiência fria, sem conhecimento da marca", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "mofu", label: "MoFu", full: "Mid of Funnel", desc: "Consideração — audiência morna, avaliando opções", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
+  { value: "bofu", label: "BoFu", full: "Bottom of Funnel", desc: "Conversão — audiência quente, pronta para decidir", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
 ];
 
 interface Hook {
@@ -27,10 +27,10 @@ interface Hook {
 const PLATFORMS = ["TikTok", "Reels", "YouTube Shorts", "Meta Feed", "YouTube", "Snapchat"];
 const TONES = ["Aggressive / Urgent", "Conversational / Friendly", "Educational / Expert", "Controversial / Bold", "Emotional / Inspiring", "Humorous / Playful"];
 const MARKETS = [
-  { value: "BR", label: "🇧🇷 Brazil" },
-  { value: "MX", label: "🇲🇽 Mexico" },
-  { value: "US", label: "🇺🇸 United States" },
-  { value: "IN", label: "🇮🇳 India" },
+  { value: "BR", label: "🇧🇷 Brasil" },
+  { value: "MX", label: "🇲🇽 México" },
+  { value: "US", label: "🇺🇸 EUA" },
+  { value: "IN", label: "🇮🇳 Índia" },
   { value: "GLOBAL", label: "🌍 Global" },
 ];
 
@@ -49,7 +49,7 @@ const HOOK_TYPE_COLORS: Record<string, string> = {
 
 const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: string }> = {
   viral:  { color: "text-green-400",  label: "Viral",   bar: "bg-green-400" },
-  high:   { color: "text-blue-400",   label: "High",    bar: "bg-blue-400" },
+  high:   { color: "text-blue-400",   label: "Alto",    bar: "bg-blue-400" },
   medium: { color: "text-yellow-400", label: "Medium",  bar: "bg-yellow-400" },
   low:    { color: "text-red-400",    label: "Low",     bar: "bg-red-400" },
 };
@@ -149,9 +149,9 @@ export default function HookGenerator() {
           data: { hooks: generatedHooks, product, niche, market, platform, tone }
         }}).catch(() => {});
       }
-      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY to get real AI hooks");
+      if (data.mock_mode) toast.info("Configure ANTHROPIC_API_KEY para hooks reais");
     } catch {
-      toast.error("Hook generation failed");
+      toast.error("Falha ao gerar hooks");
     } finally {
       setLoading(false);
     }
@@ -160,7 +160,7 @@ export default function HookGenerator() {
   const copy = async (hook: Hook, idx: number) => {
     await navigator.clipboard.writeText(hook.hook);
     setCopiedIdx(idx);
-    toast.success("Hook copied!");
+    toast.success(language === "es" ? "¡Hook copiado!" : "Hook copiado!");
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 

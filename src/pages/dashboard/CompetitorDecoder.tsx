@@ -77,7 +77,7 @@ const L: Record<string, Record<string, string>> = {
     brand_tip: "Abre la biblioteca de anuncios de Meta filtrada por esa marca. Copia el texto del anuncio y pégalo en la pestaña de texto para analizar.",
   },
   en: {
-    title: "Competitor", sub: "Analyze any ad like a senior CS",
+    title: "Concorrente", sub: "Analise qualquer anúncio como um CS sênior",
     tab_video: "Upload video", tab_text: "Paste text / link", tab_brand: "Search brand",
     drop_title: "Drag video here or click to select",
     drop_sub: "MP4, MOV, AVI — download the TikTok/Instagram video and upload here",
@@ -86,7 +86,7 @@ const L: Record<string, Record<string, string>> = {
     link_placeholder: "...or paste the link (tries to extract content automatically)",
     obs_label: "Observation (optional)",
     obs_placeholder: "What do you want to understand? AI will analyze with this in mind...",
-    btn: "Analyze", analyzing: "Analyzing...",
+    btn: "Analisar", analyzing: "Analisando...",
     industry: "Sector / Niche", market: "Market", hook: "Hook Score",
     diagnosis_label: "What this ad is doing",
     why_label: "Why it works or fails",
@@ -220,7 +220,7 @@ export default function CompetitorDecoder() {
   const analyze = async () => {
     const inputText = tab === "video" ? transcript : tab === "brand" ? "" : adText.trim();
     if (!inputText || inputText.length < 15) {
-      toast.error(lang === "pt" ? "Cole ou transcreva o conteúdo do anúncio primeiro" : "Add the ad content first"); return;
+      toast.error(lang === "pt" ? "Cole ou transcreva o conteúdo do anúncio primeiro" : lang === "es" ? "Añade el contenido del anuncio primero" : "Cole ou transcreva o conteúdo do anúncio primeiro"); return;
     }
     setLoading(true); setResult(null);
     try {

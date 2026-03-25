@@ -58,19 +58,19 @@ const PLATFORMS = [
 ];
 
 const MARKETS = [
-  { value: "BR", flag: "🇧🇷", label: "Brazil" },
-  { value: "MX", flag: "🇲🇽", label: "Mexico" },
+  { value: "BR", flag: "🇧🇷", label: "Brasil" },
+  { value: "MX", flag: "🇲🇽", label: "México" },
   { value: "IN", flag: "🇮🇳", label: "India" },
-  { value: "US", flag: "🇺🇸", label: "United States" },
-  { value: "GB", flag: "🇬🇧", label: "United Kingdom" },
+  { value: "US", flag: "🇺🇸", label: "Estados Unidos" },
+  { value: "GB", flag: "🇬🇧", label: "Reino Unido" },
   { value: "AR", flag: "🇦🇷", label: "Argentina" },
   { value: "CO", flag: "🇨🇴", label: "Colombia" },
   { value: "GLOBAL", flag: "🌐", label: "Global" },
 ];
 
 const FORMATS = [
-  "UGC", "Testimonial", "Tutorial", "Problem-Solution",
-  "Before-After", "Direct Response", "Faceless", "Founder",
+  "UGC", "Depoimento", "Tutorial", "Problema-Solução",
+  "Antes-Depois", "Resposta Direta", "Faceless", "Fundador",
 ];
 
 const DURATIONS = ["15", "30", "60", "90"];
@@ -106,11 +106,11 @@ const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 } 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<string, string> = {
-  STRONG: "Strong", SOLID: "Solid", OPTIMAL: "Optimal", GOOD: "Good", CLEAR: "Clear",
-  NEEDS_WORK: "Suggestion", SUGGESTION: "Tip", FLAG: "Note",
+  STRONG: "Forte", SOLID: "Sólido", OPTIMAL: "Ótimo", GOOD: "Bom", CLEAR: "Claro",
+  NEEDS_WORK: "Sugestão", SUGGESTION: "Dica", FLAG: "Nota",
   // Legacy
-  REVIEW: "Suggestion", WEAK: "Suggestion", ERROR: "Note",
-  CRITICAL: "Suggestion", POOR: "Suggestion", BLOCKED: "Issue",
+  REVIEW: "Sugestão", WEAK: "Sugestão", ERROR: "Nota",
+  CRITICAL: "Atenção", POOR: "Sugestão", BLOCKED: "Problema",
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -281,7 +281,7 @@ export default function PreflightCheck() {
     setDragOver(false);
     const f = e.dataTransfer.files[0];
     if (f && f.type.startsWith("video/")) { setVideoFile(f); }
-    else toast.error("Please drop a video file (MP4, MOV, AVI, WebM)");
+    else toast.error("Arraste um arquivo de vídeo (MP4, MOV, AVI, WebM)");
   };
 
   const run = async () => {
@@ -307,12 +307,12 @@ export default function PreflightCheck() {
           try {
             fileToSend = await extractAudioFromFile(videoFile);
             if (fileToSend.size > MAX_WHISPER_SIZE) {
-              toast.error(`Audio too large (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Try a shorter video.`);
+              toast.error(`Áudio muito grande (${(fileToSend.size / 1024 / 1024).toFixed(1)}MB). Tente um vídeo mais curto.`);
               setLoading(false);
               return;
             }
           } catch (err: any) {
-            toast.error(err.message || "Could not extract audio");
+            toast.error(err.message || "Não foi possível extrair o áudio");
             setLoading(false);
             return;
           }
@@ -396,9 +396,9 @@ export default function PreflightCheck() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("not configured") || msg.includes("API_KEY")) {
-        toast.error("Add ANTHROPIC_API_KEY (and OPENAI_API_KEY for video) to Supabase secrets.");
+        toast.error("Configure as chaves ANTHROPIC_API_KEY e OPENAI_API_KEY nos secrets do Supabase.");
       } else {
-        toast.error("Pre-flight failed — " + msg);
+        toast.error("Preflight falhou — " + msg);
       }
     } finally {
       setLoading(false);

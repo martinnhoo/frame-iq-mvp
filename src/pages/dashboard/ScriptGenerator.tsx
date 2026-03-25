@@ -123,7 +123,7 @@ export default function ScriptGenerator() {
   }, [aiProfile]);
 
   const generate = async () => {
-    if (!product.trim()) { toast.error("Enter a product/service description"); return; }
+    if (!product.trim()) { toast.error(language === "es" ? "Describe tu producto primero" : "Descreva seu produto primeiro"); return; }
     setLoading(true);
     setResult(null);
     try {
@@ -133,7 +133,7 @@ export default function ScriptGenerator() {
       if (error) throw error;
       setResult(data);
     } catch (e: any) {
-      toast.error(e.message || "Failed to generate script");
+      toast.error(e.message || (language === "es" ? "Falló la generación" : "Falha ao gerar roteiro"));
     } finally {
       setLoading(false);
     }
@@ -246,7 +246,7 @@ export default function ScriptGenerator() {
         </Button>
       </div>
 
-      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? "Escrevendo roteiro" : language === "es" ? "Escribiendo guión" : "Writing script"} />}
+      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? "Escrevendo roteiro" : language === "es" ? "Escribiendo guión" : "Escribiendo guión"} />}
 
       {result?.scripts && (
         <div className="space-y-4">
@@ -263,7 +263,7 @@ export default function ScriptGenerator() {
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => copyScript(s, i)} className="gap-1.5">
                   {copied === i ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copied === i ? "Copied" : dt("sg_copy")}
+                  {copied === i ? (language === "es" ? "Copiado" : "Copiado") : dt("sg_copy")}
                 </Button>
               </div>
 

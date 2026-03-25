@@ -84,7 +84,7 @@ export default function BriefGenerator() {
   }, [selectedPersona]);
 
   const generate = async () => {
-    if (!product.trim()) { toast.error("Enter a product/service description"); return; }
+    if (!product.trim()) { toast.error("Descreva o produto ou serviço primeiro"); return; }
     setLoading(true);
     setResult(null);
     try {
@@ -94,7 +94,7 @@ export default function BriefGenerator() {
       if (error) throw error;
       setResult(data);
     } catch (e: any) {
-      toast.error(e.message || "Failed to generate brief");
+      toast.error(e.message || "Falha ao gerar brief");
     } finally {
       setLoading(false);
     }
@@ -136,17 +136,17 @@ export default function BriefGenerator() {
       <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Product / Service *</label>
-          <Textarea placeholder="Describe your product, brand, or campaign..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
+          <Textarea placeholder="Descreva o produto, marca ou campanha..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Offer / Promotion (optional)</label>
-            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="e.g. 50% off, free trial, limited time" />
+            <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="ex: 50% off, trial grátis, tempo limitado" />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "✓" : "(optional)"}</label>
-            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="e.g. Women 25-34, fitness enthusiasts" />
+            <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="ex: Mulheres 25-34, entusiastas fitness" />
           </div>
         </div>
 
@@ -179,18 +179,18 @@ export default function BriefGenerator() {
           </div>
           <div className="space-y-2 col-span-2 md:col-span-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Competitors (optional)</label>
-            <Input value={competitors} onChange={e => setCompetitors(e.target.value)} placeholder="e.g. Competitor A, Competitor B" />
+            <Input value={competitors} onChange={e => setCompetitors(e.target.value)} placeholder="ex: Concorrente A, Concorrente B" />
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
-          <Textarea placeholder="Brand guidelines, compliance rules, past campaign learnings..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
+          <Textarea placeholder="Diretrizes de marca, compliance, aprendizados de campanhas anteriores..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
         <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
           <Sparkles className="h-4 w-4" />
-          {loading ? "Generating brief..." : "Generate Creative Brief"}
+          {loading ? "Gerando brief..." : "Gerar Brief Criativo"}
         </Button>
       </div>
 

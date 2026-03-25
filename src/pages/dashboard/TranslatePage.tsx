@@ -98,7 +98,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
   const acceptFile = (f: File) => {
     if (!f.type.startsWith("video/") && !f.type.startsWith("audio/")) {
-      toast.error("Please drop a video or audio file");
+      toast.error("Arraste um arquivo de vídeo ou áudio");
       return;
     }
     setFile(f);
@@ -178,7 +178,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         }
       } catch (err: any) {
         console.error("Audio extraction error:", err);
-        toast.error(err.message || "Could not extract audio. Try converting to MP3 first.");
+        toast.error(err.message || "Não foi possível extrair o áudio. Tente converter para MP3.");
         setStep("error");
         return;
       }
@@ -197,7 +197,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       console.log("Transcription response:", data);
 
       if (data?.error) {
-        toast.error(data.message || "Transcription failed");
+        toast.error(data.message || "Transcrição falhou");
         setStep("error");
         return;
       }
@@ -208,7 +208,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
       const rawTranscript = data?.transcript || "";
       if (!rawTranscript) {
-        toast.error("No transcript returned");
+        toast.error("Nenhuma transcrição retornada");
         setStep("error");
         return;
       }
@@ -239,20 +239,20 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
           console.log("Translation response:", tData, "error:", tError);
           if (tError || !tData) {
             console.error("Translation error:", tError);
-            toast.error("Translation failed — transcript is still available");
+            toast.error("Tradução falhou — transcrição ainda disponível");
           } else {
             setTranslated(tData?.translated_text || rawTranscript);
           }
         } catch (translateErr) {
           console.error("Translation exception:", translateErr);
-          toast.error("Translation failed — transcript is still available");
+          toast.error("Tradução falhou — transcrição ainda disponível");
         }
         setProgress(100);
       }
 
       setStep("done");
       setProgress(100);
-      toast.success("Transcription complete!");
+      toast.success("Transcrição concluída!");
     } catch (err: any) {
       console.error("Transcription error:", err);
       toast.error(err.message || "Transcription failed — try again");
