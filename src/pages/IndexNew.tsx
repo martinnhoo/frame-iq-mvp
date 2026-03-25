@@ -1494,7 +1494,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
   };
 
   return (
-    <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
@@ -2371,6 +2371,37 @@ function FAQ({ t }: { t: Record<string, string> }) {
 }
 
 // ─── Final CTA ────────────────────────────────────────────────────────────────
+// ── SFX helpers ───────────────────────────────────────────────────────────────
+function playTick(freq = 880, vol = 0.06, dur = 0.04) {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + dur);
+    setTimeout(() => ctx.close(), 200);
+  } catch {}
+}
+function playPop(vol = 0.05) {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const buf = ctx.createBuffer(1, 512, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < 512; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/512, 3);
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
+    gain.gain.value = vol;
+    src.start();
+    setTimeout(() => ctx.close(), 200);
+  } catch {}
+}
+
 // ── MobileDemoSection — chat simulation, only shown on mobile ────────────────
 function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
   const F = "'Plus Jakarta Sans', sans-serif";
@@ -2417,6 +2448,29 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
   const msgs = messages[lang] || messages.en;
   const label = lang === "pt" ? "SIMULAÇÃO" : lang === "es" ? "SIMULACIÓN" : "DEMO";
+  const [visible, setVisible] = useState(0);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        // Play messages one by one with delays and SFX
+        msgs.forEach((msg, i) => {
+          setTimeout(() => {
+            setVisible(v => v + 1);
+            if (msg.role === 'user') playTick(900, 0.05, 0.035);
+            else playPop(0.04);
+          }, i * 900 + 400);
+        });
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [lang]);
   const subtitle = lang === "pt"
     ? "Veja como o AdBrief analisa sua conta em tempo real"
     : lang === "es"
@@ -2427,7 +2481,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
     <section className="mobile-demo-section" style={{
       display: "none", /* hidden on desktop — shown via CSS on mobile */
       background: "linear-gradient(180deg, #0a0f1e 0%, #080c14 100%)",
-      padding: "24px 20px 48px",
+      padding: "16px 20px 40px",
       position: "relative",
       overflow: "hidden",
     }}>
@@ -2466,8 +2520,8 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
         {/* Messages */}
         <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
-          {msgs.map((msg, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {msgs.slice(0, visible).map((msg, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 0, animation: "msgIn 0.25s cubic-bezier(0.16,1,0.3,1) both" }}>
               {msg.role === "user" ? (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <div style={{
@@ -2694,14 +2748,14 @@ export default function IndexNew() {
             .hero-demo-col{display:none!important}
             .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
-            section:first-of-type{min-height:auto!important;align-items:flex-start!important;padding-top:28px!important;padding-bottom:20px!important}
+            .hero-main-section{min-height:auto!important;align-items:flex-start!important;padding-top:28px!important;padding-bottom:16px!important}
           }
           @media(max-width:480px){
-            section:first-of-type{padding:20px 20px 24px!important;min-height:auto!important;align-items:flex-start!important}
+            .hero-main-section{padding:16px 20px 20px!important;min-height:auto!important;align-items:flex-start!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */
-            section:first-of-type{overflow-x:hidden!important}
+            .hero-main-section{overflow-x:hidden!important}
             /* Nav */
             .nav-links{display:none!important}
 
