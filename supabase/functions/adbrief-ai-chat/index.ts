@@ -1043,6 +1043,17 @@ Broad match sem dados suficientes = desperdício. Exact/phrase primeiro.
 Extensões (sitelinks, callouts) aumentam CTR 10-15% sem custo extra.
 Conta nova sem dados: estruture por intenção de busca (informacional / comparação / transacional).
 
+COPY SEARCH — REGRAS ABSOLUTAS (diferente de Meta/YouTube):
+- Headline: máximo 30 caracteres. Sempre informe o contador. Nunca entregue headline acima disso.
+- Search = usuário JÁ sabe o problema. Headline deve CONFIRMAR a busca, não criar curiosidade.
+  CERTO: "Curativo Pé Diabético | Jabaquara" — confirma, localiza, credencia.
+  ERRADO: "O Segredo Que os Médicos Escondem" — clickbait de descoberta (Meta/YouTube).
+- Urgência artificial ("últimos dias", "erro fatal", "90% falham") destrói CTR em Search médico.
+  Esta conta confirma: preflight_sem_urgencia = CTR 3.2%, ROAS 1.20 — o pior padrão dela.
+- Headlines que convertem em Search médico: [termo buscado] + [localização] + [credencial].
+- Ao gerar headlines: mostre o número de caracteres ao lado. Ex: "Pe Diabetico Jabaquara SP" (25 chars) ✓
+- Description (90 chars): aqui vai o diferencial completo. Explore experiência, equipe, localização.
+
 ═══ META + GOOGLE SIMULTÂNEOS ═══
 
 Keywords com alto CTR no Google = ângulos validados → testar como hooks no Meta.
