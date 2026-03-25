@@ -698,444 +698,450 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
     </>
   );
 }
-// ─── Live Panel v2 ────────────────────────────────────────────────────────────
-// Professional real-time dashboard inside IA Chat
-// Replaces old implementation with supabase.functions.invoke + full redesign
+// ─── Live Panel v3 ────────────────────────────────────────────────────────────
+// Design: barra compacta no topo que expande / colapsa com 1 clique
 
-// ── Sparkline ────────────────────────────────────────────────────────────────
-function Sparkline({ data, color = "#0ea5e9", width = 72, height = 28 }: {
-  data: number[]; color?: string; width?: number; height?: number;
-}) {
-  if (!data || data.length < 2) return null;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const pad = 2;
-  const pts = data.map((v, i) =>
-    `${(i / (data.length - 1)) * width},${height - pad - ((v - min) / range) * (height - pad * 2)}`
-  ).join(" ");
-  const last = data[data.length - 1];
-  const prev = data[data.length - 2];
-  const up = last >= prev;
-  const dotX = width;
-  const dotY = height - pad - ((last - min) / range) * (height - pad * 2);
+function Spark({ d, c="#3b82f6", w=60, h=22 }: { d:number[]; c?:string; w?:number; h?:number }) {
+  if (!d || d.length < 2) return null;
+  const mn = Math.min(...d), mx = Math.max(...d), r = mx - mn || 1;
+  const pts = d.map((v,i) => `${(i/(d.length-1))*w},${h-2-((v-mn)/r)*(h-4)}`).join(" ");
+  const up = d[d.length-1] >= d[d.length-2];
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: "block", overflow: "visible" }}>
-      <defs>
-        <linearGradient id={`spfill-${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`0,${height} ${pts} ${width},${height}`} fill={`url(#spfill-${color.replace("#","")})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity="0.9" />
-      <circle cx={dotX} cy={dotY} r="2.5" fill={up ? "#34d399" : "#f87171"} />
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{display:"block",overflow:"visible"}}>
+      <polyline points={pts} fill="none" stroke={c} strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" opacity="0.8"/>
+      <circle cx={(d.length-1)/(d.length-1)*w} cy={h-2-((d[d.length-1]-mn)/r)*(h-4)} r="2" fill={up?"#34d399":"#f87171"}/>
     </svg>
   );
 }
 
-// ── KPI Card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false }: {
-  label: string; value: string; sub?: string; trend?: "up" | "down" | "flat";
-  spark?: number[]; color?: string; warn?: boolean;
+function Kpi({ label, val, sub, warn, spark, sparkColor }: {
+  label:string; val:string; sub?:string; warn?:boolean; spark?:number[]; sparkColor?:string;
 }) {
-  const trendColor = warn ? "#f87171" : trend === "up" ? "#34d399" : trend === "down" ? "#f87171" : "rgba(255,255,255,0.25)";
-  const trendIcon = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
   return (
-    <div style={{
-      flex: 1, minWidth: 0,
-      background: warn ? "rgba(248,113,113,0.05)" : "rgba(255,255,255,0.025)",
-      border: `1px solid ${warn ? "rgba(248,113,113,0.2)" : "rgba(255,255,255,0.06)"}`,
-      borderRadius: 12, padding: "12px 14px",
-      display: "flex", flexDirection: "column", gap: 10,
-      transition: "border-color 0.2s",
-    }}>
-      <span style={{ fontFamily: "'DM Mono','Courier New',monospace", fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)", letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+    <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,minWidth:0,
+      padding:"12px 14px", background: warn?"rgba(248,113,113,0.06)":"rgba(255,255,255,0.03)",
+      border:`1px solid ${warn?"rgba(248,113,113,0.18)":"rgba(255,255,255,0.07)"}`,borderRadius:11}}>
+      <span style={{fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:600,
+        color:"rgba(255,255,255,0.28)",letterSpacing:"0.1em",textTransform:"uppercase"}}>{label}</span>
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:6}}>
         <div>
-          <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 20, fontWeight: 900, color: warn ? "#f87171" : "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{value}</div>
-          {sub && (
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: trendColor, marginTop: 4, display: "flex", alignItems: "center", gap: 2 }}>
-              {trendIcon && <span>{trendIcon}</span>}
-              <span>{sub}</span>
-            </div>
-          )}
+          <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:19,fontWeight:900,
+            letterSpacing:"-0.04em",lineHeight:1,color:warn?"#f87171":"#fff"}}>{val}</div>
+          {sub && <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,marginTop:5,
+            color:warn?"#f87171":"rgba(255,255,255,0.3)"}}>{sub}</div>}
         </div>
-        {spark && <Sparkline data={spark} color={warn ? "#f87171" : color} />}
+        {spark && <Spark d={spark} c={sparkColor||"#3b82f6"} />}
       </div>
     </div>
   );
 }
 
-// ── Creative Row ──────────────────────────────────────────────────────────────
-function CreativeRow({ ad, type, onAsk }: { ad: any; type: "winner" | "risk" | "normal"; onAsk: (q: string) => void }) {
-  const isWinner = type === "winner";
-  const isRisk   = type === "risk";
-  const accentColor = isWinner ? "#34d399" : isRisk ? "#f87171" : "rgba(255,255,255,0.3)";
-  const badgeBg = isWinner ? "rgba(52,211,153,0.1)" : isRisk ? "rgba(248,113,113,0.08)" : "transparent";
-  const ctr = typeof ad.ctr === "number" ? ad.ctr.toFixed(2) : parseFloat(ad.ctr || 0).toFixed(2);
-  const freq = typeof ad.freq === "number" ? ad.freq.toFixed(1) : parseFloat(ad.freq || 0).toFixed(1);
-  const spend = parseFloat(ad.spend || 0).toFixed(0);
+function Creative({ a, kind, ask }: { a:any; kind:"winner"|"risk"|"normal"; ask:(q:string)=>void }) {
+  const isW=kind==="winner", isR=kind==="risk";
+  const dot = isW?"#34d399":isR?"#f87171":"rgba(255,255,255,0.2)";
+  const bg  = isW?"rgba(52,211,153,0.06)":isR?"rgba(248,113,113,0.05)":"rgba(255,255,255,0.02)";
+  const br  = isW?"rgba(52,211,153,0.14)":isR?"rgba(248,113,113,0.12)":"rgba(255,255,255,0.05)";
+  const ctr = parseFloat(a.ctr||0).toFixed(2);
+  const fr  = a.freq!=null?parseFloat(a.freq).toFixed(1):null;
+  const sp  = parseFloat(a.spend||0).toFixed(0);
   return (
-    <div
-      onClick={() => onAsk(`Me fala mais sobre o criativo "${ad.name}". Por que ele está ${isWinner ? "performando bem" : isRisk ? "em risco" : "assim"}?`)}
-      style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-        borderRadius: 9, cursor: "pointer",
-        background: badgeBg,
-        border: `1px solid ${isWinner ? "rgba(52,211,153,0.12)" : isRisk ? "rgba(248,113,113,0.1)" : "rgba(255,255,255,0.04)"}`,
-        transition: "all 0.15s",
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isWinner ? "rgba(52,211,153,0.08)" : isRisk ? "rgba(248,113,113,0.06)" : "rgba(255,255,255,0.04)"; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = badgeBg; }}
-    >
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor, flexShrink: 0, boxShadow: isWinner ? "0 0 6px #34d399" : isRisk ? "0 0 6px #f87171" : "none" }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ad.name || "—"}</p>
-        <p style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(255,255,255,0.25)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ad.campaign || ""}</p>
+    <div onClick={()=>ask(`Me explica o criativo "${a.name}" — por que está ${isW?"performando bem":isR?"em risco":"assim"}?`)}
+      style={{display:"flex",alignItems:"center",gap:9,padding:"7px 10px",borderRadius:9,
+        background:bg,border:`1px solid ${br}`,cursor:"pointer",transition:"opacity 0.15s"}}
+      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.75";}}
+      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";}}>
+      <span style={{width:6,height:6,borderRadius:"50%",background:dot,flexShrink:0,
+        boxShadow:isW?"0 0 6px #34d399":isR?"0 0 6px #f87171":"none"}}/>
+      <div style={{flex:1,minWidth:0}}>
+        <p style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,fontWeight:600,
+          color:"rgba(255,255,255,0.82)",margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.name||"—"}</p>
+        {a.campaign&&<p style={{fontFamily:"'DM Mono',monospace",fontSize:9,
+          color:"rgba(255,255,255,0.22)",margin:"2px 0 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.campaign}</p>}
       </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: parseFloat(ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.35)" }}>{ctr}%</span>
-        {parseFloat(freq) > 0 && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: parseFloat(freq) > 3.5 ? "#f87171" : "rgba(255,255,255,0.25)" }}>f{freq}</span>}
-        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>R${spend}</span>
+      <div style={{display:"flex",gap:7,flexShrink:0,fontFamily:"'DM Mono',monospace",fontSize:10}}>
+        <span style={{color:parseFloat(ctr)>1.5?"#34d399":parseFloat(ctr)<0.5?"#f87171":"rgba(255,255,255,0.35)"}}>{ctr}%</span>
+        {fr&&<span style={{color:parseFloat(fr)>3.5?"#f87171":"rgba(255,255,255,0.22)"}}>f{fr}</span>}
+        <span style={{color:"rgba(255,255,255,0.38)"}}>R${sp}</span>
       </div>
     </div>
   );
 }
 
-// ── Campaign Row ──────────────────────────────────────────────────────────────
-function CampaignRow({ c }: { c: any }) {
-  const active = c.status === "ACTIVE" || c.status === "ENABLED";
+function Camp({ c }: { c:any }) {
+  const on = c.status==="ACTIVE"||c.status==="ENABLED";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: active ? "#34d399" : "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-      <span style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.65)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{c.budget || c.spend ? `R$${c.budget || parseFloat(c.spend).toFixed(0)}` : "—"}</span>
-      {c.ctr && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.25)" }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+    <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderRadius:8,
+      background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)"}}>
+      <span style={{width:5,height:5,borderRadius:"50%",flexShrink:0,
+        background:on?"#34d399":"rgba(255,255,255,0.12)"}}/>
+      <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,
+        color:on?"rgba(255,255,255,0.7)":"rgba(255,255,255,0.3)",
+        flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</span>
+      {c.budget&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.28)",flexShrink:0}}>{c.budget}</span>}
+      {c.ctr&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,flexShrink:0,
+        color:parseFloat(c.ctr)>1.5?"#34d399":"rgba(255,255,255,0.28)"}}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
 
-// ── Alert Banner ──────────────────────────────────────────────────────────────
-function AlertBanner({ alerts, onAsk }: { alerts: Array<{type:"warn"|"ok"|"info"; title: string; detail: string; q: string}>; onAsk: (q: string) => void }) {
-  if (!alerts || alerts.length === 0) return null;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {alerts.map((a, i) => {
-        const colors = { warn: { bg: "rgba(251,146,60,0.06)", border: "rgba(251,146,60,0.2)", dot: "#fb923c", text: "#fb923c" }, ok: { bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.15)", dot: "#34d399", text: "#34d399" }, info: { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.15)", dot: "#0ea5e9", text: "#0ea5e9" } };
-        const c = colors[a.type];
-        return (
-          <div key={i} onClick={() => onAsk(a.q)} style={{
-            display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-            borderRadius: 10, background: c.bg, border: `1px solid ${c.border}`,
-            cursor: "pointer", transition: "opacity 0.15s",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}`, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: c.text }}>{a.title}</span>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginLeft: 6 }}>{a.detail}</span>
-            </div>
-            <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>perguntar →</span>
-          </div>
-        );
-      })}
-    </div>
-  );
+function smartAlerts(d:any) {
+  if(!d||d.error) return [];
+  const k=d.kpis||{}, W=d.winners||[], R=d.at_risk||[];
+  const fr=parseFloat(k.frequency||0), ctr=parseFloat(k.ctr||0), sp=parseFloat(k.spend||0);
+  const out:Array<{t:"warn"|"ok"|"info";title:string;detail:string;q:string}>=[];
+  if(fr>3.5) out.push({t:"warn",title:"Frequência crítica",detail:`${fr.toFixed(1)}x — risco de fadiga`,q:"Minha frequência está alta demais. O que fazer agora?"});
+  if(ctr<0.5&&sp>50) out.push({t:"warn",title:"CTR abaixo do esperado",detail:`${ctr.toFixed(2)}% — revise os hooks`,q:"Por que meu CTR está baixo? Quais criativos estão puxando para baixo?"});
+  if(R.length>0) out.push({t:"warn",title:`${R.length} criativo${R.length>1?"s":""} em risco`,detail:"Fadiga detectada",q:"Quais criativos devo pausar agora e por quê?"});
+  if(W.length>0) out.push({t:"ok",title:`${W.length} criativo${W.length>1?"s":""} pra escalar`,detail:"CTR alto + freq baixa",q:"Quais criativos posso escalar agora e como?"});
+  if(out.length===0&&ctr>1.5&&fr<2.5) out.push({t:"ok",title:"Conta saudável",detail:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x`,q:"Minha conta está bem. Como aproveitar esse momento para crescer?"});
+  return out;
 }
 
-// ── Generate smart alerts from data ──────────────────────────────────────────
-function generateAlerts(metaData: any): Array<{type:"warn"|"ok"|"info"; title: string; detail: string; q: string}> {
-  if (!metaData || metaData.error) return [];
-  const alerts: Array<{type:"warn"|"ok"|"info"; title: string; detail: string; q: string}> = [];
-  const k = metaData.kpis || {};
-  const freq = parseFloat(k.frequency || 0);
-  const ctr  = parseFloat(k.ctr || 0);
-  const winners = metaData.winners || [];
-  const atRisk  = metaData.at_risk  || [];
-
-  if (freq > 3.5) alerts.push({ type: "warn", title: "Frequência crítica", detail: `${freq.toFixed(1)}x — risco de fadiga generalizada`, q: "Minha frequência está alta. O que devo fazer agora?" });
-  if (ctr < 0.5 && parseFloat(k.spend || 0) > 50)  alerts.push({ type: "warn", title: "CTR abaixo do mercado", detail: `${ctr.toFixed(2)}% — revise os hooks`, q: "Meu CTR está baixo. Quais criativos estão puxando para baixo?" });
-  if (atRisk.length > 0)  alerts.push({ type: "warn", title: `${atRisk.length} criativo${atRisk.length > 1 ? "s" : ""} em risco`, detail: "Fadiga detectada — ação recomendada", q: `Quais criativos preciso pausar agora e por quê?` });
-  if (winners.length > 0) alerts.push({ type: "ok",   title: `${winners.length} criativo${winners.length > 1 ? "s" : ""} com espaço pra escalar`, detail: "CTR alto + freq baixa — janela aberta", q: "Quais criativos posso escalar agora com segurança e como?" });
-  if (ctr > 2 && freq < 2) alerts.push({ type: "ok", title: "Conta em boa saúde", detail: `CTR ${ctr.toFixed(2)}% · freq ${freq.toFixed(1)}x`, q: "Minha conta está performando bem. Como aproveito esse momento?" });
-  return alerts;
-}
-
-// ── Main LivePanel ────────────────────────────────────────────────────────────
 function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
-  user: any; selectedPersona: any; connections: string[]; lang: string;
-  onSend: (msg: string) => void;
+  user:any; selectedPersona:any; connections:string[]; lang:string; onSend:(m:string)=>void;
 }) {
-  const [data, setData]         = React.useState<any>(null);
-  const [loading, setLoading]   = React.useState(false);
-  const [error, setError]       = React.useState<string | null>(null);
-  const [collapsed, setCollapsed] = React.useState(false);
-  const [tab, setTab]           = React.useState<"meta"|"google">(connections.includes("meta") ? "meta" : "google");
-  const [lastAt, setLastAt]     = React.useState<Date | null>(null);
+  const [panelData, setPanelData] = React.useState<any>(null);
+  const [loading,   setLoading]   = React.useState(false);
+  const [err,       setErr]       = React.useState<string|null>(null);
+  const [open,      setOpen]      = React.useState(true); // expanded by default
+  const [tab,       setTab]       = React.useState<"meta"|"google">(connections.includes("meta")?"meta":"google");
+  const [stamp,     setStamp]     = React.useState<Date|null>(null);
 
   const hasMeta   = connections.includes("meta");
   const hasGoogle = connections.includes("google");
 
-  const fetch_ = React.useCallback(async () => {
-    if (!user?.id || !selectedPersona?.id) return;
-    setLoading(true);
-    setError(null);
+  const load = React.useCallback(async () => {
+    if(!user?.id||!selectedPersona?.id) return;
+    setLoading(true); setErr(null);
     try {
-      const { data: res, error: err } = await (supabase.functions.invoke as any)("live-panel", {
-        body: { user_id: user.id, persona_id: selectedPersona.id, platforms: connections },
+      const { data: res, error: e } = await (supabase.functions.invoke as any)("live-panel", {
+        body: { user_id: user.id, persona_id: selectedPersona.id, platforms: connections }
       });
-      if (err) throw new Error(err.message || "Erro na edge function");
-      if (res?.success) { setData(res.data); setLastAt(new Date()); }
-      else throw new Error(res?.error || "Resposta inválida");
-    } catch (e: any) {
-      setError(e.message || "Falha na conexão");
-    } finally {
-      setLoading(false);
-    }
+      if(e) throw new Error(e.message||"Erro");
+      if(res?.success) { setPanelData(res.data); setStamp(new Date()); }
+      else throw new Error(res?.error||"Resposta inválida");
+    } catch(e:any) { setErr(e.message||"Falha na conexão"); }
+    finally { setLoading(false); }
   }, [user?.id, selectedPersona?.id, connections.join(",")]);
 
-  React.useEffect(() => { fetch_(); }, [fetch_]);
+  React.useEffect(() => { load(); }, [load]);
 
-  const J = { fontFamily: "'Plus Jakarta Sans',sans-serif" };
-  const M = { fontFamily: "'DM Mono','Courier New',monospace" };
+  const J = {fontFamily:"'Plus Jakarta Sans',sans-serif"};
+  const M = {fontFamily:"'DM Mono',monospace"};
 
-  const tabBtn = (p: "meta" | "google") => {
-    const active = tab === p;
-    const cfg = { meta: { label: "Meta Ads", color: "#1877F2" }, google: { label: "Google Ads", color: "#4285f4" } }[p];
-    const hasErr = data?.[p]?.error;
-    return (
-      <button key={p} onClick={() => setTab(p)} style={{
-        ...J, display: "flex", alignItems: "center", gap: 5, padding: "5px 12px",
-        borderRadius: 7, border: active ? `1px solid ${cfg.color}30` : "1px solid transparent",
-        background: active ? `${cfg.color}12` : "transparent",
-        color: active ? "#fff" : "rgba(255,255,255,0.3)",
-        fontSize: 11, fontWeight: active ? 700 : 400, cursor: "pointer", transition: "all 0.15s",
-      }}>
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: loading ? "rgba(255,255,255,0.2)" : hasErr ? "#f87171" : active ? cfg.color : "rgba(255,255,255,0.15)" }} />
-        {cfg.label}
-      </button>
-    );
-  };
+  const pd  = panelData?.[tab];
+  const k   = pd?.kpis||{};
+  const spS = (pd?.time_series||[]).map((d:any)=>d.spend);
+  const cS  = (pd?.time_series||[]).map((d:any)=>d.ctr);
+  const sTr = spS.length>=2?(spS[spS.length-1]>spS[0]?"↑":"↓"):"";
+  const cTr = cS.length>=2?(cS[cS.length-1]>cS[0]?"↑":"↓"):"";
+  const alerts = tab==="meta"?smartAlerts(pd):[];
 
-  // ── Render ──
-  const panelData = data?.[tab];
-  const k = panelData?.kpis || {};
-  const spendSeries = panelData?.time_series?.map((d: any) => d.spend) || [];
-  const ctrSeries   = panelData?.time_series?.map((d: any) => d.ctr)   || [];
-  const alerts = tab === "meta" ? generateAlerts(panelData) : [];
-  const spendTrend = spendSeries.length >= 2 ? (spendSeries.at(-1) > spendSeries[0] ? "up" : "down") : "flat";
-  const ctrTrend   = ctrSeries.length   >= 2 ? (ctrSeries.at(-1)   > ctrSeries[0]   ? "up" : "down") : "flat";
+  // ── Collapsed bar ──────────────────────────────────────────────────────────
+  const collapsedBar = (
+    <div
+      onClick={()=>setOpen(true)}
+      style={{
+        display:"flex",alignItems:"center",gap:16,padding:"0 16px",
+        height:38,cursor:"pointer",
+        background:"rgba(0,0,0,0.25)",
+        borderBottom:"1px solid rgba(255,255,255,0.05)",
+        transition:"background 0.15s",userSelect:"none",
+      }}
+      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)";}}
+      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.25)";}}>
 
-  return (
-    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.2)" }}>
-
-      {/* ── Header bar ── */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "10px 20px",
-        borderBottom: collapsed ? "none" : "1px solid rgba(255,255,255,0.05)",
-      }}>
-        {/* Platform tabs */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {hasMeta   && tabBtn("meta")}
-          {hasGoogle && tabBtn("google")}
-        </div>
-
-        {/* Right side: live indicator + last refresh + actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Live dot */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            {loading
-              ? <Loader2 size={9} style={{ color: "#0ea5e9", animation: "spin 1s linear infinite" }} />
-              : <span style={{ width: 5, height: 5, borderRadius: "50%", background: error ? "#f87171" : "#34d399", boxShadow: error ? "none" : "0 0 5px #34d399", animation: error ? "none" : "pulse 2s ease-in-out infinite" }} />
-            }
-            <span style={{ ...M, fontSize: 9, color: "rgba(255,255,255,0.2)" }}>
-              {loading ? "buscando..." : lastAt ? lastAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "tempo real"}
-            </span>
-          </div>
-
-          {/* Refresh */}
-          <button onClick={fetch_} disabled={loading} title="Atualizar" style={{ background: "none", border: "none", cursor: loading ? "wait" : "pointer", color: "rgba(255,255,255,0.2)", display: "flex", padding: 2, transition: "color 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.2)"; }}
-          >
-            <RefreshCw size={11} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
-          </button>
-
-          {/* Collapse */}
-          <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", display: "flex", padding: 2, transition: "color 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.2)"; }}
-          >
-            {collapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
-          </button>
-        </div>
+      {/* Platform dot + name */}
+      <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+        <span style={{width:6,height:6,borderRadius:"50%",
+          background:loading?"rgba(255,255,255,0.2)":err?"#f87171":"#34d399",
+          boxShadow:(!loading&&!err)?"0 0 5px #34d399":"none"}}/>
+        <span style={{...M,fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.06em"}}>
+          {tab==="meta"?"META ADS":"GOOGLE ADS"}
+        </span>
       </div>
 
-      {/* ── Body ── */}
-      {!collapsed && (
-        <div style={{ padding: "14px 20px 16px" }}>
-
-          {/* Loading skeleton */}
-          {loading && !data && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[1,2,3,4,5].map(i => (
-                  <div key={i} style={{ flex: 1, height: 68, borderRadius: 12, background: "rgba(255,255,255,0.04)", animation: "skPulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.08}s` }} />
-                ))}
-              </div>
-              <div style={{ height: 80, borderRadius: 10, background: "rgba(255,255,255,0.02)", animation: "skPulse 1.4s 0.4s ease-in-out infinite" }} />
+      {/* Inline KPIs — only when data available */}
+      {pd&&!pd.error&&!loading&&(
+        <div style={{display:"flex",alignItems:"center",gap:20,flex:1,overflow:"hidden"}}>
+          {k.spend&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
+            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>SPEND</span>
+            <span style={{...M,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.65)"}}>R${parseFloat(k.spend).toFixed(0)}</span>
+            {sTr&&<span style={{...M,fontSize:9,color:sTr==="↑"?"#34d399":"#f87171"}}>{sTr}</span>}
+          </div>}
+          {k.ctr&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
+            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>CTR</span>
+            <span style={{...M,fontSize:11,fontWeight:700,color:parseFloat(k.ctr)>1.5?"#34d399":parseFloat(k.ctr)<0.5?"#f87171":"rgba(255,255,255,0.65)"}}>{parseFloat(k.ctr).toFixed(2)}%</span>
+            {cTr&&<span style={{...M,fontSize:9,color:cTr==="↑"?"#34d399":"#f87171"}}>{cTr}</span>}
+          </div>}
+          {k.frequency&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
+            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>FREQ</span>
+            <span style={{...M,fontSize:11,fontWeight:700,color:parseFloat(k.frequency)>3.5?"#f87171":"rgba(255,255,255,0.65)"}}>{parseFloat(k.frequency).toFixed(1)}x</span>
+          </div>}
+          {k.conversions&&k.conversions!=="0"&&<div style={{display:"flex",alignItems:"baseline",gap:4}}>
+            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.08em"}}>CONV</span>
+            <span style={{...M,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.65)"}}>{k.conversions}</span>
+          </div>}
+          {/* Alert dots */}
+          {alerts.filter(a=>a.t==="warn").length>0&&(
+            <div style={{display:"flex",alignItems:"center",gap:4}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:"#f87171",boxShadow:"0 0 5px #f87171"}}/>
+              <span style={{...M,fontSize:9,color:"#f87171"}}>{alerts.filter(a=>a.t==="warn").length} alerta{alerts.filter(a=>a.t==="warn").length>1?"s":""}</span>
             </div>
           )}
-
-          {/* Error */}
-          {error && !loading && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.15)" }}>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "#f87171" }}>{error}</span>
-              <button onClick={fetch_} style={{ ...J, fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 7, background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.2)", color: "#f87171", cursor: "pointer" }}>Tentar novamente</button>
-            </div>
-          )}
-
-          {/* Token expired */}
-          {panelData?.error === "token_expired" && (
-            <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(251,146,60,0.06)", border: "1px solid rgba(251,146,60,0.18)" }}>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "#fb923c" }}>
-                Token {tab === "meta" ? "Meta Ads" : "Google Ads"} expirado —{" "}
-                <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 700, textDecoration: "underline" }}>reconecte em Contas →</a>
-              </span>
-            </div>
-          )}
-
-          {/* No account selected */}
-          {panelData?.error === "no_account_selected" && (
-            <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-                Nenhuma conta selecionada — <a href="/dashboard/accounts" style={{ color: "#0ea5e9" }}>configure em Contas →</a>
-              </span>
-            </div>
-          )}
-
-          {/* Real data */}
-          {panelData && !panelData.error && !error && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-              {/* ── Smart Alerts ── */}
-              {alerts.length > 0 && <AlertBanner alerts={alerts} onAsk={onSend} />}
-
-              {/* ── KPI Row ── */}
-              {tab === "meta" && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <StatCard label="Spend 14d" value={`R$${parseFloat(k.spend||0).toFixed(0)}`} trend={spendTrend} spark={spendSeries} color="#0ea5e9" sub={spendTrend === "up" ? "crescendo" : spendTrend === "down" ? "caindo" : "estável"} />
-                  <StatCard label="CTR médio" value={`${parseFloat(k.ctr||0).toFixed(2)}%`} trend={ctrTrend} spark={ctrSeries} color={parseFloat(k.ctr||0) > 1.5 ? "#34d399" : parseFloat(k.ctr||0) < 0.5 ? "#f87171" : "#f59e0b"} sub={ctrTrend === "up" ? "subindo" : ctrTrend === "down" ? "caindo" : "estável"} warn={parseFloat(k.ctr||0) < 0.5} />
-                  <StatCard label="CPM" value={`R$${parseFloat(k.cpm||0).toFixed(1)}`} color="#a78bfa" sub="por mil impressões" />
-                  <StatCard label="Frequência" value={`${parseFloat(k.frequency||0).toFixed(1)}x`} warn={parseFloat(k.frequency||0) > 3.5} color="#f59e0b" sub={parseFloat(k.frequency||0) > 3.5 ? "alta — fadiga" : parseFloat(k.frequency||0) > 2.5 ? "atenção" : "saudável"} />
-                  <StatCard label="Conversões" value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ads ativos`} />
-                </div>
-              )}
-              {tab === "google" && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <StatCard label="Spend 14d" value={`$${parseFloat(k.spend||0).toFixed(0)}`} trend={spendTrend} spark={spendSeries} color="#4285f4" sub={spendTrend === "up" ? "crescendo" : "caindo"} />
-                  <StatCard label="CTR médio" value={`${parseFloat(k.ctr||0).toFixed(2)}%`} trend={ctrTrend} spark={ctrSeries} color="#34a853" />
-                  <StatCard label="CPC médio" value={`$${parseFloat(k.cpc||0).toFixed(2)}`} color="#fbbc05" />
-                  <StatCard label="Conversões" value={k.conversions || "0"} color="#34a853" />
-                  <StatCard label="Campanhas" value={k.active_campaigns || "0"} color="rgba(255,255,255,0.4)" sub="ativas" />
-                </div>
-              )}
-
-              {/* ── Criativos + Campanhas lado a lado ── */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-
-                {/* Criativos */}
-                <div>
-                  {tab === "meta" && (panelData.winners?.length > 0 || panelData.at_risk?.length > 0) && (
-                    <>
-                      {panelData.winners?.length > 0 && (
-                        <div style={{ marginBottom: 8 }}>
-                          <p style={{ ...J, fontSize: 9, fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px 2px" }}>
-                            ▲ Escalar agora
-                          </p>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {panelData.winners.slice(0, 3).map((ad: any, i: number) => <CreativeRow key={i} ad={ad} type="winner" onAsk={onSend} />)}
-                          </div>
-                        </div>
-                      )}
-                      {panelData.at_risk?.length > 0 && (
-                        <div>
-                          <p style={{ ...J, fontSize: 9, fontWeight: 700, color: "#f87171", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px 2px" }}>
-                            ▼ Risco de fadiga
-                          </p>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {panelData.at_risk.slice(0, 3).map((ad: any, i: number) => <CreativeRow key={i} ad={ad} type="risk" onAsk={onSend} />)}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {tab === "meta" && !panelData.winners?.length && !panelData.at_risk?.length && panelData.top_ads?.length > 0 && (
-                    <>
-                      <p style={{ ...J, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px 2px" }}>Top criativos</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {panelData.top_ads.slice(0, 5).map((ad: any, i: number) => <CreativeRow key={i} ad={ad} type="normal" onAsk={onSend} />)}
-                      </div>
-                    </>
-                  )}
-                  {tab === "google" && panelData.top_ads?.length > 0 && (
-                    <>
-                      <p style={{ ...J, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px 2px" }}>Top anúncios</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {panelData.top_ads.slice(0, 5).map((ad: any, i: number) => <CreativeRow key={i} ad={{ ...ad, freq: undefined }} type="normal" onAsk={onSend} />)}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Campanhas */}
-                <div>
-                  <p style={{ ...J, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px 2px" }}>Campanhas</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    {(panelData.campaigns || []).slice(0, 6).map((c: any, i: number) => <CampaignRow key={i} c={c} />)}
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Quick Actions ── */}
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                {[
-                  { emoji: "📊", label: "Resumo da semana",       q: "Qual o resumo da minha conta essa semana?" },
-                  { emoji: "⚡", label: "O que escalar?",          q: "O que posso escalar agora com segurança?" },
-                  { emoji: "⏸",  label: "O que pausar?",           q: "O que devo pausar hoje e por quê?" },
-                  { emoji: "🎯", label: "Próximo criativo",        q: "Com base nos meus winners, o que devo criar agora?" },
-                  { emoji: "📉", label: "Por que o ROAS caiu?",    q: "Por que meu ROAS caiu? Qual a causa raiz?" },
-                ].map(({ emoji, label, q }) => (
-                  <button key={q} onClick={() => onSend(q)} style={{
-                    ...J, fontSize: 10, fontWeight: 500, padding: "5px 10px", borderRadius: 16,
-                    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-                    color: "rgba(255,255,255,0.45)", cursor: "pointer", transition: "all 0.15s",
-                    display: "flex", alignItems: "center", gap: 4,
-                  }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(14,165,233,0.08)"; el.style.borderColor = "rgba(14,165,233,0.2)"; el.style.color = "#0ea5e9"; }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.45)"; }}
-                  >
-                    <span>{emoji}</span>{label}
-                  </button>
-                ))}
-              </div>
-
+          {(pd.winners||[]).length>0&&(
+            <div style={{display:"flex",alignItems:"center",gap:4}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 5px #34d399"}}/>
+              <span style={{...M,fontSize:9,color:"#34d399"}}>{(pd.winners||[]).length} pra escalar</span>
             </div>
           )}
         </div>
       )}
+      {loading&&<span style={{...M,fontSize:9,color:"rgba(255,255,255,0.2)",flex:1}}>carregando...</span>}
+      {err&&!loading&&<span style={{...M,fontSize:9,color:"#f87171",flex:1}}>erro — clique para ver</span>}
+
+      {/* Expand hint */}
+      <ChevronDown size={12} style={{color:"rgba(255,255,255,0.2)",flexShrink:0}}/>
+    </div>
+  );
+
+  // ── Expanded panel ─────────────────────────────────────────────────────────
+  const expandedPanel = (
+    <div style={{background:"rgba(10,12,17,0.6)",backdropFilter:"blur(8px)",
+      borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
+        padding:"10px 18px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+
+        {/* Tabs */}
+        <div style={{display:"flex",gap:4}}>
+          {[hasMeta&&"meta", hasGoogle&&"google"].filter(Boolean).map((p:any)=>{
+            const active = tab===p;
+            const cfg = p==="meta"
+              ? {label:"Meta Ads",   clr:"#1877F2"}
+              : {label:"Google Ads", clr:"#4285f4"};
+            const hasErr = panelData?.[p]?.error;
+            return (
+              <button key={p} onClick={()=>setTab(p)} style={{
+                ...J,display:"flex",alignItems:"center",gap:5,padding:"5px 12px",
+                borderRadius:8,fontSize:11,fontWeight:active?700:400,cursor:"pointer",
+                border:active?`1px solid ${cfg.clr}28`:"1px solid transparent",
+                background:active?`${cfg.clr}12`:"transparent",
+                color:active?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.15s",
+              }}>
+                <span style={{width:5,height:5,borderRadius:"50%",
+                  background:loading?"rgba(255,255,255,0.2)":hasErr?"#f87171":active?cfg.clr:"rgba(255,255,255,0.12)"}}/>
+                {cfg.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right controls */}
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:5}}>
+            {loading
+              ? <Loader2 size={9} style={{color:"#0ea5e9",animation:"spin 1s linear infinite"}}/>
+              : <span style={{width:5,height:5,borderRadius:"50%",
+                  background:err?"#f87171":"#34d399",
+                  boxShadow:err?"none":"0 0 5px #34d399",
+                  animation:err?"none":"lp-pulse 2s ease-in-out infinite"}}/>
+            }
+            <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.2)"}}>
+              {loading?"buscando...":stamp?stamp.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"ao vivo"}
+            </span>
+          </div>
+          <button onClick={(e)=>{e.stopPropagation();load();}} disabled={loading} title="Atualizar"
+            style={{background:"none",border:"none",cursor:loading?"wait":"pointer",
+              color:"rgba(255,255,255,0.2)",display:"flex",padding:2,transition:"color 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.6)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
+            <RefreshCw size={11} style={{animation:loading?"spin 1s linear infinite":"none"}}/>
+          </button>
+          <button onClick={()=>setOpen(false)} title="Recolher"
+            style={{background:"none",border:"none",cursor:"pointer",
+              color:"rgba(255,255,255,0.2)",display:"flex",padding:2,transition:"color 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.6)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
+            <ChevronUp size={13}/>
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{padding:"14px 18px 16px"}}>
+
+        {/* Skeleton */}
+        {loading&&!panelData&&(
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <div style={{display:"flex",gap:8}}>
+              {[1,2,3,4,5].map(i=>(
+                <div key={i} style={{flex:1,height:66,borderRadius:11,
+                  background:"rgba(255,255,255,0.04)",
+                  animation:`skPulse 1.4s ${i*0.1}s ease-in-out infinite`}}/>
+              ))}
+            </div>
+            <div style={{height:90,borderRadius:10,background:"rgba(255,255,255,0.02)",
+              animation:"skPulse 1.4s 0.5s ease-in-out infinite"}}/>
+          </div>
+        )}
+
+        {/* Error */}
+        {err&&!loading&&(
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
+            padding:"10px 14px",borderRadius:10,
+            background:"rgba(248,113,113,0.06)",border:"1px solid rgba(248,113,113,0.15)"}}>
+            <span style={{...J,fontSize:12,color:"#f87171"}}>{err}</span>
+            <button onClick={load} style={{...J,fontSize:11,fontWeight:700,padding:"5px 12px",
+              borderRadius:7,background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.2)",
+              color:"#f87171",cursor:"pointer"}}>Tentar novamente</button>
+          </div>
+        )}
+
+        {/* Token expired */}
+        {pd?.error==="token_expired"&&(
+          <div style={{padding:"10px 14px",borderRadius:10,
+            background:"rgba(251,146,60,0.06)",border:"1px solid rgba(251,146,60,0.18)"}}>
+            <span style={{...J,fontSize:12,color:"#fb923c"}}>
+              Token expirado — <a href="/dashboard/accounts" style={{color:"#fb923c",fontWeight:700}}>reconecte em Contas →</a>
+            </span>
+          </div>
+        )}
+
+        {/* Data */}
+        {pd&&!pd.error&&!err&&(
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+            {/* Alerts */}
+            {alerts.length>0&&(
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {alerts.map((a,i)=>{
+                  const co={warn:{bg:"rgba(248,113,113,0.05)",br:"rgba(248,113,113,0.18)",dt:"#f87171",tx:"#f87171"},
+                             ok:{bg:"rgba(52,211,153,0.05)",br:"rgba(52,211,153,0.14)",dt:"#34d399",tx:"#34d399"},
+                            info:{bg:"rgba(14,165,233,0.05)",br:"rgba(14,165,233,0.14)",dt:"#0ea5e9",tx:"#0ea5e9"}}[a.t];
+                  return(
+                    <div key={i} onClick={()=>onSend(a.q)} style={{
+                      display:"flex",alignItems:"center",gap:10,padding:"8px 12px",
+                      borderRadius:10,cursor:"pointer",background:co.bg,border:`1px solid ${co.br}`,
+                      transition:"opacity 0.15s",
+                    }}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.7";}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1";}}>
+                      <span style={{width:6,height:6,borderRadius:"50%",background:co.dt,flexShrink:0,
+                        boxShadow:`0 0 7px ${co.dt}`}}/>
+                      <span style={{...J,fontSize:11,fontWeight:700,color:co.tx}}>{a.title}</span>
+                      <span style={{...J,fontSize:11,color:"rgba(255,255,255,0.35)",marginLeft:2}}>{a.detail}</span>
+                      <span style={{...M,fontSize:9,color:"rgba(255,255,255,0.18)",marginLeft:"auto",flexShrink:0}}>perguntar →</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* KPIs */}
+            {tab==="meta"&&(
+              <div style={{display:"flex",gap:8}}>
+                <Kpi label="Spend 14d" val={`R$${parseFloat(k.spend||0).toFixed(0)}`}
+                  sub={sTr==="↑"?"crescendo":sTr==="↓"?"caindo":"estável"}
+                  spark={spS} sparkColor="#3b82f6"/>
+                <Kpi label="CTR médio" val={`${parseFloat(k.ctr||0).toFixed(2)}%`}
+                  sub={cTr==="↑"?"subindo":cTr==="↓"?"caindo":"estável"}
+                  warn={parseFloat(k.ctr||0)<0.5}
+                  spark={cS} sparkColor={parseFloat(k.ctr||0)>1.5?"#34d399":"#f87171"}/>
+                <Kpi label="CPM" val={`R$${parseFloat(k.cpm||0).toFixed(1)}`} sub="por mil"/>
+                <Kpi label="Frequência" val={`${parseFloat(k.frequency||0).toFixed(1)}x`}
+                  sub={parseFloat(k.frequency||0)>3.5?"alta — fadiga":parseFloat(k.frequency||0)>2.5?"atenção":"saudável"}
+                  warn={parseFloat(k.frequency||0)>3.5}/>
+                <Kpi label="Conversões" val={k.conversions||"0"} sub={`${k.active_ads||0} ads`}/>
+              </div>
+            )}
+            {tab==="google"&&(
+              <div style={{display:"flex",gap:8}}>
+                <Kpi label="Spend 14d" val={`$${parseFloat(k.spend||0).toFixed(0)}`} spark={spS} sparkColor="#4285f4"/>
+                <Kpi label="CTR" val={`${parseFloat(k.ctr||0).toFixed(2)}%`} spark={cS} sparkColor="#34a853"/>
+                <Kpi label="CPC médio" val={`$${parseFloat(k.cpc||0).toFixed(2)}`}/>
+                <Kpi label="Conversões" val={k.conversions||"0"}/>
+                <Kpi label="Campanhas" val={k.active_campaigns||"0"} sub="ativas"/>
+              </div>
+            )}
+
+            {/* Criativos + Campanhas */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <div>
+                {tab==="meta"&&(pd.winners||[]).length>0&&(
+                  <div style={{marginBottom:10}}>
+                    <p style={{...J,fontSize:9,fontWeight:700,color:"#34d399",letterSpacing:"0.1em",
+                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>▲ escalar agora</p>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(pd.winners||[]).slice(0,3).map((a:any,i:number)=><Creative key={i} a={a} kind="winner" ask={onSend}/>)}
+                    </div>
+                  </div>
+                )}
+                {tab==="meta"&&(pd.at_risk||[]).length>0&&(
+                  <div>
+                    <p style={{...J,fontSize:9,fontWeight:700,color:"#f87171",letterSpacing:"0.1em",
+                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>▼ risco de fadiga</p>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(pd.at_risk||[]).slice(0,3).map((a:any,i:number)=><Creative key={i} a={a} kind="risk" ask={onSend}/>)}
+                    </div>
+                  </div>
+                )}
+                {((tab==="meta"&&!(pd.winners||[]).length&&!(pd.at_risk||[]).length)||(tab==="google"))&&(pd.top_ads||[]).length>0&&(
+                  <div>
+                    <p style={{...J,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",
+                      textTransform:"uppercase",margin:"0 0 6px 2px"}}>top anúncios</p>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      {(pd.top_ads||[]).slice(0,5).map((a:any,i:number)=><Creative key={i} a={{...a,freq:undefined}} kind="normal" ask={onSend}/>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <p style={{...J,fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",
+                  textTransform:"uppercase",margin:"0 0 6px 2px"}}>campanhas</p>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {(pd.campaigns||[]).slice(0,6).map((c:any,i:number)=><Camp key={i} c={c}/>)}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick actions */}
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",
+              paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.05)"}}>
+              {[
+                {e:"📊",l:"Resumo da semana",q:"Qual o resumo da minha conta essa semana?"},
+                {e:"⚡",l:"O que escalar?",  q:"O que posso escalar agora com segurança?"},
+                {e:"⏸", l:"O que pausar?",   q:"O que devo pausar hoje e por quê?"},
+                {e:"🎯",l:"Próximo criativo",q:"Com base nos meus winners, o que criar agora?"},
+                {e:"📉",l:"Por que caiu?",   q:"Por que meu ROAS caiu? Qual a causa raiz?"},
+              ].map(({e,l,q})=>(
+                <button key={q} onClick={()=>onSend(q)} style={{
+                  ...J,fontSize:10,fontWeight:500,padding:"5px 10px",borderRadius:16,
+                  background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",
+                  color:"rgba(255,255,255,0.42)",cursor:"pointer",transition:"all 0.15s",
+                  display:"flex",alignItems:"center",gap:4,
+                }}
+                  onMouseEnter={e2=>{const el=e2.currentTarget as HTMLElement;el.style.background="rgba(14,165,233,0.08)";el.style.borderColor="rgba(14,165,233,0.2)";el.style.color="#0ea5e9";}}
+                  onMouseLeave={e2=>{const el=e2.currentTarget as HTMLElement;el.style.background="rgba(255,255,255,0.03)";el.style.borderColor="rgba(255,255,255,0.07)";el.style.color="rgba(255,255,255,0.42)";}}>
+                  <span style={{fontSize:11}}>{e}</span>{l}
+                </button>
+              ))}
+            </div>
+
+          </div>
+        )}
+      </div>
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.9)} }
-        @keyframes spin   { to{transform:rotate(360deg)} }
-        @keyframes skPulse{ 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+        @keyframes lp-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.45;transform:scale(0.85)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes skPulse{0%,100%{opacity:0.28}50%{opacity:0.65}}
       `}</style>
     </div>
   );
+
+  return open ? expandedPanel : collapsedBar;
 }
 
 
