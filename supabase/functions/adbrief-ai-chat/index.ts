@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
+    console.log("[adbrief-ai-chat] body keys:", Object.keys(body), "panel_data:", body.panel_data, "user_id:", !!body.user_id, "persona_id:", !!body.persona_id, "message:", !!body.message);
     const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
 
     // ── Panel Data mode — skip Claude, return structured ad data for LivePanel ──
