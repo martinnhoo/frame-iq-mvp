@@ -190,7 +190,34 @@ Deno.serve(async (req) => {
         max_tokens: 3000,
         messages: [{
           role: 'user',
-          content: `You are a senior creative strategist. Your job is to understand the person on the other side of the ad before writing a single word.
+          content: `You are a senior creative strategist. You write hooks that earn trust and convert — not hooks that shock, scare or lie.
+
+══════════════════════════════════════════════════
+ABSOLUTE RULES — APPLY BEFORE WRITING ANYTHING
+══════════════════════════════════════════════════
+
+1. ZERO INVENTED NUMBERS
+   Never write: "80% dos pacientes", "2.400 casos", "87% falham"
+   These numbers don't exist. The user has no data source. Using them destroys credibility.
+   If you need specificity, use TIME ("60 anos de experiência") or PLACE ("Zona Sul de SP") — never fake statistics.
+
+2. ZERO FEAR AMPLIFICATION IN HEALTH/FINANCIAL NICHES
+   Never write: "você pode estar acelerando a amputação", "seu pé está em risco"
+   The person with diabetes ALREADY lives with this fear every day.
+   Amplifying it is not persuasion — it's predatory. And it gets ads rejected.
+   Instead: offer a path, a solution, credibility, hope.
+
+3. ZERO UNVERIFIABLE CLAIMS
+   Never write: "médicos disseram que era caso perdido", "técnica que hospitais escondem"
+   These are unverifiable and trigger immediate distrust.
+   Use only what the ACCOUNT can actually prove or demonstrate.
+
+4. HOOKS MUST WORK WITHOUT THE NUMBER
+   Test every hook: if you remove the statistic, does it still work?
+   If yes → the number was filler. Write the version without it.
+   If no → find a different angle that doesn't need invented data.
+
+══════════════════════════════════════════════════
 
 ${userContext}
 ${persona_context ? `\nAUDIENCE:\n- ${persona_context.name} (${persona_context.age}) | pains: ${persona_context.pains?.join(', ')} | desires: ${persona_context.desires?.join(', ')}\n- Language style: ${persona_context.language_style}\n` : ''}
@@ -205,34 +232,15 @@ Generate ${effectiveCount} hooks for:
 ${angle ? `- Angle: ${angle}` : ''}
 ${context ? `- Context/account patterns: ${context}` : ''}
 
-STEP 1 — READ THE ROOM:
-Before writing, ask:
-- What is this person already feeling when they see this ad?
-- What does their life look like right now because of this problem?
-- What do they need — hope, validation, information, relief, confidence?
+WHAT ACTUALLY WORKS (use these angles):
+- Specificity of experience: "Ferida que não cicatriza há meses?" (they recognize themselves)
+- Earned credibility: "60 anos tratando esse tipo de caso na Zona Sul"
+- Outcome without exploitation: "Pacientes que voltaram a andar" — not "evite amputação"
+- Contrast: "Curativo convencional vs o que realmente fecha feridas diabéticas"
+- Question that interrupts: "Você ainda usa curativo comum em ferida diabética?"
+- Story opener: "Chegou aqui sem esperança. Saiu caminhando."
 
-If someone is already scared (chronic illness, financial trouble, relationship pain):
-→ Do NOT amplify the fear. They're living in it. You're not revealing anything new — you're just being cruel.
-→ Instead: offer credibility, calm authority, a path forward.
-
-If someone doesn't know they have the problem yet:
-→ Pattern interrupts and contrast work. Create awareness of something they haven't noticed.
-
-STEP 2 — WHAT EARNS TRUST IN SENSITIVE NICHES (health, finance, mental health):
-- Specificity of experience: "Feridas que não cicatrizam há meses" (they recognize themselves)
-- Earned credibility: "60 anos tratando esse tipo de ferida"
-- Outcome without exploitation: "Pacientes que voltaram a andar" not "evite amputação"
-- Normalization: "Você não está sozinho nisso"
-
-STEP 3 — WHAT DESTROYS TRUST IN ANY NICHE:
-- ALL CAPS: "MÉDICOS ESCONDEM", "ÚLTIMO AVISO" — looks like a scam
-- Invented numbers: "90% dos pacientes", "2.847 casos" — immediately distrusted
-- Fear amplification of what they already feel: predatory, not persuasive
-- "Doctors don't want you to know" — overused by spam for 15 years
-- Mismatch with platform: Google = confirm search intent (max 30 chars). Meta/TikTok = interrupt + intrigue
-
-STEP 4 — VARY THE APPROACH:
-Give ${effectiveCount} hooks with genuinely different mechanisms — not the same hook reworded:
+VARY THE APPROACH — ${effectiveCount} genuinely different mechanisms:
 curiosity | social_proof | authority | contrast | story_opener | outcome | question | relief
 
 Return ONLY valid JSON:
@@ -258,7 +266,25 @@ Return ONLY valid JSON:
     const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
-    return new Response(JSON.stringify({ hooks: parsed.hooks, mock_mode: false }), {
+    // ── Post-generation filter: catch any invented numbers/fear amplification ──
+    // This is a safety net — the prompt already prohibits these, but we verify
+    const INVENTED_NUMBER_PATTERN = /\d+[%,.]?\d*\s*(?:dos|de|pacientes|casos|pessoas|curativos|cirurgi|amputaç)/i;
+    const FEAR_AMPLIFICATION_PATTERN = /(?:acelerando|risco de|está em risco|pode perder|antes que|urgente|último aviso|médicos escondem|hospitais escondem)/i;
+    
+    const filteredHooks = (parsed.hooks || []).map((h: any) => {
+      const hookText = h.hook || '';
+      const hasInventedNumber = INVENTED_NUMBER_PATTERN.test(hookText);
+      const hasFearAmplification = FEAR_AMPLIFICATION_PATTERN.test(hookText);
+      
+      if (hasInventedNumber || hasFearAmplification) {
+        // Flag it — don't remove, but mark so the frontend can show a warning
+        // and so we learn what to avoid
+        return { ...h, flagged: true, flag_reason: hasInventedNumber ? 'invented_number' : 'fear_amplification' };
+      }
+      return h;
+    });
+
+    return new Response(JSON.stringify({ hooks: filteredHooks, mock_mode: false }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
 
