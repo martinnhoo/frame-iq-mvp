@@ -77,17 +77,28 @@ Deno.serve(async (req) => {
     const softcap  = SOFTCAP_MSGS[planKey]  ?? 3;
     const uiLang   = (user_language as string) || "pt";
 
-    // ── Hard check: daily cap (existing protection)
+    // ── Hard check: daily cap
     if (dailyCount >= cap) {
-      const m: Record<string, string> = {
-        pt: `Você usou todas as ${cap} mensagens de hoje. Renova amanhã.`,
-        es: `Usaste los ${cap} mensajes de hoy. Se reinicia mañana.`,
-        en: `You've used all ${cap} messages for today. Resets tomorrow.`,
-      };
-      return new Response(JSON.stringify({ error: "daily_limit", blocks: [{ type: "warning",
-        title: uiLang === "pt" ? "Limite diário atingido" : uiLang === "es" ? "Límite diario" : "Daily limit reached",
-        content: m[uiLang] || m.en }] }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "daily_limit" }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // ── Progressive warning — append to response after AI replies
+    // willHitLimit: true if this message uses the LAST one
+    const afterThisMsg = dailyCount + 1;
+    const willHitLimit = afterThisMsg >= cap;
+    const oneRemaining = afterThisMsg === cap - 1;
+    const limitWarning = planKey === "free" ? (
+      willHitLimit ? {
+        pt: `— Esta foi sua última mensagem gratuita.`,
+        es: `— Este fue tu último mensaje gratuito.`,
+        en: `— This was your last free message.`,
+      } : oneRemaining ? {
+        pt: `— Você tem apenas 1 mensagem gratuita restante.`,
+        es: `— Solo tienes 1 mensaje gratuito restante.`,
+        en: `— You have 1 free message left.`,
+      } : null
+    ) : null;
 
     // ── Soft cap: monthly cost approaching revenue ceiling — suggest upgrade, don't block
     if (monthlyCount >= softcap && planKey !== "studio") {
@@ -1260,7 +1271,20 @@ ABSOLUTE FORMAT RULES:
       blocks = [{ type: "insight", title: "Response", content: raw }];
     }
 
-    return new Response(JSON.stringify({ blocks }), {
+    // Append limit warning block if needed
+    let finalBlocks = blocks;
+    if (limitWarning) {
+      const warnMsg = (limitWarning as any)[uiLang] || (limitWarning as any).en;
+      finalBlocks = [...blocks, {
+        type: "limit_warning",
+        title: "",
+        content: warnMsg,
+        is_limit_warning: true,
+        will_hit_limit: willHitLimit,
+      }];
+    }
+
+    return new Response(JSON.stringify({ blocks: finalBlocks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 

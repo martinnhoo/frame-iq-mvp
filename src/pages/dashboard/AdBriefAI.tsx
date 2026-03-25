@@ -101,7 +101,7 @@ const SUGG: Record<string, string[]> = {
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart"|"limit_warning";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -1657,6 +1657,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
                   b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)}/>:
                   (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send}/>:
+                  (b.type as string)==="limit_warning"?(
+                    <div key={bi} style={{marginTop:12,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
+                      <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
+                      {(b as any).will_hit_limit&&(
+                        <button onClick={()=>setShowUpgradeWall(true)}
+                          style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
+                          {lang==="pt"?"Ver planos →":lang==="es"?"Ver planes →":"See plans →"}
+                        </button>
+                      )}
+                    </div>
+                  ):
                   (b as any)._pendingTool?null:
                   <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
                 )}
@@ -1741,13 +1752,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .chat-textarea::placeholder{color:rgba(255,255,255,0.22)!important}
       `}</style>
 
-      {showUpgradeWall&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.8)",backdropFilter:"blur(8px)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 0"}} onClick={(e)=>{if(e.target===e.currentTarget)setShowUpgradeWall(false)}}>
-          <div style={{width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",borderRadius:"20px 20px 0 0",background:"#0a0b1a"}}>
-            <UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>
-          </div>
-        </div>
-      )}
+      {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
       {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}
     </div>
   );
