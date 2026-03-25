@@ -177,37 +177,52 @@ Deno.serve(async (req) => {
         max_tokens: 3000,
         messages: [{
           role: 'user',
-          content: `You are a world-class performance marketing creative director specializing in high-converting ad hooks.
+          content: `You are a senior creative strategist at a performance agency. You write hooks that earn attention because they're true and relevant — not because they're loud.
+
 ${userContext}
-${persona_context ? `\nACTIVE AUDIENCE PERSONA — write every hook FOR THIS SPECIFIC PERSON:\n- Name: ${persona_context.name} (${persona_context.age}, ${persona_context.gender})\n- Core pains: ${persona_context.pains?.join(', ')}\n- Desires: ${persona_context.desires?.join(', ')}\n- Triggers: ${persona_context.triggers?.join(', ')}\n- Language style: ${persona_context.language_style}\n- Best platforms: ${persona_context.best_platforms?.join(', ')}\n- Proven hook angles for this persona: ${persona_context.hook_angles?.join(' | ')}\nEvery hook must resonate specifically with this person's psychology, not a generic audience.\n` : ''}
+${persona_context ? `\nAUDIENCE:\n- ${persona_context.name} (${persona_context.age}) | pains: ${persona_context.pains?.join(', ')} | desires: ${persona_context.desires?.join(', ')}\n- Language style: ${persona_context.language_style}\n` : ''}
 FUNNEL STAGE: ${FUNNEL_CONTEXT[funnel_stage] || FUNNEL_CONTEXT.tofu}
-Generate ${effectiveCount} unique, high-converting hook variations for:
+
+Generate ${effectiveCount} hooks for:
 - Product/Service: ${effectiveProduct}
-- Niche/Industry: ${niche || 'general'}
-- Target Market: ${market || 'global'}
-- Primary Platform: ${platform || 'TikTok/Reels'}
-- Tone: ${tone || 'aggressive, urgent, direct'}
-${angle ? `- Angle/Focus: ${angle}` : ''}
-${context ? `- Context/Promo/Learned patterns (USE THIS to personalize): ${context}` : ''}
+- Niche: ${niche || 'general'}
+- Market: ${market || 'global'}
+- Platform: ${platform || 'Meta/TikTok'}
+- Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, specific, credible'}
+${angle ? `- Angle: ${angle}` : ''}
+${context ? `- Context/account patterns: ${context}` : ''}
 
-Rules for hooks:
-- Each must stop the scroll in the FIRST 3 SECONDS
-- Vary the hook TYPE across the set (curiosity, social proof, pattern interrupt, direct offer, emotional, question, statement, controversy)
-- Be specific — no generic hooks
-- Some should be controversial or counterintuitive
-- Include exact words, not descriptions
-- Predict score honestly — not everything is viral
+SITUATIONAL INTELLIGENCE — read the room before writing:
+Before writing any hook, ask: who is this person, what are they already feeling, and what would actually help them take action?
 
-Return ONLY valid JSON (no markdown):
+Example of NOT reading the room:
+- Niche: pé diabético treatment clinic
+- Bad: "Seu pé diabético tem 48h antes da amputação" — this person already lives in fear of losing their foot. Amplifying that fear = trauma, not conversion.
+- Good: "60 anos cuidando de feridas que outros desistiram" — credibility + hope, without exploiting suffering they already live with.
+
+WHAT GREAT HOOKS LOOK LIKE:
+- Authority + outcome: "Tratamos feridas que não cicatrizam há meses — veja o protocolo"
+- Contrast: "A maioria dos curativos piora a ferida. Aqui está o porquê"
+- Credibility: "60 anos especializados em pé diabético na Zona Sul"
+- Patient truth: "Você não precisa conviver com essa dor"
+
+WHAT TO AVOID:
+- ALL CAPS for shock ("MÉDICOS ESCONDEM", "ÚLTIMO AVISO") — marks you as amateur, not authority
+- Invented statistics ("90% dos diabéticos") — destroys trust, especially in health niches
+- Fake urgency exploiting fear the audience already has — predatory, not persuasive
+- "Doctors don't want you to know" tropes — overused, burns credibility
+- Platform mismatch: Google Search = mirror search intent (max 30 chars headline), not interrupt
+
+Return ONLY valid JSON:
 {
   "hooks": [
     {
-      "hook": "Exact opening words/sentence — what the creator says or what appears on screen",
-      "hook_type": "curiosity|social_proof|pattern_interrupt|direct_offer|emotional|question|statement|controversy",
-      "predicted_score": 8.5,
+      "hook": "Exact words — what appears on screen or what is said",
+      "hook_type": "curiosity|social_proof|authority|contrast|emotional|question|statement",
+      "predicted_score": 7.5,
       "hook_strength": "low|medium|high|viral",
-      "platform_fit": ["TikTok", "Reels"],
-      "why": "One sentence explaining why this hook works psychologically",
+      "platform_fit": ["Meta", "Google"],
+      "why": "Psychological mechanism + why it fits this specific audience",
       "cta_suggestion": "Best CTA to pair with this hook"
     }
   ]
