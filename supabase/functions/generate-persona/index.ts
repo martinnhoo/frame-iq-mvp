@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -68,8 +69,9 @@ serve(async (req) => {
     // Rate limit check
     if (user_id) {
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
-      const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user_id).single();
-      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", { p_user_id: user_id, p_plan: profile?.plan || "free" });
+      const { data: profile } = await supabase.from("profiles").select("plan, email").eq("id", user_id).single();
+      const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
+      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", { p_user_id: user_id, p_plan: plan });
       if (rateCheck && !rateCheck.allowed) {
         return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },

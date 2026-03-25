@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -40,8 +41,8 @@ Deno.serve(async (req) => {
 
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
     if (effectiveUserId) {
-      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', effectiveUserId).maybeSingle();
-      const plan = prof?.plan || 'free';
+      const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', effectiveUserId).maybeSingle();
+      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
       if (!allowed) {
         return new Response(JSON.stringify({ error: 'plan_required', message: 'This tool requires a paid plan.' }), {

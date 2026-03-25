@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // ── Cost-based progressive throttle ──────────────────────────────────────────
@@ -46,10 +47,10 @@ Deno.serve(async (req) => {
     // ── Cap hook count by plan ─────────────────────────────────────────────
     let effectiveCount = count;
     if (user_id) {
-      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
-      const plan = prof?.plan || 'free';
+      const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
+      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const hookCaps: Record<string, number> = { free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10 };
-      const cap = hookCaps[plan] ?? 3;
+      const cap = plan === 'studio' ? 10 : (hookCaps[plan] ?? 3);
       effectiveCount = Math.min(count, cap);
     }
 

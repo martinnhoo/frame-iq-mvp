@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -78,9 +79,9 @@ Deno.serve(async (req) => {
     }
 
     const { data: profile } = await supabase
-      .from('profiles').select('plan, last_ai_action_at').eq('id', user_id).single();
+      .from('profiles').select('plan, last_ai_action_at, email').eq('id', user_id).single();
 
-    const plan = profile?.plan || 'free';
+    const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
     const planRevenue = PLAN_REVENUE[plan] ?? 0;
     const planLimits  = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 

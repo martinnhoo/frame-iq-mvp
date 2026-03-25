@@ -1,5 +1,6 @@
 // adbrief-ai-chat v13 — Google Ads live data + cross-platform intelligence + persona_id scoped
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getEffectivePlan } from "../_shared/plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,8 +40,8 @@ Deno.serve(async (req) => {
 
     // ── 2. Plan check + smart rate limiting ──────────────────────────────────
     const { data: profileRow } = await supabase
-      .from("profiles").select("plan").eq("id", user_id).maybeSingle();
-    const plan = profileRow?.plan || "free";
+      .from("profiles").select("plan, email").eq("id", user_id).maybeSingle();
+    const plan = getEffectivePlan(profileRow?.plan, (profileRow as any)?.email);
     const planKey = (["free","maker","pro","studio"].includes(plan)
       ? plan
       : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";

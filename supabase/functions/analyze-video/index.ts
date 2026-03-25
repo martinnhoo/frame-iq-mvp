@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // ── Cost-based progressive throttle ──────────────────────────────────────────
@@ -202,7 +203,8 @@ Deno.serve(async (req) => {
 
     // ── Rate limit check ──
     if (user_id) {
-      const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user_id).single();
+      const { data: profile } = await supabase.from('profiles').select('plan, email').eq('id', user_id).single();
+      const _plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
       // ── Cost-based throttle check ──
       const throttle = await checkThrottle(supabase, user_id);
       if (!throttle.allowed) {

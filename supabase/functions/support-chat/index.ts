@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getEffectivePlan } from "../_shared/plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,12 +51,12 @@ serve(async (req) => {
       );
       const { data: profile } = await supabase
         .from("profiles")
-        .select("plan")
+        .select("plan, email")
         .eq("id", user_id)
         .single();
       const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", {
         p_user_id: user_id,
-        p_plan: profile?.plan || "free",
+        p_plan: getEffectivePlan(profile?.plan, (profile as any)?.email),
       });
       if (rateCheck && !rateCheck.allowed) {
         return new Response(

@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // ── Cost-based progressive throttle ──────────────────────────────────────────
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
     const currentPeriod = new Date().toISOString().slice(0, 7);
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('plan')
+      .select('plan, email')
       .eq('id', user_id)
       .single();
 
@@ -134,10 +135,9 @@ Deno.serve(async (req) => {
       .eq('period', currentPeriod)
       .single();
 
-    const limits: Record<string, number> = { free: 10, maker: 50, pro: 200, studio: -1 };
-    const plan = profile?.plan || 'free';
+    const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
     const usageCount = (usage?.boards_count as number) || 0;
-    const planLimit = limits[plan] ?? 3;
+    const planLimit = getLimit('boards', plan);
 
     // ── Cost-based throttle check ──
     {
@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (usageCount >= planLimit) {
+    if (planLimit !== -1 && usageCount >= planLimit) {
       return new Response(
         JSON.stringify({ error: 'limit_reached', plan, message: `You've reached your ${plan} plan limit of ${planLimit} boards this month.` }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,3 +1,4 @@
+import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 const createSvcClient = createClient;
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.39.0";
@@ -25,8 +26,8 @@ Deno.serve(async (req) => {
     const { product, offer, objective, market, audience, competitors, extra_context, user_id } = await req.json();
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
     if (user_id) {
-      const { data: prof } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
-      const plan = prof?.plan || 'free';
+      const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
+      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
       if (!allowed) {
         return new Response(JSON.stringify({ error: 'plan_required', message: 'This tool requires a paid plan.' }), {

@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getEffectivePlan } from "../_shared/plans.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,11 +29,11 @@ Deno.serve(async (req) => {
     // Check plan access
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('plan')
+      .select('plan, email')
       .eq('id', user_id)
       .single();
 
-    const plan = profile?.plan || 'free';
+    const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
 
     if (plan === 'free') {
       return new Response(

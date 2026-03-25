@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getEffectivePlan, getLimit } from "../_shared/plans.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -35,8 +36,9 @@ Deno.serve(async (req) => {
     // Usage check — use maybeSingle to avoid errors on missing rows
     if (user_id) {
       const period = new Date().toISOString().slice(0, 7);
-      const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user_id).maybeSingle();
-      const plan = profile?.plan || 'free';
+      const { data: profile } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
+      const email = (profile as any)?.email || null;
+      const plan = getEffectivePlan(profile?.plan, email);
 
       // Daily AI rate limit
       const { data: rateCheck } = await supabase.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: plan });
@@ -48,9 +50,9 @@ Deno.serve(async (req) => {
 
       // Monthly translation limit
       const { data: usage } = await supabase.from('usage').select('translations_count').eq('user_id', user_id).eq('period', period).maybeSingle();
-      const limits: Record<string, number> = { free: 10, maker: 50, pro: 200, studio: -1 };
+      const limit = getLimit('translations', plan);
       const count = usage?.translations_count || 0;
-      if (count >= (limits[plan] ?? 10)) {
+      if (limit !== -1 && count >= limit) {
         return new Response(JSON.stringify({ error: 'limit_reached', plan }), {
           status: 403, headers: { ...cors, 'Content-Type': 'application/json' }
         });
