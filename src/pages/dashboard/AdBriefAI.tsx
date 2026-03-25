@@ -1,6 +1,6 @@
 // AdBrief AI — unified v4
 // Design: LoopV2 clean + AdBriefAI power (meta actions, dashboards, tool_call)
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
