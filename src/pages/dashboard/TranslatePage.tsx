@@ -234,12 +234,18 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               tone: "Conversational", user_id: userId,
             }),
           });
-          const tData = res.ok ? await res.json() : null;
-          const tError = res.ok ? null : `HTTP ${res.status}`;
-          console.log("Translation response:", tData, "error:", tError);
-          if (tError || !tData) {
-            console.error("Translation error:", tError);
-            toast.error("Tradução falhou — transcrição ainda disponível");
+          const tData = await res.json().catch(() => null);
+          console.log("Translation response:", res.status, tData);
+          if (!res.ok || !tData?.success) {
+            const errMsg = tData?.error || `HTTP ${res.status}`;
+            console.error("Translation error:", errMsg, tData);
+            if (tData?.daily_limit) {
+              toast.error("Daily AI limit reached — transcript still available");
+            } else if (tData?.error === "limit_reached") {
+              toast.error("Monthly translation limit reached — upgrade your plan");
+            } else {
+              toast.error("Tradução falhou — transcrição ainda disponível");
+            }
           } else {
             setTranslated(tData?.translated_text || rawTranscript);
           }
