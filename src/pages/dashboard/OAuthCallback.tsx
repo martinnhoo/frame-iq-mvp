@@ -67,7 +67,7 @@ export default function OAuthCallback() {
         console.log("[OAuthCallback] Invoking edge function:", pl.fn, { action: "exchange_code", code: code?.slice(0, 10) + "...", user_id: uid, persona_id: pid });
         const invokeStart = Date.now();
         const { data, error: fnError } = await supabase.functions.invoke(pl.fn, {
-          body: { action: "exchange_code", code, user_id: uid, persona_id: pid },
+          body: { action: "exchange_code", code, user_id: uid, persona_id: pid, state },
         });
         console.log("[OAuthCallback] Response in", Date.now() - invokeStart, "ms", { data, fnError });
 
