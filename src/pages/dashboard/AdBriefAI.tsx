@@ -1515,10 +1515,23 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#090d15",position:"relative" as const}}>
+      {/* Background layers — center brighter, edges darker */}
+      <div style={{position:"absolute" as const,inset:0,pointerEvents:"none" as const,zIndex:0}}>
+        {/* Center glow — makes chat area feel elevated and lighter */}
+        <div style={{position:"absolute" as const,top:"10%",left:"50%",transform:"translateX(-50%)",width:"80%",height:"75%",background:"radial-gradient(ellipse at center, rgba(255,255,255,0.018) 0%, transparent 68%)",borderRadius:"50%"}}/>
+        {/* Top vignette */}
+        <div style={{position:"absolute" as const,top:0,left:0,right:0,height:120,background:"linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%)"}}/>
+        {/* Bottom vignette */}
+        <div style={{position:"absolute" as const,bottom:0,left:0,right:0,height:100,background:"linear-gradient(to top, rgba(0,0,0,0.40) 0%, transparent 100%)"}}/>
+        {/* Left vignette */}
+        <div style={{position:"absolute" as const,top:0,left:0,bottom:0,width:80,background:"linear-gradient(to right, rgba(0,0,0,0.20) 0%, transparent 100%)"}}/>
+        {/* Right vignette */}
+        <div style={{position:"absolute" as const,top:0,right:0,bottom:0,width:80,background:"linear-gradient(to left, rgba(0,0,0,0.20) 0%, transparent 100%)"}}/>
+      </div>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0",position:"relative" as const}}>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0",position:"relative" as const,zIndex:1,maskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -1751,7 +1764,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 0 14px",flexShrink:0}}>
+      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1}}>
         <div style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
           {/* Input row: [textarea] [clear] [send] */}
           <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
