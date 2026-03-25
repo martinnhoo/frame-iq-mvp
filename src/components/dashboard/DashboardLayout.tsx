@@ -480,7 +480,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 90% 50% at 50% 100%, rgba(14,165,233,0.04) 0%, transparent 65%), #080c12", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 60%), radial-gradient(ellipse 80% 50% at 50% 100%, rgba(99,102,241,0.04) 0%, transparent 65%), #080c12", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
         </main>
       </div>

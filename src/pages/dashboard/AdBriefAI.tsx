@@ -1514,7 +1514,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0",position:"relative" as const}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -1645,9 +1645,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {messages.map((msg)=>(
           <div key={msg.id} style={{maxWidth:720,margin:"0 auto 20px",padding:"0 20px"}}>
             {msg.role==="user"?(
-              <div style={{display:"flex",justifyContent:"flex-end"}}>
-                <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.09)",border:"1px solid rgba(255,255,255,0.10)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,maxWidth:"78%",lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
-                  {msg.userText}
+              <div style={{display:"flex",justifyContent:"flex-end",position:"relative" as const}} className="user-msg-row">
+                <div style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
+                  {/* Hover actions — shown via CSS class */}
+                  <div className="user-msg-actions" style={{display:"flex",alignItems:"center",gap:4,opacity:0,transition:"opacity 0.15s",pointerEvents:"none" as const}}>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.2)",marginRight:4}}>
+                      {new Date(typeof msg.ts === "number" ? msg.ts : Date.now()).toLocaleTimeString(lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                    <button onClick={()=>{navigator.clipboard.writeText(msg.userText||"");}}
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
+                      <Copy size={9}/>Copy
+                    </button>
+                    <button onClick={()=>send(msg.userText||"")}
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
+                      <RefreshCw size={9}/>Retry
+                    </button>
+                  </div>
+                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.09)",border:"1px solid rgba(255,255,255,0.10)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+                    {msg.userText}
+                  </div>
                 </div>
               </div>
             ):(
@@ -1767,6 +1783,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           textarea::placeholder{font-size:12px!important;opacity:0.35!important}
         }
         .chat-textarea::placeholder{color:rgba(255,255,255,0.22)!important}
+        .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
+        .user-msg-row .user-msg-actions button:hover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.6)!important;}
       `}</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
