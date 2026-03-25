@@ -287,7 +287,8 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   const newAds = enriched.filter((a: any) => a.trend === 'new');
   const trending = enriched.filter((a: any) => a.trend === 'up');
 
-  // ── Patterns: learn hook types that work ─────────────────────────────────
+  // ── Patterns: learn from full funnel — CTR + conversions + ROAS ─────────
+  // Pixel data (actions, cost_per_action, roas) already in enriched[] from Meta API
   for (const ad of scalable.slice(0, 10)) {
     if (ad.ctr < 0.01) continue;
     const key = `meta_ad_${ad.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 35)}`;
@@ -295,7 +296,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       .eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
     const vars: any = (ex?.variables as any) || {};
     const history = vars.history || [];
-    history.unshift({ date: today, ctr: ad.ctr, spend: ad.spend, conversions: ad.conversions, trend: ad.trend });
+    history.unshift({ date: today, ctr: ad.ctr, spend: ad.spend, conversions: ad.conversions, roas: ad.roas||null, cpa: ad.cpa||null, kpi_value: ad.kpiValue, trend: ad.trend });
     if (ex) {
       const n = ex.sample_size || 0;
       await sb.from('learned_patterns').update({
@@ -304,7 +305,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         avg_roas: ad.roas || ex.avg_roas,
         is_winner: ad.isScalable,
         confidence: Math.min(1, (n + 1) / 14),
-        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} (${ad.trend}) | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}`,
+        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} (${ad.trend}) | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}${ad.conversions > 0 ? ` | ${ad.conversions} conv` : ''}${ad.roas ? ` | ROAS ${ad.roas.toFixed(2)}x` : ''}${ad.cpa ? ` | CPA R$${ad.cpa.toFixed(0)}` : ''}`,
         last_updated: new Date().toISOString(),
         variables: { ...vars, history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset, frequency: ad.frequency }
       }).eq('id', ex.id);

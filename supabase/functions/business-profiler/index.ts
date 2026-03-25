@@ -138,11 +138,14 @@ Deno.serve(async (req) => {
       researchChunks.push(`PERSONA DATA:\nPains: ${(personaResult.pains || []).join(' | ')}\nDesires: ${(personaResult.desires || []).join(' | ')}\nBio: ${personaResult.bio || ''}`);
     }
 
+    // Even with no external data, build a profile from what the user told us
+    // Small businesses often have no web presence — that's fine
     if (!researchChunks.length) {
-      return new Response(
-        JSON.stringify({ error: 'could not gather any business information' }),
-        { status: 422, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
+      researchChunks.push(`DADOS DO ONBOARDING:
+Negócio: ${personaName}
+Mercado: ${businessMarket}
+Nicho/Produto: ${businessNiche}
+Nota: sem presença digital encontrada — perfil baseado apenas nas informações fornecidas`);
     }
 
     // ── AI synthesizes into structured profile ───────────────────────────────
@@ -191,8 +194,11 @@ Construa o business_profile:
   "sensitive_topics": ["tópicos que a IA deve tratar com cuidado para esta empresa"],
   "what_to_never_say": ["o que NUNCA dizer sobre ou para esta empresa"],
   "confidence": "high / medium / low",
-  "research_notes": "o que foi encontrado e limitações — seja honesto"
-}`
+  "research_notes": "o que foi encontrado e limitações — seja honesto. Se dados são escassos, diga isso."
+}
+
+IMPORTANTE: Dados escassos ou empresa sem web presence = ainda assim retorne perfil completo com confidence "low".
+Nunca retorne erro. Empresa pequena sem site: infira indústria, público e compliance pelo nome e nicho.`
         }],
       }),
     });

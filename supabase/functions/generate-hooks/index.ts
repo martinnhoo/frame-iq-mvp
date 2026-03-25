@@ -148,9 +148,14 @@ Deno.serve(async (req) => {
           const lines = winners.filter((p: any) => p.insight_text).map((p: any) => {
             const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
             const roas = p.avg_roas ? ` ROAS ${p.avg_roas.toFixed(1)}x` : '';
-            return `✓ ${p.insight_text}${ctr}${roas}`;
+            // Extract conversion data from variables if available
+            const vars = (p.variables as any) || {};
+            const lastEntry = vars.history?.[0] || {};
+            const conv = lastEntry.conversions > 0 ? ` | ${lastEntry.conversions} conv` : '';
+            const cpa = lastEntry.cpa ? ` | CPA R$${lastEntry.cpa.toFixed(0)}` : '';
+            return `✓ ${p.insight_text}${ctr}${roas}${conv}${cpa}`;
           }).join('\n');
-          userContext += `\n\n=== WHAT WORKS FOR THIS ACCOUNT ===\n${lines}\nBuild hooks that match these proven angles.`;
+          userContext += `\n\n=== WHAT WORKS FOR THIS ACCOUNT (real performance) ===\n${lines}\nGenerate hooks that build on these proven angles. Prioritize angles with conversions and ROAS > 1.`;
         }
         
         if (losers.length > 0) {
