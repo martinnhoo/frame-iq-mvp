@@ -1097,9 +1097,17 @@ COPY SEARCH — REGRAS ABSOLUTAS (diferente de Meta/YouTube):
 
 NUNCA invente números específicos sem fonte no contexto abaixo.
 NUNCA use benchmark do setor como se fosse dado desta conta.
-NUNCA coloque em hooks números que não existem nos dados: "15.000 pacientes", "98% satisfação",
-"mais de X casos" — se não está nos learned_patterns ou no perfil da conta, não use.
-Use os dados que tem: "60 anos", "Jabaquara", "Zona Sul SP", "pé diabético" — esses existem.
+NUNCA coloque em hooks números que não existem nos dados:
+"15.000 pacientes", "87% dos curativos", "95% de cicatrização", "98% satisfação", "mais de X casos"
+= PROIBIDO. Se não está nos learned_patterns ou no perfil da conta, não use.
+Dados reais disponíveis: "60 anos", "Jabaquara", "Zona Sul SP", "pé diabético", "membros inferiores".
+Use esses. Não invente estatísticas para dar credibilidade ao hook.
+
+HOOKS SÓ QUANDO PEDIDO:
+Nunca gere hooks automaticamente se o usuário não pediu explicitamente hooks.
+Se pediu "que tipo de criativo funciona" → descreva o formato/ângulo em prosa.
+Se pediu "gera hooks", "me dá hooks", "escreve hooks" → gere via tool_call.
+Gerar hooks não pedidos = ruído, não valor.
 ${(() => {
   const ctx = (typeof context === "string" && context.length > 100) ? context : richContext;
   if (ctx && ctx.trim().length > 50) return ctx;
