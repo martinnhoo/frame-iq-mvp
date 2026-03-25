@@ -9,7 +9,9 @@ import {
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   ScanLine, Zap, Clapperboard, ScanEye, LayoutDashboard, X,
   TrendingUp, TrendingDown, AlertTriangle, BarChart2,
-  Upload, FileText, BarChart3
+  Upload, FileText, BarChart3,
+  Activity, ChevronDown, ChevronUp, ExternalLink,
+  DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 } from "lucide-react";
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
@@ -694,6 +696,404 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
         </button>
       </div>
     </>
+  );
+}
+
+// ─── Live Panel ───────────────────────────────────────────────────────────────
+// Renders real-time Meta + Google Ads data inside the IA Chat screen
+// Only visible when account has at least one connected platform
+
+const PROJ = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+function MiniSparkline({ data, color = "#0ea5e9", height = 32 }: { data: number[]; color?: string; height?: number }) {
+  if (!data || data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const w = 80; const h = height;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 4) - 2}`).join(" ");
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
+      <defs>
+        <linearGradient id={`sg${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#sg${color.replace("#","")})`} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function KpiCard({ label, value, sub, trend, sparkData, color = "#0ea5e9", icon: Icon }: {
+  label: string; value: string; sub?: string; trend?: "up" | "down" | "flat";
+  sparkData?: number[]; color?: string; icon?: any;
+}) {
+  const trendColor = trend === "up" ? "#34d399" : trend === "down" ? "#f87171" : "rgba(255,255,255,0.3)";
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8,
+      minWidth: 0, flex: 1,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
+        {Icon && <Icon size={12} style={{ color: "rgba(255,255,255,0.2)" }} />}
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+        <div>
+          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1, margin: 0 }}>{value}</p>
+          {sub && <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: trendColor, marginTop: 4, margin: 0 }}>{sub}</p>}
+        </div>
+        {sparkData && <MiniSparkline data={sparkData} color={color} />}
+      </div>
+    </div>
+  );
+}
+
+function AdRow({ ad, rank }: { ad: any; rank: number }) {
+  const isRisk = ad.isRisk;
+  const isWinner = ad.isWinner;
+  const badge = isWinner
+    ? { label: "Winner", bg: "rgba(52,211,153,0.12)", border: "rgba(52,211,153,0.25)", color: "#34d399" }
+    : isRisk
+    ? { label: "Em risco", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.2)", color: "#f87171" }
+    : null;
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
+      borderRadius: 10, background: "rgba(255,255,255,0.02)",
+      border: `1px solid ${isRisk ? "rgba(248,113,113,0.12)" : isWinner ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.05)"}`,
+    }}>
+      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "rgba(255,255,255,0.2)", width: 14, flexShrink: 0 }}>{rank}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.85)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ad.name}</p>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ad.campaign}</p>
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+        {ad.ctr !== undefined && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: parseFloat(ad.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.4)" }}>{typeof ad.ctr === "number" ? ad.ctr.toFixed(2) : ad.ctr}%</span>}
+        {ad.freq !== undefined && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: ad.freq > 3.5 ? "#f87171" : "rgba(255,255,255,0.3)" }}>f{typeof ad.freq === "number" ? ad.freq.toFixed(1) : ad.freq}</span>}
+        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>R${parseFloat(ad.spend).toFixed(0)}</span>
+        {badge && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color }}>{badge.label}</span>}
+      </div>
+    </div>
+  );
+}
+
+function MetaPanel({ data }: { data: any }) {
+  const spendSeries = data.time_series?.map((d: any) => d.spend) || [];
+  const ctrSeries   = data.time_series?.map((d: any) => d.ctr) || [];
+  const spendTrend  = spendSeries.length >= 2 ? (spendSeries[spendSeries.length-1] > spendSeries[0] ? "up" : "down") : "flat";
+  const ctrTrend    = ctrSeries.length >= 2 ? (ctrSeries[ctrSeries.length-1] > ctrSeries[0] ? "up" : "down") : "flat";
+  const k = data.kpis;
+  const winners = data.winners || [];
+  const atRisk  = data.at_risk || [];
+  const topAds  = data.top_ads || [];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* KPIs */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <KpiCard label="Spend" value={`R$${parseFloat(k.spend).toFixed(0)}`} trend={spendTrend} sparkData={spendSeries} icon={DollarSign} color="#0ea5e9" sub="últimos 14 dias" />
+        <KpiCard label="CTR médio" value={`${parseFloat(k.ctr).toFixed(2)}%`} trend={ctrTrend} sparkData={ctrSeries} icon={MousePointerClick} color="#34d399" sub={ctrTrend === "up" ? "↑ subindo" : ctrTrend === "down" ? "↓ caindo" : "estável"} />
+        <KpiCard label="CPM" value={`R$${parseFloat(k.cpm).toFixed(1)}`} icon={Eye} color="#f59e0b" />
+        <KpiCard label="Frequência" value={k.frequency} icon={Radio} color={parseFloat(k.frequency) > 3.5 ? "#f87171" : "#a78bfa"} sub={parseFloat(k.frequency) > 3.5 ? "⚠ Alta — risco de fadiga" : "Saudável"} />
+        <KpiCard label="Conversões" value={k.conversions} icon={Target} color="#34d399" />
+        <KpiCard label="Anúncios ativos" value={k.active_ads} icon={Activity} color="rgba(255,255,255,0.4)" />
+      </div>
+
+      {/* Winners + At Risk */}
+      {(winners.length > 0 || atRisk.length > 0) && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {winners.length > 0 && (
+            <div>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#34d399", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                🟢 Escalar agora ({winners.length})
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {winners.slice(0, 3).map((ad: any, i: number) => <AdRow key={i} ad={ad} rank={i + 1} />)}
+              </div>
+            </div>
+          )}
+          {atRisk.length > 0 && (
+            <div>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#f87171", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                🔴 Atenção necessária ({atRisk.length})
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {atRisk.slice(0, 3).map((ad: any, i: number) => <AdRow key={i} ad={ad} rank={i + 1} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Top ads if no winners/risk */}
+      {winners.length === 0 && atRisk.length === 0 && topAds.length > 0 && (
+        <div>
+          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Top Anúncios</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topAds.slice(0, 5).map((ad: any, i: number) => <AdRow key={i} ad={ad} rank={i + 1} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Campaigns */}
+      {data.campaigns?.length > 0 && (
+        <div>
+          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Campanhas</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {data.campaigns.slice(0, 5).map((c: any, i: number) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.status === "ACTIVE" ? "#34d399" : "#f87171", flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{c.budget}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GooglePanel({ data }: { data: any }) {
+  const spendSeries = data.time_series?.map((d: any) => d.spend) || [];
+  const ctrSeries   = data.time_series?.map((d: any) => d.ctr) || [];
+  const spendTrend  = spendSeries.length >= 2 ? (spendSeries[spendSeries.length-1] > spendSeries[0] ? "up" : "down") : "flat";
+  const k = data.kpis;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* KPIs */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <KpiCard label="Spend" value={`$${parseFloat(k.spend).toFixed(0)}`} trend={spendTrend} sparkData={spendSeries} icon={DollarSign} color="#34a853" sub="últimos 14 dias" />
+        <KpiCard label="CTR" value={`${parseFloat(k.ctr).toFixed(2)}%`} sparkData={ctrSeries} icon={MousePointerClick} color="#4285f4" />
+        <KpiCard label="CPC médio" value={`$${parseFloat(k.cpc).toFixed(2)}`} icon={Eye} color="#fbbc05" />
+        <KpiCard label="Conversões" value={k.conversions} icon={Target} color="#34a853" />
+        <KpiCard label="Impressões" value={k.impressions} icon={Eye} color="rgba(255,255,255,0.4)" />
+        <KpiCard label="Campanhas" value={k.active_campaigns} icon={Activity} color="rgba(255,255,255,0.4)" />
+      </div>
+
+      {/* Campaigns */}
+      {data.campaigns?.length > 0 && (
+        <div>
+          <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Campanhas</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {data.campaigns.slice(0, 8).map((c: any, i: number) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.status === "ENABLED" ? "#34a853" : "#f87171", flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "rgba(255,255,255,0.4)" }}>${parseFloat(c.spend).toFixed(0)}</span>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: parseFloat(c.ctr) > 2 ? "#34a853" : "rgba(255,255,255,0.3)" }}>{c.ctr}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
+  user: any; selectedPersona: any; connections: string[]; lang: string; onSend: (msg: string) => void;
+}) {
+  const [panelData, setPanelData] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [collapsed, setCollapsed] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"meta" | "google">(
+    connections.includes("meta") ? "meta" : "google"
+  );
+  const [lastRefresh, setLastRefresh] = React.useState<Date | null>(null);
+
+  const fetchData = React.useCallback(async () => {
+    if (!user?.id || !selectedPersona?.id || connections.length === 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`https://${PROJ}.supabase.co/functions/v1/live-panel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${ANON}`, "apikey": ANON },
+        body: JSON.stringify({ user_id: user.id, persona_id: selectedPersona.id, platforms: connections }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPanelData(json.data);
+        setLastRefresh(new Date());
+      } else {
+        setError(json.error || "Erro ao carregar dados");
+      }
+    } catch (e) {
+      setError("Falha na conexão com a API");
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, selectedPersona?.id, connections.join(",")]);
+
+  React.useEffect(() => { fetchData(); }, [fetchData]);
+
+  const hasMeta   = connections.includes("meta");
+  const hasGoogle = connections.includes("google");
+
+  const platformTab = (platform: "meta" | "google") => {
+    const active = activeTab === platform;
+    const colors: Record<string, string> = { meta: "#1877F2", google: "#4285f4" };
+    const labels: Record<string, string> = { meta: "Meta Ads", google: "Google Ads" };
+    const errored = panelData?.[platform]?.error;
+    return (
+      <button
+        onClick={() => setActiveTab(platform)}
+        style={{
+          display: "flex", alignItems: "center", gap: 6, padding: "6px 14px",
+          borderRadius: 8, border: active ? `1px solid ${colors[platform]}40` : "1px solid transparent",
+          background: active ? `${colors[platform]}15` : "transparent",
+          color: active ? "#fff" : "rgba(255,255,255,0.35)",
+          fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 12, fontWeight: active ? 700 : 400,
+          cursor: "pointer", transition: "all 0.15s",
+        }}
+      >
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: errored ? "#f87171" : active ? colors[platform] : "rgba(255,255,255,0.2)" }} />
+        {labels[platform]}
+        {errored && <span style={{ fontSize: 9, color: "#f87171" }}>!</span>}
+      </button>
+    );
+  };
+
+  return (
+    <div style={{
+      margin: "0 auto 12px", maxWidth: 860, padding: "0 16px",
+    }}>
+      <div style={{
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 18,
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "12px 16px", borderBottom: collapsed ? "none" : "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Platform tabs */}
+            <div style={{ display: "flex", gap: 4 }}>
+              {hasMeta   && platformTab("meta")}
+              {hasGoogle && platformTab("google")}
+            </div>
+            {/* Live indicator */}
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              {loading
+                ? <Loader2 size={10} style={{ color: "#0ea5e9", animation: "spin 1s linear infinite" }} />
+                : <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 6px #34d399", animation: "pulse 2s infinite" }} />
+              }
+              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
+                {loading ? "Atualizando..." : lastRefresh ? `${lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Tempo real"}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <button onClick={fetchData} disabled={loading} style={{ background: "none", border: "none", cursor: loading ? "wait" : "pointer", color: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center" }}>
+              <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+            </button>
+            <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center" }}>
+              {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        {!collapsed && (
+          <div style={{ padding: 16 }}>
+            {loading && !panelData && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Skeleton */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[1,2,3,4,5,6].map(i => (
+                    <div key={i} style={{ flex: 1, height: 72, borderRadius: 14, background: "rgba(255,255,255,0.04)", animation: "skPulse 1.4s ease-in-out infinite" }} />
+                  ))}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {[1,2].map(i => (
+                    <div key={i} style={{ height: 120, borderRadius: 12, background: "rgba(255,255,255,0.03)", animation: "skPulse 1.4s ease-in-out infinite" }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div style={{ padding: "16px", textAlign: "center", color: "#f87171", fontFamily: "'Inter',sans-serif", fontSize: 13 }}>
+                {error}
+                <button onClick={fetchData} style={{ display: "block", margin: "8px auto 0", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", color: "#f87171", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12, fontFamily: "'Inter',sans-serif" }}>
+                  Tentar novamente
+                </button>
+              </div>
+            )}
+
+            {panelData && !error && (
+              <>
+                {/* Token expired warning */}
+                {panelData[activeTab]?.error === "token_expired" && (
+                  <div style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.2)", marginBottom: 12 }}>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "#fb923c", margin: 0 }}>
+                      Token {activeTab === "meta" ? "Meta Ads" : "Google Ads"} expirado —{" "}
+                      <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 700 }}>reconecte em Contas →</a>
+                    </p>
+                  </div>
+                )}
+
+                {panelData[activeTab]?.error === "no_account_selected" && (
+                  <div style={{ padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 12 }}>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                      Nenhuma conta selecionada. Selecione em{" "}
+                      <a href="/dashboard/accounts" style={{ color: "#0ea5e9" }}>Contas →</a>
+                    </p>
+                  </div>
+                )}
+
+                {activeTab === "meta" && panelData.meta && !panelData.meta.error && (
+                  <MetaPanel data={panelData.meta} />
+                )}
+                {activeTab === "google" && panelData.google && !panelData.google.error && (
+                  <GooglePanel data={panelData.google} />
+                )}
+
+                {/* Quick actions */}
+                <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+                  {[
+                    { label: "📊 Resumo da semana", q: "Qual o resumo da minha conta essa semana?" },
+                    { label: "⚡ O que escalar agora?", q: "O que posso escalar agora com segurança?" },
+                    { label: "⏸ O que pausar?", q: "O que devo pausar hoje e por quê?" },
+                    { label: "🎯 Próximo criativo", q: "Com base nos meus winners, o que devo criar agora?" },
+                  ].map(({ label, q }) => (
+                    <button key={q} onClick={() => onSend(q)} style={{
+                      fontFamily: "'Inter',sans-serif", fontSize: 11, fontWeight: 500,
+                      padding: "6px 12px", borderRadius: 20,
+                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.55)", cursor: "pointer", transition: "all 0.15s",
+                    }}
+                      onMouseEnter={e => { const el = e.currentTarget; el.style.background = "rgba(14,165,233,0.08)"; el.style.borderColor = "rgba(14,165,233,0.2)"; el.style.color = "#0ea5e9"; }}
+                      onMouseLeave={e => { const el = e.currentTarget; el.style.background = "rgba(255,255,255,0.04)"; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.55)"; }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes spin  { to{transform:rotate(360deg)} }
+      `}</style>
+    </div>
   );
 }
 
@@ -1619,13 +2019,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <style>{`@keyframes skPulse{0%,100%{opacity:0.35}50%{opacity:0.75}}`}</style>
           </div>
         )}
+
+        {/* ── Live Panel — appears when account has connected platforms ── */}
+        {messages.length===0&&!proactiveLoading&&contextReady&&hasData&&(
+          <LivePanel
+            user={user}
+            selectedPersona={selectedPersona}
+            connections={connections}
+            lang={lang}
+            onSend={send}
+          />
+        )}
+
         {messages.length===0&&!proactiveLoading&&contextReady&&(
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
               <div style={{textAlign:"center",padding:"40px 20px"}}>
                 {/* Icon */}
-                <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 32px rgba(14,165,233,0.08)"}}>
+                <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 32px rgba(14,165,233,0.08))"}}>
                   <Sparkles size={26} color="#0ea5e9"/>
                 </div>
                 <h3 style={{...j,fontSize:18,fontWeight:900,color:"#fff",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
