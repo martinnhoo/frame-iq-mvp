@@ -1017,10 +1017,14 @@ function useStreaming(lang: Lang, externalQa?: Array<{ q: string; lines: string[
       ci++;
       setTypedQ(qa.q.slice(0, ci));
       setPhase('typing');
+      // SFX: subtle tick on every 3rd char
+      if (ci % 3 === 0) playTick(800 + Math.random() * 200, 0.03, 0.03);
       if (ci < qa.q.length) {
         timer.current = setTimeout(typeChar, ci < 3 ? 55 : Math.random() * 35 + 18);
       } else {
         setPhase('thinking');
+        // SFX: send sound when question done
+        playTick(1100, 0.06, 0.05);
         timer.current = setTimeout(streamAnswer, 900);
       }
     };
@@ -1028,6 +1032,8 @@ function useStreaming(lang: Lang, externalQa?: Array<{ q: string; lines: string[
     // — stream answer lines —
     const streamAnswer = () => {
       setPhase('streaming');
+      // SFX: soft pop when AI starts answering
+      playPop(0.04);
       let li = 0, lci = 0;
       const committed: string[] = [];
       const tick = () => {
@@ -1042,6 +1048,7 @@ function useStreaming(lang: Lang, externalQa?: Array<{ q: string; lines: string[
           setActiveLine('');
           li++; lci = 0;
           if (li < qa.lines.length) {
+            playTick(600, 0.02, 0.04);
             timer.current = setTimeout(tick, 120);
           } else {
             setPhase('done'); // stays here — no loop
@@ -1418,6 +1425,37 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
 }
 
 // ─── Immersive Hero ──────────────────────────────────────────────────────────
+function playTick(freq = 880, vol = 0.06, dur = 0.04) {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + dur);
+    setTimeout(() => ctx.close(), 200);
+  } catch {}
+}
+function playPop(vol = 0.05) {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const buf = ctx.createBuffer(1, 512, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < 512; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/512, 3);
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
+    gain.gain.value = vol;
+    src.start();
+    setTimeout(() => ctx.close(), 200);
+  } catch {}
+}
+
+
 function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const [activeIndustry, setActiveIndustry] = React.useState('fitness');
   const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
@@ -2372,35 +2410,6 @@ function FAQ({ t }: { t: Record<string, string> }) {
 
 // ─── Final CTA ────────────────────────────────────────────────────────────────
 // ── SFX helpers ───────────────────────────────────────────────────────────────
-function playTick(freq = 880, vol = 0.06, dur = 0.04) {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = freq;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(vol, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + dur);
-    setTimeout(() => ctx.close(), 200);
-  } catch {}
-}
-function playPop(vol = 0.05) {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const buf = ctx.createBuffer(1, 512, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < 512; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/512, 3);
-    const src = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
-    gain.gain.value = vol;
-    src.start();
-    setTimeout(() => ctx.close(), 200);
-  } catch {}
-}
 
 // ── MobileDemoSection — chat simulation, only shown on mobile ────────────────
 function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
@@ -2453,23 +2462,28 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
   const started = useRef(false);
 
   useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
+    // Use scroll listener since IntersectionObserver doesn't work on display:none
+    let triggered = false;
+    const check = () => {
+      const el = sectionRef.current;
+      if (!el || triggered) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
+        triggered = true;
         started.current = true;
-        // Play messages one by one with delays and SFX
         msgs.forEach((msg, i) => {
           setTimeout(() => {
             setVisible(v => v + 1);
             if (msg.role === 'user') playTick(900, 0.05, 0.035);
             else playPop(0.04);
-          }, i * 900 + 400);
+          }, i * 900 + 200);
         });
       }
-    }, { threshold: 0.3 });
-    obs.observe(el);
-    return () => obs.disconnect();
+    };
+    // Check immediately (in case already in view) and on scroll
+    setTimeout(check, 300);
+    window.addEventListener('scroll', check, { passive: true });
+    return () => window.removeEventListener('scroll', check);
   }, [lang]);
   const subtitle = lang === "pt"
     ? "Veja como o AdBrief analisa sua conta em tempo real"
@@ -2478,8 +2492,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
     : "See how AdBrief analyzes your account in real time";
 
   return (
-    <section className="mobile-demo-section" style={{
-      display: "none", /* hidden on desktop — shown via CSS on mobile */
+    <section ref={sectionRef as any} className="mobile-demo-section" style={{
       background: "linear-gradient(180deg, #0a0f1e 0%, #080c14 100%)",
       padding: "16px 20px 40px",
       position: "relative",
@@ -2743,15 +2756,17 @@ export default function IndexNew() {
           .kpi-card:nth-child(2){animation-delay:0.35s}
 
           /* ── Mobile ── */
+          .mobile-demo-section{display:none}
           @media(max-width:860px){
             .hero-grid{grid-template-columns:1fr!important;gap:0!important}
             .hero-demo-col{display:none!important}
             .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
-            .hero-main-section{min-height:auto!important;align-items:flex-start!important;padding-top:28px!important;padding-bottom:16px!important}
+            .hero-main-section{min-height:auto!important;align-items:flex-start!important;padding-top:72px!important;padding-bottom:24px!important}
+            .mobile-demo-section{display:block}
           }
           @media(max-width:480px){
-            .hero-main-section{padding:16px 20px 20px!important;min-height:auto!important;align-items:flex-start!important}
+            .hero-main-section{padding:80px 20px 24px!important;min-height:auto!important;align-items:flex-start!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */
@@ -2777,9 +2792,7 @@ export default function IndexNew() {
           @media(max-width:480px){
             h1,.hero-h1{font-size:clamp(22px,7vw,30px)!important}
           }
-          @media(max-width:860px){
-            .mobile-demo-section{display:block!important}
-          }
+
           @media(max-width:480px){
             .hero-social-proof{margin-bottom:10px!important}
             .hero-headline{margin-bottom:10px!important}
