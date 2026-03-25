@@ -261,7 +261,7 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div style={{
-        minHeight: "100dvh", background: "#080c12", position: "fixed", inset: 0, zIndex: 9999,
+        minHeight: "100dvh", background: "#0a0d14", position: "fixed", inset: 0, zIndex: 9999,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
@@ -316,7 +316,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#080c12", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#0a0d14", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
         profile={profile}
@@ -480,7 +480,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#080c12", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "#0a0d14", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
         </main>
       </div>
