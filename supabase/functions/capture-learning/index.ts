@@ -150,6 +150,39 @@ Deno.serve(async (req) => {
         const { question, answer, category } = data;
         if (!answer || !question) break;
 
+        // Special handling: business_goal triggers goal calculation
+        if (category === 'business_goal') {
+          // Parse the goal from the answer and calculate reverse-funnel metrics
+          // Example answer: "50 leads por mês com R$2.000 de budget"
+          const budgetMatch = answer.match(/r\$\s*([\d.,]+)/i);
+          const leadsMatch = answer.match(/(\d+)\s*(?:leads?|vendas?|agendamentos?|conversões?)/i);
+          const budget = budgetMatch ? parseFloat(budgetMatch[1].replace(',', '.')) : null;
+          const targetConversions = leadsMatch ? parseInt(leadsMatch[1]) : null;
+          const targetCpa = budget && targetConversions ? (budget / targetConversions) : null;
+          // Estimate required CTR: if avg CPA requires 2% CTR (heuristic based on funnel)
+          const requiredCtr = targetCpa ? (targetCpa < 50 ? '2.5%' : targetCpa < 150 ? '1.5%' : '1.0%') : null;
+
+          const goalData = {
+            goal: answer,
+            budget: budget ? `R$${budget.toFixed(0)}` : null,
+            target_conversions: targetConversions,
+            target_cpa: targetCpa ? `R$${targetCpa.toFixed(0)}` : null,
+            required_ctr: requiredCtr,
+            progress: 'aguardando dados de performance',
+            set_at: new Date().toISOString(),
+          };
+
+          // Save as ai_recommendations.business_goal in user_ai_profile
+          const { data: profile } = await (sb as any).from('user_ai_profile')
+            .select('ai_recommendations').eq('user_id', user_id).maybeSingle();
+          const currentRecs = (profile?.ai_recommendations as any) || {};
+          await (sb as any).from('user_ai_profile').upsert({
+            user_id,
+            ai_recommendations: { ...currentRecs, business_goal: goalData },
+            last_updated: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        }
+
         // Map question to category key
         const catKey = (category || 'business_insight').toLowerCase().replace(/[^a-z0-9]+/g, '_');
         const key = `curiosity_${catKey}`;

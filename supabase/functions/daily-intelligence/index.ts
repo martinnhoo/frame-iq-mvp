@@ -324,6 +324,29 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   let aiActions: any[] = [];
   if (anthropicKey && curr.length > 0) {
     try {
+      // Load previous snapshots for delta analysis (causality)
+      const { data: prevSnaps } = await sb.from('daily_snapshots' as any)
+        .select('date, avg_ctr, total_spend, active_ads, ai_insight')
+        .eq('user_id', user_id).eq('persona_id', persona_id || null)
+        .lt('date', today).order('date', { ascending: false }).limit(7);
+
+      // Load market intelligence patterns for correlation
+      const { data: marketPatterns } = await sb.from('learned_patterns' as any)
+        .select('insight_text, variables, last_updated')
+        .eq('user_id', user_id)
+        .like('pattern_key', 'market_intel_%')
+        .order('last_updated', { ascending: false }).limit(1);
+
+      const prevSnap = (prevSnaps || [])[0];
+      const ctrDelta = prevSnap && prevSnap.avg_ctr > 0
+        ? ((avgCtr - prevSnap.avg_ctr) / prevSnap.avg_ctr * 100)
+        : null;
+      const spendDelta = prevSnap && prevSnap.total_spend > 0
+        ? ((totalSpend - prevSnap.total_spend) / prevSnap.total_spend * 100)
+        : null;
+      const marketIntel = marketPatterns?.[0];
+      const marketVars = marketIntel?.variables as any;
+
       const ctx = {
         account: account.name || account.id,
         period: `${d7} → ${today}`,
@@ -334,6 +357,14 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         ctr_yesterday_pct: (ydCtr * 100).toFixed(2),
         active_ads: curr.length,
         new_ads_this_week: newAds.length,
+        // Delta vs last week — for causal diagnosis
+        ctr_vs_last_week: ctrDelta !== null ? `${ctrDelta > 0 ? '+' : ''}${ctrDelta.toFixed(1)}%` : 'first_week',
+        spend_vs_last_week: spendDelta !== null ? `${spendDelta > 0 ? '+' : ''}${spendDelta.toFixed(1)}%` : 'first_week',
+        previous_insight: prevSnap?.ai_insight?.slice(0, 100) || null,
+        // Market context for correlation
+        market_trend: marketVars?.trend_direction || null,
+        market_competitor_count: marketVars?.competitor_count || null,
+        market_action: marketVars?.action?.slice(0, 80) || null,
         top3: enriched.slice(0, 3).map((a: any) => ({
           name: a.name.slice(0, 40),
           objective: a.objective,
@@ -359,16 +390,31 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 600,
-          system: `Você é um analista sênior de performance em mídia paga. Responda SEMPRE em Português Brasileiro.
-Analise os dados da conta e retorne JSON com:
+          system: `Você é um analista sênior de mídia paga com 10 anos de experiência. Responda SEMPRE em Português Brasileiro.
+Sua função é DIAGNOSTICAR, não apenas descrever. A diferença:
+- Fraco: "CTR caiu 18% esta semana"
+- Forte: "CTR caiu 18% — provável fadiga criativa: frequência 4.2, mesmo criativo há 21 dias, sem novos ads"
+- Forte: "CTR caiu 18% — contexto: mercado com 8 concorrentes novos, demanda estável. Causa mais provável: competição de leilão"
+
+Analise os dados e identifique CAUSAS, não sintomas.
+
+Hipóteses causais por ordem de probabilidade:
+1. Fadiga criativa → frequência alta + sem ads novos + CTR caindo
+2. Competição de leilão → CPM subindo + mercado competitivo + CTR caindo
+3. Sazonalidade → padrão histórico + queda sem fadiga
+4. Problema de landing → CTR estável mas conversões caindo
+5. Público esgotado → frequência muito alta + ROAS caindo
+
+Retorne JSON:
 {
-  "resumo": "<1 frase: situação geral da conta>",
-  "insight_principal": "<2 frases: o insight mais importante hoje — específico, não genérico>",
+  "resumo": "<1 frase: situação real>",
+  "insight_principal": "<2 frases: insight com CAUSA provável — seja específico>",
+  "causa_provavel": "<hipótese causal mais provável baseada nos dados disponíveis>",
+  "confianca_causa": "alta|media|baixa",
   "acoes": [
-    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<1 frase curta>", "urgencia": "alta|media|baixa"},
-    ...máximo 4 ações
+    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<dado específico que justifica>", "urgencia": "alta|media|baixa"}
   ],
-  "alerta": "<se houver algo urgente, 1 frase. Senão: null>"
+  "alerta": "<urgente em 1 frase ou null>"
 }`,
           messages: [{ role: 'user', content: JSON.stringify(ctx, null, 2) }],
         }),
@@ -377,6 +423,10 @@ Analise os dados da conta e retorne JSON com:
       const rawText = aiData.content?.[0]?.text || '{}';
       const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
       aiInsight = parsed.insight_principal || parsed.resumo || '';
+      // Append causal diagnosis to insight when confidence is high/medium
+      if (parsed.causa_provavel && parsed.confianca_causa !== 'baixa') {
+        aiInsight = `${aiInsight} | Causa provável: ${parsed.causa_provavel}`;
+      }
       aiActions = parsed.acoes || [];
       if (parsed.alerta) aiInsight = `⚠️ ${parsed.alerta} — ${aiInsight}`;
     } catch (e) {
@@ -575,9 +625,36 @@ Analise os dados da conta e retorne JSON com:
     aiInsight || '',
   ].filter(Boolean).join(' ');
 
+  // Load existing ai_recommendations to preserve business_goal
+  const { data: existingProfile } = await sb.from('user_ai_profile' as any)
+    .select('ai_recommendations').eq('user_id', user_id).maybeSingle();
+  const existingRecs = (existingProfile?.ai_recommendations as any) || {};
+  const existingGoal = existingRecs.business_goal;
+
+  // Update business_goal progress if set
+  let updatedGoal = existingGoal;
+  if (existingGoal?.target_conversions && totalConversions > 0) {
+    const progressPct = ((totalConversions / existingGoal.target_conversions) * 100).toFixed(0);
+    const onTrack = totalConversions >= (existingGoal.target_conversions * 0.7); // 70% through week
+    updatedGoal = {
+      ...existingGoal,
+      progress: `${totalConversions}/${existingGoal.target_conversions} conversões (${progressPct}%) — ${onTrack ? '✅ no ritmo' : '⚠️ abaixo do ritmo'}`,
+      last_checked: today,
+      actual_cpa: totalConversions > 0 ? `R$${(totalSpend / totalConversions).toFixed(0)}` : null,
+    };
+  }
+
   await sb.from('user_ai_profile' as any).upsert({
     user_id, ai_summary: summary, avg_hook_score: avgCtr * 1000, total_analyses: curr.length,
-    ai_recommendations: { actions: aiActions, winners: winners.slice(0,3).map((p: any) => p.insight_text), insight: aiInsight, updated: today, auto_pilot: autoPilot },
+    ai_recommendations: {
+      ...existingRecs,
+      actions: aiActions,
+      winners: winners.slice(0,3).map((p: any) => p.insight_text),
+      insight: aiInsight,
+      updated: today,
+      auto_pilot: autoPilot,
+      business_goal: updatedGoal,
+    },
     last_updated: new Date().toISOString(),
   }, { onConflict: 'user_id' });
 

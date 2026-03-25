@@ -383,6 +383,9 @@ Deno.serve(async (req) => {
       return `${c.platform}(${accLabel})`;
     });
 
+    // Extract business goal if set
+    const businessGoal = (aiProfile as any)?.ai_recommendations?.business_goal || null;
+
     const persona = personaRow as any;
     const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name} | ${persona.headline || ""}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
@@ -878,6 +881,8 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
         if (!profile) return "";
         const directive = profile?.ai_recommendations?.weekly_directive;
         const lines = [
+          // Business goal — highest priority context
+          businessGoal ? `=== OBJETIVO DE NEGÓCIO ===\nMeta: ${businessGoal.goal}\nBudget: ${businessGoal.budget || '?'}\nCPA alvo: ${businessGoal.target_cpa || '?'}\nProgresso: ${businessGoal.progress || 'sem dados'}` : "",
           profile.ai_summary ? `PERFIL DO USUÁRIO: ${profile.ai_summary}` : "",
           directive?.proximo_teste ? `DIRETIVA SEMANAL (Creative Director): ${directive.proximo_teste}` : "",
           directive?.resumo && directive.resumo !== profile.ai_summary ? `SITUAÇÃO DA CONTA: ${directive.resumo}` : "",
@@ -1076,6 +1081,9 @@ COMO PERGUNTAR:
 - Exemplo: "Aproveitando — qual é a maior objeção que seu cliente tem antes de fechar? Quero usar isso nos próximos hooks."
 
 QUAIS LACUNAS PREENCHER (em ordem de prioridade):
+0. OBJETIVO DE NEGÓCIO — se não estiver no contexto, pergunte PRIMEIRO:
+   "Qual é a sua meta para esta conta? Ex: 50 leads/mês, R$3.000 em vendas, 30 agendamentos. Quero calibrar tudo a partir disso."
+   Quando receber: salve via capture-learning com event_type='ai_curiosity_answer', category='business_goal'
 1. Ticket médio / modelo de negócio (venda única? recorrência? lead?)
 2. Principal motivo de cancelamento/churn
 3. Canal de venda principal (WhatsApp, site, loja física, vendedor?)
