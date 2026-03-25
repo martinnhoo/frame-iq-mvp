@@ -406,6 +406,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
     const preflightPatterns = patterns.filter(p => p.pattern_key.startsWith('preflight_'));
     const actionPatterns = patterns.filter(p => p.pattern_key.startsWith('action_'));
+    // Market intelligence patterns — from Google Trends + Meta Ads Library
+    const marketPatterns = patterns.filter(p =>
+      p.pattern_key.startsWith('market_intel_') || p.pattern_key.startsWith('market_competitor_')
+    ).sort((a: any, b: any) => new Date(b.last_updated||0).getTime() - new Date(a.last_updated||0).getTime());
+    const latestMarket = marketPatterns.find(p => p.pattern_key.startsWith('market_intel_'));
+    const competitorSignals = marketPatterns.filter(p => p.pattern_key.startsWith('market_competitor_')).slice(0, 5);
 
     const learnedCtx = [
       winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
@@ -413,6 +419,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       preflightPatterns.length ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      // Real-time market context — Google Trends + Meta Ads Library
+      latestMarket ? `=== CONTEXTO DE MERCADO (${(latestMarket.variables as any)?.fetched_at?.slice(0,10) || 'hoje'}) ===\n` +
+        `${latestMarket.insight_text}\n` +
+        `Ação recomendada: ${(latestMarket.variables as any)?.action || ''}\n` +
+        `Concorrentes ativos: ${(latestMarket.variables as any)?.competitor_count || 0} | Formatos dominantes: ${((latestMarket.variables as any)?.top_competitor_formats || []).join(', ')}` : "",
+      competitorSignals.length ? `CONCORRENTES NO AR AGORA (Meta Ads Library):\n${competitorSignals.map(p => `  - ${p.insight_text}`).join("\n")}` : "",
     ].filter(Boolean).join("\n\n");
 
     // ── 4b. Fetch live Meta Ads data (with historical date detection) ──────────
@@ -1073,6 +1085,21 @@ Se CONNECTED PLATFORMS = "none":
 REGRA DE OURO: Nunca mencione uma plataforma não conectada como se tivesse dados dela.
 "Sua frequência no Meta" quando só Google está conectado = erro grave.
 "Seu CTR no Google" quando só Meta está conectado = erro grave.
+
+═══ CONTEXTO DE MERCADO — USE QUANDO DISPONÍVEL ═══
+
+No contexto abaixo pode haver uma seção "CONTEXTO DE MERCADO" com dados reais de:
+- Google Trends: demanda atual pela keyword principal da conta (score 0-100, direção)
+- Meta Ads Library: o que concorrentes estão rodando AGORA, por quanto tempo
+- Ação recomendada pelo sistema com base nesses dados
+
+COMO USAR:
+- Se há dados de mercado, integre-os naturalmente na análise sem citar a fonte tecnicamente.
+  Correto: "A demanda por esse serviço está subindo essa semana — bom momento para aumentar budget"
+  Errado: "Segundo o Google Trends score 78/100..."
+- Concorrentes rodando 45+ dias = anúncios provados. Mencione o padrão de formato, não o nome.
+  Correto: "Seus concorrentes estão apostando em UGC de longa duração — considere testar"
+- Se a ação recomendada é urgente (OPORTUNIDADE/ATENÇÃO no início), mencione proativamente.
 
 ═══ META ADS (quando conectado) ═══
 

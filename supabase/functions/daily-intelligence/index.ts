@@ -554,6 +554,12 @@ Analise os dados da conta e retorne JSON com:
     }
   }
 
+  // ── MARKET INTELLIGENCE — runs async, doesn't block ────────────────────────
+  // Fire and forget — grabs Google Trends + Meta Ads Library for this account's keywords
+  sb.functions.invoke('market-intelligence', {
+    body: { user_id, persona_id: persona_id || null }
+  }).catch(() => {}); // Non-fatal — never block daily-intelligence for market data
+
   // Email is sent once per user after all accounts processed (handled by caller)
 
   // ── Rebuild ai_profile ────────────────────────────────────────────────────
