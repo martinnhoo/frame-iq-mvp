@@ -17,7 +17,7 @@ export default function ToolGate({ children }: ToolGateProps) {
 
   if (isFree(plan)) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 160px)", padding: "24px 16px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", minHeight: "calc(100vh - 52px)", padding: "40px 16px 40px", overflowY: "auto" }}>
         <UpgradeWall trigger="tool" inline />
       </div>
     );

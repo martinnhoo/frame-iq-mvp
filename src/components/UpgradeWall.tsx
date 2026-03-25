@@ -20,10 +20,22 @@ interface UpgradeWallProps {
 }
 
 // ── Copy ──────────────────────────────────────────────────────────────────────
-const HEADLINE: Record<string, string> = {
-  pt: "3 dias grátis.\nSem cobrança agora.",
-  es: "3 días gratis.\nSin cobro ahora.",
-  en: "3 days free.\nNo charge now.",
+const HEADLINE: Record<string, Record<string, string>> = {
+  chat: {
+    pt: "3 dias grátis.\nSem cobrança agora.",
+    es: "3 días gratis.\nSin cobro ahora.",
+    en: "3 days free.\nNo charge now.",
+  },
+  tool: {
+    pt: "Todas as ferramentas.\n3 dias grátis.",
+    es: "Todas las herramientas.\n3 días gratis.",
+    en: "All tools unlocked.\n3 days free.",
+  },
+  account: {
+    pt: "3 dias grátis.\nSem cobrança agora.",
+    es: "3 días gratis.\nSin cobro ahora.",
+    en: "3 days free.\nNo charge now.",
+  },
 };
 
 const SUBLINE: Record<string, Record<string, string>> = {
@@ -33,9 +45,9 @@ const SUBLINE: Record<string, Record<string, string>> = {
     en: "You've used your 3 free messages. Keep going with the AI connected to your real account.",
   },
   tool: {
-    pt: "Esta ferramenta é exclusiva de planos pagos.",
-    es: "Esta herramienta es exclusiva de planes de pago.",
-    en: "This tool is exclusive to paid plans.",
+    pt: "Desbloqueie todas as ferramentas — Hook Generator, Roteiro, Tradução, Check Criativo, Templates e mais.",
+    es: "Desbloquea todas las herramientas — Hook Generator, Guión, Traducción, Check Creativo, Templates y más.",
+    en: "Unlock all tools — Hook Generator, Script Writer, Translator, Creative Check, Templates and more.",
   },
   account: {
     pt: "Conecte sua conta e desbloqueie a IA com seus dados reais.",
@@ -164,7 +176,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
             </span>
           </div>
           <h2 style={{ fontFamily: F, fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 10, whiteSpace: "pre-line" }}>
-            {HEADLINE[lang] || HEADLINE.en}
+            {(HEADLINE[trigger] || HEADLINE.chat)[lang] || (HEADLINE[trigger] || HEADLINE.chat).en}
           </h2>
           <p style={{ fontFamily: M, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 320, margin: "0 auto" }}>{sub}</p>
         </div>
@@ -222,8 +234,8 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
   // ── DESKTOP: centered modal ───────────────────────────────────────────────
   const DesktopModal = () => (
-    <div style={{ width: "100%", maxWidth: 640, background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: "36px 32px", boxShadow: "0 40px 100px rgba(0,0,0,0.7)", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
-      {onClose && (
+    <div style={{ width: "100%", maxWidth: 640, background: inline ? "transparent" : "#0d1117", border: inline ? "none" : "1px solid rgba(255,255,255,0.08)", borderRadius: inline ? 0 : 24, padding: inline ? "0" : "36px 32px", boxShadow: inline ? "none" : "0 40px 100px rgba(0,0,0,0.7)", position: "relative", maxHeight: inline ? "none" : "90vh", overflowY: inline ? "visible" : "auto" }}>
+      {onClose && !inline && (
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <X size={13} color="rgba(255,255,255,0.4)" />
         </button>
@@ -238,7 +250,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           </span>
         </div>
         <h2 style={{ fontFamily: F, fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 12, whiteSpace: "pre-line" }}>
-          {HEADLINE[lang] || HEADLINE.en}
+          {(HEADLINE[trigger] || HEADLINE.chat)[lang] || (HEADLINE[trigger] || HEADLINE.chat).en}
         </h2>
         <p style={{ fontFamily: M, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, maxWidth: 400, margin: "0 auto 20px" }}>{sub}</p>
 
@@ -290,7 +302,11 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
     </div>
   );
 
-  if (inline) return <DesktopModal />;
+  if (inline) return (
+    <div style={{ width: "100%", maxWidth: 640 }}>
+      <DesktopModal />
+    </div>
+  );
 
   return (
     <>
