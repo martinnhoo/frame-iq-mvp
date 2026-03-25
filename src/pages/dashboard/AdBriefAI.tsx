@@ -1247,9 +1247,34 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     try{
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history}});
-      if(error||!data?.blocks)throw new Error(error?.message||"No response");
 
-      // Show upgrade popup on daily limit
+      // Handle rate limit errors (429) — supabase returns them as errors with context
+      if(error) {
+        // Try to parse body from error context (Supabase wraps 4xx in error)
+        let parsedErr: any = null;
+        try {
+          const ctx = (error as any).context;
+          if (ctx) {
+            const txt = typeof ctx === "string" ? ctx : await ctx.text?.() || JSON.stringify(ctx);
+            parsedErr = JSON.parse(txt);
+          }
+        } catch {}
+        if(parsedErr?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
+        if(parsedErr?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
+        if(parsedErr?.error==="monthly_softcap"){
+          // Show softcap warning as a message, not a hard wall
+          const aid=Date.now()+1;
+          const warningBlocks=parsedErr.blocks||[{type:"warning",title:lang==="pt"?"Limite mensal":lang==="es"?"Límite mensual":"Monthly limit",content:lang==="pt"?"Você está se aproximando do limite do plano. Considere fazer upgrade.":"You're approaching your plan limit. Consider upgrading."}];
+          setMessages(prev=>[...prev,{role:"assistant",blocks:warningBlocks,ts:aid,id:aid}]);
+          setLoading(false);
+          return;
+        }
+        throw new Error(error?.message||"No response");
+      }
+
+      if(!data?.blocks)throw new Error("No response");
+
+      // Show upgrade popup on daily limit (in case returned with 200)
       if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
       if(data?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
 
