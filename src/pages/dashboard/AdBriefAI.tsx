@@ -2021,7 +2021,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {/* ── Live Panel — appears when account has connected platforms ── */}
-        {messages.length===0&&!proactiveLoading&&contextReady&&hasData&&(
+        {!proactiveLoading&&contextReady&&hasData&&!messages.some(m=>m.role==="user")&&(
           <LivePanel
             user={user}
             selectedPersona={selectedPersona}
