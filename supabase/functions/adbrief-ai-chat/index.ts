@@ -851,7 +851,18 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
         ].filter(Boolean).join('\n');
       })(),
       pfCtx || "",
-      (aiProfile as any)?.ai_summary ? `PERFIL DO USUÁRIO: ${(aiProfile as any).ai_summary}` : "",
+      (() => {
+        const profile = aiProfile as any;
+        if (!profile) return "";
+        const directive = profile?.ai_recommendations?.weekly_directive;
+        const lines = [
+          profile.ai_summary ? `PERFIL DO USUÁRIO: ${profile.ai_summary}` : "",
+          directive?.proximo_teste ? `DIRETIVA SEMANAL (Creative Director): ${directive.proximo_teste}` : "",
+          directive?.resumo && directive.resumo !== profile.ai_summary ? `SITUAÇÃO DA CONTA: ${directive.resumo}` : "",
+          directive?.criar_esta_semana?.length ? `HOOKS PROPOSTOS PARA TESTAR: ${directive.criar_esta_semana.slice(0,2).map((h: any) => h.hook?.slice(0,80)).join(' | ')}` : "",
+        ];
+        return lines.filter(Boolean).join("\n");
+      })(),
       (() => {
         // Telegram connection status
         const tg = telegramConnection as any;

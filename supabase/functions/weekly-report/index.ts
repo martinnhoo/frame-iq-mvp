@@ -57,6 +57,11 @@ Deno.serve(async (req) => {
       } catch(e) { console.error("weekly error for", userId, String(e)); }
     }
 
+    // ── Run Creative Director Agent — every Sunday/Monday ───────────────────
+    try {
+      await sb.functions.invoke('creative-director', { body: {} });
+    } catch(e) { console.error('creative-director error:', String(e)); }
+
     // ── GAP 5 FIX: Memory consolidation — run every Sunday ──────────────────
     let consolidated = 0;
     let pruned = 0;
