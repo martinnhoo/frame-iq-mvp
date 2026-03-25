@@ -89,8 +89,8 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     try {
       const { data } = await supabase.functions.invoke(fn, { body: { action: "get_auth_url", user_id: userId, persona_id: accountId } });
       if (data?.url) window.location.href = data.url;
-      else { toast.error("Failed to get auth URL"); setConnecting(null); }
-    } catch { toast.error("Connection failed"); setConnecting(null); }
+      else { toast.error("Falha ao obter URL de autenticação"); setConnecting(null); }
+    } catch { toast.error("Falha na conexão"); setConnecting(null); }
   };
 
   const disconnect = async (platform: string) => {
@@ -98,7 +98,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     if (!confirm(msg)) return;
     setDisconnecting(platform);
     await supabase.from("platform_connections" as any).delete().eq("user_id", userId).eq("platform", platform).eq("persona_id", accountId);
-    toast.success(language === "pt" ? "Desconectado" : "Disconnected");
+    toast.success(language === "es" ? "Desconectado" : "Desconectado");
     load(); setDisconnecting(null);
   };
 
@@ -129,7 +129,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     const newAcc = already || { id, name: `Account ${id}` };
     const updated = already ? existing : [...existing, newAcc];
     await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
-    toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} saved.`);
+    toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} salvo.`);
     setManualAccountId(""); setExpandedPlatform(null); load(); setChangingAccount(null);
   };
 

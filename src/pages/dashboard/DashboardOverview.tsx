@@ -141,19 +141,19 @@ export default function DashboardOverview() {
         if (likedHooks.length > 0) {
           const topType = likedHooks.reduce<Record<string, number>>((acc, m) => { acc[m.hook_type] = (acc[m.hook_type] || 0) + 1; return acc; }, {});
           const best = Object.entries(topType).sort((a, b) => b[1] - a[1])[0];
-          if (best) feed.push({ id: "mem_liked", icon: "👍", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: `You prefer ${best[0]} hooks`, body: `Liked ${best[1]} of this type. AI will generate more for your campaigns.`, url: "/dashboard/hooks", tag: "Learned" });
+          if (best) feed.push({ id: "mem_liked", icon: "👍", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: `Você prefere hooks de ${best[0]}`, body: `Curtiu ${best[1]} deste tipo. A IA vai gerar mais para suas campanhas.`, url: "/dashboard/hooks", tag: "Learned" });
         }
         if (dislikedHooks.length >= 2) {
           const topBad = dislikedHooks.reduce<Record<string, number>>((acc, m) => { acc[m.hook_type] = (acc[m.hook_type] || 0) + 1; return acc; }, {});
           const worst = Object.entries(topBad).sort((a, b) => b[1] - a[1])[0];
-          if (worst) feed.push({ id: "mem_disliked", icon: "📉", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `Avoid ${worst[0]} hooks`, body: `Flagged ${worst[1]}× as low quality. AI is deprioritizing this angle.`, url: "/dashboard/hooks", tag: "Learned" });
+          if (worst) feed.push({ id: "mem_disliked", icon: "📉", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `Evite hooks de ${worst[0]}`, body: `Marcou ${worst[1]}× como baixa qualidade. A IA está priorizando outros ângulos.`, url: "/dashboard/hooks", tag: "Learned" });
         }
         const avgMemScore = mem.filter(m => m.hook_score).reduce((a, m) => a + m.hook_score, 0) / mem.filter(m => m.hook_score).length;
-        if (avgMemScore > 0) feed.push({ id: "mem_avg", icon: "🎯", color: "#0ea5e9", borderColor: "rgba(14,165,233,0.2)", title: `Hook quality: ${avgMemScore.toFixed(1)}/10 avg`, body: `Based on ${mem.length} signals in your creative memory. Keep rating to improve AI accuracy.`, url: "/dashboard/intelligence", tag: "Signal" });
+        if (avgMemScore > 0) feed.push({ id: "mem_avg", icon: "🎯", color: "#0ea5e9", borderColor: "rgba(14,165,233,0.2)", title: `Qualidade média: ${avgMemScore.toFixed(1)}/10`, body: `Baseado em ${mem.length} sinais da sua memória criativa. Continue avaliando para melhorar a IA.`, url: "/dashboard/intelligence", tag: "Signal" });
       }
 
       if (!data?.length) {
-        if (feed.length === 0) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Score hooks before spending", body: "Hook Generator predicts performance in 30s — before committing to production.", url: "/dashboard/hooks", tag: "Tip" });
+        if (feed.length === 0) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Avalie hooks antes de gastar", body: "O Gerador de Hooks prevê performance em 30s — antes de ir para produção.", url: "/dashboard/hooks", tag: "Tip" });
         setIntelFeed(feed.slice(0, 4));
         return;
       }
@@ -164,19 +164,19 @@ export default function DashboardOverview() {
       const avgAll = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
       if (avgRecent > 0 && avgAll > 0) {
         const delta = avgRecent - avgAll;
-        if (delta > 0.5) feed.push({ id: "trend_up", icon: "📈", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: "Hook score improving", body: `Last 5 averaged ${avgRecent.toFixed(1)}/10 — ${delta.toFixed(1)} above your baseline.`, url: "/dashboard/intelligence", tag: "Trend" });
-        else if (delta < -0.5) feed.push({ id: "trend_down", icon: "⚠️", color: "#fbbf24", borderColor: "rgba(251,191,36,0.2)", title: "Hook score declining", body: `Recent avg ${avgRecent.toFixed(1)}/10 vs ${avgAll.toFixed(1)} baseline. Refresh formats.`, url: "/dashboard/hooks", tag: "Alert" });
+        if (delta > 0.5) feed.push({ id: "trend_up", icon: "📈", color: "#34d399", borderColor: "rgba(52,211,153,0.2)", title: "Score de hooks melhorando", body: `Últimos 5 com média ${avgRecent.toFixed(1)}/10 — ${delta.toFixed(1)} acima da sua baseline.`, url: "/dashboard/intelligence", tag: "Trend" });
+        else if (delta < -0.5) feed.push({ id: "trend_down", icon: "⚠️", color: "#fbbf24", borderColor: "rgba(251,191,36,0.2)", title: "Score de hooks caindo", body: `Média recente ${avgRecent.toFixed(1)}/10 vs baseline ${avgAll.toFixed(1)}. Renove os formatos.`, url: "/dashboard/hooks", tag: "Alert" });
       }
       const models = recent.map(a => (a.result as Record<string, unknown>)?.creative_model as string).filter(Boolean);
       const modelCount = models.reduce<Record<string, number>>((acc, m) => { acc[m] = (acc[m] || 0) + 1; return acc; }, {});
       const topModel = Object.entries(modelCount).sort((a, b) => b[1] - a[1])[0];
-      if (topModel && topModel[1] >= 3) feed.push({ id: "fatigue", icon: "🔄", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `${topModel[0]} overuse detected`, body: `Used ${topModel[1]}× recently. Creative fatigue may be hurting CTR.`, url: "/dashboard/hooks", tag: "Fatigue" });
+      if (topModel && topModel[1] >= 3) feed.push({ id: "fatigue", icon: "🔄", color: "#fb923c", borderColor: "rgba(251,146,60,0.2)", title: `Uso excessivo de ${topModel[0]} detectado`, body: `Usado ${topModel[1]}× recentemente. Fadiga criativa pode estar prejudicando o CTR.`, url: "/dashboard/hooks", tag: "Fatigue" });
       const bestEntry = data.reduce<{ r: Record<string, unknown>; t: string } | null>((best, a) => {
         const s = (a.result as Record<string, unknown>)?.hook_score as number || 0;
         return s > (best?.r?.hook_score as number || 0) ? { r: a.result as Record<string, unknown>, t: a.title || "Untitled" } : best;
       }, null);
-      if (bestEntry?.r.creative_model) feed.push({ id: "best", icon: "⚡", color: "#0ea5e9", borderColor: "rgba(14,165,233,0.2)", title: `Best: ${String(bestEntry.t).slice(0, 28)}`, body: `Model "${bestEntry.r.creative_model}" scored ${bestEntry.r.hook_score}/10. Replicate this.`, url: "/dashboard/boards/new", tag: "Insight" });
-      if (data.length < 3) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Score hooks before spending", body: "Hook Generator predicts performance in 30s — before committing to production.", url: "/dashboard/hooks", tag: "Tip" });
+      if (bestEntry?.r.creative_model) feed.push({ id: "best", icon: "⚡", color: "#0ea5e9", borderColor: "rgba(14,165,233,0.2)", title: `Best: ${String(bestEntry.t).slice(0, 28)}`, body: `Modelo "${bestEntry.r.creative_model}" pontuou ${bestEntry.r.hook_score}/10. Replique este formato.`, url: "/dashboard/boards/new", tag: "Insight" });
+      if (data.length < 3) feed.push({ id: "nudge", icon: "💡", color: "#60a5fa", borderColor: "rgba(96,165,250,0.2)", title: "Avalie hooks antes de gastar", body: "O Gerador de Hooks prevê performance em 30s — antes de ir para produção.", url: "/dashboard/hooks", tag: "Tip" });
       setIntelFeed(feed.slice(0, 4));
       const points: Record<string, { sum: number; count: number }> = {};
       data.forEach(a => {

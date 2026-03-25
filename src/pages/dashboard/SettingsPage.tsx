@@ -25,9 +25,9 @@ const SettingsPage = () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
-      else toast.error("Could not open billing portal");
+      else toast.error("Não foi possível abrir o portal de cobrança");
     } catch {
-      toast.error("Could not open billing portal");
+      toast.error("Não foi possível abrir o portal de cobrança");
     } finally {
       setPortalLoading(false);
     }
@@ -41,9 +41,9 @@ const SettingsPage = () => {
       .eq("id", user.id);
 
     if (error) {
-      toast.error("Failed to update profile");
+      toast.error("Falha ao atualizar perfil");
     } else {
-      toast.success("Profile updated");
+      toast.success("Perfil atualizado");
     }
     setSaving(false);
   };
@@ -122,12 +122,12 @@ const SettingsPage = () => {
               <p className="font-medium text-foreground capitalize">{profile?.plan} Plan</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.plan === "free"
-                  ? "Limited access. Upgrade to unlock all tools."
+                  ? "Acesso limitado. Faça upgrade para liberar todas as ferramentas."
                   : profile?.plan === "maker"
                   ? "50 AI messages/day · 1 ad account · All tools."
                   : profile?.plan === "pro"
                   ? "200 AI messages/day · 3 ad accounts · All tools."
-                  : "Unlimited messages · Unlimited accounts · Everything."}
+                  : "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado."}
               </p>
             </div>
             <Badge variant="outline" className="capitalize border-border text-muted-foreground">
@@ -140,7 +140,7 @@ const SettingsPage = () => {
             </Button>
           ) : (
             <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
-              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : "Manage billing"}
+              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : "Gerenciar cobrança"}
             </Button>
           )}
         </CardContent>
@@ -154,8 +154,8 @@ const SettingsPage = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           {[
-            { name: "Anthropic Claude", desc: "Analysis, boards, translation, persona", key: "ANTHROPIC" },
-            { name: "OpenAI Whisper", desc: "Video transcription", key: "OPENAI" },
+            { name: "Anthropic Claude", desc: "Análise, boards, tradução, persona", key: "ANTHROPIC" },
+            { name: "OpenAI Whisper", desc: "Transcrição de vídeo", key: "OPENAI" },
           ].map(({ name, desc }) => (
             <div key={name} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
