@@ -2140,7 +2140,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.15em", fontWeight: 700, color: "#27AEE1", textTransform: "uppercase" as const }}>
+            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const }}>
               {lang === "pt" ? "TELEGRAM ALERTS" : lang === "es" ? "TELEGRAM ALERTS" : "TELEGRAM ALERTS"}
             </span>
           </div>
@@ -2427,21 +2427,21 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
     <section className="mobile-demo-section" style={{
       display: "none", /* hidden on desktop — shown via CSS on mobile */
       background: "linear-gradient(180deg, #0a0f1e 0%, #080c14 100%)",
-      padding: "48px 20px 56px",
+      padding: "24px 20px 48px",
       position: "relative",
       overflow: "hidden",
     }}>
       {/* Glow */}
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-      {/* Label */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
-        <div style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08))" }} />
-        <span style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.14em" }}>{label}</span>
-        <div style={{ height: 1, flex: 1, background: "linear-gradient(90deg, rgba(255,255,255,0.08), transparent)" }} />
+      {/* Label — mesmo estilo de "O PROBLEMA" */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 14 }}>
+        <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>{label}</p>
+        <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
       </div>
 
-      <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>{subtitle}</p>
+      <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.35)", textAlign: "center", marginBottom: 20, lineHeight: 1.5 }}>{subtitle}</p>
 
       {/* Chat window */}
       <div style={{
@@ -2522,10 +2522,11 @@ function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }
       <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 500, background: "radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 65%)", pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
-        {/* Label */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 20, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 28 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", boxShadow: "0 0 8px #0ea5e9", display: "inline-block" }} />
-          <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.9)", letterSpacing: "0.12em" }}>{t.final_label}</span>
+        {/* Label — mesmo padrão de "O PROBLEMA" */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
+          <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
+          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
+          <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
         <h2 style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
@@ -2693,9 +2694,10 @@ export default function IndexNew() {
             .hero-demo-col{display:none!important}
             .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
+            section:first-of-type{min-height:auto!important;align-items:flex-start!important;padding-top:28px!important;padding-bottom:20px!important}
           }
           @media(max-width:480px){
-            section:first-of-type{padding:36px 20px 32px!important}
+            section:first-of-type{padding:20px 20px 24px!important;min-height:auto!important;align-items:flex-start!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */

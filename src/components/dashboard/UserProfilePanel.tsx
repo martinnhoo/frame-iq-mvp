@@ -235,6 +235,12 @@ function PersonaDetailView({
 // ── Main Panel ─────────────────────────────────────────────────────────────────
 
 export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate }: Props) {
+  // Close on ESC key
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    if (open) document.addEventListener('keydown', handle);
+    return () => document.removeEventListener('keydown', handle);
+  }, [open, onClose]);
   const [tab, setTab] = useState("profile");
   const [name, setName] = useState("");
   const [market, setMarket] = useState("GLOBAL");
@@ -419,8 +425,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
       <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[61] w-full flex flex-col"
-        style={{ maxWidth: 400, background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
+      <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[61] flex flex-col profile-panel-width"
+        style={{ width: "min(400px, calc(100vw - 60px))", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
 
         {/* Header */}
         <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
@@ -428,8 +434,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
               <Logo size="md" />
             </div>
-            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
-              <X className="h-3.5 w-3.5" />
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.6)", transition: "all 0.15s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}>
+              <X className="h-4 w-4" />
             </button>
           </div>
 
