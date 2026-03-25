@@ -172,6 +172,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
       {/* Plans */}
       <div className="upgrade-wall-plans" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        <style>{`.upgrade-wall-plans{grid-template-columns:repeat(3,1fr)}@media(max-width:600px){.upgrade-wall-plans{grid-template-columns:1fr!important}}`}</style>
         {plans.map(plan => {
           const features = (plan.features as any)[lang] || (plan.features as any).en;
           const planKey = plan.name.toLowerCase();

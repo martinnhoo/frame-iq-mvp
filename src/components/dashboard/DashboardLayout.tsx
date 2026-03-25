@@ -367,15 +367,19 @@ export default function DashboardLayout() {
                   <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, flexShrink: 0, overflow: "hidden", fontWeight: 800, color: "#0ea5e9" }}>
                     {selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", maxWidth: "calc(100vw - 180px)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{selectedPersona.name}</span>
+                  <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPersona.name}</span>
+                  <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>{language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}</span>
                 </>
               ) : (
                 <>
                   <span style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Users className="h-3 w-3" style={{ color: "#0ea5e9" }} />
                   </span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
+                  <span className="hidden lg:inline" style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
                     {language === "pt" ? "Selecionar conta →" : language === "es" ? "Seleccionar cuenta →" : "Select account →"}
+                  </span>
+                  <span className="lg:hidden" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", fontFamily: "'Inter', sans-serif" }}>
+                    {language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}
                   </span>
                 </>
               )}
@@ -453,7 +457,7 @@ export default function DashboardLayout() {
           <div style={{ flex: 1 }} />
 
           {/* User avatar — opens profile panel */}
-          <button onClick={() => setProfileOpen(true)}
+          <button onClick={() => setProfileOpen(o => !o)}
             style={{ width: 30, height: 30, minWidth: 30, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", color: "#fff", overflow: "hidden", marginRight: 6 }}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="" style={{ width: 30, height: 30, minWidth: 30, objectFit: "cover", display: "block", borderRadius: "50%" }} />

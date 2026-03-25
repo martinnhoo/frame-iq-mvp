@@ -1742,8 +1742,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       `}</style>
 
       {showUpgradeWall&&(
-        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-          <UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>
+        <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.8)",backdropFilter:"blur(8px)",display:"flex",alignItems:"flex-end",justifyContent:"center",padding:"0 0 0"}} onClick={(e)=>{if(e.target===e.currentTarget)setShowUpgradeWall(false)}}>
+          <div style={{width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",borderRadius:"20px 20px 0 0",background:"#0a0b1a"}}>
+            <UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>
+          </div>
         </div>
       )}
       {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}
