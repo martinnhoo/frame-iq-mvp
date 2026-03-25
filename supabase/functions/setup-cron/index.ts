@@ -1,7 +1,7 @@
 // setup-cron v2
 // Configura pg_cron via postgres direto usando pg driver
 // Invoke UMA VEZ: Lovable Cloud → Edge Functions → setup-cron → Invoke
-import postgres from "npm:postgres@3";
+import postgres from "https://deno.land/x/postgresjs@v3.4.5/mod.js";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
