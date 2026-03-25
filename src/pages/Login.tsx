@@ -61,7 +61,12 @@ const Login = () => {
   const isFormDisabled = loading || emailLoading;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <motion.div
+      className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
       {/* Animated orbs */}
       <motion.div 
         className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
@@ -188,7 +193,7 @@ const Login = () => {
           </Card>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

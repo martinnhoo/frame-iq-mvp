@@ -101,7 +101,12 @@ const Signup = () => {
   const isFormDisabled = loading || emailLoading;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <motion.div
+      className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
       {/* Animated orbs */}
       <motion.div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['20%', '-30%', '10%'], y: ['-20%', '20%', '-10%'] }} transition={{ duration: 16, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
       <motion.div className="absolute w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['-20%', '30%', '-10%'], y: ['30%', '-20%', '10%'] }} transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
@@ -222,7 +227,7 @@ const Signup = () => {
           </Card>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
