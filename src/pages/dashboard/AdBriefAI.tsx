@@ -1937,6 +1937,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#161b22",position:"relative" as const}}>
+
+      {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
+      {contextReady&&hasData&&(
+        <LivePanel
+          user={user}
+          selectedPersona={selectedPersona}
+          connections={connections}
+          lang={lang}
+          onSend={send}
+        />
+      )}
+
       
 
       {/* ── Messages ── */}
@@ -2018,17 +2030,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             </div>
             <style>{`@keyframes skPulse{0%,100%{opacity:0.35}50%{opacity:0.75}}`}</style>
           </div>
-        )}
-
-        {/* ── Live Panel — appears when account has connected platforms ── */}
-        {!proactiveLoading&&contextReady&&hasData&&!messages.some(m=>m.role==="user")&&(
-          <LivePanel
-            user={user}
-            selectedPersona={selectedPersona}
-            connections={connections}
-            lang={lang}
-            onSend={send}
-          />
         )}
 
         {messages.length===0&&!proactiveLoading&&contextReady&&(
