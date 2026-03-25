@@ -1,4 +1,4 @@
-// AdBrief AI — unified v4
+// AdBrief AI — unified v4 — LivePanel + React import fix
 // Design: LoopV2 clean + AdBriefAI power (meta actions, dashboards, tool_call)
 import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
