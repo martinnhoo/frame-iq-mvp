@@ -144,6 +144,52 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ── AI curiosity answer: user answered a strategic question from the AI ──
+      // Saves the answer as a business insight for permanent use
+      case 'ai_curiosity_answer': {
+        const { question, answer, category } = data;
+        if (!answer || !question) break;
+
+        // Map question to category key
+        const catKey = (category || 'business_insight').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const key = `curiosity_${catKey}`;
+
+        const { data: ex } = await (sb as any).from('learned_patterns')
+          .select('id, sample_size, variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+
+        const insight = `${question.slice(0, 60)}: "${answer.slice(0, 150)}"`;
+
+        if (ex) {
+          const entries = ((ex.variables as any)?.entries || []);
+          entries.unshift({ question, answer, date: new Date().toISOString().split('T')[0] });
+          await (sb as any).from('learned_patterns').update({
+            sample_size: (ex.sample_size || 0) + 1,
+            confidence: Math.min(0.95, ((ex.sample_size || 0) + 1) / 3),
+            insight_text: insight,
+            is_winner: true, // Direct user input = highest quality signal
+            last_updated: new Date().toISOString(),
+            variables: { entries: entries.slice(0, 10), category: catKey, latest_answer: answer },
+          }).eq('id', ex.id);
+        } else {
+          await (sb as any).from('learned_patterns').insert({
+            user_id,
+            pattern_key: key,
+            insight_text: insight,
+            hook_type: 'business_knowledge',
+            is_winner: true,
+            sample_size: 1,
+            confidence: 0.8, // High confidence — user said it directly
+            variables: {
+              entries: [{ question, answer, date: new Date().toISOString().split('T')[0] }],
+              category: catKey,
+              latest_answer: answer,
+            },
+            last_updated: new Date().toISOString(),
+          });
+        }
+        break;
+      }
+
       // ── Cross-platform insight: fired when AI detects patterns across Meta+Google
       case 'cross_platform_insight': {
         // data: { platform_a, platform_b, angle, result_a, result_b, insight, persona_id }

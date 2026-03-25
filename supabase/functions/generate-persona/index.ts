@@ -156,6 +156,21 @@ Return ONLY a valid JSON object with these exact keys:
       persona.name = assignedName;
     }
 
+    // Fire business-profiler async — research this business before anyone talks about it
+    // Don't await — return to user immediately, let it run in background
+    if (user_id && answers?.product) {
+      const sb = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+      sb.functions.invoke("business-profiler", {
+        body: {
+          user_id,
+          product_name: answers.product,
+          website: answers.website || "",
+          market: answers.market || "BR",
+          niche: answers.niche || answers.pain || "",
+        }
+      }).catch(() => {}); // Non-fatal — never block persona creation
+    }
+
     return new Response(JSON.stringify({ success: true, persona }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

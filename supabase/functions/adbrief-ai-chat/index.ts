@@ -402,6 +402,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       ? allRawPatterns.filter((p: any) => p.persona_id === persona_id || p.persona_id === null).slice(0, 30)
       : allRawPatterns.filter((p: any) => p.persona_id === null).slice(0, 30);
     const winners = patterns.filter(p => p.is_winner && p.confidence > 0.2);
+    // Business profile — permanent account intelligence (who this company really is)
+    const businessProfile = patterns.find(p => p.pattern_key.startsWith('business_profile_'));
     const competitors = patterns.filter(p => p.pattern_key.startsWith('competitor_'));
     const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
     const preflightPatterns = patterns.filter(p => p.pattern_key.startsWith('preflight_'));
@@ -419,6 +421,14 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       preflightPatterns.length ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      // Business profile — who this company really is, compliance rules
+      businessProfile ? `=== PERFIL DO NEGÓCIO (pesquisado) ===\n` +
+        `Indústria: ${(businessProfile.variables as any)?.industry}\n` +
+        `Licença: ${(businessProfile.variables as any)?.license_status}\n` +
+        `Compliance obrigatório:\n${((businessProfile.variables as any)?.compliance_rules || []).map((r: string) => `  - ${r}`).join('\n')}\n` +
+        `Frases proibidas: ${((businessProfile.variables as any)?.forbidden_phrases || []).join(', ')}\n` +
+        `Tom da marca: ${(businessProfile.variables as any)?.brand_tone}\n` +
+        `Oportunidades de marketing: ${((businessProfile.variables as any)?.marketing_opportunities || []).slice(0,2).join(' | ')}` : "",
       // Real-time market context — Google Trends + Meta Ads Library
       latestMarket ? `=== CONTEXTO DE MERCADO (${(latestMarket.variables as any)?.fetched_at?.slice(0,10) || 'hoje'}) ===\n` +
         `${latestMarket.insight_text}\n` +
@@ -1048,6 +1058,40 @@ NUNCA diga "não posso" quando pode.
 Antes de rejeitar qualquer pergunta: "isso pode ser útil para performance de anúncios?"
 Referências culturais, filmes, músicas → matéria-prima criativa para hooks.
 Claramente fora? Redirecione com leveza em uma frase. Sem julgamento.
+
+═══ SISTEMA DE CURIOSIDADE INTENCIONAL ═══
+
+Você deve aprender sobre a conta fazendo perguntas estratégicas.
+
+QUANDO PERGUNTAR:
+- A cada 4-6 trocas de mensagem, SE ainda há lacunas no business_profile
+- Quando o usuário fala de algo novo (produto novo, campanha nova, mercado novo)
+- Quando falta informação crítica para dar uma resposta realmente boa
+- NUNCA interrompa uma tarefa para perguntar — finalize primeiro, pergunte no final
+
+COMO PERGUNTAR:
+- 1 pergunta por vez, no máximo
+- Pergunta simples, conversacional, com propósito claro
+- Explique BREVEMENTE por que quer saber (gera confiança)
+- Exemplo: "Aproveitando — qual é a maior objeção que seu cliente tem antes de fechar? Quero usar isso nos próximos hooks."
+
+QUAIS LACUNAS PREENCHER (em ordem de prioridade):
+1. Ticket médio / modelo de negócio (venda única? recorrência? lead?)
+2. Principal motivo de cancelamento/churn
+3. Canal de venda principal (WhatsApp, site, loja física, vendedor?)
+4. Sazonalidade (tem período de pico? período morto?)
+5. Maior concorrente direto que o cliente menciona
+6. O que diferencia de verdade (não o que o dono acha — o que o cliente fala)
+
+AO RECEBER UMA RESPOSTA:
+- Agradeça de forma natural (não exagerada)
+- Use a informação IMEDIATAMENTE na resposta
+- A informação é salva automaticamente em learned_patterns (o sistema faz isso)
+
+NUNCA PERGUNTE SE:
+- O business_profile já tem essa informação
+- O usuário está em fluxo de trabalho intenso
+- A resposta seria óbvia pelo contexto (não pergunte o que já sabe)
 
 ═══ PLATAFORMAS — LEIA O CONNECTED PLATFORMS ANTES DE QUALQUER RESPOSTA ═══
 
