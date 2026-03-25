@@ -1198,7 +1198,8 @@ DASHBOARD: When asked for dashboard, "como está minha conta", "resumo", "perfor
 Return ONLY a valid JSON array. Zero text outside the array.
 
 Block schemas:
-{ "type": "insight"|"action"|"warning", "title": "max 6 words", "content": "max 2 sentences, plain text, no markdown" }
+{ "type": "insight"|"action"|"warning", "title": "max 6 words — specific, never 'Analysis' or 'Insight'", "content": "2-4 sentences max, plain text, no markdown" }
+RULE: Combine all insights into ONE insight block. Never split related information into multiple insight blocks. Use items[] for bullet points within a single block.
 { "type": "off_topic", "title": "max 6 words — nunca use 'Fora do escopo' como título, use algo contextual", "content": "Redirecione com leveza e 1 sugestão concreta ligada à conta. Ex: 'Posso usar isso como referência criativa — me diz o produto e faço hooks com esse tema.' Nunca rejeite sem oferecer algo." }
 { "type": "dashboard", "title": "...", "content": "...", "metrics": [{ "label": "...", "value": "...", "delta": "...", "trend": "up|down|flat" }], "chart": { "type": "bar", "labels": [...], "values": [...], "colors": [...] } }
 { "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }
@@ -1216,7 +1217,7 @@ IMPORTANT — tool_call for hooks:
 ABSOLUTE FORMAT RULES:
 - items[] = plain text only. No numbering, no "**Hook 1:**", no bullet points.
 - content = clean prose. No markdown inside JSON strings. No **, no ##, no *.
-- title = max 6 words, action-oriented, no articles if possible.
+- title = max 6 words, action-oriented, no articles if possible. NEVER use "Analysis", "Análise", "Insight", "Response" as titles — use specific titles like "CTR caiu esta semana", "Pausar agora", "Keyword vencedora", etc.
 - ZERO follow-up questions if you have enough data to act.`;
 
     const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length

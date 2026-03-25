@@ -1506,7 +1506,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
           {/* Social proof */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+          <div className="hero-social-proof" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
             <div style={{ display: 'flex', gap: 1 }}>
               {[0,1,2,3,4].map(i => <svg key={i} width="10" height="10" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
             </div>
@@ -1516,17 +1516,17 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* Headline */}
-          <h1 style={{ fontFamily: F, fontSize: 'clamp(30px,2.7vw,44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
+          <h1 className="hero-headline" style={{ fontFamily: F, fontSize: 'clamp(30px,2.7vw,44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
             {t.hero_h1}
           </h1>
 
           {/* Subheadline */}
-          <p style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 420 }}>
+          <p className="hero-sub" style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 420 }}>
             {lang === 'pt' ? 'Pergunte qualquer coisa sobre seus anúncios. A IA usa seus dados reais para responder.' : lang === 'es' ? 'Pregunta lo que quieras sobre tus anuncios. La IA usa tus datos reales para responder.' : 'Ask anything about your ads. The AI uses your real account data to answer.'}
           </p>
 
           {/* Bullets */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
+          <div className="hero-bullets" style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
             {bullets.map((b, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                 <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
@@ -1539,7 +1539,7 @@ function ImmersiveHero({ onCTA, t, lang }: { onCTA: () => void; t: Record<string
           </div>
 
           {/* Connects with */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
+          <div className="hero-connects" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
             <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
               {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
             </span>
@@ -2371,6 +2371,146 @@ function FAQ({ t }: { t: Record<string, string> }) {
 }
 
 // ─── Final CTA ────────────────────────────────────────────────────────────────
+// ── MobileDemoSection — chat simulation, only shown on mobile ────────────────
+function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const M = "'Inter', sans-serif";
+
+  const messages = {
+    pt: [
+      { role: "user", text: "qual meu melhor criativo agora?" },
+      { role: "ai", lines: [
+        "Creative_019 está dominando: CTR 3.8%, ROAS 3.2x.",
+        "Escale de R$120 → R$400/dia. Frequência 1.3x — tem espaço.",
+      ]},
+      { role: "user", text: "o que eu pausaria hoje?" },
+      { role: "ai", lines: [
+        "Creative_042 está queimando R$620/dia com ROAS 0.8x.",
+        "Pause agora e realoque para Creative_019.",
+      ]},
+    ],
+    en: [
+      { role: "user", text: "what's my best creative right now?" },
+      { role: "ai", lines: [
+        "Creative_019 is dominating: 3.8% CTR, 3.2x ROAS.",
+        "Scale from $120 → $400/day. Frequency 1.3x — plenty of room.",
+      ]},
+      { role: "user", text: "what would you pause today?" },
+      { role: "ai", lines: [
+        "Creative_042 is burning $620/day at 0.8x ROAS.",
+        "Pause now and reallocate to Creative_019.",
+      ]},
+    ],
+    es: [
+      { role: "user", text: "¿cuál es mi mejor creativo ahora?" },
+      { role: "ai", lines: [
+        "Creative_019 está dominando: CTR 3.8%, ROAS 3.2x.",
+        "Escala de $120 → $400/día. Frecuencia 1.3x — hay margen.",
+      ]},
+      { role: "user", text: "¿qué pausarías hoy?" },
+      { role: "ai", lines: [
+        "Creative_042 está quemando $620/día con ROAS 0.8x.",
+        "Pausa ahora y reasigna a Creative_019.",
+      ]},
+    ],
+  };
+
+  const msgs = messages[lang] || messages.en;
+  const label = lang === "pt" ? "SIMULAÇÃO" : lang === "es" ? "SIMULACIÓN" : "DEMO";
+  const subtitle = lang === "pt"
+    ? "Veja como o AdBrief analisa sua conta em tempo real"
+    : lang === "es"
+    ? "Mira cómo AdBrief analiza tu cuenta en tiempo real"
+    : "See how AdBrief analyzes your account in real time";
+
+  return (
+    <section className="mobile-demo-section" style={{
+      display: "none", /* hidden on desktop — shown via CSS on mobile */
+      background: "linear-gradient(180deg, #0a0f1e 0%, #080c14 100%)",
+      padding: "48px 20px 56px",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Glow */}
+      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      {/* Label */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
+        <div style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08))" }} />
+        <span style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.14em" }}>{label}</span>
+        <div style={{ height: 1, flex: 1, background: "linear-gradient(90deg, rgba(255,255,255,0.08), transparent)" }} />
+      </div>
+
+      <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>{subtitle}</p>
+
+      {/* Chat window */}
+      <div style={{
+        borderRadius: 16,
+        border: "1px solid rgba(14,165,233,0.2)",
+        background: "rgba(8,12,20,0.9)",
+        overflow: "hidden",
+        boxShadow: "0 0 40px rgba(14,165,233,0.08), 0 24px 48px rgba(0,0,0,0.5)",
+        maxWidth: 360,
+        margin: "0 auto",
+      }}>
+        {/* Window chrome */}
+        <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.02)" }}>
+          <div style={{ display: "flex", gap: 5 }}>
+            {["#ff5f57","#febc2e","#28c840"].map(c => <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />)}
+          </div>
+          <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", flex: 1, textAlign: "center" }}>adbrief.pro/ai</span>
+          <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.1)", color: "rgba(14,165,233,0.7)", border: "1px solid rgba(14,165,233,0.15)" }}>
+            {lang === "pt" ? "∞ Meta" : lang === "es" ? "∞ Meta" : "∞ Meta"}
+          </span>
+        </div>
+
+        {/* Messages */}
+        <div style={{ padding: "14px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
+          {msgs.map((msg, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {msg.role === "user" ? (
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{
+                    padding: "8px 12px",
+                    borderRadius: "12px 12px 3px 12px",
+                    background: "rgba(255,255,255,0.07)",
+                    fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.85)",
+                    maxWidth: "80%", lineHeight: 1.45,
+                  }}>{msg.text}</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#0ea5e9" }}>ab</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
+                    {(msg.lines || []).map((line: string, li: number) => (
+                      <p key={li} style={{
+                        margin: 0, fontFamily: M, fontSize: 13, lineHeight: 1.55,
+                        color: li === 0 ? "rgba(238,240,246,0.85)" : "rgba(238,240,246,0.55)",
+                      }}>{line}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Input bar */}
+        <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 8, alignItems: "center", background: "rgba(255,255,255,0.01)" }}>
+          <div style={{ flex: 1, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+            {lang === "pt" ? "Pergunte algo..." : lang === "es" ? "Pregunta algo..." : "Ask anything..."}
+          </div>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FinalCTA({ onCTA, t }: { onCTA: () => void; t: Record<string, string> }) {
   return (
     <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(180deg, #080c14 0%, #0a0f1e 100%)" }}>
@@ -2555,7 +2695,7 @@ export default function IndexNew() {
             .pain-grid>div:nth-child(2){display:none!important}
           }
           @media(max-width:480px){
-            section:first-of-type{padding:72px 20px 40px!important}
+            section:first-of-type{padding:36px 20px 32px!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */
@@ -2581,6 +2721,16 @@ export default function IndexNew() {
           @media(max-width:480px){
             h1,.hero-h1{font-size:clamp(22px,7vw,30px)!important}
           }
+          @media(max-width:860px){
+            .mobile-demo-section{display:block!important}
+          }
+          @media(max-width:480px){
+            .hero-social-proof{margin-bottom:10px!important}
+            .hero-headline{margin-bottom:10px!important}
+            .hero-sub{margin-bottom:16px!important}
+            .hero-bullets{margin-bottom:16px!important}
+            .hero-connects{margin-bottom:16px!important}
+          }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -2600,6 +2750,7 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} />
+      <MobileDemoSection lang={lang} />
       <PainSection onCTA={handleCTA} lang={lang} />
       <HowItWorks t={t} lang={lang} />
       <Tools t={t} lang={lang} />

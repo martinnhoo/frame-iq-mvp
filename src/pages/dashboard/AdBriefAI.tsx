@@ -440,10 +440,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 
 // ── Block card ────────────────────────────────────────────────────────────────
 function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
-  const s=BS[block.type]||BS.insight;
-  const [open,setOpen]=useState(true);
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
-  const ICONS: Record<string,string>={action:"🎯",pattern:"📊",hooks:"⚡",warning:"⚠️",insight:"📈",navigate:"→",tool_call:"⚡",off_topic:"🚫"};
 
   const copyItem=(text:string,idx:number)=>{
     navigator.clipboard.writeText(text);
@@ -455,46 +452,74 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
     onNavigate("/dashboard/script",{product:text.slice(0,120)});
   };
 
+  // ── NAVIGATE block — inline CTA button ──
   if(block.type==="navigate") return(
-    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,marginBottom:8,padding:"12px 14px"}}>
-      <p style={{...j,fontSize:12,fontWeight:700,color:s.color,marginBottom:5}}>{block.title}</p>
-      {block.content&&<p style={{...m,fontSize:12,color:"rgba(255,255,255,0.5)",lineHeight:1.6,marginBottom:10}}>{block.content}</p>}
+    <div style={{marginBottom:8,padding:"12px 14px",borderRadius:12,background:"rgba(96,165,250,0.05)",border:"1px solid rgba(96,165,250,0.15)"}}>
+      {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.6)",lineHeight:1.6,marginBottom:10}}>{block.content}</p>}
       <button onClick={()=>onNavigate(block.route!,block.params)}
-        style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:10,background:"rgba(96,165,250,0.15)",color:s.color,border:`1px solid ${s.border}`,cursor:"pointer"}}>
+        style={{...j,fontSize:12,fontWeight:600,padding:"7px 14px",borderRadius:8,background:"rgba(96,165,250,0.12)",color:"#60a5fa",border:"1px solid rgba(96,165,250,0.2)",cursor:"pointer"}}>
         {block.cta||"Open →"}
       </button>
     </div>
   );
 
-  const isHooks = block.type === "hooks";
+  // ── WARNING block ──
+  if(block.type==="warning") return(
+    <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
+      <span style={{fontSize:14,flexShrink:0,marginTop:1}}>⚠️</span>
+      <p style={{...m,fontSize:13,color:"rgba(251,191,36,0.85)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+    </div>
+  );
+
+  // ── HOOKS block — numbered list with copy/script buttons ──
+  if(block.type==="hooks") return(
+    <div style={{marginBottom:8}}>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {block.items?.map((item,i)=>(
+          <div key={i} style={{display:"flex",gap:12,padding:"11px 14px",borderRadius:10,background:"rgba(6,182,212,0.04)",border:"1px solid rgba(6,182,212,0.1)",alignItems:"flex-start",transition:"border-color 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.2)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(6,182,212,0.1)";}}>
+            <span style={{...m,fontSize:11,fontWeight:700,color:"rgba(6,182,212,0.5)",marginTop:2,flexShrink:0,width:16,textAlign:"right"}}>{i+1}</span>
+            <span style={{...m,fontSize:13,color:"rgba(255,255,255,0.82)",lineHeight:1.6,flex:1}}>{item}</span>
+            <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
+              <button onClick={()=>copyItem(item,i)}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.3)",...m,transition:"all 0.12s"}}>
+                <Copy size={9}/>{copiedIdx===i?"✓":(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
+              </button>
+              <button onClick={()=>useAsScript(item)}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(6,182,212,0.08)",border:"1px solid rgba(6,182,212,0.15)",cursor:"pointer",fontSize:10,color:"rgba(6,182,212,0.8)",...m,transition:"all 0.12s"}}>
+                {lang==="pt"?"→ Roteiro":lang==="es"?"→ Guión":"→ Script"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── ACTION block — compact success state ──
+  if(block.type==="action") return(
+    <div style={{marginBottom:8,padding:"10px 14px",borderRadius:10,background:"rgba(52,211,153,0.05)",border:"1px solid rgba(52,211,153,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
+      <span style={{fontSize:14,flexShrink:0,marginTop:1}}>✅</span>
+      <p style={{...m,fontSize:13,color:"rgba(52,211,153,0.85)",lineHeight:1.6,margin:0}}>{block.content||block.title}</p>
+    </div>
+  );
+
+  // ── DEFAULT: insight / pattern / text / off_topic / tool_call ──
+  // Render as clean prose — no card chrome, no label, no collapse
+  const hasItems = block.items && block.items.length > 0;
 
   return(
-    <div style={{borderRadius:14,border:`1px solid ${s.border}`,background:s.bg,overflow:"hidden",marginBottom:8}}>
-      <button onClick={()=>setOpen(o=>!o)}
-        style={{width:"100%",display:"flex",alignItems:"center",gap:9,padding:"11px 14px",background:"none",border:"none",cursor:"pointer"}}>
-        {ICONS[block.type] && <span style={{fontSize:14,flexShrink:0}}>{ICONS[block.type]}</span>}
-        <span style={{...j,flex:1,fontSize:12,fontWeight:700,color:s.color,textAlign:"left"}}>{block.title}</span>
-        <span style={{...m,fontSize:10,color:s.color,opacity:0.6}}>{open?"▲":"▼"}</span>
-      </button>
-      {open&&(
-        <div style={{padding:"0 14px 12px"}}>
-          {block.content&&<p style={{...m,fontSize:13,color:"rgba(255,255,255,0.68)",lineHeight:1.7,marginBottom:block.items?.length?8:0}}>{block.content}</p>}
-          {block.items?.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:9,marginBottom:7,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",alignItems:"flex-start"}}>
-              <span style={{color:s.color,fontSize:11,marginTop:3,flexShrink:0,fontWeight:700}}>{i+1}.</span>
-              <span style={{...m,fontSize:13,color:"#d4d8e8",lineHeight:1.6,flex:1}}>{item}</span>
-              {isHooks&&(
-                <div style={{display:"flex",gap:4,flexShrink:0,marginTop:1}}>
-                  <button onClick={()=>copyItem(item,i)}
-                    style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",fontSize:10,color:copiedIdx===i?"#34d399":"rgba(255,255,255,0.35)",...m,transition:"all 0.12s"}}>
-                    <Copy size={9}/>{copiedIdx===i?(lang==="pt"?"✓":lang==="es"?"✓":"✓"):(lang==="pt"?"Copiar":lang==="es"?"Copiar":"Copy")}
-                  </button>
-                  <button onClick={()=>useAsScript(item)}
-                    style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,background:`${s.color}10`,border:`1px solid ${s.color}25`,cursor:"pointer",fontSize:10,color:s.color,...m,transition:"all 0.12s"}}>
-                    {lang==="pt"?"→ Roteiro":lang==="es"?"→ Guión":"→ Script"}
-                  </button>
-                </div>
-              )}
+    <div style={{marginBottom:hasItems?8:4}}>
+      {block.content&&(
+        <p style={{...m,fontSize:13.5,color:"rgba(238,240,246,0.78)",lineHeight:1.75,margin:hasItems?"0 0 8px":"0"}}>{block.content}</p>
+      )}
+      {hasItems&&(
+        <div style={{display:"flex",flexDirection:"column",gap:5,marginTop:block.content?6:0}}>
+          {block.items!.map((item,i)=>(
+            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+              <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",marginTop:3,flexShrink:0}}>•</span>
+              <span style={{...m,fontSize:13,color:"rgba(238,240,246,0.72)",lineHeight:1.65,flex:1}}>{item}</span>
             </div>
           ))}
         </div>
@@ -1284,8 +1309,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           "script": "Roteiro",
           "brief": "Brief criativo",
           "off_topic": "Fora do escopo",
-          "insight": "Análise",
-          "action": "Ação recomendada",
+          "insight": "",
+          "analysis": "",
+          "Análise": "",
+          "action": "",
           "warning": "Atenção",
           "navigate": "Ver mais",
           "dashboard": "Dashboard",
@@ -1306,8 +1333,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           "script": "Guión",
           "brief": "Brief creativo",
           "off_topic": "Fuera del alcance",
-          "insight": "Análisis",
-          "action": "Acción recomendada",
+          "insight": "",
+          "analysis": "",
+          "action": "",
           "warning": "Atención",
         },
         en: {
@@ -1321,8 +1349,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           "script": "Script",
           "brief": "Creative brief",
           "off_topic": "Out of scope",
-          "insight": "Analysis",
-          "action": "Recommended action",
+          "insight": "",
+          "analysis": "",
+          "Analysis": "",
+          "action": "",
           "warning": "Attention",
         },
       };
@@ -1437,7 +1467,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"transparent",...j,overflow:"hidden"}}>
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"12px 0 8px",background:"rgba(255,255,255,0.05)",borderRadius:"12px 12px 0 0",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.07)"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"16px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0"}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -1566,10 +1596,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 14px",padding:"0 16px"}}>
+          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end"}}>
-                <div style={{padding:"10px 14px",borderRadius:"14px 14px 4px 14px",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.2)",fontSize:13,color:"rgba(255,255,255,0.85)",...j,maxWidth:"82%",lineHeight:1.55}}>
+                <div style={{padding:"10px 16px",borderRadius:"16px 16px 4px 16px",background:"rgba(255,255,255,0.07)",fontSize:13,color:"rgba(255,255,255,0.88)",...m,maxWidth:"78%",lineHeight:1.6,boxShadow:"none"}}>
                   {msg.userText}
                 </div>
               </div>
@@ -1577,8 +1607,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div>
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-                    <ABAvatar size={28} />
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                    <ABAvatar size={24} />
+                    <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.2)",fontWeight:500,letterSpacing:"0.02em"}}>AdBrief</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -1639,7 +1670,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"#1a2032",border:"1px solid rgba(255,255,255,0.10)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:42,maxHeight:120}} className="chat-textarea"
+              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:13,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:44,maxHeight:120}} className="chat-textarea"
               onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
               onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
