@@ -367,6 +367,7 @@ Deno.serve(async (req) => {
       { data: telegramConnection },
       { data: chatMemories },
       { data: chatExamples },
+    ] = await Promise.all([
       // 1. Recent analyses — scoped to this persona/account
       (persona_id
         ? (supabase.from("analyses" as any) as any)
@@ -387,8 +388,7 @@ Deno.serve(async (req) => {
         .select("hook_type, hook_score, platform, notes, created_at" as any)
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(20),
-      // 4. Platform connections — STRICT persona scope, no global fallback
-      // Each account has its own isolated connections
+      // 4. Platform connections — STRICT persona scope
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")
         .eq("user_id", user_id)
@@ -396,8 +396,6 @@ Deno.serve(async (req) => {
         .then(async (r: any) => {
           if (r.error?.code === "42P01") return { data: [], error: null };
           const all = (r.data || []) as any[];
-          // STRICT: only return connections for this specific persona
-          // If no persona_id, return nothing (force account selection)
           if (persona_id) {
             const scoped = all.filter((c: any) => c.persona_id === persona_id);
             return { data: scoped };
@@ -409,36 +407,35 @@ Deno.serve(async (req) => {
         .select("platform, result, created_at" as any)
         .eq("user_id" as any, user_id)
         .order("created_at" as any, { ascending: false }).limit(3),
-      // 6. Persona row — WAS MISSING QUERY
+      // 6. Persona row
       persona_id
         ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      // 7. Learned patterns — persona-scoped: prefer this account's patterns, include global (null persona_id)
+      // 7. Learned patterns
       (supabase as any).from("learned_patterns")
         .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables, persona_id")
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
         .limit(60),
-      // 8. Daily snapshots — last 7 days, persona-scoped when possible
+      // 8. Daily snapshots
       (supabase as any).from("daily_snapshots")
         .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
         .eq("user_id", user_id)
         .then(async (r: any) => {
           const all = (r.data || []) as any[];
           if (!all.length) return { data: [] };
-          // Prefer persona-scoped snapshots, fall back to any
           const scoped = persona_id ? all.filter((s: any) => s.persona_id === persona_id) : [];
           const result = scoped.length ? scoped : all;
           return { data: result.sort((a: any, b: any) => b.date.localeCompare(a.date)).slice(0, 7) };
         }),
-      // 9. Preflight history — last 10 runs to understand creative quality trend
+      // 9. Preflight history
       (supabase as any).from("preflight_results")
         .select("created_at, score, verdict, platform, market, format")
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
         .limit(10)
         .then((r: any) => r.error ? { data: [] } : r),
-      // 10. Active account alerts — undismissed, sent to AI as memory
+      // 10. Active account alerts
       (supabase as any).from("account_alerts")
         .select("type, urgency, ad_name, campaign_name, detail, kpi_label, kpi_value, action_suggestion, created_at")
         .eq("user_id", user_id)
@@ -453,20 +450,19 @@ Deno.serve(async (req) => {
         .eq("active", true)
         .maybeSingle()
         .then((r: any) => r.error ? { data: null } : r),
-      // 12. Chat memory — persistent facts extracted from previous conversations
+      // 12. Chat memory
       (supabase as any).from("chat_memory")
         .select("memory_text, memory_type, importance, created_at")
         .eq("user_id", user_id)
         .then((r: any) => {
           if (r.error) return { data: [] };
           const all = (r.data || []) as any[];
-          // Prefer persona-scoped, include global (null persona_id)
           const scoped = persona_id
             ? all.filter((m: any) => m.persona_id === persona_id || !m.persona_id)
             : all.filter((m: any) => !m.persona_id);
           return { data: scoped.sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0)).slice(0, 30) };
         }),
-      // 13. Few-shot examples — liked responses from previous conversations
+      // 13. Few-shot examples
       (supabase as any).from("chat_examples")
         .select("user_message, assistant_blocks, quality_score, created_at")
         .eq("user_id", user_id)
@@ -476,7 +472,6 @@ Deno.serve(async (req) => {
           const scoped = persona_id
             ? all.filter((e: any) => e.persona_id === persona_id || !e.persona_id)
             : all.filter((e: any) => !e.persona_id);
-          // Return top 3 by quality_score, newest first
           return { data: scoped.sort((a: any, b: any) => (b.quality_score || 0) - (a.quality_score || 0)).slice(0, 3) };
         }),
     ]);
