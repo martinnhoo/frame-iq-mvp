@@ -205,34 +205,32 @@ Return ONLY a JSON object — no markdown, no explanation:
 
 Each script needs 8–15 lines alternating VO/on-screen/visual. Vary the angle dramatically between the 3 scripts.`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Auto-retry on transient errors
+    const callScript = async () => fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 3000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 3000, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
     });
-
+    let response = await callScript();
+    if (!response.ok && (response.status === 500 || response.status === 529)) {
+      await new Promise(r => setTimeout(r, 1000));
+      response = await callScript();
+    }
     if (!response.ok) {
       const errorText = await response.text();
       return new Response(JSON.stringify({ error: `Claude API error: ${response.status}`, details: errorText }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const responseData = await response.json();
-    const raw = responseData.content?.[0]?.type === "text" ? responseData.content[0].text : "{}";
+    const rawText = responseData.content?.[0]?.type === "text" ? responseData.content[0].text : "{}";
+    // Robust JSON extraction
+    let raw = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const jsonM = raw.match(/(\{[\s\S]*\})/); if (jsonM) raw = jsonM[1];
     let result;
     try {
-      result = JSON.parse(raw.replace(/```json|```/g, "").trim());
+      result = JSON.parse(raw);
     } catch {
       return new Response(JSON.stringify({ error: "Failed to parse AI response" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

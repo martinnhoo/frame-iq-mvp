@@ -183,10 +183,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ hooks: mockHooks, mock_mode: true }), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({
+    // Auto-retry on 500/timeout — Haiku occasionally times out on long prompts
+    const callAnthropic = async (_retrying?: boolean) => {
+      return fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 3000,
         messages: [{
@@ -281,6 +283,15 @@ Return ONLY valid JSON:
       })
     });
 
+      });
+    };
+    let res = await callAnthropic();
+    // Retry once on 500/529 with reduced max_tokens
+    if (!res.ok && (res.status === 500 || res.status === 529 || res.status === 503)) {
+      console.warn(`generate-hooks: retry after ${res.status}`);
+      await new Promise(r => setTimeout(r, 1000));
+      res = await callAnthropic(0.7);
+    }
     if (!res.ok) throw new Error(`Claude API: ${res.status}`);
     const data = await res.json();
     const rawText = (data.content?.[0]?.text || '').trim();
