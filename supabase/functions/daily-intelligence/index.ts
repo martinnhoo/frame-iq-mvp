@@ -50,6 +50,56 @@ Deno.serve(async (req) => {
           body: { user_id: uid, all_results: accountResults }
         });
       } catch (e) { console.error('email error for', uid, e); }
+
+      // Send proactive Telegram briefing with top 3 actions
+      try {
+        const { data: tg } = await sb.from('telegram_connections' as any)
+          .select('chat_id, bot_token')
+          .eq('user_id', uid).eq('active', true).maybeSingle();
+
+        if (tg?.chat_id) {
+          // Collect all actions across accounts, pick top 3 by urgency
+          const allActions: any[] = [];
+          for (const res of accountResults as any[]) {
+            if (!res?.aiActions?.length) continue;
+            for (const a of res.aiActions) {
+              allActions.push({ ...a, account: res.account_name || '' });
+            }
+          }
+          const urgencyOrder: Record<string, number> = { alta: 0, media: 1, baixa: 2 };
+          allActions.sort((a, b) => (urgencyOrder[a.urgencia] ?? 3) - (urgencyOrder[b.urgencia] ?? 3));
+          const top3 = allActions.slice(0, 3);
+
+          if (top3.length > 0) {
+            const lines = top3.map((a, i) => {
+              const emoji = a.urgencia === 'alta' ? '🔴' : a.urgencia === 'media' ? '🟡' : '🟢';
+              const tipoMap: Record<string, string> = { escalar: '⬆️ Escalar', pausar: '⏸ Pausar', criar: '✏️ Criar', revisar: '🔍 Revisar' };
+              return `${emoji} <b>${tipoMap[a.tipo] || a.tipo}</b>: ${a.anuncio?.slice(0, 35) || '—'}
+   ${a.motivo?.slice(0, 80) || ''}`;
+            }).join('
+
+');
+
+            const insight = (accountResults as any[])[0]?.aiInsight || '';
+            const msg = `<b>📊 Briefing de hoje</b>
+
+${insight ? `💡 ${insight.slice(0, 120)}
+
+` : ''}<b>3 ações prioritárias:</b>
+
+${lines}`;
+
+            const botToken = tg.bot_token || Deno.env.get('TELEGRAM_BOT_TOKEN') || '';
+            if (botToken) {
+              await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: tg.chat_id, text: msg, parse_mode: 'HTML' })
+              });
+            }
+          }
+        }
+      } catch (e) { console.error('telegram briefing error:', e); }
     }
 
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
@@ -258,6 +308,22 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       || (cpa !== null && cpa > 200 && spend > 40);
     const deltaCtr = prevCtr !== null ? ((ctr - prevCtr) / Math.max(prevCtr, 0.001) * 100) : null;
 
+    // ── Trajectory prediction — predict days until critical threshold ──────
+    // Uses last 3 data points from learned_patterns history to calc velocity
+    const predictDaysToFatigue = (() => {
+      if (frequency <= 1.5) return null; // too early to predict
+      // Velocity: how much frequency grows per day based on history
+      // Simple: if freq 2.0 today and was 1.5 yesterday = +0.5/day → 3 more days to 3.5
+      if (!prevCtr) return null;
+      const freqVelocity = 0.3; // conservative estimate without full history
+      const daysLeft = Math.ceil((3.5 - frequency) / Math.max(freqVelocity, 0.1));
+      return frequency >= 2.5 && daysLeft > 0 && daysLeft <= 5 ? daysLeft : null;
+    })();
+    const ctrVelocity = deltaCtr !== null ? deltaCtr : 0;
+    const predictCritical = predictDaysToFatigue !== null
+      ? `fadiga em ~${predictDaysToFatigue}d`
+      : (ctrVelocity < -15 ? 'CTR caindo rápido' : null);
+
     return {
       id: ad.ad_id, name: ad.ad_name || 'Sem nome',
       adset: ad.adset_name, campaign: ad.campaign_name,
@@ -266,7 +332,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       conversions, roas, cpa,
       hookRate, thruPlayRate, avgWatch, engagementRate,
       prevCtr, deltaCtr,
-      isFatigued, isScalable, needsPause,
+      isFatigued, isScalable, needsPause, predictCritical,
       trend: deltaCtr === null ? 'new' : deltaCtr > 5 ? 'up' : deltaCtr < -5 ? 'down' : 'stable',
     };
   });
@@ -380,7 +446,8 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
           frequency: a.frequency.toFixed(1),
         })),
         scale_now: scalable.slice(0, 3).map((a: any) => a.name.slice(0, 40)),
-        fatigued: fatigued.slice(0, 3).map((a: any) => ({ name: a.name.slice(0, 40), freq: a.frequency.toFixed(1), ctr_drop: a.deltaCtr?.toFixed(1) })),
+        fatigued: fatigued.slice(0, 3).map((a: any) => ({ name: a.name.slice(0, 40), freq: a.frequency.toFixed(1), ctr_drop: a.deltaCtr?.toFixed(1), predict: a.predictCritical })),
+        approaching_fatigue: enriched.filter((a: any) => a.predictCritical && !a.isFatigued).slice(0, 3).map((a: any) => ({ name: a.name.slice(0, 40), predict: a.predictCritical, freq: a.frequency.toFixed(1) })),
         pause_now: toPause.slice(0, 3).map((a: any) => a.name.slice(0, 40)),
       };
 
