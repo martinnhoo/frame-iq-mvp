@@ -1725,13 +1725,13 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       q: "Cria 3 hooks dos meus criativos que mais converteram",
       platform: "meta", account: "FitCore Brasil",
       metric: "3 hooks prontos",
-      metricLabel: "gerados dos seus winners reais — não de template genérico",
+      metricLabel: "gerados dos padrões de hook rate e ROAS reais da FitCore",
       points: [
-        "Você está pagando **R$90 por clique** e nem sabe por quê — seus dados têm a resposta.",
-        "**3 dos 4 anúncios** que mais gastam têm ROAS abaixo de 1x. Qual vale manter?",
-        "Seu melhor criativo de setembro está **parado há 9 dias**. O concorrente escalou.",
+        "Você ainda treina sem saber quantas calorias queima de verdade — **seus anúncios têm esse dado**.",
+        "**3 de 4 criativos** de transformação corporal gastam R$400+/dia com ROAS abaixo de 1x.",
+        "Seu melhor UGC de setembro ficou **9 dias parado**. O concorrente escalou o mesmo ângulo.",
       ],
-      action: "Cada hook saiu dos seus dados — CTR, hook rate, padrão dos seus winners reais.",
+      action: "Hooks fitness que convertem: dor específica → credencial → resultado real. Sem clichê de motivação.",
     },
   ],
   es: [
@@ -1779,13 +1779,13 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       q: "Crea 3 hooks de mis creativos que más convirtieron",
       platform: "meta", account: "FitMex",
       metric: "3 hooks listos",
-      metricLabel: "generados de tus winners reales — no de una plantilla genérica",
+      metricLabel: "generados de los patrones reales de hook rate y ROAS de FitMex",
       points: [
-        "Estás pagando **$90 por clic** y ni sabes por qué — tus datos tienen la respuesta.",
-        "**3 de los 4 anuncios** que más gastan tienen ROAS bajo 1x. ¿Cuál vale mantener?",
-        "Tu mejor creativo de septiembre lleva **9 días pausado**. El competidor escaló.",
+        "Todavía entrenas sin saber cuántas calorías quemas de verdad — **tus anuncios tienen ese dato**.",
+        "**3 de 4 creativos** de transformación corporal gastan $400+/día con ROAS bajo 1x.",
+        "Tu mejor UGC de septiembre lleva **9 días pausado**. El competidor escaló el mismo ángulo.",
       ],
-      action: "Cada hook salió de tus datos reales — CTR, hook rate, patrón de tus winners.",
+      action: "Hooks fitness que convierten: dolor específico → credencial → resultado real. Sin clichés de motivación.",
     },
   ],
   en: [
@@ -1833,13 +1833,13 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       q: "Write 3 hooks from my best converting creatives",
       platform: "meta", account: "FitCore US",
       metric: "3 hooks ready",
-      metricLabel: "built from your real winners — not a generic template",
+      metricLabel: "built from FitCore's real hook rate and ROAS patterns",
       points: [
-        "You're paying **$90/click** and don't know why — your data already has the answer.",
-        "**3 of 4 top-spend ads** have ROAS below 1x. Which one is worth keeping?",
-        "Your best September creative has been **paused 9 days**. A competitor scaled it.",
+        "Still training without knowing your real calorie burn? — **your ads already have that data**.",
+        "**3 of 4 body transformation creatives** spend $400+/day with ROAS below 1x.",
+        "Your best UGC from September was **paused 9 days ago**. A competitor scaled the same angle.",
       ],
-      action: "Every hook came from your data — CTR, hook rate, your real winners' patterns.",
+      action: "Fitness hooks that convert: specific pain → credibility → real result. No generic motivation clichés.",
     },
   ],
 };
@@ -1849,11 +1849,13 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
   const [activeIdx, setActiveIdx] = React.useState(0);
   const scene = scenes[activeIdx];
 
-  // Auto-rotate every 6s — enough time to read one card
+  // Auto-rotate every 10s — pausa ao clicar manualmente
+  const [paused, setPaused] = React.useState(false);
   React.useEffect(() => {
-    const t = setInterval(() => setActiveIdx(i => (i + 1) % scenes.length), 6000);
+    if (paused) return;
+    const t = setInterval(() => setActiveIdx(i => (i + 1) % scenes.length), 10000);
     return () => clearInterval(t);
-  }, [scenes.length]);
+  }, [scenes.length, paused]);
 
   const ctabtn = lang==='pt' ? 'Testar com minha conta' : lang==='es' ? 'Probar con mi cuenta' : 'Try with my account';
   const sampleLabel = lang==='pt' ? 'Conta de exemplo' : lang==='es' ? 'Cuenta de ejemplo' : 'Sample account';
@@ -1893,23 +1895,22 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
         </div>
 
         {/* ── SCENARIO TABS ── */}
-        <div style={{ padding:'12px 20px 0', display:'flex', gap:4, overflowX:'auto' as const, borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding:'12px 20px', display:'flex', gap:6, overflowX:'auto' as const, borderBottom:'1px solid rgba(255,255,255,0.05)', flexWrap:'wrap' as const }}>
           {scenes.map((s, i) => {
             const isAct = i === activeIdx;
             return (
-              <button key={i} onClick={() => setActiveIdx(i)} style={{
-                fontFamily:F, fontSize:11.5, fontWeight: isAct ? 700 : 400,
-                padding:'7px 14px', borderRadius:0, cursor:'pointer',
-                transition:'all 0.15s', whiteSpace:'nowrap' as const, flexShrink:0,
-                background:'transparent',
-                color: isAct ? '#fff' : 'rgba(255,255,255,0.38)',
-                border:'none',
-                borderBottom: isAct ? '2px solid #0ea5e9' : '2px solid transparent',
-                marginBottom:-1,
+              <button key={i} onClick={() => { setActiveIdx(i); setPaused(true); }} style={{
+                fontFamily:F, fontSize:12, fontWeight: isAct ? 700 : 500,
+                padding:'8px 16px', borderRadius:8, cursor:'pointer',
+                transition:'all 0.18s', whiteSpace:'nowrap' as const, flexShrink:0,
+                background: isAct ? 'rgba(14,165,233,0.15)' : 'rgba(255,255,255,0.04)',
+                color: isAct ? '#38bdf8' : 'rgba(255,255,255,0.45)',
+                border: isAct ? '1px solid rgba(14,165,233,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                boxShadow: isAct ? '0 0 14px rgba(14,165,233,0.2), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                 letterSpacing:'-0.01em',
               }}
-              onMouseEnter={e => { if(!isAct) (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.65)'; }}
-              onMouseLeave={e => { if(!isAct) (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.38)'; }}>
+              onMouseEnter={e => { if(!isAct) { const el=e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.75)'; el.style.borderColor='rgba(255,255,255,0.14)'; }}}
+              onMouseLeave={e => { if(!isAct) { const el=e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.04)'; el.style.color='rgba(255,255,255,0.45)'; el.style.borderColor='rgba(255,255,255,0.07)'; }}}>
                 {s.tab}
               </button>
             );
@@ -1961,7 +1962,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
         {/* ── PROGRESS + INPUT ── */}
         {/* Progress bar */}
         <div style={{ height:2, background:'rgba(255,255,255,0.04)' }}>
-          <div key={`prog-${activeIdx}`} style={{ height:'100%', background:'linear-gradient(90deg,#0ea5e9,#38bdf8)', animation:'progressBar 6s linear forwards' }} />
+          <div key={`prog-${activeIdx}`} style={{ height:'100%', background:'linear-gradient(90deg,#0ea5e9,#38bdf8)', animation:'progressBar 10s linear forwards' }} />
         </div>
 
         {/* Input bar */}
