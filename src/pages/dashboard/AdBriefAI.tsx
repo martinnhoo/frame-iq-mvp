@@ -698,7 +698,7 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
     </>
   );
 }
-// ─── Live Panel v5 ────────────────────────────────────────────────────────────
+// ─── Live Panel v5 — build bump ────────────────────────────────────────────────────────────
 // Design: editorial dark refinado — Inter, cards com proporção correta
 
 const LP_CSS = `
