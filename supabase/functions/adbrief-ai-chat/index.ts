@@ -365,6 +365,7 @@ Deno.serve(async (req) => {
       { data: preflightHistory },
       { data: accountAlerts },
       { data: telegramConnection },
+      { data: crossAccountPatterns },
       { data: chatMemories },
       { data: chatExamples },
     ] = await Promise.all([
@@ -450,6 +451,17 @@ Deno.serve(async (req) => {
         .eq("active", true)
         .maybeSingle()
         .then((r: any) => r.error ? { data: null } : r),
+      // 11b. Cross-account winners — high confidence patterns from other personas
+      (supabase as any).from("learned_patterns")
+        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
+        .eq("user_id", user_id)
+        .eq("is_winner", true)
+        .gte("confidence", 0.7)
+        .order("avg_ctr", { ascending: false })
+        .limit(5)
+        .then((r: any) => r.error ? { data: [] } : {
+          data: (r.data || []).filter((p: any) => p.persona_id !== persona_id)
+        }),
       // 12. Chat memory
       (supabase as any).from("chat_memory")
         .select("memory_text, memory_type, importance, created_at")
@@ -1082,6 +1094,15 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       })(),
       // Persistent chat memory — facts extracted from previous conversations
       memorySummary ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)` : "",
+      // Cross-account intelligence — winners from other accounts of this user
+      (() => {
+        const cross = (crossAccountPatterns || []) as any[];
+        if (!cross.length) return "";
+        const lines = cross.slice(0, 5).map((p: any) =>
+          `  ✓ ${p.pattern_key?.replace(/_/g, ' ')}: CTR ${(p.avg_ctr * 100).toFixed(2)}% | conf ${(p.confidence * 100).toFixed(0)}% — ${p.insight_text?.slice(0, 80) || ''}`
+        ).join("\n");
+        return `=== PADRÕES VENCEDORES DE OUTRAS CONTAS (mesmo usuário) ===\n${lines}\n(Esses padrões funcionaram em outras contas deste usuário. Quando relevante, sugira adaptação.)`;
+      })(),
       // Few-shot: examples of responses this user approved — imitate this style/specificity/format
       fewShotBlock ? `=== EXEMPLOS DE RESPOSTAS QUE ESTE USUÁRIO APROVOU ===\nImite o nível de especificidade, o tom e o formato dessas respostas. Nunca seja mais genérico do que elas.\n\n${fewShotBlock}` : "",
     ].filter(Boolean).join("\n");

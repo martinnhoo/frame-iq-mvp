@@ -1472,6 +1472,8 @@ export default function AdBriefAI() {
         const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
         const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
         const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 1);
+        // Predictive alerts — criativos saudáveis mas na trajetória de fadiga
+        const approachingFatigue = topAds.filter((a: any) => a.predictCritical && !a.isFatigued).slice(0, 2);
         const ctrDelta = snapshot.yesterday_ctr > 0 && snapshot.avg_ctr > 0
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
@@ -1482,6 +1484,7 @@ export default function AdBriefAI() {
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, R$${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
           if (fatigued.length) parts.push(`"${fatigued[0].name?.slice(0, 40)}" freq. ${fatigued[0].frequency?.toFixed(1)}x — fadiga criativa, troque o criativo.`);
+          if (approachingFatigue.length) parts.push(`⚠️ "${approachingFatigue[0].name?.slice(0, 35)}" — ${approachingFatigue[0].predictCritical}: prepare uma variação agora.`);
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
           parts.push("O que quer fazer?");
         } else if (lang === "es") {
