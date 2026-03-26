@@ -130,8 +130,8 @@ const T: Record<Lang, Record<string, string>> = {
     demo_cta_btn: "Try with my account →",
     how_label: "HOW IT WORKS", how_h2: "Three steps. Zero friction.",
     how_sub: "No CSV uploads. No manual data. Just connect and ask.",
-    how_s1_title: "Connect your ad accounts", how_s1_desc: "Link Meta, TikTok, or Google Ads in one click. AdBrief reads your real campaign data — spend, CTR, CPM, creative performance — in real time.",
-    how_s2_title: "Set up your account", how_s2_desc: "Create an account for each brand or client. Add website, description, and connect Meta Ads or Google Ads — the AI uses this context for every answer.",
+    how_s1_title: "Create your account", how_s1_desc: "Sign up and create an account for each brand or client. Add website and context — the AI uses all of it to personalize every answer.",
+    how_s2_title: "Connect Meta or Google Ads", how_s2_desc: "Link your ad account in one click via OAuth. AdBrief reads spend, CTR, creatives and performance — in real time.",
     how_s3_title: "Ask anything. Get real answers.", how_s3_desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next.",
     for_label: "WHO IT'S FOR", for_h2: "Built for performance teams.",
     for_tab0: "Agencies", for_tab1: "Media Buyers", for_tab2: "In-house Teams",
@@ -152,7 +152,7 @@ const T: Record<Lang, Record<string, string>> = {
     ba_4_before: "Write hooks from scratch, no data", ba_4_after: "\"Write 5 hooks based on my top converters\"",
     pricing_label: "PRICING", pricing_h2: "3 days free. Stay because it works.",
     pricing_sub: "Every plan includes a 3-day free trial. Card required. No charge until day 4.",
-    pricing_cta: "Start 3-day trial", pricing_note: "3 days free · Cancel anytime",
+    pricing_cta: "Start 3-day trial", pricing_note: "3 days free · No charge until day 4",
     plan_badge_pro: "Most popular",
     plan_maker_f0: "50 AI messages / day", plan_maker_f1: "1 ad account", plan_maker_f2: "Basic tools", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 AI messages / day", plan_pro_f1: "3 ad accounts", plan_pro_f2: "All tools unlocked", plan_pro_f3: "Unlimited brands", plan_pro_f4: "Multi-market",
@@ -160,7 +160,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "FAQ", faq_h2: "Common questions",
     faq_q0: "How does the 3-day free trial work?", faq_a0: "When you sign up, you get full access for 3 days at no charge. If you cancel within that period, you won't be billed.",
     faq_q1: "Why do I need a card to start?", faq_a1: "Requiring a card filters for serious users and lets us give you genuine full access. We don't charge anything for 72 hours (3 days).",
-    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads, TikTok Ads, and Google Ads. Once connected, AdBrief reads your campaign data in real time.",
+    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads and Google Ads — fully connected and reading your data in real time. TikTok Ads is coming soon.",
     faq_q3: "Is my data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your credentials. Tokens are encrypted at rest.",
     faq_q4: "Can I use it for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts, Studio unlimited. Most agencies use one persona per brand.",
     faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its ad accounts (Meta Ads, Google Ads). The AI uses this context to personalize every answer.",
@@ -204,8 +204,8 @@ const T: Record<Lang, Record<string, string>> = {
     demo_cta_btn: "Testar com minha conta →",
     how_label: "COMO FUNCIONA", how_h2: "Três passos. Zero fricção.",
     how_sub: "Sem CSV. Sem entrada manual. Conecte e pergunte.",
-    how_s1_title: "Conecte suas contas", how_s1_desc: "Vincule Meta, TikTok ou Google Ads com um clique. O AdBrief lê seus dados reais de campanha em tempo real.",
-    how_s2_title: "Configure sua conta", how_s2_desc: "Crie uma conta para cada marca. Adicione site, descrição e conecte Meta Ads ou Google Ads — a IA usa esse contexto.",
+    how_s1_title: "Crie sua conta", how_s1_desc: "Cadastre-se e crie uma conta para cada marca ou cliente. Adicione o site e contexto — a IA usa tudo isso para personalizar cada resposta.",
+    how_s2_title: "Conecte Meta ou Google Ads", how_s2_desc: "Vincule sua conta de anúncios com um clique via OAuth. O AdBrief lê spend, CTR, criativos e performance — em tempo real.",
     how_s3_title: "Pergunte qualquer coisa.", how_s3_desc: "Converse como no ChatGPT — mas o AdBrief conhece sua conta. Pergunte o que funciona, o que cortar, o que produzir.",
     for_label: "PARA QUEM", for_h2: "Feito para equipes de performance.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
@@ -226,7 +226,7 @@ const T: Record<Lang, Record<string, string>> = {
     ba_4_before: "Escrever hooks do zero, sem dados", ba_4_after: "\"5 hooks baseados nos meus melhores criativos\"",
     pricing_label: "PREÇOS", pricing_h2: "3 dias grátis. Fique porque funciona.",
     pricing_sub: "Todo plano inclui 3 dias de teste. Cartão necessário. Sem cobrança até o 4º dia.",
-    pricing_cta: "Começar teste grátis", pricing_note: "3 dias grátis · Cancele quando quiser",
+    pricing_cta: "Começar teste grátis", pricing_note: "3 dias grátis · Sem cobrança até o 4º dia",
     plan_badge_pro: "Mais popular",
     plan_maker_f0: "50 mensagens / dia", plan_maker_f1: "1 conta de anúncios", plan_maker_f2: "Ferramentas básicas", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 mensagens / dia", plan_pro_f1: "3 contas conectadas", plan_pro_f2: "Todas as ferramentas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
@@ -234,7 +234,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "PERGUNTAS FREQUENTES", faq_h2: "Dúvidas comuns",
     faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
     faq_q1: "Por que preciso de cartão?", faq_a1: "Filtra usuários sérios e te dá acesso genuíno. Não cobramos nada em 72h.",
-    faq_q2: "O que conecta?", faq_a2: "Meta Ads, TikTok Ads e Google Ads. Lê seus dados em tempo real.",
+    faq_q2: "O que conecta?", faq_a2: "Meta Ads e Google Ads — conectados e lendo seus dados em tempo real. TikTok Ads em breve.",
     faq_q3: "Meus dados são seguros?", faq_a3: "Sim. Usamos OAuth. Nunca armazenamos suas credenciais. Tokens criptografados.",
     faq_q4: "Posso usar para vários clientes?", faq_a4: "Sim. Pro: 3 contas. Studio: ilimitado. A maioria usa uma persona por marca.",
     faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado às suas contas de anúncios (Meta Ads, Google Ads). A IA usa esse contexto em cada resposta.",
@@ -263,10 +263,10 @@ const T: Record<Lang, Record<string, string>> = {
     hero_sub: "Conecta Meta Ads o Google Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
     hero_cta: "Probar gratis 3 días", hero_see: "Verlo en acción",
     hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
-    stat_1: "$2.4M+", stat_1_label: "Budget analizado",
-    stat_2: "34,000+", stat_2_label: "Hooks generados",
-    stat_3: "4.8", stat_3_label: "Valoración media",
-    stat_4: "+22%", stat_4_label: "Mejora de ROAS",
+    stat_1: "30s", stat_1_label: "Para conectar Meta Ads",
+    stat_2: "90 días", stat_2_label: "De datos reales analizados",
+    stat_3: "7", stat_3_label: "Herramientas integradas",
+    stat_4: "Telegram", stat_4_label: "Alertas en tiempo real",
     demo_label: "DEMO EN VIVO",
     demo_q1_short: "Mi ROAS bajó 40%", demo_q1_full: "Mi ROAS de fitness bajó 40% esta semana. ¿Qué pasa?",
     demo_q2_short: "¿Cuáles pausar?", demo_q2_full: "¿Cuáles de mis anuncios debo pausar inmediatamente?",
@@ -278,7 +278,7 @@ const T: Record<Lang, Record<string, string>> = {
     demo_cta_btn: "Probar con mi cuenta →",
     how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos. Cero fricción.",
     how_sub: "Sin CSV. Sin entrada manual. Conecta y pregunta.",
-    how_s1_title: "Conecta tus cuentas", how_s1_desc: "Vincula Meta, TikTok o Google Ads con un clic. AdBrief lee tus datos reales en tiempo real.",
+    how_s1_title: "Crea tu cuenta", how_s1_desc: "Regístrate y crea una cuenta para cada marca o cliente. Agrega el sitio y contexto — la IA usa todo eso para personalizar cada respuesta.",
     how_s2_title: "Configura tu cuenta", how_s2_desc: "Crea una cuenta por marca. Agrega sitio web, descripción y conecta Meta Ads o Google Ads.",
     how_s3_title: "Pregunta lo que quieras.", how_s3_desc: "Chatea como en ChatGPT — pero AdBrief conoce tu cuenta. Pregunta qué funciona, qué pausar, qué producir.",
     for_label: "PARA QUIÉN", for_h2: "Hecho para equipos de performance.",
@@ -308,7 +308,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "PREGUNTAS FRECUENTES", faq_h2: "Preguntas comunes",
     faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 3 días sin cargo. Cancela y no se te cobra.",
     faq_q1: "¿Por qué necesito tarjeta?", faq_a1: "Filtra usuarios serios y te da acceso completo. No cobramos nada en 24h.",
-    faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads, TikTok Ads y Google Ads. Lee tus datos en tiempo real.",
+    faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads y Google Ads — conectados y leyendo tus datos en tiempo real. TikTok Ads próximamente.",
     faq_q3: "¿Mis datos son seguros?", faq_a3: "Sí. OAuth + tokens cifrados. Nunca almacenamos credenciales.",
     faq_q4: "¿Puedo usar para varios clientes?", faq_a4: "Sí. Pro: 3 cuentas. Studio: ilimitado.",
     faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a tus cuentas de anuncios (Meta Ads, Google Ads). La IA personaliza cada respuesta.",
@@ -2020,7 +2020,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
     : lang === 'es'
     ? 'Conecta Meta Ads o Google Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña.'
     : 'Connects to Meta Ads or Google Ads. Reads your real data. Responds like an analyst who knows every campaign.';
-  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança por 72h · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo por 72h · Cancela cuando quieras' : '3 days free · No charge for 72h · Cancel anytime';
+  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center' }}>
@@ -2376,7 +2376,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
         { icon: "🔔", text: "Alertas proativos no Telegram antes de queimar verba" },
       ],
-      cta: "Ver em ação",
+      cta: "Começar grátis →",
     },
     es: {
       label: "EL PROBLEMA",
@@ -2394,7 +2394,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Genera hooks y guiones de tus anuncios ganadores" },
         { icon: "🔔", text: "Alertas proactivas en Telegram antes de quemar presupuesto" },
       ],
-      cta: "Ver en acción",
+      cta: "Comenzar gratis →",
     },
     en: {
       label: "THE PROBLEM",
@@ -2412,7 +2412,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Generates hooks and scripts from your winning ads" },
         { icon: "🔔", text: "Proactive Telegram alerts before you burn budget" },
       ],
-      cta: "See it in action",
+      cta: "Start for free →",
     },
   };
 
@@ -2525,9 +2525,9 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const results: Record<Lang, string[]> = {
-    pt: ["Meta Ads conectado em ~30 segundos", "IA calibrada para sua marca e mercado", "Respostas com dados reais da sua conta"],
-    es: ["Meta Ads conectado en ~30 segundos", "IA calibrada para tu marca y mercado", "Respuestas con datos reales de tu cuenta"],
-    en: ["Meta Ads connected in ~30 seconds", "AI calibrated to your brand and market", "Answers using real data from your account"],
+    pt: ["Conta criada em menos de 1 minuto", "Meta ou Google Ads conectados via OAuth", "Respostas com dados reais da sua conta"],
+    es: ["Cuenta creada en menos de 1 minuto", "Meta o Google Ads conectados vía OAuth", "Respuestas con datos reales de tu cuenta"],
+    en: ["Account created in under 1 minute", "Meta or Google Ads connected via OAuth", "Answers using real data from your account"],
   };
   const steps = [
     { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
@@ -3291,7 +3291,6 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} ctaLoading={ctaLoading} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} ctaLoading={ctaLoading} />
-      <MobileDemoSection lang={lang} />
       <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
       <HowItWorks t={t} lang={lang} />
       <Tools t={t} lang={lang} />
