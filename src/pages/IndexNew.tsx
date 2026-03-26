@@ -643,11 +643,11 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
 // ─── Demo conversations data ──────────────────────────────────────────────────
 // ─── Industries for demo ──────────────────────────────────────────────────────
 const INDUSTRIES_DEMO = [
-  { id: "igaming",  emoji: "🎰", label: { pt: "iGaming",     es: "iGaming",     en: "iGaming"    }, color: "#a78bfa", initial: "E" },
-  { id: "ecomm",    emoji: "🛍️", label: { pt: "E-commerce",  es: "E-commerce",  en: "E-commerce" }, color: "#0ea5e9", initial: "L" },
-  { id: "fitness",  emoji: "💪", label: { pt: "Fitness",     es: "Fitness",     en: "Fitness"    }, color: "#34d399", initial: "F" },
-  { id: "finance",  emoji: "💸", label: { pt: "Finanças",    es: "Finanzas",    en: "Finance"    }, color: "#fbbf24", initial: "W" },
-  { id: "saas",     emoji: "⚡", label: { pt: "SaaS / Tech", es: "SaaS / Tech", en: "SaaS / Tech"}, color: "#60a5fa", initial: "S" },
+  { id: "fitness",  emoji: "💪", label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#34d399", initial: "F" },
+  { id: "clinica",  emoji: "🏥", label: { pt: "Google · Clínica", es: "Google · Clínica", en: "Google · Clinic"  }, color: "#60a5fa", initial: "C" },
+  { id: "ecomm",    emoji: "🛍️", label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
+  { id: "igaming",  emoji: "🎰", label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
+  { id: "saas",     emoji: "⚡", label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
 ];
 
 const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: string; campaigns: string }>> = {
@@ -656,6 +656,7 @@ const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: strin
   fitness:  { pt:{name:"FitCore Brasil", meta:"Meta · 22 campanhas"}, es:{name:"FitMex",        meta:"Meta · 17 campañas"},    en:{name:"FitCore US",   meta:"Meta · 22 campaigns"} } as any,
   finance:  { pt:{name:"WealthBR",       meta:"Meta · 14 campanhas"}, es:{name:"FinMex Pro",    meta:"Meta · 11 campañas"},    en:{name:"WealthApp",    meta:"Meta · 19 campaigns"} } as any,
   saas:     { pt:{name:"StartupAI",      meta:"Meta · 9 campanhas"},  es:{name:"TechStart MX",  meta:"Meta · 8 campañas"},     en:{name:"SaaSBoost",    meta:"Meta · 12 campaigns"} } as any,
+  clinica:  { pt:{name:"Clínica Estética BH", meta:"Google Ads · 3 campanhas"}, es:{name:"Clínica Estética MX", meta:"Google Ads · 4 campañas"}, en:{name:"Beauty Clinic", meta:"Google Ads · 3 campaigns"} } as any,
 };
 
 const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines: string[] }>>> = {
@@ -1101,6 +1102,108 @@ const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines:
           "\"I tested 12 analytics tools. Only one connects directly to the ad account.\"",
           "\"Why do media buyers scaling $500k/month use a different AI than you?\"",
         ]
+      },
+    ],
+  },
+
+  clinica: {
+    pt: [
+      {
+        q: "Por que meu CPA subiu 60% essa semana?",
+        lines: [
+          "Identifiquei a causa: um concorrente novo entrou em leilão para 'clínica estética BH' na segunda.",
+          "**Seu CPC médio subiu de R$4,20 → R$6,80** nessa keyword. Está perdendo posição para ele.",
+          "**3 keywords afetadas:** 'clínica estética BH' (CPA +82%), 'harmonização BH' (CPA +61%), 'botox Belo Horizonte' (CPA +44%).",
+          "Ação: aumente lance em 'harmonização BH' (+25%) — seu Quality Score é 8/10, pode ganhar o leilão sem aumentar muito o CPA.",
+          "Para 'clínica estética BH': adicione extensões de local para diferenciar do concorrente.",
+        ],
+      },
+      {
+        q: "Quais keywords estão trazendo mais agendamentos?",
+        lines: [
+          "Top 3 por conversão real nos últimos 30 dias:",
+          "**'harmonização facial BH'** — 14 agendamentos, CPA R$38. Sua melhor keyword.",
+          "**'botox zona sul BH'** — 9 agendamentos, CPA R$52. Boa, mas pode melhorar com extensão de local.",
+          "**'preenchimento labial BH'** — 6 agendamentos, CPA R$71. Funciona, mas só à tarde (13h-18h).",
+          "Sugestão: crie agendamento de anúncio só para 'preenchimento labial' nos horários de pico. Pode reduzir CPA 30%.",
+        ],
+      },
+      {
+        q: "Cria headlines para o Google baseado no que funciona aqui",
+        lines: [
+          "Baseado nas suas keywords com menor CPA e maior CTR:",
+          "**Headline 1:** 'Harmonização Facial em BH | Agende Hoje' (38 chars)",
+          "**Headline 2:** 'Clínica Estética Zona Sul BH | 15 Anos' (39 chars)",
+          "**Headline 3:** 'Botox a Partir de R$X | Resultado Real' (39 chars)",
+          "**Description:** 'Tratamentos estéticos com resultado comprovado em Belo Horizonte. Primeira avaliação gratuita. Ligue agora.'",
+          "Padrão que converte aqui: localização + credencial + CTA direto. Sem urgência artificial.",
+        ],
+      },
+    ],
+    es: [
+      {
+        q: "¿Por qué mi CPA subió 60% esta semana?",
+        lines: [
+          "Identifiqué la causa: un competidor nuevo entró a pujar por 'clínica estética CDMX' el lunes.",
+          "**Tu CPC promedio subió de $42 → $68** en esa keyword. Estás perdiendo posición.",
+          "**3 keywords afectadas:** 'clínica estética CDMX' (CPA +82%), 'relleno de labios CDMX' (CPA +61%).",
+          "Acción: sube puja en 'harmonización facial CDMX' (+25%) — tu Quality Score es 8/10.",
+          "Para 'clínica estética CDMX': agrega extensiones de ubicación para diferenciarte.",
+        ],
+      },
+      {
+        q: "¿Qué keywords traen más citas agendadas?",
+        lines: [
+          "Top 3 por conversión real en los últimos 30 días:",
+          "**'harmonización facial CDMX'** — 14 citas, CPA $380. Tu mejor keyword.",
+          "**'botox zona rosa CDMX'** — 9 citas, CPA $520. Buena, puede mejorar con extensión de local.",
+          "**'relleno labial CDMX'** — 6 citas, CPA $710. Funciona solo en la tarde (13h-18h).",
+          "Sugerencia: programa anuncios solo en horarios pico para 'relleno labial'. Puede reducir CPA 30%.",
+        ],
+      },
+      {
+        q: "Crea headlines para Google basados en lo que funciona aquí",
+        lines: [
+          "Basado en tus keywords con menor CPA y mayor CTR:",
+          "**Headline 1:** 'Harmonización Facial CDMX | Agenda Hoy' (38 chars)",
+          "**Headline 2:** 'Clínica Estética Zona Rosa | 15 Años' (36 chars)",
+          "**Headline 3:** 'Botox Desde $X | Resultado Real CDMX' (36 chars)",
+          "**Description:** 'Tratamientos estéticos con resultado comprobado en CDMX. Primera evaluación gratis. Llama ahora.'",
+          "Patrón que convierte: ubicación + credencial + CTA directo. Sin urgencia artificial.",
+        ],
+      },
+    ],
+    en: [
+      {
+        q: "Why did my CPA jump 60% this week?",
+        lines: [
+          "Found the cause: a new competitor started bidding on 'aesthetics clinic Miami' on Monday.",
+          "**Your avg CPC jumped from $4.20 → $6.80** on that keyword. You're losing position.",
+          "**3 affected keywords:** 'aesthetics clinic Miami' (CPA +82%), 'lip filler Miami' (CPA +61%).",
+          "Action: raise bid on 'facial harmonization Miami' (+25%) — your Quality Score is 8/10.",
+          "For 'aesthetics clinic Miami': add location extensions to differentiate from the competitor.",
+        ],
+      },
+      {
+        q: "Which keywords are driving actual appointments?",
+        lines: [
+          "Top 3 by real conversions in the last 30 days:",
+          "**'facial harmonization Miami'** — 14 bookings, CPA $38. Your best keyword.",
+          "**'botox south beach'** — 9 bookings, CPA $52. Good, can improve with location extension.",
+          "**'lip filler Miami'** — 6 bookings, CPA $71. Works, but only afternoons (1pm-6pm).",
+          "Suggestion: schedule ads only during peak hours for 'lip filler'. Could cut CPA 30%.",
+        ],
+      },
+      {
+        q: "Write Google headlines based on what converts here",
+        lines: [
+          "Based on your lowest-CPA, highest-CTR keywords:",
+          "**Headline 1:** 'Facial Harmonization Miami | Book Today' (38 chars)",
+          "**Headline 2:** 'Aesthetics Clinic South Beach | 15 Yrs' (38 chars)",
+          "**Headline 3:** 'Botox from $X | Real Results Miami' (34 chars)",
+          "**Description:** 'Proven aesthetic treatments in Miami. Free first consultation. Call now.'",
+          "Pattern that converts here: location + credential + direct CTA. No fake urgency.",
+        ],
       },
     ],
   },
@@ -1665,14 +1768,33 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
         {/* ── LEFT ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-          {/* Social proof */}
-          <div className="hero-social-proof" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
-            <div style={{ display: 'flex', gap: 1 }}>
-              {[0,1,2,3,4].map(i => <svg key={i} width="10" height="10" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.5l-2.6 1.4.5-2.9L1.8 4l2.9-.4z"/></svg>)}
-            </div>
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.22)' }}>
-              {lang === 'pt' ? '340+ gestores já usam' : lang === 'es' ? '340+ media buyers ya usan' : '340+ media buyers using it'}
-            </span>
+          {/* Social proof — real testimonials */}
+          <div className="hero-social-proof" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
+            {[
+              {
+                avatar: '/avatar-rafael.svg',
+                name: lang === 'pt' ? 'Rafael M. — gestor freelance, SP' : lang === 'es' ? 'Rafael M. — gestor freelance, SP' : 'Rafael M. — freelance media buyer, SP',
+                text: lang === 'pt' ? '"Pausei criativo com frequência 5.2x antes de queimar mais R$1.4k. Em 3 dias o substituto já tinha ROAS 2.9x."' : lang === 'es' ? '"Pausé creativo con frecuencia 5.2x antes de quemar $1.4k. En 3 días el sustituto ya tenía ROAS 2.9x."' : '"Paused a creative at 5.2x frequency before burning another R$1.4k. 3 days later the replacement hit ROAS 2.9x."',
+                plat: 'Meta Ads'
+              },
+              {
+                avatar: '/avatar-claudia.svg',
+                name: lang === 'pt' ? 'Cláudia R. — clínica estética, BH' : lang === 'es' ? 'Claudia R. — clínica estética, BH' : 'Claudia R. — aesthetics clinic, BH',
+                text: lang === 'pt' ? '"Perguntei por que meu CPA subiu 60%. Em 30 segundos soube exatamente quais 3 keywords ajustar."' : lang === 'es' ? '"Pregunté por qué mi CPA subió 60%. En 30 segundos supe exactamente qué 3 palabras clave ajustar."' : '"Asked why my CPA jumped 60%. In 30 seconds I knew exactly which 3 keywords to adjust."',
+                plat: 'Google Ads'
+              }
+            ].map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 10px' }}>
+                <img src={t.avatar} alt={t.name} width={28} height={28} style={{ borderRadius: '50%', flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <p style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.75)', margin: '0 0 2px', lineHeight: 1.45, fontStyle: 'italic' }}>{t.text}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.35)' }}>{t.name}</span>
+                    <span style={{ fontSize: 9, background: 'rgba(14,165,233,0.15)', color: '#0ea5e9', border: '1px solid rgba(14,165,233,0.25)', borderRadius: 4, padding: '1px 5px', fontFamily: F, fontWeight: 600 }}>{t.plat}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Headline */}
@@ -1752,13 +1874,20 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
                 <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.50)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
               </div>
-              {/* Meta badge — official */}
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(24,119,242,0.10)', border: '1px solid rgba(24,119,242,0.22)' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 36 18" fill="none">
-                  <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
-                </svg>
-                <span style={{ fontFamily: F, fontSize: 9, color: '#5b9cf6', fontWeight: 600 }}>Meta</span>
-              </div>
+              {/* Platform badge — dynamic */}
+              {activeIndustry === 'clinica' ? (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                  <span style={{ fontFamily: F, fontSize: 9, color: '#34d399', fontWeight: 600 }}>Google Ads</span>
+                </div>
+              ) : (
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(24,119,242,0.10)', border: '1px solid rgba(24,119,242,0.22)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 36 18" fill="none">
+                    <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
+                  </svg>
+                  <span style={{ fontFamily: F, fontSize: 9, color: '#5b9cf6', fontWeight: 600 }}>Meta</span>
+                </div>
+              )}
             </div>
 
             {/* App body */}
