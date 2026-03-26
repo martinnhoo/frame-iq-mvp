@@ -71,11 +71,13 @@ Deno.serve(async (req) => {
           );
           if (goodBlocks.length > 0) {
             // Cap at 20 examples per persona — remove oldest if over limit
-            const { data: existing } = await (sb as any).from('chat_examples')
+            const existingQuery = (sb as any).from('chat_examples')
               .select('id, created_at')
-              .eq('user_id', user_id)
-              .eq('persona_id', feedbackPersonaId || null)
-              .order('created_at', { ascending: true });
+              .eq('user_id', user_id);
+            // Must use .is() for null, .eq() for actual UUID
+            const { data: existing } = feedbackPersonaId
+              ? await existingQuery.eq('persona_id', feedbackPersonaId).order('created_at', { ascending: true })
+              : await existingQuery.is('persona_id', null).order('created_at', { ascending: true });
 
             if ((existing?.length || 0) >= 20) {
               // Delete oldest to make room
@@ -85,13 +87,15 @@ Deno.serve(async (req) => {
               }
             }
 
-            await (sb as any).from('chat_examples').insert({
+            const insertResult = await (sb as any).from('chat_examples').insert({
               user_id,
               persona_id: feedbackPersonaId || null,
               user_message: String(message_text).slice(0, 400),
               assistant_blocks: goodBlocks.slice(0, 3),
               quality_score: 5,
             });
+            if (insertResult.error) console.error('chat_examples insert error:', JSON.stringify(insertResult.error));
+            else console.log('chat_examples inserted ok, persona:', feedbackPersonaId || 'null');
           }
         }
 
