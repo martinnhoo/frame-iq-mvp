@@ -1677,169 +1677,169 @@ function GoogleBadge() {
 // ─── Selling Point Demo — UAU moments ───────────────────────────────────────
 
 // Selling point scenarios — indexed by Lang
-type SPScene = { tab: string; q: string; platform: 'meta' | 'google'; account: string; lines: string[]; result: string };
+type SPScene = { tab: string; q: string; platform: 'meta' | 'google'; account: string; metric: string; metricLabel: string; points: string[]; action: string; };
 
 const SELLING_POINTS: Record<Lang, SPScene[]> = {
   pt: [
     {
       tab: "Por que caiu?",
-      q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
-      platform: "meta", account: "FitCore Brasil · Meta Ads",
-      lines: [
-        "Encontrei 3 causas simultâneas na conta:",
-        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate despencou de 31% para 8%.",
-        "**Frequência 4.8x** — BR-Mulheres-25-34 viu o mesmo anúncio 5x. Cada real vai para quem já ignorou.",
-        "**CPM subiu 38%** — o algoritmo detectou a queda e começou a cobrar mais por impressão.",
-        "→ Pause Creative_042. Relance Creative_019 — estava com ROAS 3.2x antes de parar.",
+      q: "Meu ROAS caiu 40% essa semana. O que aconteceu?",
+      platform: "meta", account: "FitCore Brasil",
+      metric: "−40% ROAS",
+      metricLabel: "3 causas identificadas — resolvidas em 1 resposta",
+      points: [
+        "**Creative_042** rodando há 22 dias: hook rate caiu de 31% → 8%. Audiência saturada.",
+        "**Frequência 4.8x** em BR-Mulheres-25-34 — cada real vai pra quem já ignorou.",
+        "**CPM subiu 38%** — o algoritmo penalizou a queda de relevância automaticamente.",
       ],
-      result: "R/dia economizados · ROAS voltou em 4 dias"
+      action: "Pause Creative_042 agora. Relance Creative_019 — ROAS 3.2x antes de ser pausado.",
     },
     {
       tab: "O que escalar?",
-      q: "Qual criativo devo escalar agora?",
-      platform: "meta", account: "FitCore Brasil · Meta Ads",
-      lines: [
-        "**Creative_019** é seu winner claro — e está subutilizado:",
-        "Hook rate 38% — 2.4x acima da média. Prende nos primeiros 3 segundos.",
-        "ROAS 3.8x com frequência 1.3x — ainda longe da saturação.",
-        "Você roda com R/dia. Pode ir para R /dia com segurança.",
-        "→ Projeção: +R\.080/dia de retorno líquido. Espaço para triplicar sem queimar.",
+      q: "Tem algum criativo pronto pra escalar?",
+      platform: "meta", account: "FitCore Brasil",
+      metric: "+R$1.080/dia",
+      metricLabel: "retorno líquido projetado — triplicando o orçamento atual",
+      points: [
+        "**Creative_019** com hook rate 38% — 2.4x acima da média da conta.",
+        "**ROAS 3.8x** e frequência 1.3x — ainda longe da saturação, muito espaço.",
+        "Roda com R$120/dia. Pode ir para **R$400/dia com segurança** já hoje.",
       ],
-      result: "+R\.080/dia projetados · Frequência ainda segura"
+      action: "Suba o orçamento de Creative_019 para R$400/dia. Projeção: +R$1.080/dia líquido.",
     },
     {
       tab: "Avisa antes",
-      q: "Tem algum criativo que vai falhar em breve?",
-      platform: "meta", account: "FitCore Brasil · Meta Ads",
-      lines: [
-        "2 criativos na trajetória de colapso — ainda não falharam, mas vão:",
-        "**Creative_031** — frequência 3.9x, hook rate caindo 4% por dia. Colapso em ~5 dias.",
-        "**BR-Homens-25-34** — CTR caiu de 2.8% para 1.1% em 6 dias. Audiência se esgotando.",
-        "Ainda não custou caro — mas vai. Prepare uma variação de Creative_031 agora.",
-        "→ Criativos frescos prontos antes do colapso = zero interrupção de resultado.",
+      q: "Algum criativo vai falhar em breve?",
+      platform: "meta", account: "FitCore Brasil",
+      metric: "5 dias antes",
+      metricLabel: "antecipação — detectado antes de queimar qualquer verba",
+      points: [
+        "**Creative_031** em colapso: frequência 3.9x, hook rate caindo 4%/dia.",
+        "**BR-Homens-25-34**: CTR caiu de 2.8% → 1.1% em 6 dias. Audiência se esgotando.",
+        "Ainda não custou caro — mas em 5 dias vai queimar sem retorno.",
       ],
-      result: "Detectado 5 dias antes · Sem perda de verba"
+      action: "Prepare uma variação de Creative_031 hoje. Zero interrupção de resultado.",
     },
     {
       tab: "Cria hooks",
-      q: "Cria 3 hooks baseados nos meus criativos que mais converteram",
-      platform: "meta", account: "FitCore Brasil · Meta Ads",
-      lines: [
-        "Analisei seus 5 top converters. Padrão: afirmação específica que para o scroll.",
-        "**Hook 1:** Você está pagando R  por clique e nem sabe por quê — seus dados têm a resposta.",
-        "**Hook 2:** 3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x. Qual vale manter?",
-        "**Hook 3:** Seu melhor criativo de setembro está parado há 9 dias. O concorrente escalou o mesmo ângulo.",
-        "→ Cada hook saiu dos seus dados reais — não de template genérico.",
+      q: "Cria 3 hooks dos meus criativos que mais converteram",
+      platform: "meta", account: "FitCore Brasil",
+      metric: "3 hooks prontos",
+      metricLabel: "gerados dos seus winners reais — não de template genérico",
+      points: [
+        "Você está pagando **R$90 por clique** e nem sabe por quê — seus dados têm a resposta.",
+        "**3 dos 4 anúncios** que mais gastam têm ROAS abaixo de 1x. Qual vale manter?",
+        "Seu melhor criativo de setembro está **parado há 9 dias**. O concorrente escalou.",
       ],
-      result: "3 hooks prontos · Calibrados pelos seus winners reais"
+      action: "Cada hook saiu dos seus dados — CTR, hook rate, padrão dos seus winners reais.",
     },
   ],
   es: [
     {
       tab: "¿Por qué bajó?",
-      q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
-      platform: "meta", account: "FitMex · Meta Ads",
-      lines: [
-        "Encontré 3 causas simultáneas en la cuenta:",
-        "**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate cayó de 31% a 8%.",
-        "**Frecuencia 4.8x** — MX-Mujeres-25-34 vio el mismo anuncio 5 veces.",
-        "**CPM subió 38%** — el algoritmo detectó la caída y cobra más por impresión.",
-        "→ Pausa Creative_042. Relanza Creative_019 — tenía ROAS 3.2x antes de pausarse.",
+      q: "Mi ROAS bajó 40% esta semana. ¿Qué pasó?",
+      platform: "meta", account: "FitMex",
+      metric: "−40% ROAS",
+      metricLabel: "3 causas identificadas — resueltas en 1 respuesta",
+      points: [
+        "**Creative_042** con 22 días activo: hook rate cayó de 31% → 8%. Audiencia saturada.",
+        "**Frecuencia 4.8x** en MX-Mujeres-25-34 — cada peso va a quien ya ignoró el anuncio.",
+        "**CPM subió 38%** — el algoritmo penalizó automáticamente la caída de relevancia.",
       ],
-      result: "/día ahorrados · ROAS recuperado en 4 días"
+      action: "Pausa Creative_042 ahora. Relanza Creative_019 — tenía ROAS 3.2x antes de pausarse.",
     },
     {
       tab: "¿Qué escalar?",
-      q: "¿Qué creativo debo escalar ahora?",
-      platform: "meta", account: "FitMex · Meta Ads",
-      lines: [
-        "**Creative_019** es tu winner claro — y está subutilizado:",
-        "Hook rate 38% — 2.4x sobre el promedio. Engancha en los primeros 3 segundos.",
-        "ROAS 3.8x con frecuencia 1.3x — lejos de la saturación.",
-        "Corres con /día. Puedes ir a  /día con seguridad.",
-        "→ Proyección: +\.080/día de retorno neto. Espacio para triplicar sin quemar.",
+      q: "¿Hay algún creativo listo para escalar?",
+      platform: "meta", account: "FitMex",
+      metric: "+$1.080/día",
+      metricLabel: "retorno neto proyectado — triplicando el presupuesto actual",
+      points: [
+        "**Creative_019** con hook rate 38% — 2.4x sobre el promedio de la cuenta.",
+        "**ROAS 3.8x** y frecuencia 1.3x — lejos de la saturación, mucho espacio.",
+        "Corre con $120/día. Puede ir a **$400/día con seguridad** desde hoy.",
       ],
-      result: "+\.080/día proyectados · Frecuencia aún segura"
+      action: "Sube el presupuesto de Creative_019 a $400/día. Proyección: +$1.080/día neto.",
     },
     {
       tab: "Avisa antes",
-      q: "¿Hay algún creativo que va a fallar pronto?",
-      platform: "meta", account: "FitMex · Meta Ads",
-      lines: [
-        "2 creativos en trayectoria de colapso — aún no fallaron, pero lo harán:",
-        "**Creative_031** — frecuencia 3.9x, hook rate cayendo 4% por día. Colapso en ~5 días.",
-        "**MX-Hombres-25-34** — CTR cayó de 2.8% a 1.1% en 6 días. Audiencia agotándose.",
-        "Todavía no costó caro — pero costará. Prepara una variación de Creative_031 ya.",
-        "→ Creativos frescos antes del colapso = cero interrupción de resultados.",
+      q: "¿Algún creativo va a fallar pronto?",
+      platform: "meta", account: "FitMex",
+      metric: "5 días antes",
+      metricLabel: "anticipación — detectado antes de quemar presupuesto",
+      points: [
+        "**Creative_031** en colapso: frecuencia 3.9x, hook rate cayendo 4%/día.",
+        "**MX-Hombres-25-34**: CTR cayó de 2.8% → 1.1% en 6 días. Audiencia agotándose.",
+        "Todavía no costó caro — pero en 5 días quemará sin retorno.",
       ],
-      result: "Detectado 5 días antes · Sin pérdida de presupuesto"
+      action: "Prepara una variación de Creative_031 hoy. Cero interrupción de resultados.",
     },
     {
       tab: "Crea hooks",
-      q: "Crea 3 hooks basados en mis creativos que más convirtieron",
-      platform: "meta", account: "FitMex · Meta Ads",
-      lines: [
-        "Analicé tus 5 top converters. Patrón: afirmación específica que para el scroll.",
-        "**Hook 1:** Estás pagando   por clic y ni sabes por qué — tus datos tienen la respuesta.",
-        "**Hook 2:** 3 de los 4 anuncios que más gastan tienen ROAS bajo 1x. ¿Cuál vale mantener?",
-        "**Hook 3:** Tu mejor creativo de septiembre lleva 9 días pausado. El competidor escaló el mismo ángulo.",
-        "→ Cada hook salió de tus datos reales — no de una plantilla genérica.",
+      q: "Crea 3 hooks de mis creativos que más convirtieron",
+      platform: "meta", account: "FitMex",
+      metric: "3 hooks listos",
+      metricLabel: "generados de tus winners reales — no de una plantilla genérica",
+      points: [
+        "Estás pagando **$90 por clic** y ni sabes por qué — tus datos tienen la respuesta.",
+        "**3 de los 4 anuncios** que más gastan tienen ROAS bajo 1x. ¿Cuál vale mantener?",
+        "Tu mejor creativo de septiembre lleva **9 días pausado**. El competidor escaló.",
       ],
-      result: "3 hooks listos · Calibrados por tus winners reales"
+      action: "Cada hook salió de tus datos reales — CTR, hook rate, patrón de tus winners.",
     },
   ],
   en: [
     {
       tab: "Why did it drop?",
       q: "My ROAS dropped 40% this week. What happened?",
-      platform: "meta", account: "FitCore US · Meta Ads",
-      lines: [
-        "Found 3 simultaneous causes in your account:",
-        "**Creative fatigue** — Creative_042 running 22 days. Hook rate fell from 31% to 8%.",
-        "**Frequency 4.8x** — US-Women-25-34 saw the same ad 5x. Every dollar goes to someone who quit.",
-        "**CPM up 38%** — the algorithm detected the drop and charges more per impression.",
-        "→ Pause Creative_042. Relaunch Creative_019 — it had ROAS 3.2x before being paused.",
+      platform: "meta", account: "FitCore US",
+      metric: "−40% ROAS",
+      metricLabel: "3 causes identified — solved in 1 answer",
+      points: [
+        "**Creative_042** running 22 days: hook rate fell from 31% → 8%. Audience saturated.",
+        "**Frequency 4.8x** on US-Women-25-34 — every dollar goes to someone who already ignored it.",
+        "**CPM up 38%** — the algorithm automatically penalized the relevance drop.",
       ],
-      result: "/day saved · ROAS recovered in 4 days"
+      action: "Pause Creative_042 now. Relaunch Creative_019 — it had ROAS 3.2x before being paused.",
     },
     {
       tab: "What to scale?",
-      q: "Which creative should I scale right now?",
-      platform: "meta", account: "FitCore US · Meta Ads",
-      lines: [
-        "**Creative_019** is your clear winner — and it's underutilized:",
-        "Hook rate 38% — 2.4x above average. Hooks in the first 3 seconds.",
-        "ROAS 3.8x at frequency 1.3x — far from saturation.",
-        "Running at /day. Can safely go to  /day.",
-        "→ Projection: +\,080/day net return. Room to triple without burning out.",
+      q: "Is there a creative ready to scale?",
+      platform: "meta", account: "FitCore US",
+      metric: "+$1,080/day",
+      metricLabel: "projected net return — tripling current budget",
+      points: [
+        "**Creative_019** with hook rate 38% — 2.4x above account average.",
+        "**ROAS 3.8x** at frequency 1.3x — far from saturation, lots of room.",
+        "Running at $120/day. Can go to **$400/day safely** starting today.",
       ],
-      result: "+\,080/day projected · Frequency still safe"
+      action: "Raise Creative_019 budget to $400/day. Projection: +$1,080/day net.",
     },
     {
       tab: "Warns you first",
       q: "Is any creative about to fail?",
-      platform: "meta", account: "FitCore US · Meta Ads",
-      lines: [
-        "2 creatives on a collapse trajectory — haven't failed yet, but will:",
-        "**Creative_031** — frequency 3.9x, hook rate falling 4%/day. Collapse in ~5 days.",
-        "**US-Men-25-34** — CTR dropped from 2.8% to 1.1% in 6 days. Audience burning out.",
-        "Hasn't cost much yet — but it will. Prepare a Creative_031 variation now.",
-        "→ Fresh creatives before the collapse = zero results interruption.",
+      platform: "meta", account: "FitCore US",
+      metric: "5 days early",
+      metricLabel: "detected before burning any budget",
+      points: [
+        "**Creative_031** collapsing: frequency 3.9x, hook rate falling 4%/day.",
+        "**US-Men-25-34**: CTR fell from 2.8% → 1.1% in 6 days. Audience burning out.",
+        "Hasn't cost much yet — in 5 days it will burn with zero return.",
       ],
-      result: "Detected 5 days early · Zero budget lost"
+      action: "Prepare a Creative_031 variation today. Zero results interruption.",
     },
     {
       tab: "Write hooks",
       q: "Write 3 hooks from my best converting creatives",
-      platform: "meta", account: "FitCore US · Meta Ads",
-      lines: [
-        "Analyzed your top 5 converters. Pattern: specific statement that stops the scroll.",
-        "**Hook 1:** You're paying  /click and don't know why — your data already has the answer.",
-        "**Hook 2:** 3 of 4 highest-spend ads have ROAS below 1x. Which one is worth keeping?",
-        "**Hook 3:** Your best September creative was paused 9 days ago. A competitor scaled the same angle.",
-        "→ Every hook came from your real data — not a generic template.",
+      platform: "meta", account: "FitCore US",
+      metric: "3 hooks ready",
+      metricLabel: "built from your real winners — not a generic template",
+      points: [
+        "You're paying **$90/click** and don't know why — your data already has the answer.",
+        "**3 of 4 top-spend ads** have ROAS below 1x. Which one is worth keeping?",
+        "Your best September creative has been **paused 9 days**. A competitor scaled it.",
       ],
-      result: "3 hooks ready · Built from your real winners"
+      action: "Every hook came from your data — CTR, hook rate, your real winners' patterns.",
     },
   ],
 };
@@ -1847,191 +1847,147 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
 function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
   const scenes = SELLING_POINTS[lang];
   const [activeIdx, setActiveIdx] = React.useState(0);
-  const [animKey, setAnimKey] = React.useState(0);
-  const [streaming, setStreaming] = React.useState(false);
-  const [visibleLines, setVisibleLines] = React.useState<number>(0);
-  const [showResult, setShowResult] = React.useState(false);
-  const [showUser, setShowUser] = React.useState(false);
-  const chatRef = React.useRef<HTMLDivElement>(null);
-
   const scene = scenes[activeIdx];
-  const note = lang==='pt' ? 'Pergunte qualquer coisa...' : lang==='es' ? 'Pregunta lo que quieras...' : 'Ask anything...';
-  const ctabtn = lang==='pt' ? 'Testar com minha conta' : lang==='es' ? 'Probar con mi cuenta' : 'Try with my account';
-  const resultLabel = lang==='pt' ? 'Resultado:' : lang==='es' ? 'Resultado:' : 'Result:';
 
-  // Run animation when scene changes
-  const runAnimation = React.useCallback(() => {
-    setStreaming(false);
-    setVisibleLines(0);
-    setShowResult(false);
-    setShowUser(false);
-
-    const t1 = setTimeout(() => setShowUser(true), 600);
-    const t2 = setTimeout(() => setStreaming(true), 1400);
-
-    // Stream lines one by one
-    scene.lines.forEach((_, i) => {
-      setTimeout(() => setVisibleLines(i + 1), 1800 + i * 520);
-    });
-    const t3 = setTimeout(() => setShowResult(true), 1800 + scene.lines.length * 520 + 200);
-
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [activeIdx, scene.lines.length]);
-
+  // Auto-rotate every 6s — enough time to read one card
   React.useEffect(() => {
-    setAnimKey(k => k + 1);
-    const cleanup = runAnimation();
-    return cleanup;
-  }, [activeIdx]);
-
-  // Auto-rotate every 5.5s
-  React.useEffect(() => {
-    const totalDuration = 5500;
-    const t = setInterval(() => {
-      setActiveIdx(i => (i + 1) % scenes.length);
-    }, totalDuration);
+    const t = setInterval(() => setActiveIdx(i => (i + 1) % scenes.length), 6000);
     return () => clearInterval(t);
   }, [scenes.length]);
 
-  React.useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [visibleLines, showResult]);
+  const ctabtn = lang==='pt' ? 'Testar com minha conta' : lang==='es' ? 'Probar con mi cuenta' : 'Try with my account';
+  const sampleLabel = lang==='pt' ? 'Conta de exemplo' : lang==='es' ? 'Cuenta de ejemplo' : 'Sample account';
 
   return (
     <div style={{ position:'relative', zIndex:1 }}>
-      {/* Atmospheric glow */}
-      <div style={{ position:'absolute', bottom:-40, left:'10%', right:'10%', height:120, background:'radial-gradient(ellipse, rgba(14,165,233,0.22) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(20px)', zIndex:0 }} />
 
-      {/* Selling point tabs — above the card */}
-      <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
-        {scenes.map((s, i) => {
-          const isAct = i === activeIdx;
-          return (
-            <button key={i} onClick={() => setActiveIdx(i)} style={{
-              fontFamily:F, fontSize:12, fontWeight: isAct ? 700 : 500,
-              padding:'6px 14px', borderRadius:20, cursor:'pointer',
-              transition:'all 0.2s',
-              background: isAct ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
-              color: isAct ? '#fff' : 'rgba(255,255,255,0.45)',
-              border: isAct ? '1px solid rgba(14,165,233,0.6)' : '1px solid rgba(255,255,255,0.08)',
-              boxShadow: isAct ? '0 0 16px rgba(14,165,233,0.35)' : 'none',
-              letterSpacing: '-0.01em',
-            }}
-            onMouseEnter={e => { if (!isAct) { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.8)'; el.style.borderColor='rgba(255,255,255,0.2)'; }}}
-            onMouseLeave={e => { if (!isAct) { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.45)'; el.style.borderColor='rgba(255,255,255,0.08)'; }}}>
-              {s.tab}
-            </button>
-          );
-        })}
-        {/* Progress bar */}
-        <div style={{ position:'absolute', bottom:-4, left:0, right:0, height:2, background:'rgba(255,255,255,0.06)', borderRadius:1, overflow:'hidden', pointerEvents:'none' }}>
-          <div key={`bar-${activeIdx}`} style={{
-            height:'100%', background:'linear-gradient(90deg, #0ea5e9, #38bdf8)',
-            borderRadius:1,
-            animation:'progressBar 5.5s linear forwards',
-          }} />
-        </div>
-      </div>
+      {/* Glow */}
+      <div style={{ position:'absolute', bottom:-60, left:'5%', right:'5%', height:140, background:'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(24px)', zIndex:0 }} />
 
       {/* Main card */}
       <div style={{
-        position:'relative', zIndex:1, borderRadius:16, overflow:'hidden',
-        background:'linear-gradient(160deg, #0d1322 0%, #090e1b 100%)',
-        border:'1px solid rgba(255,255,255,0.08)',
-        boxShadow:'0 0 0 1px rgba(14,165,233,0.06), 0 32px 80px rgba(0,0,0,0.65)',
+        position:'relative', zIndex:1, borderRadius:18, overflow:'hidden',
+        background:'#080d1a',
+        border:'1px solid rgba(255,255,255,0.09)',
+        boxShadow:'0 0 0 1px rgba(14,165,233,0.07), 0 40px 100px rgba(0,0,0,0.7)',
       }}>
 
-        {/* Header */}
-        <div style={{ padding:'13px 18px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        {/* ── TOP BAR ── */}
+        <div style={{ padding:'14px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          {/* Left: AdBrief + account */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>✦</div>
+            <div style={{ width:30, height:30, borderRadius:9, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>✦</div>
             <div>
-              <div style={{ fontFamily:F, fontSize:12.5, fontWeight:700, color:'#fff', letterSpacing:'-0.02em' }}>AdBrief</div>
-              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{scene.account}</div>
+              <div style={{ fontFamily:F, fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.2 }}>AdBrief</div>
+              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{sampleLabel} · {scene.account}</div>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          {/* Right: live dot */}
+          <div style={{ display:'flex', alignItems:'center', gap:5 }}>
             <MetaBadge />
-            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px rgba(34,197,94,0.7)', animation:'pulse 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily:F, fontSize:9, color:'rgba(255,255,255,0.3)', letterSpacing:'0.05em', textTransform:'uppercase' as const }}>live</span>
+            <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:20, border:'1px solid rgba(34,197,94,0.25)', background:'rgba(34,197,94,0.06)' }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px rgba(34,197,94,0.8)', animation:'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily:F, fontSize:9, color:'#4ade80', letterSpacing:'0.06em', textTransform:'uppercase' as const, fontWeight:600 }}>live</span>
             </div>
           </div>
         </div>
 
-        {/* Chat area */}
-        <div ref={chatRef} style={{ minHeight:300, maxHeight:300, overflowY:'auto', padding:'20px 18px 14px', display:'flex', flexDirection:'column' as const, gap:12 }}>
+        {/* ── SCENARIO TABS ── */}
+        <div style={{ padding:'12px 20px 0', display:'flex', gap:4, overflowX:'auto' as const, borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+          {scenes.map((s, i) => {
+            const isAct = i === activeIdx;
+            return (
+              <button key={i} onClick={() => setActiveIdx(i)} style={{
+                fontFamily:F, fontSize:11.5, fontWeight: isAct ? 700 : 400,
+                padding:'7px 14px', borderRadius:0, cursor:'pointer',
+                transition:'all 0.15s', whiteSpace:'nowrap' as const, flexShrink:0,
+                background:'transparent',
+                color: isAct ? '#fff' : 'rgba(255,255,255,0.38)',
+                border:'none',
+                borderBottom: isAct ? '2px solid #0ea5e9' : '2px solid transparent',
+                marginBottom:-1,
+                letterSpacing:'-0.01em',
+              }}
+              onMouseEnter={e => { if(!isAct) (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.65)'; }}
+              onMouseLeave={e => { if(!isAct) (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.38)'; }}>
+                {s.tab}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* User message */}
-          {showUser && (
-            <div style={{ display:'flex', justifyContent:'flex-end', animation:'lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
-              <div style={{ maxWidth:'72%', padding:'10px 14px', borderRadius:12, borderBottomRightRadius:3, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)' }}>
-                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.88)', lineHeight:1.5, margin:0 }}>{scene.q}</p>
+        {/* ── SCENARIO CONTENT ── */}
+        <div key={activeIdx} style={{ padding:'20px 20px 16px', animation:'fadeSlide 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
+
+          {/* User question pill */}
+          <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:14 }}>
+            <div style={{ padding:'8px 14px', borderRadius:10, borderBottomRightRadius:3, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.09)', maxWidth:'80%' }}>
+              <p style={{ fontFamily:F, fontSize:12.5, color:'rgba(255,255,255,0.7)', lineHeight:1.4, margin:0, fontStyle:'italic' }}>{scene.q}</p>
+            </div>
+          </div>
+
+          {/* AI response card — the hero */}
+          <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+            <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0, marginTop:1 }}>✦</div>
+            <div style={{ flex:1 }}>
+
+              {/* Big result number — the first thing eyes go to */}
+              <div style={{ marginBottom:12, padding:'12px 16px', borderRadius:12, background:'linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(14,165,233,0.04) 100%)', border:'1px solid rgba(14,165,233,0.2)' }}>
+                <div style={{ fontFamily:F, fontSize:22, fontWeight:900, letterSpacing:'-0.04em', color:'#38bdf8', lineHeight:1 }}>{scene.metric}</div>
+                <div style={{ fontFamily:F, fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
+              </div>
+
+              {/* Key points — max 3, short */}
+              <div style={{ display:'flex', flexDirection:'column' as const, gap:7 }}>
+                {scene.points.map((pt, i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                    <div style={{ width:16, height:16, borderRadius:4, background: i===0 ? 'rgba(248,113,113,0.15)' : i===1 ? 'rgba(251,191,36,0.15)' : 'rgba(14,165,233,0.15)', border:`1px solid ${i===0 ? 'rgba(248,113,113,0.3)' : i===1 ? 'rgba(251,191,36,0.3)' : 'rgba(14,165,233,0.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8 }}>
+                      {i===0 ? '!' : i===1 ? '↓' : '→'}
+                    </div>
+                    <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.82)', lineHeight:1.5, margin:0 }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700">$1</strong>') }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Action line */}
+              <div style={{ marginTop:12, padding:'9px 13px', borderRadius:9, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:12, flexShrink:0 }}>⚡</span>
+                <p style={{ fontFamily:F, fontSize:12.5, color:'#7dd3fc', fontWeight:600, lineHeight:1.4, margin:0 }}>{scene.action}</p>
               </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* AI thinking */}
-          {streaming && visibleLines === 0 && (
-            <div style={{ display:'flex', gap:10, alignItems:'center', animation:'lineEnter 0.3s ease both' }}>
-              <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>✦</div>
-              <Dots />
-            </div>
-          )}
-
-          {/* AI response lines */}
-          {visibleLines > 0 && (
-            <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-              <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0, marginTop:2 }}>✦</div>
-              <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:6 }}>
-                {scene.lines.slice(0, visibleLines).map((line, i) => {
-                  const isAct = /^(Ação:|Action:|Acción:|Pause|Pausa|Suba|Raise|→|↑|↓)/i.test(line.replace(/\*\*/g,''));
-                  const isWin = /ROAS|winner|domina|convertendo|hook rate.*3[0-9]%|\+R\$|\+\$/i.test(line);
-                  const isList = /^\*\*/.test(line) && !isAct;
-                  return (
-                    <MdLine key={`${activeIdx}-${i}`} text={line} style={{
-                      fontFamily:F, fontSize:13.5, lineHeight:1.65, margin:0,
-                      color: isAct ? '#0ea5e9' : isWin ? '#38bdf8' : i===0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)',
-                      fontWeight: isAct ? 600 : 400,
-                      paddingLeft: isList ? 0 : 0,
-                      animation:`lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) both`,
-                    }} />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Result badge */}
-          {showResult && (
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 13px', borderRadius:10, background:'rgba(34,197,94,0.07)', border:'1px solid rgba(34,197,94,0.2)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) both', marginTop:2 }}>
-              <span style={{ fontSize:14 }}>✅</span>
-              <span style={{ fontFamily:F, fontSize:12, color:'rgba(255,255,255,0.5)' }}>{resultLabel}</span>
-              <span style={{ fontFamily:F, fontSize:12.5, fontWeight:700, color:'#4ade80', letterSpacing:'-0.01em' }}>{scene.result}</span>
-            </div>
-          )}
+        {/* ── PROGRESS + INPUT ── */}
+        {/* Progress bar */}
+        <div style={{ height:2, background:'rgba(255,255,255,0.04)' }}>
+          <div key={`prog-${activeIdx}`} style={{ height:'100%', background:'linear-gradient(90deg,#0ea5e9,#38bdf8)', animation:'progressBar 6s linear forwards' }} />
         </div>
 
         {/* Input bar */}
-        <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 14px 12px', background:'rgba(0,0,0,0.2)' }}>
+        <div style={{ padding:'12px 16px 14px', background:'rgba(0,0,0,0.2)' }}>
           <div style={{ display:'flex', gap:8, alignItems:'center', padding:'9px 12px 9px 16px', borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
-            <p style={{ fontFamily:F, fontSize:12, color:'rgba(255,255,255,0.22)', margin:0, flex:1, fontStyle:'italic' }}>{note}</p>
+            <p style={{ fontFamily:F, fontSize:12, color:'rgba(255,255,255,0.22)', margin:0, flex:1, fontStyle:'italic' }}>
+              {lang==='pt' ? 'Pergunte sobre sua conta...' : lang==='es' ? 'Pregunta sobre tu cuenta...' : 'Ask about your account...'}
+            </p>
             <button onClick={onCTA} style={{
-              fontFamily:F, fontSize:11.5, fontWeight:700, padding:'8px 16px', borderRadius:8,
-              background:'linear-gradient(135deg, #0ea5e9, #0284c7)', color:'#fff',
+              fontFamily:F, fontSize:12, fontWeight:700, padding:'8px 16px', borderRadius:9,
+              background:'linear-gradient(135deg,#0ea5e9,#0284c7)', color:'#fff',
               border:'none', cursor:'pointer', whiteSpace:'nowrap' as const, flexShrink:0,
-              boxShadow:'0 2px 14px rgba(14,165,233,0.4)', transition:'all 0.15s', letterSpacing:'-0.01em',
+              boxShadow:'0 2px 14px rgba(14,165,233,0.4)', transition:'all 0.15s',
             }}
-            onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 4px 18px rgba(14,165,233,0.55)'; }}
+            onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 4px 20px rgba(14,165,233,0.6)'; }}
             onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.transform='none'; el.style.boxShadow='0 2px 14px rgba(14,165,233,0.4)'; }}>
               {ctabtn} →
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
+
 
 // ─── Hero Left — Impactful, clean, cycling verb ──────────────────────────────
 function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; ctaLoading?: boolean }) {
@@ -3243,7 +3199,7 @@ export default function IndexNew() {
             from{opacity:0;transform:translateY(10px)}
             to{opacity:1;transform:translateY(0)}
           }
-          @keyframes progressBar{from{width:0%}to{width:100%}}
+          @keyframes progressBar{from{width:0%}to{width:100%}} @keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
           /* KPI slide in from sidebar bottom */
           @keyframes kpiSlideIn{
