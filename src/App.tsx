@@ -53,6 +53,7 @@ import LoopImportPage from "./pages/dashboard/LoopImportPage";
 import LoopSettingsPage from "./pages/dashboard/LoopSettingsPage";
 import LoopGuidePage from "./pages/dashboard/LoopGuidePage";
 import AdBriefAI from "./pages/dashboard/AdBriefAI";
+import IntelligencePage from "./pages/dashboard/IntelligencePage";
 import SupportChat from "./components/SupportChat";
 import ToolsIndex from "@/pages/seo/ToolsIndex";
 import ToolPage from "@/pages/seo/ToolPage";
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="ai" element={<AdBriefAI />} />
+                <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />

@@ -1540,10 +1540,29 @@ export default function AdBriefAI() {
         }
 
       } else {
-        // ── Sem nada conectado ─────────────────────────────────────────────────
-        proactiveMsg = lang === "es"
-          ? `Para trabajar bien necesito ver tu cuenta de anuncios. Conecta Meta Ads o Google Ads y veo CTR, spend, qué escalar y qué pausar en tiempo real.`
-          : `Para trabalhar de verdade preciso ver sua conta de anúncios — sem isso só consigo respostas genéricas. Conecte Meta Ads ou Google Ads e vejo CTR, spend, o que escalar e o que pausar em tempo real.`;
+        // ── Sem nada conectado — onboarding guiado ────────────────────────────
+        const aid = Date.now() + 1;
+        const step1 = lang === "es" ? "Conecta tu cuenta de anuncios" : lang === "pt" ? "Conecte sua conta de anúncios" : "Connect your ad account";
+        const step1sub = lang === "es" ? "Meta Ads o Google Ads — solo tarda 30 segundos" : lang === "pt" ? "Meta Ads ou Google Ads — leva 30 segundos" : "Meta Ads or Google Ads — takes 30 seconds";
+        const step2 = lang === "es" ? "Haz una pregunta" : lang === "pt" ? "Faça uma pergunta" : "Ask a question";
+        const step2sub = lang === "es" ? ""¿Qué debo pausar?", "¿Qué escalar hoy?"" : lang === "pt" ? ""O que pausar?", "O que escalar hoje?"" : ""What should I pause?", "What to scale today?"";
+        const step3 = lang === "es" ? "Recibe análisis real" : lang === "pt" ? "Receba análise real" : "Get real analysis";
+        const step3sub = lang === "es" ? "CTR, spend, creativos, predicciones — de tu cuenta real" : lang === "pt" ? "CTR, spend, criativos, predições — da sua conta real" : "CTR, spend, creatives, predictions — from your real account";
+        const intro = lang === "es" ? "Para darte análisis específicos necesito ver tu cuenta. Sin datos solo puedo dar respuestas genéricas." : lang === "pt" ? "Para te dar análises específicas preciso ver sua conta. Sem dados só consigo respostas genéricas." : "To give you specific insights I need to see your account. Without data I can only give generic answers.";
+        const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
+
+        setMessages([{
+          role: "assistant",
+          blocks: [
+            { type: "insight" as any, title: greetingTitle, content: intro },
+            { type: "navigate" as any, title: `1. ${step1}`, content: step1sub, route: "/dashboard/accounts", cta },
+            { type: "insight" as any, title: `2. ${step2}`, content: step2sub },
+            { type: "insight" as any, title: `3. ${step3}`, content: step3sub },
+          ],
+          ts: aid, id: aid
+        }]);
+        setProactiveLoading(false);
+        return;
       }
 
       const aid = Date.now() + 1;

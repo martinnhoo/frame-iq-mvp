@@ -80,9 +80,10 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const isAccountsActive = isActive("/dashboard/accounts");
 
   const PRIMARY_NAV = [
-    { url: "/dashboard/ai",          label: "IA Chat",                                                           icon: Cpu,          exact: false, hot: true },
-    { url: "/dashboard/competitor",  label: dt("nav_competitor")||"Concorrentes",                                icon: ScanEye,      exact: false },
-    { url: "/dashboard/analyses",    label: dt("nav_analyses"),                                                  icon: TrendingUp,   exact: false },
+    { url: "/dashboard/ai",           label: "IA Chat",                                                          icon: Cpu,          exact: false, hot: true },
+    { url: "/dashboard/intelligence", label: language==="pt" ? "Inteligência" : language==="es" ? "Inteligencia" : "Intelligence", icon: Brain, exact: false },
+    { url: "/dashboard/competitor",   label: dt("nav_competitor")||"Concorrentes",                               icon: ScanEye,      exact: false },
+    { url: "/dashboard/analyses",     label: dt("nav_analyses"),                                                 icon: TrendingUp,   exact: false },
   ];
 
   const TOOLS_NAV = [

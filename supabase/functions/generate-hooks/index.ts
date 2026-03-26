@@ -79,8 +79,8 @@ Deno.serve(async (req) => {
     // ── Load full account intelligence for hook personalization ──────────────
     let userContext = '';
     if (user_id) {
-      // Parallel: ai_profile + Meta snapshot + loop context + winner patterns
-      const [profileRes, snapshotRes, loopRes, winnersRes] = await Promise.allSettled([
+      // Parallel: ai_profile + Meta snapshot + loop context + winner patterns + chat_memory
+      const [profileRes, snapshotRes, loopRes, winnersRes, memoryRes] = await Promise.allSettled([
         supabase.from('user_ai_profile')
           .select('top_performing_models, best_platforms, avg_hook_score, creative_style, ai_summary, industry, pain_point')
           .eq('user_id', user_id).maybeSingle(),
@@ -99,6 +99,12 @@ Deno.serve(async (req) => {
           .eq('user_id', user_id)
           .order('confidence', { ascending: false })
           .limit(20),
+        // chat_memory — user preferences and account context from past conversations
+        supabase.from('chat_memory')
+          .select('memory_text, memory_type, importance')
+          .eq('user_id', user_id)
+          .order('importance', { ascending: false })
+          .limit(10),
       ]);
 
       // AI Profile
@@ -138,6 +144,20 @@ Deno.serve(async (req) => {
           }
         }
       } catch { /* optional */ }
+
+      // Chat memory — user preferences and strategy signals
+      const memories = memoryRes.status === 'fulfilled' ? memoryRes.value.data || [] : [];
+      if (memories.length > 0) {
+        const prefMems = memories.filter((m: any) => ['preference','rule','decision'].includes(m.memory_type));
+        if (prefMems.length > 0) {
+          userContext += `
+
+=== USER PREFERENCES (from past conversations) ===
+`;
+          userContext += prefMems.slice(0, 5).map((m: any) => `• ${m.memory_text}`).join('
+');
+        }
+      }
 
       // Winner hook types from learned_patterns — highest priority signal
       const allPatterns = winnersRes.status === 'fulfilled' ? winnersRes.value.data || [] : [];

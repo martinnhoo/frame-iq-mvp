@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
       const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
       try {
-        const [profileRes, snapshotRes, loopFetch] = await Promise.allSettled([
+        const [profileRes, snapshotRes, loopFetch, memoryFetch] = await Promise.allSettled([
           fetch(`${supabaseUrl}/rest/v1/user_ai_profile?user_id=eq.${effectiveUserId}&select=industry,pain_point,avg_hook_score,creative_style,top_performing_models`, { headers: restHeaders }),
           fetch(`${supabaseUrl}/rest/v1/daily_snapshots?user_id=eq.${effectiveUserId}&select=date,avg_ctr,total_spend,top_ads,ai_insight&order=date.desc&limit=1`, { headers: restHeaders }),
           fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${svcKey}` },
             body: JSON.stringify({ action: "get_context", user_id: effectiveUserId }),
           }),
+          fetch(`${supabaseUrl}/rest/v1/chat_memory?user_id=eq.${effectiveUserId}&select=memory_text,memory_type,importance&order=importance.desc&limit=8`, { headers: restHeaders }),
         ]);
 
         if (profileRes.status === "fulfilled" && profileRes.value.ok) {
@@ -101,6 +102,14 @@ Deno.serve(async (req) => {
           const loopData = await loopFetch.value.json();
           if (loopData.has_data && loopData.context) {
             loopContext += `\n\n=== PROVEN CREATIVE PATTERNS ===\n${loopData.context}\n=== Use winning patterns to write scripts. ===`;
+          }
+        }
+        if (memoryFetch.status === "fulfilled" && memoryFetch.value.ok) {
+          const mems = await memoryFetch.value.json();
+          const relevant = (Array.isArray(mems) ? mems : []).filter((m: any) => ['preference','rule','decision'].includes(m.memory_type)).slice(0, 5);
+          if (relevant.length > 0) {
+            loopContext += `\n\n=== USER PREFERENCES (from past conversations) ===`;
+            loopContext += relevant.map((m: any) => `\n• ${m.memory_text}`).join('');
           }
         }
       } catch { /* context is optional */ }
