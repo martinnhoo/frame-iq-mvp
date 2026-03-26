@@ -213,7 +213,7 @@ Each script needs 8–15 lines alternating VO/on-screen/visual. Vary the angle d
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],

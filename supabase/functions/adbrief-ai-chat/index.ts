@@ -1422,7 +1422,7 @@ REGRAS DE FORMATO:
           // Always Sonnet: creative generation tasks
           const needsSonnet = /hook|script|roteiro|legenda|caption|brief|copy|texto|redij|cri[ae]|escrev|gera|produz|creat|writ|generat/i.test(msg)
             || (aiMessages[aiMessages.length-1]?.content || "").length > 400; // Long context = complex request
-          return needsSonnet ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001";
+          return needsSonnet ? "claude-sonnet-4-5" : "claude-haiku-4-5-20251001";
         })(),
         max_tokens: 1500,
         system: systemPrompt + prefStr,
