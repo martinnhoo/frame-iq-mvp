@@ -147,8 +147,8 @@ Responda JSON:
         detail: alertDetail.slice(0, 500),
         ad_name: `Trend: ${term.slice(0, 40)}`,
         campaign_name: null,
-        created_at: new Date().toISOString(),
-      }).catch(() => {});
+      created_at: new Date().toISOString(),
+      } as any);
 
       // Also save proposed hook as learned_pattern for generate-hooks to use
       await sb.from('learned_patterns' as any).insert({
