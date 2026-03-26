@@ -235,6 +235,75 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_examples: {
+        Row: {
+          assistant_blocks: Json
+          created_at: string | null
+          id: string
+          persona_id: string | null
+          quality_score: number | null
+          times_shown: number | null
+          user_id: string
+          user_message: string
+        }
+        Insert: {
+          assistant_blocks: Json
+          created_at?: string | null
+          id?: string
+          persona_id?: string | null
+          quality_score?: number | null
+          times_shown?: number | null
+          user_id: string
+          user_message: string
+        }
+        Update: {
+          assistant_blocks?: Json
+          created_at?: string | null
+          id?: string
+          persona_id?: string | null
+          quality_score?: number | null
+          times_shown?: number | null
+          user_id?: string
+          user_message?: string
+        }
+        Relationships: []
+      }
+      chat_memory: {
+        Row: {
+          confirmed: boolean | null
+          created_at: string | null
+          id: string
+          importance: number | null
+          memory_text: string
+          memory_type: string | null
+          persona_id: string | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          memory_text: string
+          memory_type?: string | null
+          persona_id?: string | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          confirmed?: boolean | null
+          created_at?: string | null
+          id?: string
+          importance?: number | null
+          memory_text?: string
+          memory_type?: string | null
+          persona_id?: string | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           created_at: string | null
