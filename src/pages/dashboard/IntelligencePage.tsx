@@ -10,7 +10,7 @@ interface Memory { id: string; memory_text: string; memory_type: string; importa
 interface Example { id: string; user_message: string; quality_score: number; created_at: string; }
 interface Pattern { id: string; pattern_key: string; insight_text: string; avg_ctr: number; confidence: number; is_winner: boolean; }
 
-const TYPE_PT: Record<string, string> = { preference: "Preferência", rule: "Regra", decision: "Decisão", context: "Contexto" };
+// TYPE_PT now uses t object (multilanguage)
 const TYPE_COLOR: Record<string, string> = { preference: "#60a5fa", rule: "#a78bfa", decision: "#34d399", context: "#fbbf24" };
 
 function SectionHeader({ icon, color, title, subtitle, count }: { icon: React.ReactNode; color: string; title: string; subtitle: string; count: number }) {
@@ -43,7 +43,68 @@ function MemoryRow({ text, importance, typeColor, deleting, onDelete }: { text: 
 }
 
 export default function IntelligencePage() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona, lang } = useOutletContext<DashboardContext & { lang: string }>();
+  const language = lang || "pt";
+  const isPT = language === "pt";
+  const isES = language === "es";
+
+  const t = {
+    title: isPT ? "O que a IA sabe sobre" : isES ? "Lo que la IA sabe sobre" : "What the AI knows about",
+    subtitle: isPT ? "Tudo que aprendi em conversas — usado automaticamente para melhorar cada resposta"
+      : isES ? "Todo lo que aprendí en conversaciones — usado automáticamente para mejorar cada respuesta"
+      : "Everything I learned in conversations — used automatically to improve every response",
+    refresh: isPT ? "Atualizar" : isES ? "Actualizar" : "Refresh",
+    memories_title: isPT ? "Memórias persistentes" : isES ? "Memorias persistentes" : "Persistent memories",
+    memories_sub: isPT ? "Fatos que aprendi em conversas — usados em todas as respostas sem você precisar repetir"
+      : isES ? "Hechos que aprendí en conversaciones — usados en todas las respuestas sin que tengas que repetirlos"
+      : "Facts I learned in conversations — used in every response without you repeating yourself",
+    patterns_title: isPT ? "Padrões aprendidos dos seus anúncios" : isES ? "Patrones aprendidos de tus anuncios" : "Patterns learned from your ads",
+    patterns_sub: isPT ? "Extraídos dos dados reais de campanha — criativos vencedores, o que parar e o que escalar"
+      : isES ? "Extraídos de datos reales de campaña — creativos ganadores, qué pausar y qué escalar"
+      : "Extracted from real campaign data — winning creatives, what to stop and what to scale",
+    examples_title: isPT ? "Respostas que você aprovou" : isES ? "Respuestas que aprobaste" : "Responses you approved",
+    examples_sub: isPT ? "Quando você curte 👍 uma resposta, salvo o estilo para calibrar as próximas"
+      : isES ? "Cuando das 👍 a una respuesta, guardo el estilo para calibrar las siguientes"
+      : "When you 👍 a response, I save the style to calibrate future ones",
+    actions_title: isPT ? "Ações executadas pela IA" : isES ? "Acciones ejecutadas por la IA" : "Actions executed by AI",
+    actions_sub: isPT ? "Pausas, escaladas e ajustes de budget feitos no Meta Ads ou Google Ads, com sua confirmação"
+      : isES ? "Pausas, escaladas y ajustes de presupuesto en Meta Ads o Google Ads, con tu confirmación"
+      : "Pauses, scales and budget adjustments on Meta Ads or Google Ads, with your confirmation",
+    empty_title: isPT ? "Ainda sem inteligência acumulada" : isES ? "Aún sin inteligencia acumulada" : "No accumulated intelligence yet",
+    empty_sub: isPT ? "Converse com a IA sobre sua conta. Curta (👍) respostas que gostar."
+      : isES ? "Habla con la IA sobre tu cuenta. Dale 👍 a las respuestas que te gusten."
+      : "Chat with the AI about your account. Like (👍) responses you enjoy.",
+    open_chat: isPT ? "Abrir IA Chat" : isES ? "Abrir IA Chat" : "Open AI Chat",
+    no_patterns: isPT ? "Nenhum padrão ainda" : isES ? "Ningún patrón aún" : "No patterns yet",
+    no_patterns_sub: isPT ? "Conecte Meta Ads ou Google Ads e rode campanhas — os padrões são extraídos automaticamente a cada dia"
+      : isES ? "Conecta Meta Ads o Google Ads y corre campañas — los patrones se extraen automáticamente cada día"
+      : "Connect Meta Ads or Google Ads and run campaigns — patterns are extracted automatically each day",
+    no_examples: isPT ? "Nenhum exemplo ainda" : isES ? "Ningún ejemplo aún" : "No examples yet",
+    no_examples_sub: isPT ? "No IA Chat, clique 👍 nas respostas que você gostar"
+      : isES ? "En el IA Chat, haz 👍 en las respuestas que te gusten"
+      : "In the AI Chat, click 👍 on responses you like",
+    no_actions: isPT ? "Nenhuma ação ainda" : isES ? "Ninguna acción aún" : "No actions yet",
+    no_actions_sub: isPT ? "No chat, peça para a IA pausar ou escalar um criativo — ela pede confirmação antes"
+      : isES ? "En el chat, pide a la IA pausar o escalar un creativo — pide confirmación antes"
+      : "In chat, ask the AI to pause or scale a creative — it asks for confirmation first",
+    type_preference: isPT ? "Preferência" : isES ? "Preferencia" : "Preference",
+    type_rule: isPT ? "Regra" : isES ? "Regla" : "Rule",
+    type_decision: isPT ? "Decisão" : isES ? "Decisión" : "Decision",
+    type_context: isPT ? "Contexto" : isES ? "Contexto" : "Context",
+    winner: isPT ? "vencedor" : isES ? "ganador" : "winner",
+    loser: isPT ? "problema" : isES ? "problema" : "issue",
+    conf: isPT ? "conf." : "conf.",
+    memories_label: isPT ? "memórias" : isES ? "memorias" : "memories",
+    examples_label: isPT ? "exemplos" : isES ? "ejemplos" : "examples",
+    patterns_label: isPT ? "padrões" : isES ? "patrones" : "patterns",
+    actions_label: isPT ? "ações" : isES ? "acciones" : "actions",
+    mem_desc: isPT ? "fatos sobre você e a conta" : isES ? "hechos sobre ti y la cuenta" : "facts about you and account",
+    ex_desc: isPT ? "respostas que você aprovou" : isES ? "respuestas que aprobaste" : "responses you approved",
+    pat_desc: isPT ? "do que funcionou nos ads" : isES ? "de lo que funcionó en los ads" : "from what worked in ads",
+    act_desc: isPT ? "executadas no Meta/Google" : isES ? "ejecutadas en Meta/Google" : "executed on Meta/Google",
+    actions_count: (n: number) => isPT ? `${n} ação${n !== 1 ? "ões" : ""} executada${n !== 1 ? "s" : ""}` : isES ? `${n} acción${n !== 1 ? "es" : ""} ejecutada${n !== 1 ? "s" : ""}` : `${n} action${n !== 1 ? "s" : ""} executed`,
+    actions_hist: isPT ? "Histórico de ações tomadas com sua confirmação" : isES ? "Historial de acciones tomadas con tu confirmación" : "History of actions taken with your confirmation",
+  };
   const navigate = useNavigate();
   const [memories, setMemories] = useState<Memory[]>([]);
   const [examples, setExamples] = useState<Example[]>([]);
@@ -91,7 +152,7 @@ export default function IntelligencePage() {
         <div>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
             <Brain size={22} color="#0ea5e9" />
-            <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:"#fff", letterSpacing:-0.5 }}>O que a IA sabe sobre {accountName}</h1>
+            <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:"#fff", letterSpacing:-0.5 }}>{t.title} {accountName}</h1>
           </div>
           <p style={{ margin:0, fontSize:13.5, color:"rgba(255,255,255,0.45)", lineHeight:1.5 }}>Tudo que aprendi em conversas — usado automaticamente para melhorar cada resposta</p>
         </div>
@@ -103,10 +164,10 @@ export default function IntelligencePage() {
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:32 }}>
         {[
-          { n:memories.length, label:"memórias", color:"#0ea5e9", desc:"fatos sobre você e a conta" },
-          { n:examples.length, label:"exemplos", color:"#a78bfa", desc:"respostas que você aprovou" },
-          { n:patterns.length, label:"padrões", color:"#34d399", desc:"do que funcionou nos ads" },
-          { n:actionCount, label:"ações", color:"#fb923c", desc:"executadas no Meta/Google" },
+          { n:memories.length, label:t.memories_label, color:"#0ea5e9", desc:t.mem_desc },
+          { n:examples.length, label:t.examples_label, color:"#a78bfa", desc:t.ex_desc },
+          { n:patterns.length, label:t.patterns_label, color:"#34d399", desc:t.pat_desc },
+          { n:actionCount, label:t.actions_label, color:"#fb923c", desc:t.act_desc },
         ].map(s => (
           <div key={s.label} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px" }}>
             <div style={{ fontSize:26, fontWeight:700, color:s.color, lineHeight:1 }}>{s.n}</div>
@@ -131,13 +192,13 @@ export default function IntelligencePage() {
       {/* SEÇÃO 1 — MEMÓRIAS */}
       {memories.length > 0 && (
         <section style={{ marginBottom:36 }}>
-          <SectionHeader icon={<Brain size={15} />} color="#0ea5e9" title="Memórias persistentes" subtitle="Fatos que aprendi em conversas — usados em todas as respostas sem você precisar repetir" count={memories.length} />
+          <SectionHeader icon={<Brain size={15} />} color="#0ea5e9" title={t.memories_title} subtitle={t.memories_sub} count={memories.length} />
           {(["preference","decision","rule","context"] as const).map(type => {
             const group = memories.filter(m => m.memory_type === type);
             if (!group.length) return null;
             return (
               <div key={type} style={{ marginBottom:16 }}>
-                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" as const, color:TYPE_COLOR[type]||"#888", marginBottom:8, paddingLeft:2 }}>{TYPE_PT[type]||type}s</div>
+                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" as const, color:TYPE_COLOR[type]||"#888", marginBottom:8, paddingLeft:2 }}>{({"preference":t.type_preference,"decision":t.type_decision,"rule":t.type_rule,"context":t.type_context}[type]||type)}s</div>
                 <div style={{ display:"flex", flexDirection:"column" as const, gap:6 }}>
                   {group.map(m => <MemoryRow key={m.id} text={m.memory_text} importance={m.importance} typeColor={TYPE_COLOR[m.memory_type]||"#888"} deleting={deleting===m.id} onDelete={() => deleteMemory(m.id)} />)}
                 </div>
@@ -149,7 +210,7 @@ export default function IntelligencePage() {
 
       {/* SEÇÃO 2 — PADRÕES */}
       <section style={{ marginBottom:36 }}>
-        <SectionHeader icon={<TrendingUp size={15} />} color="#34d399" title="Padrões aprendidos dos seus anúncios" subtitle="Extraídos dos dados reais de campanha — criativos vencedores, o que parar e o que escalar" count={patterns.length} />
+        <SectionHeader icon={<TrendingUp size={15} />} color="#34d399" title={t.patterns_title} subtitle={t.patterns_sub} count={patterns.length} />
         {patterns.length === 0 ? (
           <div style={{ background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.1)", borderRadius:10, padding:"20px 18px", display:"flex", alignItems:"center", gap:16 }}>
             <TrendingUp size={20} color="rgba(255,255,255,0.2)" />
@@ -176,7 +237,7 @@ export default function IntelligencePage() {
 
       {/* SEÇÃO 3 — EXEMPLOS */}
       <section style={{ marginBottom:36 }}>
-        <SectionHeader icon={<MessageSquare size={15} />} color="#a78bfa" title="Respostas que você aprovou" subtitle="Quando você curte 👍 uma resposta, salvo o estilo para calibrar as próximas" count={examples.length} />
+        <SectionHeader icon={<MessageSquare size={15} />} color="#a78bfa" title={t.examples_title} subtitle={t.examples_sub} count={examples.length} />
         {examples.length === 0 ? (
           <div style={{ background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.1)", borderRadius:10, padding:"20px 18px", display:"flex", alignItems:"center", gap:16 }}>
             <Star size={20} color="rgba(255,255,255,0.2)" />
@@ -201,11 +262,11 @@ export default function IntelligencePage() {
 
       {/* SEÇÃO 4 — AÇÕES */}
       <section>
-        <SectionHeader icon={<Zap size={15} />} color="#fb923c" title="Ações executadas pela IA" subtitle="Pausas, escaladas e ajustes de budget feitos no Meta Ads ou Google Ads, com sua confirmação" count={actionCount} />
+        <SectionHeader icon={<Zap size={15} />} color="#fb923c" title={t.actions_title} subtitle={t.actions_sub} count={actionCount} />
         <div style={{ background:"rgba(251,146,60,0.04)", border:"1px solid rgba(251,146,60,0.12)", borderRadius:10, padding:"16px 18px", display:"flex", alignItems:"center", gap:16 }}>
           <div style={{ fontSize:32, fontWeight:700, color:"#fb923c", lineHeight:1 }}>{actionCount}</div>
           <div>
-            <p style={{ margin:0, fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.7)" }}>{actionCount === 0 ? "Nenhuma ação ainda" : `${actionCount} ação${actionCount > 1 ? "ões" : ""} executada${actionCount > 1 ? "s" : ""}`}</p>
+            <p style={{ margin:0, fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.7)" }}>{actionCount === 0 ? t.no_actions : t.actions_count(actionCount)}</p>
             <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.35)" }}>{actionCount === 0 ? "No chat, peça para a IA pausar ou escalar um criativo — ela pede confirmação antes" : "Histórico de ações tomadas com sua confirmação"}</p>
           </div>
         </div>

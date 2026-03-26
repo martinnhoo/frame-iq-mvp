@@ -125,13 +125,80 @@ Deno.serve(async (req) => {
       const snapshot = snapshotRes.status === 'fulfilled' ? snapshotRes.value.data?.[0] : null;
       if (snapshot) {
         const topAds = (snapshot.top_ads as any[]) || [];
-        const winners = topAds.filter((a: any) => a.isScalable || (a.ctr > 0.02)).slice(0, 3);
-        const losers  = topAds.filter((a: any) => a.needsPause || (a.ctr < 0.005)).slice(0, 2);
-        userContext += `\n\n=== META ADS DATA (${snapshot.date}) ===`;
+        const winners = topAds.filter((a: any) => a.isScalable || (a.ctr > 0.02)).slice(0, 5);
+        const losers  = topAds.filter((a: any) => a.needsPause || (a.ctr < 0.005)).slice(0, 3);
+
+        // ── Platform-specific intelligence ────────────────────────────────────
+        const pLower = (platform || '').toLowerCase();
+        const isGoogle = pLower.includes('google');
+        const isMeta   = pLower.includes('meta') || pLower.includes('facebook') || pLower.includes('instagram');
+        const isTikTok = pLower.includes('tiktok') || pLower.includes('tik tok');
+
+        userContext += `\n\n=== ${isGoogle ? 'GOOGLE' : isTikTok ? 'TIKTOK' : 'META'} ADS DATA (${snapshot.date}) ===`;
         userContext += `\nAccount CTR: ${((snapshot.avg_ctr || 0) * 100).toFixed(2)}% | Spend: $${(snapshot.total_spend || 0).toFixed(0)} | Active ads: ${snapshot.active_ads || 0}`;
-        if (winners.length) userContext += `\nWINNING ADS (high CTR — learn from these hooks): ${winners.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
-        if (losers.length)  userContext += `\nUNDERPERFORMING (avoid these hook patterns): ${losers.map((a: any) => `"${a.name}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
-        if (snapshot.ai_insight) userContext += `\nAccount insight: ${snapshot.ai_insight}`;
+
+        if (isMeta) {
+          // Meta: separate video vs static performance
+          const videoWinners = winners.filter((a: any) => a.hook_rate || a.thruplay_rate);
+          const staticWinners = winners.filter((a: any) => !a.hook_rate && !a.thruplay_rate);
+          if (videoWinners.length) {
+            userContext += `\n\nVIDEO ADS (top performers — use these hook angles):`;
+            videoWinners.forEach((a: any) => {
+              userContext += `\n  ✓ "${a.name?.slice(0,45)}" | CTR ${((a.ctr||0)*100).toFixed(2)}%`;
+              if (a.hook_rate) userContext += ` | Hook rate ${a.hook_rate} (% que clicaram play)`;
+              if (a.thruplay_rate) userContext += ` | ThruPlay ${a.thruplay_rate} (% que assistiram até o fim)`;
+              if (a.spend) userContext += ` | R$${typeof a.spend === 'number' ? a.spend.toFixed(0) : a.spend}`;
+            });
+            userContext += `\n→ Para VIDEO: priorize hooks que criam curiosidade nos primeiros 3 segundos. Alto hook_rate = bom início de vídeo.`;
+          }
+          if (staticWinners.length) {
+            userContext += `\n\nSTATIC/IMAGE ADS (top performers):`;
+            staticWinners.forEach((a: any) => {
+              userContext += `\n  ✓ "${a.name?.slice(0,45)}" | CTR ${((a.ctr||0)*100).toFixed(2)}%`;
+              if (a.spend) userContext += ` | R$${typeof a.spend === 'number' ? a.spend.toFixed(0) : a.spend}`;
+            });
+            userContext += `\n→ Para STATIC: priorize headline direto, proposta de valor imediata, copy que completa a imagem.`;
+          }
+          if (losers.length) {
+            userContext += `\n\nUNDERPERFORMING (evite esses ângulos):`;
+            losers.forEach((a: any) => {
+              userContext += `\n  ✗ "${a.name?.slice(0,45)}" | CTR ${((a.ctr||0)*100).toFixed(2)}%`;
+            });
+          }
+        } else if (isGoogle) {
+          // Google: keyword-focused scoring
+          userContext += `\n\nPLATAFORMA: Google Ads Search`;
+          userContext += `\n→ Para Google Search: hooks = headlines e descriptions. Foco em INTENÇÃO de busca.`;
+          userContext += `\n→ Usuário já está buscando — não precisa criar curiosidade, precisa confirmar que encontrou o que queria.`;
+          if (winners.length) {
+            userContext += `\n\nANÚNCIOS/KEYWORDS COM MELHOR PERFORMANCE:`;
+            winners.forEach((a: any) => {
+              userContext += `\n  ✓ "${a.name?.slice(0,45)}" | CTR ${((a.ctr||0)*100).toFixed(2)}%`;
+              if (a.conversions > 0) userContext += ` | ${a.conversions} conv`;
+              if (a.cpa) userContext += ` | CPA R$${typeof a.cpa === 'number' ? a.cpa.toFixed(0) : a.cpa}`;
+            });
+            userContext += `\n→ Gere variações dessas keywords/ângulos. Teste: exact match do problema, variação com localização, variação com credencial.`;
+          }
+          userContext += `\n\nREGRAS GOOGLE SEARCH:`;
+          userContext += `\n  - Headlines: máximo 30 chars. Inclua keyword principal.`;
+          userContext += `\n  - Descriptions: máximo 90 chars. CTA claro no final.`;
+          userContext += `\n  - Predicted_score deve ser mais alto para hooks que incluem a keyword exata que a pessoa buscou.`;
+        } else if (isTikTok) {
+          userContext += `\n\nPLATAFORMA: TikTok Ads`;
+          userContext += `\n→ Para TikTok: primeiros 3 segundos são tudo. Hook precisa parar o scroll imediatamente.`;
+          userContext += `\n→ Tom: nativo, não parece anúncio. Começa com tensão ou movimento.`;
+          if (winners.length) {
+            userContext += `\n\nADS COM MELHOR PERFORMANCE:`;
+            winners.forEach((a: any) => {
+              userContext += `\n  ✓ "${a.name?.slice(0,45)}" | CTR ${((a.ctr||0)*100).toFixed(2)}%`;
+            });
+          }
+        } else {
+          // Generic
+          if (winners.length) userContext += `\nWINNING ADS: ${winners.map((a: any) => `"${a.name?.slice(0,35)}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
+          if (losers.length)  userContext += `\nUNDERPERFORMING: ${losers.map((a: any) => `"${a.name?.slice(0,35)}" CTR ${((a.ctr||0)*100).toFixed(2)}%`).join(' | ')}`;
+        }
+        if (snapshot.ai_insight) userContext += `\n\nACCOUNT INSIGHT: ${snapshot.ai_insight}`;
       }
 
       // Creative loop patterns
@@ -285,13 +352,28 @@ WHAT ACTUALLY WORKS (use these angles):
 VARY THE APPROACH — ${effectiveCount} genuinely different mechanisms:
 curiosity | social_proof | authority | contrast | story_opener | outcome | question | relief
 
+SCORING RULES (predicted_score 0-10):
+Use the account's REAL performance data to calibrate scores:
+- Start at 5.0 (baseline for any hook)
+- +1.5 if hook uses an angle/keyword that appears in WINNING ADS above
+- +1.0 if hook matches the format that's performing (video hook style if hook_rate data shows videos win)
+- +0.5 if hook uses proven credibility signals from this account (e.g. "60 anos", location, specific result)
+- +0.5 if hook directly addresses the audience's documented pain points
+- -1.5 if hook uses an angle from UNDERPERFORMING ads
+- -1.0 if hook ignores platform context (e.g. long hook for Google where 30 chars is limit)
+- -0.5 if hook is generic and could be for any competitor
+Score range: 1.0 (generic/wrong angle) to 10.0 (proven angle + right format + platform fit)
+For Google: higher scores for hooks that include the exact keyword the user searched.
+For Meta video: higher scores for hooks that create tension/curiosity in first 3 seconds.
+For Meta static: higher scores for direct value props that complete the image.
+
 Return ONLY valid JSON:
 {
   "hooks": [
     {
       "hook": "Exact words — what appears on screen or what is said",
       "hook_type": "curiosity|social_proof|authority|contrast|emotional|question|statement",
-      "predicted_score": 7.5,
+      "predicted_score": 0.0,
       "hook_strength": "low|medium|high|viral",
       "platform_fit": ["Meta", "Google"],
       "why": "Psychological mechanism + why it fits this specific audience",
