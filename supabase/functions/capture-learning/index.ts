@@ -9,9 +9,12 @@ const cors = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
   try {
+    // Must use SERVICE ROLE KEY to bypass RLS for cross-user writes
+    const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const sb = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      SERVICE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
     const body = await req.json();
