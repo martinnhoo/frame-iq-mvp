@@ -104,6 +104,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_action_log: {
+        Row: {
+          action: string | null
+          error_msg: string | null
+          executed_at: string | null
+          id: string
+          success: boolean | null
+          target_id: string | null
+          target_name: string | null
+          target_type: string | null
+          title: string | null
+          user_id: string | null
+          value: string | null
+        }
+        Insert: {
+          action?: string | null
+          error_msg?: string | null
+          executed_at?: string | null
+          id?: string
+          success?: boolean | null
+          target_id?: string | null
+          target_name?: string | null
+          target_type?: string | null
+          title?: string | null
+          user_id?: string | null
+          value?: string | null
+        }
+        Update: {
+          action?: string | null
+          error_msg?: string | null
+          executed_at?: string | null
+          id?: string
+          success?: boolean | null
+          target_id?: string | null
+          target_name?: string | null
+          target_type?: string | null
+          title?: string | null
+          user_id?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       ai_daily_usage: {
         Row: {
           id: string
