@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
     const prompt = `You are a memory extraction system for an ad account AI assistant.
 
 Extract ONLY concrete, durable facts from this conversation exchange that would be useful in future sessions.
+IMPORTANT: Write ALL memory_text entries in the SAME LANGUAGE as the user message. If user speaks Portuguese, write in Portuguese. If English, write in English.
 Focus on: account preferences, business context, decisions made, rules the user wants enforced, product/market info.
 IGNORE: questions, greetings, temporary states, things already obvious from ad data.
 

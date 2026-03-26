@@ -90,6 +90,20 @@ Deno.serve(async (req) => {
               }
             }
 
+            // Deduplication: check if very similar message already saved
+            const msgNorm = String(message_text).toLowerCase().slice(0, 80);
+            const dupQuery = (sb as any).from('chat_examples')
+              .select('id')
+              .eq('user_id', user_id)
+              .ilike('user_message', `%${msgNorm.slice(0, 40)}%`);
+            const { data: dup } = feedbackPersonaId
+              ? await dupQuery.eq('persona_id', feedbackPersonaId)
+              : await dupQuery.is('persona_id', null);
+            if (dup && dup.length > 0) {
+              console.log('chat_examples: duplicate detected, skipping insert');
+              break;
+            }
+
             const insertResult = await (sb as any).from('chat_examples').insert({
               user_id,
               persona_id: feedbackPersonaId || null,
