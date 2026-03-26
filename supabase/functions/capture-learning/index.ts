@@ -35,21 +35,65 @@ Deno.serve(async (req) => {
       }
 
       case 'chat_feedback': {
-        const { blocks, feedback, message_text } = data;
+        const { blocks, feedback, message_text, persona_id: feedbackPersonaId } = data;
+
+        // Always update learned_patterns for hooks
         const hookBlock = (blocks || []).find((b: any) => b.type === 'hooks' && b.items?.length);
-        if (!hookBlock) break;
-        const key = `chat_hooks_${feedback}`;
-        const { data: ex } = await (sb as any).from('learned_patterns').select('id,sample_size,variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
-        if (ex) {
-          await (sb as any).from('learned_patterns').update({
-            sample_size: (ex.sample_size || 0) + 1,
-            confidence: Math.min(1, ((ex.sample_size || 0) + 1) / 10),
-            is_winner: feedback === 'like',
-            last_updated: new Date().toISOString(),
-          }).eq('id', ex.id);
-        } else {
-          await (sb as any).from('learned_patterns').insert({ user_id, pattern_key: key, is_winner: feedback === 'like', sample_size: 1, confidence: 0.1, insight_text: `User ${feedback}d chat hooks`, variables: {} });
+        if (hookBlock) {
+          const key = `chat_hooks_${feedback}`;
+          const { data: ex } = await (sb as any).from('learned_patterns').select('id,sample_size,variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+          if (ex) {
+            await (sb as any).from('learned_patterns').update({
+              sample_size: (ex.sample_size || 0) + 1,
+              confidence: Math.min(1, ((ex.sample_size || 0) + 1) / 10),
+              is_winner: feedback === 'like',
+              last_updated: new Date().toISOString(),
+            }).eq('id', ex.id);
+          } else {
+            await (sb as any).from('learned_patterns').insert({ user_id, pattern_key: key, is_winner: feedback === 'like', sample_size: 1, confidence: 0.1, insight_text: `User ${feedback}d chat hooks`, variables: {} });
+          }
         }
+
+        // FEW-SHOT: save liked responses as examples for future prompts
+        if (feedback === 'like' && message_text && blocks?.length) {
+          // Only save substantive responses (insight/action/dashboard blocks)
+          const goodBlocks = (blocks || []).filter((b: any) =>
+            ['insight', 'action', 'dashboard', 'warning'].includes(b.type) && b.content && b.content.length > 30
+          );
+          if (goodBlocks.length > 0) {
+            // Cap at 20 examples per persona — remove oldest if over limit
+            const { data: existing } = await (sb as any).from('chat_examples')
+              .select('id, created_at')
+              .eq('user_id', user_id)
+              .eq('persona_id', feedbackPersonaId || null)
+              .order('created_at', { ascending: true });
+
+            if ((existing?.length || 0) >= 20) {
+              // Delete oldest to make room
+              const toDelete = existing!.slice(0, (existing!.length - 19));
+              for (const old of toDelete) {
+                await (sb as any).from('chat_examples').delete().eq('id', old.id);
+              }
+            }
+
+            await (sb as any).from('chat_examples').insert({
+              user_id,
+              persona_id: feedbackPersonaId || null,
+              user_message: String(message_text).slice(0, 400),
+              assistant_blocks: goodBlocks.slice(0, 3),
+              quality_score: 5,
+            });
+          }
+        }
+
+        // FEW-SHOT: remove disliked responses if they were previously saved
+        if (feedback === 'dislike' && message_text) {
+          await (sb as any).from('chat_examples')
+            .delete()
+            .eq('user_id', user_id)
+            .ilike('user_message', `%${String(message_text).slice(0, 50)}%`);
+        }
+
         break;
       }
 

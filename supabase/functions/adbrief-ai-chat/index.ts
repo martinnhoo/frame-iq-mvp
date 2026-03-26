@@ -366,6 +366,7 @@ Deno.serve(async (req) => {
       { data: accountAlerts },
       { data: telegramConnection },
       { data: chatMemories },
+      { data: chatExamples },
       // 1. Recent analyses — scoped to this persona/account
       (persona_id
         ? (supabase.from("analyses" as any) as any)
@@ -465,6 +466,19 @@ Deno.serve(async (req) => {
             : all.filter((m: any) => !m.persona_id);
           return { data: scoped.sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0)).slice(0, 30) };
         }),
+      // 13. Few-shot examples — liked responses from previous conversations
+      (supabase as any).from("chat_examples")
+        .select("user_message, assistant_blocks, quality_score, created_at")
+        .eq("user_id", user_id)
+        .then((r: any) => {
+          if (r.error) return { data: [] };
+          const all = (r.data || []) as any[];
+          const scoped = persona_id
+            ? all.filter((e: any) => e.persona_id === persona_id || !e.persona_id)
+            : all.filter((e: any) => !e.persona_id);
+          // Return top 3 by quality_score, newest first
+          return { data: scoped.sort((a: any, b: any) => (b.quality_score || 0) - (a.quality_score || 0)).slice(0, 3) };
+        }),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -477,6 +491,22 @@ Deno.serve(async (req) => {
 
     // chat_memory: persistent facts extracted from previous conversations
     const persistentMemories = (chatMemories || []) as any[];
+
+    // few-shot examples: liked responses used as style/format guide
+    const fewShotExamples = (chatExamples || []) as any[];
+    const fewShotBlock = fewShotExamples.length
+      ? fewShotExamples.map((ex: any, i: number) => {
+          const blocks = Array.isArray(ex.assistant_blocks) ? ex.assistant_blocks : [];
+          const responseText = blocks
+            .map((b: any) => `${b.title ? `[${b.title}] ` : ""}${b.content || ""}`.trim())
+            .filter(Boolean).join(" / ").slice(0, 300);
+          return `Exemplo ${i + 1}:
+  Pergunta: "${String(ex.user_message || "").slice(0, 150)}"
+  Resposta aprovada: "${responseText}"`;
+        }).join("
+
+")
+      : null;
     const memorySummary = persistentMemories.length
       ? persistentMemories
           .sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0))
@@ -1061,6 +1091,8 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       })(),
       // Persistent chat memory — facts extracted from previous conversations
       memorySummary ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)` : "",
+      // Few-shot: examples of responses this user approved — imitate this style/specificity/format
+      fewShotBlock ? `=== EXEMPLOS DE RESPOSTAS QUE ESTE USUÁRIO APROVOU ===\nImite o nível de especificidade, o tom e o formato dessas respostas. Nunca seja mais genérico do que elas.\n\n${fewShotBlock}` : "",
     ].filter(Boolean).join("\n");
 
     // ── 5. Language ───────────────────────────────────────────────────────────

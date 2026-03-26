@@ -155,6 +155,22 @@ Deno.serve(async (req) => {
     DROP POLICY IF EXISTS "Users manage own chat memory" ON public.chat_memory;
     CREATE POLICY "Users manage own chat memory" ON public.chat_memory FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
     CREATE INDEX IF NOT EXISTS chat_memory_user_persona ON public.chat_memory(user_id, persona_id);
+
+    -- chat_examples: few-shot examples from liked responses
+    CREATE TABLE IF NOT EXISTS public.chat_examples (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      persona_id uuid REFERENCES public.personas(id) ON DELETE CASCADE,
+      user_message text NOT NULL,
+      assistant_blocks jsonb NOT NULL,
+      quality_score integer DEFAULT 5,
+      times_shown integer DEFAULT 0,
+      created_at timestamp with time zone DEFAULT now()
+    );
+    ALTER TABLE public.chat_examples ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users manage own chat examples" ON public.chat_examples;
+    CREATE POLICY "Users manage own chat examples" ON public.chat_examples FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE INDEX IF NOT EXISTS chat_examples_user_persona ON public.chat_examples(user_id, persona_id);
   `;
 
   let rpcError: string | null = null;

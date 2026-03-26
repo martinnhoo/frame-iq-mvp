@@ -1647,7 +1647,7 @@ export default function AdBriefAI() {
       supabase.functions.invoke("capture-learning",{body:{
         user_id:user.id,
         event_type:"chat_feedback",
-        data:{ blocks, feedback:type, message_text:msg?.userText||"" }
+        data:{ blocks, feedback:type, message_text:msg?.userText||"", persona_id:selectedPersona?.id||null }
       }}).catch(()=>{});
     }
   };
