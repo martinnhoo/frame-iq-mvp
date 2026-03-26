@@ -14,7 +14,16 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { user_id, event_type, data } = await req.json();
+    const body = await req.json();
+    const { user_id, event_type, data } = body;
+
+    // Version probe
+    if (event_type === '__version') {
+      return new Response(JSON.stringify({ version: 'v2-few-shot', ts: Date.now() }), {
+        status: 200, headers: { ...cors, 'Content-Type': 'application/json' }
+      });
+    }
+
     if (!user_id || !event_type) return new Response(JSON.stringify({ error: 'missing fields' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
 
     switch (event_type) {
