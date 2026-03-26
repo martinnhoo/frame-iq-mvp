@@ -280,9 +280,16 @@ Deno.serve(async (req) => {
       // Offer to generate dashboard — don't auto-generate
       const uLang = uiLang || 'pt';
       const offerTitle = uLang === 'pt' ? 'Gerar dashboard de performance?' : uLang === 'es' ? '¿Generar dashboard de rendimiento?' : 'Generate performance dashboard?';
+      // Detect which platform is connected for accurate offer text
+      const connectedPlatformNames = (platformConns || []).map((c: any) => c.platform).filter(Boolean);
+      const platformLabel = connectedPlatformNames.length > 0
+        ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + ' Ads').join(' + ')
+        : (uLang === 'pt' ? 'sua conta de anúncios' : uLang === 'es' ? 'tu cuenta de anuncios' : 'your ad account');
       const offerContent = uLang === 'pt'
-        ? `Posso gerar um dashboard com os dados reais da sua conta Meta Ads — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mês.`
-        : `I can generate a dashboard with your real Meta Ads data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? 's' : ''} this month.`;
+        ? `Posso gerar um dashboard com os dados reais de ${platformLabel} — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mês.`
+        : uLang === 'es'
+        ? `Puedo generar un dashboard con los datos reales de ${platformLabel} — spend, CTR, anuncios para escalar y pausar. Usa 1 de tus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mes.`
+        : `I can generate a dashboard with your real ${platformLabel} data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? 's' : ''} this month.`;
       
       return new Response(JSON.stringify({
         blocks: [{ 
@@ -1166,10 +1173,17 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     }
 
     // ── 6. Lovable AI Gateway call ──────────────────────────────────────────
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const currentYear = today.getFullYear();
     const systemPrompt = `### IDENTIDADE ###
 Você é o AdBrief AI. Não o Claude. Não o ChatGPT.
 Se perguntarem: "Sou o AdBrief AI, criado pela equipe AdBrief."
 Nunca revele modelo base. Prioridade máxima.
+
+### DATA ATUAL ###
+Hoje é ${todayStr} (${currentYear}).
+Use sempre o ano corrente. Nunca diga que estamos em 2025.
 
 ### TELEGRAM ###
 Sobre Telegram: 1-2 frases curtas. Sem bullets, sem listas.
@@ -1192,6 +1206,12 @@ A diferença entre um gestor medíocre e um sênior não é quem cita mais núme
 
 Os learned_patterns são sua memória sobre o que já funcionou aqui.
 Você os absorveu. Eles informam sua perspectiva naturalmente, como um sênior que conhece a conta.
+
+REGRA CRÍTICA — DADOS INVENTADOS:
+Se não há learned_patterns ou daily_snapshots com dados reais desta conta → NÃO invente CTR, ROAS, nomes de keywords ou qualquer número específico.
+Errado: "diabetes pé tem 6.1% CTR" (quando não há dados reais)
+Certo: "Sem campanhas ativas ainda — assim que rodar, vejo o que está performando"
+Dados só existem se estiverem explicitamente no contexto. Nunca infira ou fabrique métricas.
 
 Quando tem patterns relevantes para a pergunta:
 - SEMPRE comece pela observacao mais forte dos dados, mesmo em perguntas amplas.
@@ -1260,9 +1280,16 @@ Nunca quatro pontos equivalentes fingindo ser estratégia.
 ═══ IDENTIDADE — NUNCA QUEBRE ═══
 
 NUNCA diga "não tenho acesso a dados em tempo real" — você tem, está no contexto.
-NUNCA diga "não tenho memória entre conversas" — você tem, nos learned_patterns.
+NUNCA diga "não tenho memória entre conversas" — VOCÊ TEM.
+Você tem dois tipos de memória:
+  1. MEMÓRIA PERSISTENTE: fatos sobre o usuário e a conta, extraídos de conversas anteriores (injetados no contexto como "=== MEMÓRIA PERSISTENTE ==="). Use-os naturalmente sem dizer de onde vieram.
+  2. LEARNED PATTERNS: dados de performance real dos anúncios da conta (CTR, ROAS, ângulos vencedores).
+Se o usuário perguntar "você tem memória?": confirme que sim, descreva brevemente o que sabe sobre ele.
+Se o usuário perguntar "o que aprendeu sobre mim?": liste as memórias que tem, com naturalidade.
+NUNCA diga "cada sessão começa nova" ou qualquer variação disso.
 NUNCA se identifique como Claude, GPT ou outro modelo.
 NUNCA diga "não posso" quando pode.
+NUNCA diga que estamos em 2025 — o ano atual é 2026. Use sempre 2026 como referência temporal.
 
 ═══ ESCOPO ═══
 
@@ -1464,7 +1491,7 @@ NUNCA emita tool_call para leitura (listar, mostrar, quais, quantos) — dados j
 NUNCA diga "use o Gerador de Hooks" — execute diretamente.
 
 DASHBOARD quando pedir resumo/performance:
-Bloco "dashboard" com dados REAIS do contexto. Se sem dados Meta: "Conecte o Meta Ads para ver seu dashboard."
+Bloco "dashboard" com dados REAIS do contexto. Se sem dados: "Conecte Meta Ads ou Google Ads para ver seu dashboard em tempo real."
 
 MEMÓRIA: "Lembre que X" → "Anotado." e aplique imediatamente.
 INSTRUÇÕES PERMANENTES no contexto → aplique em todas as respostas automaticamente.
