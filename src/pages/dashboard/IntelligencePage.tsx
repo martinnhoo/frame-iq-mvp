@@ -813,7 +813,7 @@ export default function IntelligencePage() {
                   </div>
                 )}
 
-                {aiProfile?.ai_recommendations && (
+                {aiProfile?.ai_recommendations && Array.isArray(aiProfile.ai_recommendations) && (aiProfile.ai_recommendations as string[]).length > 0 && (
                   <div>
                     <p className="text-[9px] uppercase tracking-widest text-white/40 mb-2" style={mono}>Personalized recommendations</p>
                     <ul className="space-y-1.5">
