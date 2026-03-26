@@ -138,6 +138,23 @@ Deno.serve(async (req) => {
     ALTER TABLE public.user_ai_profile ENABLE ROW LEVEL SECURITY;
     DROP POLICY IF EXISTS "Users manage own AI profile" ON public.user_ai_profile;
     CREATE POLICY "Users manage own AI profile" ON public.user_ai_profile FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+    -- chat_memory: memória persistente extraída das conversas
+    CREATE TABLE IF NOT EXISTS public.chat_memory (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+      persona_id uuid REFERENCES public.personas(id) ON DELETE CASCADE,
+      memory_text text NOT NULL,
+      memory_type text DEFAULT 'context',
+      importance integer DEFAULT 3,
+      source text DEFAULT 'chat',
+      confirmed boolean DEFAULT false,
+      created_at timestamp with time zone DEFAULT now()
+    );
+    ALTER TABLE public.chat_memory ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users manage own chat memory" ON public.chat_memory;
+    CREATE POLICY "Users manage own chat memory" ON public.chat_memory FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE INDEX IF NOT EXISTS chat_memory_user_persona ON public.chat_memory(user_id, persona_id);
   `;
 
   let rpcError: string | null = null;

@@ -365,7 +365,7 @@ Deno.serve(async (req) => {
       { data: preflightHistory },
       { data: accountAlerts },
       { data: telegramConnection },
-    ] = await Promise.all([
+      { data: chatMemories },
       // 1. Recent analyses — scoped to this persona/account
       (persona_id
         ? (supabase.from("analyses" as any) as any)
@@ -452,6 +452,19 @@ Deno.serve(async (req) => {
         .eq("active", true)
         .maybeSingle()
         .then((r: any) => r.error ? { data: null } : r),
+      // 12. Chat memory — persistent facts extracted from previous conversations
+      (supabase as any).from("chat_memory")
+        .select("memory_text, memory_type, importance, created_at")
+        .eq("user_id", user_id)
+        .then((r: any) => {
+          if (r.error) return { data: [] };
+          const all = (r.data || []) as any[];
+          // Prefer persona-scoped, include global (null persona_id)
+          const scoped = persona_id
+            ? all.filter((m: any) => m.persona_id === persona_id || !m.persona_id)
+            : all.filter((m: any) => !m.persona_id);
+          return { data: scoped.sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0)).slice(0, 30) };
+        }),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -461,6 +474,16 @@ Deno.serve(async (req) => {
     const memory = allMemory; // creative_memory doesn't have persona_id yet — use all, AI persona context prevents cross-contamination
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
+
+    // chat_memory: persistent facts extracted from previous conversations
+    const persistentMemories = (chatMemories || []) as any[];
+    const memorySummary = persistentMemories.length
+      ? persistentMemories
+          .sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0))
+          .slice(0, 20)
+          .map((m: any) => `[${m.memory_type || "context"}] ${m.memory_text}`)
+          .join("\n")
+      : null;
 
     const scores = analyses.map((a: any) => (a.result as any)?.hook_score).filter(Boolean) as number[];
     const avgScore = scores.length ? (scores.reduce((a: number, b: number) => a + b) / scores.length).toFixed(1) : null;
@@ -1036,6 +1059,8 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
         if (!items.length) return "";
         return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map(n => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
       })(),
+      // Persistent chat memory — facts extracted from previous conversations
+      memorySummary ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)` : "",
     ].filter(Boolean).join("\n");
 
     // ── 5. Language ───────────────────────────────────────────────────────────
@@ -1451,6 +1476,28 @@ REGRAS DE FORMATO:
         will_hit_limit: willHitLimit,
       }];
     }
+
+    // ── Fire-and-forget: extract memorable facts from this exchange ──────────
+    // Non-blocking — runs after response is sent, never delays the user
+    (async () => {
+      try {
+        const assistantText = finalBlocks
+          .filter((b: any) => b.type === "insight" || b.type === "action" || b.type === "warning")
+          .map((b: any) => `${b.title ? b.title + ": " : ""}${b.content || ""}`)
+          .join(" ").slice(0, 600);
+        if (assistantText && message && user_id) {
+          await supabase.functions.invoke("extract-chat-memory", {
+            body: {
+              user_id,
+              persona_id: persona_id || null,
+              user_message: message.slice(0, 400),
+              assistant_response: assistantText,
+              existing_memories: persistentMemories.slice(0, 10).map((m: any) => ({ memory_text: m.memory_text })),
+            }
+          });
+        }
+      } catch (_) { /* silent — never break the main flow */ }
+    })();
 
     return new Response(JSON.stringify({ blocks: finalBlocks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
