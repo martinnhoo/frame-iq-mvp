@@ -495,12 +495,8 @@ Deno.serve(async (req) => {
           const responseText = blocks
             .map((b: any) => `${b.title ? `[${b.title}] ` : ""}${b.content || ""}`.trim())
             .filter(Boolean).join(" / ").slice(0, 300);
-          return `Exemplo ${i + 1}:
-  Pergunta: "${String(ex.user_message || "").slice(0, 150)}"
-  Resposta aprovada: "${responseText}"`;
-        }).join("
-
-")
+          return `Exemplo ${i + 1}:\n  Pergunta: "${String(ex.user_message || "").slice(0, 150)}"\n  Resposta aprovada: "${responseText}"`;
+        }).join("\n\n")
       : null;
     const memorySummary = persistentMemories.length
       ? persistentMemories
