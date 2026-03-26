@@ -312,7 +312,7 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250929',
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 1000,
           messages: [{ role: 'user', content: prompt }],
         }),
