@@ -721,7 +721,7 @@ const LP_CSS = `
 `;
 
 const I = { fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" };
-const M = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
+const MONO = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
 
 // ── Tiny sparkline ────────────────────────────────────────────────────────────
 function Spark({ d, c = "#6366f1", w = 52, h = 26 }: { d: number[]; c?: string; w?: number; h?: number }) {
@@ -788,9 +788,9 @@ function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; a
         {a.campaign && <p style={{ ...I, fontSize: 10, color: "#334155", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
       <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-        <span style={{ ...M, fontSize: 11, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
-        {fr && <span style={{ ...M, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "#334155" }}>f{fr}</span>}
-        <span style={{ ...M, fontSize: 11, color: "#334155" }}>R${sp}</span>
+        <span style={{ ...MONO, fontSize: 11, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
+        {fr && <span style={{ ...MONO, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "#334155" }}>f{fr}</span>}
+        <span style={{ ...MONO, fontSize: 11, color: "#334155" }}>R${sp}</span>
       </div>
     </div>
   );
@@ -803,8 +803,8 @@ function CampRow({ c }: { c: any }) {
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
       <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "#1e293b", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "#334155", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-      {c.budget && <span style={{ ...M, fontSize: 10, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
-      {c.ctr && <span style={{ ...M, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "#334155", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+      {c.budget && <span style={{ ...MONO, fontSize: 10, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
+      {c.ctr && <span style={{ ...MONO, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "#334155", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
@@ -925,7 +925,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               <React.Fragment key={item.lbl}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 5, padding: "0 14px", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                   <span style={{ fontSize: 9, fontWeight: 500, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
-                  <span style={{ ...M, fontSize: 11, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
+                  <span style={{ ...MONO, fontSize: 11, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
                   {item.tr !== "flat" && <span style={{ fontSize: 9, color: item.tr === "up" ? "#34d399" : "#fb7185" }}>{item.tr === "up" ? "↑" : "↓"}</span>}
                 </div>
               </React.Fragment>

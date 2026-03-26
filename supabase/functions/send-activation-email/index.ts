@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     const { email, name, language } = await req.json();
     const lang = detectLang(language);
     const t = T[lang];
-    const firstName = (name || "").split(" ")[0] || (lang === "pt" || lang === "es" ? "gestor" : lang === "hi" ? "वहाँ" : "there");
+    const firstName = (name || "").split(" ")[0] || (lang === "pt" || lang === "es" ? "gestor" : "there");
     const html = buildHtml(t, firstName, APP);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

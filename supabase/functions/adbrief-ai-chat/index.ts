@@ -368,14 +368,14 @@ Deno.serve(async (req) => {
     ] = await Promise.all([
       // 1. Recent analyses — scoped to this persona/account
       (persona_id
-        ? supabase.from("analyses")
+        ? (supabase.from("analyses" as any) as any)
             .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
-            .eq("user_id", user_id).eq("persona_id" as any, persona_id).eq("status", "completed")
+            .eq("user_id", user_id).eq("persona_id", persona_id).eq("status", "completed")
             .order("created_at", { ascending: false }).limit(15)
-        : supabase.from("analyses")
+        : (supabase.from("analyses" as any) as any)
             .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
             .eq("user_id", user_id).eq("status", "completed")
-            .is("persona_id" as any, null)
+            .is("persona_id", null)
             .order("created_at", { ascending: false }).limit(15)
       ),
       // 2. AI profile

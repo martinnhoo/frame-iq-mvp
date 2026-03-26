@@ -146,7 +146,7 @@ Return JSON:
       } as never)
       .select().single();
 
-    return new Response(JSON.stringify({ success: true, result: parsed, id: (stored as Record<string,unknown>)?.id }), {
+    return new Response(JSON.stringify({ success: true, result: parsed, id: (stored as unknown as Record<string,unknown>)?.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
