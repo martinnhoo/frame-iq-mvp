@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
             loser_names: losers.map((a: any) => a.ad_name?.slice(0, 50)),
           },
           last_updated: new Date().toISOString(),
-        }, { onConflict: "user_id,pattern_key" }).then(() => {}).catch(() => {});
+        }, { onConflict: "user_id,pattern_key" } as any).then(() => {}).catch(() => {});
 
         if (winners.length) {
           const memRows = winners.slice(0, 5).map((a: any) => ({

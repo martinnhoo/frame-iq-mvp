@@ -242,7 +242,7 @@ Construa o cultural_brief baseado APENAS no que as fontes mostram:
     if (cached) {
       await sb.from('learned_patterns' as any).update(patternData).eq('id', cached.id);
     } else if (anyUser) {
-      await sb.from('learned_patterns' as any).insert(patternData).catch(() => {});
+      await sb.from('learned_patterns' as any).insert(patternData as any);
     }
 
     return new Response(JSON.stringify({

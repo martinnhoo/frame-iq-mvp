@@ -166,7 +166,7 @@ Responda JSON:
           source: 'trend_matcher',
         },
         last_updated: new Date().toISOString(),
-      }).catch(() => {});
+      } as any);
 
       // Send Telegram alert if connected
       try {

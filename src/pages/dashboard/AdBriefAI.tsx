@@ -721,7 +721,7 @@ const LP_CSS = `
 `;
 
 const I = { fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" };
-const M = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
+const MONO = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
 
 // ── Tiny sparkline ────────────────────────────────────────────────────────────
 function Spark({ d, c = "#6366f1", w = 52, h = 26 }: { d: number[]; c?: string; w?: number; h?: number }) {

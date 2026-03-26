@@ -4,23 +4,25 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // ── Cost-based progressive throttle ──────────────────────────────────────────
 const _COST_PER = { analysis:(3000/1e6*3)+(800/1e6*15), board:(2500/1e6*3)+(700/1e6*15), preflight:(2000/1e6*3)+(600/1e6*15), translation:(800/1e6*3)+(400/1e6*15), hook:(1500/1e6*3)+(400/1e6*15) };
 const _PLAN_REV: Record<string,number> = { free:0, maker:19, pro:49, studio:149 };
-async function checkThrottle(sb: ReturnType<typeof createClient>, uid: string): Promise<{allowed:boolean;retry_after:number}> {
+async function checkThrottle(sb: any, uid: string): Promise<{allowed:boolean;retry_after:number}> {
   const period = new Date().toISOString().slice(0,7);
   const [{data:prof},{data:usage}] = await Promise.all([
     sb.from('profiles').select('plan,last_ai_action_at').eq('id',uid).single(),
     sb.from('usage').select('analyses_count,boards_count,translations_count,preflights_count,hooks_count').eq('user_id',uid).eq('period',period).single(),
   ]);
-  const rev = _PLAN_REV[prof?.plan||'free']??0;
+  const rev = _PLAN_REV[(prof as any)?.plan||'free']??0;
   if(rev<=0) return {allowed:true,retry_after:0};
-  const cost=(usage?.analyses_count||0)*_COST_PER.analysis+(usage?.boards_count||0)*_COST_PER.board+(usage?.translations_count||0)*_COST_PER.translation+(usage?.preflights_count||0)*_COST_PER.preflight+(usage?.hooks_count||0)*_COST_PER.hook;
+  const u = usage as any;
+  const cost=(u?.analyses_count||0)*_COST_PER.analysis+(u?.boards_count||0)*_COST_PER.board+(u?.translations_count||0)*_COST_PER.translation+(u?.preflights_count||0)*_COST_PER.preflight+(u?.hooks_count||0)*_COST_PER.hook;
   const ratio=cost/rev;
   if(ratio<0.80) return {allowed:true,retry_after:0};
   const maxSec=480;
   const cooldown=ratio>=1?maxSec:Math.round(((ratio-0.80)/0.20)*maxSec);
-  const elapsed=prof?.last_ai_action_at?(Date.now()-new Date(prof.last_ai_action_at).getTime())/1000:cooldown+1;
+  const p = prof as any;
+  const elapsed=p?.last_ai_action_at?(Date.now()-new Date(p.last_ai_action_at).getTime())/1000:cooldown+1;
   const wait=Math.max(0,Math.ceil(cooldown-elapsed));
   if(wait>0) return {allowed:false,retry_after:wait};
-  await sb.from('profiles').update({last_ai_action_at:new Date().toISOString()}).eq('id',uid);
+  await sb.from('profiles').update({last_ai_action_at:new Date().toISOString()} as any).eq('id',uid);
   return {allowed:true,retry_after:0};
 }
 // ─────────────────────────────────────────────────────────────────────────────
