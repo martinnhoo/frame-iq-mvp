@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     const results: Array<{ lang: string; translated_text: string; cultural_adaptation: string }> = [];
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    const LOVABLE_API_URL = 'https://api.lovable.dev/v1/chat/completions';
+    const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
     for (const target of targets) {
       const systemPrompt = `You are an expert advertising translator and cultural strategist specializing in performance marketing ads. Your job is to translate ad scripts, captions, hooks, and VO copy so they feel native — not translated.
