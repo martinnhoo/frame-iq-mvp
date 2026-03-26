@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
 
   try {
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    // Using Lovable AI gateway (no separate API key needed)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -59,30 +59,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // No API key — return friendly mock
-    if (!ANTHROPIC_API_KEY) {
-      console.log('No ANTHROPIC_API_KEY — returning mock');
-      const targets = multi_targets?.length ? multi_targets : [to_language];
-      const multi = targets.map(lang => ({
-        lang,
-        translated_text: `[No API key] ${source_text.slice(0, 100)}`,
-        cultural_adaptation: `Add ANTHROPIC_API_KEY in Supabase Secrets to enable real translation.`
-      }));
-      return new Response(JSON.stringify({
-        success: true,
-        translated_text: multi[0].translated_text,
-        cultural_adaptation: multi[0].cultural_adaptation,
-        multi: multi.length > 1 ? multi : undefined,
-        mock_mode: true,
-      }), { headers: { ...cors, 'Content-Type': 'application/json' } });
-    }
-
     // Build translation targets
     const targets = multi_targets?.length
       ? multi_targets.map(code => ({ code, name: code }))
       : [{ code: to_language, name: to_language_name }];
 
     const results: Array<{ lang: string; translated_text: string; cultural_adaptation: string }> = [];
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
     for (const target of targets) {
       const systemPrompt = `You are an expert advertising translator and cultural strategist specializing in performance marketing ads. Your job is to translate ad scripts, captions, hooks, and VO copy so they feel native — not translated.
@@ -107,35 +92,40 @@ ${context ? `Context: ${context}` : ''}
 
 Return ONLY valid JSON.`;
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(LOVABLE_API_URL, {
         method: 'POST',
         headers: {
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1500,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: userMsg }]
-        })
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMsg },
+          ],
+          temperature: 0.3,
+        }),
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        console.error('Claude API error:', res.status, errText);
-        throw new Error(`Claude API ${res.status}: ${errText}`);
+        console.error('Lovable AI error:', res.status, errText);
+        throw new Error(`AI API ${res.status}: ${errText}`);
       }
 
       const apiData = await res.json();
-      const raw = (apiData.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+      const rawContent = apiData.choices?.[0]?.message?.content || '';
+      const raw = rawContent.replace(/```json|```/g, '').trim();
 
       let parsed: { translated: string; cultural_notes: string };
       try {
-        parsed = JSON.parse(raw);
+        // Find JSON boundaries for robust parsing
+        const jsonStart = raw.search(/[\{\[]/);
+        const jsonEnd = raw.lastIndexOf('}');
+        const jsonStr = (jsonStart !== -1 && jsonEnd !== -1) ? raw.substring(jsonStart, jsonEnd + 1) : raw;
+        parsed = JSON.parse(jsonStr);
       } catch {
-        // If JSON parse fails, treat the whole response as the translation
         console.warn('JSON parse failed, using raw text as translation');
         parsed = { translated: raw, cultural_notes: '' };
       }
