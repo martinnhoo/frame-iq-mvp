@@ -1,4 +1,4 @@
-// extract-chat-memory v1
+// extract-chat-memory v2
 // Roda após cada resposta do chat — extrai fatos, preferências e decisões
 // Salva em chat_memory para injetar no contexto das próximas sessões
 import { createClient } from "npm:@supabase/supabase-js@2";

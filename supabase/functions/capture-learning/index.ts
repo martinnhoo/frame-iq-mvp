@@ -1,4 +1,4 @@
-// capture-learning v1 — alimenta a memória do produto com cada ação do usuário
+// capture-learning v2 — few-shot + chat_memory — alimenta a memória do produto com cada ação do usuário
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
