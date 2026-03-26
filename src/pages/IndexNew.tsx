@@ -1649,6 +1649,250 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
   return <span ref={ref}>{display}{suffix}</span>;
 }
 
+// ─── Platform SVG badges ─────────────────────────────────────────────────────
+function MetaBadge() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5, background:'rgba(24,119,242,0.12)', border:'1px solid rgba(24,119,242,0.28)' }}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 36 18" fill="none">
+        <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
+      </svg>
+      <span style={{ fontFamily:F, fontSize:9.5, color:'#6ba3f5', fontWeight:700, letterSpacing:'0.02em' }}>Meta Ads</span>
+    </div>
+  );
+}
+function GoogleBadge() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5, background:'rgba(66,133,244,0.10)', border:'1px solid rgba(66,133,244,0.28)' }}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      <span style={{ fontFamily:F, fontSize:9.5, color:'#7ab4f5', fontWeight:700, letterSpacing:'0.02em' }}>Google Ads</span>
+    </div>
+  );
+}
+
+// ─── Hero Demo — redesign from scratch ───────────────────────────────────────
+function HeroDemo({
+  lang, activeIndustry, setActiveIndustry, account, qa, qi, phase, typedQ,
+  lines, activeLine, jump, chatRef, onCTA, WIN_COLOR, ACT_COLOR,
+}: {
+  lang: Lang; activeIndustry: string; setActiveIndustry: (id: string) => void;
+  account: { name: string; meta: string }; qa: any[]; qi: number;
+  phase: string; typedQ: string; lines: string[]; activeLine: string;
+  jump: (i: number) => void; chatRef: React.RefObject<HTMLDivElement>;
+  onCTA: () => void; WIN_COLOR: string; ACT_COLOR: string;
+}) {
+  const isGoogle = activeIndustry === 'clinica';
+  const note = lang==='pt' ? 'Pergunte qualquer coisa...' : lang==='es' ? 'Pregunta lo que quieras...' : 'Ask anything...';
+  const ctabtn = lang==='pt' ? 'Testar com minha conta' : lang==='es' ? 'Probar con mi cuenta' : 'Try with my account';
+
+  // Quick action chips — 3 per industry
+  const chips = (() => {
+    if (activeIndustry === 'clinica') {
+      return lang === 'pt' ? ['Por que meu CPA subiu?', 'Melhores keywords', 'Criar headlines'] :
+             lang === 'es' ? ['¿Por qué subió mi CPA?', 'Mejores keywords', 'Crear headlines'] :
+                             ['Why did CPA rise?', 'Top keywords', 'Write headlines'];
+    }
+    return lang === 'pt' ? ['Qual meu melhor criativo?', 'O que posso escalar?', 'O que pausar?'] :
+           lang === 'es' ? ['¿Cuál es mi mejor creativo?', '¿Qué puedo escalar?', '¿Qué pausar?'] :
+                           ["What's my best creative?", 'What can I scale?', 'What to pause?'];
+  })();
+
+  // Proactive greeting cards — different per platform
+  const greetingCards = (() => {
+    if (isGoogle) {
+      return lang === 'pt'
+        ? { win: <><span style={{color:'#34d399',fontWeight:700}}>'harmonização facial BH'</span> — 14 agendamentos, CPA R$38. Sua melhor keyword.</>, act: <>↑ Aumente lance +25% — Quality Score 8/10, pode ganhar o leilão sem elevar CPA.</> }
+        : lang === 'es'
+        ? { win: <><span style={{color:'#34d399',fontWeight:700}}>'harmonización facial CDMX'</span> — 14 citas, CPA $380. Tu mejor keyword.</>, act: <>↑ Sube puja +25% — Quality Score 8/10, puedes ganar la subasta sin elevar CPA.</> }
+        : { win: <><span style={{color:'#34d399',fontWeight:700}}>'facial harmonization'</span> — 14 bookings, CPA $38. Your top keyword.</>, act: <>↑ Raise bid +25% — Quality Score 8/10, can win auction without raising CPA.</> };
+    }
+    return lang === 'pt'
+      ? { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 convertendo 2.4x mais</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Escale de <strong style={{color:'#fff'}}>R$120 → R$400/dia</strong>. Frequência 1.3x, seguro.</> }
+      : lang === 'es'
+      ? { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 convirtiendo 2.4x más</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Escala de <strong style={{color:'#fff'}}>$120 → $400/día</strong>. Frecuencia 1.3x, seguro.</> }
+      : { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 converting 2.4x more</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Scale from <strong style={{color:'#fff'}}>$120 → $400/day</strong>. Frequency 1.3x, safe.</> };
+  })();
+
+  // AI response render
+  const renderAI = () => {
+    if (phase === 'thinking') return <Dots />;
+    if (phase !== 'streaming' && phase !== 'done') return null;
+    const allLines = activeLine ? [...lines, activeLine] : lines;
+    if (!allLines.length) return null;
+    return (
+      <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+        <img src="/ab-avatar.png" alt="AB" width={26} height={26}
+          style={{ width:26, height:26, borderRadius:7, objectFit:'cover', flexShrink:0, marginTop:1 }} />
+        <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:5 }}>
+          {allLines.map((line, i) => {
+            const isAct = /^(Fix:|Ação:|Action:|Acción:|→|↑|↓)/i.test(line.replace(/\*\*/g,''));
+            const isWin = /winner|melhor|dominando|escalando|\+|\↑|2\.4x|3\.8x|3\.2x|agendamento/i.test(line);
+            const isLast = i === allLines.length - 1 && phase === 'streaming';
+            return (
+              <MdLine key={i} text={line} style={{
+                fontFamily:F, fontSize:13.5, lineHeight:1.65, margin:0,
+                color: isAct ? ACT_COLOR : isWin ? WIN_COLOR : i===0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)',
+                fontWeight: isAct ? 600 : 400, opacity: isLast ? 0.55 : 1,
+                animation:`lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) ${i*0.07}s both`,
+              }} />
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ position:'relative', zIndex:1 }}>
+      {/* Glow behind the card */}
+      <div style={{ position:'absolute', inset:-1, borderRadius:18, background:'radial-gradient(ellipse 80% 50% at 50% 80%, rgba(14,165,233,0.18) 0%, transparent 70%)', pointerEvents:'none', zIndex:0 }} />
+
+      {/* Main card */}
+      <div style={{
+        position:'relative', zIndex:1,
+        borderRadius:16, overflow:'hidden',
+        background:'linear-gradient(160deg, #0d1322 0%, #0a0f1d 60%, #080c18 100%)',
+        border:'1px solid rgba(255,255,255,0.09)',
+        boxShadow:'0 2px 0 rgba(255,255,255,0.04) inset, 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(14,165,233,0.08)',
+      }}>
+
+        {/* ── HEADER ── */}
+        <div style={{ padding:'14px 18px 12px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(255,255,255,0.02)' }}>
+          {/* Left: logo + account name */}
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <img src="/ab-avatar.png" alt="AdBrief" width={28} height={28} style={{ borderRadius:8, objectFit:'cover' }} />
+            <div>
+              <div style={{ fontFamily:F, fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.2 }}>{account.name}</div>
+              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:1 }}>
+                {account.meta}
+              </div>
+            </div>
+          </div>
+          {/* Right: platform badge + live dot */}
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {isGoogle ? <GoogleBadge /> : <MetaBadge />}
+            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px #22c55e', animation:'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily:F, fontSize:9.5, color:'rgba(255,255,255,0.35)', letterSpacing:'0.04em' }}>
+                {lang==='pt' ? 'ao vivo' : lang==='es' ? 'en vivo' : 'live'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ACCOUNT SWITCHER ── */}
+        <div style={{ padding:'10px 18px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', gap:6, overflowX:'auto' as const }}>
+          {INDUSTRIES_DEMO.slice(0,3).map(ind => {
+            const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
+            const isAct = ind.id === activeIndustry;
+            const indIsGoogle = ind.id === 'clinica';
+            return (
+              <button key={ind.id} onClick={() => setActiveIndustry(ind.id)} style={{
+                display:'flex', alignItems:'center', gap:6,
+                padding:'6px 12px', borderRadius:8, flexShrink:0,
+                background: isAct ? 'rgba(255,255,255,0.09)' : 'transparent',
+                border: isAct ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
+                cursor:'pointer', transition:'all 0.15s',
+                fontFamily:F, fontSize:12, fontWeight: isAct ? 600 : 400,
+                color: isAct ? '#fff' : 'rgba(255,255,255,0.4)',
+              }}
+              onMouseEnter={e => { if (!isAct) { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.7)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}}
+              onMouseLeave={e => { if (!isAct) { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='transparent'; }}}>
+                <span style={{ fontSize:11 }}>{ind.emoji}</span>
+                <span>{acc?.name || ind.id}</span>
+                {isAct && (
+                  <span style={{ fontSize:8, padding:'1px 5px', borderRadius:3,
+                    background: indIsGoogle ? 'rgba(66,133,244,0.18)' : 'rgba(24,119,242,0.18)',
+                    color: indIsGoogle ? '#7ab4f5' : '#6ba3f5', fontWeight:700, letterSpacing:'0.04em' }}>
+                    {indIsGoogle ? 'Google' : 'Meta'}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── CHAT ── */}
+        <div ref={chatRef} style={{ minHeight:340, maxHeight:340, overflowY:'auto', padding:'18px 18px 10px', display:'flex', flexDirection:'column' as const, gap:14 }}>
+
+          {/* Proactive greeting — clean, structured */}
+          <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+            <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1, fontSize:12 }}>✦</div>
+            <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:7 }}>
+              {/* Winner card */}
+              <div style={{ padding:'10px 13px', borderRadius:10, background:'rgba(14,165,233,0.07)', border:'1px solid rgba(14,165,233,0.2)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
+                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.55, margin:0 }}>{greetingCards.win}</p>
+              </div>
+              {/* Action card */}
+              <div style={{ padding:'10px 13px', borderRadius:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
+                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.75)', lineHeight:1.55, margin:0 }}>{greetingCards.act}</p>
+              </div>
+              {/* Suggestion chips */}
+              <div style={{ display:'flex', flexWrap:'wrap' as const, gap:5, animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both' }}>
+                {chips.map((label, i) => (
+                  <button key={i} onClick={() => { if (i < qa.length) jump(i); }} style={{
+                    padding:'5px 11px', borderRadius:20, cursor:'pointer',
+                    fontFamily:F, fontSize:11.5, transition:'all 0.15s', whiteSpace:'nowrap' as const,
+                    background:'rgba(14,165,233,0.06)', border:'1px solid rgba(14,165,233,0.2)',
+                    color:'rgba(255,255,255,0.6)',
+                  }}
+                  onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.background='rgba(14,165,233,0.14)'; el.style.color='#fff'; el.style.borderColor='rgba(14,165,233,0.4)'; }}
+                  onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.background='rgba(14,165,233,0.06)'; el.style.color='rgba(255,255,255,0.6)'; el.style.borderColor='rgba(14,165,233,0.2)'; }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* User message */}
+          {phase !== 'idle' && (
+            <div style={{ display:'flex', justifyContent:'flex-end' }}>
+              <div style={{ maxWidth:'68%', padding:'9px 13px', borderRadius:10, borderBottomRightRadius:3, background:'rgba(14,165,233,0.12)', border:'1px solid rgba(14,165,233,0.22)' }}>
+                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.9)', lineHeight:1.5, margin:0 }}>
+                  {typedQ}
+                  {phase==='typing' && <span className="cursor-blink" style={{ display:'inline-block', width:1.5, height:13, background:'rgba(255,255,255,0.6)', marginLeft:2, verticalAlign:'middle', borderRadius:1 }} />}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* AI response */}
+          {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
+            <div>{renderAI()}</div>
+          )}
+          {phase === 'done' && (
+            <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[0]} />
+          )}
+        </div>
+
+        {/* ── INPUT BAR ── */}
+        <div style={{ borderTop:'1px solid rgba(255,255,255,0.07)', padding:'10px 14px 12px', background:'rgba(0,0,0,0.15)' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', padding:'9px 12px 9px 16px', borderRadius:12, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)' }}>
+            <p style={{ fontFamily:F, fontSize:12.5, color:'rgba(255,255,255,0.28)', margin:0, flex:1, fontStyle:'italic', letterSpacing:'-0.01em' }}>{note}</p>
+            <button onClick={onCTA} style={{
+              fontFamily:F, fontSize:11.5, fontWeight:700, padding:'7px 14px', borderRadius:8,
+              background:'linear-gradient(135deg, #0ea5e9, #0284c7)', color:'#fff',
+              border:'none', cursor:'pointer', whiteSpace:'nowrap' as const, flexShrink:0,
+              boxShadow:'0 2px 12px rgba(14,165,233,0.35)', transition:'all 0.15s',
+              letterSpacing:'-0.01em',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity='0.9'; (e.currentTarget as HTMLElement).style.transform='translateY(-1px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity='1'; (e.currentTarget as HTMLElement).style.transform='none'; }}>
+              {ctabtn} →
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── Hero Left — Impactful, clean, cycling verb ──────────────────────────────
 function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; ctaLoading?: boolean }) {
   const verbs = lang === 'pt'
@@ -1885,143 +2129,25 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
         <HeroLeft lang={lang} onCTA={onCTA} ctaLoading={ctaLoading} />
 
         {/* ── RIGHT — demo ── */}
+        {/* ── RIGHT — Demo redesign ── */}
         <div className="hero-demo-col" style={{ position: 'relative' }}>
-
-          {/* Window chrome */}
-          <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(14,165,233,0.35)', boxShadow: '0 0 0 1px rgba(14,165,233,0.10), 0 24px 80px rgba(0,0,0,0.6), 0 0 60px rgba(14,165,233,0.15)', position: 'relative', zIndex: 1 }}>
-
-            {/* Titlebar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', background: '#090d14', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
-              <div style={{ display: 'flex', gap: 5 }}>
-                {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width: 8.5, height: 8.5, borderRadius: '50%', background: c }} />)}
-              </div>
-              <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 5, padding: '3px 10px', display: 'flex', alignItems: 'center', gap: 5, maxWidth: 180, margin: '0 auto' }}>
-                <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.3)' }} />
-                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.50)', fontFamily: "'DM Mono',monospace" }}>adbrief.pro/ai</span>
-              </div>
-              {/* Platform badge — dynamic */}
-              {activeIndustry === 'clinica' ? (
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.25)' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                  <span style={{ fontFamily: F, fontSize: 9, color: '#34d399', fontWeight: 600 }}>Google Ads</span>
-                </div>
-              ) : (
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 5, background: 'rgba(24,119,242,0.10)', border: '1px solid rgba(24,119,242,0.22)' }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 36 18" fill="none">
-                    <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
-                  </svg>
-                  <span style={{ fontFamily: F, fontSize: 9, color: '#5b9cf6', fontWeight: 600 }}>Meta</span>
-                </div>
-              )}
-            </div>
-
-            {/* App body */}
-            <div style={{ background: '#111520', minHeight: 440, maxHeight: 440, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-
-              {/* Account topbar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.10)', background: '#0f1420', flexShrink: 0 }}>
-                <div style={{ display: 'flex', gap: 4, flex: 1 }}>
-                  {INDUSTRIES_DEMO.slice(0, 3).map(ind => {
-                    const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
-                    const isAct = ind.id === activeIndustry;
-                    return (
-                      <button key={ind.id} onClick={() => setActiveIndustry(ind.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: isAct ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isAct ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0, fontFamily: F, fontSize: 11, fontWeight: isAct ? 600 : 400, color: isAct ? '#fff' : 'rgba(255,255,255,0.55)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' as const }}>
-                        <span style={{ fontSize: 10, opacity: isAct ? 1 : 0.5 }}>{ind.emoji}</span>
-                        {acc?.name || ind.id}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* KPIs — very minimal */}
-                <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
-                  {[{ l: 'CTR', v: '3.2%' }, { l: 'ROAS', v: '3.8x' }].map((k,i) => (
-                    <div key={i} style={{ textAlign: 'right' }}>
-                      <div style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.02em' }}>{k.v}</div>
-                      <div style={{ fontFamily: F, fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>{k.l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Chat */}
-              <div ref={chatRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 12px', display: 'flex', flexDirection: 'column' as const, gap: 14 }}>
-
-                {/* Greeting — editorial cards */}
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  {/* Real logo */}
-                  <img src="/ab-avatar.png" alt="AdBrief" width={26} height={26}
-                    style={{ width: 26, height: 26, borderRadius: 7, objectFit: 'cover', flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 6 }}>
-                    {/* Win card — violet accent, editorial */}
-                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.35)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, margin: 0 }}>
-                        {lang === 'pt'
-                          ? <><span style={{ color: WIN_COLOR, fontWeight: 600 }}>Creative_019 convertendo 2.4x mais</span> — hook rate 38%, ROAS 3.8x.</>
-                          : lang === 'es'
-                          ? <><span style={{ color: WIN_COLOR, fontWeight: 600 }}>Creative_019 convirtiendo 2.4x más</span> — hook rate 38%, ROAS 3.8x.</>
-                          : <><span style={{ color: WIN_COLOR, fontWeight: 600 }}>Creative_019 converting 2.4x more</span> — hook rate 38%, ROAS 3.8x.</>}
-                      </p>
-                    </div>
-                    {/* Action card — white accent */}
-                    <div style={{ padding: '11px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.18)', animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.55, margin: 0 }}>
-                        {lang === 'pt'
-                          ? <>→ Escale de <strong style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>R$120 → R$400/dia</strong>. Frequência 1.3x, seguro.</>
-                          : lang === 'es'
-                          ? <>→ Escala de <strong style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>$120 → $400/día</strong>. Frecuencia 1.3x, seguro.</>
-                          : <>→ Scale from <strong style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>$120 → $400/day</strong>. Frequency 1.3x, safe.</>}
-                      </p>
-                    </div>
-                    {/* Quick pills */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, animation: 'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both' }}>
-                      {quickActions.map((label, i) => (
-                        <button key={i} onClick={() => { if (i < qa.length) jump(i); }}
-                          style={{ padding: '5px 11px', borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.55)', transition: 'all 0.15s', whiteSpace: 'nowrap' as const }}
-                          onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.25)'; el.style.color='rgba(255,255,255,0.9)'; }}
-                          onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor='rgba(255,255,255,0.12)'; el.style.color='rgba(255,255,255,0.55)'; }}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* User message */}
-                {phase !== 'idle' && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ maxWidth: '65%', padding: '9px 13px', borderRadius: 9, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, margin: 0 }}>
-                        {typedQ}
-                        {phase === 'typing' && <span className="cursor-blink" style={{ display: 'inline-block', width: 1.5, height: 13, background: 'rgba(255,255,255,0.5)', marginLeft: 2, verticalAlign: 'middle', borderRadius: 1 }} />}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-                  <div style={{ flex: 1 }}>{renderAI()}</div>
-                )}
-
-                {phase === 'done' && (
-                  <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={industry} />
-                )}
-              </div>
-
-              {/* Input */}
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.10)', padding: '8px 14px 10px', flexShrink: 0, background: '#0f1420' }}>
-                <div style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '8px 10px 8px 14px', borderRadius: 11, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)' }}>
-                  <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.38)', margin: 0, flex: 1, fontStyle: 'italic' }}>{note}</p>
-                  <button onClick={onCTA}
-                    style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: '7px 14px', borderRadius: 8, background: 'rgba(14,165,233,0.20)', color: '#fff', border: '1px solid rgba(14,165,233,0.35)', cursor: 'pointer', whiteSpace: 'nowrap' as const, flexShrink: 0, transition: 'all 0.15s' }}
-                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.12)'; el.style.color='#fff'; }}
-                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.7)'; }}>
-                    {ctabtn} →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroDemo
+            lang={lang}
+            activeIndustry={activeIndustry}
+            setActiveIndustry={setActiveIndustry}
+            account={account}
+            qa={qa}
+            qi={qi}
+            phase={phase}
+            typedQ={typedQ}
+            lines={lines}
+            activeLine={activeLine}
+            jump={jump}
+            chatRef={chatRef}
+            onCTA={onCTA}
+            WIN_COLOR={WIN_COLOR}
+            ACT_COLOR={ACT_COLOR}
+          />
         </div>
 
       </div>
