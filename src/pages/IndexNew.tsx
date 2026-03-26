@@ -1674,220 +1674,360 @@ function GoogleBadge() {
   );
 }
 
-// ─── Hero Demo — redesign from scratch ───────────────────────────────────────
-function HeroDemo({
-  lang, activeIndustry, setActiveIndustry, account, qa, qi, phase, typedQ,
-  lines, activeLine, jump, chatRef, onCTA, WIN_COLOR, ACT_COLOR,
-}: {
-  lang: Lang; activeIndustry: string; setActiveIndustry: (id: string) => void;
-  account: { name: string; meta: string }; qa: any[]; qi: number;
-  phase: string; typedQ: string; lines: string[]; activeLine: string;
-  jump: (i: number) => void; chatRef: React.RefObject<HTMLDivElement>;
-  onCTA: () => void; WIN_COLOR: string; ACT_COLOR: string;
-}) {
-  const isGoogle = activeIndustry === 'clinica';
+// ─── Selling Point Demo — UAU moments ───────────────────────────────────────
+
+// Selling point scenarios — indexed by Lang
+type SPScene = { tab: string; q: string; platform: 'meta' | 'google'; account: string; lines: string[]; result: string };
+
+const SELLING_POINTS: Record<Lang, SPScene[]> = {
+  pt: [
+    {
+      tab: "Por que caiu?",
+      q: "Meu ROAS caiu 40% essa semana. O que está acontecendo?",
+      platform: "meta", account: "FitCore Brasil · Meta Ads",
+      lines: [
+        "Encontrei 3 causas simultâneas na conta:",
+        "**Fadiga criativa** — Creative_042 roda há 22 dias. Hook rate despencou de 31% para 8%.",
+        "**Frequência 4.8x** — BR-Mulheres-25-34 viu o mesmo anúncio 5x. Cada real vai para quem já ignorou.",
+        "**CPM subiu 38%** — o algoritmo detectou a queda e começou a cobrar mais por impressão.",
+        "→ Pause Creative_042. Relance Creative_019 — estava com ROAS 3.2x antes de parar.",
+      ],
+      result: "R/dia economizados · ROAS voltou em 4 dias"
+    },
+    {
+      tab: "O que escalar?",
+      q: "Qual criativo devo escalar agora?",
+      platform: "meta", account: "FitCore Brasil · Meta Ads",
+      lines: [
+        "**Creative_019** é seu winner claro — e está subutilizado:",
+        "Hook rate 38% — 2.4x acima da média. Prende nos primeiros 3 segundos.",
+        "ROAS 3.8x com frequência 1.3x — ainda longe da saturação.",
+        "Você roda com R/dia. Pode ir para R /dia com segurança.",
+        "→ Projeção: +R\.080/dia de retorno líquido. Espaço para triplicar sem queimar.",
+      ],
+      result: "+R\.080/dia projetados · Frequência ainda segura"
+    },
+    {
+      tab: "Avisa antes",
+      q: "Tem algum criativo que vai falhar em breve?",
+      platform: "meta", account: "FitCore Brasil · Meta Ads",
+      lines: [
+        "2 criativos na trajetória de colapso — ainda não falharam, mas vão:",
+        "**Creative_031** — frequência 3.9x, hook rate caindo 4% por dia. Colapso em ~5 dias.",
+        "**BR-Homens-25-34** — CTR caiu de 2.8% para 1.1% em 6 dias. Audiência se esgotando.",
+        "Ainda não custou caro — mas vai. Prepare uma variação de Creative_031 agora.",
+        "→ Criativos frescos prontos antes do colapso = zero interrupção de resultado.",
+      ],
+      result: "Detectado 5 dias antes · Sem perda de verba"
+    },
+    {
+      tab: "Cria hooks",
+      q: "Cria 3 hooks baseados nos meus criativos que mais converteram",
+      platform: "meta", account: "FitCore Brasil · Meta Ads",
+      lines: [
+        "Analisei seus 5 top converters. Padrão: afirmação específica que para o scroll.",
+        "**Hook 1:** Você está pagando R  por clique e nem sabe por quê — seus dados têm a resposta.",
+        "**Hook 2:** 3 dos 4 anúncios que mais gastam têm ROAS abaixo de 1x. Qual vale manter?",
+        "**Hook 3:** Seu melhor criativo de setembro está parado há 9 dias. O concorrente escalou o mesmo ângulo.",
+        "→ Cada hook saiu dos seus dados reais — não de template genérico.",
+      ],
+      result: "3 hooks prontos · Calibrados pelos seus winners reais"
+    },
+  ],
+  es: [
+    {
+      tab: "¿Por qué bajó?",
+      q: "Mi ROAS bajó 40% esta semana. ¿Qué está pasando?",
+      platform: "meta", account: "FitMex · Meta Ads",
+      lines: [
+        "Encontré 3 causas simultáneas en la cuenta:",
+        "**Fatiga creativa** — Creative_042 lleva 22 días. Hook rate cayó de 31% a 8%.",
+        "**Frecuencia 4.8x** — MX-Mujeres-25-34 vio el mismo anuncio 5 veces.",
+        "**CPM subió 38%** — el algoritmo detectó la caída y cobra más por impresión.",
+        "→ Pausa Creative_042. Relanza Creative_019 — tenía ROAS 3.2x antes de pausarse.",
+      ],
+      result: "/día ahorrados · ROAS recuperado en 4 días"
+    },
+    {
+      tab: "¿Qué escalar?",
+      q: "¿Qué creativo debo escalar ahora?",
+      platform: "meta", account: "FitMex · Meta Ads",
+      lines: [
+        "**Creative_019** es tu winner claro — y está subutilizado:",
+        "Hook rate 38% — 2.4x sobre el promedio. Engancha en los primeros 3 segundos.",
+        "ROAS 3.8x con frecuencia 1.3x — lejos de la saturación.",
+        "Corres con /día. Puedes ir a  /día con seguridad.",
+        "→ Proyección: +\.080/día de retorno neto. Espacio para triplicar sin quemar.",
+      ],
+      result: "+\.080/día proyectados · Frecuencia aún segura"
+    },
+    {
+      tab: "Avisa antes",
+      q: "¿Hay algún creativo que va a fallar pronto?",
+      platform: "meta", account: "FitMex · Meta Ads",
+      lines: [
+        "2 creativos en trayectoria de colapso — aún no fallaron, pero lo harán:",
+        "**Creative_031** — frecuencia 3.9x, hook rate cayendo 4% por día. Colapso en ~5 días.",
+        "**MX-Hombres-25-34** — CTR cayó de 2.8% a 1.1% en 6 días. Audiencia agotándose.",
+        "Todavía no costó caro — pero costará. Prepara una variación de Creative_031 ya.",
+        "→ Creativos frescos antes del colapso = cero interrupción de resultados.",
+      ],
+      result: "Detectado 5 días antes · Sin pérdida de presupuesto"
+    },
+    {
+      tab: "Crea hooks",
+      q: "Crea 3 hooks basados en mis creativos que más convirtieron",
+      platform: "meta", account: "FitMex · Meta Ads",
+      lines: [
+        "Analicé tus 5 top converters. Patrón: afirmación específica que para el scroll.",
+        "**Hook 1:** Estás pagando   por clic y ni sabes por qué — tus datos tienen la respuesta.",
+        "**Hook 2:** 3 de los 4 anuncios que más gastan tienen ROAS bajo 1x. ¿Cuál vale mantener?",
+        "**Hook 3:** Tu mejor creativo de septiembre lleva 9 días pausado. El competidor escaló el mismo ángulo.",
+        "→ Cada hook salió de tus datos reales — no de una plantilla genérica.",
+      ],
+      result: "3 hooks listos · Calibrados por tus winners reales"
+    },
+  ],
+  en: [
+    {
+      tab: "Why did it drop?",
+      q: "My ROAS dropped 40% this week. What happened?",
+      platform: "meta", account: "FitCore US · Meta Ads",
+      lines: [
+        "Found 3 simultaneous causes in your account:",
+        "**Creative fatigue** — Creative_042 running 22 days. Hook rate fell from 31% to 8%.",
+        "**Frequency 4.8x** — US-Women-25-34 saw the same ad 5x. Every dollar goes to someone who quit.",
+        "**CPM up 38%** — the algorithm detected the drop and charges more per impression.",
+        "→ Pause Creative_042. Relaunch Creative_019 — it had ROAS 3.2x before being paused.",
+      ],
+      result: "/day saved · ROAS recovered in 4 days"
+    },
+    {
+      tab: "What to scale?",
+      q: "Which creative should I scale right now?",
+      platform: "meta", account: "FitCore US · Meta Ads",
+      lines: [
+        "**Creative_019** is your clear winner — and it's underutilized:",
+        "Hook rate 38% — 2.4x above average. Hooks in the first 3 seconds.",
+        "ROAS 3.8x at frequency 1.3x — far from saturation.",
+        "Running at /day. Can safely go to  /day.",
+        "→ Projection: +\,080/day net return. Room to triple without burning out.",
+      ],
+      result: "+\,080/day projected · Frequency still safe"
+    },
+    {
+      tab: "Warns you first",
+      q: "Is any creative about to fail?",
+      platform: "meta", account: "FitCore US · Meta Ads",
+      lines: [
+        "2 creatives on a collapse trajectory — haven't failed yet, but will:",
+        "**Creative_031** — frequency 3.9x, hook rate falling 4%/day. Collapse in ~5 days.",
+        "**US-Men-25-34** — CTR dropped from 2.8% to 1.1% in 6 days. Audience burning out.",
+        "Hasn't cost much yet — but it will. Prepare a Creative_031 variation now.",
+        "→ Fresh creatives before the collapse = zero results interruption.",
+      ],
+      result: "Detected 5 days early · Zero budget lost"
+    },
+    {
+      tab: "Write hooks",
+      q: "Write 3 hooks from my best converting creatives",
+      platform: "meta", account: "FitCore US · Meta Ads",
+      lines: [
+        "Analyzed your top 5 converters. Pattern: specific statement that stops the scroll.",
+        "**Hook 1:** You're paying  /click and don't know why — your data already has the answer.",
+        "**Hook 2:** 3 of 4 highest-spend ads have ROAS below 1x. Which one is worth keeping?",
+        "**Hook 3:** Your best September creative was paused 9 days ago. A competitor scaled the same angle.",
+        "→ Every hook came from your real data — not a generic template.",
+      ],
+      result: "3 hooks ready · Built from your real winners"
+    },
+  ],
+};
+
+function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
+  const scenes = SELLING_POINTS[lang];
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  const [animKey, setAnimKey] = React.useState(0);
+  const [streaming, setStreaming] = React.useState(false);
+  const [visibleLines, setVisibleLines] = React.useState<number>(0);
+  const [showResult, setShowResult] = React.useState(false);
+  const [showUser, setShowUser] = React.useState(false);
+  const chatRef = React.useRef<HTMLDivElement>(null);
+
+  const scene = scenes[activeIdx];
   const note = lang==='pt' ? 'Pergunte qualquer coisa...' : lang==='es' ? 'Pregunta lo que quieras...' : 'Ask anything...';
   const ctabtn = lang==='pt' ? 'Testar com minha conta' : lang==='es' ? 'Probar con mi cuenta' : 'Try with my account';
+  const resultLabel = lang==='pt' ? 'Resultado:' : lang==='es' ? 'Resultado:' : 'Result:';
 
-  // Quick action chips — 3 per industry
-  const chips = (() => {
-    if (activeIndustry === 'clinica') {
-      return lang === 'pt' ? ['Por que meu CPA subiu?', 'Melhores keywords', 'Criar headlines'] :
-             lang === 'es' ? ['¿Por qué subió mi CPA?', 'Mejores keywords', 'Crear headlines'] :
-                             ['Why did CPA rise?', 'Top keywords', 'Write headlines'];
-    }
-    return lang === 'pt' ? ['Qual meu melhor criativo?', 'O que posso escalar?', 'O que pausar?'] :
-           lang === 'es' ? ['¿Cuál es mi mejor creativo?', '¿Qué puedo escalar?', '¿Qué pausar?'] :
-                           ["What's my best creative?", 'What can I scale?', 'What to pause?'];
-  })();
+  // Run animation when scene changes
+  const runAnimation = React.useCallback(() => {
+    setStreaming(false);
+    setVisibleLines(0);
+    setShowResult(false);
+    setShowUser(false);
 
-  // Proactive greeting cards — different per platform
-  const greetingCards = (() => {
-    if (isGoogle) {
-      return lang === 'pt'
-        ? { win: <><span style={{color:'#34d399',fontWeight:700}}>'harmonização facial BH'</span> — 14 agendamentos, CPA R$38. Sua melhor keyword.</>, act: <>↑ Aumente lance +25% — Quality Score 8/10, pode ganhar o leilão sem elevar CPA.</> }
-        : lang === 'es'
-        ? { win: <><span style={{color:'#34d399',fontWeight:700}}>'harmonización facial CDMX'</span> — 14 citas, CPA $380. Tu mejor keyword.</>, act: <>↑ Sube puja +25% — Quality Score 8/10, puedes ganar la subasta sin elevar CPA.</> }
-        : { win: <><span style={{color:'#34d399',fontWeight:700}}>'facial harmonization'</span> — 14 bookings, CPA $38. Your top keyword.</>, act: <>↑ Raise bid +25% — Quality Score 8/10, can win auction without raising CPA.</> };
-    }
-    return lang === 'pt'
-      ? { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 convertendo 2.4x mais</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Escale de <strong style={{color:'#fff'}}>R$120 → R$400/dia</strong>. Frequência 1.3x, seguro.</> }
-      : lang === 'es'
-      ? { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 convirtiendo 2.4x más</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Escala de <strong style={{color:'#fff'}}>$120 → $400/día</strong>. Frecuencia 1.3x, seguro.</> }
-      : { win: <><span style={{color:WIN_COLOR,fontWeight:700}}>Creative_019 converting 2.4x more</span> — hook rate 38%, ROAS 3.8x.</>, act: <>→ Scale from <strong style={{color:'#fff'}}>$120 → $400/day</strong>. Frequency 1.3x, safe.</> };
-  })();
+    const t1 = setTimeout(() => setShowUser(true), 600);
+    const t2 = setTimeout(() => setStreaming(true), 1400);
 
-  // AI response render
-  const renderAI = () => {
-    if (phase === 'thinking') return <Dots />;
-    if (phase !== 'streaming' && phase !== 'done') return null;
-    const allLines = activeLine ? [...lines, activeLine] : lines;
-    if (!allLines.length) return null;
-    return (
-      <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-        <img src="/ab-avatar.png" alt="AB" width={26} height={26}
-          style={{ width:26, height:26, borderRadius:7, objectFit:'cover', flexShrink:0, marginTop:1 }} />
-        <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:5 }}>
-          {allLines.map((line, i) => {
-            const isAct = /^(Fix:|Ação:|Action:|Acción:|→|↑|↓)/i.test(line.replace(/\*\*/g,''));
-            const isWin = /winner|melhor|dominando|escalando|\+|\↑|2\.4x|3\.8x|3\.2x|agendamento/i.test(line);
-            const isLast = i === allLines.length - 1 && phase === 'streaming';
-            return (
-              <MdLine key={i} text={line} style={{
-                fontFamily:F, fontSize:13.5, lineHeight:1.65, margin:0,
-                color: isAct ? ACT_COLOR : isWin ? WIN_COLOR : i===0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)',
-                fontWeight: isAct ? 600 : 400, opacity: isLast ? 0.55 : 1,
-                animation:`lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) ${i*0.07}s both`,
-              }} />
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
+    // Stream lines one by one
+    scene.lines.forEach((_, i) => {
+      setTimeout(() => setVisibleLines(i + 1), 1800 + i * 520);
+    });
+    const t3 = setTimeout(() => setShowResult(true), 1800 + scene.lines.length * 520 + 200);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [activeIdx, scene.lines.length]);
+
+  React.useEffect(() => {
+    setAnimKey(k => k + 1);
+    const cleanup = runAnimation();
+    return cleanup;
+  }, [activeIdx]);
+
+  // Auto-rotate every 5.5s
+  React.useEffect(() => {
+    const totalDuration = 5500;
+    const t = setInterval(() => {
+      setActiveIdx(i => (i + 1) % scenes.length);
+    }, totalDuration);
+    return () => clearInterval(t);
+  }, [scenes.length]);
+
+  React.useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [visibleLines, showResult]);
 
   return (
     <div style={{ position:'relative', zIndex:1 }}>
-      {/* Glow behind the card */}
-      <div style={{ position:'absolute', inset:-1, borderRadius:18, background:'radial-gradient(ellipse 80% 50% at 50% 80%, rgba(14,165,233,0.18) 0%, transparent 70%)', pointerEvents:'none', zIndex:0 }} />
+      {/* Atmospheric glow */}
+      <div style={{ position:'absolute', bottom:-40, left:'10%', right:'10%', height:120, background:'radial-gradient(ellipse, rgba(14,165,233,0.22) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(20px)', zIndex:0 }} />
+
+      {/* Selling point tabs — above the card */}
+      <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
+        {scenes.map((s, i) => {
+          const isAct = i === activeIdx;
+          return (
+            <button key={i} onClick={() => setActiveIdx(i)} style={{
+              fontFamily:F, fontSize:12, fontWeight: isAct ? 700 : 500,
+              padding:'6px 14px', borderRadius:20, cursor:'pointer',
+              transition:'all 0.2s',
+              background: isAct ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
+              color: isAct ? '#fff' : 'rgba(255,255,255,0.45)',
+              border: isAct ? '1px solid rgba(14,165,233,0.6)' : '1px solid rgba(255,255,255,0.08)',
+              boxShadow: isAct ? '0 0 16px rgba(14,165,233,0.35)' : 'none',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={e => { if (!isAct) { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.8)'; el.style.borderColor='rgba(255,255,255,0.2)'; }}}
+            onMouseLeave={e => { if (!isAct) { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.45)'; el.style.borderColor='rgba(255,255,255,0.08)'; }}}>
+              {s.tab}
+            </button>
+          );
+        })}
+        {/* Progress bar */}
+        <div style={{ position:'absolute', bottom:-4, left:0, right:0, height:2, background:'rgba(255,255,255,0.06)', borderRadius:1, overflow:'hidden', pointerEvents:'none' }}>
+          <div key={`bar-${activeIdx}`} style={{
+            height:'100%', background:'linear-gradient(90deg, #0ea5e9, #38bdf8)',
+            borderRadius:1,
+            animation:'progressBar 5.5s linear forwards',
+          }} />
+        </div>
+      </div>
 
       {/* Main card */}
       <div style={{
-        position:'relative', zIndex:1,
-        borderRadius:16, overflow:'hidden',
-        background:'linear-gradient(160deg, #0d1322 0%, #0a0f1d 60%, #080c18 100%)',
-        border:'1px solid rgba(255,255,255,0.09)',
-        boxShadow:'0 2px 0 rgba(255,255,255,0.04) inset, 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(14,165,233,0.08)',
+        position:'relative', zIndex:1, borderRadius:16, overflow:'hidden',
+        background:'linear-gradient(160deg, #0d1322 0%, #090e1b 100%)',
+        border:'1px solid rgba(255,255,255,0.08)',
+        boxShadow:'0 0 0 1px rgba(14,165,233,0.06), 0 32px 80px rgba(0,0,0,0.65)',
       }}>
 
-        {/* ── HEADER ── */}
-        <div style={{ padding:'14px 18px 12px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(255,255,255,0.02)' }}>
-          {/* Left: logo + account name */}
+        {/* Header */}
+        <div style={{ padding:'13px 18px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <img src="/ab-avatar.png" alt="AdBrief" width={28} height={28} style={{ borderRadius:8, objectFit:'cover' }} />
+            <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>✦</div>
             <div>
-              <div style={{ fontFamily:F, fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.2 }}>{account.name}</div>
-              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:1 }}>
-                {account.meta}
-              </div>
+              <div style={{ fontFamily:F, fontSize:12.5, fontWeight:700, color:'#fff', letterSpacing:'-0.02em' }}>AdBrief</div>
+              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:1 }}>{scene.account}</div>
             </div>
           </div>
-          {/* Right: platform badge + live dot */}
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            {isGoogle ? <GoogleBadge /> : <MetaBadge />}
+            <MetaBadge />
             <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px #22c55e', animation:'pulse 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily:F, fontSize:9.5, color:'rgba(255,255,255,0.35)', letterSpacing:'0.04em' }}>
-                {lang==='pt' ? 'ao vivo' : lang==='es' ? 'en vivo' : 'live'}
-              </span>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px rgba(34,197,94,0.7)', animation:'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily:F, fontSize:9, color:'rgba(255,255,255,0.3)', letterSpacing:'0.05em', textTransform:'uppercase' as const }}>live</span>
             </div>
           </div>
         </div>
 
-        {/* ── ACCOUNT SWITCHER ── */}
-        <div style={{ padding:'10px 18px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', gap:6, overflowX:'auto' as const }}>
-          {INDUSTRIES_DEMO.slice(0,3).map(ind => {
-            const acc = INDUSTRY_ACCOUNTS[ind.id]?.[lang];
-            const isAct = ind.id === activeIndustry;
-            const indIsGoogle = ind.id === 'clinica';
-            return (
-              <button key={ind.id} onClick={() => setActiveIndustry(ind.id)} style={{
-                display:'flex', alignItems:'center', gap:6,
-                padding:'6px 12px', borderRadius:8, flexShrink:0,
-                background: isAct ? 'rgba(255,255,255,0.09)' : 'transparent',
-                border: isAct ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
-                cursor:'pointer', transition:'all 0.15s',
-                fontFamily:F, fontSize:12, fontWeight: isAct ? 600 : 400,
-                color: isAct ? '#fff' : 'rgba(255,255,255,0.4)',
-              }}
-              onMouseEnter={e => { if (!isAct) { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.7)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}}
-              onMouseLeave={e => { if (!isAct) { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='transparent'; }}}>
-                <span style={{ fontSize:11 }}>{ind.emoji}</span>
-                <span>{acc?.name || ind.id}</span>
-                {isAct && (
-                  <span style={{ fontSize:8, padding:'1px 5px', borderRadius:3,
-                    background: indIsGoogle ? 'rgba(66,133,244,0.18)' : 'rgba(24,119,242,0.18)',
-                    color: indIsGoogle ? '#7ab4f5' : '#6ba3f5', fontWeight:700, letterSpacing:'0.04em' }}>
-                    {indIsGoogle ? 'Google' : 'Meta'}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── CHAT ── */}
-        <div ref={chatRef} style={{ minHeight:340, maxHeight:340, overflowY:'auto', padding:'18px 18px 10px', display:'flex', flexDirection:'column' as const, gap:14 }}>
-
-          {/* Proactive greeting — clean, structured */}
-          <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-            <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1, fontSize:12 }}>✦</div>
-            <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:7 }}>
-              {/* Winner card */}
-              <div style={{ padding:'10px 13px', borderRadius:10, background:'rgba(14,165,233,0.07)', border:'1px solid rgba(14,165,233,0.2)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
-                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.85)', lineHeight:1.55, margin:0 }}>{greetingCards.win}</p>
-              </div>
-              {/* Action card */}
-              <div style={{ padding:'10px 13px', borderRadius:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.25s both' }}>
-                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.75)', lineHeight:1.55, margin:0 }}>{greetingCards.act}</p>
-              </div>
-              {/* Suggestion chips */}
-              <div style={{ display:'flex', flexWrap:'wrap' as const, gap:5, animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both' }}>
-                {chips.map((label, i) => (
-                  <button key={i} onClick={() => { if (i < qa.length) jump(i); }} style={{
-                    padding:'5px 11px', borderRadius:20, cursor:'pointer',
-                    fontFamily:F, fontSize:11.5, transition:'all 0.15s', whiteSpace:'nowrap' as const,
-                    background:'rgba(14,165,233,0.06)', border:'1px solid rgba(14,165,233,0.2)',
-                    color:'rgba(255,255,255,0.6)',
-                  }}
-                  onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.background='rgba(14,165,233,0.14)'; el.style.color='#fff'; el.style.borderColor='rgba(14,165,233,0.4)'; }}
-                  onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.background='rgba(14,165,233,0.06)'; el.style.color='rgba(255,255,255,0.6)'; el.style.borderColor='rgba(14,165,233,0.2)'; }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Chat area */}
+        <div ref={chatRef} style={{ minHeight:300, maxHeight:300, overflowY:'auto', padding:'20px 18px 14px', display:'flex', flexDirection:'column' as const, gap:12 }}>
 
           {/* User message */}
-          {phase !== 'idle' && (
-            <div style={{ display:'flex', justifyContent:'flex-end' }}>
-              <div style={{ maxWidth:'68%', padding:'9px 13px', borderRadius:10, borderBottomRightRadius:3, background:'rgba(14,165,233,0.12)', border:'1px solid rgba(14,165,233,0.22)' }}>
-                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.9)', lineHeight:1.5, margin:0 }}>
-                  {typedQ}
-                  {phase==='typing' && <span className="cursor-blink" style={{ display:'inline-block', width:1.5, height:13, background:'rgba(255,255,255,0.6)', marginLeft:2, verticalAlign:'middle', borderRadius:1 }} />}
-                </p>
+          {showUser && (
+            <div style={{ display:'flex', justifyContent:'flex-end', animation:'lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) both' }}>
+              <div style={{ maxWidth:'72%', padding:'10px 14px', borderRadius:12, borderBottomRightRadius:3, background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)' }}>
+                <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.88)', lineHeight:1.5, margin:0 }}>{scene.q}</p>
               </div>
             </div>
           )}
 
-          {/* AI response */}
-          {(phase === 'thinking' || phase === 'streaming' || phase === 'done') && (
-            <div>{renderAI()}</div>
+          {/* AI thinking */}
+          {streaming && visibleLines === 0 && (
+            <div style={{ display:'flex', gap:10, alignItems:'center', animation:'lineEnter 0.3s ease both' }}>
+              <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>✦</div>
+              <Dots />
+            </div>
           )}
-          {phase === 'done' && (
-            <InlineSuggestions qa={qa} qi={qi} jump={jump} lang={lang} industry={INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[0]} />
+
+          {/* AI response lines */}
+          {visibleLines > 0 && (
+            <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+              <div style={{ width:26, height:26, borderRadius:7, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0, marginTop:2 }}>✦</div>
+              <div style={{ flex:1, display:'flex', flexDirection:'column' as const, gap:6 }}>
+                {scene.lines.slice(0, visibleLines).map((line, i) => {
+                  const isAct = /^(Ação:|Action:|Acción:|Pause|Pausa|Suba|Raise|→|↑|↓)/i.test(line.replace(/\*\*/g,''));
+                  const isWin = /ROAS|winner|domina|convertendo|hook rate.*3[0-9]%|\+R\$|\+\$/i.test(line);
+                  const isList = /^\*\*/.test(line) && !isAct;
+                  return (
+                    <MdLine key={`${activeIdx}-${i}`} text={line} style={{
+                      fontFamily:F, fontSize:13.5, lineHeight:1.65, margin:0,
+                      color: isAct ? '#0ea5e9' : isWin ? '#38bdf8' : i===0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)',
+                      fontWeight: isAct ? 600 : 400,
+                      paddingLeft: isList ? 0 : 0,
+                      animation:`lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) both`,
+                    }} />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Result badge */}
+          {showResult && (
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 13px', borderRadius:10, background:'rgba(34,197,94,0.07)', border:'1px solid rgba(34,197,94,0.2)', animation:'lineEnter 0.4s cubic-bezier(0.16,1,0.3,1) both', marginTop:2 }}>
+              <span style={{ fontSize:14 }}>✅</span>
+              <span style={{ fontFamily:F, fontSize:12, color:'rgba(255,255,255,0.5)' }}>{resultLabel}</span>
+              <span style={{ fontFamily:F, fontSize:12.5, fontWeight:700, color:'#4ade80', letterSpacing:'-0.01em' }}>{scene.result}</span>
+            </div>
           )}
         </div>
 
-        {/* ── INPUT BAR ── */}
-        <div style={{ borderTop:'1px solid rgba(255,255,255,0.07)', padding:'10px 14px 12px', background:'rgba(0,0,0,0.15)' }}>
-          <div style={{ display:'flex', gap:8, alignItems:'center', padding:'9px 12px 9px 16px', borderRadius:12, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)' }}>
-            <p style={{ fontFamily:F, fontSize:12.5, color:'rgba(255,255,255,0.28)', margin:0, flex:1, fontStyle:'italic', letterSpacing:'-0.01em' }}>{note}</p>
+        {/* Input bar */}
+        <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 14px 12px', background:'rgba(0,0,0,0.2)' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', padding:'9px 12px 9px 16px', borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)' }}>
+            <p style={{ fontFamily:F, fontSize:12, color:'rgba(255,255,255,0.22)', margin:0, flex:1, fontStyle:'italic' }}>{note}</p>
             <button onClick={onCTA} style={{
-              fontFamily:F, fontSize:11.5, fontWeight:700, padding:'7px 14px', borderRadius:8,
+              fontFamily:F, fontSize:11.5, fontWeight:700, padding:'8px 16px', borderRadius:8,
               background:'linear-gradient(135deg, #0ea5e9, #0284c7)', color:'#fff',
               border:'none', cursor:'pointer', whiteSpace:'nowrap' as const, flexShrink:0,
-              boxShadow:'0 2px 12px rgba(14,165,233,0.35)', transition:'all 0.15s',
-              letterSpacing:'-0.01em',
+              boxShadow:'0 2px 14px rgba(14,165,233,0.4)', transition:'all 0.15s', letterSpacing:'-0.01em',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity='0.9'; (e.currentTarget as HTMLElement).style.transform='translateY(-1px)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity='1'; (e.currentTarget as HTMLElement).style.transform='none'; }}>
+            onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 4px 18px rgba(14,165,233,0.55)'; }}
+            onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.transform='none'; el.style.boxShadow='0 2px 14px rgba(14,165,233,0.4)'; }}>
               {ctabtn} →
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -2131,23 +2271,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
         {/* ── RIGHT — demo ── */}
         {/* ── RIGHT — Demo redesign ── */}
         <div className="hero-demo-col" style={{ position: 'relative' }}>
-          <HeroDemo
-            lang={lang}
-            activeIndustry={activeIndustry}
-            setActiveIndustry={setActiveIndustry}
-            account={account}
-            qa={qa}
-            qi={qi}
-            phase={phase}
-            typedQ={typedQ}
-            lines={lines}
-            activeLine={activeLine}
-            jump={jump}
-            chatRef={chatRef}
-            onCTA={onCTA}
-            WIN_COLOR={WIN_COLOR}
-            ACT_COLOR={ACT_COLOR}
-          />
+          <HeroDemo lang={lang} onCTA={onCTA} />
         </div>
 
       </div>
@@ -3119,6 +3243,7 @@ export default function IndexNew() {
             from{opacity:0;transform:translateY(10px)}
             to{opacity:1;transform:translateY(0)}
           }
+          @keyframes progressBar{from{width:0%}to{width:100%}}
 
           /* KPI slide in from sidebar bottom */
           @keyframes kpiSlideIn{
