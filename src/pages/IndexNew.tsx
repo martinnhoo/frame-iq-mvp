@@ -1649,6 +1649,122 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
   return <span ref={ref}>{display}{suffix}</span>;
 }
 
+// ─── Hero Left — Impactful, clean, cycling verb ──────────────────────────────
+function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; ctaLoading?: boolean }) {
+  const verbs = lang === 'pt'
+    ? ['responde.', 'analisa.', 'aprende.', 'avisa.']
+    : lang === 'es'
+    ? ['responde.', 'analiza.', 'aprende.', 'avisa.']
+    : ['responds.', 'analyzes.', 'learns.', 'alerts.'];
+
+  const [verbIdx, setVerbIdx] = React.useState(0);
+  const [fade, setFade] = React.useState(true);
+
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setVerbIdx(i => (i + 1) % verbs.length);
+        setFade(true);
+      }, 220);
+    }, 2200);
+    return () => clearInterval(t);
+  }, [lang]);
+
+  const line1 = lang === 'pt' ? 'Converse com' : lang === 'es' ? 'Habla con' : 'Talk to';
+  const line2 = lang === 'pt' ? 'seus anúncios.' : lang === 'es' ? 'tus anuncios.' : 'your ads.';
+  const line3prefix = lang === 'pt' ? 'A IA ' : lang === 'es' ? 'La IA ' : 'The AI ';
+  const sub = lang === 'pt'
+    ? 'Conecta em Meta Ads ou Google Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha.'
+    : lang === 'es'
+    ? 'Conecta Meta Ads o Google Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña.'
+    : 'Connects to Meta Ads or Google Ads. Reads your real data. Responds like an analyst who knows every campaign.';
+  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança por 72h · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo por 72h · Cancela cuando quieras' : '3 days free · No charge for 72h · Cancel anytime';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center' }}>
+      {/* Eyebrow */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content' }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0ea5e9' }}>
+          {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
+        </span>
+      </div>
+
+      {/* Headline — massive, bold */}
+      <h1 style={{
+        fontFamily: F, fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 1.0,
+        margin: '0 0 28px', color: '#fff',
+        fontSize: 'clamp(42px, 4.8vw, 68px)',
+      }}>
+        {line1}<br />
+        {line2}<br />
+        <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>{line3prefix}</span>
+        <span style={{
+          background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 60%, #7dd3fc 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          display: 'inline-block',
+          opacity: fade ? 1 : 0,
+          transform: fade ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.22s ease, transform 0.22s ease',
+        }}>
+          {verbs[verbIdx]}
+        </span>
+      </h1>
+
+      {/* Subline — single sentence, max impact */}
+      <p style={{
+        fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)',
+        color: 'rgba(255,255,255,0.48)', lineHeight: 1.6,
+        margin: '0 0 36px', maxWidth: 430,
+      }}>
+        {sub}
+      </p>
+
+      {/* CTA row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+        <CTAButton
+          onClick={onCTA}
+          loading={ctaLoading}
+          label={lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
+          size="md"
+          variant="primary"
+        />
+        <button
+          onClick={() => document.querySelector('#how')?.scrollIntoView({ behavior: 'smooth' })}
+          style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.25)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}>
+          {lang === 'pt' ? 'Ver como funciona' : lang === 'es' ? 'Ver cómo funciona' : 'See how it works'}
+        </button>
+      </div>
+
+      {/* Fine print */}
+      <p style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.22)', margin: '0 0 28px' }}>{finePrint}</p>
+
+      {/* Platform badges */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+          {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 36 18" fill="none">
+            <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
+          </svg>
+          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Meta Ads</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
+        </div>
+        <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+          TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>SOON</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Immersive Hero ──────────────────────────────────────────────────────────
 function playTick(freq = 880, vol = 0.06, dur = 0.04) {
   try {
@@ -1766,98 +1882,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
       <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
 
         {/* ── LEFT ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-
-          {/* Social proof — real testimonials */}
-          <div className="hero-social-proof" style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
-            {[
-              {
-                avatar: '/avatar-rafael.svg',
-                name: lang === 'pt' ? 'Rafael M. — gestor freelance, SP' : lang === 'es' ? 'Rafael M. — gestor freelance, SP' : 'Rafael M. — freelance media buyer, SP',
-                text: lang === 'pt' ? '"Pausei criativo com frequência 5.2x antes de queimar mais R$1.4k. Em 3 dias o substituto já tinha ROAS 2.9x."' : lang === 'es' ? '"Pausé creativo con frecuencia 5.2x antes de quemar $1.4k. En 3 días el sustituto ya tenía ROAS 2.9x."' : '"Paused a creative at 5.2x frequency before burning another R$1.4k. 3 days later the replacement hit ROAS 2.9x."',
-                plat: 'Meta Ads'
-              },
-              {
-                avatar: '/avatar-claudia.svg',
-                name: lang === 'pt' ? 'Cláudia R. — clínica estética, BH' : lang === 'es' ? 'Claudia R. — clínica estética, BH' : 'Claudia R. — aesthetics clinic, BH',
-                text: lang === 'pt' ? '"Perguntei por que meu CPA subiu 60%. Em 30 segundos soube exatamente quais 3 keywords ajustar."' : lang === 'es' ? '"Pregunté por qué mi CPA subió 60%. En 30 segundos supe exactamente qué 3 palabras clave ajustar."' : '"Asked why my CPA jumped 60%. In 30 seconds I knew exactly which 3 keywords to adjust."',
-                plat: 'Google Ads'
-              }
-            ].map((t, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '8px 10px' }}>
-                <img src={t.avatar} alt={t.name} width={28} height={28} style={{ borderRadius: '50%', flexShrink: 0, marginTop: 1 }} />
-                <div>
-                  <p style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.75)', margin: '0 0 2px', lineHeight: 1.45, fontStyle: 'italic' }}>{t.text}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.35)' }}>{t.name}</span>
-                    <span style={{ fontSize: 9, background: 'rgba(14,165,233,0.15)', color: '#0ea5e9', border: '1px solid rgba(14,165,233,0.25)', borderRadius: 4, padding: '1px 5px', fontFamily: F, fontWeight: 600 }}>{t.plat}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Headline */}
-          <h1 className="hero-headline" style={{ fontFamily: F, fontSize: 'clamp(30px,2.7vw,44px)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1.05, margin: '0 0 14px', color: '#fff' }}>
-            {t.hero_h1}
-          </h1>
-
-          {/* Subheadline */}
-          <p className="hero-sub" style={{ fontFamily: F, fontSize: 'clamp(14px,1vw,16px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, margin: '0 0 28px', maxWidth: 420 }}>
-            {lang === 'pt' ? 'Pergunte qualquer coisa sobre seus anúncios. A IA usa seus dados reais para responder.' : lang === 'es' ? 'Pregunta lo que quieras sobre tus anuncios. La IA usa tus datos reales para responder.' : 'Ask anything about your ads. The AI uses your real account data to answer.'}
-          </p>
-
-          {/* Bullets */}
-          <div className="hero-bullets" style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
-            {bullets.map((b, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
-                <p style={{ fontFamily: F, fontSize: 14, margin: 0 }}>
-                  <strong style={{ color: '#fff', fontWeight: 700 }}>{b.bold}</strong>
-                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>{b.rest}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Connects with */}
-          <div className="hero-connects" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
-            <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
-              {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
-            </span>
-            {/* Meta Ads — official logo SVG */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="8" viewBox="0 0 36 18" fill="none">
-                <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
-              </svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>Meta Ads</span>
-            </div>
-            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-              <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>Google Ads</span>
-            </div>
-            <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-              TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.06em', opacity: 0.6 }}>SOON</span>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <CTAButton
-              onClick={onCTA}
-              loading={ctaLoading}
-              label={lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
-              size="md"
-              variant="primary"
-            />
-            <button onClick={() => document.querySelector('#how')?.scrollIntoView({ behavior: 'smooth' })}
-              style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.09)', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 6 }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.08)'; el.style.color='rgba(255,255,255,0.7)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.04)'; el.style.color='rgba(255,255,255,0.45)'; }}>
-              {lang === 'pt' ? 'Ver como funciona' : lang === 'es' ? 'Ver cómo funciona' : 'See how it works'}
-            </button>
-          </div>
-        </div>
+        <HeroLeft lang={lang} onCTA={onCTA} ctaLoading={ctaLoading} />
 
         {/* ── RIGHT — demo ── */}
         <div className="hero-demo-col" style={{ position: 'relative' }}>
