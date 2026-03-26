@@ -118,8 +118,13 @@ Return ONLY valid JSON:
 
     if (!res.ok) throw new Error(`Claude API: ${res.status}`);
     const data = await res.json();
-    const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(text);
+    const rawText = (data.content?.[0]?.text || '').trim();
+    let text = rawText.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    const jsonMatch = text.match(/(\{[\s\S]*\})/);
+    if (jsonMatch) text = jsonMatch[1];
+    let parsed: any;
+    try { parsed = JSON.parse(text); }
+    catch(e) { throw new Error('JSON parse failed: ' + String(e).slice(0,100)); }
 
     return new Response(JSON.stringify({ variants: parsed.variants, mock_mode: false }), {
       headers: { ...cors, 'Content-Type': 'application/json' }

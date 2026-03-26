@@ -283,8 +283,31 @@ Return ONLY valid JSON:
 
     if (!res.ok) throw new Error(`Claude API: ${res.status}`);
     const data = await res.json();
-    const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(text);
+    const rawText = (data.content?.[0]?.text || '').trim();
+
+    // Robust JSON extraction — handles markdown fences, trailing text, etc.
+    let text = rawText
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*/g, '')
+      .trim();
+
+    // If there's text after the closing }, extract just the JSON object
+    const jsonMatch = text.match(/(\{[\s\S]*\})/);
+    if (jsonMatch) text = jsonMatch[1];
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseErr) {
+      // Last resort: try to extract hooks array directly
+      const hooksMatch = rawText.match(/"hooks"\s*:\s*(\[[\s\S]*?\])/);
+      if (hooksMatch) {
+        try { parsed = { hooks: JSON.parse(hooksMatch[1]) }; }
+        catch { throw new Error(`JSON parse failed: ${String(parseErr).slice(0, 100)}`); }
+      } else {
+        throw new Error(`JSON parse failed: ${String(parseErr).slice(0, 100)}`);
+      }
+    }
 
     // ── Post-generation filter: catch any invented numbers/fear amplification ──
     // This is a safety net — the prompt already prohibits these, but we verify
