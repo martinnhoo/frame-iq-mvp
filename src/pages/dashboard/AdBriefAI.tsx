@@ -1545,7 +1545,7 @@ export default function AdBriefAI() {
         const step1 = lang === "es" ? "Conecta tu cuenta de anuncios" : lang === "pt" ? "Conecte sua conta de anúncios" : "Connect your ad account";
         const step1sub = lang === "es" ? "Meta Ads o Google Ads — solo tarda 30 segundos" : lang === "pt" ? "Meta Ads ou Google Ads — leva 30 segundos" : "Meta Ads or Google Ads — takes 30 seconds";
         const step2 = lang === "es" ? "Haz una pregunta" : lang === "pt" ? "Faça uma pergunta" : "Ask a question";
-        const step2sub = lang === "es" ? ""¿Qué debo pausar?", "¿Qué escalar hoy?"" : lang === "pt" ? ""O que pausar?", "O que escalar hoje?"" : ""What should I pause?", "What to scale today?"";
+        const step2sub = lang === "es" ? "'\u00bfQu\u00e9 debo pausar?', '\u00bfQu\u00e9 escalar hoy?'" : lang === "pt" ? "'O que pausar?', 'O que escalar hoje?'" : "'What should I pause?', 'What to scale today?'";
         const step3 = lang === "es" ? "Recibe análisis real" : lang === "pt" ? "Receba análise real" : "Get real analysis";
         const step3sub = lang === "es" ? "CTR, spend, creativos, predicciones — de tu cuenta real" : lang === "pt" ? "CTR, spend, criativos, predições — da sua conta real" : "CTR, spend, creatives, predictions — from your real account";
         const intro = lang === "es" ? "Para darte análisis específicos necesito ver tu cuenta. Sin datos solo puedo dar respuestas genéricas." : lang === "pt" ? "Para te dar análises específicas preciso ver sua conta. Sem dados só consigo respostas genéricas." : "To give you specific insights I need to see your account. Without data I can only give generic answers.";
