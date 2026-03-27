@@ -248,11 +248,11 @@ export default function Onboarding() {
     const nicheObj = NICHES.find(n => n.value === niche);
     const personaName = accountName.trim() || (name ? name.split(" ")[0] : nicheObj?.label || "Minha conta");
 
-    // 1. Check if persona already exists — return immediately if so
-    const { data: existing } = await supabase.from("personas")
+    // 1. Check if persona already exists
+    const { data: existing, error: selectErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
+    console.log("[persona] existing check:", { existing, selectErr: selectErr?.message });
     if (existing?.length) {
-      // Update name/desc to match what user typed
       await supabase.from("personas").update({
         name: personaName,
         headline: accountDesc || (nicheObj ? `${nicheObj.label} · ${lang.toUpperCase()}` : "Minha conta"),
@@ -269,7 +269,7 @@ export default function Onboarding() {
       result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
     } as never).select("id");
 
-    if (insertError) console.error("[onboarding insert error]", insertError.message, insertError.code);
+    console.log("[persona] insert result:", { inserted, insertError: insertError?.message, code: insertError?.code });
     if (!insertError && inserted?.length) {
       supabase.functions.invoke("send-welcome-email", {
         body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
@@ -277,9 +277,10 @@ export default function Onboarding() {
       return (inserted[0] as any).id as string;
     }
 
-    // 3. Insert may have failed due to race — try fetching again
-    const { data: retry } = await supabase.from("personas")
+    // 3. Try fetching again after failed insert
+    const { data: retry, error: retryErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
+    console.log("[persona] retry:", { retry, retryErr: retryErr?.message });
     return retry?.length ? (retry[0] as any).id as string : null;
   };
 
