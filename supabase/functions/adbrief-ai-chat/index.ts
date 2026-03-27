@@ -1795,10 +1795,34 @@ REGRAS DE FORMATO:
     const raw = anthropicResult.content?.[0]?.type === "text" ? anthropicResult.content[0].text : "[]";
     let blocks;
     try {
-      blocks = JSON.parse(raw.replace(/```json|```/g, "").trim());
-      if (!Array.isArray(blocks)) throw new Error("not array");
+      const cleaned = raw.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) {
+        blocks = parsed;
+      } else if (parsed && typeof parsed === "object") {
+        blocks = [parsed];
+      } else {
+        throw new Error("not array");
+      }
     } catch {
-      blocks = [{ type: "insight", title: "Response", content: raw }];
+      // Claude sometimes returns multiple JSON arrays like [{...}][{...}] — merge them
+      try {
+        const matches = [...raw.matchAll(/\[[\s\S]*?\]/g)];
+        const merged: any[] = [];
+        for (const m of matches) {
+          try {
+            const arr = JSON.parse(m[0]);
+            if (Array.isArray(arr)) merged.push(...arr);
+          } catch { /* skip invalid */ }
+        }
+        if (merged.length > 0) {
+          blocks = merged;
+        } else {
+          throw new Error("no valid arrays");
+        }
+      } catch {
+        blocks = [{ type: "insight", title: "Response", content: raw }];
+      }
     }
 
     // Append limit warning block if needed
