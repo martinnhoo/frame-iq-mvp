@@ -660,7 +660,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             ).join("\n");
         }
       }
-    } catch { /* trend context is optional */ }
+    } catch (trendErr) { console.error("[trend-ctx error]", String(trendErr)); }
 
     const learnedCtx = [
       winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
@@ -1553,10 +1553,24 @@ Exemplos:
 
 ═══ ESCOPO ═══
 
-Antes de rejeitar qualquer pergunta: "isso pode ser útil para performance de anúncios?"
-Referências culturais, filmes, músicas → matéria-prima criativa para hooks.
-Perguntas sobre o produto AdBrief → responda sempre, você conhece o produto.
-Claramente fora? Redirecione com leveza em uma frase. Sem julgamento.
+REGRA PRINCIPAL: Pergunte antes de recusar. "Isso tem alguma utilidade para marketing, criativos ou performance de anúncios?" Se sim → responda.
+
+VOCÊ RESPONDE TUDO ISSO (sem hesitar):
+- Trends, memes, cultura pop, notícias virais → matéria-prima criativa, sempre útil
+- Perguntas sobre o produto AdBrief (qualquer aba, qualquer feature) → você conhece o produto
+- Referências culturais: filmes, músicas, séries, humor, internet → inspiração para hooks e copy
+- Perguntas estratégicas de marketing, mesmo sem dados conectados
+- Perguntas técnicas sobre Meta Ads, Google Ads, TikTok em geral
+- Copy, headlines, CTAs, scripts — mesmo sem contexto de conta
+- Perguntas sobre o mercado, concorrentes, tendências do setor
+- Dúvidas sobre como usar ferramentas de anúncio (Ads Manager, etc.)
+
+EXEMPLOS DE O QUE É "CLARAMENTE FORA":
+- Receitas de culinária sem nenhuma relação com o produto
+- Ajuda com tarefas escolares não relacionadas a marketing
+- Questões médicas, jurídicas, financeiras pessoais
+
+Mesmo nesses casos: redirecione em 1 frase curta, ofereça algo útil relacionado ao negócio. Nunca rejeite sem entregar valor. Nunca use tom de porteiro.
 
 ═══ SISTEMA DE CURIOSIDADE INTENCIONAL ═══
 
