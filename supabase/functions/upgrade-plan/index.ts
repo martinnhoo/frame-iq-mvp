@@ -16,16 +16,25 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { user_id, new_plan } = await req.json();
-
-    if (!user_id || !new_plan) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: user_id, new_plan' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // ── JWT auth — REQUIRED: this function modifies plan in the database ──────
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const { data: { user: authUser } } = await supabaseClient.auth.getUser(authHeader.slice(7));
+    if (!authUser) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    if (!['free', 'maker', 'pro', 'studio'].includes(new_plan)) {
+    const { new_plan } = await req.json();
+    // Always use authenticated user — ignore body user_id to prevent privilege escalation
+    const user_id = authUser.id;
+
+    if (!new_plan || !['free', 'maker', 'pro', 'studio'].includes(new_plan)) {
       return new Response(
         JSON.stringify({ error: 'Invalid plan. Must be: free, maker, pro, or studio' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

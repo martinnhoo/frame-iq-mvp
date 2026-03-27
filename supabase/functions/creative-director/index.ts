@@ -2,6 +2,7 @@
 // Liga daily-intelligence + generate-hooks + capture-learning em sequência
 // com decisão de IA no meio: o que testar, pausar, escalar esta semana
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { user_id, persona_id } = body;
+
+    const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id || undefined);
+    if (!authed) return unauthorizedResponse(cors);
 
     const targets: { user_id: string; persona_id: string | null }[] = [];
     if (user_id) {

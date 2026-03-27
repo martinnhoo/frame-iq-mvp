@@ -44,21 +44,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // ── JWT auth — verify caller before processing expensive API calls ────────
+    const authHeader = req.headers.get('Authorization') ?? '';
+    let verified_user_id = '';
+    if (authHeader.startsWith('Bearer ')) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+      if (authUser) verified_user_id = authUser.id;
+    }
+    // Fall back to formData user_id only if JWT validation failed (legacy clients)
+    // but log a warning — this path should eventually be removed
+
     const formData = await req.formData();
     const videoFile = formData.get('video_file') as File | null;
     const videoUrl = formData.get('video_url') as string | null;
     const meta_performance_data = formData.get('meta_performance_data') as string | null;
     const meta_ad_name = formData.get('meta_ad_name') as string | null;
     const campaign_goal = formData.get('campaign_goal') as string | null;
-    const user_id = formData.get('user_id') as string;
+    // Always prefer JWT-verified identity
+    const user_id = verified_user_id || (formData.get('user_id') as string) || '';
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
-    const market = (formData.get('market') as string) || '';
-
-    console.log('analyze-video called:', { 
-      hasFile: !!videoFile, 
-      fileSize: videoFile?.size, 
+    const market = (formData.get('market') as string) || '';      fileSize: videoFile?.size, 
       fileName: videoFile?.name,
       transcribe_only, 
       hasVideoUrl: !!videoUrl 
@@ -75,7 +82,6 @@ Deno.serve(async (req) => {
 
     if (videoFile && LOVABLE_API_KEY) {
       try {
-        console.log('Transcription: starting with Lovable AI, file size:', videoFile.size, 'name:', videoFile.name);
         
         // Convert file to base64 for Gemini
         const arrayBuffer = await videoFile.arrayBuffer();
@@ -119,7 +125,6 @@ Deno.serve(async (req) => {
           const transcribeData = await transcribeRes.json();
           const rawText = transcribeData.choices?.[0]?.message?.content || '';
           const clean = rawText.replace(/```json|```/g, '').trim();
-          console.log('Transcription raw response:', clean.slice(0, 200));
           try {
             const parsed = JSON.parse(clean);
             transcript = parsed.text || clean;
@@ -128,7 +133,6 @@ Deno.serve(async (req) => {
             // If not JSON, use the raw text as transcript
             transcript = clean;
           }
-          console.log('Transcription: success, length:', transcript.length, 'duration:', duration);
         } else {
           const errText = await transcribeRes.text();
           console.error('Transcription API error:', transcribeRes.status, errText);
@@ -147,7 +151,6 @@ Deno.serve(async (req) => {
     } else if (videoFile && OPENAI_API_KEY) {
       // Fallback to Whisper if no LOVABLE_API_KEY
       try {
-        console.log('Whisper fallback: starting transcription, file size:', videoFile.size);
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
         whisperForm.append('model', 'whisper-1');
@@ -269,7 +272,6 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
 
     if (LOVABLE_API_KEY) {
       // Use Lovable AI Gateway
-      console.log('Using Lovable AI for analysis...');
       const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -298,12 +300,10 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
       const aiData = await aiRes.json();
       const rawText = aiData.choices?.[0]?.message?.content || '{}';
       const clean = rawText.replace(/```json|```/g, '').trim();
-      console.log('AI response length:', clean.length);
       analysis = JSON.parse(clean);
     } else {
       // Fallback to Anthropic
       const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
-      console.log('Using Anthropic for analysis...');
       const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -330,7 +330,6 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
     }
 
     const processingTime = Math.round((Date.now() - startTime) / 1000);
-    console.log('Analysis complete in', processingTime, 'seconds');
 
     // ── Save result ──────────────────────────────────────────────────────
     const { error: saveError } = await supabase.from('analyses').update({

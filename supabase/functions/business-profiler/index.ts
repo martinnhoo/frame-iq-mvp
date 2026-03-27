@@ -4,6 +4,7 @@
 // Salva business_profile permanente: indústria, compliance, tom, diferenciadores
 // Acionado: automaticamente quando persona é criada + sob demanda no chat
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,10 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: 'user_id required' }),
       { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
     );
+
+    // Auth: allow cron (service role) or authenticated user
+    const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id);
+    if (!authed) return unauthorizedResponse(cors);
 
     // ── Load persona context if provided ────────────────────────────────────
     let personaResult: any = {};

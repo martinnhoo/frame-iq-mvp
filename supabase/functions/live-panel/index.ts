@@ -18,6 +18,21 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { user_id, persona_id, platforms } = body;
 
+    // ── JWT auth ─────────────────────────────────────────────────────────────
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (authHeader.startsWith("Bearer ")) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+      if (!authUser || authUser.id !== user_id) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...cors, "Content-Type": "application/json" }
+        });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" }
+      });
+    }
+
     if (!user_id || !persona_id) {
       return new Response(JSON.stringify({ error: "Missing user_id or persona_id" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" }

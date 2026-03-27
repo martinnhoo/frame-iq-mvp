@@ -3,6 +3,7 @@
 // Usa Haiku ($0.001/chamada) para scoring — muito barato
 // Quando score >= 7 E ângulo específico: dispara content-brief + Telegram alert
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,7 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
 
   const sb = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
