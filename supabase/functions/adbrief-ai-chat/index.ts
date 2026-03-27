@@ -319,7 +319,7 @@ Deno.serve(async (req) => {
     await (supabase as any).from("free_usage").upsert({
       user_id,
       chat_count: dailyCount + 1,
-      last_reset: today,
+      last_reset: todayDate,
       monthly_msg_count: monthlyCount + 1,
       monthly_reset: monthKey,
     }, { onConflict: "user_id" });
