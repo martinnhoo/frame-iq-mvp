@@ -254,9 +254,7 @@ export default function Onboarding() {
     console.log("[persona] existing check:", { existing, selectErr: selectErr?.message });
     if (existing?.length) {
       await supabase.from("personas").update({
-        name: personaName,
-        headline: accountDesc || (nicheObj ? `${nicheObj.label} · ${lang.toUpperCase()}` : "Minha conta"),
-        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
+        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
       } as never).eq("id", (existing[0] as any).id);
       return (existing[0] as any).id as string;
     }
@@ -264,9 +262,7 @@ export default function Onboarding() {
     // 2. Insert new persona
     const { data: inserted, error: insertError } = await supabase.from("personas").insert({
       user_id: session.user.id,
-      name: personaName,
-      headline: accountDesc || (nicheObj ? `${nicheObj.label} · ${lang.toUpperCase()}` : "Minha conta"),
-      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
+      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
     } as never).select("id");
 
     console.log("[persona] insert result:", { inserted, insertError: insertError?.message, code: insertError?.code });
