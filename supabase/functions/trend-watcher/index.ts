@@ -377,11 +377,11 @@ Deno.serve(async (req) => {
         const sources = [...brave, ...reddit, ...x].filter(s => !isBlocked(s));
         const analysis = await analyzeTrend(term, sources);
         if (!analysis || analysis.risk_score >= 7) {
-          await sb.from("trend_intelligence").insert({
+          try { await sb.from("trend_intelligence").insert({
             term, term_key: key, is_blocked: true, risk_score: analysis?.risk_score || 8,
             angle: "", ad_angle: "", niches: [], category: "bloqueado",
             peak_volume: volume, last_volume: volume, avg_volume: volume,
-          }).catch(() => {});
+          }); } catch {}
           results.push({ term, key, status: "blocked" });
           continue;
         }
