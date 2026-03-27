@@ -71,8 +71,8 @@ serve(async (req) => {
         supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_type,memory_text&order=importance.desc&limit=15`),
       ]);
 
-      const [memories, patterns, profiles] = await Promise.all([
-        memoriesRes.json(), patternsRes.json(), profileRes.json(),
+      const [memories, patterns, profiles, chatMems] = await Promise.all([
+        memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemRes.json(),
       ]);
 
       const profile = profiles?.[0] || null;
