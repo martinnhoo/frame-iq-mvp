@@ -267,10 +267,27 @@ export default function Onboarding() {
 
     
     if (!insertError && inserted?.length) {
+      const newPersonaId = (inserted[0] as any).id as string;
+
+      // Fire welcome email
       supabase.functions.invoke("send-welcome-email", {
         body: { user_id: session.user.id, email: session.user.email, first_name: name.trim().split(" ")[0] || personaName, language: lang }
       }).catch(() => {});
-      return (inserted[0] as any).id as string;
+
+      // Fire business-profiler async — research this business so the AI knows it from day 1
+      if (accountDesc || niche) {
+        supabase.functions.invoke("business-profiler", {
+          body: {
+            user_id: session.user.id,
+            persona_id: newPersonaId,
+            product_name: personaName,
+            niche,
+            market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US",
+          }
+        }).catch(() => {});
+      }
+
+      return newPersonaId;
     }
 
     // 3. Try fetching again after failed insert

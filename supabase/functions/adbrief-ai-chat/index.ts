@@ -1180,7 +1180,10 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       (() => {
         const notes = (aiProfile as any)?.pain_point as string | null;
         if (!notes) return "";
-        const items = notes.split("|||").filter(Boolean).slice(0, 5);
+        const items = notes.split("|||")
+          .filter(Boolean)
+          .filter(n => !n.trim().startsWith("Usuário:") && !n.trim().startsWith("Nicho:"))
+          .slice(0, 5);
         if (!items.length) return "";
         return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map(n => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
       })(),
