@@ -34,7 +34,7 @@ const BLOCKED = [
   "sexo","porno","nude","nudez","escort","putaria",
 ];
 
-function isBlocked(text) {
+function isBlocked(text: string): boolean {
   const l = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return BLOCKED.some(k => l.includes(k));
 }
