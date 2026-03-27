@@ -392,10 +392,10 @@ Deno.serve(async (req) => {
       (supabase as any).from("user_ai_profile")
         .select("*").eq("user_id", user_id).maybeSingle(),
       // 3. Creative memory
-      supabase.from("creative_memory" as any)
-        .select("hook_type, hook_score, platform, notes, created_at" as any)
-        .eq("user_id" as any, user_id)
-        .order("created_at" as any, { ascending: false }).limit(20),
+      (supabase as any).from("creative_memory")
+        .select("hook_type, hook_score, platform, notes, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false }).limit(20),
       // 4. Platform connections — STRICT persona scope
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")
