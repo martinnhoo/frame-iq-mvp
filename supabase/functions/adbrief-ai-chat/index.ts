@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id).maybeSingle();
 
     const lastReset = usageRow?.last_reset?.slice(0, 10);
-    const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
+    const dailyCount = lastReset === todayDate ? (usageRow?.chat_count || 0) : 0;
     const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
     const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
 
