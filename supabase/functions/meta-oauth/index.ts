@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const META_APP_ID = Deno.env.get("META_APP_ID") || "";
 const META_APP_SECRET = Deno.env.get("META_APP_SECRET") || "";
-const APP_URL = "https://adbrief.pro";
+const APP_URL = Deno.env.get("APP_URL") || "https://adbrief.pro";
 const REDIRECT_URI = `${APP_URL}/dashboard/loop/connect/meta/callback`;
 const SCOPES = ["ads_read", "business_management"].join(",");
 

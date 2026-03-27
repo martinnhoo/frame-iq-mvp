@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
             if (subscriptionId) {
               const sub = await stripe.subscriptions.retrieve(subscriptionId);
               const productId = sub.items.data[0]?.price?.product as string;
-              const plan = PRODUCT_TO_PLAN[productId] || "maker";
+              const plan = PRODUCT_TO_PLAN[productId] || "free";
 
               await supabase.from("profiles").update({
                 plan,
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
         const productId = sub.items.data[0]?.price?.product as string;
-        const plan = PRODUCT_TO_PLAN[productId] || "maker";
+        const plan = PRODUCT_TO_PLAN[productId] || "free";
         const isActive = sub.status === "active" || sub.status === "trialing";
 
         const { data: profiles } = await supabase
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId);
           const productId = sub.items.data[0]?.price?.product as string;
-          const plan = PRODUCT_TO_PLAN[productId] || "maker";
+          const plan = PRODUCT_TO_PLAN[productId] || "free";
 
           const { data: profiles } = await supabase
             .from("profiles")

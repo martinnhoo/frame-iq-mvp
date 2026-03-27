@@ -42,11 +42,24 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const { product, niche, market, platform, tone, user_id, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
-    
+
+    // ── JWT auth check — prevent user_id spoofing ──────────────────────────
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+    const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+    if (!authUser) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+    const verified_user_id = authUser.id;
+
+    const { product, niche, market, platform, tone, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
+    const user_id = verified_user_id; // always use verified id, never trust body
+
     // ── Cap hook count by plan ─────────────────────────────────────────────
     let effectiveCount = count;
-    if (user_id) {
+    {
       const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
       const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const hookCaps: Record<string, number> = { free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10 };
@@ -64,9 +77,8 @@ Deno.serve(async (req) => {
     const effectiveProduct = product || niche || 'iGaming';
 
     // ── Cost-based throttle check ──
-    if (user_id) {
-      const _sb = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-      const throttle = await checkThrottle(_sb, user_id);
+    {
+      const throttle = await checkThrottle(supabase, user_id);
       if (!throttle.allowed) {
         return new Response(JSON.stringify({
           error: 'rate_limited',

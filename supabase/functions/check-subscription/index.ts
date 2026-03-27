@@ -1,5 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { LIFETIME_ACCOUNTS } from "../_shared/plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,13 +43,6 @@ Deno.serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Lifetime accounts — never downgrade
-    const LIFETIME_ACCOUNTS: Record<string, string> = {
-      "martinhovff@gmail.com": "studio",
-      "victoriafnogueira@hotmail.com": "studio",
-      "isadoradblima@gmail.com": "studio",
-      "denis.magalhaes10@gmail.com": "studio",
-    };
     if (user.email && LIFETIME_ACCOUNTS[user.email]) {
       const lifetimePlan = LIFETIME_ACCOUNTS[user.email];
       logStep("Lifetime account detected", { email: user.email, plan: lifetimePlan });

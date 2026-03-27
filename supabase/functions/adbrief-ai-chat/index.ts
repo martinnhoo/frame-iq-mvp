@@ -32,6 +32,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Validate persona_id belongs to this user (prevents cross-account access) ──
+    if (persona_id && user_id) {
+      const { data: personaCheck } = await sbAuth
+        .from("personas")
+        .select("id")
+        .eq("id", persona_id)
+        .eq("user_id", user_id)
+        .maybeSingle();
+      if (!personaCheck) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // ── Panel Data mode — skip Claude, return structured ad data for LivePanel ──
     if (panel_data && user_id && persona_id) {
       const sbPanel = sbAuth;
@@ -151,11 +166,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── 1. Init Supabase + validate JWT matches user_id ───────────────────────
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // ── 1. Reuse sbAuth as the main supabase client (already created above) ──
+    const supabase = sbAuth;
 
     // ── 2. Plan check + smart rate limiting ──────────────────────────────────
     const { data: profileRow } = await supabase
@@ -1879,7 +1891,6 @@ REGRAS DE FORMATO:
               persona_id: persona_id || null,
               user_message: message.slice(0, 400),
               assistant_response: assistantText,
-              existing_memories: persistentMemories.slice(0, 10).map((m: any) => ({ memory_text: m.memory_text })),
             }
           }).catch(() => {});
         }

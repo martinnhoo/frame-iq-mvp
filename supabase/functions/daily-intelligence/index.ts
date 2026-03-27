@@ -110,12 +110,6 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       .eq('user_id', user_id).eq('platform', 'meta').eq('persona_id', persona_id).maybeSingle();
     conn = data;
   }
-  if (!conn) {
-    const { data } = await sb.from('platform_connections' as any)
-      .select('access_token, ad_accounts, selected_account_id')
-      .eq('user_id', user_id).eq('platform', 'meta').is('persona_id', null).maybeSingle();
-    conn = data;
-  }
   if (!conn?.access_token) return { skipped: 'No Meta connection' };
 
   const token = conn.access_token;
