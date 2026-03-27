@@ -462,12 +462,20 @@ export default function Onboarding() {
                   </span>
                 </label>
 
-                <motion.button onClick={() => setStep(2)} disabled={!canStep1}
-                  whileHover={canStep1 ? { scale: 1.01 } : {}}
-                  whileTap={canStep1 ? { scale: 0.99 } : {}}
-                  style={{ width: "100%", padding: "16px 0", borderRadius: 16, background: canStep1 ? "#fff" : "rgba(255,255,255,0.08)", border: "none", cursor: canStep1 ? "pointer" : "not-allowed", color: canStep1 ? "#000" : "rgba(255,255,255,0.2)", fontSize: 15, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 0.2s" }}>
-                  {t.continue}
-                </motion.button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={() => navigate(-1 as any)}
+                    style={{ padding: "14px 20px", borderRadius: 14, background: "none", border: "1.5px solid rgba(255,255,255,0.10)", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 13, fontFamily: F, fontWeight: 500, transition: "all 0.15s", flexShrink: 0 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
+                    {t.back}
+                  </button>
+                  <motion.button onClick={() => setStep(2)} disabled={!canStep1}
+                    whileHover={canStep1 ? { scale: 1.01 } : {}}
+                    whileTap={canStep1 ? { scale: 0.99 } : {}}
+                    style={{ flex: 1, padding: "16px 0", borderRadius: 16, background: canStep1 ? "#fff" : "rgba(255,255,255,0.08)", border: "none", cursor: canStep1 ? "pointer" : "not-allowed", color: canStep1 ? "#000" : "rgba(255,255,255,0.2)", fontSize: 15, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 0.2s" }}>
+                    {t.continue}
+                  </motion.button>
+                </div>
               </div>
             )}
 
