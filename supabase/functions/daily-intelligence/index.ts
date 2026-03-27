@@ -74,8 +74,7 @@ Deno.serve(async (req) => {
             const lines = top3.map((a, i) => {
               const emoji = a.urgencia === 'alta' ? '🔴' : a.urgencia === 'media' ? '🟡' : '🟢';
               const tipoMap: Record<string, string> = { escalar: '⬆️ Escalar', pausar: '⏸ Pausar', criar: '✏️ Criar', revisar: '🔍 Revisar' };
-              return `${emoji} <b>${tipoMap[a.tipo] || a.tipo}</b>: ${a.anuncio?.slice(0, 35) || '—'}
-   ${a.motivo?.slice(0, 80) || ''}`;
+              return `${emoji} <b>${tipoMap[a.tipo] || a.tipo}</b>: ${a.anuncio?.slice(0, 35) || '—'}\n   ${a.motivo?.slice(0, 80) || ''}`;
             }).join('\n\n');
 
             const insight = (accountResults as any[])[0]?.aiInsight || '';
