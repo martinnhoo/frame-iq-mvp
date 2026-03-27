@@ -245,25 +245,39 @@ export default function Onboarding() {
   const createFirstAccount = async (session: any): Promise<string | null> => {
     const nicheObj = NICHES.find(n => n.value === niche);
     const personaName = accountName.trim() || (name ? name.split(" ")[0] : nicheObj?.label || "Minha conta");
-    // Check if persona already exists
-    const { data: existing } = await supabase.from("personas").select("id").eq("user_id", session.user.id).limit(1);
+
+    // 1. Check if persona already exists — return immediately if so
+    const { data: existing } = await supabase.from("personas")
+      .select("id").eq("user_id", session.user.id).limit(1);
     if (existing?.length) {
+      // Update name/desc to match what user typed
+      await supabase.from("personas").update({
+        name: personaName,
+        headline: accountDesc || (nicheObj ? `${nicheObj.label} · ${lang.toUpperCase()}` : "Minha conta"),
+        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
+      } as never).eq("id", (existing[0] as any).id);
       return (existing[0] as any).id as string;
     }
-    try {
-      const { data: inserted } = await supabase.from("personas").insert({
-        user_id: session.user.id,
-        name: personaName,
-        headline: accountDesc || (niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta"),
-        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
-      } as never).select("id").single();
+
+    // 2. Insert new persona
+    const { data: inserted, error: insertError } = await supabase.from("personas").insert({
+      user_id: session.user.id,
+      name: personaName,
+      headline: accountDesc || (nicheObj ? `${nicheObj.label} · ${lang.toUpperCase()}` : "Minha conta"),
+      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
+    } as never).select("id");
+
+    if (!insertError && inserted?.length) {
       supabase.functions.invoke("send-welcome-email", {
         body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
       }).catch(() => {});
-      return (inserted as any)?.id ?? null;
-    } catch {
-      return null;
+      return (inserted[0] as any).id as string;
     }
+
+    // 3. Insert may have failed due to race — try fetching again
+    const { data: retry } = await supabase.from("personas")
+      .select("id").eq("user_id", session.user.id).limit(1);
+    return retry?.length ? (retry[0] as any).id as string : null;
   };
 
   const handleConnect = async (platform: "meta"|"google") => {
