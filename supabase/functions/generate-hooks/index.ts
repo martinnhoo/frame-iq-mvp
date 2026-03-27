@@ -217,12 +217,8 @@ Deno.serve(async (req) => {
       if (memories.length > 0) {
         const prefMems = memories.filter((m: any) => ['preference','rule','decision'].includes(m.memory_type));
         if (prefMems.length > 0) {
-          userContext += `
-
-=== USER PREFERENCES (from past conversations) ===
-`;
-          userContext += prefMems.slice(0, 5).map((m: any) => `• ${m.memory_text}`).join('
-');
+          userContext += '\n\n=== USER PREFERENCES (from past conversations) ===\n';
+          userContext += prefMems.slice(0, 5).map((m: any) => `• ${m.memory_text}`).join('\n');
         }
       }
 
