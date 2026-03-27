@@ -143,10 +143,10 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   ].join(',');
 
   const [wk1Res, wk2Res, ydRes, campsRes] = await Promise.all([
-    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d7}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
-    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d14}","until":"${d7}"}&sort=spend_descending&limit=50&access_token=${token}`),
-    fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=20&access_token=${token}`),
-    fetch(`https://graph.facebook.com/v19.0/${account.id}/campaigns?fields=id,name,objective,optimization_goal&limit=50&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v21.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d7}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v21.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d14}","until":"${d7}"}&sort=spend_descending&limit=50&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v21.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=20&access_token=${token}`),
+    fetch(`https://graph.facebook.com/v21.0/${account.id}/campaigns?fields=id,name,objective,optimization_goal&limit=50&access_token=${token}`),
   ]);
 
   const [wk1, wk2, yd, campsData] = await Promise.all([wk1Res.json(), wk2Res.json(), ydRes.json(), campsRes.json()]);

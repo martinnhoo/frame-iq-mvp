@@ -10,7 +10,7 @@ const META_APP_ID = Deno.env.get("META_APP_ID") || "";
 const META_APP_SECRET = Deno.env.get("META_APP_SECRET") || "";
 const APP_URL = "https://adbrief.pro";
 const REDIRECT_URI = `${APP_URL}/dashboard/loop/connect/meta/callback`;
-const SCOPES = ["ads_read", "ads_management", "business_management"].join(",");
+const SCOPES = ["ads_read", "business_management"].join(",");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       connection_label: connection_label || null,
       ts: Date.now()
     }));
-    const url = new URL("https://www.facebook.com/v19.0/dialog/oauth");
+    const url = new URL("https://www.facebook.com/v21.0/dialog/oauth");
     url.searchParams.set("client_id", META_APP_ID);
     url.searchParams.set("redirect_uri", REDIRECT_URI);
     url.searchParams.set("scope", SCOPES);
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     }
 
     // Exchange code → short-lived token
-    const tokenUrl = new URL("https://graph.facebook.com/v19.0/oauth/access_token");
+    const tokenUrl = new URL("https://graph.facebook.com/v21.0/oauth/access_token");
     tokenUrl.searchParams.set("client_id", META_APP_ID);
     tokenUrl.searchParams.set("client_secret", META_APP_SECRET);
     tokenUrl.searchParams.set("redirect_uri", REDIRECT_URI);
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     if (tokenData.error) throw new Error(tokenData.error.message);
 
     // Exchange → long-lived token (~60 days)
-    const longUrl = new URL("https://graph.facebook.com/v19.0/oauth/access_token");
+    const longUrl = new URL("https://graph.facebook.com/v21.0/oauth/access_token");
     longUrl.searchParams.set("grant_type", "fb_exchange_token");
     longUrl.searchParams.set("client_id", META_APP_ID);
     longUrl.searchParams.set("client_secret", META_APP_SECRET);
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
     // Get ad accounts
     const accountsRes = await fetch(
-      `https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${accessToken}`
+      `https://graph.facebook.com/v21.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${accessToken}`
     );
     const accountsData = await accountsRes.json();
     const adAccounts = accountsData.data || [];
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
         const fields = "ad_name,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
 
         const res = await fetch(
-          `https://graph.facebook.com/v19.0/${firstActive.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since90}","until":"${today}"}&sort=spend_descending&limit=100&access_token=${accessToken}`
+          `https://graph.facebook.com/v21.0/${firstActive.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since90}","until":"${today}"}&sort=spend_descending&limit=100&access_token=${accessToken}`
         );
         const insightsData = await res.json();
         if (insightsData.error || !insightsData.data?.length) return;
@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
 
     if (action === "pull_insights") {
       const fields = "ad_name,spend,impressions,clicks,ctr,cpc,cpm,actions,cost_per_action_type,video_play_actions,video_avg_time_watched_actions";
-      const url = `https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`;
+      const url = `https://graph.facebook.com/v21.0/${accountId}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_campaigns" || action === "get_campaigns") {
-      const url = `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,insights{spend,impressions,clicks,ctr}&limit=25&access_token=${token}`;
+      const url = `https://graph.facebook.com/v21.0/${accountId}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,insights{spend,impressions,clicks,ctr}&limit=25&access_token=${token}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_ads" || action === "get_ads") {
-      const url = `https://graph.facebook.com/v19.0/${accountId}/insights?level=ad&fields=ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpm,cpc,actions,frequency,reach&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`;
+      const url = `https://graph.facebook.com/v21.0/${accountId}/insights?level=ad&fields=ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpm,cpc,actions,frequency,reach&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);

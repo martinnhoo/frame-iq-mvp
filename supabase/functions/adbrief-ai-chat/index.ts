@@ -14,9 +14,27 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
 
+    // ── Auth check — runs first for ALL modes including panel_data ────────────
+    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")??"", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")??"");
+    const authHeaderEarly = req.headers.get("Authorization");
+    if (authHeaderEarly?.startsWith("Bearer ")) {
+      const earlyToken = authHeaderEarly.slice(7);
+      const { data: { user: earlyUser }, error: earlyAuthError } = await sbAuth.auth.getUser(earlyToken);
+      if (earlyAuthError || !earlyUser || earlyUser.id !== user_id) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else if (user_id) {
+      // No auth header at all — reject
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── Panel Data mode — skip Claude, return structured ad data for LivePanel ──
     if (panel_data && user_id && persona_id) {
-      const sbPanel = createClient(Deno.env.get("SUPABASE_URL")??"", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")??"");
+      const sbPanel = sbAuth;
       const platforms: string[] = body.platforms || [];
       const result: Record<string, any> = {};
       const today = new Date().toISOString().split("T")[0];
@@ -33,9 +51,9 @@ Deno.serve(async (req) => {
           if (acc) {
             const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
             const [r1,r2,r3] = await Promise.allSettled([
-              fetch(`https://graph.facebook.com/v19.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v19.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v19.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
             ]);
             const ads   = r1.status==="fulfilled"?await r1.value.json():null;
             const camps = r2.status==="fulfilled"?await r2.value.json():null;
@@ -139,22 +157,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Security: verify the auth token belongs to the claimed user_id
-    // Prevents one user from querying another user's data by spoofing user_id
-    const authHeader = req.headers.get("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !user || user.id !== user_id) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
     // ── 2. Plan check + smart rate limiting ──────────────────────────────────
     const { data: profileRow } = await supabase
-      .from("profiles").select("plan, email").eq("id", user_id).maybeSingle();
+      .from("profiles").select("plan, email, dashboard_count").eq("id", user_id).maybeSingle();
     const plan = getEffectivePlan(profileRow?.plan, (profileRow as any)?.email);
     const planKey = (["free","maker","pro","studio"].includes(plan)
       ? plan
@@ -419,7 +424,7 @@ Deno.serve(async (req) => {
         .order("created_at" as any, { ascending: false }).limit(3),
       // 6. Persona row
       persona_id
-        ? supabase.from("personas").select("name, headline, result").eq("id", persona_id).maybeSingle()
+        ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
       // 7. Learned patterns
       (supabase as any).from("learned_patterns")
@@ -579,7 +584,8 @@ Deno.serve(async (req) => {
     const businessGoal = (aiProfile as any)?.ai_recommendations?.business_goal || null;
 
     const persona = personaRow as any;
-    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${persona.name} | ${persona.headline || ""}
+    const personaName = (persona?.result as any)?.name || "";
+    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${personaName} | ${(persona.result as any)?.headline || ""}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
 Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
 Language style: ${(persona.result as any)?.language_style || "—"}` : "";
@@ -752,15 +758,15 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
               const [r1, r2, r3, r4, r5] = await Promise.allSettled([
                 // FIX 1: 50 ads (was 20)
-                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
                 // Campaigns: 50 (was 20)
-                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
                 // FIX 4: Adsets with targeting + budget + status
-                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=50&access_token=${token}`),
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=50&access_token=${token}`),
                 // FIX 3: Time series — daily CTR, spend, impressions for last 14 days
-                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${new Date(Date.now()-14*24*3600000).toISOString().split("T")[0]}","until":"${until}"}&time_increment=1&limit=14&access_token=${token}`),
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${new Date(Date.now()-14*24*3600000).toISOString().split("T")[0]}","until":"${until}"}&time_increment=1&limit=14&access_token=${token}`),
                 // FIX 2: Placement breakdown
-                fetch(`https://graph.facebook.com/v19.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
               ]);
               adsRaw        = r1.status === "fulfilled" ? await r1.value.json() : null;
               campsRaw      = r2.status === "fulfilled" ? await r2.value.json() : null;
@@ -916,9 +922,9 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             const until = historicalUntil || new Date().toISOString().split("T")[0];
 
             // Cache for Google too
-            const gCacheKey = `g:${custId}:${since}:${until}`;
-            if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
-            const gCached = (globalThis as any).__metaCache[gCacheKey];
+            const gCacheKey = `${custId}:${since}:${until}`;
+            if (!(globalThis as any).__googleCache) (globalThis as any).__googleCache = {};
+            const gCached = (globalThis as any).__googleCache[gCacheKey];
 
             let gCampaigns: any[] = [], gAds: any[] = [], gKeywords: any[] = [], gTimeSeries: any[] = [];
 
@@ -956,7 +962,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               gKeywords   = parse(kRes);
               gTimeSeries = parse(tRes);
 
-              (globalThis as any).__metaCache[gCacheKey] = { ts: Date.now(), campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
+              (globalThis as any).__googleCache[gCacheKey] = { ts: Date.now(), campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
             }
 
             liveGoogleData = `LIVE GOOGLE ADS — Account: ${activeAcc.name || custId} (${since} to ${until})\n`;
@@ -1216,9 +1222,9 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     }
 
     // ── 6. Lovable AI Gateway call ──────────────────────────────────────────
-    const todayDate = new Date();
-    const todayStr = todayDate.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const currentYear = todayDate.getFullYear();
+    const todayObj = new Date();
+    const todayStr = todayObj.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const currentYear = todayObj.getFullYear();
     const systemPrompt = `### IDENTIDADE ###
 Você é o AdBrief AI. Não o Claude. Não o ChatGPT.
 Se perguntarem: "Sou o AdBrief AI, criado pela equipe AdBrief."
@@ -1875,10 +1881,10 @@ REGRAS DE FORMATO:
               assistant_response: assistantText,
               existing_memories: persistentMemories.slice(0, 10).map((m: any) => ({ memory_text: m.memory_text })),
             }
-          });
+          }).catch(() => {});
         }
       } catch (_) { /* silent — never break the main flow */ }
-    })();
+    })().catch(() => {});
 
     return new Response(JSON.stringify({ blocks: finalBlocks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -5,7 +5,7 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-const BASE = "https://graph.facebook.com/v19.0";
+const BASE = "https://graph.facebook.com/v21.0";
 
 function ok(data: object) {
   return new Response(JSON.stringify(data), { headers: { ...cors, "Content-Type": "application/json" } });

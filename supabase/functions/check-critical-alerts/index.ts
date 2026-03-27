@@ -99,9 +99,9 @@ Deno.serve(async (req) => {
         // Fetch current + previous 24h
         const fields = "ad_id,ad_name,campaign_name,adset_name,spend,ctr,cpc,cpm,frequency,actions,action_values,website_purchase_roas,video_play_actions,video_thruplay_watched_actions,impressions";
         const [r1, r2, rCamps] = await Promise.all([
-          fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=40&access_token=${token}`),
-          fetch(`https://graph.facebook.com/v19.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d2}","until":"${yesterday}"}&sort=spend_descending&limit=40&access_token=${token}`),
-          fetch(`https://graph.facebook.com/v19.0/${account.id}/campaigns?fields=name,objective&limit=50&access_token=${token}`),
+          fetch(`https://graph.facebook.com/v21.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${yesterday}","until":"${today}"}&sort=spend_descending&limit=40&access_token=${token}`),
+          fetch(`https://graph.facebook.com/v21.0/${account.id}/insights?level=ad&fields=${fields}&time_range={"since":"${d2}","until":"${yesterday}"}&sort=spend_descending&limit=40&access_token=${token}`),
+          fetch(`https://graph.facebook.com/v21.0/${account.id}/campaigns?fields=name,objective&limit=50&access_token=${token}`),
         ]);
         const [d1, d0, dCamps] = await Promise.all([r1.json(), r2.json(), rCamps.json()]);
 

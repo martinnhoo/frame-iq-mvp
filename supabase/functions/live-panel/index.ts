@@ -50,9 +50,9 @@ Deno.serve(async (req) => {
           const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
 
           const [adsRes, campsRes, timeRes] = await Promise.allSettled([
-            fetch(`https://graph.facebook.com/v19.0/${accId}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
-            fetch(`https://graph.facebook.com/v19.0/${accId}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
-            fetch(`https://graph.facebook.com/v19.0/${accId}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
+            fetch(`https://graph.facebook.com/v21.0/${accId}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
+            fetch(`https://graph.facebook.com/v21.0/${accId}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
+            fetch(`https://graph.facebook.com/v21.0/${accId}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
           ]);
 
           const ads    = adsRes.status   === "fulfilled" ? await adsRes.value.json()   : null;

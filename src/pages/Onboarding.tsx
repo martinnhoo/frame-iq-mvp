@@ -109,9 +109,9 @@ const T: Record<string, any> = {
     s3_name_ph: "e.g. My Store, Agency XYZ, Brand Name",
     s3_desc_label: "Describe in one line (optional)",
     s3_desc_ph: "e.g. Women's fashion e-commerce in NY",
-    s3_connect_title: "Connect Meta Ads or Google Ads or Google Ads to this account",
+    s3_connect_title: "Connect Meta Ads or Google Ads to this account",
     s3_connect_sub: "Official OAuth — read-only. We never spend or publish anything without your confirmation.",
-    s3_meta: "Connect Meta Ads or Google Ads",
+    s3_meta: "Connect Meta Ads",
     s3_google: "Connect Google Ads",
     s3_connecting_meta: "Redirecting to Meta...",
     s3_connecting_google: "Redirecting to Google...",
@@ -164,7 +164,7 @@ const T: Record<string, any> = {
     s3_desc_ph: "Ej: E-commerce de moda femenina en CDMX",
     s3_connect_title: "Conecta Meta Ads o Google Ads a esta cuenta",
     s3_connect_sub: "OAuth oficial — solo lectura. Nunca gastamos ni publicamos nada sin tu confirmación.",
-    s3_meta: "Conectar conta de anúncios",
+    s3_meta: "Conectar Meta Ads",
     s3_google: "Conectar Google Ads",
     s3_connecting_meta: "Redirigiendo a Meta...",
     s3_connecting_google: "Redirigiendo a Google...",
@@ -321,7 +321,7 @@ export default function Onboarding() {
     navigate("/dashboard/ai");
   };
 
-  const canStep1 = acceptedTerms;
+  const canStep1 = acceptedTerms && name.trim().length > 0;
   const canStep3 = accountName.trim().length > 0;
 
   const inputStyle: React.CSSProperties = {
