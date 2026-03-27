@@ -1,6 +1,7 @@
 // daily-intelligence v2 — inteligência real focada na dor do gestor de tráfego
 // Roda: (1) todo dia às 12h via cron, (2) ao abrir o chat se sem snapshot hoje
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,10 @@ Deno.serve(async (req) => {
     const ANTHROPIC = Deno.env.get('ANTHROPIC_API_KEY');
     const body = await req.json().catch(() => ({}));
     const { user_id, persona_id } = body;
+
+    // Auth: allow service role (cron) OR authenticated user (chat trigger)
+    const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id);
+    if (!authed) return unauthorizedResponse(cors);
 
     // Cron mode: run for all active Meta users
     const targets: { user_id: string; persona_id: string | null }[] = [];

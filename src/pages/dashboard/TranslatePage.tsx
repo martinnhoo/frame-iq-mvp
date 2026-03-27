@@ -126,10 +126,13 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
   /** Upload with real progress tracking via XMLHttpRequest */
   const uploadWithProgress = (formData: FormData): Promise<any> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      // Use authenticated session token, not anon key
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
@@ -152,8 +155,8 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       xhr.timeout = 120000;
 
       xhr.open("POST", `https://${projectId}.supabase.co/functions/v1/analyze-video`);
-      xhr.setRequestHeader("Authorization", `Bearer ${anonKey}`);
-      xhr.setRequestHeader("apikey", anonKey);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
       xhr.send(formData);
     });
   };
@@ -222,10 +225,11 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         try {
           console.log("Starting translation to", targetLang);
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          const { data: { session: tSess } } = await supabase.auth.getSession();
+          const tToken = tSess?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
           const res = await fetch(`https://${projectId}.supabase.co/functions/v1/translate-text`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}`, "apikey": anonKey },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${tToken}`, "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
             body: JSON.stringify({
               source_text: rawTranscript,
               from_language: "auto", from_language_name: "Auto-detect",
@@ -452,10 +456,11 @@ const AdaptMode = ({ userId }: { userId: string }) => {
     setLoading(true); setResults([]);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: { session: aSess } } = await supabase.auth.getSession();
+      const aToken = aSess?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/translate-text`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}`, "apikey": anonKey },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${aToken}`, "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         body: JSON.stringify({
           source_text: input.trim(),
           from_language: sourceLang,

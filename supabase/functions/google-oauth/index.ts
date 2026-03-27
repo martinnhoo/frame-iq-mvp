@@ -79,8 +79,6 @@ Deno.serve(async (req) => {
         connected_at: new Date().toISOString(),
       };
 
-      console.log("google-oauth: attempting upsert for user", storedUserId, "persona", storedPersonaId);
-
       const { error: upsertError } = await sb.from("platform_connections" as any)
         .upsert(payload, { onConflict: "user_id,platform,persona_id" });
 
@@ -94,7 +92,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      console.log("SAVED");
       return new Response(JSON.stringify({ success: true, ad_accounts: [] }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
 

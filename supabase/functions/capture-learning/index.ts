@@ -1,5 +1,6 @@
 // capture-learning v2 — few-shot + chat_memory — alimenta a memória do produto com cada ação do usuário
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +21,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { user_id, event_type, data } = body;
 
-    // Version probe
+    // Version probe — allow unauthenticated
     if (event_type === '__version') {
       return new Response(JSON.stringify({ version: 'v2-few-shot', ts: Date.now() }), {
         status: 200, headers: { ...cors, 'Content-Type': 'application/json' }
@@ -28,6 +29,19 @@ Deno.serve(async (req) => {
     }
 
     if (!user_id || !event_type) return new Response(JSON.stringify({ error: 'missing fields' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+
+    // Auth: allow service role (internal invocations) OR authenticated user
+    // Verify user JWT matches claimed user_id to prevent spoofing
+    if (!isCronAuthorized(req)) {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      if (!authHeader.startsWith('Bearer ')) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+      }
+      const { data: { user: authUser } } = await sb.auth.getUser(authHeader.slice(7));
+      if (!authUser || authUser.id !== user_id) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+      }
+    }
 
     switch (event_type) {
 

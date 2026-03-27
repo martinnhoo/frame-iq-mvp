@@ -13,6 +13,7 @@
 //   - Trends que voltam ao ranking ganham boost de confiança
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -276,6 +277,13 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const { mode = "auto", term, geo = "BR" } = body;
+
+    // STATUS mode is read-only public data — allow unauthenticated
+    // AUTO/MANUAL modes burn Anthropic API — require cron auth or user JWT
+    if (mode !== "status") {
+      const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb);
+      if (!authed) return unauthorizedResponse(cors);
+    }
 
     // STATUS
     if (mode === "status") {

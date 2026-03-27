@@ -4,6 +4,7 @@
 // Output: market_* learned_patterns + market_context no richContext do chat
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +13,7 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
 
   const sb = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',

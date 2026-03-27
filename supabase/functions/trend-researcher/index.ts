@@ -3,6 +3,7 @@
 // Vai direto ao X/Twitter (via Nitter), Reddit, TikTok — não só jornais
 // Resultado: brief cultural que a IA usa para entender antes de agir
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,10 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
+
+  // Require cron auth or authenticated user — this function burns Anthropic API
+  const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb);
+  if (!authed) return unauthorizedResponse(cors);
   const ANTHROPIC = Deno.env.get('ANTHROPIC_API_KEY');
   const BRAVE_KEY = Deno.env.get('BRAVE_SEARCH_API_KEY');
 

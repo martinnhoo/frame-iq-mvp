@@ -32,13 +32,14 @@ Deno.serve(async (req) => {
     if (!authUser || authUser.id !== user_id) return err("unauthorized", 401);
 
     // Get token — scoped to persona if provided
-    const connQuery = supabase
-      .from("platform_connections" as any)
-      .select("access_token, ad_accounts")
-      .eq("user_id", user_id)
-      .eq("platform", "meta")
-      .eq("status", "active");
-    if (persona_id) connQuery.eq("persona_id", persona_id);
+    // NOTE: Supabase builder is immutable — must chain conditionally, not mutate
+    const connQuery = persona_id
+      ? supabase.from("platform_connections" as any)
+          .select("access_token, ad_accounts")
+          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active").eq("persona_id", persona_id)
+      : supabase.from("platform_connections" as any)
+          .select("access_token, ad_accounts")
+          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
     const { data: conn } = await connQuery.maybeSingle();
 
     if (!conn?.access_token) return err("Meta Ads not connected.");

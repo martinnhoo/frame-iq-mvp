@@ -209,10 +209,12 @@ const NewAnalysis = () => {
   };
 
   const uploadWithProgress = (formData: FormData): Promise<any> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      // Use session token, not anon key — functions require authenticated user
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
       };
@@ -224,8 +226,8 @@ const NewAnalysis = () => {
       xhr.timeout = 180000;
       xhr.ontimeout = () => reject(new Error("Upload timed out"));
       xhr.open("POST", `https://${projectId}.supabase.co/functions/v1/analyze-video`);
-      xhr.setRequestHeader("Authorization", `Bearer ${anonKey}`);
-      xhr.setRequestHeader("apikey", anonKey);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
       xhr.send(formData);
     });
   };

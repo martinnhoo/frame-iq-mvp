@@ -445,16 +445,19 @@ Deno.serve(async (req) => {
         .order("confidence", { ascending: false })
         .limit(60),
       // 8. Daily snapshots
-      (supabase as any).from("daily_snapshots")
-        .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
-        .eq("user_id", user_id)
-        .then(async (r: any) => {
-          const all = (r.data || []) as any[];
-          if (!all.length) return { data: [] };
-          const scoped = persona_id ? all.filter((s: any) => s.persona_id === persona_id) : [];
-          const result = scoped.length ? scoped : all;
-          return { data: result.sort((a: any, b: any) => b.date.localeCompare(a.date)).slice(0, 7) };
-        }),
+      // 8. Daily snapshots — filter at DB level
+      persona_id
+        ? (supabase as any).from("daily_snapshots")
+            .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
+            .eq("user_id", user_id)
+            .eq("persona_id", persona_id)
+            .order("date", { ascending: false })
+            .limit(7)
+        : (supabase as any).from("daily_snapshots")
+            .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
+            .eq("user_id", user_id)
+            .order("date", { ascending: false })
+            .limit(7),
       // 9. Preflight history
       (supabase as any).from("preflight_results")
         .select("created_at, score, verdict, platform, market, format")
@@ -488,18 +491,20 @@ Deno.serve(async (req) => {
         .then((r: any) => r.error ? { data: [] } : {
           data: (r.data || []).filter((p: any) => p.persona_id !== persona_id)
         }),
-      // 12. Chat memory
-      (supabase as any).from("chat_memory")
-        .select("memory_text, memory_type, importance, created_at")
-        .eq("user_id", user_id)
-        .then((r: any) => {
-          if (r.error) return { data: [] };
-          const all = (r.data || []) as any[];
-          const scoped = persona_id
-            ? all.filter((m: any) => m.persona_id === persona_id || !m.persona_id)
-            : all.filter((m: any) => !m.persona_id);
-          return { data: scoped.sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0)).slice(0, 30) };
-        }),
+      // 12. Chat memory — filter at DB level, not in JS
+      persona_id
+        ? (supabase as any).from("chat_memory")
+            .select("memory_text, memory_type, importance, created_at")
+            .eq("user_id", user_id)
+            .or(`persona_id.eq.${persona_id},persona_id.is.null`)
+            .order("importance", { ascending: false })
+            .limit(30)
+        : (supabase as any).from("chat_memory")
+            .select("memory_text, memory_type, importance, created_at")
+            .eq("user_id", user_id)
+            .is("persona_id", null)
+            .order("importance", { ascending: false })
+            .limit(30),
       // 13. Few-shot examples
       (supabase as any).from("chat_examples")
         .select("user_message, assistant_blocks, quality_score, created_at")
