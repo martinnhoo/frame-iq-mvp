@@ -378,10 +378,9 @@ Return ONLY valid JSON:
   ]
 }`
         }]
-      })
+      }),
+      signal: AbortSignal.timeout(25000),
     });
-
-      });
     };
     let res = await callAnthropic();
     // Retry once on 500/529 with reduced max_tokens
