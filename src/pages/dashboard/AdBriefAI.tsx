@@ -1596,7 +1596,7 @@ export default function AdBriefAI() {
 
   const executeMetaAction=async(block:Block)=>{
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action,user_id:user.id,target_id:block.target_id,target_type:block.target_type,value:block.value}
+      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,value:block.value}
     });
 
     // ── Audit log — registra toda ação executada ──

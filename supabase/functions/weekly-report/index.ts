@@ -1,10 +1,12 @@
 // weekly-report — sends weekly performance summary every Sunday
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");

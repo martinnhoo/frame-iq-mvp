@@ -10,11 +10,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
 
   try {
-    // Using Lovable AI gateway (no separate API key needed)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // ── JWT auth — verify caller identity, use verified user_id ──────────────
+    const authHeader = req.headers.get('Authorization') ?? '';
+    let verified_user_id: string | undefined;
+    if (authHeader.startsWith('Bearer ')) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+      if (authUser) verified_user_id = authUser.id;
+    }
 
     const body = await req.json();
     const source_text: string = body.source_text || body.text || '';
@@ -24,7 +31,8 @@ Deno.serve(async (req) => {
     const from_language_name: string = body.from_language_name || body.source_language_name || 'auto';
     const tone: string = body.tone || 'Aggressive / Urgent';
     const context: string = body.context || '';
-    const user_id: string | undefined = body.user_id;
+    // Always use verified JWT identity — ignore body user_id to prevent spoofing
+    const user_id: string | undefined = verified_user_id;
     const multi_targets: string[] | undefined = body.multi_targets;
 
     if (!source_text) {

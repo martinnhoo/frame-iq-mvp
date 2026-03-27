@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
           if (acc) {
             const custId = acc.id.replace(/-/g,"");
             const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??"","login-customer-id":custId};
-            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v17/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
+            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
             const [cr,ar,tr] = await Promise.allSettled([
               gq(`SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
               gq(`SELECT ad_group_ad.ad.name,ad_group_ad.ad.type,campaign.name,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
@@ -214,23 +214,7 @@ Deno.serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── Progressive warning — append to response after AI replies
-    // ── Progressive warning — computed after RPC so counts are accurate
-    // (finalDailyCount defined below after RPC call; these are pre-computed estimates)
-    const afterThisMsg = dailyCount + 1;
-    const willHitLimit = afterThisMsg >= cap;
-    const oneRemaining = afterThisMsg === cap - 1;
-    const limitWarning = planKey === "free" ? (
-      willHitLimit ? {
-        pt: `— Esta foi sua última mensagem gratuita.`,
-        es: `— Este fue tu último mensaje gratuito.`,
-        en: `— This was your last free message.`,
-      } : oneRemaining ? {
-        pt: `— Você tem apenas 1 mensagem gratuita restante.`,
-        es: `— Solo tienes 1 mensaje gratuito restante.`,
-        en: `— You have 1 free message left.`,
-      } : null
-    ) : null;
+    // ── Progressive warning — computed after RPC call below, using accurate finalDailyCount
 
     // ── Soft cap: monthly cost approaching revenue ceiling — suggest upgrade, don't block
     if (monthlyCount >= softcap && planKey !== "studio") {
@@ -350,6 +334,21 @@ Deno.serve(async (req) => {
     // Use RPC counts if available, otherwise fall back to pre-read values
     const finalDailyCount   = rpcResult?.daily_count   ?? (dailyCount + 1);
     const finalMonthlyCount = rpcResult?.monthly_count ?? (monthlyCount + 1);
+
+    // ── Progressive warning — uses accurate post-RPC count
+    const willHitLimit = finalDailyCount >= cap;
+    const oneRemaining = finalDailyCount === cap - 1;
+    const limitWarning = planKey === "free" ? (
+      willHitLimit ? {
+        pt: `— Esta foi sua última mensagem gratuita.`,
+        es: `— Este fue tu último mensaje gratuito.`,
+        en: `— This was your last free message.`,
+      } : oneRemaining ? {
+        pt: `— Você tem apenas 1 mensagem gratuita restante.`,
+        es: `— Solo tienes 1 mensaje gratuito restante.`,
+        en: `— You have 1 free message left.`,
+      } : null
+    ) : null;
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
     const rememberTriggers = /(lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse))/i;
@@ -972,7 +971,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
                 "Content-Type": "application/json",
               };
               const gQuery = (query: string) =>
-                fetch(`https://googleads.googleapis.com/v17/customers/${custId}/googleAds:search`, {
+                fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
                   method: "POST", headers: gHeaders, body: JSON.stringify({ query }),
                 }).then(r => r.json());
 

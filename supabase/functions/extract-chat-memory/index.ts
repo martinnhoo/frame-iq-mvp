@@ -17,6 +17,12 @@ const hasMemoryValue = (text: string): boolean => {
   return /lembr|remember|recuerd|prefer|always|nunca|never|siempre|jamás|budget|orçamento|presupuesto|pausei|pausar|escalar|escalei|scale|pause|decidiu|decided|decidí|decidi|regra|rule|regla|meu produto|my product|mi producto|minha marca|my brand|mi marca|meu público|my audience|mi audiencia|trabalho com|i work with|trabajo con|foco em|focus on|enfoque en|meu cliente|my client|mi cliente|objetivo|goal|campanh|campaign|ticket médio|concorrente|competitor|churn|cancelamento/i.test(text);
 };
 
+// Explicit "remember this" triggers — these are handled by the pain_point system in adbrief-ai-chat.
+// Skipping here prevents double-storage of the same fact in both pain_point and chat_memory.
+const isExplicitRemember = (text: string): boolean => {
+  return /\b(lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse))\b/i.test(text);
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
@@ -38,6 +44,14 @@ Deno.serve(async (req) => {
     // Filtro rápido — skip trocas sem valor de memória (economiza chamada ao Haiku)
     if (!hasMemoryValue(user_message + " " + assistant_response)) {
       return new Response(JSON.stringify({ ok: true, skipped: true }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // Skip explicit "remember" commands — pain_point system in adbrief-ai-chat handles these
+    // to avoid storing the same fact twice in two different memory systems
+    if (isExplicitRemember(user_message)) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "explicit_remember_handled_by_pain_point" }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }

@@ -44,6 +44,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // ── JWT auth — extract verified user identity from token ─────────────────
+    let verified_user_id = "";
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (authHeader.startsWith("Bearer ")) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+      if (authUser) verified_user_id = authUser.id;
+    }
+
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI API key not configured" }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
       format = (formData.get("format") as string) || "UGC";
       product = (formData.get("product") as string) || "";
       compliance_notes = (formData.get("compliance_notes") as string) || "";
-      user_id = (formData.get("user_id") as string) || "";
+      user_id = verified_user_id || (formData.get("user_id") as string) || "";
       funnel_stage = (formData.get("funnel_stage") as string) || "tofu";
       const pcStr = formData.get("persona_context") as string | null;
       if (pcStr) { try { persona_context = JSON.parse(pcStr); } catch {} }
@@ -127,7 +135,7 @@ Deno.serve(async (req) => {
       format = body.format || "UGC";
       product = body.product || "";
       compliance_notes = body.compliance_notes || "";
-      user_id = body.user_id || "";
+      user_id = verified_user_id || body.user_id || "";
       funnel_stage = body.funnel_stage || "tofu";
       persona_context = body.persona_context || null;
     }
