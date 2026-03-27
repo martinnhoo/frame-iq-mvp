@@ -74,20 +74,11 @@ Deno.serve(async (req) => {
             const lines = top3.map((a, i) => {
               const emoji = a.urgencia === 'alta' ? '🔴' : a.urgencia === 'media' ? '🟡' : '🟢';
               const tipoMap: Record<string, string> = { escalar: '⬆️ Escalar', pausar: '⏸ Pausar', criar: '✏️ Criar', revisar: '🔍 Revisar' };
-              return `${emoji} <b>${tipoMap[a.tipo] || a.tipo}</b>: ${a.anuncio?.slice(0, 35) || '—'}
-   ${a.motivo?.slice(0, 80) || ''}`;
-            }).join('
-
-');
+              return `${emoji} <b>${tipoMap[a.tipo] || a.tipo}</b>: ${a.anuncio?.slice(0, 35) || '—'}\n   ${a.motivo?.slice(0, 80) || ''}`;
+            }).join('\n\n');
 
             const insight = (accountResults as any[])[0]?.aiInsight || '';
-            const msg = `<b>📊 Briefing de hoje</b>
-
-${insight ? `💡 ${insight.slice(0, 120)}
-
-` : ''}<b>3 ações prioritárias:</b>
-
-${lines}`;
+            const msg = `<b>📊 Briefing de hoje</b>\n\n${insight ? `💡 ${insight.slice(0, 120)}\n\n` : ''}<b>3 ações prioritárias:</b>\n\n${lines}`;
 
             const botToken = tg.bot_token || Deno.env.get('TELEGRAM_BOT_TOKEN') || '';
             if (botToken) {

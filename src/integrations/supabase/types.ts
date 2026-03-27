@@ -1208,6 +1208,131 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_daily_volumes: {
+        Row: {
+          date: string
+          id: string
+          position: number | null
+          term_key: string
+          volume: number
+        }
+        Insert: {
+          date?: string
+          id?: string
+          position?: number | null
+          term_key: string
+          volume: number
+        }
+        Update: {
+          date?: string
+          id?: string
+          position?: number | null
+          term_key?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_daily_volumes_term_key_fkey"
+            columns: ["term_key"]
+            isOneToOne: false
+            referencedRelation: "trend_intelligence"
+            referencedColumns: ["term_key"]
+          },
+        ]
+      }
+      trend_intelligence: {
+        Row: {
+          ad_angle: string | null
+          angle: string | null
+          appearances: number
+          avg_volume: number
+          category: string | null
+          created_at: string
+          days_active: number
+          first_seen_at: string
+          id: string
+          is_active: boolean
+          is_blocked: boolean
+          last_seen_at: string
+          last_volume: number
+          niches: string[] | null
+          peak_volume: number
+          risk_score: number
+          term: string
+          term_key: string
+          updated_at: string
+        }
+        Insert: {
+          ad_angle?: string | null
+          angle?: string | null
+          appearances?: number
+          avg_volume?: number
+          category?: string | null
+          created_at?: string
+          days_active?: number
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          is_blocked?: boolean
+          last_seen_at?: string
+          last_volume?: number
+          niches?: string[] | null
+          peak_volume?: number
+          risk_score?: number
+          term: string
+          term_key: string
+          updated_at?: string
+        }
+        Update: {
+          ad_angle?: string | null
+          angle?: string | null
+          appearances?: number
+          avg_volume?: number
+          category?: string | null
+          created_at?: string
+          days_active?: number
+          first_seen_at?: string
+          id?: string
+          is_active?: boolean
+          is_blocked?: boolean
+          last_seen_at?: string
+          last_volume?: number
+          niches?: string[] | null
+          peak_volume?: number
+          risk_score?: number
+          term?: string
+          term_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trend_platform_baseline: {
+        Row: {
+          avg_volume: number | null
+          geo: string
+          id: string
+          p75_volume: number | null
+          p90_volume: number | null
+          week_start: string
+        }
+        Insert: {
+          avg_volume?: number | null
+          geo?: string
+          id?: string
+          p75_volume?: number | null
+          p90_volume?: number | null
+          week_start: string
+        }
+        Update: {
+          avg_volume?: number | null
+          geo?: string
+          id?: string
+          p75_volume?: number | null
+          p90_volume?: number | null
+          week_start?: string
+        }
+        Relationships: []
+      }
       upgrade_events: {
         Row: {
           created_at: string
