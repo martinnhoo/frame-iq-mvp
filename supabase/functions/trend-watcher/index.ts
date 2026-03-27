@@ -200,8 +200,8 @@ async function redditSearch(term: string): Promise<string[]> {
     if (!r.ok) return [];
     const d = await r.json();
     return ((d.data?.children || []))
-      .map(c => (c.data?.title || "").slice(0, 100))
-      .filter(t => t.length > 5 && !isBlocked(t))
+      .map((c: any) => (c.data?.title || "").slice(0, 100))
+      .filter((t: string) => t.length > 5 && !isBlocked(t))
       .slice(0, 4);
   } catch { return []; }
 }
