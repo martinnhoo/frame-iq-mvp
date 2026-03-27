@@ -39,7 +39,7 @@ function isBlocked(text: string): boolean {
   return BLOCKED.some(k => l.includes(k));
 }
 
-function toKey(term) {
+function toKey(term: string): string {
   return term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/, "").slice(0, 60);
 }
