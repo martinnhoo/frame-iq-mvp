@@ -177,7 +177,7 @@ async function fetchGoogleTrends_UNUSED(geo = "BR") {
   }
 }
 
-async function braveSearch(q, count = 5) {
+async function braveSearch(q: string, count = 5): Promise<string[]> {
   if (!BRAVE_KEY) return [];
   try {
     const r = await fetch(
