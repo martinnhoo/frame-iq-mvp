@@ -20,6 +20,24 @@ Deno.serve(async (req) => {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
+    // ── JWT auth — invoked server-side by cron or by authenticated user ──────
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      // Only validate if it looks like a user JWT (not service key)
+      if (!token.startsWith('eyJ')) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const { data: { user: authUser } } = await supabase.auth.getUser(token);
+      if (authUser && authUser.id !== user_id) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     const [
       { data: analyses },
       { data: boards },

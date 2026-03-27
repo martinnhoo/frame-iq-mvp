@@ -23,9 +23,11 @@ Deno.serve(async (req) => {
     if (!authUser) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const verified_user_id = authUser.id;
     // ─────────────────────────────────────────────────────────────────────────
-    const { product, offer, objective, market, audience, competitors, extra_context, user_id } = await req.json();
+    const { product, offer, objective, market, audience, competitors, extra_context } = await req.json();
+    const user_id = verified_user_id; // always use verified id, never trust body
+
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
-    if (user_id) {
+    {
       const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
       const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
@@ -43,8 +45,7 @@ Deno.serve(async (req) => {
 
     // Fetch accumulated creative context from the loop
     let loopContext = "";
-    if (user_id) {
-      try {
+    try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
         const loopRes = await fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
           method: "POST",
@@ -61,7 +62,6 @@ Deno.serve(async (req) => {
           }
         }
       } catch { /* loop context is optional */ }
-    }
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
 

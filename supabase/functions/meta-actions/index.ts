@@ -21,15 +21,25 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, user_id, target_id, target_type, value } = body;
+    const { action, user_id, persona_id, target_id, target_type, value } = body;
 
     if (!user_id || !action) return err("missing user_id or action");
 
-    // Get token
-    const { data: conn } = await supabase
+    // ── JWT auth — prevent user_id spoofing on write actions ──────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) return err("unauthorized", 401);
+    const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+    if (!authUser || authUser.id !== user_id) return err("unauthorized", 401);
+
+    // Get token — scoped to persona if provided
+    const connQuery = supabase
       .from("platform_connections" as any)
       .select("access_token, ad_accounts")
-      .eq("user_id", user_id).eq("platform", "meta").maybeSingle();
+      .eq("user_id", user_id)
+      .eq("platform", "meta")
+      .eq("status", "active");
+    if (persona_id) connQuery.eq("persona_id", persona_id);
+    const { data: conn } = await connQuery.maybeSingle();
 
     if (!conn?.access_token) return err("Meta Ads not connected.");
     const token = conn.access_token;
