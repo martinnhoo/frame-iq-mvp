@@ -242,23 +242,28 @@ export default function Onboarding() {
     }
   };
 
-  const createFirstAccount = async (session: any) => {
+  const createFirstAccount = async (session: any): Promise<string | null> => {
     const nicheObj = NICHES.find(n => n.value === niche);
     const personaName = accountName.trim() || (name ? name.split(" ")[0] : nicheObj?.label || "Minha conta");
+    // Check if persona already exists
     const { data: existing } = await supabase.from("personas").select("id").eq("user_id", session.user.id).limit(1);
-    if (!existing?.length) {
-      try {
-        await supabase.from("personas").insert({
-          user_id: session.user.id,
-          name: personaName,
-          headline: accountDesc || (niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta"),
-          result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
-        } as never);
-      } catch {}
+    if (existing?.length) {
+      return (existing[0] as any).id as string;
     }
-    supabase.functions.invoke("send-welcome-email", {
-      body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
-    }).catch(() => {});
+    try {
+      const { data: inserted } = await supabase.from("personas").insert({
+        user_id: session.user.id,
+        name: personaName,
+        headline: accountDesc || (niche ? `${nicheObj?.label || niche} · ${lang.toUpperCase()}` : "Minha conta"),
+        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
+      } as never).select("id").single();
+      supabase.functions.invoke("send-welcome-email", {
+        body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
+      }).catch(() => {});
+      return (inserted as any)?.id ?? null;
+    } catch {
+      return null;
+    }
   };
 
   const handleConnect = async (platform: "meta"|"google") => {
@@ -268,9 +273,12 @@ export default function Onboarding() {
       const session = await getSession();
       if (!session) return;
       await saveUserProfile(session);
-      await createFirstAccount(session);
+      const personaId = await createFirstAccount(session);
+      if (!personaId) throw new Error("Could not create account");
       const fn = platform === "meta" ? "meta-oauth" : "google-oauth";
-      const { data } = await supabase.functions.invoke(fn, { body: { action: "get_auth_url", user_id: session.user.id } });
+      const { data } = await supabase.functions.invoke(fn, {
+        body: { action: "get_auth_url", user_id: session.user.id, persona_id: personaId }
+      });
       if (data?.url) window.location.href = data.url;
       else throw new Error("No URL");
     } catch {
