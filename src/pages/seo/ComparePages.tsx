@@ -142,3 +142,5 @@ export function CompareDetail() {
     </SeoLayout>
   );
 }
+
+export default { CompareIndex, CompareDetail };

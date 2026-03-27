@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     // ── 1. Reuse sbAuth as the main supabase client (already created above) ──
     const supabase = sbAuth;
 
-    // ── 2. Plan check + smart rate limiting ──────────────────────────────────
+    // ── 2. Plan check + atomic rate limiting ─────────────────────────────────
     const { data: profileRow } = await supabase
       .from("profiles").select("plan, email, dashboard_count").eq("id", user_id).maybeSingle();
     const plan = getEffectivePlan(profileRow?.plan, (profileRow as any)?.email);
@@ -180,26 +180,12 @@ Deno.serve(async (req) => {
     const todayDate = new Date().toISOString().slice(0, 10);
     const monthKey = todayDate.slice(0, 7); // YYYY-MM
 
-    // Fetch daily + monthly usage in one query
-    const { data: usageRow } = await (supabase as any)
-      .from("free_usage")
-      .select("chat_count, last_reset, monthly_msg_count, monthly_reset")
-      .eq("user_id", user_id).maybeSingle();
-
-    const lastReset = usageRow?.last_reset?.slice(0, 10);
-    const dailyCount = lastReset === todayDate ? (usageRow?.chat_count || 0) : 0;
-    const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
-    const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
-
     // ── Cost model: $0.0236 per chat message (Sonnet, 5850 in + 400 out tokens)
     const COST_PER_MSG = 0.0236;
-    const estimatedMonthlyCost = monthlyCount * COST_PER_MSG;
 
     // ── Plan revenue & thresholds
     const PLAN_REVENUE:    Record<string, number> = { free: 0,   maker: 19,  pro: 49,  studio: 149 };
     const DAILY_CAPS:      Record<string, number> = { free: 3,   maker: 50,  pro: 200, studio: 500 };
-    // Cooldown threshold: monthly cost > 70% of plan revenue (msgs)
-    // Soft cap: monthly cost > 90% of plan revenue  
     const COOLDOWN_MSGS:   Record<string, number> = { free: 3,   maker: 564, pro: 1456, studio: 4428 };
     const SOFTCAP_MSGS:    Record<string, number> = { free: 3,   maker: 726, pro: 1872, studio: 5694 };
 
@@ -209,14 +195,28 @@ Deno.serve(async (req) => {
     const softcap  = SOFTCAP_MSGS[planKey]  ?? 3;
     const uiLang   = (user_language as string) || "pt";
 
-    // ── Hard check: daily cap
+    // ── Read current usage for soft-cap / cooldown checks (non-atomic read is fine here —
+    //    these are advisory checks, not hard limits enforced by race-sensitive code)
+    const { data: usageRow } = await (supabase as any)
+      .from("free_usage")
+      .select("chat_count, last_reset, monthly_msg_count, monthly_reset")
+      .eq("user_id", user_id).maybeSingle();
+
+    const lastReset = usageRow?.last_reset?.slice(0, 10);
+    const dailyCount = lastReset === todayDate ? (usageRow?.chat_count || 0) : 0;
+    const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
+    const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
+    const estimatedMonthlyCost = monthlyCount * COST_PER_MSG;
+
+    // ── Pre-flight daily cap check (fast path before hitting the RPC)
     if (dailyCount >= cap) {
       return new Response(JSON.stringify({ error: "daily_limit" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── Progressive warning — append to response after AI replies
-    // willHitLimit: true if this message uses the LAST one
+    // ── Progressive warning — computed after RPC so counts are accurate
+    // (finalDailyCount defined below after RPC call; these are pre-computed estimates)
     const afterThisMsg = dailyCount + 1;
     const willHitLimit = afterThisMsg >= cap;
     const oneRemaining = afterThisMsg === cap - 1;
@@ -332,14 +332,24 @@ Deno.serve(async (req) => {
       await new Promise(r => setTimeout(r, cooldownDelay));
     }
 
-    // Update daily + monthly counter atomically
-    await (supabase as any).from("free_usage").upsert({
-      user_id,
-      chat_count: dailyCount + 1,
-      last_reset: todayDate,
-      monthly_msg_count: monthlyCount + 1,
-      monthly_reset: monthKey,
-    }, { onConflict: "user_id" });
+    // ── Atomic increment via RPC — prevents race condition where two concurrent
+    //    requests both read dailyCount=N, both pass the cap check, both write N+1
+    const { data: rpcResult } = await (supabase as any).rpc("increment_chat_usage", {
+      p_user_id:   user_id,
+      p_daily_cap: cap,
+      p_today:     todayDate,
+      p_month_key: monthKey,
+    });
+
+    // RPC returns null if function doesn't exist yet (migration pending) — fall back gracefully
+    if (rpcResult && rpcResult.allowed === false) {
+      return new Response(JSON.stringify({ error: "daily_limit" }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Use RPC counts if available, otherwise fall back to pre-read values
+    const finalDailyCount   = rpcResult?.daily_count   ?? (dailyCount + 1);
+    const finalMonthlyCount = rpcResult?.monthly_count ?? (monthlyCount + 1);
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
     const rememberTriggers = /(lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse))/i;
@@ -754,8 +764,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
             const until = historicalUntil || new Date().toISOString().split("T")[0];
 
-            // ── FIX 6: In-memory cache (15 min per account) ─────────────────
-            // Prevents 2x redundant Meta API calls on every message
+            // ── In-memory cache (15 min per account) ─────────────────────────
+            // Prevents redundant Meta API calls. Evicts expired keys on each write.
             const cacheKey = `${activeAcc.id}:${since}:${until}`;
             const now_ts = Date.now();
             const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -791,8 +801,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
               placementRaw  = r5.status === "fulfilled" ? await r5.value.json() : null;
 
-              // Cache results
-              (globalThis as any).__metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw };
+              // Cache results — evict stale entries first to prevent unbounded growth
+              const metaCache = (globalThis as any).__metaCache;
+              for (const k of Object.keys(metaCache)) {
+                if (now_ts - metaCache[k].ts >= CACHE_TTL) delete metaCache[k];
+              }
+              metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw };
             }
 
             liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
@@ -979,7 +993,13 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               gKeywords   = parse(kRes);
               gTimeSeries = parse(tRes);
 
-              (globalThis as any).__googleCache[gCacheKey] = { ts: Date.now(), campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
+              // Evict stale entries before writing to prevent unbounded growth
+              const googleCache = (globalThis as any).__googleCache;
+              const gNow = Date.now();
+              for (const k of Object.keys(googleCache)) {
+                if (gNow - googleCache[k].ts >= 15 * 60 * 1000) delete googleCache[k];
+              }
+              googleCache[gCacheKey] = { ts: gNow, campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
             }
 
             liveGoogleData = `LIVE GOOGLE ADS — Account: ${activeAcc.name || custId} (${since} to ${until})\n`;

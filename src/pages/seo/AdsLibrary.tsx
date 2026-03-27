@@ -218,3 +218,5 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
     </div>
   );
 }
+
+export default { AdsLibraryIndex, AdsLibraryLanding };
