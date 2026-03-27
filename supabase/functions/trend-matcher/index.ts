@@ -53,9 +53,19 @@ Deno.serve(async (req) => {
     // ── Score each account with Haiku ─────────────────────────────────────────
     const matches = [];
     const term = research.term || trend_term || 'trend';
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     for (const persona of personas) {
       if (!ANTHROPIC) break;
+
+      // ── Dedup: skip if this trend×persona was already scored today ────────
+      // Prevents re-scoring 48x/day — a score is valid for 24h
+      const dedupKey = `trend_scored_${term.replace(/[^a-z0-9]/gi, '_').slice(0, 30)}_${persona.id.slice(0, 8)}`;
+      const { data: existing } = await sb.from('learned_patterns' as any)
+        .select('last_updated').eq('pattern_key', dedupKey).maybeSingle();
+      if (existing?.last_updated && existing.last_updated.slice(0, 10) === today) {
+        continue; // already scored today — skip Anthropic call
+      }
 
       const personaResult = typeof persona.result === 'string'
         ? JSON.parse(persona.result || '{}')
@@ -125,6 +135,19 @@ Responda JSON:
           }
         }
       } catch(e) { console.error(`Score error for ${persona.name}:`, e); }
+
+      // Save dedup marker — regardless of score, mark as scored today
+      await sb.from('learned_patterns' as any).upsert({
+        user_id: persona.user_id,
+        persona_id: persona.id,
+        pattern_key: dedupKey,
+        insight_text: `Trend "${term.slice(0, 40)}" scored for ${persona.name} on ${today}`,
+        confidence: 0,
+        sample_size: 0,
+        is_winner: null,
+        variables: { trend: term, scored_date: today },
+        last_updated: new Date().toISOString(),
+      }, { onConflict: 'pattern_key' }).catch(() => {});
 
       // Small delay to avoid rate limits
       await new Promise(r => setTimeout(r, 200));
