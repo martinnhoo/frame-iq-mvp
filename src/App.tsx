@@ -30,7 +30,6 @@ const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
 const Refund       = lazy(() => import("./pages/Refund"));
 const Careers      = lazy(() => import("./pages/Careers"));
-const Pricing      = lazy(() => import("./pages/Pricing"));
 
 // Dashboard — largest chunk, never loaded on landing page
 const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));

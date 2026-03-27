@@ -8,6 +8,9 @@ Disallow: /signup
 Disallow: /onboarding
 Disallow: /settings
 Disallow: /callback
+Disallow: /confirm-email
+Disallow: /forgot-password
+Disallow: /reset-password
 
 # Allow all public SEO pages
 Allow: /tools/

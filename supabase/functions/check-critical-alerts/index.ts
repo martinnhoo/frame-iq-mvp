@@ -3,6 +3,7 @@
 // Dedup por ad_id + tipo + semana — nunca repete o mesmo alerta.
 // Cruza com learned_patterns — alerta quando repete padrão de fracasso conhecido.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -52,6 +53,7 @@ function buildTelegramButtons(alerts: any[]): object | undefined {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
