@@ -193,7 +193,7 @@ async function braveSearch(q: string, count = 5): Promise<string[]> {
   } catch { return []; }
 }
 
-async function redditSearch(term) {
+async function redditSearch(term: string): Promise<string[]> {
   try {
     const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(term)}&sort=hot&limit=5&t=week`;
     const r = await fetch(url, { headers: { "User-Agent": "AdBriefTrendWatcher/2.0" }, signal: AbortSignal.timeout(7000) });
