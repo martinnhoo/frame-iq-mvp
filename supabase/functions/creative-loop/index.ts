@@ -64,10 +64,11 @@ serve(async (req) => {
     // ── ACTION: get_context ──
     // Retrieve accumulated learning context for use in generators
     if (action === "get_context") {
-      const [memoriesRes, patternsRes, profileRes] = await Promise.all([
+      const [memoriesRes, patternsRes, profileRes, chatMemRes] = await Promise.all([
         supaFetch(`creative_memory?user_id=eq.${user_id}&select=*&order=created_at.desc&limit=50`),
         supaFetch(`learned_patterns?user_id=eq.${user_id}&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
         supaFetch(`user_ai_profile?user_id=eq.${user_id}&select=*&limit=1`),
+        supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_type,memory_text&order=importance.desc&limit=15`),
       ]);
 
       const [memories, patterns, profiles] = await Promise.all([
