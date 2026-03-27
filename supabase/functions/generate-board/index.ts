@@ -90,21 +90,15 @@ Deno.serve(async (req) => {
       bofu: 'BOTTOM OF FUNNEL (hot audience): Trigger CONVERSION. Urgency, specific offer, risk reversal, final push for someone ready to decide.',
     };
 
-    // Resolve user_id from body OR JWT
-    let user_id = bodyUserId;
-    if (!user_id) {
-      const authHeader = req.headers.get('Authorization') ?? '';
-      const token = authHeader.replace('Bearer ', '');
-      if (token) {
-        const anonClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-          { global: { headers: { Authorization: `Bearer ${token}` } } }
-        );
-        const { data: { user } } = await anonClient.auth.getUser();
-        user_id = user?.id;
-      }
+    // Resolve user_id — JWT always wins over body to prevent spoofing
+    const authHeader = req.headers.get('Authorization') ?? '';
+    let user_id: string | undefined;
+    if (authHeader.startsWith('Bearer ')) {
+      const { data: { user: authUser } } = await supabaseClient.auth.getUser(authHeader.slice(7));
+      if (authUser) user_id = authUser.id;
     }
+    // Fallback to body user_id only when no valid JWT (legacy clients)
+    if (!user_id) user_id = bodyUserId;
 
     if (!prompt || prompt.length < 10) {
       return new Response(

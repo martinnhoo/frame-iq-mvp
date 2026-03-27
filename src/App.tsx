@@ -70,7 +70,6 @@ const UseCasePage   = lazy(() => import("@/pages/seo/UseCasePage"));
 const RolePage      = lazy(() => import("@/pages/seo/RolePage"));
 const LearnPage     = lazy(() => import("@/pages/seo/LearnPage"));
 const HookTypePage  = lazy(() => import("@/pages/seo/HookTypePage"));
-const MarketPage    = lazy(() => import("@/pages/seo/MarketPage"));
 const AdExamplesPage = lazy(() => import("@/pages/seo/AdExamplesPage"));
 const AdHooksPage   = lazy(() => import("@/pages/seo/AdHooksPage"));
 const GlossaryPage  = lazy(() => import("@/pages/seo/GlossaryPage"));
@@ -173,7 +172,7 @@ const App = () => (
               <Route path="/for/:slug"         element={<RolePage />} />
               <Route path="/learn/:slug"       element={<LearnPage />} />
               <Route path="/hooks/:slug"       element={<HookTypePage />} />
-              <Route path="/markets/:slug"     element={<MarketPage />} />
+              <Route path="/markets/:slug"     element={<LocationPage />} />
               <Route path="/examples/:slug"    element={<AdExamplesPage />} />
 
               {/* ── SEO: Ads Library ── */}
@@ -185,7 +184,6 @@ const App = () => (
               <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
               <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
               <Route path="/glossary/:slug"        element={<GlossaryPage />} />
-              <Route path="/markets/:slug"         element={<LocationPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
