@@ -596,6 +596,46 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const latestMarket = marketPatterns.find(p => p.pattern_key.startsWith('market_intel_'));
     const competitorSignals = marketPatterns.filter(p => p.pattern_key.startsWith('market_competitor_')).slice(0, 5);
 
+    // ── Trend intelligence — global, acima de todos os clientes ──────────────
+    let trendContext = "";
+    try {
+      // Detect if user is asking about a specific trend or mentioning a cultural term
+      const trendRequest = message.match(/(?:trend|meme|viral|pesquisa|o que é|o que foi|quem é|me fala sobre)\s+(.{3,40})/i);
+      const manualTerm = trendRequest?.[1]?.trim();
+
+      if (manualTerm && manualTerm.length > 2) {
+        // User explicitly asking about something — call trend-watcher manual
+        const tw = await supabase.functions.invoke("trend-watcher", {
+          body: { mode: "manual", term: manualTerm }
+        });
+        if (tw.data?.ok && tw.data?.trend && !tw.data?.blocked) {
+          const t = tw.data.trend;
+          trendContext = `=== TREND PESQUISADA: "${t.term}" ===\n` +
+            `O que é: ${t.angle}\n` +
+            `Ângulo criativo: ${t.ad_angle}\n` +
+            `Nichos relevantes: ${(t.niches || []).join(", ")}\n` +
+            `Dias ativa: ${t.days_active} | Aparições: ${t.appearances} | Volume: ${t.last_volume}/100\n` +
+            (t.appearances > 1 ? `⚡ Trend persistente — voltou ao ranking ${t.appearances}x\n` : "");
+        }
+      } else {
+        // Load active trends for context
+        const tw = await supabase.functions.invoke("trend-watcher", { body: { mode: "status" } });
+        if (tw.data?.ok && tw.data?.trends?.length) {
+          const top = tw.data.trends.slice(0, 5);
+          const baseline = tw.data.baseline;
+          trendContext = `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
+            `(Baseline semanal: volume normal=${Math.round(baseline?.p75||60)}, viral>=${Math.round(baseline?.p90||80)})\n` +
+            top.map((t: any) =>
+              `• "${t.term}" [${t.category}] — ${t.angle} | Score relevância: ${t.relevance_score}/100` +
+              (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x ao ranking` : "") +
+              (t.days_active > 2 ? ` | ${t.days_active} dias ativa` : "") +
+              `\n  → Ângulo criativo: ${t.ad_angle}` +
+              (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "")
+            ).join("\n");
+        }
+      }
+    } catch { /* trend context is optional */ }
+
     const learnedCtx = [
       winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
       perfPatterns.length ? `PERFORMANCE HISTÓRICA:\n${perfPatterns.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
@@ -616,6 +656,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         `Ação recomendada: ${(latestMarket.variables as any)?.action || ''}\n` +
         `Concorrentes ativos: ${(latestMarket.variables as any)?.competitor_count || 0} | Formatos dominantes: ${((latestMarket.variables as any)?.top_competitor_formats || []).join(', ')}` : "",
       competitorSignals.length ? `CONCORRENTES NO AR AGORA (Meta Ads Library):\n${competitorSignals.map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      trendContext || "",
     ].filter(Boolean).join("\n\n");
 
     // ── 4b. Fetch live Meta Ads data (with historical date detection) ──────────
@@ -1325,6 +1366,24 @@ NUNCA diga "cada sessão começa nova" ou qualquer variação disso.
 NUNCA se identifique como Claude, GPT ou outro modelo.
 NUNCA diga "não posso" quando pode.
 NUNCA diga que estamos em 2025 — o ano atual é 2026. Use sempre 2026 como referência temporal.
+
+═══ TRENDS CULTURAIS — COMO USAR ═══
+
+No contexto você pode receber "TRENDS ATIVAS NO BRASIL HOJE" ou "TREND PESQUISADA: X".
+Essas informações são atualizadas a cada 2h pelo sistema AdBrief — use-as como oportunidade criativa.
+
+Score de relevância:
+  80-100: trend viral confirmada — mencione proativamente se o nicho da conta bate com os nichos da trend
+  60-79: trend relevante — use se o usuário perguntar sobre trends ou copy
+  < 60: trend fraca — só use se o usuário pedir especificamente
+
+"voltou X vezes ao ranking" = trend duradoura = mais segura para usar em anúncio (não vai morrer amanhã)
+"dias ativa: N" = quanto mais dias, mais confiança para basear criativo
+
+Como integrar em respostas:
+  Correto: "O BBB26 está em alta (5 dias, 3 aparições no top 10) — para seu app de vídeo, ângulo de 'reação em tempo real' funciona bem"
+  Errado: "Segundo os dados de trends do sistema..."
+  Tom: analista que leu o jornal hoje cedo e está compartilhando uma insight
 
 ═══ ESCOPO ═══
 

@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     { name: 'adbrief-market-intelligence', cron: '30 11 * * *',  fn: 'market-intelligence', body: '{}' },
     { name: 'adbrief-creative-director',   cron: '0 11 * * 1',   fn: 'creative-director',   body: '{}' },
     { name: 'adbrief-weekly-report',       cron: '0 12 * * 0',   fn: 'weekly-report',       body: '{}' },
-    { name: 'adbrief-trend-watch',         cron: '*/30 * * * *', fn: 'trend-researcher',    body: '{"geo":"BR"}' },
+    { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',       body: '{"mode":"auto","geo":"BR"}' },
   ];
 
   const results: any[] = [];
