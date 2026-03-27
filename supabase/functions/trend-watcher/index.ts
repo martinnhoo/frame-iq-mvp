@@ -45,6 +45,97 @@ function toKey(term) {
 }
 
 async function fetchGoogleTrends(geo = "BR") {
+  // Try multiple approaches — Google Trends RSS sometimes blocks server-side
+  const urls = [
+    `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`,
+    `https://trends.google.com/trends/trendingsearches/realtime/rss?geo=${geo}&hl=pt-BR&cat=all`,
+  ];
+  const agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+    "Googlebot/2.1 (+http://www.google.com/bot.html)",
+  ];
+  
+  for (const url of urls) {
+    for (const agent of agents) {
+      try {
+        const r = await fetch(url, {
+          headers: { 
+            "User-Agent": agent,
+            "Accept": "application/rss+xml, application/xml, text/xml, */*",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+            "Cache-Control": "no-cache",
+          },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) continue;
+        const xml = await r.text();
+        if (!xml.includes("<item>") && !xml.includes("<title>")) continue;
+        // Parse this response
+        const items = parseGoogleTrendsXML(xml);
+        if (items.length > 0) return items;
+      } catch { continue; }
+    }
+  }
+  
+  // Final fallback: use Brave Search to discover trending terms
+  return await discoverTrendsViaBrave(geo);
+}
+
+function parseGoogleTrendsXML(xml) {
+  const items = [];
+  const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+  for (let i = 0; i < Math.min(itemMatches.length, 10); i++) {
+    const itemXml = itemMatches[i][1];
+    const titleMatch = itemXml.match(/<title><!\[CDATA\[([^\]]+)\]\]><\/title>/) || itemXml.match(/<title>([^<]+)<\/title>/);
+    const trafficMatch = itemXml.match(/<ht:approx_traffic>([^<]+)<\/ht:approx_traffic>/);
+    if (!titleMatch) continue;
+    const term = titleMatch[1].trim();
+    if (term.length < 2 || isBlocked(term)) continue;
+    let volume = 50;
+    if (trafficMatch) {
+      const t = trafficMatch[1].replace(/[^0-9KM+]/g, "");
+      if (t.includes("M")) volume = 95;
+      else if (t.includes("K")) {
+        const n = parseInt(t);
+        if (n >= 500) volume = 90;
+        else if (n >= 200) volume = 80;
+        else if (n >= 100) volume = 70;
+        else if (n >= 50) volume = 60;
+        else if (n >= 20) volume = 50;
+        else if (n >= 10) volume = 40;
+        else volume = 30;
+      }
+    }
+    items.push({ term, volume, position: i + 1 });
+  }
+  return items;
+}
+
+async function discoverTrendsViaBrave(geo = "BR") {
+  if (!BRAVE_KEY) return [];
+  console.log("Google Trends RSS unavailable — using Brave Search fallback");
+  try {
+    const queries = [
+      "trending brasil hoje viral 2026",
+      "meme viral brasil semana",
+    ];
+    const terms = new Set<string>();
+    for (const q of queries) {
+      const results = await braveSearch(q, 8);
+      // Extract potential trend terms from titles
+      for (const r of results) {
+        const title = r.split(":")[0].trim();
+        if (title.length > 2 && title.length < 50 && !isBlocked(title)) {
+          terms.add(title);
+        }
+      }
+    }
+    return [...terms].slice(0, 10).map((term, i) => ({ term, volume: 60 - i * 3, position: i + 1 }));
+  } catch { return []; }
+}
+
+async function fetchGoogleTrends_UNUSED(geo = "BR") {
   try {
     const url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`;
     const r = await fetch(url, {
