@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
       const uLang = uiLang || 'pt';
       const offerTitle = uLang === 'pt' ? 'Gerar dashboard de performance?' : uLang === 'es' ? '¿Generar dashboard de rendimiento?' : 'Generate performance dashboard?';
       // Detect which platform is connected for accurate offer text
-      const connectedPlatformNames = (platformConns || []).map((c: any) => c.platform).filter(Boolean);
+      const connectedPlatformNames: string[] = [];
       const platformLabel = connectedPlatformNames.length > 0
         ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + ' Ads').join(' + ')
         : (uLang === 'pt' ? 'sua conta de anúncios' : uLang === 'es' ? 'tu cuenta de anuncios' : 'your ad account');

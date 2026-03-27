@@ -387,7 +387,7 @@ Return ONLY valid JSON:
     if (!res.ok && (res.status === 500 || res.status === 529 || res.status === 503)) {
       console.warn(`generate-hooks: retry after ${res.status}`);
       await new Promise(r => setTimeout(r, 1000));
-      res = await callAnthropic(0.7);
+      res = await callAnthropic(true);
     }
     if (!res.ok) throw new Error(`Claude API: ${res.status}`);
     const data = await res.json();
