@@ -66,16 +66,20 @@ serve(async (req) => {
     const { answers, user_id } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    // Rate limit check
+    // Rate limit check — use plan-based persona limit from _shared/plans.ts
     if (user_id) {
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
       const { data: profile } = await supabase.from("profiles").select("plan, email").eq("id", user_id).single();
       const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
-      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", { p_user_id: user_id, p_plan: plan });
-      if (rateCheck && !rateCheck.allowed) {
-        return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const limit = getLimit("personas", plan); // free=1, maker=10, pro=50, studio=unlimited
+      if (limit !== -1) {
+        // Count existing personas for this user
+        const { count } = await supabase.from("personas").select("id", { count: "exact", head: true }).eq("user_id", user_id);
+        if ((count ?? 0) >= limit) {
+          return new Response(JSON.stringify({ error: "Persona limit reached for your plan.", daily_limit: true }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
