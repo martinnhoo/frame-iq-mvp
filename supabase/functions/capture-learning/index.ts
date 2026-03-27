@@ -349,6 +349,28 @@ Deno.serve(async (req) => {
       await (sb as any).from('user_ai_profile').upsert({ user_id, avg_hook_score: avgScore||null, top_performing_models: topTypes, ai_summary: summary, total_analyses: (mem||[]).length, last_updated: new Date().toISOString() }, { onConflict: 'user_id' });
     } catch (_) {}
 
+    // ── Auto-trigger re-learn every 10 feedback events ───────────────────────
+    // Fires creative-loop learn asynchronously — never blocks the response
+    // This ensures learned_patterns stay fresh without requiring a CSV import
+    try {
+      const { data: memCount } = await (sb as any)
+        .from('creative_memory')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user_id);
+      const total = (memCount as any)?.length ?? 0;
+      // Trigger on multiples of 10 — covers both manual feedback and CSV import paths
+      if (total > 0 && total % 10 === 0) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+        // fire-and-forget — do not await
+        fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({ action: 'learn', user_id, persona_id: data?.persona_id || null }),
+        }).catch(() => {});
+      }
+    } catch (_) { /* never block */ }
+
     return new Response(JSON.stringify({ ok: true }), { headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (e) {
     console.error('capture-learning:', e);

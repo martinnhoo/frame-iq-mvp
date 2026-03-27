@@ -64,15 +64,15 @@ serve(async (req) => {
     // ── ACTION: get_context ──
     // Retrieve accumulated learning context for use in generators
     if (action === "get_context") {
-      const [memoriesRes, patternsRes, profileRes, chatMemRes] = await Promise.all([
+      const [memoriesRes, patternsRes, profileRes, chatMemoryRes] = await Promise.all([
         supaFetch(`creative_memory?user_id=eq.${user_id}&select=*&order=created_at.desc&limit=50`),
         supaFetch(`learned_patterns?user_id=eq.${user_id}&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
         supaFetch(`user_ai_profile?user_id=eq.${user_id}&select=*&limit=1`),
-        supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_type,memory_text&order=importance.desc&limit=15`),
+        supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_text,memory_type,importance&order=importance.desc&limit=15`),
       ]);
 
-      const [memories, patterns, profiles, chatMems] = await Promise.all([
-        memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemRes.json(),
+      const [memories, patterns, profiles, chatMemories] = await Promise.all([
+        memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemoryRes.json(),
       ]);
 
       const profile = profiles?.[0] || null;
@@ -122,18 +122,15 @@ serve(async (req) => {
         contextLines.push(`\nAI PROFILE: ${profile.ai_summary}`);
       }
 
-      if (chatMems?.length) {
-        const grouped: Record<string, string[]> = {};
-        for (const m of chatMems) {
-          const t = m.memory_type || "general";
-          if (!grouped[t]) grouped[t] = [];
-          grouped[t].push(m.memory_text);
-        }
-        contextLines.push(`\nUSER PREFERENCES (from chat):`);
-        for (const [type, texts] of Object.entries(grouped)) {
-          for (const txt of texts.slice(0, 3)) {
-            contextLines.push(`- [${type}] ${txt.slice(0, 120)}`);
-          }
+      // ── chat_memory: user preferences and rules from past conversations ──────
+      const chatMems = Array.isArray(chatMemories) ? chatMemories : [];
+      const relevantMems = chatMems.filter((m: any) =>
+        m.memory_text && ["preference", "rule", "decision", "context"].includes(m.memory_type)
+      ).slice(0, 8);
+      if (relevantMems.length > 0) {
+        contextLines.push(`\nUSER PREFERENCES (from past conversations — always apply):`);
+        for (const m of relevantMems) {
+          contextLines.push(`- [${m.memory_type}] ${m.memory_text}`);
         }
       }
 
@@ -141,7 +138,8 @@ serve(async (req) => {
         context: contextLines.join("\n"),
         memories_count: memories?.length || 0,
         patterns_count: patterns?.length || 0,
-        has_data: (memories?.length || 0) > 0 || (patterns?.length || 0) > 0,
+        chat_memory_count: relevantMems.length,
+        has_data: (memories?.length || 0) > 0 || (patterns?.length || 0) > 0 || relevantMems.length > 0,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

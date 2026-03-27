@@ -82,7 +82,7 @@ async function fetchGoogleTrends(geo = "BR") {
   return await discoverTrendsViaBrave(geo);
 }
 
-function parseGoogleTrendsXML(xml: string) {
+function parseGoogleTrendsXML(xml: string): Array<{term: string; volume: number}> {
   const items = [];
   const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
   for (let i = 0; i < Math.min(itemMatches.length, 10); i++) {
@@ -187,8 +187,8 @@ async function braveSearch(q: string, count = 5): Promise<string[]> {
     if (!r.ok) return [];
     const d = await r.json();
     return (d.web?.results || [])
-      .map((x: any) => `${x.title}: ${(x.description || "").slice(0, 100)}`)
-      .filter((s: string) => !isBlocked(s))
+      .map(x => `${x.title}: ${(x.description || "").slice(0, 100)}`)
+      .filter(s => !isBlocked(s))
       .slice(0, count);
   } catch { return []; }
 }
@@ -200,8 +200,8 @@ async function redditSearch(term: string): Promise<string[]> {
     if (!r.ok) return [];
     const d = await r.json();
     return ((d.data?.children || []))
-      .map((c: any) => (c.data?.title || "").slice(0, 100))
-      .filter((t: string) => t.length > 5 && !isBlocked(t))
+      .map(c => (c.data?.title || "").slice(0, 100))
+      .filter(t => t.length > 5 && !isBlocked(t))
       .slice(0, 4);
   } catch { return []; }
 }
@@ -227,7 +227,7 @@ async function xSearch(term: string): Promise<string[]> {
   return [];
 }
 
-async function analyzeTrend(term: string, sources: string[]) {
+async function analyzeTrend(term: string, sources: string[]): Promise<{angle: string; ad_angle: string; niches: string[]; risk_score: number; category: string}> {
   if (!ANTHROPIC) return { angle: term, ad_angle: "", niches: [], risk_score: 3, category: "geral" };
   const srcText = sources.slice(0, 10).join("\n").slice(0, 1000);
   try {
@@ -251,7 +251,7 @@ async function analyzeTrend(term: string, sources: string[]) {
   } catch { return null; }
 }
 
-function computeRelevanceScore(trend: any, baseline: any) {
+function computeRelevanceScore(trend: Record<string, any>, baseline: Record<string, any> | null): number {
   let score = 0;
   const p75 = baseline?.p75 || 60;
   const p90 = baseline?.p90 || 80;
@@ -414,6 +414,6 @@ Deno.serve(async (req) => {
     });
   } catch(e) {
     console.error("trend-watcher error:", e);
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { headers: { ...cors, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { ...cors, "Content-Type": "application/json" } });
   }
 });

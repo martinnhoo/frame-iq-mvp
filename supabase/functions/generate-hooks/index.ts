@@ -225,11 +225,11 @@ Deno.serve(async (req) => {
       // Winner hook types from learned_patterns — highest priority signal
       const allPatterns = winnersRes.status === 'fulfilled' ? winnersRes.value.data || [] : [];
       if (allPatterns.length > 0) {
-        const winners = allPatterns.filter((p: any) => p.is_winner && p.confidence > 0.3);
-        const losers = allPatterns.filter((p: any) => !p.is_winner && p.confidence > 0.3);
+        const winnerPatterns = allPatterns.filter((p: any) => p.is_winner && p.confidence > 0.3);
+        const loserPatterns = allPatterns.filter((p: any) => !p.is_winner && p.confidence > 0.3);
         
-        if (winners.length > 0) {
-          const lines = winners.filter((p: any) => p.insight_text).map((p: any) => {
+        if (winnerPatterns.length > 0) {
+          const lines = winnerPatterns.filter((p: any) => p.insight_text).map((p: any) => {
             const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
             const roas = p.avg_roas ? ` ROAS ${p.avg_roas.toFixed(1)}x` : '';
             // Extract conversion data from variables if available
@@ -242,8 +242,8 @@ Deno.serve(async (req) => {
           userContext += `\n\n=== WHAT WORKS FOR THIS ACCOUNT (real performance) ===\n${lines}\nGenerate hooks that build on these proven angles. Prioritize angles with conversions and ROAS > 1.`;
         }
         
-        if (losers.length > 0) {
-          const lines = losers.filter((p: any) => p.insight_text).slice(0, 5).map((p: any) => {
+        if (loserPatterns.length > 0) {
+          const lines = loserPatterns.filter((p: any) => p.insight_text).slice(0, 5).map((p: any) => {
             const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
             return `✗ ${p.insight_text}${ctr}`;
           }).join('\n');
