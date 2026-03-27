@@ -375,6 +375,8 @@ Deno.serve(async (req) => {
       { data: crossAccountPatterns },
       { data: chatMemories },
       { data: chatExamples },
+      { data: activeTrends },
+      { data: trendBaseline },
     ] = await Promise.all([
       // 1. Recent analyses — scoped to this persona/account
       (persona_id
@@ -493,6 +495,18 @@ Deno.serve(async (req) => {
             : all.filter((e: any) => !e.persona_id);
           return { data: scoped.sort((a: any, b: any) => (b.quality_score || 0) - (a.quality_score || 0)).slice(0, 3) };
         }),
+      // 15. Active trends — direct DB read, no invoke needed
+      (supabase as any).from("trend_intelligence")
+        .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,peak_volume")
+        .eq("is_active", true).eq("is_blocked", false).lt("risk_score", 7)
+        .order("last_volume", { ascending: false }).limit(5)
+        .then((r: any) => r.error ? { data: [] } : r),
+      // 16. Trend baseline
+      (supabase as any).from("trend_platform_baseline")
+        .select("p75_volume,p90_volume").eq("geo", "BR")
+        .order("week_start", { ascending: false }).limit(1)
+        .maybeSingle()
+        .then((r: any) => r.error ? { data: null } : r),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -596,69 +610,31 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const latestMarket = marketPatterns.find(p => p.pattern_key.startsWith('market_intel_'));
     const competitorSignals = marketPatterns.filter(p => p.pattern_key.startsWith('market_competitor_')).slice(0, 5);
 
-    // ── Trend intelligence — leitura direta do banco (mais confiável que invoke) ──
+    // ── Trend intelligence — já carregado no Promise.all acima ──────────────
     let trendContext = "";
     try {
-      const trendRequest = message.match(/(?:trend|meme|viral|pesquisa|o que é|o que foi|quem é|me fala sobre)\s+(.{3,40})/i);
-      const manualTerm = trendRequest?.[1]?.trim();
-
-      if (manualTerm && manualTerm.length > 2) {
-        // Busca direta no banco pelo termo específico
-        const termKey = manualTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/, "").slice(0, 60);
-        const { data: trendRow } = await (supabase as any).from("trend_intelligence")
-          .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,risk_score")
-          .eq("term_key", termKey).eq("is_blocked", false).maybeSingle();
-        if (trendRow) {
-          trendContext = `=== TREND PESQUISADA: "${trendRow.term}" ===\n` +
-            `O que é: ${trendRow.angle}\n` +
-            `Ângulo criativo: ${trendRow.ad_angle}\n` +
-            `Nichos relevantes: ${(trendRow.niches || []).join(", ")}\n` +
-            `Dias ativa: ${trendRow.days_active} | Aparições: ${trendRow.appearances} | Volume: ${trendRow.last_volume}/100\n` +
-            (trendRow.appearances > 1 ? `⚡ Trend persistente — voltou ao ranking ${trendRow.appearances}x\n` : "");
-        } else {
-          // Termo não encontrado no banco — chama invoke como fallback
-          try {
-            const tw = await supabase.functions.invoke("trend-watcher", { body: { mode: "manual", term: manualTerm } });
-            if (tw.data?.ok && tw.data?.trend && !tw.data?.blocked) {
-              const t = tw.data.trend;
-              trendContext = `=== TREND PESQUISADA: "${t.term}" ===\n` +
-                `O que é: ${t.angle}\nÂngulo criativo: ${t.ad_angle}\n` +
-                `Nichos: ${(t.niches || []).join(", ")} | Volume: ${t.last_volume}/100\n`;
-            }
-          } catch { /* silent */ }
-        }
-      } else {
-        // Leitura direta das trends ativas — sem depender de invoke
-        const { data: activeTrends } = await (supabase as any).from("trend_intelligence")
-          .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,peak_volume")
-          .eq("is_active", true).eq("is_blocked", false).lt("risk_score", 7)
-          .order("last_volume", { ascending: false }).limit(5);
-        const { data: baseline } = await (supabase as any).from("trend_platform_baseline")
-          .select("p75_volume,p90_volume").eq("geo", "BR")
-          .order("week_start", { ascending: false }).limit(1).maybeSingle();
-        if (activeTrends && activeTrends.length > 0) {
-          const p75 = baseline?.p75_volume || 60;
-          const p90 = baseline?.p90_volume || 80;
-          const scored = activeTrends.map((t: any) => {
-            let score = 0;
-            if (t.last_volume >= p90) score += 40;
-            else if (t.last_volume >= p75) score += 20;
-            if (t.days_active >= 3) score += 20;
-            if (t.appearances > 1) score += 20;
-            if (t.peak_volume > t.last_volume * 1.3) score += 10;
-            return { ...t, relevance_score: Math.min(score, 100) };
-          }).sort((a: any, b: any) => b.relevance_score - a.relevance_score);
-          trendContext = `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
-            `(Baseline semanal: volume normal=${p75}, viral>=${p90})\n` +
-            scored.map((t: any) =>
-              `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
-              (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
-              (t.days_active > 2 ? ` | ${t.days_active} dias ativa` : "") +
-              `\n  → Ângulo criativo: ${t.ad_angle}` +
-              (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "")
-            ).join("\n");
-        }
+      const trendsData = (activeTrends || []) as any[];
+      if (trendsData.length > 0) {
+        const p75 = (trendBaseline as any)?.p75_volume || 60;
+        const p90 = (trendBaseline as any)?.p90_volume || 80;
+        const scored = trendsData.map((t: any) => {
+          let score = 0;
+          if (t.last_volume >= p90) score += 40;
+          else if (t.last_volume >= p75) score += 20;
+          if (t.days_active >= 3) score += 20;
+          if (t.appearances > 1) score += 20;
+          if (t.peak_volume > t.last_volume * 1.3) score += 10;
+          return { ...t, relevance_score: Math.min(score, 100) };
+        }).sort((a: any, b: any) => b.relevance_score - a.relevance_score);
+        trendContext = `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
+          `(Baseline: normal=${p75}, viral>=${p90})\n` +
+          scored.map((t: any) =>
+            `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
+            (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
+            (t.days_active > 2 ? ` | ${t.days_active} dias ativa` : "") +
+            `\n  → Ângulo criativo: ${t.ad_angle}` +
+            (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "")
+          ).join("\n");
       }
     } catch (trendErr) { console.error("[trend-ctx error]", String(trendErr)); }
 
