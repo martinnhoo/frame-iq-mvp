@@ -627,14 +627,16 @@ function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; o
 }
 
 // ── Dashboard Offer Block ─────────────────────────────────────────────────────
-function DashboardOfferBlock({ block, lang, onConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void }) {
+function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void; onSilentConfirm?: (msg: string) => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = () => {
     setLoading(true);
-    onConfirm(`[DASHBOARD_CONFIRMED] ${block.original_message || "gerar dashboard"}`);
+    // Use silent confirm if available — avoids showing [DASHBOARD_CONFIRMED] in UI
+    const internalMsg = `[DASHBOARD_CONFIRMED] ${block.original_message || "gerar dashboard"}`;
+    if (onSilentConfirm) { onSilentConfirm(internalMsg); } else { onConfirm(internalMsg); }
   };
 
   const labels: Record<string, Record<string, string>> = {
@@ -2204,7 +2206,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {msg.blocks?.map((b,bi)=>
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
-                  b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)}/>:
+                  b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={async(msg)=>{if(!msg||loading||!contextReady)return;setLoading(true);try{const{data}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history:[...messages].slice(-10).map(m=>({role:m.role,content:(m.blocks||[]).map((b:any)=>b.content||"").join(" ").slice(0,300)})).filter(m=>m.content)}});if(data?.blocks?.length){const aid=Date.now()+1;setMessages(prev=>[...prev,{role:"assistant",blocks:data.blocks,ts:aid,id:aid}]);}}catch(e){console.error("dashboard silent error",e);}finally{setLoading(false);}}}/>:
                   (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send}/>:
                   (b.type as string)==="limit_warning"?(
                     <div key={bi} style={{marginTop:12,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
