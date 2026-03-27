@@ -82,7 +82,7 @@ async function fetchGoogleTrends(geo = "BR") {
   return await discoverTrendsViaBrave(geo);
 }
 
-function parseGoogleTrendsXML(xml) {
+function parseGoogleTrendsXML(xml: string) {
   const items = [];
   const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
   for (let i = 0; i < Math.min(itemMatches.length, 10); i++) {
