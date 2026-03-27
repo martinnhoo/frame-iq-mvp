@@ -122,6 +122,21 @@ serve(async (req) => {
         contextLines.push(`\nAI PROFILE: ${profile.ai_summary}`);
       }
 
+      if (chatMems?.length) {
+        const grouped: Record<string, string[]> = {};
+        for (const m of chatMems) {
+          const t = m.memory_type || "general";
+          if (!grouped[t]) grouped[t] = [];
+          grouped[t].push(m.memory_text);
+        }
+        contextLines.push(`\nUSER PREFERENCES (from chat):`);
+        for (const [type, texts] of Object.entries(grouped)) {
+          for (const txt of texts.slice(0, 3)) {
+            contextLines.push(`- [${type}] ${txt.slice(0, 120)}`);
+          }
+        }
+      }
+
       return new Response(JSON.stringify({
         context: contextLines.join("\n"),
         memories_count: memories?.length || 0,
