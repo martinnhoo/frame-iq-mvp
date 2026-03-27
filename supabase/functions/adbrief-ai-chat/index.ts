@@ -160,8 +160,8 @@ Deno.serve(async (req) => {
       ? plan
       : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
 
-    const today = new Date().toISOString().slice(0, 10);
-    const monthKey = today.slice(0, 7); // YYYY-MM
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const monthKey = todayDate.slice(0, 7); // YYYY-MM
 
     // Fetch daily + monthly usage in one query
     const { data: usageRow } = await (supabase as any)
