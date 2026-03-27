@@ -74,7 +74,7 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
-  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte o Meta Ads",        price: "$0" },
+  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte Meta Ads ou Google Ads",        price: "$0" },
   maker:   { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
   pro:     { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
   studio:  { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
@@ -522,7 +522,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             const isMaker = currentPlan === "maker";
 
             const FEATURES: Record<string, { icon: string; label: string }[]> = {
-              free:   [{ icon:"💬", label: language==="pt"?"3 mensagens IA/dia":"3 AI messages/day" }, { icon:"🔗", label: language==="pt"?"Conectar Meta Ads":"Connect Meta Ads" }],
+              free:   [{ icon:"💬", label: language==="pt"?"3 mensagens IA/dia":"3 AI messages/day" }, { icon:"🔗", label: language==="pt"?"Conectar conta de anúncios":"Connect Meta Ads or Google Ads" }],
               maker:  [{ icon:"💬", label: language==="pt"?"50 mensagens IA/dia":"50 AI messages/day" }, { icon:"🔗", label: language==="pt"?"1 conta de anúncios":"1 ad account" }, { icon:"🛠️", label: language==="pt"?"Ferramentas básicas":"Basic tools" }],
               pro:    [{ icon:"💬", label: language==="pt"?"200 mensagens IA/dia":"200 AI messages/day" }, { icon:"🔗", label: language==="pt"?"3 contas de anúncios":"3 ad accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🌍", label: language==="pt"?"Multi-mercado":"Multi-market" }, { icon:"📊", label: language==="pt"?"Dashboards avançados":"Advanced dashboards" }],
               studio: [{ icon:"∞", label: language==="pt"?"Mensagens ilimitadas":"Unlimited messages" }, { icon:"🔗", label: language==="pt"?"Contas ilimitadas":"Unlimited accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🏢", label: language==="pt"?"Workspace agência":"Agency workspace" }, { icon:"🚀", label: language==="pt"?"Prioridade máxima":"Maximum priority" }],
@@ -709,7 +709,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                       <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
                         <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.30)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
-                            {language === "pt" ? "Performance Meta Ads" : "Meta Ads Performance"}
+                            {language === "pt" ? "Performance da conta" : "Account Performance"}
                           </p>
                           <span style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)" }}>{s0.date}</span>
                         </div>
@@ -758,7 +758,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     ) : (
                       <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.09)" }}>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.38)", lineHeight: 1.6, margin: 0 }}>
-                          {language === "pt" ? "Conecte o Meta Ads para ver performance real — CTR, spend, o que escalar e o que pausar." : "Connect Meta Ads to see real performance."}
+                          {language === "pt" ? "Conecte Meta Ads ou Google Ads para ver performance real — CTR, spend, o que escalar e o que pausar." : "Connect Meta Ads or Google Ads to see real performance."}
                         </p>
                       </div>
                     )}
@@ -890,7 +890,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           {language === "pt" ? "Ainda aprendendo..." : "Still learning..."}
                         </p>
                         <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
-                          {language === "pt" ? "Conecte o Meta Ads e use o produto — o sistema aprende com os resultados reais." : "Connect Meta Ads and use the product — it learns from real results."}
+                          {language === "pt" ? "Conecte Meta Ads ou Google Ads e use o produto — o sistema aprende com os resultados reais." : "Connect Meta Ads or Google Ads and use the product — it learns from real results."}
                         </p>
                       </div>
                     )}

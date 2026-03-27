@@ -45,7 +45,7 @@ const T: Record<Lang, {
     steps_label: "HOW TO START",
     s1t: "Create your first account",
     s1d: "One account = one client or brand. Give it a name and describe the business — the AI uses this in every answer.",
-    s2t: "Connect Meta Ads or Google Ads",
+    s2t: "Connect Meta Ads or Google Ads or Google Ads",
     s2d: "Official OAuth, read-only. The AI starts seeing CTR, ROAS, frequency and creative patterns in real time.",
     s3t: "Ask anything",
     s3d: "\"What's killing my ROAS?\" · \"Which creative should I pause?\" · \"Write 3 hooks for my account\" · \"What's trending in Brazil today?\"",

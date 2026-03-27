@@ -633,10 +633,10 @@ export default function DashboardLayout() {
                 <div>
                   <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "0 0 16px", lineHeight: 1.7 }}>
                     {language === "pt"
-                      ? "Receba alertas críticos da sua conta Meta Ads no Telegram e execute comandos direto por lá."
+                      ? "Receba alertas críticos da sua conta de anúncios no Telegram e execute comandos direto por lá."
                       : language === "es"
-                      ? "Recibe alertas críticos de tu cuenta Meta Ads en Telegram y ejecuta comandos directamente."
-                      : "Get critical Meta Ads alerts on Telegram and run commands directly from there."}
+                      ? "Recibe alertas críticos de tu cuenta de anuncios en Telegram y ejecuta comandos directamente."
+                      : "Get critical ad account alerts on Telegram and run commands directly from there."}
                   </p>
                   <div style={{ display: "flex", flexDirection: "column" as const, gap: 7, marginBottom: 20 }}>
                     {[
