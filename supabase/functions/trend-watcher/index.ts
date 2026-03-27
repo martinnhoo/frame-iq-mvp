@@ -208,7 +208,7 @@ async function redditSearch(term: string): Promise<string[]> {
 
 const NITTER = ["https://nitter.privacydev.net", "https://nitter.cz", "https://lightbrd.com"];
 
-async function xSearch(term) {
+async function xSearch(term: string): Promise<string[]> {
   for (const instance of NITTER) {
     try {
       const r = await fetch(`${instance}/search?f=tweets&q=${encodeURIComponent(term)}&lang=pt`, {
