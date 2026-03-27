@@ -64,14 +64,7 @@ const Signup = () => {
       }
       setEmailLoading(false);
     } else {
-      // Send premium welcome email in background (non-blocking)
-      supabase.functions.invoke("send-welcome-email", {
-        body: {
-          email: email.trim(),
-          first_name: name.trim().split(" ")[0],
-          language: localStorage.getItem("adbrief_language") || navigator.language?.slice(0, 2) || "en",
-        },
-      }).catch(() => {}); // fire and forget
+      // Welcome email is sent by Onboarding.tsx after profile is complete — not here
 
       // Go directly to dashboard (no email confirmation required)
       const billingQuery = billingParam ? `&billing=${billingParam}` : '';

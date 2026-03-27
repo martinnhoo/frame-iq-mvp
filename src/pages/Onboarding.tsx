@@ -251,7 +251,7 @@ export default function Onboarding() {
     // 1. Check if persona already exists
     const { data: existing, error: selectErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
-    console.log("[persona] existing check:", { existing, selectErr: selectErr?.message });
+    
     if (existing?.length) {
       await supabase.from("personas").update({
         result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
@@ -265,10 +265,10 @@ export default function Onboarding() {
       result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
     } as never).select("id");
 
-    console.log("[persona] insert result:", { inserted, insertError: insertError?.message, code: insertError?.code });
+    
     if (!insertError && inserted?.length) {
       supabase.functions.invoke("send-welcome-email", {
-        body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
+        body: { user_id: session.user.id, email: session.user.email, first_name: name.trim().split(" ")[0] || personaName, language: lang }
       }).catch(() => {});
       return (inserted[0] as any).id as string;
     }
@@ -276,7 +276,7 @@ export default function Onboarding() {
     // 3. Try fetching again after failed insert
     const { data: retry, error: retryErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
-    console.log("[persona] retry:", { retry, retryErr: retryErr?.message });
+    
     return retry?.length ? (retry[0] as any).id as string : null;
   };
 
@@ -296,7 +296,7 @@ export default function Onboarding() {
       if (data?.url) window.location.href = data.url;
       else throw new Error("No URL");
     } catch (err: any) {
-      console.error("[onboarding connect error]", err?.message || String(err));
+      
       toast.error("Something went wrong: " + (err?.message || "unknown"));
       setConnecting(null);
     }
