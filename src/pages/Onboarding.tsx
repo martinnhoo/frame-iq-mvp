@@ -267,6 +267,7 @@ export default function Onboarding() {
       result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc },
     } as never).select("id");
 
+    if (insertError) console.error("[onboarding insert error]", insertError.message, insertError.code);
     if (!insertError && inserted?.length) {
       supabase.functions.invoke("send-welcome-email", {
         body: { user_id: session.user.id, first_name: name.trim().split(" ")[0] || personaName, language: lang }
@@ -295,8 +296,9 @@ export default function Onboarding() {
       });
       if (data?.url) window.location.href = data.url;
       else throw new Error("No URL");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err: any) {
+      console.error("[onboarding connect error]", err?.message || String(err));
+      toast.error("Something went wrong: " + (err?.message || "unknown"));
       setConnecting(null);
     }
   };
