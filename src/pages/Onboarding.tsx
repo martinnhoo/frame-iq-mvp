@@ -365,7 +365,7 @@ export default function Onboarding() {
       ))}
 
       {/* ── Header ── */}
-      <div style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 32px", flexShrink: 0 }}>
+      <div className="onboarding-header" style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 32px", flexShrink: 0 }}>
         <Logo size="md" />
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           {/* Step dots */}
@@ -390,7 +390,7 @@ export default function Onboarding() {
       </div>
 
       {/* ── Content ── */}
-      <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "32px 20px 40px", overflowY: "auto" as const }}>
+      <div className="onboarding-content" style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "32px 20px 40px", overflowY: "auto" as const }}>
         <AnimatePresence mode="wait">
           <motion.div key={step} variants={stepVariants} initial="enter" animate="center" exit="exit"
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
@@ -426,7 +426,7 @@ export default function Onboarding() {
                   <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 12, letterSpacing: "0.02em" }}>
                     {t.s1_niche_label}
                   </label>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
+                  <div className="niche-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
                     {NICHES.map(n => {
                       const active = niche === n.value;
                       return (
@@ -486,7 +486,7 @@ export default function Onboarding() {
                 </p>
 
                 {/* Before / After */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+                <div className="compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
                   <div style={{ padding: "16px", borderRadius: 16, background: "rgba(248,113,113,0.07)", border: "2px solid rgba(248,113,113,0.2)" }}>
                     <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
                     <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0, fontStyle: "italic" as const }}>{t.s2_generic}</p>
@@ -641,6 +641,25 @@ export default function Onboarding() {
         input::placeholder { color: rgba(255,255,255,0.2); }
         button, input { touch-action: manipulation; }
         * { -webkit-tap-highlight-color: transparent; }
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+          /* Nicho grid: 5 col no mobile fica muito pequeno, vai pra 3+2 */
+          .niche-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          /* Padding geral menor */
+          .onboarding-content { padding: 16px 16px 28px !important; }
+          /* Header compacto */
+          .onboarding-header { padding: 14px 16px !important; }
+          /* Botões mais fáceis de toque */
+          button { min-height: 44px; }
+          /* H1 menor no mobile */
+          .onboarding-h1 { font-size: clamp(28px,8vw,40px) !important; }
+          /* Before/after empilhado no mobile */
+          .compare-grid { grid-template-columns: 1fr !important; }
+          /* Cards de conexão fullwidth */
+        }
+        @media (max-width: 360px) {
+          .niche-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
       `}</style>
     </div>
   );
