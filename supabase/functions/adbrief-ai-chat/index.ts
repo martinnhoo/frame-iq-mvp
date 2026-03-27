@@ -160,8 +160,8 @@ Deno.serve(async (req) => {
       ? plan
       : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
 
-    const today = new Date().toISOString().slice(0, 10);
-    const monthKey = today.slice(0, 7); // YYYY-MM
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const monthKey = todayDate.slice(0, 7); // YYYY-MM
 
     // Fetch daily + monthly usage in one query
     const { data: usageRow } = await (supabase as any)
@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id).maybeSingle();
 
     const lastReset = usageRow?.last_reset?.slice(0, 10);
-    const dailyCount = lastReset === today ? (usageRow?.chat_count || 0) : 0;
+    const dailyCount = lastReset === todayDate ? (usageRow?.chat_count || 0) : 0;
     const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
     const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
 
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
       const uLang = uiLang || 'pt';
       const offerTitle = uLang === 'pt' ? 'Gerar dashboard de performance?' : uLang === 'es' ? '¿Generar dashboard de rendimiento?' : 'Generate performance dashboard?';
       // Detect which platform is connected for accurate offer text
-      const connectedPlatformNames = (platformConns || []).map((c: any) => c.platform).filter(Boolean);
+      const connectedPlatformNames: string[] = [];
       const platformLabel = connectedPlatformNames.length > 0
         ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + ' Ads').join(' + ')
         : (uLang === 'pt' ? 'sua conta de anúncios' : uLang === 'es' ? 'tu cuenta de anuncios' : 'your ad account');
@@ -319,7 +319,7 @@ Deno.serve(async (req) => {
     await (supabase as any).from("free_usage").upsert({
       user_id,
       chat_count: dailyCount + 1,
-      last_reset: today,
+      last_reset: todayDate,
       monthly_msg_count: monthlyCount + 1,
       monthly_reset: monthKey,
     }, { onConflict: "user_id" });
@@ -392,10 +392,10 @@ Deno.serve(async (req) => {
       (supabase as any).from("user_ai_profile")
         .select("*").eq("user_id", user_id).maybeSingle(),
       // 3. Creative memory
-      supabase.from("creative_memory" as any)
-        .select("hook_type, hook_score, platform, notes, created_at" as any)
-        .eq("user_id" as any, user_id)
-        .order("created_at" as any, { ascending: false }).limit(20),
+      (supabase as any).from("creative_memory")
+        .select("hook_type, hook_score, platform, notes, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false }).limit(20),
       // 4. Platform connections — STRICT persona scope
       supabase.from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")

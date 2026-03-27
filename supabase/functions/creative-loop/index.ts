@@ -64,14 +64,15 @@ serve(async (req) => {
     // ── ACTION: get_context ──
     // Retrieve accumulated learning context for use in generators
     if (action === "get_context") {
-      const [memoriesRes, patternsRes, profileRes] = await Promise.all([
+      const [memoriesRes, patternsRes, profileRes, chatMemRes] = await Promise.all([
         supaFetch(`creative_memory?user_id=eq.${user_id}&select=*&order=created_at.desc&limit=50`),
         supaFetch(`learned_patterns?user_id=eq.${user_id}&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
         supaFetch(`user_ai_profile?user_id=eq.${user_id}&select=*&limit=1`),
+        supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_type,memory_text&order=importance.desc&limit=15`),
       ]);
 
-      const [memories, patterns, profiles] = await Promise.all([
-        memoriesRes.json(), patternsRes.json(), profileRes.json(),
+      const [memories, patterns, profiles, chatMems] = await Promise.all([
+        memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemRes.json(),
       ]);
 
       const profile = profiles?.[0] || null;
@@ -119,6 +120,21 @@ serve(async (req) => {
 
       if (profile?.ai_summary) {
         contextLines.push(`\nAI PROFILE: ${profile.ai_summary}`);
+      }
+
+      if (chatMems?.length) {
+        const grouped: Record<string, string[]> = {};
+        for (const m of chatMems) {
+          const t = m.memory_type || "general";
+          if (!grouped[t]) grouped[t] = [];
+          grouped[t].push(m.memory_text);
+        }
+        contextLines.push(`\nUSER PREFERENCES (from chat):`);
+        for (const [type, texts] of Object.entries(grouped)) {
+          for (const txt of texts.slice(0, 3)) {
+            contextLines.push(`- [${type}] ${txt.slice(0, 120)}`);
+          }
+        }
       }
 
       return new Response(JSON.stringify({

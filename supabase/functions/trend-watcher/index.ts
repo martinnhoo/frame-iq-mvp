@@ -34,12 +34,12 @@ const BLOCKED = [
   "sexo","porno","nude","nudez","escort","putaria",
 ];
 
-function isBlocked(text) {
+function isBlocked(text: string): boolean {
   const l = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return BLOCKED.some(k => l.includes(k));
 }
 
-function toKey(term) {
+function toKey(term: string): string {
   return term.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/, "").slice(0, 60);
 }
@@ -82,7 +82,7 @@ async function fetchGoogleTrends(geo = "BR") {
   return await discoverTrendsViaBrave(geo);
 }
 
-function parseGoogleTrendsXML(xml) {
+function parseGoogleTrendsXML(xml: string) {
   const items = [];
   const itemMatches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
   for (let i = 0; i < Math.min(itemMatches.length, 10); i++) {
@@ -177,7 +177,7 @@ async function fetchGoogleTrends_UNUSED(geo = "BR") {
   }
 }
 
-async function braveSearch(q, count = 5) {
+async function braveSearch(q: string, count = 5): Promise<string[]> {
   if (!BRAVE_KEY) return [];
   try {
     const r = await fetch(
@@ -187,28 +187,28 @@ async function braveSearch(q, count = 5) {
     if (!r.ok) return [];
     const d = await r.json();
     return (d.web?.results || [])
-      .map(x => `${x.title}: ${(x.description || "").slice(0, 100)}`)
-      .filter(s => !isBlocked(s))
+      .map((x: any) => `${x.title}: ${(x.description || "").slice(0, 100)}`)
+      .filter((s: string) => !isBlocked(s))
       .slice(0, count);
   } catch { return []; }
 }
 
-async function redditSearch(term) {
+async function redditSearch(term: string): Promise<string[]> {
   try {
     const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(term)}&sort=hot&limit=5&t=week`;
     const r = await fetch(url, { headers: { "User-Agent": "AdBriefTrendWatcher/2.0" }, signal: AbortSignal.timeout(7000) });
     if (!r.ok) return [];
     const d = await r.json();
     return ((d.data?.children || []))
-      .map(c => (c.data?.title || "").slice(0, 100))
-      .filter(t => t.length > 5 && !isBlocked(t))
+      .map((c: any) => (c.data?.title || "").slice(0, 100))
+      .filter((t: string) => t.length > 5 && !isBlocked(t))
       .slice(0, 4);
   } catch { return []; }
 }
 
 const NITTER = ["https://nitter.privacydev.net", "https://nitter.cz", "https://lightbrd.com"];
 
-async function xSearch(term) {
+async function xSearch(term: string): Promise<string[]> {
   for (const instance of NITTER) {
     try {
       const r = await fetch(`${instance}/search?f=tweets&q=${encodeURIComponent(term)}&lang=pt`, {
@@ -227,7 +227,7 @@ async function xSearch(term) {
   return [];
 }
 
-async function analyzeTrend(term, sources) {
+async function analyzeTrend(term: string, sources: string[]) {
   if (!ANTHROPIC) return { angle: term, ad_angle: "", niches: [], risk_score: 3, category: "geral" };
   const srcText = sources.slice(0, 10).join("\n").slice(0, 1000);
   try {
@@ -251,7 +251,7 @@ async function analyzeTrend(term, sources) {
   } catch { return null; }
 }
 
-function computeRelevanceScore(trend, baseline) {
+function computeRelevanceScore(trend: any, baseline: any) {
   let score = 0;
   const p75 = baseline?.p75 || 60;
   const p90 = baseline?.p90 || 80;
@@ -414,6 +414,6 @@ Deno.serve(async (req) => {
     });
   } catch(e) {
     console.error("trend-watcher error:", e);
-    return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { ...cors, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { headers: { ...cors, "Content-Type": "application/json" } });
   }
 });
