@@ -251,7 +251,7 @@ async function analyzeTrend(term: string, sources: string[]) {
   } catch { return null; }
 }
 
-function computeRelevanceScore(trend, baseline) {
+function computeRelevanceScore(trend: any, baseline: any) {
   let score = 0;
   const p75 = baseline?.p75 || 60;
   const p90 = baseline?.p90 || 80;
