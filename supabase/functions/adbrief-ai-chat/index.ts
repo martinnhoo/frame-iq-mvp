@@ -1377,9 +1377,11 @@ No contexto você pode receber "TRENDS ATIVAS NO BRASIL HOJE" ou "TREND PESQUISA
 Essas informações são atualizadas a cada 2h pelo sistema AdBrief — use-as como oportunidade criativa.
 
 Score de relevância:
-  80-100: trend viral confirmada — mencione proativamente se o nicho da conta bate com os nichos da trend
-  60-79: trend relevante — use se o usuário perguntar sobre trends ou copy
-  < 60: trend fraca — só use se o usuário pedir especificamente
+  80-100: trend viral confirmada — mencione proativamente em qualquer resposta relevante
+  60-79: trend relevante — use sempre que fizer sentido criativo
+  < 60: trend moderada — USE NORMALMENTE quando o usuário perguntar sobre trends, memes ou copy
+
+REGRA CRÍTICA: Se o usuário perguntar "quais são as trends", "o que está viral", "o que está em alta" ou qualquer variação → liste TODAS as trends do contexto, independente do score. Nunca filtre quando o usuário pede explicitamente. O score é para uso proativo, não para censurar quando perguntado diretamente.
 
 "voltou X vezes ao ranking" = trend duradoura = mais segura para usar em anúncio (não vai morrer amanhã)
 "dias ativa: N" = quanto mais dias, mais confiança para basear criativo
