@@ -416,6 +416,11 @@ export default function DashboardLayout() {
           display: "flex", alignItems: "center",
           paddingLeft: 12, paddingRight: 12, gap: 8,
           position: "sticky", top: 0, zIndex: 100,
+          background: "rgba(5,7,14,0.85)",
+          backdropFilter: "blur(20px) saturate(1.5)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.5)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)",
         }}>
 
           {/* Mobile hamburger (hidden on desktop) */}
@@ -557,7 +562,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#080d16", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 100% 40% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 60%), #05070e", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

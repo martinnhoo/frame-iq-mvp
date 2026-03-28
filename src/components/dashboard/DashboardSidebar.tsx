@@ -284,10 +284,10 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
 
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ width: 220, background: SB.bg, borderRight: `1px solid rgba(255,255,255,0.07)`, fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
+        style={{ width: 220, background: "linear-gradient(180deg, #0d1424 0%, #080c16 60%, #060a12 100%)", borderRight: "1px solid rgba(255,255,255,0.07)", boxShadow: "4px 0 32px rgba(0,0,0,0.5)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* ── Logo ── */}
-        <div style={{ height: 52, minHeight: 52, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", background: "#0b0f18" }}>
+        <div style={{ height: 52, minHeight: 52, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", background: "transparent", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
             <Logo size="md" />

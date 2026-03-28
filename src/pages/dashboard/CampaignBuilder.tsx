@@ -206,7 +206,7 @@ export default function CampaignBuilder() {
 
   const BG="#0e1118";
   return(
-    <div style={{minHeight:"100vh",background:BG,fontFamily:"'DM Sans',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#060a12 0%,#04060a 100%)",fontFamily:"'DM Sans',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -289,7 +289,7 @@ export default function CampaignBuilder() {
       <div className="campaign-body" style={{flex:1,display:"flex",overflow:"hidden"}}>
 
         {/* Form */}
-        <div style={{flex:1,padding:"28px 32px",overflowY:"auto",animation:"fadeUp 0.2s ease",minWidth:0}} key={`${platform}-${step}`}>
+        <div style={{flex:1,padding:"28px 32px",overflowY:"auto",animation:"fadeUp 0.2s ease",minWidth:0,background:"transparent"}} key={`${platform}-${step}`}>
 
           {/* STEP 0: Objetivo */}
           {step===0&&(
@@ -505,7 +505,7 @@ export default function CampaignBuilder() {
         </div>
 
         {/* AI Panel */}
-        <div className="campaign-ai-panel" style={{width:290,borderLeft:`1px solid ${BD}`,background:S1,display:"flex",flexDirection:"column",flexShrink:0}}>
+        <div className="campaign-ai-panel" style={{width:290,borderLeft:"1px solid rgba(255,255,255,0.06)",background:"linear-gradient(180deg,rgba(14,165,233,0.04) 0%,rgba(255,255,255,0.02) 100%)",display:"flex",flexDirection:"column",flexShrink:0,boxShadow:"inset 4px 0 16px rgba(0,0,0,0.3)"}}>
           <div style={{padding:"14px 18px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:7,height:7,borderRadius:"50%",background:aiLoading?pc:GREEN,animation:aiLoading?"pulse 1s infinite":"none"}}/>
             <p style={{margin:0,fontSize:13,fontWeight:600,color:TX}}>Co-piloto IA</p>

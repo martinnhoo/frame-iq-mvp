@@ -1852,7 +1852,7 @@ const TemplatesPage = () => {
             return (
               <div key={template.id}
                 className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-200 active:scale-[0.99] hover:scale-[1.01]"
-                style={{ background: "#111", border: "1px solid rgba(255,255,255,0.07)" }}>
+                style={{ background: "linear-gradient(145deg,#0e1825 0%,#090d14 100%)", border: "1px solid rgba(255,255,255,0.08)", borderTopColor: "rgba(255,255,255,0.13)", boxShadow: "0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
                 {/* Color accent top bar */}
                 <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${getCatAccent(template.category)}, transparent)` }} />
                 <div className="p-4 sm:p-4 flex flex-col">

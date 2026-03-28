@@ -152,10 +152,12 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
         return (
           <div key={p.id} style={{
             borderRadius: 12,
-            background: connected ? `${p.color}0a` : "rgba(255,255,255,0.02)",
-            border: `1px solid ${connected ? p.color + "30" : "rgba(255,255,255,0.08)"}`,
+            background: connected ? `linear-gradient(135deg, ${p.color}12 0%, ${p.color}04 100%)` : "linear-gradient(135deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.01) 100%)",
+            border: `1px solid ${connected ? p.color + "35" : "rgba(255,255,255,0.08)"}`,
+            borderTopColor: connected ? p.color + "50" : "rgba(255,255,255,0.12)",
             overflow: "hidden",
             transition: "all 0.15s",
+            boxShadow: connected ? `0 4px 16px ${p.color}15, inset 0 1px 0 ${p.color}15` : "0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
           }}>
             {/* Main row */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", overflow: "hidden" }}>

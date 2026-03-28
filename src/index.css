@@ -741,3 +741,246 @@ input, textarea, select {
 .typing-dot:nth-child(2) { animation: typingBounce 1.2s 0.15s ease-in-out infinite; }
 .typing-dot:nth-child(3) { animation: typingBounce 1.2s 0.30s ease-in-out infinite; }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DEPTH SYSTEM — Luz, sombra, profundidade
+   Filosofia: luz vem de cima-esquerda, objetos elevados têm borda superior 
+   mais clara e sombra inferior mais profunda (como Linear, Vercel, Raycast)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Elevation tokens ─────────────────────────────────────────────────────── */
+:root {
+  /* Superfícies */
+  --surface-0:  #04050a;   /* base — fundo mais profundo */
+  --surface-1:  #080c14;   /* sidebar, topbar */
+  --surface-2:  #0c1220;   /* cards, painéis */
+  --surface-3:  #111a2c;   /* cards elevated, hover */
+  --surface-4:  #162035;   /* cards ativos, selecionados */
+
+  /* Sombras — luz de cima-esquerda */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
+  --shadow-xl:  0 20px 60px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.5);
+
+  /* Glow — apenas para elementos interativos focados */
+  --glow-blue:  0 0 0 1px rgba(14,165,233,0.4), 0 0 20px rgba(14,165,233,0.15);
+  --glow-cyan:  0 0 0 1px rgba(6,182,212,0.35), 0 0 16px rgba(6,182,212,0.12);
+
+  /* Bordas com luz */
+  --border-dim:       rgba(255,255,255,0.06);
+  --border-normal:    rgba(255,255,255,0.09);
+  --border-bright:    rgba(255,255,255,0.14);
+  --border-top-light: rgba(255,255,255,0.12); /* borda superior mais clara = luz de cima */
+}
+
+/* ── Dashboard root — fundo mais profundo ────────────────────────────────── */
+.dashboard-root {
+  background: var(--surface-0) !important;
+}
+
+/* ── Sidebar — elevada da base com borda direita ─────────────────────────── */
+@media (min-width: 1024px) {
+  .sidebar-transition {
+    background: linear-gradient(180deg, #0b1020 0%, #080c18 100%) !important;
+    border-right: 1px solid var(--border-dim) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.4) !important;
+  }
+}
+
+/* ── Topbar — glassmorphism real ──────────────────────────────────────────── */
+.dashboard-topbar {
+  background: rgba(7, 10, 18, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+
+/* ── KPI cards — profundidade real ───────────────────────────────────────── */
+.lp-kpi {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-top-color: var(--border-top-light) !important; /* luz de cima */
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important;
+}
+.lp-kpi:hover {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  border-color: var(--border-normal) !important;
+  border-top-color: var(--border-bright) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ── Dashboard main — fundo com gradiente radial sutil ───────────────────── */
+.dashboard-main {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(14,165,233,0.04) 0%,
+    transparent 60%
+  ), var(--surface-0) !important;
+}
+
+/* ── Cards genéricos — profundidade ──────────────────────────────────────── */
+.card-hover {
+  background: linear-gradient(135deg, var(--surface-2) 0%, rgba(8,12,20,1) 100%) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-top-color: var(--border-normal) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+.card-hover:hover {
+  background: linear-gradient(135deg, var(--surface-3) 0%, var(--surface-2) 100%) !important;
+  border-color: var(--border-normal) !important;
+  border-top-color: var(--border-bright) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ── Input fields — elevação e foco ──────────────────────────────────────── */
+.input-glow {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-top-color: var(--border-normal) !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(0,0,0,0.2) !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.input-glow:focus {
+  border-color: rgba(14,165,233,0.5) !important;
+  box-shadow: var(--glow-blue), inset 0 2px 4px rgba(0,0,0,0.2) !important;
+  background: rgba(14,165,233,0.04) !important;
+}
+
+/* ── Tool page cards — Tailwind .rounded-2xl com profundidade ────────────── */
+@media (min-width: 1024px) {
+  .rounded-2xl.border {
+    box-shadow: var(--shadow-sm) !important;
+    border-top-color: rgba(255,255,255,0.1) !important;
+  }
+  .rounded-2xl.border:hover {
+    box-shadow: var(--shadow-md) !important;
+  }
+
+  .rounded-xl.border {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+    border-top-color: rgba(255,255,255,0.09) !important;
+  }
+}
+
+/* ── Sidebar nav item active — elevação com glow ─────────────────────────── */
+.sidebar-active-item {
+  box-shadow: 0 0 0 1px rgba(14,165,233,0.2), inset 0 1px 0 rgba(14,165,233,0.1) !important;
+}
+
+/* ── Chat input area — elevated panel ────────────────────────────────────── */
+.chat-input-wrap {
+  background: rgba(8,12,20,0.95) !important;
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* ── Buttons — elevação e profundidade ───────────────────────────────────── */
+button[style*="linear-gradient"] {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  transition: box-shadow 0.15s ease, transform 0.1s ease !important;
+}
+button[style*="linear-gradient"]:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px) !important;
+}
+button[style*="linear-gradient"]:active {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(0,0,0,0.3) !important;
+  transform: translateY(0) !important;
+}
+
+/* ── Section dividers — separação com luz ────────────────────────────────── */
+.border-t {
+  border-top-color: var(--border-dim) !important;
+}
+.border-b {
+  border-bottom-color: var(--border-dim) !important;
+}
+
+/* ── Dropdown / popup panels ─────────────────────────────────────────────── */
+[style*="zIndex: 99999"],
+[style*="z-index: 99999"] {
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255,255,255,0.08) !important;
+}
+
+/* ── Modal overlays ──────────────────────────────────────────────────────── */
+[style*="zIndex: 9999"],
+[style*="z-index: 9999"] {
+  box-shadow: var(--shadow-xl) !important;
+  border: 1px solid var(--border-normal) !important;
+  border-top-color: var(--border-bright) !important;
+}
+
+/* ── Pricing cards — special depth ───────────────────────────────────────── */
+@media (min-width: 1024px) {
+  /* Pro card pulse */
+  [class*="pricing"] [style*="0ea5e9"] {
+    box-shadow: 0 0 40px rgba(14,165,233,0.12), var(--shadow-lg) !important;
+  }
+}
+
+/* ── Scrollbar styling ────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .dashboard-main::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+}
+
+/* ── HookGenerator — funnel cards ────────────────────────────────────────── */
+.rounded-2xl[style*="rgba(96,165,250"],
+.rounded-2xl[style*="rgba(14,165,233"],
+.rounded-2xl[style*="rgba(52,211,153"] {
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* ── Chip/pill buttons ────────────────────────────────────────────────────── */
+.lp-chip {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+  transition: all 0.15s ease !important;
+}
+.lp-chip:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+/* ── AdBrief AI page — chat message bubbles ─────────────────────────────── */
+.user-msg-row > div {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ── Accounts page — platform cards ─────────────────────────────────────── */
+[style*="overflow: hidden"][style*="transition: all"] {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ── Tag/badge pills depth ───────────────────────────────────────────────── */
+span[style*="border-radius: 99"],
+span[style*="borderRadius: 99"],
+span[style*="borderRadius: 20"],
+span[style*="borderRadius: \"99\""] {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+/* ── Landing section backgrounds — depth gradient ───────────────────────── */
+section {
+  position: relative;
+}
+
+/* ── Ambient glow behind hero demo ───────────────────────────────────────── */
+.hero-main-section::after {
+  content: '';
+  position: absolute;
+  right: 8%;
+  top: 20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(ellipse, rgba(14,165,233,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
