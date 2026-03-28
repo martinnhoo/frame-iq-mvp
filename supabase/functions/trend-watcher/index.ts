@@ -188,8 +188,8 @@ async function braveSearch(q: string, count = 5): Promise<string[]> {
     if (!r.ok) return [];
     const d = await r.json();
     return (d.web?.results || [])
-      .map(x => `${x.title}: ${(x.description || "").slice(0, 100)}`)
-      .filter(s => !isBlocked(s))
+      .map((x: any) => `${x.title}: ${(x.description || "").slice(0, 100)}`)
+      .filter((s: string) => !isBlocked(s))
       .slice(0, count);
   } catch { return []; }
 }
