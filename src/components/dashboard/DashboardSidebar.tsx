@@ -8,6 +8,7 @@ import {
   LayoutTemplate, Kanban, Cpu, Users2, TrendingUp, Plus, Rocket,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { motion } from "framer-motion";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,18 +50,18 @@ const PLANS: Record<string, { label: string; color: string }> = {
 
 // Sidebar colors v2 — more contrast, cleaner hierarchy
 const SB = {
-  bg:           "#0b0f18",
-  border:       "rgba(255,255,255,0.08)",
-  activeItem:   "rgba(14,165,233,0.10)",
-  activeBorder: "rgba(14,165,233,0.35)",
-  activeText:   "#cce8ff",
+  bg:           "#080c14",
+  border:       "rgba(255,255,255,0.07)",
+  activeItem:   "rgba(14,165,233,0.13)",
+  activeBorder: "rgba(14,165,233,0.45)",
+  activeText:   "#e2f4ff",
   activeIcon:   "#38bdf8",
-  idleText:     "rgba(238,240,246,0.50)",
-  idleIcon:     "rgba(238,240,246,0.30)",
-  hoverBg:      "rgba(255,255,255,0.05)",
-  divider:    "rgba(255,255,255,0.10)",
-  sectionLabel: "rgba(255,255,255,0.28)",
-  footerBg:   "rgba(0,0,0,0.2)",
+  idleText:     "rgba(238,240,246,0.52)",
+  idleIcon:     "rgba(238,240,246,0.28)",
+  hoverBg:      "rgba(255,255,255,0.06)",
+  divider:      "rgba(255,255,255,0.07)",
+  sectionLabel: "rgba(255,255,255,0.3)",
+  footerBg:     "rgba(0,0,0,0.25)",
 };
 
 export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose, onOpenProfile, savedPersonas = [], selectedPersona, onSelectPersona }: SidebarProps) {

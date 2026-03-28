@@ -114,7 +114,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="page-enter p-6 space-y-5">
           {/* Target market */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
             <div>
@@ -1763,7 +1763,7 @@ const TemplatesPage = () => {
   const mono = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
 
   return (
-    <div className="relative flex flex-col min-h-screen">
+    <div className="page-enter relative flex flex-col min-h-screen">
       {translateModal && (
         <TranslateModal
           template={translateModal}

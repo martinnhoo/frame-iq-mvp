@@ -153,7 +153,7 @@ export default function ScriptGenerator() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="page-enter p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(14,165,233,0.15)" }}>
           <FileText className="h-5 w-5" style={{ color: "#0ea5e9" }} />

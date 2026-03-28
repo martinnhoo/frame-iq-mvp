@@ -1,5 +1,6 @@
 // DashboardLayout v2 — build 2026-03-20
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -414,8 +415,6 @@ export default function DashboardLayout() {
           height: 52, minHeight: 52, maxHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
           paddingLeft: 12, paddingRight: 12, gap: 8,
-          background: "#0b0f18",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
           position: "sticky", top: 0, zIndex: 100,
         }}>
 
@@ -558,8 +557,19 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "#0d1117", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
-          <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
+        <main className="flex-1 dashboard-main" style={{ background: "#080d16", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
+            >
+              <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

@@ -748,7 +748,7 @@ function Kpi({ label, value, sub, trend, spark, color = "#6366f1", warn = false 
   const vc = warn ? "#fb7185" : "#f1f5f9";
   const sc = warn ? "#fb7185" : trend === "up" ? "#34d399" : trend === "down" ? "#fb7185" : "#475569";
   return (
-    <div className="lp-kpi" style={{
+    <div className="lp-kpi kpi-card" style={{
       flex: 1, minWidth: 0, padding: "14px 16px 14px",
       background: warn ? "rgba(251,113,133,0.03)" : "rgba(255,255,255,0.02)",
       border: `1px solid ${warn ? "rgba(251,113,133,0.12)" : "rgba(255,255,255,0.06)"}`,

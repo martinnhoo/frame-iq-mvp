@@ -528,3 +528,216 @@ input, textarea, select {
     white-space: nowrap !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD ANIMATIONS — Production Final
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page entry animation ─────────────────────────────────────────────────── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: pageEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Fade up (for cards staggered) ───────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.fade-up-1 { animation: fadeUp 0.3s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-2 { animation: fadeUp 0.3s 0.10s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-3 { animation: fadeUp 0.3s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-4 { animation: fadeUp 0.3s 0.20s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-5 { animation: fadeUp 0.3s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ── Scale in (for modals, popups) ───────────────────────────────────────── */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Sidebar item hover ───────────────────────────────────────────────────── */
+.sidebar-nav-item {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.sidebar-nav-item:hover {
+  transform: translateX(2px);
+}
+.sidebar-nav-item:active {
+  transform: translateX(1px) scale(0.99);
+}
+
+/* ── Card hover lift ──────────────────────────────────────────────────────── */
+.card-hover {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ── Button press ─────────────────────────────────────────────────────────── */
+.btn-press {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* ── KPI card entrance stagger ───────────────────────────────────────────── */
+.kpi-card {
+  animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.kpi-card:nth-child(1) { animation-delay: 0s; }
+.kpi-card:nth-child(2) { animation-delay: 0.05s; }
+.kpi-card:nth-child(3) { animation-delay: 0.10s; }
+.kpi-card:nth-child(4) { animation-delay: 0.15s; }
+.kpi-card:nth-child(5) { animation-delay: 0.20s; }
+
+/* ── Input focus glow ─────────────────────────────────────────────────────── */
+.input-glow {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-glow:focus {
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+  outline: none;
+}
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Pulse dot (live indicator) ──────────────────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+.pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+/* ── Sidebar active item glow ─────────────────────────────────────────────── */
+@keyframes activeGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0); }
+  50%       { box-shadow: 0 0 12px 0 rgba(14,165,233,0.15); }
+}
+
+.sidebar-active-item {
+  animation: activeGlow 3s ease-in-out infinite;
+}
+
+/* ── Topbar ───────────────────────────────────────────────────────────────── */
+.dashboard-topbar {
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: rgba(8, 12, 20, 0.85);
+  transition: background 0.2s ease;
+}
+
+/* ── Smooth tab switch ────────────────────────────────────────────────────── */
+@keyframes tabSlide {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.tab-content-enter {
+  animation: tabSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Message bubble entrance ──────────────────────────────────────────────── */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.msg-enter {
+  animation: msgIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Smooth number count ──────────────────────────────────────────────────── */
+@keyframes countIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.count-in {
+  animation: countIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Gradient border animation ────────────────────────────────────────────── */
+@keyframes borderRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Loading spinner ──────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Sidebar logo hover ───────────────────────────────────────────────────── */
+.sidebar-logo {
+  transition: opacity 0.15s ease;
+}
+.sidebar-logo:hover {
+  opacity: 0.85;
+}
+
+/* ── Tool card interactive ────────────────────────────────────────────────── */
+.tool-card-interactive {
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+.tool-card-interactive:hover {
+  transform: translateY(-1px);
+  border-color: rgba(14,165,233,0.25) !important;
+  background: rgba(14,165,233,0.05) !important;
+}
+.tool-card-interactive:active {
+  transform: translateY(0px) scale(0.99);
+}
+
+/* ── AI message typing indicator ─────────────────────────────────────────── */
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%            { transform: translateY(-4px); opacity: 1; }
+}
+
+.typing-dot:nth-child(1) { animation: typingBounce 1.2s 0s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation: typingBounce 1.2s 0.15s ease-in-out infinite; }
+.typing-dot:nth-child(3) { animation: typingBounce 1.2s 0.30s ease-in-out infinite; }
+
