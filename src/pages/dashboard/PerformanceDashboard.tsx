@@ -323,7 +323,7 @@ export default function PerformanceDashboard() {
 
           {/* Metrics grid */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:16}}>
-            <MetricCard label="Ad Spend" value={`R$ ${fmtSpend(d.spend||0)}`} delta={d.delta_spend} sparkData={sparkSpend} accent={ACCENT} icon={DollarSign}/>
+            <MetricCard label={language === "pt" ? "Gasto total" : language === "es" ? "Gasto total" : "Ad Spend"} value={`R$ ${fmtSpend(d.spend||0)}`} delta={d.delta_spend} sparkData={sparkSpend} accent={ACCENT} icon={DollarSign}/>
             <MetricCard label="CTR Médio" value={((d.ctr||0)*100).toFixed(2)} suffix="%" delta={d.delta_ctr} sparkData={sparkCtr} accent={GREEN} icon={MousePointer}/>
             <MetricCard label="Cliques" value={fmtNum(d.clicks||0)} delta={d.delta_clicks} sparkData={sparkClicks} accent="#a78bfa" icon={Target}/>
             <MetricCard label="Conversões" value={fmtNum(d.conversions||0)} accent={AMBER} icon={Eye}/>

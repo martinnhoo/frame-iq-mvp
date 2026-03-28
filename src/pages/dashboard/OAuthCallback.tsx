@@ -145,9 +145,9 @@ export default function OAuthCallback() {
 
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
           {status === "loading" && `Connecting ${pl.name}`}
-          {status === "selecting" && "Choose an ad account"}
+          {status === "selecting" && "Escolha uma conta de anúncios"}
           {status === "success" && `${pl.name} Connected`}
-          {status === "error" && "Connection Failed"}
+          {status === "error" && "Falha na conexão"}
         </h2>
 
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 20 }}>{message}</p>

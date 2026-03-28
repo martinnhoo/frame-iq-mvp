@@ -267,7 +267,7 @@ export default function LoopImportPage() {
             <Button onClick={processImport} disabled={loading} className="w-full gap-2"
               style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)", color: "#000" }}>
               {loading ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-              {loading ? "Processing..." : "Import & Parse Creatives"}
+              {loading ? "Processando..." : "Importar e analisar criativos"}
             </Button>
           </div>
         )}

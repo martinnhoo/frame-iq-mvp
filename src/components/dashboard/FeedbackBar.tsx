@@ -56,7 +56,7 @@ export function FeedbackBar({
       <div className={`flex items-center gap-1.5 ${className}`}>
         <Check className="h-3 w-3 text-green-400" />
         <span className="text-[10px] text-white/45" style={mono}>
-          {rated === 1 ? "Marked as useful" : "Noted — AI will adapt"}
+          {rated === 1 ? "Marcado como útil" : "Registrado — IA vai melhorar"}
         </span>
       </div>
     );
@@ -72,7 +72,7 @@ export function FeedbackBar({
       <button
         onClick={() => submit(1)}
         disabled={loading}
-        title="This was useful"
+        title="Isso foi útil"
         className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-green-500/15 hover:text-green-400 text-white/40 disabled:opacity-40"
         style={{ border: "1px solid rgba(255,255,255,0.07)" }}
       >
@@ -81,7 +81,7 @@ export function FeedbackBar({
       <button
         onClick={() => submit(-1)}
         disabled={loading}
-        title="This wasn't useful"
+        title="Isso não foi útil"
         className="h-6 w-6 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/15 hover:text-red-400 text-white/40 disabled:opacity-40"
         style={{ border: "1px solid rgba(255,255,255,0.07)" }}
       >

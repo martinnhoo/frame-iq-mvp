@@ -316,7 +316,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
     const ext = file.name.split(".").pop();
     const path = `${userId}/${account?.id || "new"}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("account-logos").upload(path, file, { upsert: true });
-    if (error) { toast.error("Upload failed"); setUploading(false); return; }
+    if (error) { toast.error("Falha no upload"); setUploading(false); return; }
     const { data } = supabase.storage.from("account-logos").getPublicUrl(path);
     setLogoUrl(data.publicUrl);
     setUploading(false);
@@ -335,7 +335,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
       result = data;
     }
     setSaving(false);
-    if (result) { toast.success(account?.id ? "Account updated" : "Account created"); onSave(result as Account); }
+    if (result) { toast.success(account?.id ? "Conta atualizada" : "Conta criada"); onSave(result as Account); }
     else toast.error("Failed to save");
   };
 

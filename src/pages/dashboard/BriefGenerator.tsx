@@ -203,7 +203,7 @@ export default function BriefGenerator() {
               <h2 className="text-lg font-bold text-foreground" style={syne}>{b.campaign_name}</h2>
               <Button size="sm" variant="ghost" onClick={copyBrief} className="gap-1.5">
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied" : "Copy All"}
+                {copied ? (language === "pt" ? "Copiado" : language === "es" ? "Copiado" : "Copied") : (language === "pt" ? "Copiar tudo" : language === "es" ? "Copiar todo" : "Copy All")}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.objective}</p>

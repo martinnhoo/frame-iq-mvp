@@ -144,7 +144,7 @@ const VideosList = () => {
     setDeleting(id);
     await supabase.from("videos_generated").delete().eq("id", id);
     setVideos(p => p.filter(v => v.id !== id));
-    toast.success("Deleted");
+    toast.success("Excluído");
     setDeleting(null);
   };
 
@@ -176,10 +176,10 @@ const VideosList = () => {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">
-                  {genStatus === "done" ? "Video generated!" : "Ready to generate"}
+                  {genStatus === "done" ? "Vídeo gerado! ✓" : "Pronto para gerar"}
                 </p>
                 <p className="text-xs text-white/50">
-                  {genStatus === "done" ? "Want changes? Describe them below." : "Video will be ready for download"}
+                  {genStatus === "done" ? "Quer alterações? Descreva abaixo." : "Vídeo pronto para download em breve"}
                 </p>
               </div>
             </div>

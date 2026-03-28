@@ -42,7 +42,7 @@ const BoardsList = () => {
     setDeleting(id);
     await supabase.from("boards").delete().eq("id", id);
     setBoards(p => p.filter(b => b.id !== id));
-    toast.success("Board deleted");
+    toast.success(language === "pt" ? "Board excluído" : "Board deleted");
     setDeleting(null);
   };
 
@@ -125,7 +125,7 @@ const BoardsList = () => {
                 {/* Title */}
                 <div className="flex-1">
                   <p className="font-semibold text-white/80 group-hover:text-white transition-colors truncate">
-                    {board.title || "Untitled Board"}
+                    {board.title || (language === "pt" ? "Board sem título" : "Untitled Board")}
                   </p>
                   {board.prompt && (
                     <p className="text-xs text-white/50 mt-1 line-clamp-2 leading-relaxed">{board.prompt}</p>

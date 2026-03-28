@@ -240,12 +240,12 @@ export default function DashboardOverview() {
     { title: dt("ov_analyze"),   desc: dt("ov_analyze_desc"),   icon: BarChart3, url: "/dashboard/analyses/new", accent: "#0ea5e9" },
     { title: dt("ov_board"),     desc: dt("ov_board_desc"),     icon: LayoutGrid,url: "/dashboard/boards/new",   accent: "#60a5fa" },
     { title: dt("ov_hooks"),     desc: dt("ov_hooks_desc"),     icon: Cpu,       url: "/dashboard/hooks",        accent: "#fb923c" },
-    { title: "Script",           desc: "Full ad script",        icon: Zap,       url: "/dashboard/script",       accent: "#0ea5e9" },
-    { title: "Brief",            desc: "Production brief",      icon: Sparkles,  url: "/dashboard/brief",        accent: "#60a5fa" },
+    { title: language === "pt" ? "Roteiro" : language === "es" ? "Guión" : "Script",           desc: language === "pt" ? "Roteiro completo de anúncio" : language === "es" ? "Guión completo" : "Full ad script",        icon: Zap,       url: "/dashboard/script",       accent: "#0ea5e9" },
+    { title: "Brief",            desc: language === "pt" ? "Brief de produção" : language === "es" ? "Brief de producción" : "Production brief",      icon: Sparkles,  url: "/dashboard/brief",        accent: "#60a5fa" },
     { title: dt("nav_translate"),desc: dt("ov_translate_desc"), icon: Languages, url: "/dashboard/translate",    accent: "#34d399" },
     { title: dt("ov_templates"), desc: dt("ov_templates_desc"), icon: Layers,    url: "/dashboard/templates",    accent: "#06b6d4" },
     { title: dt("nav_preflight"),desc: dt("ov_preflight_desc"), icon: Plane,     url: "/dashboard/preflight",    accent: "#fbbf24" },
-    { title: "Competitor",       desc: "Decode competitor ads", icon: Brain,     url: "/dashboard/competitor",   accent: "#34d399" },
+    { title: language === "pt" ? "Concorrente" : language === "es" ? "Competidor" : "Competitor",       desc: language === "pt" ? "Decodifique anúncios concorrentes" : language === "es" ? "Decodifica anuncios" : "Decode competitor ads", icon: Brain,     url: "/dashboard/competitor",   accent: "#34d399" },
   ];
 
   const usageBlocks = [
@@ -307,9 +307,9 @@ export default function DashboardOverview() {
             </div>
             <div className="divide-y divide-white/[0.04]">
               {([
-                { n: 1, icon: "🎬", title: "Analyze your first ad", desc: "Upload any video — AdBrief scores the hook, flags what's costing you budget, tells you exactly what to fix.", cta: "Analyze now →", url: "/dashboard/analyses/new", done: usedAnalyses > 0 },
-                { n: 2, icon: "⚡", title: "Generate hooks before producing", desc: "Test 10 hook angles in 30s. Each gets a predicted CTR score. Never produce a weak hook again.", cta: "Generate hooks →", url: "/dashboard/hooks", done: false },
-                { n: 3, icon: "🧠", title: "Ask AdBrief AI what to fix", desc: "Your AI already knows your account. Ask it what's wasting budget and what to produce next.", cta: "Ask AI →", url: "/dashboard/ai", done: false },
+                { n: 1, icon: "🎬", title: language === "pt" ? "Analise seu primeiro anúncio" : "Analyze your first ad", desc: language === "pt" ? "Faça upload de qualquer vídeo — AdBrief pontua o hook, aponta o que está custando budget e diz exatamente o que corrigir." : "Upload any video — AdBrief scores the hook, flags what's costing you budget, tells you exactly what to fix.", cta: language === "pt" ? "Analisar agora →" : "Analyze now →", url: "/dashboard/analyses/new", done: usedAnalyses > 0 },
+                { n: 2, icon: "⚡", title: language === "pt" ? "Gere hooks antes de produzir" : "Generate hooks before producing", desc: language === "pt" ? "Teste 10 ângulos de hook em 30s. Cada um tem score de CTR previsto. Nunca produza um hook fraco." : "Test 10 hook angles in 30s. Each gets a predicted CTR score. Never produce a weak hook again.", cta: language === "pt" ? "Gerar hooks →" : "Generate hooks →", url: "/dashboard/hooks", done: false },
+                { n: 3, icon: "🧠", title: language === "pt" ? "Pergunte à IA o que corrigir" : "Ask AdBrief AI what to fix", desc: language === "pt" ? "A IA já conhece sua conta. Pergunte o que está desperdiçando budget e o que produzir." : "Your AI already knows your account. Ask it what's wasting budget and what to produce next.", cta: language === "pt" ? "Perguntar →" : "Ask AI →", url: "/dashboard/ai", done: false },
               ] as {n:number;icon:string;title:string;desc:string;cta:string;url:string;done:boolean}[]).map(step => (
                 <button key={step.n} onClick={() => navigate(step.url)}
                   className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors">
@@ -372,9 +372,9 @@ export default function DashboardOverview() {
               {intelFeed.length === 0 ? (
                 <div className="px-4 py-5 space-y-2">
                   {[
-                    { icon: "🎬", title: "Analyze your first ad", body: "Upload any video — AdBrief scores the hook, flags weak points, and tells you exactly what to fix.", url: "/dashboard/analyses/new", tag: "Start here" },
-                    { icon: "⚡", title: "Generate hooks before producing", body: "Test 10 hook angles in 30s before committing budget to production.", url: "/dashboard/hooks", tag: "Save budget" },
-                    { icon: "📋", title: "Brief your editor with AI", body: "Turn any insight into a production-ready brief. No back-and-forth, no guesswork.", url: "/dashboard/brief", tag: "Efficiency" },
+                    { icon: "🎬", title: language === "pt" ? "Analise seu primeiro anúncio" : "Analyze your first ad", body: language === "pt" ? "Faça upload de qualquer vídeo — AdBrief pontua o hook e diz exatamente o que corrigir." : "Upload any video — AdBrief scores the hook, flags weak points, and tells you exactly what to fix.", url: "/dashboard/analyses/new", tag: language === "pt" ? "Comece aqui" : "Start here" },
+                    { icon: "⚡", title: language === "pt" ? "Gere hooks antes de produzir" : "Generate hooks before producing", body: language === "pt" ? "Teste 10 ângulos em 30s antes de investir em produção." : "Test 10 hook angles in 30s before committing budget to production.", url: "/dashboard/hooks", tag: language === "pt" ? "Economize" : "Save budget" },
+                    { icon: "📋", title: language === "pt" ? "Crie briefs com IA" : "Brief your editor with AI", body: language === "pt" ? "Transforme qualquer insight em um brief pronto. Sem vai e volta, sem achismo." : "Turn any insight into a production-ready brief. No back-and-forth, no guesswork.", url: "/dashboard/brief", tag: language === "pt" ? "Eficiência" : "Efficiency" },
                   ].map((tip, i) => (
                     <button key={i} onClick={() => navigate(tip.url)}
                       className="w-full flex items-start gap-3 p-3 rounded-xl text-left hover:bg-white/[0.03] transition-colors"

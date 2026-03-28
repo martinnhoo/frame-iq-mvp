@@ -79,7 +79,7 @@ export default function LoopSettingsPage() {
         updated_at: new Date().toISOString(),
       } as any, { onConflict: "user_id" });
       if (error) throw error;
-      toast.success("Nomenclature config saved");
+      toast.success("Configuração salva");
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
     } finally {
@@ -198,7 +198,7 @@ export default function LoopSettingsPage() {
       <Button onClick={save} disabled={saving} className="w-full gap-2"
         style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-        {saving ? "Saving..." : "Save Configuration"}
+        {saving ? "Salvando..." : "Salvar configuração"}
       </Button>
     </div>
   );

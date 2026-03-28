@@ -69,7 +69,7 @@ const BoardDetail = () => {
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
-    toast.success("Copied");
+    toast.success(language === "pt" ? "Copiado" : "Copied");
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -154,7 +154,7 @@ const BoardDetail = () => {
       // Small delay between requests
       if (i < scenes.length - 1) await new Promise(r => setTimeout(r, 500));
     }
-    toast.success("All reference images generated");
+    toast.success(language === "pt" ? "Todas as imagens geradas" : "All reference images generated");
   };
 
   const generateAB = async () => {
@@ -175,7 +175,7 @@ const BoardDetail = () => {
   const handleDelete = async () => {
     if (!confirm("Delete this board? This cannot be undone.")) return;
     await supabase.from("boards").delete().eq("id", id);
-    toast.success("Board deleted");
+    toast.success(language === "pt" ? "Board excluído" : "Board deleted");
     navigate("/dashboard/boards");
   };
 
@@ -222,7 +222,7 @@ const BoardDetail = () => {
         </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
-            {board.title || "Untitled Board"}
+            {board.title || (language === "pt" ? "Board sem título" : "Untitled Board")}
           </h1>
           <p className="text-white/50 text-sm mt-0.5 line-clamp-1">{board.prompt}</p>
         </div>

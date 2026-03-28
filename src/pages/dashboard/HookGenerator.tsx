@@ -50,8 +50,8 @@ const HOOK_TYPE_COLORS: Record<string, string> = {
 const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: string }> = {
   viral:  { color: "text-green-400",  label: "Viral",   bar: "bg-green-400" },
   high:   { color: "text-blue-400",   label: "Alto",    bar: "bg-blue-400" },
-  medium: { color: "text-yellow-400", label: "Medium",  bar: "bg-yellow-400" },
-  low:    { color: "text-red-400",    label: "Low",     bar: "bg-red-400" },
+  medium: { color: "text-yellow-400", label: "Médio",   bar: "bg-yellow-400" },
+  low:    { color: "text-red-400",    label: "Baixo",   bar: "bg-red-400" },
 };
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
