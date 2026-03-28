@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
         estimated_cost: estimatedMonthlyCost,
         plan_revenue: revenue,
         cost_pct: revenue > 0 ? Math.round((estimatedMonthlyCost / revenue) * 100) : 999,
-        alert_date: today,
+        alert_date: todayDate,
         last_updated: new Date().toISOString(),
       }, { onConflict: "user_id" }).then(() => {}).catch(() => {});
     }
