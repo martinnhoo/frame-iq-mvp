@@ -104,6 +104,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
+  } catch (err) {
+    console.error('daily-intelligence error:', err);
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' }
+    });
   }
 });
 
@@ -237,22 +242,20 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   if (!conn?.access_token) return { skipped: 'No Meta connection' };
 
   // ── Get persona market and name for accurate tagging ─────────────────────
+  const token = conn.access_token;
+  const accounts = (conn.ad_accounts as any[]) || [];
+  const selectedId = conn.selected_account_id;
+  const account = (selectedId && accounts.find((a: any) => a.id === selectedId)) || accounts[0];
+
   let accountMarket = 'BR'; // default
-  let personaName = account.name || account.id; // fallback to Meta account name
+  let personaName = account?.name || account?.id || 'Unknown';
   if (persona_id) {
     const { data: personaData } = await sb.from('personas')
       .select('name, result').eq('id', persona_id).maybeSingle();
     const personaResult = personaData?.result as any;
     accountMarket = personaResult?.preferred_market || personaResult?.market || 'BR';
-    // personas.name = what user typed in Accounts page ("Eluck MX", "Come India", etc.)
-    // Fall back to Meta ad account name only if user never set one
-    personaName = personaData?.name || account.name || account.id;
+    personaName = personaData?.name || account?.name || account?.id || 'Unknown';
   }
-
-  const token = conn.access_token;
-  const accounts = (conn.ad_accounts as any[]) || [];
-  const selectedId = conn.selected_account_id;
-  const account = (selectedId && accounts.find((a: any) => a.id === selectedId)) || accounts[0];
   if (!account?.id) return { skipped: 'No active account' };
 
   const fmt = (d: Date) => d.toISOString().split('T')[0];
