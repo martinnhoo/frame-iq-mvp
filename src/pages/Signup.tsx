@@ -94,7 +94,7 @@ const Signup = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden"
+      className="min-h-screen bg-background flex items-center justify-center px-4 py-8 sm:py-4 relative overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
@@ -132,7 +132,7 @@ const Signup = () => {
             border: '1px solid rgba(14,165,233,0.35)',
             boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 64px rgba(0,0,0,0.5), 0 0 80px rgba(14,165,233,0.08)',
             backdropFilter: 'blur(24px)',
-            padding: '36px 32px 32px',
+            padding: 'clamp(24px, 5vw, 36px) clamp(20px, 5vw, 32px) clamp(24px, 5vw, 32px)',
           }}>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: 28 }}>

@@ -2459,7 +2459,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(16px,2.5vw,40px)", alignItems: "center" }} className="pain-grid">
 
           {/* PAINS column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="pain-col-left" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
               <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
@@ -2498,7 +2498,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
           </div>
 
           {/* SOLUTIONS column */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="pain-col-right" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", display: "inline-block", boxShadow: "0 0 6px #0ea5e9" }} />
               <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
@@ -2667,7 +2667,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="how-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="telegram-grid">
           {items.map((item, i) => (
             <div key={i} style={{ padding: "28px 28px", borderRadius: 20, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 18, alignItems: "flex-start" }}>
               <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(39,175,225,0.1)", border: "1px solid rgba(39,175,225,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
@@ -3088,7 +3088,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.22)", marginTop: 20, lineHeight: 1.6 }}>{t.final_fine}</p>
 
         {/* Trust badges */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
+        <div className="trust-badges" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
           {[t.trust_1, t.trust_2, t.trust_3].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#34d399", fontSize: 13 }}>✓</span>
@@ -3106,7 +3106,7 @@ function Footer({ t }: { t: Record<string, string> }) {
   return (
     <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "#060810", padding: "48px clamp(16px,4vw,40px) 32px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 40, flexWrap: "wrap" as const, marginBottom: 40 }}>
+        <div className="footer-inner" style={{ display: "flex", justifyContent: "space-between", gap: 40, flexWrap: "wrap" as const, marginBottom: 40 }}>
           {/* Brand */}
           <div style={{ maxWidth: 260 }}>
             <Logo size="lg" />
@@ -3120,7 +3120,7 @@ function Footer({ t }: { t: Record<string, string> }) {
             </div>
           </div>
           {/* Links */}
-          <div style={{ display: "flex", gap: 48, flexWrap: "wrap" as const }}>
+          <div className="footer-links" style={{ display: "flex", gap: 48, flexWrap: "wrap" as const }}>
             <div>
               <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_product}</p>
               {([[t.footer_pricing, "/pricing"], [t.footer_how, "#how"], [t.footer_for, "#for"], [t.footer_tools, "/tools"]] as [string, string][]).map(([l, h]) => (
@@ -3142,7 +3142,7 @@ function Footer({ t }: { t: Record<string, string> }) {
           </div>
         </div>
         {/* Bottom bar */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 12 }}>
+        <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 12 }}>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</p>
           <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>{t.footer_built}</p>
         </div>
@@ -3278,6 +3278,43 @@ export default function IndexNew() {
             .hero-sub{margin-bottom:16px!important}
             .hero-bullets{margin-bottom:16px!important}
             .hero-connects{margin-bottom:16px!important}
+          }
+
+          /* ── Comprehensive mobile fixes 640px ── */
+          @media(max-width:640px){
+            /* Pain section */
+            .pain-grid{grid-template-columns:1fr!important;gap:20px!important}
+            .pain-grid>div:nth-child(2){display:none!important}
+            .pain-col-left,.pain-col-right{padding:0!important}
+
+            /* How */
+            .how-grid{grid-template-columns:1fr!important;gap:12px!important}
+
+            /* For who */
+            .for-who-tabs{flex-wrap:wrap!important;gap:8px!important}
+            .for-who-grid{grid-template-columns:1fr!important}
+
+            /* Pricing */
+            .pricing-grid{grid-template-columns:1fr!important;gap:12px!important}
+
+            /* Tools */
+            .tools-bento{grid-template-columns:1fr!important}
+            .tools-list{display:none!important}
+            .tools-io-grid{grid-template-columns:1fr!important;gap:12px!important}
+
+            /* Telegram */
+            .telegram-grid{grid-template-columns:1fr!important;gap:12px!important}
+
+            /* Footer */
+            .footer-inner{flex-direction:column!important;gap:32px!important}
+            .footer-links{gap:32px!important}
+            .footer-bottom{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
+
+            /* FinalCTA */
+            .trust-badges{flex-direction:column!important;align-items:center!important;gap:12px!important}
+
+            /* Sections: reduce padding */
+            section{padding-left:20px!important;padding-right:20px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
