@@ -241,12 +241,12 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   let personaName = account.name || account.id; // fallback to Meta account name
   if (persona_id) {
     const { data: personaData } = await sb.from('personas')
-      .select('result').eq('id', persona_id).maybeSingle();
+      .select('name, result').eq('id', persona_id).maybeSingle();
     const personaResult = personaData?.result as any;
     accountMarket = personaResult?.preferred_market || personaResult?.market || 'BR';
-    // Use the persona's name (set by user in AdBrief) as the account label
-    // This is more meaningful than the Meta Business Manager account name
-    personaName = personaResult?.name || personaResult?.headline || account.name || account.id;
+    // personas.name = what user typed in Accounts page ("Eluck MX", "Come India", etc.)
+    // Fall back to Meta ad account name only if user never set one
+    personaName = personaData?.name || account.name || account.id;
   }
 
   const token = conn.access_token;
