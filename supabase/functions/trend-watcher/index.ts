@@ -132,7 +132,7 @@ async function discoverTrendsViaBrave(geo = "BR") {
         }
       }
     }
-    return [...terms].slice(0, 10).map((term, i) => ({ term, volume: 60 - i * 3, position: i + 1 }));
+    return [...terms].slice(0, 10).map((term: string, i: number) => ({ term, volume: 60 - i * 3, position: i + 1 }));
   } catch { return []; }
 }
 
