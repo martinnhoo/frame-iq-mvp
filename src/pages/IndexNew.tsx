@@ -451,10 +451,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "transparent",
-    subtle:  "#0f1117",
-    dark:    "#080a0f",
-    accent:  "#0c1220",
+    default: "#060810",
+    subtle:  "#0d1117",
+    dark:    "#040608",
+    accent:  "#0a1628",
   };
   return (
     <section
@@ -2365,6 +2365,52 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
 // ─── How It Works ─────────────────────────────────────────────────────────────
 // ─── Pain → Solution section ──────────────────────────────────────────────────
+function SocialProofStrip({ lang }: { lang: Lang }) {
+  const F = "'Plus Jakarta Sans', sans-serif";
+  const stats = lang === "pt"
+    ? [
+        { n: "30s", label: "Para conectar sua conta" },
+        { n: "90 dias", label: "De dados reais analisados" },
+        { n: "7", label: "Ferramentas de IA integradas" },
+        { n: "24h", label: "Monitoramento via Telegram" },
+      ]
+    : lang === "es"
+    ? [
+        { n: "30s", label: "Para conectar tu cuenta" },
+        { n: "90 días", label: "De datos reales analizados" },
+        { n: "7", label: "Herramientas integradas" },
+        { n: "24h", label: "Monitoreo vía Telegram" },
+      ]
+    : [
+        { n: "30s", label: "To connect your account" },
+        { n: "90 days", label: "Of real data analyzed" },
+        { n: "7", label: "Integrated AI tools" },
+        { n: "24h", label: "Telegram monitoring" },
+      ];
+
+  return (
+    <div style={{
+      background: "rgba(14,165,233,0.04)",
+      borderTop: "1px solid rgba(14,165,233,0.12)",
+      borderBottom: "1px solid rgba(14,165,233,0.12)",
+      padding: "20px clamp(20px,5vw,80px)",
+    }}>
+      <div style={{
+        maxWidth: 1100, margin: "0 auto",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap" as const, gap: 16,
+      }}>
+        {stats.map(({ n, label }, i) => (
+          <div key={i} style={{ textAlign: "center", flex: "1 1 120px" }}>
+            <div style={{ fontFamily: F, fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, color: "#38bdf8", letterSpacing: "-0.04em", lineHeight: 1 }}>{n}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt" | "es" | "en"; ctaLoading?: boolean }) {
   const copy = {
     pt: {
@@ -2551,7 +2597,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
         </div>
         <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ padding: "36px 28px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: `1px solid rgba(255,255,255,0.08)`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s", display: "flex", flexDirection: "column" }}
+            <div key={i} style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s, transform 0.2s", display: "flex", flexDirection: "column", boxShadow: `0 0 40px ${step.color}08` }}
               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}30`; el.style.background = 'rgba(255,255,255,0.06)'; }}
               onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.background = 'rgba(255,255,255,0.04)'; }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "rgba(255,255,255,0.55)" }}>{step.icon}</div>
@@ -3335,6 +3381,7 @@ export default function IndexNew() {
       </Helmet>
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} ctaLoading={ctaLoading} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} ctaLoading={ctaLoading} />
+      <SocialProofStrip lang={lang} />
       <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
       <HowItWorks t={t} lang={lang} />
       <Tools t={t} lang={lang} />
