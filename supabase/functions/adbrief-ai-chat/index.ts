@@ -394,6 +394,8 @@ Deno.serve(async (req) => {
       { data: adsImports },
       { data: personaRow },
       { data: learnedPatterns },
+      { data: globalBenchmarks },
+      { data: marketSummaryRow },
       { data: dailySnapshots },
       { data: preflightHistory },
       { data: accountAlerts },
@@ -453,6 +455,23 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
         .limit(60),
+      // 7b. Global benchmarks — anonymous aggregate patterns from all accounts (user_id=null)
+      // These are what the AI uses as market benchmarks — never reveals source accounts
+      (supabase as any).from("learned_patterns")
+        .select("pattern_key, avg_ctr, avg_roas, is_winner, confidence, insight_text, variables")
+        .is("user_id", null)
+        .like("pattern_key", "global_benchmark::%")
+        .gte("confidence", 0.3)
+        .order("avg_ctr", { ascending: false })
+        .limit(20)
+        .then((r: any) => r.error ? { data: [] } : r),
+      // 7c. Global market summary — synthesized narrative from aggregate-intelligence
+      (supabase as any).from("learned_patterns")
+        .select("insight_text, variables")
+        .is("user_id", null)
+        .eq("pattern_key", "global_market_summary")
+        .maybeSingle()
+        .then((r: any) => r.error ? { data: null } : r),
       // 8. Daily snapshots
       // 8. Daily snapshots — filter at DB level
       persona_id
@@ -676,6 +695,27 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
       competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       preflightPatterns.length ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
       actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      // Global benchmarks — anonymous aggregates from all accounts across the platform
+      // Use as market benchmarks. NEVER mention "other clients" — phrase as "dados do setor" or "mercado"
+      (() => {
+        const globals = (globalBenchmarks || []) as any[];
+        if (!globals.length) return "";
+        const persona = personaRow as any;
+        const niche = (persona?.result as any)?.niche || (persona?.result as any)?.industry || "";
+        const market = (persona?.result as any)?.preferred_market || "BR";
+        // Prioritize benchmarks matching this account's niche/market
+        const relevant = globals
+          .filter(g => {
+            const vars = (g.variables as any) || {};
+            return (vars.niche === "all" || vars.niche === niche) &&
+                   (vars.market === "all" || vars.market === market);
+          })
+          .slice(0, 8);
+        if (!relevant.length) return "";
+        const summary = (marketSummaryRow as any)?.insight_text || "";
+        const lines = relevant.map(g => `  - ${g.insight_text}${g.avg_ctr ? ` (benchmark: CTR ${(g.avg_ctr*100).toFixed(2)}%)` : ""}`).join("\n");
+        return `=== BENCHMARKS DO SETOR (dados agregados, anônimos) ===\n${summary ? `${summary}\n` : ""}${lines}\n(Use como referência de mercado. Fraseie como "dados do setor" ou "em campanhas similares". Nunca revele que são dados de outras contas.)`;
+      })(),
       // Business profile — who this company really is, compliance rules
       businessProfile ? `=== PERFIL DO NEGÓCIO (pesquisado) ===\n` +
         `Indústria: ${(businessProfile.variables as any)?.industry}\n` +

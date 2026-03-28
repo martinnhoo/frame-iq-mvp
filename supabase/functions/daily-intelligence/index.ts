@@ -520,16 +520,42 @@ Retorne JSON:
 
   // ── GAP 3 FIX: Feed real CTR/ROAS per ad back into capture-learning ──────
   // This closes the creative loop: hook generated → goes live → performance captured → feeds next generation
+  const adsToClassify = [...scalable, ...toPause].slice(0, 15).filter(ad => ad.ctr || ad.roas);
+
+  // Use Haiku to classify hook types from ad names — batch all ads in ONE call
+  // Much more accurate than heuristic (can detect urgency, curiosity, social proof from any naming convention)
+  let hookClassifications: Record<string, string> = {};
+  if (anthropicKey && adsToClassify.length > 0) {
+    try {
+      const nameList = adsToClassify.map((ad: any, i: number) => `${i+1}. "${ad.name?.slice(0, 80)}"`).join("\n");
+      const classRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001", max_tokens: 400,
+          messages: [{ role: "user", content: `Classify each ad name into ONE hook type. Return ONLY a JSON object: {"1": "type", "2": "type", ...}\n\nHook types: urgency, social_proof, curiosity, educational, ugc, before_after, question, direct, emotional, offer\n\nAd names:\n${nameList}` }]
+        })
+      });
+      if (classRes.ok) {
+        const raw = (await classRes.json()).content?.[0]?.text?.trim() || "{}";
+        const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
+        adsToClassify.forEach((ad: any, i: number) => {
+          hookClassifications[ad.name] = parsed[String(i+1)] || "direct";
+        });
+      }
+    } catch { /* fall back to heuristic */ }
+  }
+
   const capturePromises = [];
-  for (const ad of [...scalable, ...toPause].slice(0, 15)) {
-    if (!ad.ctr && !ad.roas) continue;
-    // Infer hook_type from ad name — simple heuristic
+  for (const ad of adsToClassify) {
+    // Use Haiku classification if available, else fall back to heuristic
     const name = (ad.name || '').toLowerCase();
-    const hookType = name.includes('ugc') ? 'ugc' : name.includes('question') || name.includes('?') ? 'question' :
-      name.includes('before') || name.includes('depois') ? 'before_after' :
+    const hookType = hookClassifications[ad.name] || (
+      name.includes('ugc') ? 'ugc' : name.includes('?') ? 'question' :
       name.includes('tip') || name.includes('dica') ? 'educational' :
-      name.includes('depo') || name.includes('review') ? 'social_proof' : 'direct';
-    
+      name.includes('depo') || name.includes('review') ? 'social_proof' : 'direct'
+    );
+
     capturePromises.push(
       sb.functions.invoke('capture-learning', {
         body: {
