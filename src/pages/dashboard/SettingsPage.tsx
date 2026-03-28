@@ -193,6 +193,46 @@ const SettingsPage = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Support & Account */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base">Suporte & Conta</CardTitle>
+          <CardDescription>Precisa de ajuda ou quer encerrar sua conta?</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Support */}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">Falar com suporte</p>
+              <p className="text-xs text-muted-foreground">Dúvidas, bugs ou qualquer problema</p>
+            </div>
+            <a href="mailto:hello@adbrief.pro?subject=Suporte AdBrief"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              hello@adbrief.pro
+            </a>
+          </div>
+
+          {/* Delete account */}
+          <div className="pt-3 border-t border-border">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-destructive">Excluir conta</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Todos os seus dados serão permanentemente removidos — campanhas, análises, memórias e conexões. Esta ação não pode ser desfeita.
+                  <br />
+                  Para excluir, envie um e-mail para{" "}
+                  <a href="mailto:hello@adbrief.pro?subject=Excluir minha conta AdBrief"
+                    className="text-destructive underline underline-offset-2">
+                    hello@adbrief.pro
+                  </a>
+                  {" "}com o assunto <strong>"Excluir minha conta"</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
