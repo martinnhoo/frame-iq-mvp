@@ -104,6 +104,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
+  } catch (err) {
+    console.error('daily-intelligence error:', err);
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' }
+    });
   }
 });
 
