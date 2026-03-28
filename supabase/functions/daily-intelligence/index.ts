@@ -236,13 +236,17 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   }
   if (!conn?.access_token) return { skipped: 'No Meta connection' };
 
-  // ── Get persona market for accurate benchmark tagging ────────────────────
+  // ── Get persona market and name for accurate tagging ─────────────────────
   let accountMarket = 'BR'; // default
+  let personaName = account.name || account.id; // fallback to Meta account name
   if (persona_id) {
     const { data: personaData } = await sb.from('personas')
       .select('result').eq('id', persona_id).maybeSingle();
     const personaResult = personaData?.result as any;
     accountMarket = personaResult?.preferred_market || personaResult?.market || 'BR';
+    // Use the persona's name (set by user in AdBrief) as the account label
+    // This is more meaningful than the Meta Business Manager account name
+    personaName = personaResult?.name || personaResult?.headline || account.name || account.id;
   }
 
   const token = conn.access_token;
@@ -686,7 +690,7 @@ Retorne JSON:
   // ── Save snapshot ─────────────────────────────────────────────────────────
   const snapshot = {
     user_id, persona_id: persona_id || null, date: today,
-    account_id: account.id, account_name: account.name || account.id,
+    account_id: account.id, account_name: personaName,
     total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + parseInt(a.impressions > 0 ? String(a.ctr * a.impressions / 100) : '0'), 0),
     active_ads: curr.length, winners_count: scalable.length, losers_count: toPause.length,
     yesterday_spend: ydSpend, yesterday_ctr: ydCtr,
