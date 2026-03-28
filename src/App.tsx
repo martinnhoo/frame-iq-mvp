@@ -53,6 +53,7 @@ const ScriptGenerator  = lazy(() => import("./pages/dashboard/ScriptGenerator"))
 const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
 const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
 const CampaignBuilder  = lazy(() => import("./pages/dashboard/CampaignBuilder"));
+const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
 const LoopV2           = lazy(() => import("./pages/dashboard/LoopV2"));
 const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
@@ -148,6 +149,7 @@ const App = () => (
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="campaigns/new" element={<CampaignBuilder />} />
+                <Route path="performance" element={<PerformanceDashboard />} />
                 <Route path="loop/v2" element={<LoopV2 />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
