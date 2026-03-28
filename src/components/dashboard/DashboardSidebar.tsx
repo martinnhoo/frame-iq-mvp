@@ -5,7 +5,7 @@ import {
   ChevronRight, CheckCircle2, Circle, ChevronDown,
   // New precise icons
   ScanEye, Clapperboard, Languages, ShieldCheck,
-  LayoutTemplate, Kanban, Cpu, Users2, TrendingUp, Plus,
+  LayoutTemplate, Kanban, Cpu, Users2, TrendingUp, Plus, Rocket,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -80,6 +80,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const isAccountsActive = isActive("/dashboard/accounts");
 
   const PRIMARY_NAV = [
+    { url: "/dashboard/campaigns/new", label: language==="pt" ? "Criar Campanha" : language==="es" ? "Crear Campaña" : "Create Campaign", icon: Rocket, exact: false, hot: false, highlight: true },
     { url: "/dashboard/ai",           label: "IA Chat",                                                          icon: Cpu,          exact: false, hot: true },
     { url: "/dashboard/intelligence", label: language==="pt" ? "Inteligência" : language==="es" ? "Inteligencia" : "Intelligence", icon: Brain, exact: false },
     { url: "/dashboard/competitor",   label: dt("nav_competitor")||"Concorrentes",                               icon: ScanEye,      exact: false },
@@ -95,8 +96,32 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     { url: "/dashboard/boards",       label: dt("nav_boards")||"Boards",            icon: Kanban },
   ];
 
-  const primaryItem = (url: string, label: string, Icon: any, exact = false, hot = false) => {
+  const primaryItem = (url: string, label: string, Icon: any, exact = false, hot = false, highlight = false) => {
     const active = isActive(url, exact);
+    if (highlight) {
+      return (
+        <NavLink key={url} to={url} end={exact} onClick={onClose}
+          style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+            borderRadius: 10, margin: "6px 6px 4px",
+            background: active
+              ? "linear-gradient(135deg,#0891b2,#0ea5e9)"
+              : "linear-gradient(135deg,rgba(14,165,233,0.18),rgba(6,182,212,0.12))",
+            border: `1px solid ${active ? "transparent" : "rgba(14,165,233,0.35)"}`,
+            fontSize: 13, fontWeight: 700,
+            color: "#fff",
+            textDecoration: "none", transition: "all 0.15s", fontFamily: F,
+            boxShadow: active ? "0 2px 12px rgba(14,165,233,0.3)" : "none",
+          }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg,rgba(14,165,233,0.28),rgba(6,182,212,0.2))"; el.style.boxShadow = "0 2px 12px rgba(14,165,233,0.25)"; }}
+          onMouseLeave={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg,rgba(14,165,233,0.18),rgba(6,182,212,0.12))"; el.style.boxShadow = "none"; }}}
+        >
+          <Icon size={15} style={{ color: "#7dd3fc", flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>{label}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#7dd3fc", background: "rgba(14,165,233,0.2)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em" }}>NOVO</span>
+        </NavLink>
+      );
+    }
     return (
       <NavLink key={url} to={url} end={exact} onClick={onClose}
         style={{
@@ -274,7 +299,7 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         <nav style={{ flex: 1, paddingTop: 8, overflowY: "auto", overflowX: "hidden" }}>
 
           {/* Primary */}
-          {PRIMARY_NAV.map(({ url, label, icon, exact, hot }) => primaryItem(url, label, icon, exact, hot))}
+          {PRIMARY_NAV.map(({ url, label, icon, exact, hot, highlight }) => primaryItem(url, label, icon, exact, hot, highlight))}
 
           {/* Accounts with inline persona switcher */}
           {accountsItem()}
