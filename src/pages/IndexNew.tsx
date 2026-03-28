@@ -110,9 +110,9 @@ type Lang = "en" | "pt" | "es";
 const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
-    hero_badge: "THE AI THAT KNOWS YOUR AD ACCOUNT",
+    hero_badge: "AI CONNECTED TO YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
-    hero_sub: "Connect Meta Ads or Google Ads and ask anything. The AI reads your account and answers like an analyst who knows every campaign.",
+    hero_sub: "Connect Meta Ads or Google Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
     hero_cta: "Try free for 3 days", hero_see: "See it in action",
     hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
@@ -186,9 +186,9 @@ const T: Record<Lang, Record<string, string>> = {
   },
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
-    hero_badge: "IA QUE CONHECE SUA CONTA DE ANÚNCIOS",
-    hero_h1: "Converse com seus anúncios.\nA IA responde.",
-    hero_sub: "Conecte Meta Ads ou Google Ads e pergunte qualquer coisa. A IA lê sua conta e responde como um analista que conhece cada campanha.",
+    hero_badge: "IA CONECTADA NA SUA CONTA DE ANÚNCIOS",
+    hero_h1: "Converse com\nseus anúncios.",
+    hero_sub: "Conecta em Meta Ads ou Google Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
     hero_cta: "Testar grátis por 3 dias", hero_see: "Ver na prática",
     hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
@@ -204,12 +204,12 @@ const T: Record<Lang, Record<string, string>> = {
     demo_connected: "conectado à FitCore Brasil",
     demo_cta_note: "Conta de exemplo. Com a sua, a IA usa dados reais.",
     demo_cta_btn: "Testar com minha conta →",
-    how_label: "COMO FUNCIONA", how_h2: "Três passos. Zero fricção.",
-    how_sub: "Sem CSV. Sem entrada manual. Conecte e pergunte.",
-    how_s1_title: "Crie sua conta", how_s1_desc: "Cadastre-se e crie uma conta para cada marca ou cliente. Adicione o site e contexto — a IA usa tudo isso para personalizar cada resposta.",
-    how_s2_title: "Conecte Meta ou Google Ads", how_s2_desc: "Vincule sua conta de anúncios com um clique via OAuth. O AdBrief lê spend, CTR, criativos e performance — em tempo real.",
-    how_s3_title: "Pergunte qualquer coisa.", how_s3_desc: "Converse como no ChatGPT — mas o AdBrief conhece sua conta. Pergunte o que funciona, o que cortar, o que produzir.",
-    for_label: "PARA QUEM", for_h2: "Feito para equipes de performance.",
+    how_label: "COMO FUNCIONA", how_h2: "Conecte. Pergunte. Escale.",
+    how_sub: "Do zero à sua primeira resposta em menos de 2 minutos.",
+    how_s1_title: "Crie sua conta", how_s1_desc: "30 segundos. Adicione o nome da marca, site e contexto — a IA usa isso para personalizar cada resposta com a identidade do seu negócio.",
+    how_s2_title: "Conecte Meta ou Google Ads", how_s2_desc: "Um clique via OAuth. O AdBrief lê spend, CTR, frequência, criativos e performance dos últimos 90 dias — em tempo real, sem CSV.",
+    how_s3_title: "Pergunte. Receba diagnóstico.", how_s3_desc: "Interface de chat — mas com seus dados reais. Pergunte por que o ROAS caiu, o que pausar, quais hooks criar. A IA responde com contexto real.",
+    for_label: "PARA QUEM", for_h2: "Para quem gerencia anúncios a sério.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
@@ -218,22 +218,22 @@ const T: Record<Lang, Record<string, string>> = {
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
-    tools_label: "FERRAMENTAS", tools_h2: "Tudo para escalar.",
-    tools_sub: "Cada ferramenta conectada aos seus dados. Sem copiar e colar.",
+    tools_label: "FERRAMENTAS", tools_h2: "Uma IA. Sete ferramentas.",
+    tools_sub: "Hooks, roteiros, análise, tradução — tudo com contexto dos seus dados reais.",
     ba_label: "ANTES VS DEPOIS", ba_h2: "O que muda quando a IA conhece sua conta.",
     ba_before_label: "Antes do AdBrief", ba_after_label: "Com AdBrief",
     ba_1_before: "Exportar CSV do Meta toda segunda", ba_1_after: "Pergunte: \"O que corrigir essa semana?\" — 10s",
     ba_2_before: "Comparar CTR de 20 conjuntos manualmente", ba_2_after: "\"Quais anúncios estão underperformando?\" — instantâneo",
     ba_3_before: "Adivinhar por que o ROAS caiu", ba_3_after: "\"Por que o ROAS caiu?\" — diagnóstico específico",
     ba_4_before: "Escrever hooks do zero, sem dados", ba_4_after: "\"5 hooks baseados nos meus melhores criativos\"",
-    pricing_label: "PREÇOS", pricing_h2: "3 dias grátis. Fique porque funciona.",
-    pricing_sub: "Todo plano inclui 3 dias de teste. Cartão necessário. Sem cobrança até o 4º dia.",
+    pricing_label: "PREÇOS", pricing_h2: "3 dias grátis. Cancele se quiser.",
+    pricing_sub: "Acesso completo por 3 dias. Cartão necessário — mas nenhuma cobrança até o 4º dia.",
     pricing_cta: "Começar teste grátis", pricing_note: "3 dias grátis · Sem cobrança até o 4º dia",
     plan_badge_pro: "Mais popular",
     plan_maker_f0: "50 mensagens / dia", plan_maker_f1: "1 conta de anúncios", plan_maker_f2: "Ferramentas básicas", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 mensagens / dia", plan_pro_f1: "3 contas conectadas", plan_pro_f2: "Todas as ferramentas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
     plan_studio_f0: "Mensagens ilimitadas", plan_studio_f1: "Contas ilimitadas", plan_studio_f2: "Todas as ferramentas", plan_studio_f3: "Marcas ilimitadas", plan_studio_f4: "Workspace agência",
-    faq_label: "PERGUNTAS FREQUENTES", faq_h2: "Dúvidas comuns",
+    faq_label: "FAQ", faq_h2: "Perguntas frequentes",
     faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
     faq_q1: "Por que preciso de cartão?", faq_a1: "Filtra usuários sérios e te dá acesso genuíno. Não cobramos nada em 72h.",
     faq_q2: "O que conecta?", faq_a2: "Meta Ads e Google Ads — conectados e lendo seus dados em tempo real. TikTok Ads em breve.",
@@ -242,8 +242,8 @@ const T: Record<Lang, Record<string, string>> = {
     faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado às suas contas de anúncios (Meta Ads, Google Ads). A IA usa esse contexto em cada resposta.",
     faq_q6: "Funciona com catálogo?", faq_a6: "Sim. Lê todos os tipos de campanha — DPA, catálogo, Advantage+.",
     faq_q7: "E se não funcionar?", faq_a7: "Cancele em 72h (3 dias), sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
-    final_label: "COMECE HOJE", final_h2: "30 segundos para conectar.\nSua conta tem as respostas.",
-    final_sub: "Conecte em 2 minutos. Cancele quando quiser.",
+    final_label: "COMECE AGORA", final_h2: "Sua conta tem dados.\nA IA tem as respostas.",
+    final_sub: "Conecte em 30 segundos. Pergunte tudo. Cancele quando quiser.",
     final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
     trust_1: "Sem cartão até o 4º dia", trust_2: "Cancele quando quiser", trust_3: "Configure em 2 minutos",
     tiktok_soon: "EM BREVE",
@@ -451,10 +451,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#060810",
-    subtle:  "#0d1117",
-    dark:    "#040608",
-    accent:  "#0a1628",
+    default: "#08090f",
+    subtle:  "#0f1520",
+    dark:    "#050609",
+    accent:  "#071022",
   };
   return (
     <section
@@ -2257,7 +2257,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
@@ -2390,20 +2390,20 @@ function SocialProofStrip({ lang }: { lang: Lang }) {
 
   return (
     <div style={{
-      background: "rgba(14,165,233,0.04)",
-      borderTop: "1px solid rgba(14,165,233,0.12)",
-      borderBottom: "1px solid rgba(14,165,233,0.12)",
-      padding: "20px clamp(20px,5vw,80px)",
+      background: "rgba(14,165,233,0.06)",
+      borderTop: "1px solid rgba(14,165,233,0.18)",
+      borderBottom: "1px solid rgba(14,165,233,0.18)",
+      padding: "28px clamp(20px,5vw,80px)",
     }}>
       <div style={{
-        maxWidth: 1100, margin: "0 auto",
+        maxWidth: 960, margin: "0 auto",
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        flexWrap: "wrap" as const, gap: 16,
+        flexWrap: "wrap" as const, gap: 24,
       }}>
         {stats.map(({ n, label }, i) => (
-          <div key={i} style={{ textAlign: "center", flex: "1 1 120px" }}>
-            <div style={{ fontFamily: F, fontSize: "clamp(22px,3vw,30px)", fontWeight: 900, color: "#38bdf8", letterSpacing: "-0.04em", lineHeight: 1 }}>{n}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
+          <div key={i} style={{ textAlign: "center", flex: "1 1 140px", padding: "0 8px", borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
+            <div style={{ fontFamily: F, fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, color: "#38bdf8", letterSpacing: "-0.04em", lineHeight: 1 }}>{n}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6, lineHeight: 1.4 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -2415,7 +2415,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
   const copy = {
     pt: {
       label: "O PROBLEMA",
-      title: "Gestores desperdiçam horas\nanalisando dados.",
+      title: "Gestores de tráfego\nperdendo horas todo dia.",
       pains: [
         { icon: "⏳", text: "Você monta relatórios manualmente toda semana" },
         { icon: "📊", text: "Dados em 5 ferramentas diferentes que não se conversam" },
@@ -2497,7 +2497,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         </div>
 
         {/* Title */}
-        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(28px,3.5vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 56 }}>
+        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 48 }}>
           {c.title}
         </h2>
 
@@ -2516,8 +2516,8 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
               <div key={i} style={{
                 display: "flex", alignItems: "flex-start", gap: 12,
                 padding: "14px 16px", borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0.02) 100%)",
-                border: "1px solid rgba(239,68,68,0.12)",
+                background: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.03) 100%)",
+                border: "1px solid rgba(239,68,68,0.18)",
                 backdropFilter: "blur(8px)",
                 transition: "border-color 0.2s",
               }}>
@@ -2532,8 +2532,8 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
             <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.08))", minHeight: 60 }} />
             <div style={{
               padding: "8px 16px", borderRadius: 24,
-              background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15))",
-              border: "1px solid rgba(14,165,233,0.30)",
+              background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(99,102,241,0.2))",
+              border: "1px solid rgba(14,165,233,0.45)",
               boxShadow: "0 0 20px rgba(14,165,233,0.15)",
               backdropFilter: "blur(8px)",
               whiteSpace: "nowrap" as const,
@@ -2555,8 +2555,8 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
               <div key={i} style={{
                 display: "flex", alignItems: "flex-start", gap: 12,
                 padding: "14px 16px", borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(14,165,233,0.07) 0%, rgba(99,102,241,0.04) 100%)",
-                border: "1px solid rgba(14,165,233,0.16)",
+                background: "linear-gradient(135deg, rgba(14,165,233,0.1) 0%, rgba(99,102,241,0.05) 100%)",
+                border: "1px solid rgba(14,165,233,0.22)",
                 backdropFilter: "blur(8px)",
               }}>
                 <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{s.icon}</span>
@@ -2591,7 +2591,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
     <Section id="how" bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.how_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
         </div>
@@ -2628,7 +2628,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
     <Section id="for" bg="subtle">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.for_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
         <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
@@ -2701,8 +2701,8 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const }}>
-              {lang === "pt" ? "TELEGRAM ALERTS" : lang === "es" ? "TELEGRAM ALERTS" : "TELEGRAM ALERTS"}
+            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>
+              TELEGRAM ALERTS
             </span>
           </div>
           <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 14px", color: "#fff", lineHeight: 1.15 }}>
@@ -2887,7 +2887,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)';}else{el.style.opacity='0.8';} }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(14,165,233,0.25)':'none'; }}
               >{t.pricing_cta}</button>
-              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center" as const }}>{t.pricing_note}</p>
+              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
           ))}
         </div>
@@ -2909,8 +2909,8 @@ function FAQ({ t }: { t: Record<string, string> }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ borderRadius: 16, background: open === i ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.01)", border: `1px solid ${open === i ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.10)"}`, overflow: "hidden", transition: "all 0.2s" }}>
-              <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 14, textAlign: "left" }}>
+            <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${open === i ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)"}`, overflow: "hidden", transition: "all 0.2s" }}>
+              <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 14, textAlign: "left" }}>
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.8)", lineHeight: 1.4 }}>{item.q}</span>
                 <ChevronDown size={14} color={open === i ? "#fff" : "rgba(255,255,255,0.2)"} style={{ flexShrink: 0, transform: open === i ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
               </button>
@@ -3115,7 +3115,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
         {/* Label — mesmo padrão de "O PROBLEMA" */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
+          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
