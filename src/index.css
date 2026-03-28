@@ -219,79 +219,199 @@ code, pre,
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Mobile responsive fixes ─────────────────────────────────────────────────── */
 
-/* ── Mobile nav ── */
-@media (max-width: 768px) {
-  .nav-links { display: none !important; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE SYSTEM — AdBrief
+   Strategy: mobile-first, 4 breakpoints, no conflicts
+   xs: < 480px  (small phones: iPhone SE, mini)
+   sm: 480–767px (normal phones: iPhone 13, Galaxy S)
+   md: 768–1023px (tablets, large phones landscape)
+   lg: 1024px+ (desktop — sidebar visible)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Base: apply to all viewports ─────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
-@media (max-width: 640px) {
-  /* Landing grids → single column */
-  .how-grid,
-  .for-who-grid,
-  .pricing-grid { 
-    grid-template-columns: 1fr !important; 
-  }
-  .suggestions-grid { grid-template-columns: 1fr !important; }
+/* iOS input zoom fix — must be 16px or Safari zooms in */
+input, textarea, select { font-size: 16px; }
 
-  /* Upgrade wall → bottom sheet */
-  .upgrade-wall-modal {
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .upgrade-wall-plans {
-    grid-template-columns: 1fr !important;
-  }
+/* Smooth scrolling on iOS */
+.dashboard-main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
-/* Safe area for notched phones */
+/* Safe area — notched phones (iPhone X+) */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .chat-input-sticky {
-    padding-bottom: env(safe-area-inset-bottom);
+  .chat-input-sticky, .chat-input-area {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
 
-/* ── Dashboard mobile overhaul ──────────────────────────────────────────────── */
+/* Sidebar slide animation */
+.sidebar-transition {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-@media (max-width: 1023px) {
-  /* Root: no horizontal overflow */
-  body, #root, .dashboard-root {
+/* ── 1. Mobile: < 768px (phones) ─────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+
+  /* Global */
+  body { overflow-x: hidden !important; }
+  #root, .dashboard-root {
     overflow-x: hidden !important;
     max-width: 100vw !important;
   }
 
-  /* Main content: natural scroll */
+  /* Dashboard layout: main content fills full width (sidebar is off-screen) */
   .dashboard-main {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    display: flex !important;
-    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
-  /* Upgrade wall single col */
+  /* Topbar nav: hide desktop links, show hamburger */
+  .nav-links { display: none !important; }
+
+  /* Touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  /* Scrollbars hidden on mobile */
+  *::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+
+  /* ── Landing page ── */
+  .how-grid,
+  .for-who-grid,
+  .pricing-grid,
+  .suggestions-grid { grid-template-columns: 1fr !important; }
+
+  .upgrade-wall-modal {
+    border-radius: 20px 20px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
   .upgrade-wall-plans { grid-template-columns: 1fr !important; }
 
-  /* Pricing grid single col */
-  .pricing-grid { grid-template-columns: 1fr !important; }
+  /* ── Tool pages: reduce padding ── */
+  .p-6 { padding: 16px !important; }
+  .p-5 { padding: 14px !important; }
+  .p-4 { padding: 12px !important; }
+  .px-6 { padding-left: 14px !important; padding-right: 14px !important; }
+  .px-5 { padding-left: 12px !important; padding-right: 12px !important; }
+
+  .max-w-5xl,
+  .max-w-4xl,
+  .max-w-3xl {
+    max-width: 100% !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* ── All grids → 1 column ── */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .grid { grid-template-columns: 1fr !important; }
+
+  /* Exception: 2-col for compact items like platform toggles */
+  .grid-cols-2.compact { grid-template-columns: 1fr 1fr !important; }
+
+  /* ── Headings ── */
+  .text-3xl { font-size: 20px !important; line-height: 1.2 !important; }
+  .text-2xl { font-size: 18px !important; line-height: 1.2 !important; }
+  .text-xl  { font-size: 16px !important; line-height: 1.3 !important; }
+
+  /* ── Buttons: right size ── */
+  .h-12 { height: 46px !important; }
+  .h-11 { height: 42px !important; }
+  .h-10 { height: 38px !important; }
+  .text-base { font-size: 14px !important; }
+
+  /* ── KPI cards in AI chat: 2 per row ── */
+  .lp-kpi {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: calc(50% - 4px) !important;
+    padding: 10px 12px !important;
+  }
+  .lp-kpi [style*="fontSize: 24"],
+  .lp-kpi [style*="font-size: 24"] { font-size: 18px !important; }
+
+  /* ── Chip/pill rows: horizontal scroll ── */
+  .lp-chip { font-size: 11px !important; padding: 5px 10px !important; }
+  [role="tablist"] {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 2px;
+  }
+
+  /* ── Chat input ── */
+  .chat-input-wrap {
+    padding: 0 10px !important;
+  }
+  .chat-messages { padding: 10px 12px 8px !important; }
+
+  /* ── Cards ── */
+  .rounded-2xl.p-6 { padding: 14px !important; }
+  .rounded-2xl.p-5 { padding: 12px !important; }
+  .rounded-xl.p-6  { padding: 14px !important; }
+  .rounded-xl.p-5  { padding: 12px !important; }
+
+  /* ── Textarea ── */
+  textarea { resize: none !important; }
+
+  /* ── Landing sections ── */
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
 }
 
-@media (max-width: 640px) {
-  /* iOS font zoom fix */
-  input, textarea, select { font-size: 16px !important; }
+/* ── 2. Extra small: < 390px (iPhone SE, small Android) ──────────────────── */
 
-  /* No horizontal scroll anywhere */
+@media (max-width: 389px) {
+  .p-6 { padding: 12px !important; }
+  .p-5 { padding: 10px !important; }
+  .max-w-5xl, .max-w-4xl { padding-left: 10px !important; padding-right: 10px !important; }
+  .text-xl { font-size: 15px !important; }
+  .lp-kpi { padding: 8px 10px !important; }
+}
+
+/* ── 3. Tablet: 768px–1023px ─────────────────────────────────────────────── */
+
+@media (min-width: 768px) and (max-width: 1023px) {
   body { overflow-x: hidden !important; }
-  #root, .dashboard-root { max-width: 100vw !important; overflow-x: hidden !important; }
-
-  /* Landing sections padding */
-  section { padding-left: 16px !important; padding-right: 16px !important; }
+  .dashboard-main {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+  .grid-cols-4 { grid-template-columns: 1fr 1fr !important; }
+  .grid-cols-3 { grid-template-columns: 1fr 1fr !important; }
+  .pricing-grid { grid-template-columns: 1fr 1fr !important; }
 }
 
-/* ── Large screen responsiveness (1280px+) ───────────────────────────────────── */
+/* ── 4. Desktop: 1024px+ ──────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  /* Sidebar always visible */
+  .dashboard-root { flex-direction: row; }
+}
 
 @media (min-width: 1280px) {
   :root { --sidebar-w: 224px; }
@@ -299,179 +419,21 @@ code, pre,
 
 @media (min-width: 1440px) {
   :root { --sidebar-w: 236px; }
-
-  /* Chat content area wider on large screens */
   .chat-messages-area { max-width: 800px !important; }
   .chat-input-area    { max-width: 800px !important; }
-
-  /* Tool pages get more breathing room */
-  .max-w-4xl { max-width: 56rem; }  /* 896px */
-  .max-w-5xl { max-width: 68rem; }  /* 1088px */
 }
 
 @media (min-width: 1920px) {
   :root { --sidebar-w: 256px; }
-
   html, body { font-size: 15px; }
-
-  /* Chat wider on ultrawide */
   .chat-messages-area { max-width: 900px !important; }
   .chat-input-area    { max-width: 900px !important; }
-
-  /* More padding on large screens */
-  .dashboard-main { padding: 0; }
 }
 
-/* ── Dashboard centering on ultra-wide (2560px+) ─────────────────────────────── */
 @media (min-width: 2400px) {
   .dashboard-root {
     max-width: 2400px !important;
     margin: 0 auto !important;
   }
-  html, body { font-size: 16px; }
-}
-
-/* ── Prevent tiny text at high DPR (HiDPI) ──────────────────────────────────── */
-@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
-  :root { --base-font-boost: 1; }
-  .dashboard-main { font-size: 14px; }
-}
-
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  html { font-size: 15px; }
-}
-
-/* ── Mobile touch targets & scroll fixes ────────────────────────────────────── */
-@media (max-width: 1023px) {
-  /* Hide scrollbars on pill rows */
-  *::-webkit-scrollbar { display: none; }
-
-  /* Minimum touch target 44px */
-  button, a, [role="button"] { min-height: 36px; }
-
-  /* Account picker bar on mobile */
-  .dashboard-main { padding-bottom: env(safe-area-inset-bottom); }
-}
-
-@media (max-width: 640px) {
-  /* Chat messages padding */
-  .chat-messages { padding: 10px 12px 8px !important; }
-
-  /* Tool buttons min height */
-  .tool-btn { min-height: 44px !important; padding: 10px 16px !important; }
-
-  /* Onboarding steps full width */
-  .onboarding-step { padding: 20px 16px !important; }
-}
-
-/* ── iPhone 13 / 390px — production-ready mobile overhaul ──────────────────── */
-@media (max-width: 430px) {
-
-  /* ── Global: zero horizontal overflow ── */
-  html, body, #root { overflow-x: hidden !important; width: 100% !important; }
-  * { box-sizing: border-box !important; }
-
-  /* ── Tool page wrappers: reduce padding ── */
-  .p-5, .p-6 { padding: 14px 14px !important; }
-  .p-4 { padding: 12px 12px !important; }
-  .lg\:p-6 { padding: 14px 14px !important; }
-  .space-y-6 > * + * { margin-top: 16px !important; }
-  .space-y-5 > * + * { margin-top: 14px !important; }
-  .space-y-4 > * + * { margin-top: 12px !important; }
-  .max-w-5xl, .max-w-4xl, .max-w-3xl { max-width: 100% !important; padding-left: 14px !important; padding-right: 14px !important; }
-
-  /* ── Grids: all collapse to 1 col on 390px ── */
-  .grid-cols-2, .grid-cols-3, .grid-cols-4,
-  [class*="md:grid-cols-"], [class*="sm:grid-cols-"],
-  [class*="lg:grid-cols-"] { grid-template-columns: 1fr !important; }
-  .grid-cols-1 { grid-template-columns: 1fr !important; }
-
-  /* ── Flex rows that overflow: stack vertically ── */
-  .flex.gap-3:not(.items-center):not([class*="shrink"]),
-  .flex.gap-4:not(.items-center):not([class*="shrink"]) {
-    flex-wrap: wrap !important;
-  }
-
-  /* ── Headings: scale down ── */
-  h1 { font-size: clamp(18px, 5vw, 22px) !important; }
-  h2 { font-size: clamp(16px, 4.5vw, 20px) !important; }
-  h3 { font-size: clamp(14px, 4vw, 17px) !important; }
-  .text-xl { font-size: 17px !important; }
-  .text-2xl { font-size: 19px !important; }
-  .text-3xl { font-size: 22px !important; }
-
-  /* ── Buttons: proper touch targets, not huge ── */
-  button, [role="button"] {
-    min-height: 40px !important;
-    font-size: 13px !important;
-  }
-  /* Primary action buttons keep height but scale text */
-  .h-12 { height: 44px !important; }
-  .h-11 { height: 40px !important; }
-  .h-10 { height: 38px !important; }
-  .h-14 { height: 46px !important; }
-
-  /* ── Inputs: 16px prevents iOS zoom ── */
-  input, textarea, select { font-size: 16px !important; }
-
-  /* ── Cards & rounded containers: reduce internal padding ── */
-  .rounded-2xl.p-6 { padding: 14px !important; }
-  .rounded-2xl.p-5 { padding: 12px !important; }
-  .rounded-xl.p-4 { padding: 12px !important; }
-  .rounded-xl.p-5 { padding: 14px !important; }
-  .rounded-xl.p-6 { padding: 14px !important; }
-
-  /* ── Tool header row: stack icon + title ── */
-  .flex.items-start.gap-3 { gap: 10px !important; }
-  .flex.items-center.gap-3 { gap: 8px !important; }
-  .h-10.w-10 { width: 36px !important; height: 36px !important; min-width: 36px !important; }
-
-  /* ── Topbar: compact ── */
-  header { padding-left: 10px !important; padding-right: 10px !important; }
-
-  /* ── Dashboard AI chat: full width ── */
-  .chat-input-wrap { padding: 0 10px !important; }
-  .lp-kpi { min-width: calc(50% - 4px) !important; flex: 1 1 calc(50% - 4px) !important; font-size: 11px !important; }
-  .lp-kpi .text-2xl, .lp-kpi [style*="fontSize: 24"] { font-size: 18px !important; }
-
-  /* ── KPI row in PerformanceDashboard ── */
-  [style*="repeat(auto-fit"] { grid-template-columns: 1fr 1fr !important; }
-
-  /* ── Tabs / pill rows: scroll horizontally ── */
-  .flex.gap-2[class*="overflow"], .tabs-row { overflow-x: auto !important; flex-wrap: nowrap !important; padding-bottom: 4px !important; }
-  [role="tablist"] { overflow-x: auto !important; flex-wrap: nowrap !important; }
-
-  /* ── Suggestion chips in chat: smaller ── */
-  .lp-chip { font-size: 10px !important; padding: 4px 8px !important; }
-
-  /* ── AccountsPage / OnboardingPage: stack buttons ── */
-  .flex.gap-3.flex-wrap { gap: 8px !important; }
-
-  /* ── Sidebar stays 220px but off-screen on mobile — prevent content push ── */
-  .dashboard-root { width: 100vw !important; max-width: 100vw !important; }
-
-  /* ── Safe area bottom for input bar ── */
-  .chat-input-sticky, [style*="padding-bottom"] {
-    padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
-  }
-
-  /* ── Text truncation where needed ── */
-  .truncate { max-width: 200px !important; }
-
-  /* ── Hide decorative long labels on mobile ── */
-  .hidden-mobile { display: none !important; }
-
-  /* ── ScriptGenerator / HookGenerator grid fixes ── */
-  .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
-  .grid.md\:grid-cols-2 { grid-template-columns: 1fr !important; }
-  .grid.md\:grid-cols-4 { grid-template-columns: 1fr 1fr !important; }
-  .grid.sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
-  .grid.sm\:grid-cols-3 { grid-template-columns: 1fr !important; }
-
-  /* ── Result cards: full width ── */
-  .rounded-2xl.border { max-width: 100% !important; width: 100% !important; }
-
-  /* ── Textarea: resize none on mobile ── */
-  textarea { resize: none !important; }
 }
 

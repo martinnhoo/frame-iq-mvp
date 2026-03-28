@@ -125,6 +125,23 @@ export default function DashboardLayout() {
     } catch {}
   };
 
+  // ── Responsive sidebar: close on mobile resize & route change ──────────────
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) setSidebarOpen(false);
+      else setSidebarOpen(true);
+    };
+    window.addEventListener("resize", handleResize);
+    // Set correct initial state based on actual viewport
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    if (window.innerWidth < 1024) setSidebarOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     let mounted = true;
     const init = async () => {
@@ -316,6 +333,67 @@ export default function DashboardLayout() {
   }
 
   return (
+    <>
+    <style>{`
+      /* ── Dashboard Mobile — iPhone 13 (390px) ── */
+      @media (max-width: 768px) {
+        /* Prevent any horizontal overflow */
+        .dashboard-root, .dashboard-root * { box-sizing: border-box; }
+        .dashboard-root { overflow-x: hidden !important; }
+        .dashboard-main { overflow-x: hidden !important; }
+
+        /* All pages: constrain padding */
+        .dashboard-main > * { max-width: 100vw !important; overflow-x: hidden !important; }
+
+        /* Topbar: tighten on mobile */
+        .dash-topbar { padding-left: 10px !important; padding-right: 10px !important; gap: 6px !important; }
+
+        /* Buttons: cap height and font on mobile */
+        .dashboard-main button:not(.icon-btn):not([class*="h-8"]):not([class*="h-6"]):not([class*="w-8"]):not([class*="w-6"]) {
+          font-size: clamp(11px, 3vw, 14px) !important;
+        }
+
+        /* Tool pages: constrain content width */
+        .tool-page-wrap { padding: 16px 14px !important; max-width: 100% !important; overflow-x: hidden !important; }
+
+        /* KPI cards: 2 per row minimum */
+        .lp-kpi { min-width: calc(50% - 6px) !important; flex: 1 1 calc(50% - 6px) !important; }
+
+        /* Grids: force single column on very small */
+        .dash-grid-2, .dash-grid-3, .dash-grid-4 { grid-template-columns: 1fr !important; }
+
+        /* Text sizes: scale down on mobile */
+        .dashboard-main h1 { font-size: clamp(18px, 5vw, 28px) !important; }
+        .dashboard-main h2 { font-size: clamp(16px, 4.5vw, 24px) !important; }
+        .dashboard-main h3 { font-size: clamp(14px, 4vw, 20px) !important; }
+
+        /* Tables: allow horizontal scroll in container */
+        .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+
+        /* Modal: full width on mobile */
+        .dash-modal { width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important; padding: 20px 16px !important; }
+
+        /* Chips/pills: smaller on mobile */
+        .lp-chip { font-size: 11px !important; padding: 4px 10px !important; }
+
+        /* Input/textarea: prevent zoom on iOS (font-size >= 16px) */
+        .dashboard-main input, .dashboard-main textarea, .dashboard-main select {
+          font-size: 16px !important;
+        }
+        .chat-textarea { font-size: 15px !important; }
+
+        /* Suggestion pills row: horizontal scroll */
+        .suggestions-bar { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+        .suggestions-bar::-webkit-scrollbar { display: none; }
+      }
+
+      @media (max-width: 480px) {
+        /* Extra small: tighter still */
+        .tool-page-wrap { padding: 12px !important; }
+        .lp-kpi { min-width: calc(50% - 4px) !important; }
+        .dashboard-main h1 { font-size: clamp(16px, 5.5vw, 22px) !important; }
+      }
+    `}</style>
     <div className="dashboard-root" style={{ height: "100dvh", background: "#0d1117", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
@@ -332,7 +410,7 @@ export default function DashboardLayout() {
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
         {/* ── Topbar: mobile-first, clean ── */}
-        <header style={{
+        <header className="dash-topbar" style={{
           height: 52, minHeight: 52, maxHeight: 52, flexShrink: 0,
           display: "flex", alignItems: "center",
           paddingLeft: 12, paddingRight: 12, gap: 8,
@@ -688,6 +766,7 @@ export default function DashboardLayout() {
         />
       )}
     </div>
+    </>
   );
 }
 
