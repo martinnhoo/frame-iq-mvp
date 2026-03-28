@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         .select('user_id').not('user_id', 'is', null);
       const uniqueUsers = [...new Set((allUsers || []).map((u: any) => u.user_id))];
       
-      for (const uid of uniqueUsers.slice(0, 50)) {
+      for (const uid of uniqueUsers) {
         // 1. Prune: remove low-signal patterns older than 30 days
         const { error: pruneErr } = await sb.from('learned_patterns' as any)
           .delete()

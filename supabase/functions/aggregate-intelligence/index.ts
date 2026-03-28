@@ -50,9 +50,11 @@ Deno.serve(async (req) => {
 
     // ── 2. Enrich with persona niche/market ───────────────────────────────────
     const personaIds = [...new Set(patterns.map((p: any) => p.persona_id).filter(Boolean))];
-    const { data: personas } = await sb.from("personas").select("id, result").in("id", personaIds.slice(0, 500));
     const personaMap: Record<string, any> = {};
-    (personas || []).forEach((p: any) => { personaMap[p.id] = p.result || {}; });
+    if (personaIds.length > 0) {
+      const { data: personas } = await sb.from("personas").select("id, result").in("id", personaIds.slice(0, 500));
+      (personas || []).forEach((p: any) => { personaMap[p.id] = p.result || {}; });
+    }
 
     // ── 3. Aggregate into buckets ──────────────────────────────────────────────
     const buckets: Record<string, {
