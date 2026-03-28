@@ -340,7 +340,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
 
       {/* Progress bar */}
       {isProcessing && (
-        <div className="rounded-2xl p-5 space-y-4" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+        <div className="rounded-2xl p-5 space-y-4" style={{ border: "1px solid rgba(255,255,255,0.09)", borderTopColor: "rgba(255,255,255,0.15)", background: "linear-gradient(145deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%)", boxShadow: "0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-sky-400" />
@@ -387,7 +387,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       {/* Dual output */}
       {(transcript || step === "done") && (
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.09)", borderTopColor: "rgba(255,255,255,0.15)", background: "linear-gradient(145deg,#0d1825,#080c14)", boxShadow: "0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center gap-2">
                 <Mic className="h-4 w-4" style={{ color: "#0ea5e9" }} />
@@ -405,7 +405,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{transcript || "..."}</p>
             </div>
           </div>
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(52,211,153,0.2)", background: "#0c0c0c" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(52,211,153,0.25)", borderTopColor: "rgba(52,211,153,0.35)", background: "linear-gradient(145deg,rgba(52,211,153,0.06),#080c14)", boxShadow: "0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(52,211,153,0.1)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(52,211,153,0.08)" }}>
               <div className="flex items-center gap-2">
                 <Languages className="h-4 w-4" style={{ color: "#34d399" }} />
@@ -493,7 +493,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
     <div className="space-y-5">
       <div className="grid lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3 space-y-4">
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.09)", borderTopColor: "rgba(255,255,255,0.15)", background: "linear-gradient(145deg,#0d1825,#080c14)", boxShadow: "0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-white/50" />
@@ -588,7 +588,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
           </div>
           <div className={`grid gap-4 ${results.length > 1 ? "md:grid-cols-2" : ""}`}>
             {results.map((r, i) => (
-              <div key={r.lang} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "#0c0c0c" }}>
+              <div key={r.lang} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.09)", borderTopColor: "rgba(255,255,255,0.15)", background: "linear-gradient(145deg,#0d1825,#080c14)", boxShadow: "0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
                 <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{r.flag}</span>

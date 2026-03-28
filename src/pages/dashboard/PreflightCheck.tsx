@@ -881,7 +881,7 @@ export default function PreflightCheck() {
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-[0.15em] px-1" style={{ ...mono, color: "rgba(255,255,255,0.2)" }}>{t("pf_crosspost")}</p>
                     {result.platform_fit.crosspost.map((p, i) => (
-                      <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.02)" }}>
+                      <div key={i} className="flex items-start gap-3 px-3 py-2 rounded-xl" style={{ background: "linear-gradient(145deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%)", borderTopColor: "rgba(255,255,255,0.14)", boxShadow: "0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
                         <span className="text-xs font-medium w-28 shrink-0" style={{ ...mono, color: "rgba(255,255,255,0.4)" }}>{p.platform}</span>
                         <StatusBadge status={p.status} />
                         <p className="text-xs text-white/55 flex-1" style={mono}>{p.detail}</p>

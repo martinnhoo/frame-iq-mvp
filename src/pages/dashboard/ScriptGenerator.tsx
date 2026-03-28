@@ -174,7 +174,7 @@ export default function ScriptGenerator() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+      <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "linear-gradient(145deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%)", borderTopColor: "rgba(255,255,255,0.14)", boxShadow: "0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Produto / Serviço *" : language === "es" ? "Producto / Servicio *" : "Product / Service *"}</label>
           <Textarea placeholder={language === "pt" ? "Descreva seu produto, serviço ou marca..." : language === "es" ? "Describe tu producto, servicio o marca..." : "Describe your product, service, or brand..."} value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
@@ -251,7 +251,7 @@ export default function ScriptGenerator() {
       {result?.scripts && (
         <div className="space-y-4">
           {result.scripts.map((s: any, i: number) => (
-            <div key={i} className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <div key={i} className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "linear-gradient(145deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%)", borderTopColor: "rgba(255,255,255,0.14)", boxShadow: "0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-foreground" style={syne}>{s.title || `Variant ${i + 1}`}</span>

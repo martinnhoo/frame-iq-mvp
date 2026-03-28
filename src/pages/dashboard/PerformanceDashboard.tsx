@@ -79,7 +79,7 @@ function Delta({value}:{value:number|null}) {
 function MetricCard({label,value,delta,suffix,prefix,sparkData,accent,icon:Icon}:{label:string;value:string;delta?:number|null;suffix?:string;prefix?:string;sparkData?:number[];accent?:string;icon?:any}) {
   const c=accent||ACCENT;
   return(
-    <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",gap:12,transition:"border-color 0.2s",cursor:"default"}}
+    <div style={{background:"linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.015) 100%)",border:"1px solid rgba(255,255,255,0.09)",borderTopColor:"rgba(255,255,255,0.15)",boxShadow:"0 4px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07)",borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",gap:12,transition:"border-color 0.2s",cursor:"default"}}
       onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor=`${c}40`;}}
       onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor=BD;}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
