@@ -1998,6 +1998,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
 
 // ─── Hero Left — Impactful, clean, cycling verb ──────────────────────────────
 function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; ctaLoading?: boolean }) {
+  const t = T[lang];
   const verbs = lang === 'pt'
     ? ['responde.', 'analisa.', 'aprende.', 'avisa.']
     : lang === 'es'
