@@ -296,7 +296,7 @@ export default function PerformanceDashboard() {
       {/* Loading skeleton */}
       {loading&&(
         <div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:16}}>
             {[...Array(4)].map((_,i)=><div key={i} style={{height:120,background:S1,borderRadius:16,animation:"pulse 1.5s ease-in-out infinite",border:`1px solid ${BD}`}}/>)}
           </div>
           <div style={{height:240,background:S1,borderRadius:16,animation:"pulse 1.5s ease-in-out infinite",border:`1px solid ${BD}`}}/>
@@ -322,7 +322,7 @@ export default function PerformanceDashboard() {
           )}
 
           {/* Metrics grid */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:16}}>
             <MetricCard label="Ad Spend" value={`R$ ${fmtSpend(d.spend||0)}`} delta={d.delta_spend} sparkData={sparkSpend} accent={ACCENT} icon={DollarSign}/>
             <MetricCard label="CTR Médio" value={((d.ctr||0)*100).toFixed(2)} suffix="%" delta={d.delta_ctr} sparkData={sparkCtr} accent={GREEN} icon={MousePointer}/>
             <MetricCard label="Cliques" value={fmtNum(d.clicks||0)} delta={d.delta_clicks} sparkData={sparkClicks} accent="#a78bfa" icon={Target}/>
@@ -330,7 +330,7 @@ export default function PerformanceDashboard() {
           </div>
 
           {/* Second row */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:24}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:24}}>
             {/* ROAS */}
             <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
               <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>ROAS</p>

@@ -774,7 +774,7 @@ function Kpi({ label, value, sub, trend, spark, color = "#6366f1", warn = false 
 // ── Ad row ────────────────────────────────────────────────────────────────────
 function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; ask: (q: string) => void }) {
   const isW = kind === "winner", isR = kind === "risk";
-  const dot = isW ? "#34d399" : isR ? "#fb7185" : "#1e293b";
+  const dot = isW ? "#34d399" : isR ? "#fb7185" : "rgba(255,255,255,0.15)";
   const ctr = parseFloat(a.ctr || 0).toFixed(2);
   const fr = a.freq != null ? parseFloat(a.freq).toFixed(1) : null;
   const sp = parseFloat(a.spend || 0).toFixed(0);
@@ -787,12 +787,12 @@ function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; a
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0, boxShadow: isW ? "0 0 5px rgba(52,211,153,0.6)" : isR ? "0 0 5px rgba(251,113,133,0.6)" : "none" }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ ...I, fontSize: 12, fontWeight: 500, color: "#cbd5e1", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || "—"}</p>
-        {a.campaign && <p style={{ ...I, fontSize: 10, color: "#334155", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
+        {a.campaign && <p style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.35)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
       <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
         <span style={{ ...MONO, fontSize: 11, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
-        {fr && <span style={{ ...MONO, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "#334155" }}>f{fr}</span>}
-        <span style={{ ...MONO, fontSize: 11, color: "#334155" }}>R${sp}</span>
+        {fr && <span style={{ ...MONO, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.3)" }}>f{fr}</span>}
+        <span style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>R${sp}</span>
       </div>
     </div>
   );
@@ -803,10 +803,10 @@ function CampRow({ c }: { c: any }) {
   const on = c.status === "ACTIVE" || c.status === "ENABLED";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "#1e293b", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
-      <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "#334155", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "rgba(255,255,255,0.15)", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
+      <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "rgba(255,255,255,0.3)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
       {c.budget && <span style={{ ...MONO, fontSize: 10, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
-      {c.ctr && <span style={{ ...MONO, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "#334155", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+      {c.ctr && <span style={{ ...MONO, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.3)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
@@ -826,7 +826,7 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}60`, flexShrink: 0 }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 600, color: c.title, whiteSpace: "nowrap" }}>{a.title}</span>
       <span style={{ ...I, fontSize: 12, color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.detail}</span>
-      <span style={{ ...I, fontSize: 10, color: "#1e293b", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
+      <span style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
     </div>
   );
 }
@@ -910,7 +910,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         <style>{LP_CSS}</style>
 
         {/* Live dot */}
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "#334155" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.6)" : "none", marginRight: 8, flexShrink: 0 }} />
+        <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.6)" : "none", marginRight: 8, flexShrink: 0 }} />
 
         {/* Platform */}
         <span style={{ fontSize: 10, fontWeight: 600, color: "#475569", letterSpacing: "0.07em", textTransform: "uppercase", marginRight: 16, flexShrink: 0 }}>{tcfg[tab]?.label}</span>
@@ -926,7 +926,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             ].filter(Boolean).map((item: any, i, arr) => (
               <React.Fragment key={item.lbl}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 5, padding: "0 14px", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                  <span style={{ fontSize: 9, fontWeight: 500, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
+                  <span style={{ fontSize: 9, fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
                   <span style={{ ...MONO, fontSize: 11, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
                   {item.tr !== "flat" && <span style={{ fontSize: 9, color: item.tr === "up" ? "#34d399" : "#fb7185" }}>{item.tr === "up" ? "↑" : "↓"}</span>}
                 </div>
@@ -947,10 +947,10 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             )}
           </div>
         )}
-        {busy && <span style={{ fontSize: 10, color: "#334155", flex: 1, paddingLeft: 8 }}>carregando...</span>}
+        {busy && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
         {fail && !busy && <span style={{ fontSize: 10, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
 
-        <ChevronDown size={12} style={{ color: "#334155", flexShrink: 0, marginLeft: "auto" }} />
+        <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0, marginLeft: "auto" }} />
       </div>
     );
   }
@@ -973,16 +973,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 ...I, display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8,
                 border: active ? `1px solid ${cfg.c}22` : "1px solid transparent",
                 background: active ? `${cfg.c}0d` : "transparent",
-                color: active ? "#e2e8f0" : "#334155",
+                color: active ? "#e2e8f0" : "rgba(255,255,255,0.3)",
                 fontSize: 12, fontWeight: active ? 500 : 400, cursor: "pointer", transition: "all 0.15s",
               }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "#1e293b" : hasErr ? "#fb7185" : active ? cfg.c : "#1e293b", boxShadow: active && !hasErr && !busy ? `0 0 7px ${cfg.c}80` : "none", transition: "all 0.2s" }} />
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.15)" : hasErr ? "#fb7185" : active ? cfg.c : "rgba(255,255,255,0.15)", boxShadow: active && !hasErr && !busy ? `0 0 7px ${cfg.c}80` : "none", transition: "all 0.2s" }} />
                 {cfg.label}
               </button>
             );
           })}
           {/* Account name */}
-          {accName && <span style={{ ...I, fontSize: 11, color: "#1e293b", marginLeft: 8 }}>· {accName}</span>}
+          {accName && <span style={{ ...I, fontSize: 11, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>}
         </div>
 
         {/* Right controls */}
@@ -992,16 +992,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               ? <Loader2 size={9} style={{ color: "#475569", animation: "lp-spin 1s linear infinite" }} />
               : <span style={{ width: 5, height: 5, borderRadius: "50%", background: fail ? "#fb7185" : "#34d399", boxShadow: !fail ? "0 0 5px rgba(52,211,153,0.5)" : "none", animation: !fail ? "lp-glow 2.5s ease-in-out infinite" : "none" }} />
             }
-            <span style={{ ...I, fontSize: 10, color: "#1e293b" }}>
+            <span style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
               {busy ? "atualizando..." : ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "ao vivo"}
             </span>
           </div>
           <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "#1e293b", display: "flex", padding: 3, transition: "color 0.15s" }}>
+            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "rgba(255,255,255,0.3)", display: "flex", padding: 3, transition: "color 0.15s" }}>
             <RefreshCw size={11} style={{ animation: busy ? "lp-spin 1s linear infinite" : "none" }} />
           </button>
           <button onClick={() => setOpen(false)} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#1e293b", display: "flex", padding: 3, transition: "color 0.15s" }}>
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", display: "flex", padding: 3, transition: "color 0.15s" }}>
             <ChevronUp size={12} />
           </button>
         </div>
@@ -1019,7 +1019,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               ))}
             </div>
             <div style={{ height: 36, borderRadius: 10, background: "rgba(255,255,255,0.02)", animation: "lp-sk 1.5s 0.5s ease-in-out infinite" }} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
               {[1, 2].map(i => <div key={i} style={{ height: 110, borderRadius: 10, background: "rgba(255,255,255,0.015)", animation: `lp-sk 1.5s ${0.6 + i * 0.1}s ease-in-out infinite` }} />)}
             </div>
           </div>
@@ -1059,7 +1059,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             )}
 
             {/* KPIs */}
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
               {tab === "meta" ? (
                 <>
                   <Kpi label="Spend 14 dias" value={`R$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? "crescendo" : sTr === "down" ? "caindo" : "estável"} />
@@ -1082,8 +1082,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {/* Empty state */}
             {isEmpty && (
               <div style={{ padding: "20px", textAlign: "center" }}>
-                <p style={{ ...I, fontSize: 13, fontWeight: 500, color: "#334155", margin: "0 0 4px" }}>Sem campanhas ativas nos últimos 14 dias</p>
-                {accName && <p style={{ ...I, fontSize: 11, color: "#1e293b", margin: 0 }}>{accName}</p>}
+                <p style={{ ...I, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.35)", margin: "0 0 4px" }}>Sem campanhas ativas nos últimos 14 dias</p>
+                {accName && <p style={{ ...I, fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0 }}>{accName}</p>}
               </div>
             )}
 
@@ -1091,7 +1091,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {!isEmpty && (
               <>
                 <Div />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
 
                   {/* Criativos */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1147,7 +1147,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 <button key={q} className="lp-chip" onClick={() => onSend(q)} style={{
                   ...I, fontSize: 11, fontWeight: 400, padding: "5px 12px", borderRadius: 20,
                   background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
-                  color: "#334155", cursor: "pointer", transition: "all 0.15s",
+                  color: "rgba(255,255,255,0.35)", cursor: "pointer", transition: "all 0.15s",
                 }}>
                   {l}
                 </button>
@@ -2275,7 +2275,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Input area ── */}
       <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1}}>
-        <div style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
           {/* Input row: [textarea] [clear] [send] */}
           <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
@@ -2309,6 +2309,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @media(max-width:640px){
           .chat-footer-hint{display:none!important}
           textarea::placeholder{font-size:12px!important;opacity:0.35!important}
+          .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
+          .lp-chip{font-size:11px!important;padding:5px 10px!important}
+          .ad-row{padding:8px 10px!important;font-size:12px!important}
+          .sec-title{font-size:10px!important}
+          .chat-input-wrap{padding:0 12px!important}
+          .msg-body p{font-size:13px!important;line-height:1.65!important}
         }
         .chat-textarea::placeholder{color:rgba(255,255,255,0.22)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}

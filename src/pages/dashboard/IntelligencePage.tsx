@@ -162,7 +162,7 @@ export default function IntelligencePage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:32 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:10, marginBottom:32 }}>
         {[
           { n:memories.length, label:t.memories_label, color:"#0ea5e9", desc:t.mem_desc },
           { n:examples.length, label:t.examples_label, color:"#a78bfa", desc:t.ex_desc },
