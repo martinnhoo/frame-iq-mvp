@@ -215,10 +215,16 @@ Deno.serve(async (req) => {
       }
 
       case 'performance_reported': {
-        const { hook_type, ctr, roas, platform, market, hook_text } = data;
+        const { hook_type, ctr, roas, platform, market, hook_text, persona_id: perfPersonaId } = data;
         if (!ctr && !roas) break;
         const key = `perf_${(hook_type||'unknown').toLowerCase().replace(/\s+/g,'_')}_${(platform||'meta').toLowerCase()}`;
-        const { data: ex } = await (sb as any).from('learned_patterns').select('id,sample_size,avg_ctr,avg_roas,variables').eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
+        // Scope by persona_id so BR and MX personas don't pollute each other's patterns
+        const patternQuery = (sb as any).from('learned_patterns')
+          .select('id,sample_size,avg_ctr,avg_roas,variables')
+          .eq('user_id', user_id).eq('pattern_key', key);
+        const { data: ex } = await (perfPersonaId
+          ? patternQuery.eq('persona_id', perfPersonaId)
+          : patternQuery.is('persona_id', null)).maybeSingle();
         if (ex) {
           const n = ex.sample_size || 0;
           const newCtr = ctr ? ((ex.avg_ctr||0)*n + ctr)/(n+1) : ex.avg_ctr;
@@ -227,7 +233,7 @@ Deno.serve(async (req) => {
           entries.unshift({ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] });
           await (sb as any).from('learned_patterns').update({ sample_size: n+1, avg_ctr: newCtr, avg_roas: newRoas, is_winner: (newCtr||0)>0.015||(newRoas||0)>2, confidence: Math.min(1,(n+1)/10), insight_text: `${hook_type} em ${platform}: CTR médio ${(newCtr||0).toFixed(3)}, ROAS médio ${(newRoas||0).toFixed(2)}`, last_updated: new Date().toISOString(), variables: { entries: entries.slice(0,20) } }).eq('id', ex.id);
         } else {
-          await (sb as any).from('learned_patterns').insert({ user_id, pattern_key: key, sample_size: 1, avg_ctr: ctr||null, avg_roas: roas||null, is_winner: (ctr||0)>0.015||(roas||0)>2, confidence: 0.1, insight_text: `${hook_type} em ${platform}: CTR ${ctr}, ROAS ${roas}`, variables: { entries: [{ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] }] } });
+          await (sb as any).from('learned_patterns').insert({ user_id, persona_id: perfPersonaId || null, pattern_key: key, sample_size: 1, avg_ctr: ctr||null, avg_roas: roas||null, is_winner: (ctr||0)>0.015||(roas||0)>2, confidence: 0.1, insight_text: `${hook_type} em ${platform}: CTR ${ctr}, ROAS ${roas}`, variables: { entries: [{ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] }] } });
         }
         break;
       }

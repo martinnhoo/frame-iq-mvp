@@ -117,6 +117,15 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   }
   if (!conn?.access_token) return { skipped: 'No Meta connection' };
 
+  // ── Get persona market for accurate benchmark tagging ────────────────────
+  let accountMarket = 'BR'; // default
+  if (persona_id) {
+    const { data: personaData } = await sb.from('personas')
+      .select('result').eq('id', persona_id).maybeSingle();
+    const personaResult = personaData?.result as any;
+    accountMarket = personaResult?.preferred_market || personaResult?.market || 'BR';
+  }
+
   const token = conn.access_token;
   const accounts = (conn.ad_accounts as any[]) || [];
   const selectedId = conn.selected_account_id;
@@ -567,7 +576,8 @@ Retorne JSON:
             ctr: ad.ctr,
             roas: ad.roas || null,
             platform: 'meta',
-            market: 'BR',
+            market: accountMarket,
+            persona_id: persona_id || null,
           }
         }
       }).catch(() => {})
