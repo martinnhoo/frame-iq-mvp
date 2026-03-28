@@ -184,10 +184,20 @@ export default function PerformanceDashboard() {
 
   useEffect((){load();},[load]);
 
-  const d = data?.combined || data?.meta || data?.google;
   const hasMeta   = data?.meta   && !data.meta.error;
   const hasGoogle = data?.google && !data.google.error;
   const noConnections = !loading && !hasMeta && !hasGoogle;
+
+  // Platform selector — default to first available
+  const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
+  useEffect(() => {
+    if (data) {
+      if (hasMeta) setActivePlatform("meta");
+      else if (hasGoogle) setActivePlatform("google");
+    }
+  }, [data, hasMeta, hasGoogle]);
+
+  const d = activePlatform === "google" ? data?.google : data?.meta;
 
   const sparkSpend  = useMemo(()=>(d?.daily||[]).map((x:any)=>x.spend),[d]);
   const sparkCtr    = useMemo(()=>(d?.daily||[]).map((x:any)=>x.ctr*100),[d]);
@@ -218,10 +228,27 @@ export default function PerformanceDashboard() {
               </span>
             )}
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <p style={{margin:0,fontSize:14,color:MT}}>Dashboard de performance</p>
-            {hasMeta&&<PlatformBadge platform="meta"/>}
-            {hasGoogle&&<PlatformBadge platform="google"/>}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8}}>
+            {hasMeta&&hasGoogle&&(
+              <div style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
+                {([["meta","Meta Ads","f",ACCENT],["google","Google Ads","G",GBLUE]] as const).map(([plt,label,glyph,color])=>{
+                  const active = activePlatform===plt;
+                  return(
+                    <button key={plt} onClick={()=>setActivePlatform(plt)}
+                      style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",borderRadius:8,border:"none",cursor:"pointer",fontFamily:F,fontSize:13,fontWeight:active?700:500,background:active?S1:"transparent",color:active?color:MT,transition:"all 0.15s",boxShadow:active?"0 1px 4px rgba(0,0,0,0.3)":"none"}}>
+                      <span style={{width:18,height:18,borderRadius:5,background:active?`${color}20`:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:active?color:MT,fontFamily:"serif"}}>{glyph}</span>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {!hasMeta&&!hasGoogle&&!loading&&(
+              <p style={{margin:0,fontSize:13,color:MT}}>Nenhuma conta conectada</p>
+            )}
+            {(hasMeta||hasGoogle)&&!(hasMeta&&hasGoogle)&&(
+              <PlatformBadge platform={hasMeta?"meta":"google"}/>
+            )}
           </div>
           {lastUpdated&&(
             <p style={{margin:"4px 0 0",fontSize:11,color:MT}}>Atualizado: {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>
@@ -348,7 +375,7 @@ export default function PerformanceDashboard() {
                   <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Tendência de Performance</p>
                   <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>
                     Dados em tempo real · {period==="7d"?"7 dias":period==="14d"?"14 dias":"30 dias"}
-                    {hasMeta&&hasGoogle?" · Meta + Google":hasMeta?" · Meta Ads":" · Google Ads"}
+                    {" · "}{activePlatform==="meta"?"Meta Ads":"Google Ads"}
                   </p>
                 </div>
                 <div style={{display:"flex",gap:16}}>
@@ -357,36 +384,6 @@ export default function PerformanceDashboard() {
                 </div>
               </div>
               <AreaChart daily={d.daily}/>
-            </div>
-          )}
-
-          {/* Per-platform breakdown when both connected */}
-          {hasMeta&&hasGoogle&&(
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
-              {[
-                {name:"Meta Ads",d:data.meta,color:ACCENT,plt:"meta"},
-                {name:"Google Ads",d:data.google,color:GBLUE,plt:"google"},
-              ].map(({name,d:pd,color,plt})=>(
-                <div key={plt} style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-                    <div style={{width:28,height:28,borderRadius:8,background:`${color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color}}>{plt==="meta"?"f":"G"}</div>
-                    <p style={{margin:0,fontSize:14,fontWeight:700,color:TX}}>{name}</p>
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    {[
-                      {label:"Spend",value:`R$${(pd.spend||0).toFixed(0)}`},
-                      {label:"CTR",value:`${((pd.ctr||0)*100).toFixed(2)}%`},
-                      {label:"Cliques",value:String(Math.round(pd.clicks||0))},
-                      {label:"ROAS",value:pd.roas?`${pd.roas.toFixed(1)}×`:"—"},
-                    ].map(m=>(
-                      <div key={m.label}>
-                        <p style={{margin:0,fontSize:11,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>{m.label}</p>
-                        <p style={{margin:0,fontSize:18,fontWeight:700,color:TX}}>{m.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
           )}
 
