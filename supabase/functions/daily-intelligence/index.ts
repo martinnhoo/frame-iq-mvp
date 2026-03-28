@@ -334,6 +334,43 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   const prev: any[] = wk2.data || [];
   const yest: any[] = yd.data || [];
 
+  // ── Batch-fetch creative content for top 20 ads ──────────────────────────
+  // Meta Insights only returns ad_name + metrics. To get the actual hook text,
+  // headline, CTA we need a separate batch call to the Ads API.
+  // This is what makes hook classification accurate — we read the real ad copy.
+  const creativeMap: Record<string, { hook_text: string; headline: string; cta: string }> = {};
+  try {
+    const topAdIds = curr.slice(0, 20).map((a: any) => a.ad_id).filter(Boolean);
+    if (topAdIds.length > 0) {
+      // Meta Graph API batch: up to 50 requests in one HTTP call
+      const batch = topAdIds.map((id: string) => ({
+        method: 'GET',
+        relative_url: `${id}?fields=creative{body,title,call_to_action_type,object_story_spec}`
+      }));
+      const batchRes = await fetch(`https://graph.facebook.com/v21.0/?batch=${encodeURIComponent(JSON.stringify(batch))}&access_token=${token}`, {
+        method: 'POST'
+      });
+      if (batchRes.ok) {
+        const batchData = await batchRes.json() as any[];
+        batchData.forEach((item: any, i: number) => {
+          if (!item || item.code !== 200) return;
+          try {
+            const ad = JSON.parse(item.body);
+            const creative = ad.creative || {};
+            const spec = creative.object_story_spec || {};
+            const linkData = spec.link_data || spec.video_data || {};
+            const hook_text = creative.body || linkData.message || linkData.description || '';
+            const headline = creative.title || linkData.name || '';
+            const cta = creative.call_to_action_type || linkData.call_to_action?.type || '';
+            if (hook_text || headline) {
+              creativeMap[topAdIds[i]] = { hook_text: hook_text.slice(0, 300), headline: headline.slice(0, 100), cta };
+            }
+          } catch { /* skip malformed */ }
+        });
+      }
+    }
+  } catch { /* non-fatal — fall back to name-based classification */ }
+
   // ── Process and enrich ───────────────────────────────────────────────────
   const prevMap: Record<string, any> = {};
   prev.forEach((a: any) => prevMap[a.ad_name || a.ad_id] = a);
@@ -482,7 +519,17 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       .eq('user_id', user_id).eq('pattern_key', key).maybeSingle();
     const vars: any = (ex?.variables as any) || {};
     const history = vars.history || [];
-    history.unshift({ date: today, ctr: ad.ctr, spend: ad.spend, conversions: ad.conversions, roas: ad.roas||null, cpa: ad.cpa||null, kpi_value: ad.kpiValue, trend: ad.trend, frequency: ad.frequency, predictCritical: ad.predictCritical || null, isFatigued: ad.isFatigued });
+    const adCreative = creativeMap[ad.id]; // real copy if fetched
+    history.unshift({
+      date: today, ctr: ad.ctr, spend: ad.spend, conversions: ad.conversions,
+      roas: ad.roas||null, cpa: ad.cpa||null, kpi_value: ad.kpiValue,
+      trend: ad.trend, frequency: ad.frequency,
+      predictCritical: ad.predictCritical || null, isFatigued: ad.isFatigued,
+      // Real creative content — what the ad actually says
+      hook_text: adCreative?.hook_text || null,
+      headline: adCreative?.headline || null,
+      cta: adCreative?.cta || null,
+    });
     if (ex) {
       const n = ex.sample_size || 0;
       const vars: any = (ex.variables as any) || {};
@@ -490,22 +537,25 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       const prevHistory = vars.history || [];
       const lastPred = prevHistory.find((h: any) => h.predictCritical);
       const predictionConfirmed = lastPred && ad.isFatigued && !prevHistory[0]?.isFatigued;
-      const confidenceBoost = predictionConfirmed ? 0.15 : 0; // confirmed prediction = stronger signal
+      const confidenceBoost = predictionConfirmed ? 0.15 : 0;
+      // Build insight_text with real hook copy when available
+      const hookPreview = adCreative?.hook_text ? ` | Hook: "${adCreative.hook_text.slice(0, 60)}..."` : '';
       await sb.from('learned_patterns').update({
         sample_size: n + 1,
         avg_ctr: ((ex.avg_ctr || 0) * n + ad.ctr) / (n + 1),
         avg_roas: ad.roas || ex.avg_roas,
         is_winner: ad.isScalable,
         confidence: Math.min(1, (n + 1) / 14 + confidenceBoost),
-        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} (${ad.trend}) | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}${ad.conversions > 0 ? ` | ${ad.conversions} conv` : ''}${ad.roas ? ` | ROAS ${ad.roas.toFixed(2)}x` : ''}${ad.cpa ? ` | CPA R$${ad.cpa.toFixed(0)}` : ''}`,
+        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} (${ad.trend}) | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}${ad.conversions > 0 ? ` | ${ad.conversions} conv` : ''}${ad.roas ? ` | ROAS ${ad.roas.toFixed(2)}x` : ''}${ad.cpa ? ` | CPA R$${ad.cpa.toFixed(0)}` : ''}${hookPreview}`,
         last_updated: new Date().toISOString(),
         variables: { ...vars, history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset, frequency: ad.frequency }
       }).eq('id', ex.id);
     } else {
+      const hookPreview = adCreative?.hook_text ? ` | Hook: "${adCreative.hook_text.slice(0, 60)}..."` : '';
       await sb.from('learned_patterns').insert({
         user_id, pattern_key: key, is_winner: ad.isScalable, sample_size: 1,
         avg_ctr: ad.ctr, avg_roas: ad.roas || null, confidence: 0.07,
-        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}`,
+        insight_text: `"${ad.name.slice(0, 45)}": ${ad.kpiLabel} ${ad.kpiValue !== null ? ad.kpiValue.toFixed(2) : '—'} | CTR ${(ad.ctr*100).toFixed(2)}% | R$${ad.spend.toFixed(0)}${hookPreview}`,
         variables: { history: history.slice(0, 30), campaign: ad.campaign, adset: ad.adset }
       });
     }
@@ -650,18 +700,25 @@ Retorne JSON:
   // This closes the creative loop: hook generated → goes live → performance captured → feeds next generation
   const adsToClassify = [...scalable, ...toPause].slice(0, 15).filter(ad => ad.ctr || ad.roas);
 
-  // Use Haiku to classify hook types from ad names — batch all ads in ONE call
-  // Much more accurate than heuristic (can detect urgency, curiosity, social proof from any naming convention)
+  // Use Haiku to classify hook types — now uses REAL ad copy when available (from creativeMap)
+  // Falls back to ad name when creative wasn't fetchable
   let hookClassifications: Record<string, string> = {};
   if (anthropicKey && adsToClassify.length > 0) {
     try {
-      const nameList = adsToClassify.map((ad: any, i: number) => `${i+1}. "${ad.name?.slice(0, 80)}"`).join("\n");
+      const adList = adsToClassify.map((ad: any, i: number) => {
+        const creative = creativeMap[ad.id];
+        // Prefer real copy over name — "Você tem 23 minutos para pegar o bônus" beats "creative_042"
+        const content = creative
+          ? `Hook: "${creative.hook_text.slice(0, 150)}"${creative.headline ? ` | Headline: "${creative.headline.slice(0, 80)}"` : ''}${creative.cta ? ` | CTA: ${creative.cta}` : ''}`
+          : `Name: "${ad.name?.slice(0, 80)}"`;
+        return `${i+1}. ${content}`;
+      }).join("\n");
       const classRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001", max_tokens: 400,
-          messages: [{ role: "user", content: `Classify each ad name into ONE hook type. Return ONLY a JSON object: {"1": "type", "2": "type", ...}\n\nHook types: urgency, social_proof, curiosity, educational, ugc, before_after, question, direct, emotional, offer\n\nAd names:\n${nameList}` }]
+          messages: [{ role: "user", content: `Classify each ad into ONE hook type based on its copy. Return ONLY JSON: {"1": "type", ...}\n\nHook types: urgency, social_proof, curiosity, educational, ugc, before_after, question, direct, emotional, offer\n\nAds:\n${adList}` }]
         })
       });
       if (classRes.ok) {
@@ -676,13 +733,15 @@ Retorne JSON:
 
   const capturePromises = [];
   for (const ad of adsToClassify) {
-    // Use Haiku classification if available, else fall back to heuristic
     const name = (ad.name || '').toLowerCase();
     const hookType = hookClassifications[ad.name] || (
       name.includes('ugc') ? 'ugc' : name.includes('?') ? 'question' :
       name.includes('tip') || name.includes('dica') ? 'educational' :
       name.includes('depo') || name.includes('review') ? 'social_proof' : 'direct'
     );
+    // Use real creative hook text when available — this is what the brain actually learns
+    const creative = creativeMap[ad.id];
+    const hook_text = creative?.hook_text || ad.name?.slice(0, 100);
 
     capturePromises.push(
       sb.functions.invoke('capture-learning', {
@@ -691,7 +750,7 @@ Retorne JSON:
           event_type: 'performance_reported',
           data: {
             hook_type: hookType,
-            hook_text: ad.name?.slice(0, 100),
+            hook_text,   // real ad copy when available, ad name as fallback
             ctr: ad.ctr,
             roas: ad.roas || null,
             platform: 'meta',
