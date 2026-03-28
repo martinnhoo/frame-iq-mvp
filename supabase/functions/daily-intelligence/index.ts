@@ -98,13 +98,132 @@ Deno.serve(async (req) => {
       } catch (e) { console.error('telegram briefing error:', e); }
     }
 
+    // ── Google Ads learning — fire after Meta loop, non-blocking ─────────────
+    processGoogleLearning(sb, ANTHROPIC).catch(() => {});
+
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 });
+
+// ── Google Ads learning — runs after Meta loop, feeds capture-learning ────────
+// Reads active Google Ads connections and captures performance patterns
+// so Google data contributes to the individual and global learning brain
+async function processGoogleLearning(sb: any, anthropicKey: string | undefined) {
+  const GOOGLE_DEV_TOKEN = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN') ?? '';
+  const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') ?? '';
+  const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '';
+  if (!GOOGLE_DEV_TOKEN) return { skipped: 'no_google_dev_token' };
+
+  const { data: conns } = await sb.from('platform_connections' as any)
+    .select('user_id, persona_id, access_token, refresh_token, expires_at, ad_accounts, selected_account_id')
+    .eq('platform', 'google').eq('status', 'active');
+
+  if (!conns?.length) return { skipped: 'no_google_connections' };
+
+  const today = new Date().toISOString().split('T')[0];
+  const since = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  let processed = 0;
+
+  for (const conn of conns) {
+    try {
+      let token = conn.access_token;
+      // Refresh token if expired
+      if (conn.refresh_token && conn.expires_at && new Date(conn.expires_at) < new Date()) {
+        const rr = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, refresh_token: conn.refresh_token, grant_type: 'refresh_token' })
+        });
+        if (rr.ok) {
+          const rd = await rr.json();
+          if (rd.access_token) {
+            token = rd.access_token;
+            await sb.from('platform_connections' as any).update({
+              access_token: token,
+              expires_at: new Date(Date.now() + (rd.expires_in || 3600) * 1000).toISOString()
+            }).eq('user_id', conn.user_id).eq('platform', 'google').eq('persona_id', conn.persona_id);
+          }
+        }
+      }
+
+      const accs = (conn.ad_accounts || []) as any[];
+      const acc = (conn.selected_account_id && accs.find((a: any) => a.id === conn.selected_account_id)) || accs[0];
+      if (!acc?.id) continue;
+
+      const custId = acc.id.replace(/-/g, '');
+      const hdr = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'developer-token': GOOGLE_DEV_TOKEN,
+        'login-customer-id': custId,
+      };
+
+      // Fetch top ads by spend in last 7 days
+      const res = await fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
+        method: 'POST', headers: hdr,
+        body: JSON.stringify({ query: `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, metrics.ctr, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20` })
+      });
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const ads = (data.results || []) as any[];
+
+      // Get persona market
+      const { data: personaData } = await sb.from('personas').select('result').eq('id', conn.persona_id).maybeSingle();
+      const personaResult = personaData?.result as any;
+      const accountMarket = personaResult?.preferred_market || personaResult?.market || 'BR';
+
+      // Classify hook types in batch via Haiku
+      const adsWithData = ads.filter((a: any) => a.metrics?.ctr > 0);
+      let hookClassifications: Record<string, string> = {};
+      if (anthropicKey && adsWithData.length > 0) {
+        try {
+          const nameList = adsWithData.map((a: any, i: number) => `${i+1}. "${(a.adGroupAd?.ad?.name || a.adGroupAd?.ad?.type || 'Ad').slice(0, 80)}"`).join('\n');
+          const cr = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: `Classify each ad name into ONE hook type. Return ONLY JSON: {"1": "type", ...}\nTypes: urgency, social_proof, curiosity, educational, ugc, before_after, question, direct, emotional, offer\n\n${nameList}` }] })
+          });
+          if (cr.ok) {
+            const parsed = JSON.parse((await cr.json()).content?.[0]?.text?.replace(/```json|```/g, '').trim() || '{}');
+            adsWithData.forEach((a: any, i: number) => {
+              hookClassifications[a.adGroupAd?.ad?.name || i] = parsed[String(i+1)] || 'direct';
+            });
+          }
+        } catch { /* fallback to direct */ }
+      }
+
+      // Feed into capture-learning
+      const captureJobs = adsWithData.slice(0, 15).map((a: any) => {
+        const adName = a.adGroupAd?.ad?.name || a.adGroupAd?.ad?.type || 'Ad';
+        const ctr = a.metrics?.ctr || 0;
+        const conversions = a.metrics?.conversions || 0;
+        const spend = (a.metrics?.costMicros || 0) / 1e6;
+        if (ctr < 0.001 && conversions === 0) return Promise.resolve();
+        return sb.functions.invoke('capture-learning', {
+          body: {
+            user_id: conn.user_id,
+            event_type: 'performance_reported',
+            data: {
+              hook_type: hookClassifications[adName] || 'direct',
+              hook_text: adName.slice(0, 100),
+              ctr,
+              roas: null, // Google Ads API doesn't return ROAS here without target_roas setup
+              platform: 'google',
+              market: accountMarket,
+              persona_id: conn.persona_id,
+            }
+          }
+        }).catch(() => {});
+      });
+      await Promise.allSettled(captureJobs);
+      processed++;
+    } catch (e) { /* continue to next connection */ }
+  }
+  return { processed };
+}
 
 async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
   // ── Get Meta token ───────────────────────────────────────────────────────
