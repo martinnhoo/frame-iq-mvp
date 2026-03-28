@@ -80,12 +80,12 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
   const isAccountsActive = isActive("/dashboard/accounts");
 
   const PRIMARY_NAV = [
-    { url: "/dashboard/campaigns/new", label: language==="pt" ? "Criar Campanha" : language==="es" ? "Crear Campaña" : "Create Campaign", icon: Rocket, exact: false, hot: false, highlight: true },
-    { url: "/dashboard/performance",   label: language==="pt" ? "Performance" : language==="es" ? "Performance" : "Performance",         icon: BarChart3, exact: false, hot: false, highlight: false },
-    { url: "/dashboard/ai",           label: "IA Chat",                                                          icon: Cpu,          exact: false, hot: true },
-    { url: "/dashboard/intelligence", label: language==="pt" ? "Inteligência" : language==="es" ? "Inteligencia" : "Intelligence", icon: Brain, exact: false },
-    { url: "/dashboard/competitor",   label: dt("nav_competitor")||"Concorrentes",                               icon: ScanEye,      exact: false },
-    { url: "/dashboard/analyses",     label: dt("nav_analyses"),                                                 icon: TrendingUp,   exact: false },
+    { url: "/dashboard/campaigns/new", label: language==="pt" ? "Criar Campanha" : language==="es" ? "Crear Campaña" : "Create Campaign", icon: Rocket,    exact: false, hot: false, highlight: true  },
+    { url: "/dashboard/performance",   label: language==="pt" ? "Performance"    : language==="es" ? "Performance"    : "Performance",    icon: BarChart3, exact: false, hot: false, highlight: false },
+    { url: "/dashboard/ai",            label: "IA Chat",                                                                                    icon: Cpu,       exact: false, hot: true,  highlight: false },
+    { url: "/dashboard/intelligence",  label: language==="pt" ? "Inteligência"   : language==="es" ? "Inteligencia"   : "Intelligence",   icon: Brain,     exact: false, hot: false, highlight: false },
+    { url: "/dashboard/competitor",    label: dt("nav_competitor")||"Concorrentes",                                                         icon: ScanEye,   exact: false, hot: false, highlight: false },
+    { url: "/dashboard/analyses",      label: dt("nav_analyses")||"Análises",                                                               icon: TrendingUp, exact: false, hot: false, highlight: false },
   ];
 
   const TOOLS_NAV = [

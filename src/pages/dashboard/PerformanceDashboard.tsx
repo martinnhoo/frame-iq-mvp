@@ -162,6 +162,8 @@ export default function PerformanceDashboard() {
   const [error,setError] = useState("");
   const [lastUpdated,setLastUpdated] = useState<Date|null>(null);
 
+  const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
+
   const load = useCallback(async(showSpinner=false) => {
     if(!user||!selectedPersona)return;
     if(showSpinner)setRefreshing(true);
@@ -182,14 +184,12 @@ export default function PerformanceDashboard() {
     }
   },[user,selectedPersona,period]);
 
-  useEffect((){load();},[load]);
+  useEffect(() => { load(); }, [load]);
 
   const hasMeta   = data?.meta   && !data.meta.error;
   const hasGoogle = data?.google && !data.google.error;
   const noConnections = !loading && !hasMeta && !hasGoogle;
 
-  // Platform selector — default to first available
-  const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
   useEffect(() => {
     if (data) {
       if (hasMeta) setActivePlatform("meta");
