@@ -422,6 +422,6 @@ Deno.serve(async (req) => {
     });
   } catch(e) {
     console.error("trend-watcher error:", e);
-    return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { ...cors, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { headers: { ...cors, "Content-Type": "application/json" } });
   }
 });

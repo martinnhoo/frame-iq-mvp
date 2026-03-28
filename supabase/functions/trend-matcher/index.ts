@@ -147,7 +147,8 @@ Responda JSON:
         is_winner: null,
         variables: { trend: term, scored_date: today },
         last_updated: new Date().toISOString(),
-      }, { onConflict: 'pattern_key' }).catch(() => {});
+      }, { onConflict: 'pattern_key' });
+      // Ignore upsert errors silently
 
       // Small delay to avoid rate limits
       await new Promise(r => setTimeout(r, 200));

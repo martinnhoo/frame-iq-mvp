@@ -441,10 +441,10 @@ Deno.serve(async (req) => {
           return { data: [] };
         }),
       // 5. Ads data imports
-      supabase.from("ads_data_imports" as any)
-        .select("platform, result, created_at" as any)
-        .eq("user_id" as any, user_id)
-        .order("created_at" as any, { ascending: false }).limit(3),
+      (supabase as any).from("ads_data_imports")
+        .select("platform, result, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false }).limit(3),
       // 6. Persona row
       persona_id
         ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
