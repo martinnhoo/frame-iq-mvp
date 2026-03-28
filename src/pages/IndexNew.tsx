@@ -169,6 +169,8 @@ const T: Record<Lang, Record<string, string>> = {
     final_label: "START TODAY", final_h2: "Your ad account is full of insights.\nStart asking.",
     final_sub: "Connect in 2 minutes. Cancel anytime.",
     final_cta: "Try free for 3 days", final_fine: "Any plan · 3-day free trial · Cancel before day 4, pay nothing",
+    trust_1: "No credit card until day 4", trust_2: "Cancel anytime", trust_3: "Setup in 2 minutes",
+    tiktok_soon: "SOON",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "The AI that knows your ad account. Stop guessing, start scaling.",
     footer_product: "Product",
@@ -243,6 +245,8 @@ const T: Record<Lang, Record<string, string>> = {
     final_label: "COMECE HOJE", final_h2: "30 segundos para conectar.\nSua conta tem as respostas.",
     final_sub: "Conecte em 2 minutos. Cancele quando quiser.",
     final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
+    trust_1: "Sem cartão até o 4º dia", trust_2: "Cancele quando quiser", trust_3: "Configure em 2 minutos",
+    tiktok_soon: "EM BREVE",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "A IA que conhece sua conta de anúncios. Pare de adivinhar, comece a escalar.",
     footer_product: "Produto",
@@ -300,7 +304,7 @@ const T: Record<Lang, Record<string, string>> = {
     ba_4_before: "Escribir hooks sin datos", ba_4_after: "\"5 hooks de mis mejores creativos\"",
     pricing_label: "PRECIOS", pricing_h2: "3 días gratis. Quédate porque funciona.",
     pricing_sub: "Todos incluyen 3 días gratis. Sin cargo hasta el día 4.",
-    pricing_cta: "Empezar prueba gratis", pricing_note: "1 día de prueba · Cancela cuando quieras",
+    pricing_cta: "Empezar prueba gratis", pricing_note: "3 días gratis · Sin cargo hasta el día 4",
     plan_badge_pro: "Más popular",
     plan_maker_f0: "50 mensajes / día", plan_maker_f1: "1 cuenta de anuncios", plan_maker_f2: "Herramientas básicas", plan_maker_f3: "1 workspace",
     plan_pro_f0: "200 mensajes / día", plan_pro_f1: "3 cuentas conectadas", plan_pro_f2: "Todas las herramientas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
@@ -317,6 +321,8 @@ const T: Record<Lang, Record<string, string>> = {
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta está llena de insights.\nEmpieza a preguntar.",
     final_sub: "Conéctate en 2 minutos. Cancela cuando quieras.",
     final_cta: "Probar gratis 3 días", final_fine: "Cualquier plan · 3 días gratis · Cancela antes del día 4",
+    trust_1: "Sin tarjeta hasta el día 4", trust_2: "Cancela cuando quieras", trust_3: "Configura en 2 minutos",
+    tiktok_soon: "PRONTO",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "La IA que conoce tu cuenta de anuncios. Para de adivinar, empieza a escalar.",
     footer_product: "Producto",
@@ -2099,7 +2105,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
           <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
         </div>
         <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-          TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>SOON</span>
+          TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>{t.tiktok_soon}</span>
         </div>
       </div>
     </div>
@@ -3082,7 +3088,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
 
         {/* Trust badges */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
-          {["No credit card until day 4", "Cancel anytime", "Setup in 2 minutes"].map((item, i) => (
+          {[t.trust_1, t.trust_2, t.trust_3].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#34d399", fontSize: 13 }}>✓</span>
               <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{item}</span>
@@ -3125,7 +3131,7 @@ function Footer({ t }: { t: Record<string, string> }) {
             </div>
             <div>
               <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_legal}</p>
-              {([[t.footer_privacy, "/privacy"], [t.footer_terms, "/terms"], [t.footer_faq, "#faq"]] as [string, string][]).map(([l, h]) => (
+              {([[t.footer_privacy, "/privacy"], [t.footer_terms, "/terms"], [t.footer_faq, "/faq"]] as [string, string][]).map(([l, h]) => (
                 <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
