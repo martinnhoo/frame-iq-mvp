@@ -347,8 +347,14 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         method: 'GET',
         relative_url: `${id}?fields=creative{body,title,call_to_action_type,object_story_spec}`
       }));
-      const batchRes = await fetch(`https://graph.facebook.com/v21.0/?batch=${encodeURIComponent(JSON.stringify(batch))}&access_token=${token}`, {
-        method: 'POST'
+      const batchBody = new URLSearchParams({
+        batch: JSON.stringify(batch),
+        access_token: token,
+        include_headers: 'false',
+      });
+      const batchRes = await fetch(`https://graph.facebook.com/v21.0/`, {
+        method: 'POST',
+        body: batchBody,
       });
       if (batchRes.ok) {
         const batchData = await batchRes.json() as any[];
