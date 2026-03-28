@@ -255,7 +255,7 @@ export default function PerformanceDashboard() {
           )}
         </div>
 
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div className="perf-actions" style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap" as const}}>
           <div style={{display:"flex",gap:4,background:S1,border:`1px solid ${BD}`,borderRadius:10,padding:4}}>
             {(["7d","14d","30d"] as Period[]).map(p=>(
               <button key={p} className={`pdb${period===p?" act":""}`} onClick={()=>setPeriod(p)}>

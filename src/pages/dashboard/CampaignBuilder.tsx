@@ -286,10 +286,10 @@ export default function CampaignBuilder() {
       </div>
 
       {/* Body */}
-      <div style={{flex:1,display:"flex",overflow:"hidden"}}>
+      <div className="campaign-body" style={{flex:1,display:"flex",overflow:"hidden"}}>
 
         {/* Form */}
-        <div style={{flex:1,padding:"28px 32px",overflowY:"auto",animation:"fadeUp 0.2s ease"}} key={`${platform}-${step}`}>
+        <div style={{flex:1,padding:"28px 32px",overflowY:"auto",animation:"fadeUp 0.2s ease",minWidth:0}} key={`${platform}-${step}`}>
 
           {/* STEP 0: Objetivo */}
           {step===0&&(
@@ -505,7 +505,7 @@ export default function CampaignBuilder() {
         </div>
 
         {/* AI Panel */}
-        <div style={{width:290,borderLeft:`1px solid ${BD}`,background:S1,display:"flex",flexDirection:"column",flexShrink:0}}>
+        <div className="campaign-ai-panel" style={{width:290,borderLeft:`1px solid ${BD}`,background:S1,display:"flex",flexDirection:"column",flexShrink:0}}>
           <div style={{padding:"14px 18px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:7,height:7,borderRadius:"50%",background:aiLoading?pc:GREEN,animation:aiLoading?"pulse 1s infinite":"none"}}/>
             <p style={{margin:0,fontSize:13,fontWeight:600,color:TX}}>Co-piloto IA</p>

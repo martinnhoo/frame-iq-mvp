@@ -158,7 +158,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
             transition: "all 0.15s",
           }}>
             {/* Main row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", overflow: "hidden" }}>
               {/* Icon */}
               <div style={{
                 width: 36, height: 36, borderRadius: 9,
@@ -295,11 +295,12 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
 // ─── Account Form (create / edit) ────────────────────────────────────────────
 // ─── Account Form (create / edit) ────────────────────────────────────────────
 
-function AccountForm({ account, userId, onSave, onCancel }: {
+function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
   account?: Account;
   userId: string;
   onSave: (a: Account) => void;
   onCancel: () => void;
+  language?: string;
 }) {
   const [name, setName] = useState(account?.name || "");
   const [website, setWebsite] = useState(account?.website || "");
@@ -322,7 +323,7 @@ function AccountForm({ account, userId, onSave, onCancel }: {
   };
 
   const save = async () => {
-    if (!name.trim()) { toast.error("Account name is required"); return; }
+    if (!name.trim()) { toast.error(language === "pt" ? "Nome da conta é obrigatório" : language === "es" ? "El nombre de la cuenta es obligatorio" : "Account name is required"); return; }
     setSaving(true);
     const payload = { user_id: userId, name: name.trim(), website: website.trim() || null, description: description.trim() || null, logo_url: logoUrl || null };
     let result: any;
@@ -369,7 +370,9 @@ function AccountForm({ account, userId, onSave, onCancel }: {
       {/* Fields */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Account name *</label>
+          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+            {language === "pt" ? "Nome da conta *" : language === "es" ? "Nombre de la cuenta *" : "Account name *"}
+          </label>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="FitCore Brasil, Nike MX, Eluck BR…"
             style={{ width: "100%", fontFamily: F, fontSize: 14, color: "#fff", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 13px", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
             onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }}
@@ -388,14 +391,18 @@ function AccountForm({ account, userId, onSave, onCancel }: {
         </div>
 
         <div>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Description</label>
+          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+            {language === "pt" ? "Descrição" : language === "es" ? "Descripción" : "Description"}
+          </label>
           <textarea value={description} onChange={e => setDescription(e.target.value)}
-            placeholder="What does this account sell? Who's the target audience? Any context the AI should know…"
+            placeholder={language === "pt" ? "O que essa conta vende? Quem é o público-alvo? Contexto que a IA deve saber…" : language === "es" ? "¿Qué vende esta cuenta? ¿Quién es el público? Contexto para la IA…" : "What does this account sell? Who's the target audience? Any context the AI should know…"}
             rows={3}
             style={{ width: "100%", fontFamily: F, fontSize: 14, color: "#fff", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 13px", outline: "none", resize: "none", boxSizing: "border-box", transition: "border-color 0.15s", lineHeight: 1.6 }}
             onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }}
             onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }} />
-          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 5 }}>The AI reads this as context for every question you ask.</p>
+          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 5 }}>
+            {language === "pt" ? "A IA usa isso como contexto para cada pergunta." : language === "es" ? "La IA usa esto como contexto para cada pregunta." : "The AI reads this as context for every question you ask."}
+          </p>
         </div>
       </div>
 
@@ -404,11 +411,11 @@ function AccountForm({ account, userId, onSave, onCancel }: {
         <button onClick={save} disabled={saving || !name.trim()}
           style={{ flex: 1, fontFamily: F, fontSize: 13, fontWeight: 700, padding: "11px", borderRadius: 10, background: name.trim() ? `linear-gradient(135deg, ${BLUE}, #06b6d4)` : "rgba(255,255,255,0.06)", color: name.trim() ? "#000" : "rgba(255,255,255,0.25)", border: "none", cursor: name.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
           {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={13} />}
-          {account?.id ? "Save changes" : "Create account"}
+          {account?.id ? "Salvar alterações" : "Criar conta"}
         </button>
         <button onClick={onCancel}
           style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: "11px 18px", borderRadius: 10, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
-          Cancel
+          Cancelar
         </button>
       </div>
     </div>
@@ -496,7 +503,7 @@ export default function AccountsPage() {
           <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: BLUE, marginBottom: 20, display: "flex", alignItems: "center", gap: 6 }}>
             <Plus size={13} /> {t.new_label}
           </p>
-          <AccountForm userId={user.id} onSave={acc => { setCreating(false); load(); setActiveId(acc.id); }} onCancel={() => setCreating(false)} />
+          <AccountForm userId={user.id} language={language} onSave={acc => { setCreating(false); load(); setActiveId(acc.id); }} onCancel={() => setCreating(false)} />
         </div>
       )}
 
@@ -588,7 +595,7 @@ export default function AccountsPage() {
 
               <div style={{ padding: "20px" }}>
                 {editingId === activeAccount.id ? (
-                  <AccountForm account={activeAccount} userId={user.id}
+                  <AccountForm account={activeAccount} userId={user.id} language={language}
                     onSave={() => { setEditingId(null); load(); }}
                     onCancel={() => setEditingId(null)} />
                 ) : (
@@ -602,7 +609,7 @@ export default function AccountsPage() {
 
                     {/* Platform connections */}
                     <div>
-                      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Ad account connections</p>
+                      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Contas de anúncios</p>
                       <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} language={language} />
                     </div>
 

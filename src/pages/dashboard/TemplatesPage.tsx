@@ -1855,7 +1855,7 @@ const TemplatesPage = () => {
                 style={{ background: "#111", border: "1px solid rgba(255,255,255,0.07)" }}>
                 {/* Color accent top bar */}
                 <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${getCatAccent(template.category)}, transparent)` }} />
-                <div className="p-4 sm:p-4 flex flex-col flex-1">
+                <div className="p-4 sm:p-4 flex flex-col">
                   {/* Category + Duration */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -1880,7 +1880,7 @@ const TemplatesPage = () => {
                         <h3 className="font-bold text-white text-[13px] sm:text-sm mb-1.5 leading-snug" style={syne}>
                           {tt?.name || template.name}
                         </h3>
-                        <p className="text-xs text-white/40 mb-4 flex-1 leading-relaxed">
+                        <p className="text-xs text-white/40 mb-3 leading-relaxed line-clamp-2">
                           {tt?.desc || template.description}
                         </p>
                       </>
@@ -1896,7 +1896,7 @@ const TemplatesPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; (e.currentTarget as HTMLButtonElement).style.color = "#000"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
                     >
-                      {loading === template.id ? "Loading..." : <><span>{ot("tp_use")}</span><ArrowRight className="h-3.5 w-3.5" /></>}
+                      {loading === template.id ? (language === "pt" ? "Gerando..." : language === "es" ? "Generando..." : "Loading...") : <><span>{ot("tp_use")}</span><ArrowRight className="h-3.5 w-3.5" /></>}
                     </button>
                     <button
                       onClick={() => setTranslateModal(template)}
