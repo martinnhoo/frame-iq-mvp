@@ -228,7 +228,7 @@ async function xSearch(term: string): Promise<string[]> {
   return [];
 }
 
-async function analyzeTrend(term: string, sources: string[]): Promise<{angle: string; ad_angle: string; niches: string[]; risk_score: number; category: string}> {
+async function analyzeTrend(term: string, sources: string[]): Promise<{angle: string; ad_angle: string; niches: string[]; risk_score: number; category: string} | null> {
   if (!ANTHROPIC) return { angle: term, ad_angle: "", niches: [], risk_score: 3, category: "geral" };
   const srcText = sources.slice(0, 10).join("\n").slice(0, 1000);
   try {
