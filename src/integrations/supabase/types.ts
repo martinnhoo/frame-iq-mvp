@@ -743,7 +743,7 @@ export type Database = {
           pattern_key: string
           persona_id: string | null
           sample_size: number | null
-          user_id: string
+          user_id: string | null
           variables: Json
         }
         Insert: {
@@ -760,7 +760,7 @@ export type Database = {
           pattern_key: string
           persona_id?: string | null
           sample_size?: number | null
-          user_id: string
+          user_id?: string | null
           variables?: Json
         }
         Update: {
@@ -777,7 +777,7 @@ export type Database = {
           pattern_key?: string
           persona_id?: string | null
           sample_size?: number | null
-          user_id?: string
+          user_id?: string | null
           variables?: Json
         }
         Relationships: []
@@ -1556,6 +1556,15 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      increment_chat_usage: {
+        Args: {
+          p_daily_cap: number
+          p_month_key: string
+          p_today: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
