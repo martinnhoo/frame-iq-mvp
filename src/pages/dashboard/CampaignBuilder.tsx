@@ -124,19 +124,33 @@ export default function CampaignBuilder() {
     lastKey.current=key;
     setAiLoading(true);
     try{
-      const[{data:snap},{data:pats}]=await Promise.all([
+      const[{data:snap},{data:pats},{data:memories},{data:aiProfile}]=await Promise.all([
         (supabase as any).from("daily_snapshots").select("total_spend,avg_ctr,active_ads")
           .eq("user_id",userId).eq("persona_id",persona.id).order("date",{ascending:false}).limit(1).maybeSingle(),
         (supabase as any).from("learned_patterns").select("insight_text,avg_ctr,is_winner")
           .eq("user_id",userId).order("confidence",{ascending:false}).limit(6),
+        (supabase as any).from("chat_memory").select("memory_text,memory_type,importance")
+          .eq("user_id",userId).order("importance",{ascending:false}).limit(8),
+        (supabase as any).from("user_ai_profile").select("ai_recommendations,pain_point")
+          .eq("user_id",userId).maybeSingle(),
       ]);
       const acct=snap?`CTR: ${((snap.avg_ctr||0)*100).toFixed(2)}% | Spend: R$${(snap.total_spend||0).toFixed(0)}`:"Sem dados ainda.";
       const patsText=(pats||[]).filter((p:any)=>p.insight_text)
         .map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.insight_text} (CTR ${((p.avg_ctr||0)*100).toFixed(2)}%)`).join("\n");
+      const memText=(memories||[]).filter((m:any)=>m.memory_text).map((m:any)=>m.memory_text).join("\n");
+      const bizGoal=(aiProfile as any)?.ai_recommendations?.business_goal;
+      const goalText=bizGoal?`Meta de negócio: ${bizGoal.goal}${bizGoal.target_cpa?` | CPA alvo: ${bizGoal.target_cpa}`:""}`:null;
       const r=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,messages:[{role:"user",content:
-          `Co-piloto AdBrief — ${platform==="meta"?"Meta Ads":"Google Ads"}. Conta: ${persona.name}.\nDados: ${acct}\n${patsText?`Padrões:\n${patsText}`:""}\nEtapa: ${trigger}\nForm: ${JSON.stringify(ctx)}\n1-3 comentários curtos. JSON: [{"type":"tip"|"warn"|"insight"|"ok","text":"..."}] Só JSON.`
+        body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:500,messages:[{role:"user",content:
+          `Co-piloto AdBrief — ${platform==="meta"?"Meta Ads":"Google Ads"}. Conta: ${persona.name}.
+Dados da conta: ${acct}
+${patsText?`Padrões:\n${patsText}`:""}
+${goalText?`\n${goalText}`:""}
+${memText?`\nContexto (do chat):\n${memText}`:""}
+Etapa: ${trigger}. Form: ${JSON.stringify(ctx)}.
+1-3 comentários curtos. Se usuário mencionou metas (ex: X leads/mês), calcule orçamento com base no CPA histórico.
+JSON: [{"type":"tip"|"warn"|"insight"|"ok","text":"..."}] Só JSON.`
         }]}),
       });
       const d=await r.json();
