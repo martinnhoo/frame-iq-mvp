@@ -214,7 +214,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
     for_h2b: "Suas campanhas finalmente conectadas.", for_d2: "Conecte as contas e dê ao time acesso a uma IA que conhece seu histórico de performance.",
-    for_cta: "Começar grátis",
+    for_cta: "Começar grátis →",
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
@@ -451,10 +451,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#08090f",
-    subtle:  "#0f1520",
-    dark:    "#050609",
-    accent:  "#071022",
+    default: "#06080e",
+    subtle:  "#0c1018",
+    dark:    "#030407",
+    accent:  "#070d1a",
   };
   return (
     <section
@@ -462,7 +462,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
       className={className}
       style={noPadding
         ? { background: bgMap[bg] || "transparent" }
-        : { padding: "clamp(56px,6vw,96px) clamp(20px,4vw,40px)", background: bgMap[bg] || "transparent" }
+        : { padding: "clamp(48px,5vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg] || "transparent" }
       }
     >
       {children}
@@ -2000,7 +2000,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
 function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; ctaLoading?: boolean }) {
   const t = T[lang];
   const verbs = lang === 'pt'
-    ? ['responde.', 'analisa.', 'aprende.', 'avisa.']
+    ? ['analisa.', 'aprende.', 'avisa.', 'escala.']
     : lang === 'es'
     ? ['responde.', 'analiza.', 'aprende.', 'avisa.']
     : ['responds.', 'analyzes.', 'learns.', 'alerts.'];
@@ -2221,7 +2221,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
   };
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(14,165,233,0.07) 0%, transparent 65%), #06080e' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
@@ -2300,7 +2300,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
             <motion.div key={active}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              style={{ borderRadius: 20, border: `1px solid ${tool.color}25`, background: `linear-gradient(135deg, ${tool.color}08 0%, rgba(255,255,255,0.03) 100%)`, overflow: "hidden" }}
+              style={{ borderRadius: 20, border: `1px solid ${tool.color}30`, background: `linear-gradient(135deg, ${tool.color}10 0%, rgba(255,255,255,0.04) 100%)`, overflow: "hidden" }}
             >
               {/* Card header */}
               <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${tool.color}15` }}>
@@ -2319,7 +2319,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
               </div>
 
               {/* IO preview */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }} className="tools-io-grid">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, minHeight: 220 }} className="tools-io-grid">
 
                 {/* Input */}
                 <div style={{ padding: "20px 24px", borderRight: `1px solid ${tool.color}12` }}>
@@ -2538,7 +2538,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
               backdropFilter: "blur(8px)",
               whiteSpace: "nowrap" as const,
             }}>
-              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, color: "#38bdf8", letterSpacing: "0.02em" }}>{c.divider}</span>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 800, color: "#38bdf8", letterSpacing: "0.04em" }}>{c.divider}</span>
             </div>
             <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, rgba(255,255,255,0.08), transparent)", minHeight: 60 }} />
           </div>
@@ -2567,7 +2567,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         </div>
 
         {/* CTA */}
-        <div style={{ textAlign: "center", marginTop: 48 }}>
+        <div style={{ textAlign: "center", marginTop: 36 }}>
           <CTAButton onClick={onCTA} loading={ctaLoading} label={`${c.cta} →`} size="md" variant="primary" />
         </div>
       </div>
@@ -2637,7 +2637,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
               fontFamily: F, fontSize: 13, fontWeight: active === i ? 600 : 400,
               padding: "8px 20px", borderRadius: 9, cursor: "pointer", transition: "all 0.18s",
               background: active === i ? "rgba(255,255,255,0.10)" : "transparent",
-              color: active === i ? "#fff" : "rgba(255,255,255,0.4)",
+              color: active === i ? "#fff" : "rgba(255,255,255,0.45)",
               border: "none",
             }}>
               {pr.label}
@@ -2647,18 +2647,19 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
         <AnimatePresence mode="wait">
           <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-            <div style={{ padding: "36px 30px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
-              <h3 style={{ fontFamily: F, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 14, color: "#fff" }}>{p.headline}</h3>
-              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.75, marginBottom: 28 }}>{p.desc}</p>
+            <div style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}10 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid ${p.color}25` }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}>{p.emoji}</div>
+              <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 10, color: "#fff" }}>{p.headline}</h3>
+              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
               <CTAButton onClick={onCTA} loading={ctaLoading} label={t.for_cta} size="sm" variant="white" icon={<ArrowRight size={14} />} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {p.points.map((point) => (
-                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                    <Check size={10} color="rgba(255,255,255,0.5)" />
+                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 16px", borderRadius: 12, background: `${p.color}08`, border: `1px solid ${p.color}18` }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${p.color}20`, border: `1px solid ${p.color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <Check size={10} color={p.color} />
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.5, margin: 0 }}>{point}</p>
+                  <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, margin: 0 }}>{point}</p>
                 </div>
               ))}
             </div>
@@ -2692,7 +2693,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
   return (
     <Section bg="dark">
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -2715,11 +2716,11 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="telegram-grid">
           {items.map((item, i) => (
-            <div key={i} style={{ padding: "28px 28px", borderRadius: 20, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 18, alignItems: "flex-start" }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(39,175,225,0.1)", border: "1px solid rgba(39,175,225,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
+            <div key={i} style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.07)", border: "1px solid rgba(39,175,225,0.18)", display: "flex", gap: 16, alignItems: "flex-start" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
               <div>
-                <p style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.02em" }}>{item.title}</p>
-                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.52)", lineHeight: 1.65, margin: 0 }}>{item.desc}</p>
+                <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#e2f4ff", margin: "0 0 5px", letterSpacing: "-0.01em" }}>{item.title}</p>
+                <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.58)", lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
               </div>
             </div>
           ))}
@@ -3103,7 +3104,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
 function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   return (
-    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(180deg, #080c14 0%, #0a0f1e 100%)" }}>
+    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(160deg, #04060c 0%, #071020 50%, #04060c 100%)" }}>
       {/* Grid pattern overlay */}
       <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
       {/* Top glow */}
