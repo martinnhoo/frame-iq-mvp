@@ -191,7 +191,7 @@ export default function ScriptGenerator() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Formato" : language === "es" ? "Formato" : "Format"} {personaApplied ? "✓" : ""}</label>
             <Select value={format} onValueChange={setFormat}>
