@@ -11,3 +11,17 @@ BEGIN
   );
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
+
+-- Add weekly creative-loop re-learn schedule
+-- Runs Monday 3h UTC — recalibrates time-decay patterns for all users
+DO $$
+BEGIN
+  PERFORM cron.unschedule('adbrief-creative-loop-relearn');
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+SELECT cron.schedule(
+  'adbrief-creative-loop-relearn',
+  '0 3 * * 1',
+  $$SELECT adbrief_invoke_function('creative-loop', '{"action":"cron_relearn"}')$$
+);

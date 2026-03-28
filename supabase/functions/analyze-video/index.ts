@@ -65,11 +65,7 @@ Deno.serve(async (req) => {
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
-    const market = (formData.get('market') as string) || '';      fileSize: videoFile?.size, 
-      fileName: videoFile?.name,
-      transcribe_only, 
-      hasVideoUrl: !!videoUrl 
-    });
+    const market = (formData.get('market') as string) || '';
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');

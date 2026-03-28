@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +24,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, user_id, variables, analysis_data } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { action, user_id, variables, analysis_data } = body;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -30,6 +33,31 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supaFetch = supaFetchFactory(supabaseUrl, supabaseKey);
+
+    // ── CRON MODE: re-learn for ALL users with creative_entries ──────────────
+    // Called by pg_cron every Monday 3h UTC — recalibrates patterns with time-decay
+    if (action === "cron_relearn" || (!action && isCronAuthorized(req))) {
+      if (!isCronAuthorized(req)) return unauthorizedResponse(corsHeaders);
+      const sb = createClient(supabaseUrl, supabaseKey);
+      // Get distinct user_ids with creative_entries
+      const { data: users } = await sb
+        .from("creative_entries" as any)
+        .select("user_id")
+        .limit(1000);
+      const uniqueUsers = [...new Set((users || []).map((u: any) => u.user_id))];
+      let processed = 0;
+      for (const uid of uniqueUsers) {
+        try {
+          await sb.functions.invoke("creative-loop", {
+            body: { action: "learn", user_id: uid }
+          });
+          processed++;
+        } catch { /* continue */ }
+      }
+      return new Response(JSON.stringify({ ok: true, users_processed: processed }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     // ── ACTION: store_analysis ──
     // Store a video analysis result into creative_memory so AI accumulates context
