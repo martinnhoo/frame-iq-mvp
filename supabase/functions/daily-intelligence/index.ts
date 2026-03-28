@@ -708,7 +708,13 @@ Retorne JSON:
 
   // ── GAP 3 FIX: Feed real CTR/ROAS per ad back into capture-learning ──────
   // This closes the creative loop: hook generated → goes live → performance captured → feeds next generation
-  const adsToClassify = [...scalable, ...toPause].slice(0, 15).filter(ad => ad.ctr || ad.roas);
+  // Capture ALL ads with real CTR — not just extremes (scalable/toPause)
+  // Every ad with a real CTR contributes to learning what works and what doesn't
+  // Sort by spend descending so highest-investment ads get classified first
+  const adsToClassify = enriched
+    .filter(ad => ad.ctr > 0 && ad.spend > 0)
+    .sort((a: any, b: any) => b.spend - a.spend)
+    .slice(0, 20);
 
   // Use Haiku to classify hook types — now uses REAL ad copy when available (from creativeMap)
   // Falls back to ad name when creative wasn't fetchable
