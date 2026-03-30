@@ -214,7 +214,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
     for_h2b: "Suas campanhas finalmente conectadas.", for_d2: "Conecte as contas e dê ao time acesso a uma IA que conhece seu histórico de performance.",
-    for_cta: "Começar grátis →",
+    for_cta: "Começar grátis",
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
@@ -2480,9 +2480,9 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
     }}>
       {/* Background radial glows */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: "10%", left: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", top: "10%", right: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.15), transparent)" }} />
+        <div style={{ position: "absolute", top: "10%", left: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: "10%", right: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(14,165,233,0.04) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.10), transparent)" }} />
       </div>
 
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
@@ -2631,14 +2631,14 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
-        <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
+        <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
           {profiles.map((pr, i) => (
             <button key={i} onClick={() => setActive(i)} style={{
               fontFamily: F, fontSize: 13, fontWeight: active === i ? 600 : 400,
-              padding: "8px 20px", borderRadius: 9, cursor: "pointer", transition: "all 0.18s",
+              padding: "8px 16px", borderRadius: 9, cursor: "pointer", transition: "all 0.18s",
               background: active === i ? "rgba(255,255,255,0.10)" : "transparent",
               color: active === i ? "#fff" : "rgba(255,255,255,0.45)",
-              border: "none",
+              border: "none", whiteSpace: "nowrap" as const,
             }}>
               {pr.label}
             </button>
@@ -2647,7 +2647,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
         <AnimatePresence mode="wait">
           <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-            <div style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}10 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid ${p.color}25` }}>
+            <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}10 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid ${p.color}25` }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}>{p.emoji}</div>
               <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 10, color: "#fff" }}>{p.headline}</h3>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
@@ -3310,7 +3310,10 @@ export default function IndexNew() {
 
             /* Sections */
             .how-grid{grid-template-columns:1fr!important}
+            .for-who-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;justify-content:flex-start!important;scrollbar-width:none!important}
+            .for-who-tabs::-webkit-scrollbar{display:none!important}
             .for-who-grid{grid-template-columns:1fr!important}
+            .for-who-card{padding:20px 18px!important}
             .pricing-grid{grid-template-columns:1fr!important}
             .tools-bento{grid-template-columns:1fr!important}
             .tools-io-grid{grid-template-columns:1fr!important}
@@ -3338,8 +3341,10 @@ export default function IndexNew() {
             .how-grid{grid-template-columns:1fr!important;gap:12px!important}
 
             /* For who */
-            .for-who-tabs{flex-wrap:wrap!important;gap:8px!important}
+            .for-who-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;box-sizing:border-box!important;justify-content:flex-start!important;scrollbar-width:none!important}
+            .for-who-tabs::-webkit-scrollbar{display:none!important}
             .for-who-grid{grid-template-columns:1fr!important}
+            .for-who-card{padding:20px 18px!important}
 
             /* Pricing */
             .pricing-grid{grid-template-columns:1fr!important;gap:12px!important}
