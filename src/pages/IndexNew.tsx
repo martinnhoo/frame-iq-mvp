@@ -2074,7 +2074,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         <CTAButton
           onClick={onCTA}
           loading={ctaLoading}
-          label={lang === 'pt' ? 'Começar grátis →' : lang === 'es' ? 'Comenzar gratis →' : 'Start for free →'}
+          label={lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
           size="md"
           variant="primary"
         />
@@ -2429,7 +2429,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
         { icon: "🔔", text: "Alertas proativos no Telegram antes de queimar verba" },
       ],
-      cta: "Começar grátis →",
+      cta: "Começar grátis",
     },
     es: {
       label: "EL PROBLEMA",
@@ -2447,7 +2447,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Genera hooks y guiones de tus anuncios ganadores" },
         { icon: "🔔", text: "Alertas proactivas en Telegram antes de quemar presupuesto" },
       ],
-      cta: "Comenzar gratis →",
+      cta: "Comenzar gratis",
     },
     en: {
       label: "THE PROBLEM",
@@ -2465,7 +2465,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         { icon: "✍️", text: "Generates hooks and scripts from your winning ads" },
         { icon: "🔔", text: "Proactive Telegram alerts before you burn budget" },
       ],
-      cta: "Start for free →",
+      cta: "Start for free",
     },
   };
 
@@ -2568,7 +2568,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
         {/* CTA */}
         <div style={{ textAlign: "center", marginTop: 36 }}>
-          <CTAButton onClick={onCTA} loading={ctaLoading} label={`${c.cta} →`} size="md" variant="primary" />
+          <CTAButton onClick={onCTA} loading={ctaLoading} label={c.cta} size="md" variant="primary" icon={<ArrowRight size={15} />} />
         </div>
       </div>
     </section>
