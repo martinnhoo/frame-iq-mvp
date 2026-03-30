@@ -132,8 +132,8 @@ const App = () => (
                 <Route path="ai" element={<AdBriefAI />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="analyses" element={<AnalysesList />} />
-                <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />
+                <Route path="analyses/:id" element={<AnalysisDetail />} />
                 <Route path="boards" element={<ToolGate><BoardsList /></ToolGate>} />
                 <Route path="boards/new" element={<ToolGate><NewBoard /></ToolGate>} />
                 <Route path="boards/:id" element={<ToolGate><BoardDetail /></ToolGate>} />

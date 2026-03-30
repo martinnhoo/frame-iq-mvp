@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
@@ -45,6 +46,7 @@ export interface DashboardContext {
   selectedPersona: ActivePersona | null;
   setSelectedPersona: (p: ActivePersona | null) => void;
   aiProfile: { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
+  lang: string;
 }
 
 export interface Profile {
@@ -572,7 +574,9 @@ export default function DashboardLayout() {
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
               style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
             >
-              <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile } satisfies DashboardContext} />
+              <ErrorBoundary>
+              <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
+              </ErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </main>

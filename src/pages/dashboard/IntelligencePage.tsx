@@ -43,7 +43,7 @@ function MemoryRow({ text, importance, typeColor, deleting, onDelete }: { text: 
 }
 
 export default function IntelligencePage() {
-  const { user, selectedPersona, lang } = useOutletContext<DashboardContext & { lang: string }>();
+  const { user, selectedPersona, lang } = useOutletContext<DashboardContext>();
   const language = lang || "pt";
   const isPT = language === "pt";
   const isES = language === "es";
