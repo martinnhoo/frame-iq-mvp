@@ -86,7 +86,7 @@ const L: Record<string, Record<string, string>> = {
     link_placeholder: "...or paste the link (tries to extract content automatically)",
     obs_label: "Observation (optional)",
     obs_placeholder: "What do you want to understand? AI will analyze with this in mind...",
-    btn: "Analisar", analyzing: "Analisando...",
+    btn: "Analyze", analyzing: "Analyzing...",
     industry: "Sector / Niche", market: "Market", hook: "Hook Score",
     diagnosis_label: "What this ad is doing",
     why_label: "Why it works or fails",

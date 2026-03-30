@@ -4,6 +4,7 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, DollarSign, MousePointer, Target, Eye, Zap, ChevronUp, ChevronDown, Rocket, ArrowUpRight, AlertCircle, Link2 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 type Period = "7d" | "14d" | "30d";
 
@@ -154,6 +155,7 @@ function AdRow({ad,rank}:{ad:any;rank:number}) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function PerformanceDashboard() {
   const {user,selectedPersona} = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const [period,setPeriod] = useState<Period>("7d");
   const [data,setData] = useState<any>(null);
@@ -265,10 +267,10 @@ export default function PerformanceDashboard() {
           </div>
           <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",background:S1,border:`1px solid ${BD}`,borderRadius:10,color:TX,fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:F}}>
             <RefreshCw size={14} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
-            {refreshing?"Buscando...":"Atualizar"}
+            {refreshing ? (language==="es"?"Actualizando...":language==="pt"?"Buscando...":"Fetching...") : (language==="es"?"Actualizar":language==="pt"?"Atualizar":"Refresh")}
           </button>
           <button onClick={()=>navigate("/dashboard/campaigns/new")} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"linear-gradient(135deg,#0ea5e9,#0891b2)",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:F}}>
-            <Rocket size={14}/>Nova campanha
+            <Rocket size={14}/>{language==="es"?"Nueva campaña":language==="pt"?"Nova campanha":"New campaign"}
           </button>
         </div>
       </div>

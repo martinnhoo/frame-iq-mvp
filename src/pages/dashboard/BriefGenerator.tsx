@@ -190,7 +190,7 @@ export default function BriefGenerator() {
 
         <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
           <Sparkles className="h-4 w-4" />
-          {loading ? "Gerando brief..." : "Gerar Brief Criativo"}
+          {loading ? (language==="es"?"Creando brief...":language==="pt"?"Gerando brief...":"Generating brief...") : (language==="es"?"Crear Brief Creativo":language==="pt"?"Gerar Brief Criativo":"Generate Creative Brief")}
         </Button>
       </div>
 
