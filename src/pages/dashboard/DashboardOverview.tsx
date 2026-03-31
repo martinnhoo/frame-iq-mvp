@@ -206,7 +206,7 @@ export default function DashboardOverview() {
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6));
     };
     run();
-  }, [user.id]);
+  }, [user?.id]);
 
   const timeAgo = (d: string) => {
     const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
