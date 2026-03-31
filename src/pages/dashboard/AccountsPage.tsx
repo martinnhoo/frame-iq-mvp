@@ -99,7 +99,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     setDisconnecting(platform);
     try {
       await supabase.from("platform_connections" as any).delete().eq("user_id", userId).eq("platform", platform).eq("persona_id", accountId);
-      toast.success(language === "es" ? "Desconectado" : "Desconectado");
+      toast.success(language === "pt" ? "Desconectado" : language === "es" ? "Desconectado" : "Disconnected");
       load();
     } catch { toast.error("Erro ao desconectar"); }
     finally { setDisconnecting(null); }
@@ -135,7 +135,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
       const newAcc = already || { id, name: `Account ${id}` };
       const updated = already ? existing : [...existing, newAcc];
       await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
-      toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} salvo.`);
+      toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : language === "es" ? `Customer ID ${id} guardado.` : `Customer ID ${id} saved.`);
       setManualAccountId(""); setExpandedPlatform(null); load();
     } catch { toast.error("Erro ao salvar ID"); }
     finally { setChangingAccount(null); }
@@ -345,7 +345,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
       result = data;
     }
     setSaving(false);
-    if (result) { toast.success(account?.id ? "Conta atualizada" : "Conta criada"); onSave(result as Account); }
+    if (result) { toast.success(account?.id ? (language === "pt" ? "Conta atualizada" : language === "es" ? "Cuenta actualizada" : "Account updated") : (language === "pt" ? "Conta criada" : language === "es" ? "Cuenta creada" : "Account created")); onSave(result as Account); }
     else toast.error("Failed to save");
   };
 

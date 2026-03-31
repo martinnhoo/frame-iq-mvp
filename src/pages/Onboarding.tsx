@@ -237,7 +237,7 @@ export default function Onboarding() {
         await (supabase.from("user_ai_profile" as any) as any).upsert({
           user_id: session.user.id,
           industry: niche,
-          pain_point: [name ? `Usuário: ${name}.` : "", niche ? `Nicho: ${nicheObj?.label || niche}.` : ""].filter(Boolean).join(" "),
+          pain_point: [name ? `User: ${name}.` : "", niche ? `Niche: ${nicheObj?.label || niche}.` : ""].filter(Boolean).join(" "),
           last_updated: new Date().toISOString(),
         }, { onConflict: "user_id" });
       } catch {}

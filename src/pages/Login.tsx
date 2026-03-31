@@ -19,7 +19,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -44,10 +44,10 @@ const Login = () => {
 
     if (error) {
       if (error.message.includes("Email not confirmed")) {
-        toast.error("Please confirm your email before signing in.");
+        toast.error(language === "pt" ? "Confirme seu email antes de entrar." : language === "es" ? "Confirma tu email antes de iniciar sesión." : "Please confirm your email before signing in.");
         navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}`);
       } else if (error.message.includes("Invalid login credentials")) {
-        toast.error("Invalid email or password. Please try again.");
+        toast.error(language === "pt" ? "Email ou senha inválidos. Tente novamente." : language === "es" ? "Email o contraseña incorrectos. Inténtalo de nuevo." : "Invalid email or password. Please try again.");
       } else {
         toast.error(error.message);
       }

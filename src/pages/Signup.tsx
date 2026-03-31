@@ -23,7 +23,7 @@ const Signup = () => {
   const [searchParams] = useSearchParams();
   const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
   const billingParam = searchParams.get("billing"); // "annual" | null
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleGoogleSignup = async () => {
     setLoading(true);
@@ -41,7 +41,7 @@ const Signup = () => {
     if (!email.trim() || !password || !name.trim()) return;
 
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+      toast.error(language === "pt" ? "A senha deve ter pelo menos 8 caracteres." : language === "es" ? "La contraseña debe tener al menos 8 caracteres." : "Password must be at least 8 characters.");
       return;
     }
 
@@ -57,7 +57,7 @@ const Signup = () => {
 
     if (error) {
       if (error.message.includes("already registered")) {
-        toast.error("This email is already registered. Try signing in instead.");
+        toast.error(language === "pt" ? "Este email já está cadastrado. Tente entrar." : language === "es" ? "Este email ya está registrado. Intenta iniciar sesión." : "This email is already registered. Try signing in instead.");
       } else {
         toast.error(error.message);
       }
