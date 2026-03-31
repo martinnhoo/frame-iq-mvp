@@ -39,6 +39,7 @@ function CTAButton({
     transform: "translateY(0)",
     userSelect: "none" as const,
     position: "relative" as const, overflow: "hidden" as const,
+    whiteSpace: "nowrap" as const,
   };
 
   const variants: Record<string, React.CSSProperties> = {
@@ -2070,7 +2071,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       </p>
 
       {/* CTA row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+      <div className="hero-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, flexWrap: 'wrap' as const }}>
         <CTAButton
           onClick={onCTA}
           loading={ctaLoading}
@@ -2625,7 +2626,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   ];
   const p = profiles[active];
   return (
-    <Section id="for" bg="subtle">
+    <Section id="for" bg="default">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
@@ -3293,6 +3294,8 @@ export default function IndexNew() {
           }
           @media(max-width:480px){
             .hero-main-section{padding:80px 20px 24px!important;min-height:auto!important;align-items:flex-start!important}
+            .hero-cta-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+            .hero-cta-row button{width:100%!important;justify-content:center!important}
           }
           @media(max-width:768px){
             /* Fix hero section overflow */
