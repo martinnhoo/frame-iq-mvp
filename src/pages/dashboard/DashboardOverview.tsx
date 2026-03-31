@@ -194,6 +194,7 @@ export default function DashboardOverview() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       const [{ data: analyses }, { data: boards }] = await Promise.all([
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
