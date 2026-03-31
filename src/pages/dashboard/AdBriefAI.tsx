@@ -2191,9 +2191,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               onSend={send}
               lang={lang}
               accountCtx={{
-                product: (aiProfile as any)?.product || selectedPersona?.name || undefined,
-                niche: (aiProfile as any)?.industry || (aiProfile as any)?.niche || undefined,
-                market: (aiProfile as any)?.market || lang.toUpperCase(),
+                product: (profile as any)?.product || selectedPersona?.name || undefined,
+                niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
+                market: (profile as any)?.market || lang.toUpperCase(),
                 platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
                 angle: undefined,
               }}
