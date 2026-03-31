@@ -1869,6 +1869,10 @@ const blogPosts: Record<string, {
 const BlogPost = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
+  const { language } = useLanguage();
+  const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
+  const hrefLangCode = langMap[language] || "en";
+  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.adbrief.pro";
   const post = slug ? blogPosts[slug] : null;
 
   if (!post) {
@@ -1883,11 +1887,6 @@ const BlogPost = () => {
       </div>
     );
   }
-
-  const { language } = useLanguage();
-  const langMap: Record<string, string> = { en: "en", es: "es", fr: "fr", de: "de", ar: "ar", zh: "zh" };
-  const hrefLangCode = langMap[language] || "en";
-  const baseUrl = (import.meta.env.VITE_BASE_URL as string) || "https://www.adbrief.pro";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
