@@ -1995,7 +1995,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }
         // When AI emits a tool_call for content tools, open the panel with prefilled context
-        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!c._pendingTool){
+        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!(c as any)._pendingTool){
           // Auto-open panel with AI-populated context
           setTimeout(()=>setActiveTool(c.tool||null),100);
         }
@@ -2191,9 +2191,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               onSend={send}
               lang={lang}
               accountCtx={{
-                product: (aiProfile as any)?.product || selectedPersona?.name || undefined,
-                niche: (aiProfile as any)?.industry || (aiProfile as any)?.niche || undefined,
-                market: (aiProfile as any)?.market || lang.toUpperCase(),
+                product: (profile as any)?.product || selectedPersona?.name || undefined,
+                niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
+                market: (profile as any)?.market || lang.toUpperCase(),
                 platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
                 angle: undefined,
               }}

@@ -238,10 +238,6 @@ Deno.serve(async (req) => {
     // Called by onboarding (user JWT) or internal cron (service role)
     const authH = req.headers.get("Authorization") ?? "";
     const isServiceRole = authH === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
-    // Auth: accept service role (cron) or valid user JWT (onboarding)
-    // Reject raw anon key which would allow anyone to send emails to arbitrary addresses
-    const authH = req.headers.get("Authorization") ?? "";
-    const isServiceRole = authH === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
     if (!isServiceRole) {
       if (!authH.startsWith("Bearer ")) {
         return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
