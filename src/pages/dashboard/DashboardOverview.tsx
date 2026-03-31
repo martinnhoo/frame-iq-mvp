@@ -100,6 +100,7 @@ export default function DashboardOverview() {
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       let q = supabase.from("analyses").select("result, created_at").eq("user_id", user.id).eq("status", "completed");
       if (dateFilter !== "all") {
