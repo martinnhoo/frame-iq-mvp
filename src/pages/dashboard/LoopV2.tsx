@@ -1288,7 +1288,7 @@ export default function LoopV2() {
           flex-shrink: 0;
           position: relative;
           z-index: 10;
-          background: #0d0f18;
+          background: linear-gradient(180deg, rgba(11,14,26,0.95), rgba(8,11,20,1)) !important;
         }
         @media (max-width: 1023px) {
           /* Scrollable main, not fixed height */

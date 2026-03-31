@@ -86,23 +86,27 @@ function NavItem({ url, label, opts, isActive, onClose }: {
   return (
     <div style={{ position: "relative" }}>
       <NavLink to={url} onClick={opts?.soon ? undefined : onClose}
+        className="sidebar-nav-item"
         style={{
-          display: "flex", alignItems: "center", padding: "7px 14px 7px 18px",
-          borderRadius: 7, margin: "1px 8px",
-          color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.52)",
-          background: active ? "rgba(255,255,255,0.07)" : "transparent",
-          fontSize: 13.5, fontWeight: active ? 600 : 400,
-          textDecoration: "none", transition: "background 0.15s, color 0.15s", fontFamily: "'Inter', system-ui, sans-serif",
+          display: "flex", alignItems: "center", padding: "8px 14px 8px 18px",
+          borderRadius: 9, margin: "2px 10px",
+          color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.48)",
+          background: active ? "rgba(14,165,233,0.08)" : "transparent",
+          fontSize: 13.5, fontWeight: active ? 600 : 450,
+          textDecoration: "none", transition: "all 0.18s cubic-bezier(0.16,1,0.3,1)", fontFamily: "'Inter', system-ui, sans-serif",
           cursor: opts?.soon ? "default" : "pointer",
           pointerEvents: opts?.soon ? "none" : "auto",
           position: "relative", overflow: "visible",
+          letterSpacing: "-0.01em",
+          borderLeft: active ? "2px solid #0ea5e9" : "2px solid transparent",
+          boxShadow: active ? "inset 0 0 20px rgba(14,165,233,0.04)" : "none",
         }}
         onMouseEnter={e => {
           setHovered(true);
           if (!active && !opts?.soon) {
             const el = e.currentTarget as HTMLElement;
-            el.style.background = "rgba(255,255,255,0.045)";
-            el.style.color = "rgba(255,255,255,0.82)";
+            el.style.background = "rgba(255,255,255,0.04)";
+            el.style.color = "rgba(255,255,255,0.8)";
           }
         }}
         onMouseLeave={e => {
@@ -110,36 +114,29 @@ function NavItem({ url, label, opts, isActive, onClose }: {
           if (!active && !opts?.soon) {
             const el = e.currentTarget as HTMLElement;
             el.style.background = "transparent";
-            el.style.color = "rgba(255,255,255,0.52)";
+            el.style.color = "rgba(255,255,255,0.48)";
           }
         }}>
-        {/* Animated left bar */}
-        <div style={{
-          position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
-          width: 2, borderRadius: "0 2px 2px 0",
-          height: active ? 14 : 0,
-          background: "#0ea5e9",
-          transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)",
-          boxShadow: active ? "0 0 6px rgba(14,165,233,0.5)" : "none",
-        }} />
         <span style={{ flex: 1 }}>{label}</span>
         {opts?.badge && !opts?.soon && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.1)", borderRadius: 5, padding: "2px 7px", letterSpacing: "0.05em", border: "1px solid rgba(14,165,233,0.15)" }}>
             {opts.badge}
           </span>
         )}
         {opts?.soon && (
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Em breve</span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", fontWeight: 500 }}>
+            {language === "pt" ? "Em breve" : language === "es" ? "Pronto" : "Soon"}
+          </span>
         )}
       </NavLink>
       {/* Hover tooltip */}
       {hovered && opts?.tooltip && (
         <div style={{
           position: "absolute", left: "calc(100% + 12px)", top: "50%", transform: "translateY(-50%)",
-          background: "#0f1825", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 10, padding: "10px 14px", zIndex: 100,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.6)", pointerEvents: "none",
-          minWidth: 140, animation: "fadeTooltip 0.15s ease",
+          background: "linear-gradient(135deg, #111827, #0f1629)", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 12, padding: "12px 16px", zIndex: 100,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)", pointerEvents: "none",
+          minWidth: 150, animation: "fadeTooltip 0.18s ease",
         }}>
           {opts.tooltip}
         </div>
