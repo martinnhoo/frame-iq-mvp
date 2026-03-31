@@ -32,7 +32,7 @@ const T: Record<Lang, {
     s3t: "Pergunte qualquer coisa",
     s3d: "\"O que está matando meu ROAS?\" · \"Qual criativo pausar?\" · \"Gere 3 hooks para minha conta\" · \"O que está em alta no Brasil hoje?\"",
     cta: "Abrir o AdBrief →",
-    ps: "Trial de 1 dia começa quando você escolhe um plano. Acesso total. Cancele nas primeiras 24h e não paga nada.",
+    ps: "Trial de 3 dias começa quando você escolhe um plano. Acesso total. Cancele nas primeiras 72h e não paga nada.",
     footer: "Você se cadastrou em adbrief.pro",
   },
   en: {
@@ -68,7 +68,7 @@ const T: Record<Lang, {
     s3t: "Pregunta lo que quieras",
     s3d: "\"¿Qué está matando mi ROAS?\" · \"¿Qué creativo pausar?\" · \"Escribe 3 hooks para mi cuenta\" · \"¿Qué está en tendencia hoy?\"",
     cta: "Abrir AdBrief →",
-    ps: "Prueba de 1 día comienza cuando eliges un plan. Acceso total. Cancela en las primeras 24h y no pagas nada.",
+    ps: "Prueba de 3 días comienza cuando eliges un plan. Acceso total. Cancela en las primeras 72h y no pagas nada.",
     footer: "Te registraste en adbrief.pro",
   },
   fr: {
@@ -86,7 +86,7 @@ const T: Record<Lang, {
     s3t: "Posez n'importe quelle question",
     s3d: "\"Qu'est-ce qui tue mon ROAS ?\" · \"Quel créatif mettre en pause ?\" · \"Écris 3 hooks pour mon compte\"",
     cta: "Ouvrir AdBrief →",
-    ps: "Essai d'1 jour commence quand vous choisissez un plan. Accès complet. Annulez dans les 24h et ne payez rien.",
+    ps: "Essai de 3 jours commence quand vous choisissez un plan. Accès complet. Annulez dans les 72h et ne payez rien.",
     footer: "Vous vous êtes inscrit sur adbrief.pro",
   },
   de: {
@@ -104,7 +104,7 @@ const T: Record<Lang, {
     s3t: "Frag alles",
     s3d: "\"Was tötet meinen ROAS?\" · \"Welches Creative pausieren?\" · \"Schreib 3 Hooks für mein Konto\"",
     cta: "AdBrief öffnen →",
-    ps: "1-Tage-Test beginnt wenn du einen Plan wählst. Voller Zugang. Kündige in 24h und zahle nichts.",
+    ps: "3-Tage-Test beginnt wenn du einen Plan wählst. Voller Zugang. Kündige in 72h und zahle nichts.",
     footer: "Du hast dich bei adbrief.pro registriert",
   },
 };

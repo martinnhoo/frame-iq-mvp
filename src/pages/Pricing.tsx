@@ -170,7 +170,7 @@ const Pricing = () => {
               Simple, transparent pricing
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              3-day free trial on all plans. Card required. Cancel anytime before 24h and pay nothing.
+              3-day free trial on all plans. Card required. No charge until day 4. Cancel anytime.
             </p>
 
             {/* Annual/Monthly Toggle */}

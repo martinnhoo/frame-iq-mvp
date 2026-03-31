@@ -312,7 +312,7 @@ const T: Record<Lang, Record<string, string>> = {
     plan_studio_f0: "Mensajes ilimitados", plan_studio_f1: "Cuentas ilimitadas", plan_studio_f2: "Todas las herramientas", plan_studio_f3: "Marcas ilimitadas", plan_studio_f4: "Workspace agencia",
     faq_label: "PREGUNTAS FRECUENTES", faq_h2: "Preguntas comunes",
     faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 3 días sin cargo. Cancela y no se te cobra.",
-    faq_q1: "¿Por qué necesito tarjeta?", faq_a1: "Filtra usuarios serios y te da acceso completo. No cobramos nada en 24h.",
+    faq_q1: "¿Por qué necesito tarjeta?", faq_a1: "Filtra usuarios serios y te da acceso completo. No cobramos nada en 72h (3 días).",
     faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads y Google Ads — conectados y leyendo tus datos en tiempo real. TikTok Ads próximamente.",
     faq_q3: "¿Mis datos son seguros?", faq_a3: "Sí. OAuth + tokens cifrados. Nunca almacenamos credenciales.",
     faq_q4: "¿Puedo usar para varios clientes?", faq_a4: "Sí. Pro: 3 cuentas. Studio: ilimitado.",
@@ -2797,13 +2797,13 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
       name: "Maker", price: annual ? "$15" : "$19", desc: annual ? "/mo billed annually" : "/mo",
       features: [t.plan_maker_f0, t.plan_maker_f1, t.plan_maker_f2, t.plan_maker_f3],
       highlight: false, badge: null,
-      action: () => navigate("/signup?plan=maker"),
+      action: () => navigate(`/signup?plan=maker${annual ? "&billing=annual" : ""}`),
     },
     {
       name: "Pro", price: annual ? "$39" : "$49", desc: annual ? "/mo billed annually" : "/mo",
       features: [t.plan_pro_f0, t.plan_pro_f1, t.plan_pro_f2, t.plan_pro_f3, t.plan_pro_f4],
       highlight: true, badge: t.plan_badge_pro,
-      action: () => navigate("/signup?plan=pro"),
+      action: () => navigate(`/signup?plan=pro${annual ? "&billing=annual" : ""}`),
     },
     {
       name: "Studio", price: annual ? "$119" : "$149", desc: annual ? "/mo billed annually" : "/mo",
@@ -2811,7 +2811,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
         lang === "pt" ? "Suporte prioritário via WhatsApp" : lang === "es" ? "Soporte prioritario por WhatsApp" : "Priority WhatsApp support"
       ],
       highlight: false, badge: null,
-      action: () => navigate("/signup?plan=studio"),
+      action: () => navigate(`/signup?plan=studio${annual ? "&billing=annual" : ""}`),
     },
   ];
 
