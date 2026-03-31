@@ -146,7 +146,7 @@ export default function CampaignBuilder() {
     debRef.current=setTimeout(()=>askAI(trigger,ctx),800);
   },[askAI]);
 
-  const set=(k:keyof Form,v:any)=>setForm(f=>({...f,[k]:v}));
+  const set=(k:keyof Form,v:any)=>{setForm(f=>({...f,[k]:v}));};
 
   const canNext=()=>{
     if(step===0)return!!(platform==="meta"?form.objective:form.channel_type)&&!!form.name.trim();
@@ -155,16 +155,41 @@ export default function CampaignBuilder() {
     return true;
   };
 
+  // billing_event must match optimization_goal
+  const billingEvent=(opt:string)=>{
+    if(["VALUE","OFFSITE_CONVERSIONS"].includes(opt)) return "IMPRESSIONS";
+    if(opt==="LINK_CLICKS") return "LINK_CLICKS";
+    return "IMPRESSIONS";
+  };
+
   const launch=async()=>{
     if(!persona||!userId)return;
     setLaunching(true);setError("");
     try{
       const fn=platform==="google"?"create-campaign-google":"create-campaign";
+      const optGoal=form.optimization_goal||META_OPT[form.objective]?.[0]?.id||"LINK_CLICKS";
       const body=platform==="meta"
-        ?{user_id:userId,persona_id:persona.id,campaign:{name:form.name,objective:form.objective,cbo:form.cbo,daily_budget:form.daily_budget,optimization_goal:form.optimization_goal||META_OPT[form.objective]?.[0]?.id,countries:[form.country],age_min:form.age_min,age_max:form.age_max,adset_name:form.group_name||`${form.name} — Público 1`}}
-        :{user_id:userId,persona_id:persona.id,campaign:{name:form.name,channel_type:form.channel_type,daily_budget:form.daily_budget,cpc_bid:form.cpc_bid,adgroup_name:form.group_name||`${form.name} — Grupo 1`}};
+        ?{user_id:userId,persona_id:persona.id,campaign:{
+            name:form.name,objective:form.objective,cbo:form.cbo,
+            daily_budget:form.daily_budget,
+            optimization_goal:optGoal,
+            billing_event:billingEvent(optGoal),
+            countries:[form.country],age_min:form.age_min,age_max:form.age_max,
+            adset_name:form.group_name||`${form.name} — Público 1`,
+          }}
+        :{user_id:userId,persona_id:persona.id,campaign:{
+            name:form.name,channel_type:form.channel_type,
+            daily_budget:form.daily_budget,cpc_bid:form.cpc_bid,
+            adgroup_name:form.group_name||`${form.name} — Grupo 1`,
+          }};
       const res=await supabase.functions.invoke(fn,{body});
-      if(res.error||res.data?.error){setError(res.data?.error||res.error?.message||"Erro");return;}
+      // Handle auth error clearly
+      if(res.error?.message?.includes("401")||res.data?.error==="unauthorized"){
+        setError("Sessão expirada — recarregue a página e tente novamente.");return;
+      }
+      if(res.error||res.data?.error){
+        setError(res.data?.error||res.error?.message||"Erro ao criar campanha");return;
+      }
       setResult({...res.data,platform});
     }catch(e){setError(String(e));}finally{setLaunching(false);}
   };
@@ -330,6 +355,9 @@ export default function CampaignBuilder() {
                 <Label>Nome da campanha *</Label>
                 <input className="cbi" placeholder="ex: Leads Q2 — Público Frio" value={form.name}
                   onChange={e=>{set("name",e.target.value);triggerAI("nome",{name:e.target.value,platform});}}/>
+                {(platform==="meta"?form.objective:form.channel_type)&&!form.name.trim()&&(
+                  <p style={{fontSize:12,color:AMBER,margin:"6px 0 0"}}>⚠ Preencha o nome para continuar</p>
+                )}
               </div>
             </div>
           )}

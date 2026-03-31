@@ -66,7 +66,7 @@ serve(async (req) => {
       campaign_id: campaignId,
       status: "PAUSED",
       optimization_goal: campaign.optimization_goal || "LINK_CLICKS",
-      billing_event: "IMPRESSIONS",
+      billing_event: campaign.billing_event || "IMPRESSIONS",
       targeting: {
         geo_locations: { countries: campaign.countries || ["BR"] },
         age_min: campaign.age_min || 18,
