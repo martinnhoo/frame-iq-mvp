@@ -2367,8 +2367,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </button>
             )}
             <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-              {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
+              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",transform:input.trim()&&!loading&&contextReady?"scale(1)":"scale(0.92)",boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.3)":"none"}}>
+              {loading?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
             </button>
           </div>
         </div>
