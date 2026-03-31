@@ -191,7 +191,7 @@ export default function DashboardOverview() {
       setTrendData(Object.entries(points).slice(-14).map(([date, { sum, count }]) => ({ date, score: Math.round((sum / count) * 10) / 10 })).reverse());
     };
     run();
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     const run = async () => {
