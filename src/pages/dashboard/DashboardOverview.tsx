@@ -59,21 +59,14 @@ export default function DashboardOverview() {
   const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
   const [isLiteMode, setIsLiteMode] = useState(() => localStorage.getItem("adbrief_mode") === "lite");
-  function switchToLite() { localStorage.setItem("adbrief_mode", "lite"); setIsLiteMode(true); }
-  function switchToPro()  { localStorage.setItem("adbrief_mode", "pro");  setIsLiteMode(false); }
-
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
   const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
+
+  function switchToLite() { localStorage.setItem("adbrief_mode", "lite"); setIsLiteMode(true); }
+  function switchToPro()  { localStorage.setItem("adbrief_mode", "pro");  setIsLiteMode(false); }
 
   // Auto-trigger Stripe checkout if ?checkout=plan param is present
   useEffect(() => {
@@ -107,6 +100,7 @@ export default function DashboardOverview() {
   const limits = planLimits[profile?.plan as keyof typeof planLimits] || planLimits.free;
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       let q = supabase.from("analyses").select("result, created_at").eq("user_id", user.id).eq("status", "completed");
       if (dateFilter !== "all") {
@@ -128,9 +122,10 @@ export default function DashboardOverview() {
       setInsights({ avgHookScore: count > 0 ? total / count : null, bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null, mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null, totalAnalyzed: data.length });
     };
     run();
-  }, [user.id, dateFilter]);
+  }, [user?.id, dateFilter]);
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       const [{ data }, { data: memData }] = await Promise.all([
         supabase.from("analyses").select("result, created_at, title")
@@ -196,9 +191,10 @@ export default function DashboardOverview() {
       setTrendData(Object.entries(points).slice(-14).map(([date, { sum, count }]) => ({ date, score: Math.round((sum / count) * 10) / 10 })).reverse());
     };
     run();
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       const [{ data: analyses }, { data: boards }] = await Promise.all([
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
@@ -210,7 +206,7 @@ export default function DashboardOverview() {
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6));
     };
     run();
-  }, [user.id]);
+  }, [user?.id]);
 
   const timeAgo = (d: string) => {
     const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
@@ -261,7 +257,13 @@ export default function DashboardOverview() {
     { label: dt("ov_preflights"), used: usedPreflights, limit: limits.preflights, url: "/dashboard/preflight", accent: "#fbbf24", icon: Plane },
   ];
 
-  if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
   if (isLiteMode) return <LiteMode profile={profile} onSwitchToPro={switchToPro} />;
 
   // Compute fatigue signal — cross-reference intel feed signals
