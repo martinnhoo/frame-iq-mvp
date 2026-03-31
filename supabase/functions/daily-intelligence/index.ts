@@ -83,7 +83,11 @@ Deno.serve(async (req) => {
             }).join('\n\n');
 
             const insight = (accountResults as any[])[0]?.aiInsight || '';
-            const msg = `<b>📊 Briefing de hoje</b>\n\n${insight ? `💡 ${insight.slice(0, 120)}\n\n` : ''}<b>3 ações prioritárias:</b>\n\n${lines}`;
+            const hasHighUrgency = top3.some((a: any) => a.urgencia === 'alta');
+            const pitch = hasHighUrgency
+              ? `\n\n🔴 <b>Ação necessária hoje.</b> Abra o AdBrief para executar direto na plataforma → adbrief.pro`
+              : `\n\n→ Ver análise completa e agir: <b>adbrief.pro</b>`;
+            const msg = `<b>📊 Briefing de hoje</b>\n\n${insight ? `💡 ${insight.slice(0, 150)}\n\n` : ''}<b>3 ações prioritárias:</b>\n\n${lines}${pitch}`;
 
             const botToken = tg.bot_token || Deno.env.get('TELEGRAM_BOT_TOKEN') || '';
             if (botToken) {
@@ -645,32 +649,40 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 600,
-          system: `Você é um analista sênior de mídia paga com 10 anos de experiência. Responda SEMPRE em Português Brasileiro.
-Sua função é DIAGNOSTICAR, não apenas descrever. A diferença:
-- Fraco: "CTR caiu 18% esta semana"
-- Forte: "CTR caiu 18% — provável fadiga criativa: frequência 4.2, mesmo criativo há 21 dias, sem novos ads"
-- Forte: "CTR caiu 18% — contexto: mercado com 8 concorrentes novos, demanda estável. Causa mais provável: competição de leilão"
+          max_tokens: 800,
+          system: `Você é o AdBrief AI — gestor sênior de tráfego pago embutido na conta. Responda SEMPRE em Português Brasileiro.
 
-Analise os dados e identifique CAUSAS, não sintomas.
+RACIOCÍNIO OBRIGATÓRIO antes de qualquer conclusão:
+1. O que os números dizem de fato? (padrão, não sintoma)
+2. Qual a causa mais provável? (não a mais óbvia)
+3. Segunda e terceira causa possível?
+4. O que eu faria se esse dinheiro fosse meu?
 
-Hipóteses causais por ordem de probabilidade:
-1. Fadiga criativa → frequência alta + sem ads novos + CTR caindo
-2. Competição de leilão → CPM subindo + mercado competitivo + CTR caindo
-3. Sazonalidade → padrão histórico + queda sem fadiga
-4. Problema de landing → CTR estável mas conversões caindo
-5. Público esgotado → frequência muito alta + ROAS caindo
+HIERARQUIA CAUSAL:
+CPM subindo → cheque PRIMEIRO leilão/audiência/sazonalidade → só então criativo
+CTR caindo → cheque PRIMEIRO frequência/overlap → só então copy
+CPC subindo → diagnostique se vem de CPM ou CTR — problemas diferentes
+CPA/CPR subindo → cheque PRIMEIRO landing/pixel/funil → só então campanha
+ROAS caindo → segmente por campanha e público ANTES de qualquer conclusão
+Conversões zero → cheque pixel/tracking PRIMEIRO
+
+LINGUAGEM CAUSAL OBRIGATÓRIA:
+✅ "CTR caiu 23% + frequência 4.1 = fadiga criativa, não sazonalidade (sazonalidade afetaria todas as campanhas)"
+✅ "CPM subiu 40% com CTR estável = pressão de leilão, não problema de criativo"
+🚫 "Você deveria tentar X" sem diagnóstico
+🚫 "Pode ser várias coisas" sem priorizar
 
 Retorne JSON:
 {
-  "resumo": "<1 frase: situação real>",
-  "insight_principal": "<2 frases: insight com CAUSA provável — seja específico>",
-  "causa_provavel": "<hipótese causal mais provável baseada nos dados disponíveis>",
+  "resumo": "<1 frase: situação real — diagnóstico, não descrição>",
+  "insight_principal": "<2 frases: causa provável com dado específico que sustenta>",
+  "causa_provavel": "<hipótese causal #1 com raciocínio explícito>",
   "confianca_causa": "alta|media|baixa",
   "acoes": [
-    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<dado específico que justifica>", "urgencia": "alta|media|baixa"}
+    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<dado específico>", "urgencia": "alta|media|baixa"}
   ],
-  "alerta": "<urgente em 1 frase ou null>"
+  "alerta": "<urgente em 1 frase ou null>",
+  "monitorar_24h": "<o que observar amanhã para confirmar ou refutar o diagnóstico>"
 }`,
           messages: [{ role: 'user', content: JSON.stringify(ctx, null, 2) }],
         }),
