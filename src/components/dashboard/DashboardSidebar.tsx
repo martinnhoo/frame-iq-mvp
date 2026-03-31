@@ -241,7 +241,7 @@ export function DashboardSidebar({
     hasActiveChild: boolean
   ) => (
     <div>
-      <button onClick={() => { setOpen(!isOpen); if (!isOpen && items.length > 0) navigate(items[0].url); }}
+      <button onClick={() => setOpen(!isOpen)}
         style={{
           width: "calc(100% - 16px)", display: "flex", alignItems: "center",
           padding: "7px 14px 7px 22px", borderRadius: 7, margin: "1px 8px",
