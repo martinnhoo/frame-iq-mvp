@@ -48,12 +48,6 @@ CREATE TRIGGER on_auth_user_created
 -- account_alerts: service_role needs full access for internal alerts system
 -- This is intentional and correct — document explicitly
 
--- Drop and recreate to make intent clear to linter
-DROP POLICY IF EXISTS "Service role manages action log" ON public.ai_action_log;
-CREATE POLICY "Service role manages action log"
-  ON public.ai_action_log FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
 -- usage table: service_role needs full access for billing/throttle
 DROP POLICY IF EXISTS "Service role manages usage" ON public.usage;
 CREATE POLICY "Service role manages usage"

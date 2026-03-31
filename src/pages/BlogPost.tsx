@@ -1898,6 +1898,11 @@ const BlogPost = () => {
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.description} />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content={`${baseUrl}/logo.png`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.description} />
+        <meta name="twitter:image" content={`${baseUrl}/logo.png`} />
         <link rel="canonical" href={`${baseUrl}/blog/${slug}`} />
         <link rel="alternate" hrefLang="en" href={`${baseUrl}/blog/${slug}`} />
         <link rel="alternate" hrefLang="es" href={`${baseUrl}/blog/${slug}?lang=es`} />

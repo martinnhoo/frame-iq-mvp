@@ -101,6 +101,11 @@ const Blog = () => {
         <title>AdBrief Blog — Creative Strategy, AI & Performance Marketing Insights</title>
         <meta name="description" content="Expert insights on creative strategy, AI-powered ad production, performance marketing, and scaling ad creative for growth teams and Creative Strategists." />
         <meta name="keywords" content="creative strategy blog, AI ad production, performance marketing, ad creative, video ad analysis, creative strategist, DTC ads, TikTok ads, Meta ads" />
+        <meta property="og:title" content="AdBrief Blog — Creative Strategy, AI & Performance Marketing" />
+        <meta property="og:description" content="Expert insights on creative strategy, AI-powered ad production and performance marketing." />
+        <meta property="og:image" content={`${baseUrl}/logo.png`} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href={`${baseUrl}/blog`} />
         {/* Hreflang tags */}
         <link rel="alternate" hrefLang="en" href={`${baseUrl}/blog`} />
