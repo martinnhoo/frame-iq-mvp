@@ -22,11 +22,11 @@ interface Form {
 }
 
 const META_OBJ = [
-  { id:"OUTCOME_TRAFFIC",    label:"Tráfego",       desc:"Cliques no link",        icon:"🌐" },
-  { id:"OUTCOME_LEADS",      label:"Leads",          desc:"Formulário / mensagem",  icon:"📋" },
-  { id:"OUTCOME_SALES",      label:"Vendas",         desc:"Compras e conversões",   icon:"💰" },
-  { id:"OUTCOME_ENGAGEMENT", label:"Engajamento",    desc:"Curtidas e comentários", icon:"❤️" },
-  { id:"OUTCOME_AWARENESS",  label:"Reconhecimento", desc:"Alcance e memória",      icon:"📢" },
+  { id:"OUTCOME_TRAFFIC",    label:"Tráfego",       desc:"Cliques no link",        icon:"Traffic" },
+  { id:"OUTCOME_LEADS",      label:"Leads",          desc:"Formulário / mensagem",  icon:"Leads" },
+  { id:"OUTCOME_SALES",      label:"Vendas",         desc:"Compras e conversões",   icon:"Sales" },
+  { id:"OUTCOME_ENGAGEMENT", label:"Engajamento",    desc:"Curtidas e comentários", icon:"Engagement" },
+  { id:"OUTCOME_AWARENESS",  label:"Reconhecimento", desc:"Alcance e memória",      icon:"Awareness" },
 ];
 const GOOGLE_CH = [
   { id:"SEARCH",          label:"Search",    desc:"Resultados de busca",         icon:"🔍" },
@@ -272,8 +272,8 @@ export default function CampaignBuilder() {
       {/* Platform tabs */}
       <div style={{padding:"0 24px",borderBottom:`1px solid ${BD}`,display:"flex",gap:0}}>
         {([
-          {id:"meta" as Platform,label:"Meta Ads",  glyph:"f",grad:"linear-gradient(135deg,#0ea5e9,#06b6d4)",color:BLUE},
-          {id:"google" as Platform,label:"Google Ads",glyph:"G",grad:"linear-gradient(135deg,#4285F4,#34A853)",color:GBLUE},
+          {id:"meta" as Platform,label:"Meta Ads",  glyph:"meta",grad:"linear-gradient(135deg,#0ea5e9,#06b6d4)",color:BLUE},
+          {id:"google" as Platform,label:"Google Ads",glyph:"google",grad:"linear-gradient(135deg,#4285F4,#34A853)",color:GBLUE},
         ]).map(plt=>{
           const active=platform===plt.id;
           const connected=connsReady&&isConnected(plt.id);
@@ -286,7 +286,15 @@ export default function CampaignBuilder() {
                 setForm(f=>({...f, objective:"", optimization_goal:"", channel_type:"SEARCH"}));
               }}
               style={{display:"flex",alignItems:"center",gap:9,padding:"13px 20px",border:"none",borderBottom:`2px solid ${active?plt.color:"transparent"}`,background:"transparent",cursor:"pointer",fontFamily:"'DM Sans',system-ui,sans-serif",color:active?plt.color:MT,fontWeight:active?700:500,fontSize:14,transition:"all 0.15s"}}>
-              <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",fontFamily:"serif",transition:"background 0.15s"}}>{plt.glyph}</div>
+              {plt.glyph === "meta" ? (
+                <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s"}}>
+                  <svg width="12" height="7" viewBox="0 0 36 18" fill="none"><path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8.6 5.2 0 7 0 9c0 2 .6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 .9-5.5 2.4L18 6l-4-3.6C12.5.9 10.7 0 8.5 0zm0 4c1.2 0 2.2.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-.8-3.8-2C4 11 3.6 10 3.6 9s.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9.8 3.8 2 .7 1 1.1 2 1.1 3s-.4 2-1.1 3c-.9 1.2-2.2 2-3.8 2-1.2 0-2.2-.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#fff"/></svg>
+                </div>
+              ) : (
+                <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s"}}>
+                  <svg width="12" height="12" viewBox="0 0 48 48"><path fill="#fff" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/></svg>
+                </div>
+              )}
               {plt.label}
               <div style={{width:6,height:6,borderRadius:"50%",background:!connsReady?MT:connected?GREEN:AMBER,flexShrink:0}} title={!connsReady?"Verificando...":connected?"Conectado":"Não conectado"}/>
             </button>
@@ -345,7 +353,17 @@ export default function CampaignBuilder() {
                         else set("channel_type",obj.id);
                         triggerAI("objetivo",{objective:obj.id,channel_type:obj.id,platform});
                       }}>
-                      <div style={{fontSize:22,marginBottom:8}}>{obj.icon}</div>
+                      {obj.icon === "Traffic" ? (
+                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+                      ) : obj.icon === "Leads" ? (
+                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                      ) : obj.icon === "Sales" ? (
+                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+                      ) : obj.icon === "Engagement" ? (
+                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                      ) : (
+                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                      )}
                       <p style={{margin:"0 0 3px",fontSize:13,fontWeight:700,color:TX}}>{obj.label}</p>
                       <p style={{margin:0,fontSize:12,color:MT}}>{obj.desc}</p>
                     </div>
