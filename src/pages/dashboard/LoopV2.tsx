@@ -1130,8 +1130,8 @@ export default function LoopV2() {
       )}
 
       {/* ── Messages ── */}
-      <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "16px 14px 12px", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0, position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 22 }}>
 
           {messages.map((msg, i) => (
             <div key={i}>
