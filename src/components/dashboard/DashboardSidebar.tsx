@@ -41,14 +41,23 @@ const PLANS: Record<string, { label: string; color: string }> = {
   scale:   { label: "Studio", color: "#a78bfa" },
 };
 
-// ── Generate accent color from persona name ──────────────────────────────────
+// ── Generate accent color from persona name — restricted palette ──────────────
 function personaAccent(name: string | null): string {
   if (!name) return "#0ea5e9";
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  const hue = Math.abs(hash) % 360;
-  // Keep saturation/lightness in a premium range — avoid muddy colors
-  return `hsl(${hue}, 70%, 62%)`;
+  // Only colors that work on dark backgrounds — blues, cyans, teals, greens, sky
+  const palette = [
+    "#0ea5e9", // sky blue
+    "#06b6d4", // cyan
+    "#14b8a6", // teal
+    "#22c55e", // green
+    "#38bdf8", // light blue
+    "#34d399", // emerald
+    "#60a5fa", // blue
+    "#4ade80", // light green
+  ];
+  return palette[Math.abs(hash) % palette.length];
 }
 
 // ── Tiny sparkline SVG ────────────────────────────────────────────────────────
@@ -190,7 +199,7 @@ export function DashboardSidebar({
           }} />
           <span style={{ flex: 1 }}>{label}</span>
           {opts?.badge && !opts?.soon && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: accent, background: `${accent}18`, borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
               {opts.badge}
             </span>
           )}
@@ -269,20 +278,18 @@ export function DashboardSidebar({
           onMouseLeave={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.52)"; }}}>
           {/* Left bar */}
           <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 3, borderRadius: "0 2px 2px 0", height: isAccountsActive ? 20 : 0, background: `linear-gradient(180deg, ${accent}, ${accent}88)`, transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: isAccountsActive ? `0 0 8px ${accent}60` : "none" }} />
-          {/* Account logo avatar */}
+          {/* Account logo avatar — small, no truncated name */}
           {selectedPersona ? (
-            <div style={{ width: 18, height: 18, borderRadius: 5, overflow: "hidden", flexShrink: 0, background: `${accent}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 16, height: 16, borderRadius: 4, overflow: "hidden", flexShrink: 0, background: `${accent}25`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {selectedPersona.logo_url
                 ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 9, fontWeight: 800, color: accent }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
+                : <span style={{ fontSize: 8, fontWeight: 800, color: accent }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
               }
             </div>
           ) : null}
           <span style={{ flex: 1 }}>{pt ? "Contas" : es ? "Cuentas" : "Accounts"}</span>
           {selectedPersona && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: `${accent}cc`, letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 60 }}>
-              {selectedPersona.name?.split(" ")[0] || "?"}
-            </span>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: accent, flexShrink: 0, boxShadow: `0 0 6px ${accent}80` }} />
           )}
         </NavLink>
         {savedPersonas.length > 0 && (
@@ -370,21 +377,21 @@ export function DashboardSidebar({
         {/* Nav */}
         <nav style={{ flex: 1, paddingTop: 12, paddingBottom: 8, overflowY: "auto", overflowX: "hidden" }}>
 
-          {/* Create campaign */}
+          {/* Create campaign — fixed brand blue, not accent */}
           <div style={{ margin: "0 8px 4px" }}>
             <NavLink to="/dashboard/campaigns/new" onClick={onClose}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "7px 14px", borderRadius: 7,
-                background: isActive("/dashboard/campaigns/new") ? `${accent}20` : `${accent}0d`,
-                border: `1px solid ${accent}25`,
-                fontSize: 13.5, fontWeight: 600, color: accent,
+                background: isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "rgba(14,165,233,0.08)",
+                border: "1px solid rgba(14,165,233,0.2)",
+                fontSize: 13.5, fontWeight: 600, color: "#7dd3fc",
                 textDecoration: "none", transition: "all 0.15s", fontFamily: F,
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${accent}18`; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? `${accent}20` : `${accent}0d`; }}>
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.13)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "rgba(14,165,233,0.08)"; }}>
               {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
-              <span style={{ fontSize: 9, fontWeight: 700, color: accent, background: `${accent}20`, borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em", opacity: 0.8 }}>NOVO</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "rgba(14,165,233,0.15)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em", opacity: 0.8 }}>NOVO</span>
             </NavLink>
           </div>
 
