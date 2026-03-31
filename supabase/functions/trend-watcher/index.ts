@@ -114,26 +114,37 @@ function parseGoogleTrendsXML(xml: string): Array<{term: string; volume: number;
 }
 
 async function discoverTrendsViaBrave(geo = "BR") {
-  if (!BRAVE_KEY) return [];
-  console.log("Google Trends RSS unavailable — using Brave Search fallback");
+  if (!BRAVE_KEY) {
+    console.log("[trend-watcher] No BRAVE_KEY — cannot fallback");
+    return [];
+  }
+  console.log("[trend-watcher] Google Trends RSS failed — using Brave Search fallback");
   try {
     const queries = [
-      "trending brasil hoje viral 2026",
-      "meme viral brasil semana",
+      "viral brasil hoje trending 2026",
+      "meme viral semana brasil twitter",
+      "trending topic brasil instagram reels",
+      "o que está bombando brasil agora",
     ];
-    const terms = new Set<string>();
+    const termSet = new Set<string>();
     for (const q of queries) {
-      const results = await braveSearch(q, 8);
-      // Extract potential trend terms from titles
+      const results = await braveSearch(q, 10);
       for (const r of results) {
-        const title = r.split(":")[0].trim();
-        if (title.length > 2 && title.length < 50 && !isBlocked(title)) {
-          terms.add(title);
+        // Extract the main subject from the title (before ":")
+        const parts = r.split(/[:|\-–]/);
+        const candidate = parts[0].trim();
+        if (candidate.length >= 3 && candidate.length <= 60 && !isBlocked(candidate)) {
+          termSet.add(candidate);
         }
       }
     }
-    return [...terms].slice(0, 10).map((term: string, i: number) => ({ term, volume: 60 - i * 3, position: i + 1 }));
-  } catch { return []; }
+    const terms = [...termSet].slice(0, 10);
+    console.log(`[trend-watcher] Brave fallback found ${terms.length} terms:`, terms.join(", "));
+    return terms.map((term: string, i: number) => ({ term, volume: 65 - i * 3, position: i + 1 }));
+  } catch(e) {
+    console.error("[trend-watcher] Brave fallback error:", e);
+    return [];
+  }
 }
 
 async function fetchGoogleTrends_UNUSED(geo = "BR") {
@@ -346,6 +357,7 @@ Deno.serve(async (req) => {
 
     // AUTO — top 10 Google Trends
     const googleTrends = await fetchGoogleTrends(geo);
+    console.log(`[trend-watcher] Fetched ${googleTrends.length} trends for ${geo}`);
     if (!googleTrends.length) return new Response(JSON.stringify({ ok: false, error: "no_trends_fetched" }), {
       headers: { ...cors, "Content-Type": "application/json" }
     });
