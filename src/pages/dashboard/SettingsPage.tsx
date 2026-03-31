@@ -55,7 +55,7 @@ const SettingsPage = () => {
     contactSub: { pt: "Dúvidas, bugs ou qualquer problema", en: "Questions, bugs or any issue", es: "Dudas, bugs o cualquier problema" },
     deleteAcc:  { pt: "Excluir conta",      en: "Delete account", es: "Eliminar cuenta" },
     deleteSub:  { pt: "Todos os seus dados serão permanentemente removidos. Para excluir, envie e-mail para", en: "All your data will be permanently removed. To delete, email", es: "Todos tus datos serán eliminados permanentemente. Para eliminar, envía un email a" },
-    deleteWith: { pt: "com o assunto "Excluir minha conta".", en: "with subject "Delete my account".", es: "con asunto "Eliminar mi cuenta"." },
+    deleteWith: { pt: "com o assunto \u201cExcluir minha conta\u201d.", en: "with subject \u201cDelete my account\u201d.", es: "con asunto \u201cEliminar mi cuenta\u201d." },
   };
   const t = (k: keyof typeof T) => T[k][lang] || T[k]["en"];
 

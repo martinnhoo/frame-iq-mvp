@@ -1842,9 +1842,9 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       metric: "hook rate 38%",
       metricLabel: "your top creatives' pattern — basis for the hooks below",
       points: [
-        "**"You've been training for 3 months and the scale hasn't moved — your ads already know why."**",
-        "**"3 of 4 transformations you've seen here cost under $18 CAC. Want to see the math?"**",
-        "**"Your competitor is scaling the same angle as your best UGC — which you paused 9 days ago."**",
+        "**\u201cYou've been training for 3 months and the scale hasn't moved — your ads already know why.\u201d**",
+        "**\u201c3 of 4 transformations you've seen here cost under $18 CAC. Want to see the math?\u201d**",
+        "**\u201cYour competitor is scaling the same angle as your best UGC — which you paused 9 days ago.\u201d**",
       ],
       action: "Pattern from your winners: specific pain with real data → no generic motivation.",
     },
