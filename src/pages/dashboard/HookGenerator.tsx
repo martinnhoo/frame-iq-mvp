@@ -170,14 +170,15 @@ export default function HookGenerator() {
     toast.success(vote === "up" ? "Got it — more like this 👍" : "Noted — fewer of this type 👎");
     // Save to creative_memory so update-ai-profile can learn from it
     if (user?.id) {
-      await supabase.from("creative_memory").insert({
-        user_id: user.id,
-        hook_type: hook.hook_type,
-        platform: platform.toLowerCase().replace(" ", "_"),
-        hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
-        notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
-      } as any);
-      // Trigger AI profile update non-blocking
+      try {
+        await supabase.from("creative_memory").insert({
+          user_id: user.id,
+          hook_type: hook.hook_type,
+          platform: platform.toLowerCase().replace(" ", "_"),
+          hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
+          notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
+        } as any);
+      } catch {} // non-critical — feedback loss is acceptable
       supabase.functions.invoke("update-ai-profile", {
         body: { user_id: user.id, trigger: "hook_feedback", vote, hook_type: hook.hook_type, platform, predicted_score: hook.predicted_score }
       }).catch(() => {});

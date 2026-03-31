@@ -27,23 +27,28 @@ const BoardsList = () => {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     const run = async () => {
       const { data } = await supabase
         .from("boards").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (!mounted) return;
       if (data) setBoards(data as Board[]);
       setLoading(false);
     };
     run();
+    return () => { mounted = false; };
   }, [user.id]);
 
   const handleDelete = async (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
     if (!confirm(`Delete "${title}"?`)) return;
     setDeleting(id);
-    await supabase.from("boards").delete().eq("id", id);
-    setBoards(p => p.filter(b => b.id !== id));
-    toast.success(language === "pt" ? "Board excluído" : "Board deleted");
-    setDeleting(null);
+    try {
+      await supabase.from("boards").delete().eq("id", id);
+      setBoards(p => p.filter(b => b.id !== id));
+      toast.success(language === "pt" ? "Board excluído" : "Board deleted");
+    } catch { toast.error("Erro ao excluir board"); }
+    finally { setDeleting(null); }
   };
 
   if (loading) return (

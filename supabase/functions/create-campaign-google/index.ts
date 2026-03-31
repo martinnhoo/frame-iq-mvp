@@ -10,7 +10,7 @@ const cors = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   const ok = (d: object) => new Response(JSON.stringify(d), { headers: { ...cors, "Content-Type": "application/json" } });
   const err = (msg: string, step?: string) =>
     new Response(JSON.stringify({ error: msg, step }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });

@@ -44,13 +44,17 @@ export default function AnalysesList() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"date" | "score">("date");
 
-  const load = async () => {
-    const { data } = await supabase.from("analyses").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    if (data) setAnalyses(data as Analysis[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, [user.id]);
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const { data } = await supabase.from("analyses").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (!mounted) return;
+      if (data) setAnalyses(data as Analysis[]);
+      setLoading(false);
+    };
+    load();
+    return () => { mounted = false; };
+  }, [user.id]);
 
   const filtered = useMemo(() => {
     let list = analyses.filter(a => !search || (a.title || "").toLowerCase().includes(search.toLowerCase()));

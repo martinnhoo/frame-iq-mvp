@@ -174,9 +174,11 @@ const BoardDetail = () => {
 
   const handleDelete = async () => {
     if (!confirm("Delete this board? This cannot be undone.")) return;
-    await supabase.from("boards").delete().eq("id", id);
-    toast.success(language === "pt" ? "Board excluído" : "Board deleted");
-    navigate("/dashboard/boards");
+    try {
+      await supabase.from("boards").delete().eq("id", id);
+      toast.success(language === "pt" ? "Board excluído" : "Board deleted");
+      navigate("/dashboard/boards");
+    } catch { toast.error("Erro ao excluir board"); }
   };
 
   if (loading) return (

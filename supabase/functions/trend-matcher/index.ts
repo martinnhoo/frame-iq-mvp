@@ -11,7 +11,7 @@ const cors = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: cors });
   if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
 
   const sb = createClient(

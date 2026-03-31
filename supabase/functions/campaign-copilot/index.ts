@@ -9,7 +9,7 @@ const cors = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
 
   try {
     const { user_id, persona_id, persona_name, platform, trigger, form_ctx } = await req.json();

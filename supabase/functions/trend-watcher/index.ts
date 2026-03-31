@@ -301,7 +301,7 @@ function computeRelevanceScore(trend: Record<string, any>, baseline: Record<stri
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   try {
     const body = await req.json().catch(() => ({}));

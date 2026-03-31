@@ -342,7 +342,7 @@ const AnalysisDetail = () => {
                   ].filter(([, v]) => v).map(([k, v]) => (
                     <div key={k as string}>
                       <span style={{ color: "rgba(255,255,255,0.25)" }}>{k}: </span>
-                      <span style={{ color: "rgba(255,255,255,0.6)" }}>{(v as string).charAt(0).toUpperCase() + (v as string).slice(1)}</span>
+                      <span style={{ color: "rgba(255,255,255,0.6)" }}>{String(v).charAt(0).toUpperCase() + String(v).slice(1)}</span>
                     </div>
                   ))}
                 </div>

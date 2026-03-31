@@ -97,21 +97,26 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     const msg = language === "pt" ? `Desconectar ${platform}?` : `Disconnect ${platform}?`;
     if (!confirm(msg)) return;
     setDisconnecting(platform);
-    await supabase.from("platform_connections" as any).delete().eq("user_id", userId).eq("platform", platform).eq("persona_id", accountId);
-    toast.success(language === "es" ? "Desconectado" : "Desconectado");
-    load(); setDisconnecting(null);
+    try {
+      await supabase.from("platform_connections" as any).delete().eq("user_id", userId).eq("platform", platform).eq("persona_id", accountId);
+      toast.success(language === "es" ? "Desconectado" : "Desconectado");
+      load();
+    } catch { toast.error("Erro ao desconectar"); }
+    finally { setDisconnecting(null); }
   };
 
   const selectAccount = async (platform: string, accId: string) => {
     setChangingAccount(platform);
-    await supabase.from("platform_connections" as any).update({ selected_account_id: accId }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
-    load(); setChangingAccount(null);
+    try {
+      await supabase.from("platform_connections" as any).update({ selected_account_id: accId }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
+      load();
+    } catch { toast.error("Erro ao selecionar conta"); }
+    finally { setChangingAccount(null); }
   };
 
   const saveManualAccount = async (platform: string, rawId: string) => {
     const id = rawId.trim().replace(/-/g, "");
     if (!id) return;
-    // Validate Google Ads Customer ID — must be exactly 10 digits
     if (platform === "google") {
       if (!/^\d{10}$/.test(id)) {
         toast.error(language === "pt"
@@ -123,14 +128,17 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
       }
     }
     setChangingAccount(platform);
-    const conn = connections[platform];
-    const existing = conn?.accounts || [];
-    const already = existing.find((a: any) => a.id === id);
-    const newAcc = already || { id, name: `Account ${id}` };
-    const updated = already ? existing : [...existing, newAcc];
-    await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
-    toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} salvo.`);
-    setManualAccountId(""); setExpandedPlatform(null); load(); setChangingAccount(null);
+    try {
+      const conn = connections[platform];
+      const existing = conn?.accounts || [];
+      const already = existing.find((a: any) => a.id === id);
+      const newAcc = already || { id, name: `Account ${id}` };
+      const updated = already ? existing : [...existing, newAcc];
+      await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
+      toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : `Customer ID ${id} salvo.`);
+      setManualAccountId(""); setExpandedPlatform(null); load();
+    } catch { toast.error("Erro ao salvar ID"); }
+    finally { setChangingAccount(null); }
   };
 
   if (loading) return (
@@ -452,17 +460,20 @@ export default function AccountsPage() {
     setSelectedPersona(acc ? { ...acc } as any : null);
   };
 
-  const load = async () => {
-    const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
-    setAccounts((data || []) as Account[]);
-    setLoading(false);
-    // Auto-select first if nothing active yet
-    if (data?.length && !selectedPersona) {
-      setSelectedPersona({ ...(data[0] as any) });
-    }
-  };
-
-  useEffect(() => { load(); }, [user.id]);
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (!mounted) return;
+      setAccounts((data || []) as Account[]);
+      setLoading(false);
+      if (data?.length && !selectedPersona) {
+        setSelectedPersona({ ...(data[0] as any) });
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [user.id]);
 
   const deleteAccount = async (id: string) => {
     if (!confirm(t.delete_confirm)) return;
