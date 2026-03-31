@@ -2060,7 +2060,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0",position:"relative" as const,zIndex:1,maskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",position:"relative" as const,zIndex:1}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
