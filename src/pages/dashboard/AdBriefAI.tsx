@@ -2230,8 +2230,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <ABAvatar size={26} />
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"rgba(14,165,233,0.6)",letterSpacing:"0.10em",textTransform:"uppercase" as const}}>AdBrief</span>
+                    <div style={{width:28,height:28,borderRadius:9,background:"linear-gradient(135deg, #0ea5e9, #06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 10px rgba(14,165,233,0.2)"}}>
+                      <Sparkles size={13} color="#fff" strokeWidth={2}/>
+                    </div>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"#0ea5e9",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>ADBRIEF</span>
                   </div>
                 )}
                 {/* Blocks */}
