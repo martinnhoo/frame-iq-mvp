@@ -427,9 +427,9 @@ export function DashboardSidebar({
               animation: systemStatus === "loading" ? "pulseDot 1.2s ease infinite" : "none",
             }} />
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: F }}>
-              {systemStatus === "ok" ? (pt ? "Todos os sistemas OK" : "All systems OK") :
-               systemStatus === "warn" ? (pt ? "Lentidão detectada" : "Slowness detected") :
-               (pt ? "Verificando..." : "Checking...")}
+              {systemStatus === "ok" ? (pt ? "Todos os sistemas OK" : es ? "Todos los sistemas OK" : "All systems OK") :
+               systemStatus === "warn" ? (pt ? "Lentidão detectada" : es ? "Lentitud detectada" : "Slowness detected") :
+               (pt ? "Verificando..." : es ? "Verificando..." : "Checking...")}
             </span>
           </div>
 
