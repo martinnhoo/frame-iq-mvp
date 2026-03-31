@@ -125,6 +125,7 @@ export default function DashboardOverview() {
   }, [user?.id, dateFilter]);
 
   useEffect(() => {
+    if (!user) return;
     const run = async () => {
       const [{ data }, { data: memData }] = await Promise.all([
         supabase.from("analyses").select("result, created_at, title")
