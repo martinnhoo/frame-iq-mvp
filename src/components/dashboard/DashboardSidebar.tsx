@@ -286,7 +286,7 @@ export function DashboardSidebar({
           ) : null}
           <span style={{ flex: 1 }}>{pt ? "Contas" : es ? "Cuentas" : "Accounts"}</span>
           {selectedPersona && (
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: accent, flexShrink: 0, boxShadow: `0 0 6px ${accent}80` }} />
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
           )}
         </NavLink>
         {savedPersonas.length > 0 && (
@@ -300,35 +300,37 @@ export function DashboardSidebar({
       </div>
 
       {accountsExpanded && savedPersonas.length > 0 && (
-        <div style={{ marginLeft: 16, marginRight: 8, background: "rgba(255,255,255,0.02)", borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)", borderTop: "none" }}>
+        <div style={{ marginLeft: 8, marginRight: 8, marginTop: 2, background: "rgba(255,255,255,0.02)", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
           {savedPersonas.map(p => {
             const isSel = p.id === selectedPersona?.id;
-            const pAccent = personaAccent(p.name);
             return (
               <button key={p.id}
                 onClick={() => { onSelectPersona?.(p); navigate("/dashboard/ai"); onClose(); setAccountsExpanded(false); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: isSel ? `${pAccent}10` : "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer", fontFamily: F, transition: "background 0.1s" }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: isSel ? "rgba(255,255,255,0.05)" : "transparent", border: "none", cursor: "pointer", fontFamily: F, transition: "background 0.1s" }}
                 onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
                 onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                <div style={{ width: 20, height: 20, borderRadius: 5, background: `${pAccent}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                {/* Neutral avatar — no random colors */}
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                   {p.logo_url
                     ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <span style={{ fontSize: 9, fontWeight: 800, color: pAccent }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
+                    : <span style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: 0 }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
                   }
                 </div>
-                <span style={{ flex: 1, fontSize: 12, fontWeight: isSel ? 500 : 400, color: isSel ? "#fff" : "rgba(255,255,255,0.48)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>
+                {/* Name — never bold, active is just slightly brighter */}
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 400, color: isSel ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>
                   {p.name || "Conta"}
                 </span>
-                {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: pAccent, flexShrink: 0, boxShadow: `0 0 5px ${pAccent}` }} />}
+                {/* Active indicator — small, no glow */}
+                {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.4)", flexShrink: 0 }} />}
               </button>
             );
           })}
           <button onClick={() => { navigate("/dashboard/accounts"); onClose(); setAccountsExpanded(false); }}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "transparent", border: "none", cursor: "pointer", fontFamily: F }}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: 7, padding: "9px 14px", background: "transparent", border: "none", cursor: "pointer", fontFamily: F, transition: "background 0.1s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <Plus size={10} color="rgba(255,255,255,0.18)" />
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{pt ? "Nova conta" : es ? "Nueva cuenta" : "New account"}</span>
+            <Plus size={11} color="rgba(14,165,233,0.6)" />
+            <span style={{ fontSize: 12.5, color: "rgba(14,165,233,0.7)", fontWeight: 400 }}>{pt ? "Nova conta" : es ? "Nueva cuenta" : "New account"}</span>
           </button>
         </div>
       )}
