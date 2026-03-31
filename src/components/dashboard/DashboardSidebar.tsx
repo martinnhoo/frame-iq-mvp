@@ -1,5 +1,6 @@
-// DashboardSidebar v3 — Apple/Posttar aesthetic: text-first, no icons in nav, typographic hierarchy
-import { ChevronDown, Plus } from "lucide-react";
+// DashboardSidebar v4 — premium: accent color per account, animated active line,
+// hover tooltips with data, system status, logo avatar in accounts
+import { ChevronDown, Plus, Zap } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -8,15 +9,16 @@ import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
   plan: string | null; [key: string]: unknown;
 }
 interface ActivePersona {
-  id: string; name: string; logo_url?: string | null; website?: string | null; description?: string | null;
-  [key: string]: unknown;
+  id: string; name: string; logo_url?: string | null; website?: string | null;
+  description?: string | null; [key: string]: unknown;
 }
 interface SidebarProps {
   user: SupaUser | null; profile: Profile | null;
@@ -33,11 +35,35 @@ const PLANS: Record<string, { label: string; color: string }> = {
   free:    { label: "Free",    color: "#6b7280" },
   maker:   { label: "Maker",  color: "#60a5fa" },
   pro:     { label: "Pro",    color: "#0ea5e9" },
-  studio:  { label: "Studio", color: "#0ea5e9" },
+  studio:  { label: "Studio", color: "#a78bfa" },
   creator: { label: "Maker",  color: "#60a5fa" },
   starter: { label: "Pro",    color: "#0ea5e9" },
-  scale:   { label: "Studio", color: "#0ea5e9" },
+  scale:   { label: "Studio", color: "#a78bfa" },
 };
+
+// ── Generate accent color from persona name ──────────────────────────────────
+function personaAccent(name: string | null): string {
+  if (!name) return "#0ea5e9";
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  // Keep saturation/lightness in a premium range — avoid muddy colors
+  return `hsl(${hue}, 70%, 62%)`;
+}
+
+// ── Tiny sparkline SVG ────────────────────────────────────────────────────────
+function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+  if (!data || data.length < 2) return null;
+  const w = 52, h = 16;
+  const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * (h - 2) - 1}`);
+  const path = `M ${pts.join(" L ")}`;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" opacity={0.8} />
+    </svg>
+  );
+}
 
 export function DashboardSidebar({
   user, profile, open, onClose, onOpenProfile,
@@ -50,6 +76,8 @@ export function DashboardSidebar({
   const [accountsExpanded, setAccountsExpanded] = useState(false);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [perfData, setPerfData] = useState<number[] | null>(null);
+  const [systemStatus, setSystemStatus] = useState<"ok" | "warn" | "loading">("loading");
 
   const plan = profile?.plan || "free";
   const isLifetime = LIFETIME.includes(user?.email || "");
@@ -59,70 +87,138 @@ export function DashboardSidebar({
   const isActive = (url: string) => location.pathname === url || location.pathname.startsWith(url + "/");
   const isAccountsActive = isActive("/dashboard/accounts");
 
+  // Accent color driven by selected persona
+  const accent = personaAccent(selectedPersona?.name || null);
+
   const pt = language === "pt", es = language === "es";
 
+  // ── Fetch performance sparkline data for hover tooltip ────────────────────
+  useEffect(() => {
+    if (!user?.id || !selectedPersona?.id) return;
+    const load = async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("daily_snapshots")
+          .select("date, total_spend")
+          .eq("user_id", user.id)
+          .eq("persona_id", selectedPersona.id)
+          .order("date", { ascending: false })
+          .limit(7);
+        if (data?.length) {
+          setPerfData(data.reverse().map((d: any) => d.total_spend || 0));
+        }
+      } catch {}
+    };
+    load();
+  }, [user?.id, selectedPersona?.id]);
+
+  // ── System status check ────────────────────────────────────────────────────
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const start = Date.now();
+        await supabase.from("profiles").select("id").limit(1);
+        setSystemStatus(Date.now() - start > 1500 ? "warn" : "ok");
+      } catch {
+        setSystemStatus("warn");
+      }
+    };
+    check();
+  }, []);
+
   const ANALYSIS_NAV = [
-    { url: "/dashboard/performance",  label: pt ? "Performance"   : es ? "Performance"   : "Performance"  },
-    { url: "/dashboard/intelligence", label: pt ? "Inteligência"  : es ? "Inteligencia"  : "Intelligence" },
-    { url: "/dashboard/competitor",   label: dt("nav_competitor") || "Concorrentes"                       },
-    { url: "/dashboard/analyses",     label: dt("nav_analyses")   || "Análises"                           },
+    { url: "/dashboard/performance",  label: pt ? "Performance"  : es ? "Performance"  : "Performance"  },
+    { url: "/dashboard/intelligence", label: pt ? "Inteligência" : es ? "Inteligencia" : "Intelligence" },
+    { url: "/dashboard/competitor",   label: dt("nav_competitor") || "Concorrentes"                      },
+    { url: "/dashboard/analyses",     label: dt("nav_analyses")   || "Análises"                          },
   ];
-
   const TOOLS_NAV = [
-    { url: "/dashboard/hooks",      label: pt ? "Gerador de Hooks"  : es ? "Generador de Hooks"  : "Hook Generator" },
-    { url: "/dashboard/script",     label: pt ? "Roteiro"           : es ? "Guión"                : "Script"         },
-    { url: "/dashboard/translate",  label: pt ? "Traduzir"          : es ? "Traducir"             : "Translate"      },
-    { url: "/dashboard/preflight",  label: pt ? "Check Criativo"    : es ? "Check Creativo"       : "Creative Check" },
-    { url: "/dashboard/templates",  label: pt ? "Templates"         : es ? "Plantillas"           : "Templates"      },
-    { url: "/dashboard/boards",     label: pt ? "Boards"            : es ? "Tableros"             : "Boards"         },
+    { url: "/dashboard/hooks",     label: pt ? "Gerador de Hooks" : es ? "Generador de Hooks" : "Hook Generator" },
+    { url: "/dashboard/script",    label: pt ? "Roteiro"          : es ? "Guión"               : "Script"         },
+    { url: "/dashboard/translate", label: pt ? "Traduzir"         : es ? "Traducir"            : "Translate"      },
+    { url: "/dashboard/preflight", label: pt ? "Check Criativo"   : es ? "Check Creativo"      : "Creative Check" },
+    { url: "/dashboard/templates", label: pt ? "Templates"        : es ? "Plantillas"          : "Templates"      },
+    { url: "/dashboard/boards",    label: pt ? "Boards"           : es ? "Tableros"            : "Boards"         },
   ];
-
   const isAnalysisActive = ANALYSIS_NAV.some(i => isActive(i.url));
   const isToolsActive    = TOOLS_NAV.some(i => isActive(i.url));
 
-  // ── Nav item — text only, no icon ──────────────────────────────────────────
-  const navItem = (url: string, label: string, opts?: { badge?: string; soon?: boolean }) => {
+  // ── Nav item with animated left bar ──────────────────────────────────────
+  const navItem = (url: string, label: string, opts?: {
+    badge?: string; soon?: boolean; tooltip?: React.ReactNode;
+  }) => {
     const active = isActive(url);
+    const [hovered, setHovered] = useState(false);
     return (
-      <NavLink key={url} to={url} onClick={onClose}
-        style={{
-          display: "flex", alignItems: "center", padding: "7px 16px",
-          borderRadius: 7, margin: "1px 8px",
-          color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)",
-          background: active ? "rgba(255,255,255,0.08)" : "transparent",
-          fontSize: 13.5, fontWeight: active ? 600 : 400,
-          textDecoration: "none", transition: "all 0.1s", fontFamily: F,
-          cursor: opts?.soon ? "default" : "pointer",
-          pointerEvents: opts?.soon ? "none" : "auto",
-        }}
-        onMouseEnter={e => { if (!active && !opts?.soon) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.05)"; el.style.color = "rgba(255,255,255,0.85)"; }}}
-        onMouseLeave={e => { if (!active && !opts?.soon) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.55)"; }}}
-      >
-        <span style={{ flex: 1 }}>{label}</span>
-        {opts?.badge && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
-            {opts.badge}
-          </span>
+      <div key={url} style={{ position: "relative" }}>
+        <NavLink to={url} onClick={onClose}
+          style={{
+            display: "flex", alignItems: "center", padding: "7px 14px 7px 18px",
+            borderRadius: 7, margin: "1px 8px",
+            color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.52)",
+            background: active ? "rgba(255,255,255,0.07)" : "transparent",
+            fontSize: 13.5, fontWeight: active ? 600 : 400,
+            textDecoration: "none", transition: "background 0.15s, color 0.15s", fontFamily: F,
+            cursor: opts?.soon ? "default" : "pointer",
+            pointerEvents: opts?.soon ? "none" : "auto",
+            position: "relative", overflow: "visible",
+          }}
+          onMouseEnter={e => {
+            setHovered(true);
+            if (!active && !opts?.soon) {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "rgba(255,255,255,0.045)";
+              el.style.color = "rgba(255,255,255,0.82)";
+            }
+          }}
+          onMouseLeave={e => {
+            setHovered(false);
+            if (!active && !opts?.soon) {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "transparent";
+              el.style.color = "rgba(255,255,255,0.52)";
+            }
+          }}>
+          {/* Animated left bar */}
+          <div style={{
+            position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
+            width: 3, borderRadius: "0 2px 2px 0",
+            height: active ? 20 : 0,
+            background: `linear-gradient(180deg, ${accent}, ${accent}88)`,
+            transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)",
+            boxShadow: active ? `0 0 8px ${accent}60` : "none",
+          }} />
+          <span style={{ flex: 1 }}>{label}</span>
+          {opts?.badge && !opts?.soon && (
+            <span style={{ fontSize: 10, fontWeight: 700, color: accent, background: `${accent}18`, borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
+              {opts.badge}
+            </span>
+          )}
+          {opts?.soon && (
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{pt ? "Em breve" : "Soon"}</span>
+          )}
+        </NavLink>
+
+        {/* Hover tooltip */}
+        {hovered && opts?.tooltip && (
+          <div style={{
+            position: "absolute", left: "calc(100% + 12px)", top: "50%", transform: "translateY(-50%)",
+            background: "#0f1825", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 10, padding: "10px 14px", zIndex: 100,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)", pointerEvents: "none",
+            minWidth: 140, animation: "fadeTooltip 0.15s ease",
+          }}>
+            {opts.tooltip}
+          </div>
         )}
-        {opts?.soon && (
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", fontFamily: F }}>{pt ? "Em breve" : es ? "Próximo" : "Soon"}</span>
-        )}
-        {active && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, marginLeft: 6 }} />}
-      </NavLink>
+      </div>
     );
   };
 
-  // ── Section label ───────────────────────────────────────────────────────────
-  const sectionLabel = (label: string) => (
-    <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.22)", letterSpacing: "0.09em", textTransform: "uppercase", padding: "14px 16px 4px", margin: 0 }}>
-      {label}
-    </p>
-  );
-
-  // ── Collapsible section ─────────────────────────────────────────────────────
+  // ── Collapsible section ───────────────────────────────────────────────────
   const collapsibleSection = (
     label: string,
-    items: { url: string; label: string }[],
+    items: { url: string; label: string; tooltip?: React.ReactNode }[],
     isOpen: boolean,
     setOpen: (v: boolean) => void,
     hasActiveChild: boolean
@@ -130,53 +226,71 @@ export function DashboardSidebar({
     <div>
       <button onClick={() => setOpen(!isOpen)}
         style={{
-          width: "100%", display: "flex", alignItems: "center", padding: "7px 16px",
-          borderRadius: 7, margin: "1px 8px", boxSizing: "border-box",
-          background: hasActiveChild && !isOpen ? "rgba(255,255,255,0.06)" : "transparent",
-          border: "none", cursor: "pointer", fontFamily: F, transition: "all 0.1s",
-          width: "calc(100% - 16px)",
+          width: "calc(100% - 16px)", display: "flex", alignItems: "center",
+          padding: "7px 14px 7px 18px", borderRadius: 7, margin: "1px 8px",
+          background: "transparent", border: "none", cursor: "pointer",
+          fontFamily: F, transition: "background 0.15s",
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = hasActiveChild && !isOpen ? "rgba(255,255,255,0.06)" : "transparent"; }}>
-        <span style={{ flex: 1, fontSize: 13.5, fontWeight: hasActiveChild ? 600 : 400, color: hasActiveChild ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", textAlign: "left" }}>{label}</span>
-        <ChevronDown size={12} color="rgba(255,255,255,0.25)" style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+        <span style={{
+          flex: 1, fontSize: 13.5, textAlign: "left",
+          fontWeight: hasActiveChild ? 600 : 400,
+          color: hasActiveChild ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.45)",
+          transition: "color 0.15s",
+        }}>{label}</span>
+        <ChevronDown size={11} color="rgba(255,255,255,0.2)"
+          style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
       </button>
       {isOpen && (
         <div style={{ paddingLeft: 8 }}>
-          {items.map(({ url, label }) => navItem(url, label))}
+          {items.map(({ url, label, tooltip }) => navItem(url, label, { tooltip }))}
         </div>
       )}
     </div>
   );
 
-  // ── Accounts item ───────────────────────────────────────────────────────────
+  // ── Accounts item ─────────────────────────────────────────────────────────
   const accountsItem = () => (
     <div>
       <div style={{ display: "flex", alignItems: "center", margin: "1px 8px" }}>
         <NavLink to="/dashboard/accounts" onClick={onClose}
           style={{
-            flex: 1, display: "flex", alignItems: "center", padding: "7px 16px 7px 16px",
+            flex: 1, display: "flex", alignItems: "center", gap: 9,
+            padding: "7px 10px 7px 18px",
             borderRadius: savedPersonas.length > 0 ? "7px 0 0 7px" : 7,
-            color: isAccountsActive ? "#fff" : "rgba(255,255,255,0.55)",
-            background: isAccountsActive ? "rgba(255,255,255,0.08)" : "transparent",
+            color: isAccountsActive ? "#fff" : "rgba(255,255,255,0.52)",
+            background: isAccountsActive ? "rgba(255,255,255,0.07)" : "transparent",
             fontSize: 13.5, fontWeight: isAccountsActive ? 600 : 400,
-            textDecoration: "none", transition: "all 0.1s", fontFamily: F,
+            textDecoration: "none", transition: "all 0.15s", fontFamily: F,
+            position: "relative",
           }}
-          onMouseEnter={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.05)"; el.style.color = "rgba(255,255,255,0.85)"; }}}
-          onMouseLeave={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.55)"; }}}>
+          onMouseEnter={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.045)"; el.style.color = "rgba(255,255,255,0.82)"; }}}
+          onMouseLeave={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.52)"; }}}>
+          {/* Left bar */}
+          <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 3, borderRadius: "0 2px 2px 0", height: isAccountsActive ? 20 : 0, background: `linear-gradient(180deg, ${accent}, ${accent}88)`, transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: isAccountsActive ? `0 0 8px ${accent}60` : "none" }} />
+          {/* Account logo avatar */}
+          {selectedPersona ? (
+            <div style={{ width: 18, height: 18, borderRadius: 5, overflow: "hidden", flexShrink: 0, background: `${accent}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {selectedPersona.logo_url
+                ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <span style={{ fontSize: 9, fontWeight: 800, color: accent }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
+              }
+            </div>
+          ) : null}
           <span style={{ flex: 1 }}>{pt ? "Contas" : es ? "Cuentas" : "Accounts"}</span>
           {selectedPersona && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.8)", background: "rgba(14,165,233,0.1)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.03em" }}>
-              {(selectedPersona.name || "?").split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()}
+            <span style={{ fontSize: 10, fontWeight: 600, color: `${accent}cc`, letterSpacing: "0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 60 }}>
+              {selectedPersona.name?.split(" ")[0] || "?"}
             </span>
           )}
         </NavLink>
         {savedPersonas.length > 0 && (
           <button onClick={() => setAccountsExpanded(e => !e)}
-            style={{ width: 26, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", borderLeft: "1px solid rgba(255,255,255,0.06)", borderRadius: "0 7px 7px 0", cursor: "pointer" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+            style={{ width: 26, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", borderLeft: "1px solid rgba(255,255,255,0.05)", borderRadius: "0 7px 7px 0", cursor: "pointer", transition: "background 0.1s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <ChevronDown size={11} color="rgba(255,255,255,0.25)" style={{ transform: accountsExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+            <ChevronDown size={11} color="rgba(255,255,255,0.2)" style={{ transform: accountsExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
           </button>
         )}
       </div>
@@ -185,18 +299,23 @@ export function DashboardSidebar({
         <div style={{ marginLeft: 16, marginRight: 8, background: "rgba(255,255,255,0.02)", borderRadius: "0 0 8px 8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)", borderTop: "none" }}>
           {savedPersonas.map(p => {
             const isSel = p.id === selectedPersona?.id;
+            const pAccent = personaAccent(p.name);
             return (
               <button key={p.id}
                 onClick={() => { onSelectPersona?.(p); navigate("/dashboard/ai"); onClose(); setAccountsExpanded(false); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: isSel ? "rgba(14,165,233,0.06)" : "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", fontFamily: F }}>
-                <div style={{ width: 20, height: 20, borderRadius: 5, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: isSel ? `${pAccent}10` : "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer", fontFamily: F, transition: "background 0.1s" }}
+                onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+                onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                <div style={{ width: 20, height: 20, borderRadius: 5, background: `${pAccent}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                   {p.logo_url
                     ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <span style={{ fontSize: 9, fontWeight: 700, color: isSel ? "#38bdf8" : "rgba(255,255,255,0.4)" }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
+                    : <span style={{ fontSize: 9, fontWeight: 800, color: pAccent }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
                   }
                 </div>
-                <span style={{ flex: 1, fontSize: 12, fontWeight: isSel ? 500 : 400, color: isSel ? "#fff" : "rgba(255,255,255,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>{p.name || "Conta"}</span>
-                {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
+                <span style={{ flex: 1, fontSize: 12, fontWeight: isSel ? 500 : 400, color: isSel ? "#fff" : "rgba(255,255,255,0.48)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "left" }}>
+                  {p.name || "Conta"}
+                </span>
+                {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: pAccent, flexShrink: 0, boxShadow: `0 0 5px ${pAccent}` }} />}
               </button>
             );
           })}
@@ -204,7 +323,7 @@ export function DashboardSidebar({
             style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "transparent", border: "none", cursor: "pointer", fontFamily: F }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <Plus size={10} color="rgba(255,255,255,0.2)" />
+            <Plus size={10} color="rgba(255,255,255,0.18)" />
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{pt ? "Nova conta" : es ? "Nueva cuenta" : "New account"}</span>
           </button>
         </div>
@@ -212,13 +331,34 @@ export function DashboardSidebar({
     </div>
   );
 
+  // ── Performance tooltip content ───────────────────────────────────────────
+  const perfTooltip = perfData ? (
+    <div>
+      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>Spend 7 dias</p>
+      <MiniSparkline data={perfData} color={accent} />
+      <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", margin: "6px 0 0" }}>
+        R${perfData.reduce((a, b) => a + b, 0).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
+      </p>
+    </div>
+  ) : null;
+
+  const ANALYSIS_WITH_TOOLTIPS = ANALYSIS_NAV.map(item => ({
+    ...item,
+    tooltip: item.url === "/dashboard/performance" && perfTooltip ? perfTooltip : undefined,
+  }));
+
   return (
     <>
+      <style>{`
+        @keyframes fadeTooltip { from { opacity:0; transform:translateY(-50%) translateX(-4px); } to { opacity:1; transform:translateY(-50%) translateX(0); } }
+        @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+      `}</style>
+
       {open && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={onClose} />}
 
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ width: 216, background: "#0a0e19", borderRight: "1px solid rgba(255,255,255,0.06)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
+        style={{ width: 216, background: "#090d18", borderRight: "1px solid rgba(255,255,255,0.055)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
       >
         {/* Logo */}
         <div style={{ height: 52, minHeight: 52, padding: "0 18px", flexShrink: 0, display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -228,56 +368,68 @@ export function DashboardSidebar({
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, paddingTop: 10, paddingBottom: 8, overflowY: "auto", overflowX: "hidden" }}>
+        <nav style={{ flex: 1, paddingTop: 12, paddingBottom: 8, overflowY: "auto", overflowX: "hidden" }}>
 
-          {/* Create campaign — subtle highlight */}
-          <div style={{ margin: "0 8px 2px" }}>
+          {/* Create campaign */}
+          <div style={{ margin: "0 8px 4px" }}>
             <NavLink to="/dashboard/campaigns/new" onClick={onClose}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "7px 16px", borderRadius: 7,
-                background: isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.15)" : "rgba(14,165,233,0.07)",
-                border: "1px solid rgba(14,165,233,0.18)",
-                fontSize: 13.5, fontWeight: 600, color: "#7dd3fc",
-                textDecoration: "none", transition: "all 0.1s", fontFamily: F,
+                padding: "7px 14px", borderRadius: 7,
+                background: isActive("/dashboard/campaigns/new") ? `${accent}20` : `${accent}0d`,
+                border: `1px solid ${accent}25`,
+                fontSize: 13.5, fontWeight: 600, color: accent,
+                textDecoration: "none", transition: "all 0.15s", fontFamily: F,
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.12)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.15)" : "rgba(14,165,233,0.07)"; }}>
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${accent}18`; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? `${accent}20` : `${accent}0d`; }}>
               {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#38bdf8", background: "rgba(14,165,233,0.15)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.05em" }}>NOVO</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: accent, background: `${accent}20`, borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em", opacity: 0.8 }}>NOVO</span>
             </NavLink>
           </div>
 
-          {/* Primary */}
           {navItem("/dashboard/ai", "IA Chat", { badge: "AI" })}
-
-          {/* Accounts */}
           {accountsItem()}
 
           {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "10px 16px 6px" }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "10px 18px 8px" }} />
 
-          {/* Collapsible sections */}
           {collapsibleSection(
             pt ? "Análise" : es ? "Análisis" : "Analytics",
-            ANALYSIS_NAV, analysisOpen, setAnalysisOpen, isAnalysisActive
+            ANALYSIS_WITH_TOOLTIPS, analysisOpen, setAnalysisOpen, isAnalysisActive
           )}
           {collapsibleSection(
             pt ? "Ferramentas" : es ? "Herramientas" : "Tools",
             TOOLS_NAV, toolsOpen, setToolsOpen, isToolsActive
           )}
-
         </nav>
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "10px 10px 12px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
 
+          {/* System status */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", marginBottom: 2 }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+              background: systemStatus === "ok" ? "#22c55e" : systemStatus === "warn" ? "#f59e0b" : "#6b7280",
+              boxShadow: systemStatus === "ok" ? "0 0 6px #22c55e60" : "none",
+              animation: systemStatus === "loading" ? "pulseDot 1.2s ease infinite" : "none",
+            }} />
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: F }}>
+              {systemStatus === "ok" ? (pt ? "Todos os sistemas OK" : "All systems OK") :
+               systemStatus === "warn" ? (pt ? "Lentidão detectada" : "Slowness detected") :
+               (pt ? "Verificando..." : "Checking...")}
+            </span>
+          </div>
+
           {/* Upgrade */}
           {plan === "free" && (
             <button onClick={() => { navigate("/pricing"); onClose(); }}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.12)", cursor: "pointer", fontFamily: F, width: "100%", marginBottom: 4 }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade plan"}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>→</span>
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", fontFamily: F, width: "100%", marginBottom: 2, transition: "background 0.1s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>{pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade"}</span>
+              <Zap size={12} color="rgba(255,255,255,0.3)" />
             </button>
           )}
 
@@ -285,15 +437,15 @@ export function DashboardSidebar({
 
           {/* Profile */}
           <button onClick={() => onOpenProfile?.()}
-            style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", fontFamily: F, width: "100%", transition: "background 0.1s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+            style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 8px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", fontFamily: F, width: "100%", transition: "background 0.1s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <Avatar style={{ width: 28, height: 28, flexShrink: 0 }}>
+            <Avatar style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 8 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback style={{ fontSize: 11, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff" }}>{initials}</AvatarFallback>
+              <AvatarFallback style={{ fontSize: 11, fontWeight: 700, background: `linear-gradient(135deg, ${accent}, ${accent}88)`, color: "#fff", borderRadius: 8 }}>{initials}</AvatarFallback>
             </Avatar>
             <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <p style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.82)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{displayName}</p>
+              <p style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{displayName}</p>
               <p style={{ fontSize: 11, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
             </div>
           </button>
