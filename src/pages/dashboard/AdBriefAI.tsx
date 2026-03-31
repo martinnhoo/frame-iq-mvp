@@ -137,11 +137,12 @@ const BS: Record<string,{color:string;bg:string;border:string}> = {
 };
 
 // ── InlineToolPanel (from LoopV2) ──────────────────────────────────────────────
-function InlineToolPanel({ action, onClose, onSend, lang }: {
+function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   action: string; onClose: () => void; onSend: (msg: string) => void; lang: string;
+  accountCtx?: { product?: string; niche?: string; market?: string; platform?: string; angle?: string };
 }) {
-  const [val, setVal] = useState("");
-  const [platform, setPlatform] = useState("meta");
+  const [val, setVal] = useState(accountCtx?.angle || "");
+  const [platform, setPlatform] = useState(accountCtx?.platform?.toLowerCase().includes("google") ? "google" : "meta");
   const [tone, setTone] = useState("direct");
 
   const config: Record<string, any> = {
@@ -150,14 +151,14 @@ function InlineToolPanel({ action, onClose, onSend, lang }: {
       title: { en: "Generate Hooks", pt: "Gerar Hooks", es: "Generar Hooks" },
       placeholder: { en: "Describe product, angle, or paste context…", pt: "Descreva o produto, ângulo, ou cole o contexto…", es: "Describe el producto, ángulo, o pega el contexto…" },
       cta: { en: "Generate 5 hooks →", pt: "Gerar 5 hooks →", es: "Generar 5 hooks →" },
-      buildMsg: (v: string, p: string, t: string) => `Generate 5 high-converting ${t} ad hooks for ${p}: "${v}". Format: [N]. [Hook text]. Include hook type label.`,
+      buildMsg: (v: string, p: string, t: string) => `Generate 5 high-converting ${t} ad hooks for ${p} on ${accountCtx?.platform||p}. Product/niche: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Context from this account: "${v}". Format: [N]. [Hook text]. Include hook type label. Use real account data patterns if available.`,
     },
     script: {
       icon: "✍️", color: "#34d399",
       title: { en: "Write Script", pt: "Escrever Roteiro", es: "Escribir Guión" },
       placeholder: { en: "What's the ad about? Paste brief or context…", pt: "Sobre o que é o anúncio? Cole o brief ou contexto…", es: "¿De qué trata el anuncio? Pega el brief o contexto…" },
       cta: { en: "Write script →", pt: "Escrever roteiro →", es: "Escribir guión →" },
-      buildMsg: (v: string, p: string, t: string) => `Write a complete ${t} video ad script for ${p}: "${v}". Format per scene: VO | ON-SCREEN | VISUAL. Strong hook in first 3s.`,
+      buildMsg: (v: string, p: string, t: string) => `Write a complete ${t} video ad script for ${accountCtx?.platform||p}. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Context: "${v}". Format per scene: VO | ON-SCREEN | VISUAL. Strong hook in first 3s. Use account patterns if available.`,
     },
     competitor: {
       icon: "🔍", color: "#a78bfa",
@@ -1993,6 +1994,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           }
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }
+        // When AI emits a tool_call for content tools, open the panel with prefilled context
+        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!c._pendingTool){
+          // Auto-open panel with AI-populated context
+          setTimeout(()=>setActiveTool(c.tool||null),100);
+        }
         // Execute hooks/script/brief tool_calls inline — fire and replace
         if(c.type==="tool_call"&&["hooks","script","brief"].includes(c.tool||"")){
           const p=c.tool_params||{};
@@ -2179,7 +2185,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {/* Inline tool panel */}
         {activeTool&&activeTool!=="upload"&&(
           <div style={{maxWidth:620,margin:"0 auto 4px"}}>
-            <InlineToolPanel action={activeTool} onClose={()=>setActiveTool(null)} onSend={send} lang={lang}/>
+            <InlineToolPanel
+              action={activeTool}
+              onClose={()=>setActiveTool(null)}
+              onSend={send}
+              lang={lang}
+              accountCtx={{
+                product: (aiProfile as any)?.product || selectedPersona?.name || undefined,
+                niche: (aiProfile as any)?.industry || (aiProfile as any)?.niche || undefined,
+                market: (aiProfile as any)?.market || lang.toUpperCase(),
+                platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
+                angle: undefined,
+              }}
+            />
           </div>
         )}
 
@@ -2289,6 +2307,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Input area ── */}
       <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"rgba(5,7,14,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",boxShadow:"0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+        {/* ── Floating tool shortcuts ── */}
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
+          <div style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none"}}>
+            {TOOLS.map(tool=>(
+              <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
+                style={{
+                  display:"flex",alignItems:"center",gap:5,padding:"5px 11px",borderRadius:20,flexShrink:0,
+                  background:activeTool===tool.action?`${tool.color}22`:"rgba(255,255,255,0.04)",
+                  border:`1px solid ${activeTool===tool.action?`${tool.color}50`:"rgba(255,255,255,0.07)"}`,
+                  color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.38)",
+                  fontSize:11.5,fontWeight:activeTool===tool.action?600:400,cursor:"pointer",
+                  fontFamily:"'Inter',system-ui,sans-serif",transition:"all 0.15s",
+                }}>
+                <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.3)"}/>
+                {tool.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
           {/* Message counter — only for free users */}
           {(profile?.plan === "free" || !profile?.plan) && (() => {

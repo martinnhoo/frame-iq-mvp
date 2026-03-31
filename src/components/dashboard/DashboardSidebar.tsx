@@ -158,14 +158,6 @@ export function DashboardSidebar({
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [accountsExpanded, setAccountsExpanded] = useState(false);
-  const [analysisOpen, setAnalysisOpen] = useState(() => {
-    const p = window.location.pathname;
-    return p.includes("/performance") || p.includes("/intelligence") || p.includes("/competitor") || p.includes("/analyses");
-  });
-  const [toolsOpen, setToolsOpen] = useState(() => {
-    const p = window.location.pathname;
-    return p.includes("/hooks") || p.includes("/script") || p.includes("/brief") || p.includes("/translate") || p.includes("/preflight") || p.includes("/templates") || p.includes("/boards") || p.includes("/loop/v2");
-  });
   const [perfData, setPerfData] = useState<number[] | null>(null);
   const [systemStatus, setSystemStatus] = useState<"ok" | "warn" | "loading">("loading");
 
@@ -216,24 +208,7 @@ export function DashboardSidebar({
     check();
   }, []);
 
-  const ANALYSIS_NAV = [
-    { url: "/dashboard/analyses",     label: dt("nav_analyses")   || (pt ? "Análises" : es ? "Análisis" : "Analyses") },
-    { url: "/dashboard/performance",  label: pt ? "Performance"  : es ? "Performance"  : "Performance"  },
-    { url: "/dashboard/intelligence", label: pt ? "Inteligência" : es ? "Inteligencia" : "Intelligence" },
-    { url: "/dashboard/competitor",   label: dt("nav_competitor") || (pt ? "Concorrentes" : es ? "Competidores" : "Competitors") },
   ];
-  const TOOLS_NAV = [
-    { url: "/dashboard/hooks",     label: pt ? "Gerador de Hooks" : es ? "Generador de Hooks" : "Hook Generator" },
-    { url: "/dashboard/script",    label: pt ? "Roteiro"          : es ? "Guión"               : "Script"         },
-    { url: "/dashboard/brief",     label: pt ? "Brief"            : es ? "Brief"               : "Brief"          },
-    { url: "/dashboard/preflight", label: pt ? "Check Criativo"   : es ? "Check Creativo"      : "Creative Check" },
-    { url: "/dashboard/translate", label: pt ? "Traduzir"         : es ? "Traducir"            : "Translate"      },
-    { url: "/dashboard/templates", label: pt ? "Templates"        : es ? "Plantillas"          : "Templates"      },
-    { url: "/dashboard/boards",    label: pt ? "Boards"           : es ? "Tableros"            : "Boards"         },
-    { url: "/dashboard/loop/v2",   label: pt ? "Importar Dados"   : es ? "Importar Datos"      : "Import Data"    },
-  ];
-  const isAnalysisActive = ANALYSIS_NAV.some(i => isActive(i.url));
-  const isToolsActive    = TOOLS_NAV.some(i => isActive(i.url));
 
   // ── Nav item with animated left bar ──────────────────────────────────────
   const navItem = (url: string, label: string, opts?: {
@@ -242,40 +217,6 @@ export function DashboardSidebar({
     <NavItem key={url} url={url} label={label} opts={opts} isActive={isActive} onClose={onClose} />
   );
 
-  // ── Collapsible section ───────────────────────────────────────────────────
-  const collapsibleSection = (
-    label: string,
-    items: { url: string; label: string; tooltip?: React.ReactNode }[],
-    isOpen: boolean,
-    setOpen: (v: boolean) => void,
-    hasActiveChild: boolean
-  ) => (
-    <div>
-      <button onClick={() => setOpen(!isOpen)}
-        style={{
-          width: "calc(100% - 16px)", display: "flex", alignItems: "center",
-          padding: "7px 14px 7px 22px", borderRadius: 7, margin: "1px 8px",
-          background: "transparent", border: "none", cursor: "pointer",
-          fontFamily: F, transition: "background 0.15s",
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-        <span style={{
-          flex: 1, fontSize: 13.5, textAlign: "left",
-          fontWeight: hasActiveChild ? 600 : 400,
-          color: hasActiveChild ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.45)",
-          transition: "color 0.15s",
-        }}>{label}</span>
-        <ChevronDown size={11} color="rgba(255,255,255,0.2)"
-          style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
-      </button>
-      {isOpen && (
-        <div style={{ paddingLeft: 8 }}>
-          {items.map(({ url, label, tooltip }) => navItem(url, label, { tooltip }))}
-        </div>
-      )}
-    </div>
-  );
 
   // ── Accounts item ─────────────────────────────────────────────────────────
   const accountsItem = () => (
@@ -366,10 +307,6 @@ export function DashboardSidebar({
     </div>
   ) : null;
 
-  const ANALYSIS_WITH_TOOLTIPS = ANALYSIS_NAV.map(item => ({
-    ...item,
-    tooltip: item.url === "/dashboard/performance" && perfTooltip ? perfTooltip : undefined,
-  }));
 
   return (
     <>
@@ -400,31 +337,8 @@ export function DashboardSidebar({
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "14px 18px 10px" }} />
 
-          {collapsibleSection(
-            pt ? "Análise" : es ? "Análisis" : "Analytics",
-            ANALYSIS_WITH_TOOLTIPS, analysisOpen, setAnalysisOpen, isAnalysisActive
-          )}
-          {collapsibleSection(
-            pt ? "Ferramentas" : es ? "Herramientas" : "Tools",
-            TOOLS_NAV, toolsOpen, setToolsOpen, isToolsActive
-          )}
-
-          {/* Create campaign — at bottom, after tools */}
-          <div style={{ margin: "8px 8px 0" }}>
-            <NavLink to="/dashboard/campaigns/new" onClick={onClose}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 7,
-                background: isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "transparent",
-                border: "1px solid rgba(14,165,233,0.15)",
-                fontSize: 13, fontWeight: 600, color: "#7dd3fc",
-                textDecoration: "none", transition: "all 0.15s", fontFamily: F,
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.15)"; }}>
-              + {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
-            </NavLink>
-          </div>
+          {navItem("/dashboard/performance", pt ? "Performance" : es ? "Performance" : "Performance", { tooltip: perfTooltip||undefined })}
+          {navItem("/dashboard/boards", pt ? "Boards" : es ? "Tableros" : "Boards")}
         </nav>
 
         {/* Footer */}
