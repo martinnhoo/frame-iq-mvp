@@ -2328,7 +2328,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             ))}
           </div>
         </div>
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",paddingTop:8}}>
           {/* Message counter — only for free users */}
           {(profile?.plan === "free" || !profile?.plan) && (() => {
             const used = messages.filter(m => m.role === "user").length;
