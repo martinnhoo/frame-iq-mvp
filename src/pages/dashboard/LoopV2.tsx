@@ -135,39 +135,30 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 
   // Tool result — shows output from an executed tool inline
   if (block.type === "tool_result") {
-    const toolIcons: Record<string, string> = {
-      hooks: "⚡", script: "✍️", brief: "📋", competitor: "🔍", translate: "🌍", preflight: "🛫",
-    };
-    const icon = toolIcons[block.tool_name || ""] || null;
     return (
-      <div style={{ borderRadius: 14, border: `1px solid ${GREEN}25`, background: `linear-gradient(135deg, ${GREEN}06 0%, rgba(13,15,24,0.95) 100%)`, overflow: "hidden", marginBottom: 8 }}>
-        {/* Tool result header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}15` }}>
-          <span style={{ fontSize: 14 }}>{icon}</span>
+      <div style={{ borderRadius: 12, border: `1px solid ${GREEN}20`, background: `${GREEN}05`, overflow: "hidden", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}10` }}>
+          <Zap size={13} color={GREEN} strokeWidth={2} />
           <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: GREEN }}>{block.title}</span>
-          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: `${GREEN}15`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto" }}>GENERATED</span>
+          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: `${GREEN}12`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto", letterSpacing: "0.03em" }}>GENERATED</span>
         </div>
-        {/* Content */}
         <div style={{ padding: "12px 14px" }}>
           {block.result_content && (
             <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.75, whiteSpace: "pre-line", marginBottom: block.result_items?.length ? 12 : 0 }}>{block.result_content}</p>
           )}
           {block.result_items?.map((item, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <span style={{ color: GREEN, fontSize: 13, fontWeight: 700, flexShrink: 0, minWidth: 20, fontFamily: F }}>{i + 1}.</span>
+            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ color: GREEN, fontSize: 12, fontWeight: 700, flexShrink: 0, minWidth: 20, fontFamily: F }}>{i + 1}.</span>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, margin: 0 }}>{item}</p>
             </div>
           ))}
-          {/* Copy all button */}
           {(block.result_items || block.result_content) && (
-            <button
-              onClick={() => {
-                const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || "");
-                navigator.clipboard.writeText(text);
-              }}
-              style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: F, cursor: "pointer" }}
-            >
-              📋 Copy all
+            <button onClick={() => { const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || ""); navigator.clipboard.writeText(text); }}
+              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, cursor: "pointer", transition: "all 0.15s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy all
             </button>
           )}
         </div>
@@ -437,56 +428,52 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
   const iconColors = [BLUE, TEAL, GREEN, PURPLE];
   const iconComponents = [BarChart3, Zap, FileText, Target];
   return (
-    <div style={{ width: "100%", maxWidth: 660, animation: "welcomeIn 0.5s cubic-bezier(0.16,1,0.3,1) both" }}>
+    <div style={{ width: "100%", maxWidth: 660, animation: "chatMsgIn 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
       {/* Welcome hero */}
-      <div style={{ textAlign: "center", marginBottom: 32, padding: "20px 0 0" }}>
-        {/* Logo mark */}
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.08))", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: "0 0 40px rgba(14,165,233,0.1)" }}>
-          <Sparkles size={22} color={BLUE} strokeWidth={1.5} />
+      <div style={{ textAlign: "center", marginBottom: 28, padding: "12px 0 0" }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 14,
+          background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 14px", boxShadow: "0 4px 24px rgba(14,165,233,0.25)",
+        }}>
+          <Sparkles size={20} color="#fff" strokeWidth={2} />
         </div>
-        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           {hasData ? "Ready to work." : "AdBrief AI"}
         </h2>
-        <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>
           {hasData ? "Your account data is loaded. What should we optimize?" : "Ask about your campaigns, generate hooks, or analyze competitors."}
         </p>
       </div>
 
-      {/* Suggestion cards — 2x2 */}
-      <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      {/* Suggestion cards */}
+      <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {suggestions.slice(0, 4).map((s, i) => {
           const Icon = iconComponents[i];
           const color = iconColors[i];
           return (
-            <button
-              key={i}
-              onClick={() => onSend(s)}
-              className="card-hover"
+            <button key={i} onClick={() => onSend(s)}
               style={{
-                display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 14px",
-                borderRadius: 14,
-                background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderTopColor: "rgba(255,255,255,0.1)",
+                display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+                borderRadius: 12, background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
                 cursor: "pointer", textAlign: "left", fontFamily: F,
                 transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
-                animation: `fadeUp 0.3s ${0.1 + i * 0.07}s cubic-bezier(0.16,1,0.3,1) both`,
+                animation: `chatMsgIn 0.35s ${0.08 + i * 0.06}s cubic-bezier(0.16,1,0.3,1) both`,
               }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `linear-gradient(135deg, ${color}10 0%, rgba(255,255,255,0.02) 100%)`; el.style.borderColor = `${color}30`; el.style.transform = "translateY(-2px)"; el.style.boxShadow = `0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px ${color}15, inset 0 1px 0 rgba(255,255,255,0.06)`; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
-            >
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `${color}0c`; el.style.borderColor = `${color}25`; el.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.06)"; el.style.transform = "translateY(0)"; }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}10`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon size={14} color={color} strokeWidth={2} />
               </div>
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.55, fontWeight: 500, letterSpacing: "-0.01em" }}>{s}</span>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, fontWeight: 500 }}>{s}</span>
             </button>
           );
         })}
       </div>
       <style>{`
         @keyframes toolSlideIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes welcomeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
@@ -1028,161 +1015,164 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "linear-gradient(180deg, #0b0e1a 0%, #080b14 100%)", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
-      {/* Ambient background glow */}
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 300, background: "radial-gradient(ellipse, rgba(14,165,233,0.04) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#090c14", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
 
-      {/* ── Header — refined with glass effect ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 10, position: "relative", zIndex: 2, background: "rgba(8,11,20,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-
-        {/* Left: persona + status */}
+      {/* ── Header ── */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 20px", height: 56, borderBottom: "1px solid rgba(255,255,255,0.06)",
+        flexShrink: 0, gap: 12, position: "relative", zIndex: 2,
+        background: "rgba(9,12,20,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      }}>
+        {/* Left: persona */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
           {selectedPersona ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", boxShadow: "0 0 12px rgba(14,165,233,0.08)" }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 10,
+                background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                overflow: "hidden", boxShadow: "0 0 20px rgba(14,165,233,0.2)",
+              }}>
                 {(selectedPersona as any).logo_url
                   ? <img src={(selectedPersona as any).logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <span style={{ fontSize: 12, fontWeight: 800, color: "#0ea5e9" }}>{selectedPersona.name?.charAt(0)?.toUpperCase() || "A"}</span>}
+                  : <span style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{selectedPersona.name?.charAt(0)?.toUpperCase() || "A"}</span>}
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", letterSpacing: "-0.01em" }}>{selectedPersona.name}</span>
                 {hasData && (
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 4 }}>
                     {pulse?.totalAnalyses} analyses
-                    {pulse?.avgHookScore && <><span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} /> {pulse.avgHookScore.toFixed(1)}/10</>}
+                    {pulse?.avgHookScore && <><span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} /> {pulse.avgHookScore.toFixed(1)}/10</>}
                   </span>
                 )}
               </div>
             </div>
           ) : (
-            connectedPlatforms.length > 0 ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {connectedPlatforms.map(p => (
-                  <span key={p} style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
-                  </span>
-                ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 10,
+                background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 0 20px rgba(14,165,233,0.15)",
+              }}>
+                <Sparkles size={16} color="#fff" strokeWidth={2} />
               </div>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", animation: "pulseDotChat 2s ease infinite" }} />
-                <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.5)", letterSpacing: "-0.01em" }}>AdBrief AI</span>
-              </div>
-            )
+              <span style={{ fontSize: 15, fontWeight: 600, color: "#fff", letterSpacing: "-0.02em" }}>AdBrief AI</span>
+            </div>
           )}
         </div>
 
-        {/* Right: platform badges — desktop only, xl+ */}
+        {/* Right: platform badges */}
         <div className="hidden xl:flex" style={{ alignItems: "center", gap: 6, flexShrink: 0 }}>
           {PLATFORMS.map(p => (
-            <PlatformBadge
-              key={p.id}
-              platform={p}
-              connected={connectedPlatforms.includes(p.id)}
-              onConnect={() => handleConnect(p)}
-              onDisconnect={() => handleDisconnect(p.id)}
-              requiresPersona={!selectedPersona}
-              dt={dt}
-            />
+            <PlatformBadge key={p.id} platform={p} connected={connectedPlatforms.includes(p.id)} onConnect={() => handleConnect(p)} onDisconnect={() => handleDisconnect(p.id)} requiresPersona={!selectedPersona} dt={dt} />
           ))}
           <button onClick={() => loadPulse()}
-            style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginLeft: 4, transition: "all 0.15s" }}
-            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.07)"; el.style.borderColor = "rgba(255,255,255,0.15)"; }}
-            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.08)"; }}>
-            <RefreshCw size={12} color="rgba(255,255,255,0.3)" />
+            style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginLeft: 2, transition: "all 0.2s" }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.08)"; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.04)"; }}>
+            <RefreshCw size={13} color="rgba(255,255,255,0.4)" />
           </button>
         </div>
-
       </div>
 
-      {/* ── Connect Meta Ads banner — only when not connected ── */}
+      {/* ── Connect banner ── */}
       {connectedPlatforms.length === 0 && (
         <div style={{
-          margin: "12px 16px 0",
-          padding: "14px 16px",
-          borderRadius: 14,
-          background: "rgba(14,165,233,0.07)",
-          border: "1px solid rgba(14,165,233,0.2)",
+          margin: "12px 20px 0", padding: "12px 16px", borderRadius: 12,
+          background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(6,182,212,0.04))",
+          border: "1px solid rgba(14,165,233,0.15)",
           display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
         }}>
-          <span style={{ fontSize: 22, flexShrink: 0 }}>🔗</span>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <ExternalLink size={16} color={BLUE} strokeWidth={2} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F, margin: 0 }}>
-              {language === "pt" ? "Conecte o Meta Ads para começar" : language === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
+              {language === "pt" ? "Conecte o Meta Ads para comecar" : language === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
             </p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: F, margin: "2px 0 0" }}>
-              {language === "pt" ? "A IA usa seus dados reais de campanha para responder" : language === "es" ? "La IA usa tus datos reales para responder" : "The AI uses your real campaign data to answer"}
+              {language === "pt" ? "A IA usa seus dados reais de campanha" : language === "es" ? "La IA usa tus datos reales" : "AI uses your real campaign data to respond"}
             </p>
           </div>
-          <button
-            onClick={() => navigate("/dashboard/persona")}
-            style={{
-              flexShrink: 0, padding: "7px 14px", borderRadius: 9,
-              background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
-              color: "#000", fontWeight: 700, fontSize: 12,
-              border: "none", cursor: "pointer", fontFamily: F,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {language === "pt" ? "Conectar →" : language === "es" ? "Conectar →" : "Connect →"}
+          <button onClick={() => navigate("/dashboard/persona")}
+            style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#fff", fontWeight: 700, fontSize: 12, border: "none", cursor: "pointer", fontFamily: F, whiteSpace: "nowrap", boxShadow: "0 2px 12px rgba(14,165,233,0.3)", transition: "all 0.2s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(14,165,233,0.4)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(14,165,233,0.3)"; }}>
+            {language === "pt" ? "Conectar" : language === "es" ? "Conectar" : "Connect"}
           </button>
         </div>
       )}
 
       {/* ── Messages ── */}
       <div className="loop-messages" style={{ flex: 1, overflowY: "auto", minHeight: 0, position: "relative", zIndex: 1 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "20px 16px 16px", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "24px 20px 20px", display: "flex", flexDirection: "column", gap: 24 }}>
 
           {messages.map((msg, i) => (
-            <div key={i}>
+            <div key={i} style={{ animation: "chatMsgIn 0.35s cubic-bezier(0.16,1,0.3,1) both" }}>
               {/* User bubble */}
               {msg.role === "user" && (
-                <div className="msg-enter" style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ maxWidth: "72%", padding: "12px 18px", borderRadius: "20px 20px 6px 20px", background: "linear-gradient(135deg, rgba(14,165,233,0.14), rgba(6,182,212,0.08))", border: "1px solid rgba(14,165,233,0.18)", boxShadow: "0 2px 12px rgba(14,165,233,0.06)" }}>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.7, fontFamily: F, margin: 0, letterSpacing: "-0.01em" }}>{msg.text}</p>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{
+                    maxWidth: "75%", padding: "12px 18px", borderRadius: "18px 18px 4px 18px",
+                    background: "linear-gradient(135deg, #0ea5e9, #0891d2)",
+                    boxShadow: "0 4px 16px rgba(14,165,233,0.2)",
+                  }}>
+                    <p style={{ fontSize: 14, color: "#fff", lineHeight: 1.7, fontFamily: F, margin: 0, letterSpacing: "-0.01em" }}>{msg.text}</p>
                   </div>
                 </div>
               )}
               {/* AI bubble */}
               {msg.role === "assistant" && (
-                <div className="msg-enter" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   {/* Avatar */}
-                  <div style={{ width: 30, height: 30, borderRadius: 10, flexShrink: 0, marginTop: 2, background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.08))", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 16px rgba(14,165,233,0.06)" }}>
-                    {msg.loading ? <Loader2 size={12} color={BLUE} className="animate-spin" /> : <Sparkles size={14} color={BLUE} strokeWidth={1.8} />}
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 10, flexShrink: 0, marginTop: 2,
+                    background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 12px rgba(14,165,233,0.2)",
+                  }}>
+                    {msg.loading
+                      ? <Loader2 size={14} color="#fff" className="animate-spin" />
+                      : <Sparkles size={14} color="#fff" strokeWidth={2} />}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Label */}
+                    <p style={{ fontSize: 11, fontWeight: 700, color: BLUE, marginBottom: 6, letterSpacing: "0.04em", textTransform: "uppercase" }}>ADBRIEF</p>
                     {msg.loading ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, paddingTop: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, paddingTop: 2 }}>
                         {[0,1,2].map(d => (
-                          <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(14,165,233,0.5)", animation: `dotPulse 1.3s ease ${d*0.18}s infinite` }} />
+                          <div key={d} style={{ width: 7, height: 7, borderRadius: "50%", background: BLUE, animation: `dotPulse 1.3s ease ${d*0.18}s infinite` }} />
                         ))}
                       </div>
                     ) : (
                       <>
-                        {msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)}
+                        <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 14, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                          {msg.blocks?.map((block, j) => <Block key={j} block={block} onNav={navigate} />)}
+                        </div>
                         {/* Feedback bar */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 8, opacity: 0.4, transition: "opacity 0.15s" }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "0.4"; }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 8 }}>
                           <button onClick={() => handleFeedback(i, "like", msg.blocks || [])}
-                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 26, borderRadius: 7, background: feedback[i] === "like" ? "rgba(52,211,153,0.1)" : "transparent", border: `1px solid ${feedback[i] === "like" ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", transition: "all 0.12s", color: feedback[i] === "like" ? GREEN : "rgba(255,255,255,0.4)", fontSize: 12 }}>
-                            👍
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 28, borderRadius: 8, background: feedback[i] === "like" ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${feedback[i] === "like" ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", transition: "all 0.15s", fontSize: 12 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={feedback[i] === "like" ? GREEN : "rgba(255,255,255,0.3)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
                           </button>
                           <button onClick={() => handleFeedback(i, "dislike", msg.blocks || [])}
-                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 26, borderRadius: 7, background: feedback[i] === "dislike" ? "rgba(248,113,113,0.1)" : "transparent", border: `1px solid ${feedback[i] === "dislike" ? "rgba(248,113,113,0.3)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", transition: "all 0.12s", color: feedback[i] === "dislike" ? RED : "rgba(255,255,255,0.4)", fontSize: 12 }}>
-                            👎
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 28, borderRadius: 8, background: feedback[i] === "dislike" ? "rgba(248,113,113,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${feedback[i] === "dislike" ? "rgba(248,113,113,0.3)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", transition: "all 0.15s", fontSize: 12 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={feedback[i] === "dislike" ? RED : "rgba(255,255,255,0.3)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
                           </button>
-                          <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.08)", margin: "0 4px" }} />
+                          <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.06)", margin: "0 2px" }} />
                           <button onClick={() => handleCopy(i, msg.blocks || [])}
-                            style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 10px", height: 26, borderRadius: 7, background: copiedIdx === i ? "rgba(52,211,153,0.08)" : "transparent", border: `1px solid ${copiedIdx === i ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.08)"}`, cursor: "pointer", color: copiedIdx === i ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.12s" }}>
-                            {copiedIdx === i ? "✓ Copied" : "Copy"}
+                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: copiedIdx === i ? "rgba(52,211,153,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${copiedIdx === i ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", color: copiedIdx === i ? GREEN : "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            {copiedIdx === i ? "Copied" : "Copy"}
                           </button>
                           {i === messages.length - 1 && (
                             <button onClick={handleRegenerate}
-                              style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 10px", height: 26, borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 11, fontFamily: F, transition: "all 0.12s" }}
-                              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.color = "rgba(255,255,255,0.7)"; }}
-                              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.4)"; }}>
-                              ↺ Retry
+                              style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}
+                              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.15)"; el.style.color = "rgba(255,255,255,0.6)"; }}
+                              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.06)"; el.style.color = "rgba(255,255,255,0.35)"; }}>
+                              <RefreshCw size={11} /> Retry
                             </button>
                           )}
                         </div>
@@ -1194,16 +1184,9 @@ export default function LoopV2() {
             </div>
           ))}
 
-          {/* ── Inline Tool Panel ── */}
+          {/* Inline Tool Panel */}
           {activeTool && (
-            <InlineToolPanel
-              action={activeTool}
-              prefill={toolInput[activeTool] || ""}
-              onClose={() => setActiveTool(null)}
-              onSend={(msg) => { setActiveTool(null); send(msg); }}
-              language={language}
-              dt={dt}
-            />
+            <InlineToolPanel action={activeTool} prefill={toolInput[activeTool] || ""} onClose={() => setActiveTool(null)} onSend={(msg) => { setActiveTool(null); send(msg); }} language={language} dt={dt} />
           )}
 
           {!hasConversation && ready && (
@@ -1215,49 +1198,76 @@ export default function LoopV2() {
       </div>
 
       {/* Upgrade wall */}
-      {showUpgradeWall && (
-        <UpgradeWall
-          trigger={upgradeWallTrigger}
-          onClose={() => setShowUpgradeWall(false)}
-        />
-      )}
+      {showUpgradeWall && <UpgradeWall trigger={upgradeWallTrigger} onClose={() => setShowUpgradeWall(false)} />}
 
-      {/* ── Input ── */}
-      <div className="loop-input-area" style={{ padding: "12px 16px 14px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(14px, env(safe-area-inset-bottom))", position: "relative", zIndex: 2, background: "linear-gradient(180deg, rgba(11,14,26,0.95) 0%, rgba(8,11,20,1) 100%)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
+      {/* ── Input area ── */}
+      <div className="loop-input-area" style={{
+        padding: "0 20px 16px", flexShrink: 0,
+        paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+        position: "relative", zIndex: 2,
+        background: "linear-gradient(180deg, transparent 0%, rgba(9,12,20,0.98) 30%)",
+      }}>
         <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
-          {/* Tool actions bar — above input */}
-          <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
-              <button key={t.action} onClick={() => handleToolAction(t.action)}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.15s" }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${t.color}35`; el.style.color = t.color; el.style.background = `${t.color}0c`; el.style.transform = "translateY(-1px)"; }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "rgba(255,255,255,0.03)"; el.style.transform = "translateY(0)"; }}>
-                <t.icon size={12} strokeWidth={1.8} /> {t.label}
-              </button>
-            ))}
-            <span className="hidden lg:inline" style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginLeft: "auto", fontFamily: F }}>
-              {dt("loop_enter_to_send")}
-            </span>
-          </div>
 
-          {/* Input container */}
-          <div style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "12px 14px 10px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)" }}
-            onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.35)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.06), 0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
-            onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.boxShadow = "0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"; }}>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : (dt("loop_placeholder") || "Ask anything about your campaigns...")}
-              rows={1}
-              autoFocus
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.7, maxHeight: 140, overflowY: "auto", fontFamily: F, caretColor: BLUE, letterSpacing: "-0.01em" }}
-            />
-            <button onClick={() => send(input)} disabled={!input.trim() || sending}
-              style={{ width: 34, height: 34, borderRadius: 10, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.05)", border: "none", cursor: input.trim() && !sending ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)", transform: input.trim() && !sending ? "scale(1)" : "scale(0.9)", boxShadow: input.trim() && !sending ? "0 2px 12px rgba(14,165,233,0.25)" : "none" }}>
-              {sending ? <Loader2 size={14} color="rgba(255,255,255,0.5)" className="animate-spin" /> : <Send size={14} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
-            </button>
+          {/* Input container — clean card */}
+          <div style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 18,
+            overflow: "hidden",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+            onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.08), 0 4px 24px rgba(0,0,0,0.2)"; }}
+            onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.boxShadow = "none"; }}>
+
+            {/* Textarea row */}
+            <div style={{ display: "flex", alignItems: "flex-end", padding: "14px 16px 10px", gap: 10 }}>
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : (dt("loop_placeholder") || "Ask anything about your campaigns...")}
+                rows={1}
+                autoFocus
+                style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.7, maxHeight: 140, overflowY: "auto", fontFamily: F, caretColor: BLUE, letterSpacing: "-0.01em" }}
+              />
+              <button onClick={() => send(input)} disabled={!input.trim() || sending}
+                style={{
+                  width: 36, height: 36, borderRadius: 12,
+                  background: input.trim() && !sending ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.06)",
+                  border: "none", cursor: input.trim() && !sending ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
+                  transform: input.trim() && !sending ? "scale(1)" : "scale(0.92)",
+                  boxShadow: input.trim() && !sending ? "0 4px 16px rgba(14,165,233,0.3)" : "none",
+                }}>
+                {sending ? <Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin" /> : <Send size={15} color={input.trim() ? "#fff" : "rgba(255,255,255,0.2)"} />}
+              </button>
+            </div>
+
+            {/* Tool pills row — inside input card */}
+            <div className="loop-tool-pills" style={{
+              display: "flex", alignItems: "center", gap: 4, padding: "0 14px 10px",
+              borderTop: "1px solid rgba(255,255,255,0.04)",
+            }}>
+              {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
+                <button key={t.action} onClick={() => handleToolAction(t.action)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5, padding: "5px 10px",
+                    borderRadius: 8, background: "transparent",
+                    border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11,
+                    fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = t.color; el.style.background = `${t.color}0a`; }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.35)"; el.style.background = "transparent"; }}>
+                  <t.icon size={12} strokeWidth={1.8} /> {t.label}
+                </button>
+              ))}
+              <span className="hidden lg:inline" style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginLeft: "auto", fontFamily: F }}>
+                Enter
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -1265,75 +1275,27 @@ export default function LoopV2() {
       <style>{`
         @keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes dotPulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+        @keyframes chatMsgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulseDotChat { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 99px; }
         textarea::placeholder { color: rgba(255,255,255,0.25); }
-        .loop-container { 
-          height: calc(100dvh - 44px);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .loop-messages {
-          flex: 1;
-          overflow-y: auto;
-          overflow-x: hidden;
-          min-height: 0;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-        }
-        .loop-input-area {
-          flex-shrink: 0;
-          position: relative;
-          z-index: 10;
-          background: linear-gradient(180deg, rgba(11,14,26,0.95), rgba(8,11,20,1)) !important;
-        }
+        .loop-container { height: calc(100dvh - 44px); display: flex; flex-direction: column; overflow: hidden; }
+        .loop-messages { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+        .loop-input-area { flex-shrink: 0; position: relative; z-index: 10; }
         @media (max-width: 1023px) {
-          /* Scrollable main, not fixed height */
-          .dashboard-main {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch;
-          }
-          /* Loop: natural height */
-          .loop-container {
-            height: auto !important;
-            min-height: calc(100dvh - 100px);
-            overflow: visible !important;
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          .loop-messages {
-            flex: 1 !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch;
-          }
-          /* Input sticky at bottom */
-          .loop-input-area {
-            position: sticky !important;
-            bottom: 0 !important;
-            z-index: 20 !important;
-            background: #0d0f18 !important;
-            padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
-          }
-          /* Hide tool pills on mobile */
+          .dashboard-main { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; }
+          .loop-container { height: auto !important; min-height: calc(100dvh - 100px); overflow: visible !important; display: flex !important; flex-direction: column !important; }
+          .loop-messages { flex: 1 !important; overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; }
+          .loop-input-area { position: sticky !important; bottom: 0 !important; z-index: 20 !important; background: #090c14 !important; padding-bottom: max(12px, env(safe-area-inset-bottom)) !important; }
           .loop-tool-pills { display: none !important; }
-          .suggestions-grid { grid-template-columns: 1fr !important; }
-          /* Suggestions single column */
           .suggestions-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 640px) {
-          /* Hide platform badges on mobile */
           .loop-header-badges { display: none !important; }
-          /* iOS zoom fix */
           .loop-input-area textarea { font-size: 16px !important; }
-          /* No horizontal scroll */
           body, .dashboard-root { overflow-x: hidden !important; }
-          /* Compact persona bar */
-          .loop-persona-bar { padding: 0 12px !important; }
         }
       `}</style>
     </div>
