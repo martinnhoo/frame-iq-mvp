@@ -62,6 +62,13 @@ export default function DashboardOverview() {
   function switchToLite() { localStorage.setItem("adbrief_mode", "lite"); setIsLiteMode(true); }
   function switchToPro()  { localStorage.setItem("adbrief_mode", "pro");  setIsLiteMode(false); }
 
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
   const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
