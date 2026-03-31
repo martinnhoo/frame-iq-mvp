@@ -238,8 +238,21 @@ Deno.serve(async (req) => {
     // Called by onboarding (user JWT) or internal cron (service role)
     const authH = req.headers.get("Authorization") ?? "";
     const isServiceRole = authH === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
-    if (!isServiceRole && !authH.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    // Auth: accept service role (cron) or valid user JWT (onboarding)
+    // Reject raw anon key which would allow anyone to send emails to arbitrary addresses
+    const authH = req.headers.get("Authorization") ?? "";
+    const isServiceRole = authH === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+    if (!isServiceRole) {
+      if (!authH.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      // Validate JWT is not just the anon key
+      const token = authH.slice(7);
+      const sbCheck = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+      const { data: { user: jwtUser }, error: jwtErr } = await sbCheck.auth.getUser(token);
+      if (jwtErr || !jwtUser) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+      }
     }
     const RESEND = Deno.env.get("RESEND_API_KEY") ?? "";
     const FROM   = Deno.env.get("RESEND_FROM_EMAIL") ?? "AdBrief <hello@adbrief.pro>";
