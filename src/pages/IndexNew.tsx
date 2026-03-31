@@ -1731,14 +1731,14 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       tab: "Cria hooks",
       q: "Cria 3 hooks dos meus criativos que mais converteram",
       platform: "meta", account: "FitCore Brasil",
-      metric: "3 hooks prontos",
-      metricLabel: "gerados dos padrões de hook rate e ROAS reais da FitCore",
+      metric: "hook rate 38%",
+      metricLabel: "padrão dos seus top criativos — base dos hooks abaixo",
       points: [
-        "Você ainda treina sem saber quantas calorias queima de verdade — **seus anúncios têm esse dado**.",
-        "**3 de 4 criativos** de transformação corporal gastam R$400+/dia com ROAS abaixo de 1x.",
-        "Seu melhor UGC de setembro ficou **9 dias parado**. O concorrente escalou o mesmo ângulo.",
+        "**"Você treina há 3 meses e o ponteiro não se move — seus anúncios já sabem o porquê."**",
+        "**"3 de 4 transformações que você viu aqui custaram menos de R$18 de CAC. Quer ver a conta?"**",
+        "**"Seu concorrente está rodando o mesmo ângulo do seu melhor UGC — pausado há 9 dias."**",
       ],
-      action: "Hooks fitness que convertem: dor específica → credencial → resultado real. Sem clichê de motivação.",
+      action: "Padrão dos seus winners: dor específica com dado real → sem clichê de motivação.",
     },
   ],
   es: [
@@ -1785,14 +1785,14 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       tab: "Crea hooks",
       q: "Crea 3 hooks de mis creativos que más convirtieron",
       platform: "meta", account: "FitMex",
-      metric: "3 hooks listos",
-      metricLabel: "generados de los patrones reales de hook rate y ROAS de FitMex",
+      metric: "hook rate 38%",
+      metricLabel: "patrón de tus top creativos — base de los hooks abajo",
       points: [
-        "Todavía entrenas sin saber cuántas calorías quemas de verdad — **tus anuncios tienen ese dato**.",
-        "**3 de 4 creativos** de transformación corporal gastan $400+/día con ROAS bajo 1x.",
-        "Tu mejor UGC de septiembre lleva **9 días pausado**. El competidor escaló el mismo ángulo.",
+        "**"Llevas 3 meses entrenando y la báscula no se mueve — tus anuncios ya saben por qué."**",
+        "**"3 de 4 transformaciones que viste aquí costaron menos de $18 de CAC. ¿Quieres ver la cuenta?"**",
+        "**"Tu competidor está escalando el mismo ángulo de tu mejor UGC — pausado hace 9 días."**",
       ],
-      action: "Hooks fitness que convierten: dolor específico → credencial → resultado real. Sin clichés de motivación.",
+      action: "Patrón de tus winners: dolor específico con dato real → sin clichés de motivación.",
     },
   ],
   en: [
@@ -1839,14 +1839,14 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       tab: "Write hooks",
       q: "Write 3 hooks from my best converting creatives",
       platform: "meta", account: "FitCore US",
-      metric: "3 hooks ready",
-      metricLabel: "built from FitCore's real hook rate and ROAS patterns",
+      metric: "hook rate 38%",
+      metricLabel: "your top creatives' pattern — basis for the hooks below",
       points: [
-        "Still training without knowing your real calorie burn? — **your ads already have that data**.",
-        "**3 of 4 body transformation creatives** spend $400+/day with ROAS below 1x.",
-        "Your best UGC from September was **paused 9 days ago**. A competitor scaled the same angle.",
+        "**"You've been training for 3 months and the scale hasn't moved — your ads already know why."**",
+        "**"3 of 4 transformations you've seen here cost under $18 CAC. Want to see the math?"**",
+        "**"Your competitor is scaling the same angle as your best UGC — which you paused 9 days ago."**",
       ],
-      action: "Fitness hooks that convert: specific pain → credibility → real result. No generic motivation clichés.",
+      action: "Pattern from your winners: specific pain with real data → no generic motivation.",
     },
   ],
 };
@@ -1945,16 +1945,29 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
                 <div style={{ fontFamily:F, fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
               </div>
 
-              {/* Key points — max 3, short */}
+              {/* Key points — hook tabs get numbered style, others get icon style */}
               <div style={{ display:'flex', flexDirection:'column' as const, gap:7 }}>
-                {scene.points.map((pt, i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-                    <div style={{ width:16, height:16, borderRadius:4, background: i===0 ? 'rgba(248,113,113,0.15)' : i===1 ? 'rgba(251,191,36,0.15)' : 'rgba(14,165,233,0.15)', border:`1px solid ${i===0 ? 'rgba(248,113,113,0.3)' : i===1 ? 'rgba(251,191,36,0.3)' : 'rgba(14,165,233,0.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8 }}>
-                      {i===0 ? '!' : i===1 ? '↓' : '→'}
+                {scene.points.map((pt, i) => {
+                  const isHook = scene.tab.toLowerCase().includes('hook') || scene.tab.toLowerCase().includes('cria') || scene.tab.toLowerCase().includes('crea') || scene.tab.toLowerCase().includes('write');
+                  if (isHook) {
+                    return (
+                      <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                        <div style={{ width:16, height:16, borderRadius:4, background:'rgba(14,165,233,0.12)', border:'1px solid rgba(14,165,233,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8, fontWeight:700, color:'#38bdf8', fontFamily:F }}>
+                          {i+1}
+                        </div>
+                        <p style={{ fontFamily:F, fontSize:12.5, color:'rgba(255,255,255,0.88)', lineHeight:1.55, margin:0, fontStyle:'italic' }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;font-style:normal">$1</strong>') }} />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                      <div style={{ width:16, height:16, borderRadius:4, background: i===0 ? 'rgba(248,113,113,0.15)' : i===1 ? 'rgba(251,191,36,0.15)' : 'rgba(14,165,233,0.15)', border:`1px solid ${i===0 ? 'rgba(248,113,113,0.3)' : i===1 ? 'rgba(251,191,36,0.3)' : 'rgba(14,165,233,0.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8 }}>
+                        {i===0 ? '!' : i===1 ? '↓' : '→'}
+                      </div>
+                      <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.82)', lineHeight:1.5, margin:0 }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700">$1</strong>') }} />
                     </div>
-                    <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.82)', lineHeight:1.5, margin:0 }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700">$1</strong>') }} />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Action line */}
