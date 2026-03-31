@@ -8,7 +8,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
@@ -24,6 +24,17 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Missing required fields: board_id, user_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Auth: verify JWT matches user_id
+    const authH = req.headers.get('Authorization') ?? '';
+    if (authH.startsWith('Bearer ')) {
+      const { data: { user: aU }, error: aE } = await supabaseClient.auth.getUser(authH.slice(7));
+      if (aE || !aU || aU.id !== user_id) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Check plan access

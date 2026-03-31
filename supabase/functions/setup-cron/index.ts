@@ -9,7 +9,13 @@ const cors = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: cors });
+
+  // Admin only — require service role
+  const authH = req.headers.get('Authorization') ?? '';
+  if (authH !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: cors });
+  }
 
   // These are always available in Supabase edge functions
   const DB_URL     = Deno.env.get('SUPABASE_DB_URL') ?? '';

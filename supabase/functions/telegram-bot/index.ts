@@ -28,9 +28,20 @@ async function answerCallback(token: string, callback_query_id: string, text?: s
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
 
   const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
+  const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
+
+  // Validate Telegram webhook secret (set via setWebhook API)
+  // If secret is configured, reject requests that don't have it
+  if (WEBHOOK_SECRET) {
+    const incomingSecret = req.headers.get("X-Telegram-Bot-Api-Secret-Token") ?? "";
+    if (incomingSecret !== WEBHOOK_SECRET) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
+    }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""

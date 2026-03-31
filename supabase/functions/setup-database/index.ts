@@ -7,6 +7,12 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+    // Admin only — require service role
+    const authH = req.headers.get('Authorization') ?? '';
+    if (authH !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
