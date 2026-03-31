@@ -311,36 +311,52 @@ export function DashboardSidebar({
       <style>{`
         @keyframes fadeTooltip { from { opacity:0; transform:translateY(-50%) translateX(-4px); } to { opacity:1; transform:translateY(-50%) translateX(0); } }
         @keyframes pulseDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes sidebarGlow { 0%,100%{opacity:0.5} 50%{opacity:1} }
       `}</style>
 
-      {open && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-40 lg:hidden" onClick={onClose} style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />}
 
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ width: 216, background: "#090d18", borderRight: "1px solid rgba(255,255,255,0.055)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0 }}
+        style={{ width: 220, background: "linear-gradient(180deg, #0a0f1e 0%, #070b16 100%)", borderRight: "1px solid rgba(255,255,255,0.06)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0, boxShadow: "4px 0 32px rgba(0,0,0,0.5)" }}
       >
         {/* Logo */}
-        <div style={{ height: 52, minHeight: 52, padding: "0 18px", flexShrink: 0, display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <button onClick={() => { navigate("/dashboard"); onClose(); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+        <div style={{ height: 56, minHeight: 56, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}>
+          <button onClick={() => { navigate("/dashboard"); onClose(); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", transition: "opacity 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}>
             <Logo size="md" />
           </button>
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, paddingTop: 12, paddingBottom: 8, overflowY: "auto", overflowX: "hidden" }}>
+        <nav style={{ flex: 1, paddingTop: 16, paddingBottom: 12, overflowY: "auto", overflowX: "hidden" }}>
+          {/* Section label */}
+          <div style={{ padding: "0 20px", marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
+              {pt ? "Principal" : es ? "Principal" : "Main"}
+            </span>
+          </div>
 
           {navItem("/dashboard/ai", "IA Chat", { badge: "AI" })}
           {accountsItem()}
 
           {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "14px 18px 10px" }} />
+          <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)", margin: "16px 16px 12px" }} />
+
+          {/* Section label */}
+          <div style={{ padding: "0 20px", marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
+              {pt ? "Ferramentas" : es ? "Herramientas" : "Tools"}
+            </span>
+          </div>
 
           {navItem("/dashboard/performance", pt ? "Performance" : es ? "Performance" : "Performance", { tooltip: perfTooltip||undefined })}
           {navItem("/dashboard/boards", pt ? "Boards" : es ? "Tableros" : "Boards")}
         </nav>
 
         {/* Footer */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "10px 10px 12px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 12px 14px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 6, background: "rgba(0,0,0,0.15)" }}>
 
           {/* System status */}
           <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", marginBottom: 2 }}>

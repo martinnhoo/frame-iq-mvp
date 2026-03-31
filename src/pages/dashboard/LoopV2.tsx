@@ -1265,10 +1265,11 @@ export default function LoopV2() {
       <style>{`
         @keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes dotPulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+        @keyframes pulseDotChat { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-        textarea::placeholder { color: rgba(255,255,255,0.28); }
+        textarea::placeholder { color: rgba(255,255,255,0.25); }
         .loop-container { 
           height: calc(100dvh - 44px);
           display: flex;
