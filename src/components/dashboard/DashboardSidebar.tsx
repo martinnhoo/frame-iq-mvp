@@ -83,8 +83,14 @@ export function DashboardSidebar({
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [accountsExpanded, setAccountsExpanded] = useState(false);
-  const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [toolsOpen, setToolsOpen] = useState(false);
+  const [analysisOpen, setAnalysisOpen] = useState(() => {
+    const p = window.location.pathname;
+    return p.includes("/performance") || p.includes("/intelligence") || p.includes("/competitor") || p.includes("/analyses");
+  });
+  const [toolsOpen, setToolsOpen] = useState(() => {
+    const p = window.location.pathname;
+    return p.includes("/hooks") || p.includes("/script") || p.includes("/translate") || p.includes("/preflight") || p.includes("/templates") || p.includes("/boards");
+  });
   const [perfData, setPerfData] = useState<number[] | null>(null);
   const [systemStatus, setSystemStatus] = useState<"ok" | "warn" | "loading">("loading");
 
@@ -233,7 +239,7 @@ export function DashboardSidebar({
     hasActiveChild: boolean
   ) => (
     <div>
-      <button onClick={() => setOpen(!isOpen)}
+      <button onClick={() => { setOpen(!isOpen); if (!isOpen && items.length > 0) navigate(items[0].url); }}
         style={{
           width: "calc(100% - 16px)", display: "flex", alignItems: "center",
           padding: "7px 14px 7px 22px", borderRadius: 7, margin: "1px 8px",
