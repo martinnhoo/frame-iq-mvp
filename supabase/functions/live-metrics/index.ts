@@ -26,7 +26,7 @@ serve(async (req) => {
 
     if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
 
-    const days = period === "30d" ? 30 : period === "14d" ? 14 : 7;
+    const days = period === "90d" ? 90 : period === "60d" ? 60 : period === "30d" ? 30 : period === "14d" ? 14 : 7;
     const now = new Date();
     const fmt = (d: Date) => d.toISOString().split("T")[0];
     const today = fmt(now);

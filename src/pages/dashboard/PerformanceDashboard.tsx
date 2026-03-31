@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, DollarSign, MousePointer, Target, Eye, Zap, ChevronUp, ChevronDown, Rocket, ArrowUpRight, AlertCircle, Link2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-type Period = "7d" | "14d" | "30d";
+type Period = "7d" | "14d" | "30d" | "60d" | "90d";
 
 const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
 const BG="#0e1118",S1="#141824",S2="#1a2135",BD="rgba(255,255,255,0.07)";
@@ -236,38 +236,36 @@ export default function PerformanceDashboard() {
               </span>
             )}
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8}}>
-            {hasMeta&&hasGoogle&&(
-              <div style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
-                {([["meta","Meta Ads","f",ACCENT],["google","Google Ads","G",GBLUE]] as const).map(([plt,label,glyph,color])=>{
-                  const active = activePlatform===plt;
-                  return(
-                    <button key={plt} onClick={()=>setActivePlatform(plt)}
-                      style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",borderRadius:8,border:"none",cursor:"pointer",fontFamily:F,fontSize:13,fontWeight:active?700:500,background:active?S1:"transparent",color:active?color:MT,transition:"all 0.15s",boxShadow:active?"0 1px 4px rgba(0,0,0,0.3)":"none"}}>
-                      <span style={{width:18,height:18,borderRadius:5,background:active?`${color}20`:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:active?color:MT,fontFamily:"serif"}}>{glyph}</span>
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {!hasMeta&&!hasGoogle&&!loading&&(
-              <p style={{margin:0,fontSize:13,color:MT}}>Nenhuma conta conectada</p>
-            )}
-            {(hasMeta||hasGoogle)&&!(hasMeta&&hasGoogle)&&(
-              <PlatformBadge platform={hasMeta?"meta":"google"}/>
-            )}
-          </div>
           {lastUpdated&&(
-            <p style={{margin:"4px 0 0",fontSize:11,color:MT}}>Atualizado: {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>
+            <p style={{margin:"4px 0 0",fontSize:11,color:MT}}>
+              {language==="pt"?"Atualizado:":language==="es"?"Actualizado:":"Updated:"} {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
+              {" · "}{activePlatform==="meta"?"Meta Ads":"Google Ads"}
+              {" · "}{period==="7d"?"7 dias":period==="14d"?"14 dias":period==="30d"?"30 dias":period==="60d"?"60 dias":"90 dias"}
+            </p>
           )}
         </div>
 
         <div className="perf-actions" style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap" as const}}>
+          {/* Platform tabs — always visible */}
+          <div style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
+            {([["meta","Meta Ads","f",ACCENT],["google","Google Ads","G",GBLUE]] as const).map(([plt,label,glyph,color])=>{
+              const active = activePlatform===plt;
+              const hasData = plt==="meta" ? hasMeta : hasGoogle;
+              return(
+                <button key={plt} onClick={()=>hasData&&setActivePlatform(plt)}
+                  style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",borderRadius:8,border:"none",cursor:hasData?"pointer":"default",fontFamily:F,fontSize:13,fontWeight:active?700:500,background:active&&hasData?S1:"transparent",color:active&&hasData?color:hasData?MT:"rgba(255,255,255,0.2)",transition:"all 0.15s",boxShadow:active&&hasData?"0 1px 4px rgba(0,0,0,0.3)":"none",opacity:hasData?1:0.45}}>
+                  <span style={{width:18,height:18,borderRadius:5,background:active&&hasData?`${color}20`:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:active&&hasData?color:hasData?MT:"rgba(255,255,255,0.2)",fontFamily:"serif"}}>{glyph}</span>
+                  {label}
+                  {!hasData&&<span style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginLeft:2}}>—</span>}
+                </button>
+              );
+            })}
+          </div>
+          {/* Period selector */}
           <div style={{display:"flex",gap:4,background:S1,border:`1px solid ${BD}`,borderRadius:10,padding:4}}>
-            {(["7d","14d","30d"] as Period[]).map(p=>(
+            {(["7d","14d","30d","60d","90d"] as Period[]).map(p=>(
               <button key={p} className={`pdb${period===p?" act":""}`} onClick={()=>setPeriod(p)}>
-                {p==="7d"?"7D":p==="14d"?"14D":"30D"}
+                {p==="7d"?"7D":p==="14d"?"14D":p==="30d"?"30D":p==="60d"?"60D":"90D"}
               </button>
             ))}
           </div>
@@ -349,17 +347,19 @@ export default function PerformanceDashboard() {
             </div>
           )}
 
-          {/* Metrics grid */}
+          {/* Metrics grid — platform specific */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16,marginBottom:16}}>
-            <MetricCard label={language === "pt" ? "Gasto total" : language === "es" ? "Gasto total" : "Ad Spend"} value={`R$ ${fmtSpend(d.spend||0)}`} delta={d.delta_spend} sparkData={sparkSpend} accent={ACCENT} icon={DollarSign}/>
-            <MetricCard label="CTR Médio" value={((d.ctr||0)*100).toFixed(2)} suffix="%" delta={d.delta_ctr} sparkData={sparkCtr} accent={GREEN} icon={MousePointer}/>
-            <MetricCard label="Cliques" value={fmtNum(d.clicks||0)} delta={d.delta_clicks} sparkData={sparkClicks} accent="#a78bfa" icon={Target}/>
-            <MetricCard label="Conversões" value={fmtNum(d.conversions||0)} accent={AMBER} icon={Eye}/>
+            <MetricCard label={language==="pt"?"Gasto total":language==="es"?"Gasto total":"Ad Spend"} value={`R$ ${fmtSpend(d.spend||0)}`} delta={d.delta_spend} sparkData={sparkSpend} accent={ACCENT} icon={DollarSign}/>
+            <MetricCard label="CTR" value={((d.ctr||0)*100).toFixed(2)} suffix="%" delta={d.delta_ctr} sparkData={sparkCtr} accent={GREEN} icon={MousePointer}/>
+            <MetricCard label={language==="pt"?"Cliques":language==="es"?"Clics":"Clicks"} value={fmtNum(d.clicks||0)} delta={d.delta_clicks} sparkData={sparkClicks} accent="#a78bfa" icon={Target}/>
+            {activePlatform==="meta" ? (
+              <MetricCard label="Impressões" value={fmtNum(d.impressions||0)} accent="#f97316" icon={Eye}/>
+            ) : (
+              <MetricCard label={language==="pt"?"Conversões":language==="es"?"Conversiones":"Conversions"} value={fmtNum(d.conversions||0)} accent={AMBER} icon={Eye}/>
+            )}
           </div>
-
-          {/* Second row */}
+          {/* Platform-specific second row */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:24}}>
-            {/* ROAS */}
             <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
               <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>ROAS</p>
               <div style={{display:"flex",alignItems:"baseline",gap:8}}>
@@ -367,10 +367,8 @@ export default function PerformanceDashboard() {
                   {d.roas?`${d.roas.toFixed(2)}×`:"—"}
                 </span>
               </div>
-              <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>Retorno sobre o investimento</p>
+              <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>{language==="pt"?"Retorno sobre investimento":language==="es"?"Retorno sobre inversión":"Return on ad spend"}</p>
             </div>
-
-            {/* CPA */}
             <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
               <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>CPA</p>
               <div style={{display:"flex",alignItems:"baseline",gap:8}}>
@@ -378,18 +376,37 @@ export default function PerformanceDashboard() {
                   {d.cpa?`R$${d.cpa.toFixed(0)}`:"—"}
                 </span>
               </div>
-              <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>Custo por aquisição</p>
+              <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>{language==="pt"?"Custo por aquisição":language==="es"?"Costo por adquisición":"Cost per acquisition"}</p>
             </div>
-
-            {/* Quick actions */}
+            {activePlatform==="meta" ? (
+              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
+                <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>CPM</p>
+                <div style={{display:"flex",alignItems:"baseline",gap:8}}>
+                  <span style={{fontSize:40,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>
+                    {d.impressions&&d.spend?`R$${((d.spend/d.impressions)*1000).toFixed(2)}`:"—"}
+                  </span>
+                </div>
+                <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>Custo por mil impressões</p>
+              </div>
+            ) : (
+              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px"}}>
+                <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>CPC</p>
+                <div style={{display:"flex",alignItems:"baseline",gap:8}}>
+                  <span style={{fontSize:40,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>
+                    {d.clicks&&d.spend?`R$${(d.spend/d.clicks).toFixed(2)}`:"—"}
+                  </span>
+                </div>
+                <p style={{margin:"8px 0 0",fontSize:12,color:MT}}>Custo por clique</p>
+              </div>
+            )}
             <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-              <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>Ações rápidas</p>
+              <p style={{margin:"0 0 12px",fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em"}}>{language==="pt"?"Ações rápidas":language==="es"?"Acciones rápidas":"Quick actions"}</p>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 <button onClick={()=>navigate("/dashboard/campaigns/new")} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(14,165,233,0.1)",border:"1px solid rgba(14,165,233,0.2)",borderRadius:10,color:ACCENT,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:F,textAlign:"left"}}>
-                  <Rocket size={13}/>Criar campanha
+                  <Rocket size={13}/>{language==="pt"?"Criar campanha":language==="es"?"Crear campaña":"New campaign"}
                 </button>
                 <button onClick={()=>navigate("/dashboard/hooks")} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:10,color:"#a78bfa",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:F,textAlign:"left"}}>
-                  <Zap size={13}/>Gerar hooks
+                  <Zap size={13}/>{language==="pt"?"Gerar hooks":language==="es"?"Generar hooks":"Generate hooks"}
                 </button>
               </div>
             </div>
