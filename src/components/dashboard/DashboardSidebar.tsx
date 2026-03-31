@@ -74,6 +74,81 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
+// ── NavItem — proper React component (avoids hooks-in-function violation) ────
+function NavItem({ url, label, opts, isActive, onClose }: {
+  url: string; label: string;
+  opts?: { badge?: string; soon?: boolean; tooltip?: React.ReactNode };
+  isActive: (url: string) => boolean;
+  onClose: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const active = isActive(url);
+  return (
+    <div style={{ position: "relative" }}>
+      <NavLink to={url} onClick={opts?.soon ? undefined : onClose}
+        style={{
+          display: "flex", alignItems: "center", padding: "7px 14px 7px 18px",
+          borderRadius: 7, margin: "1px 8px",
+          color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.52)",
+          background: active ? "rgba(255,255,255,0.07)" : "transparent",
+          fontSize: 13.5, fontWeight: active ? 600 : 400,
+          textDecoration: "none", transition: "background 0.15s, color 0.15s", fontFamily: "'Inter', system-ui, sans-serif",
+          cursor: opts?.soon ? "default" : "pointer",
+          pointerEvents: opts?.soon ? "none" : "auto",
+          position: "relative", overflow: "visible",
+        }}
+        onMouseEnter={e => {
+          setHovered(true);
+          if (!active && !opts?.soon) {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = "rgba(255,255,255,0.045)";
+            el.style.color = "rgba(255,255,255,0.82)";
+          }
+        }}
+        onMouseLeave={e => {
+          setHovered(false);
+          if (!active && !opts?.soon) {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = "transparent";
+            el.style.color = "rgba(255,255,255,0.52)";
+          }
+        }}>
+        {/* Animated left bar */}
+        <div style={{
+          position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
+          width: 2, borderRadius: "0 2px 2px 0",
+          height: active ? 14 : 0,
+          background: "#0ea5e9",
+          transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)",
+          boxShadow: active ? "0 0 6px rgba(14,165,233,0.5)" : "none",
+        }} />
+        <span style={{ flex: 1 }}>{label}</span>
+        {opts?.badge && !opts?.soon && (
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
+            {opts.badge}
+          </span>
+        )}
+        {opts?.soon && (
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Em breve</span>
+        )}
+      </NavLink>
+      {/* Hover tooltip */}
+      {hovered && opts?.tooltip && (
+        <div style={{
+          position: "absolute", left: "calc(100% + 12px)", top: "50%", transform: "translateY(-50%)",
+          background: "#0f1825", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 10, padding: "10px 14px", zIndex: 100,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)", pointerEvents: "none",
+          minWidth: 140, animation: "fadeTooltip 0.15s ease",
+        }}>
+          {opts.tooltip}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export function DashboardSidebar({
   user, profile, open, onClose, onOpenProfile,
   savedPersonas = [], selectedPersona, onSelectPersona,
@@ -163,74 +238,9 @@ export function DashboardSidebar({
   // ── Nav item with animated left bar ──────────────────────────────────────
   const navItem = (url: string, label: string, opts?: {
     badge?: string; soon?: boolean; tooltip?: React.ReactNode;
-  }) => {
-    const active = isActive(url);
-    const [hovered, setHovered] = useState(false);
-    return (
-      <div key={url} style={{ position: "relative" }}>
-        <NavLink to={url} onClick={onClose}
-          style={{
-            display: "flex", alignItems: "center", padding: "7px 14px 7px 18px",
-            borderRadius: 7, margin: "1px 8px",
-            color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.52)",
-            background: active ? "rgba(255,255,255,0.07)" : "transparent",
-            fontSize: 13.5, fontWeight: active ? 600 : 400,
-            textDecoration: "none", transition: "background 0.15s, color 0.15s", fontFamily: F,
-            cursor: opts?.soon ? "default" : "pointer",
-            pointerEvents: opts?.soon ? "none" : "auto",
-            position: "relative", overflow: "visible",
-          }}
-          onMouseEnter={e => {
-            setHovered(true);
-            if (!active && !opts?.soon) {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(255,255,255,0.045)";
-              el.style.color = "rgba(255,255,255,0.82)";
-            }
-          }}
-          onMouseLeave={e => {
-            setHovered(false);
-            if (!active && !opts?.soon) {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "transparent";
-              el.style.color = "rgba(255,255,255,0.52)";
-            }
-          }}>
-          {/* Animated left bar — thin, subtle */}
-          <div style={{
-            position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
-            width: 2, borderRadius: "0 2px 2px 0",
-            height: active ? 14 : 0,
-            background: "#0ea5e9",
-            transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)",
-            boxShadow: active ? "0 0 6px rgba(14,165,233,0.5)" : "none",
-          }} />
-          <span style={{ flex: 1 }}>{label}</span>
-          {opts?.badge && !opts?.soon && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em" }}>
-              {opts.badge}
-            </span>
-          )}
-          {opts?.soon && (
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{pt ? "Em breve" : "Soon"}</span>
-          )}
-        </NavLink>
-
-        {/* Hover tooltip */}
-        {hovered && opts?.tooltip && (
-          <div style={{
-            position: "absolute", left: "calc(100% + 12px)", top: "50%", transform: "translateY(-50%)",
-            background: "#0f1825", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 10, padding: "10px 14px", zIndex: 100,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.6)", pointerEvents: "none",
-            minWidth: 140, animation: "fadeTooltip 0.15s ease",
-          }}>
-            {opts.tooltip}
-          </div>
-        )}
-      </div>
-    );
-  };
+  }) => (
+    <NavItem key={url} url={url} label={label} opts={opts} isActive={isActive} onClose={onClose} />
+  );
 
   // ── Collapsible section ───────────────────────────────────────────────────
   const collapsibleSection = (
