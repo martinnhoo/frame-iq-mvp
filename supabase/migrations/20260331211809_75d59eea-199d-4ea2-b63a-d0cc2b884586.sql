@@ -1,0 +1,1 @@
+GRANT SELECT (access_token, refresh_token) ON public.platform_connections TO service_role;
