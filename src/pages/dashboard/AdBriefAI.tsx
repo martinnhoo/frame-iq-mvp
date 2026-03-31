@@ -549,7 +549,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
-function ProactiveBlock({ block, lang, onSend, connections }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[] }) {
+function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
 
