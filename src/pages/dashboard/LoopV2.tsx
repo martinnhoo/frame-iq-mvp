@@ -135,39 +135,30 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
 
   // Tool result — shows output from an executed tool inline
   if (block.type === "tool_result") {
-    const toolIcons: Record<string, string> = {
-      hooks: "⚡", script: "✍️", brief: "📋", competitor: "🔍", translate: "🌍", preflight: "🛫",
-    };
-    const icon = toolIcons[block.tool_name || ""] || null;
     return (
-      <div style={{ borderRadius: 14, border: `1px solid ${GREEN}25`, background: `linear-gradient(135deg, ${GREEN}06 0%, rgba(13,15,24,0.95) 100%)`, overflow: "hidden", marginBottom: 8 }}>
-        {/* Tool result header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}15` }}>
-          <span style={{ fontSize: 14 }}>{icon}</span>
+      <div style={{ borderRadius: 12, border: `1px solid ${GREEN}20`, background: `${GREEN}05`, overflow: "hidden", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}10` }}>
+          <Zap size={13} color={GREEN} strokeWidth={2} />
           <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: GREEN }}>{block.title}</span>
-          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: `${GREEN}15`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto" }}>GENERATED</span>
+          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: `${GREEN}12`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto", letterSpacing: "0.03em" }}>GENERATED</span>
         </div>
-        {/* Content */}
         <div style={{ padding: "12px 14px" }}>
           {block.result_content && (
             <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.75, whiteSpace: "pre-line", marginBottom: block.result_items?.length ? 12 : 0 }}>{block.result_content}</p>
           )}
           {block.result_items?.map((item, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <span style={{ color: GREEN, fontSize: 13, fontWeight: 700, flexShrink: 0, minWidth: 20, fontFamily: F }}>{i + 1}.</span>
+            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ color: GREEN, fontSize: 12, fontWeight: 700, flexShrink: 0, minWidth: 20, fontFamily: F }}>{i + 1}.</span>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, margin: 0 }}>{item}</p>
             </div>
           ))}
-          {/* Copy all button */}
           {(block.result_items || block.result_content) && (
-            <button
-              onClick={() => {
-                const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || "");
-                navigator.clipboard.writeText(text);
-              }}
-              style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: F, cursor: "pointer" }}
-            >
-              📋 Copy all
+            <button onClick={() => { const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || ""); navigator.clipboard.writeText(text); }}
+              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, cursor: "pointer", transition: "all 0.15s" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy all
             </button>
           )}
         </div>
