@@ -1028,40 +1028,46 @@ export default function LoopV2() {
   const hasConversation = messages.filter(m => m.role === "user").length > 0;
 
   return (
-    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0d0f18", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
+    <div className="loop-container" style={{ display: "flex", flexDirection: "column", height: "100%", background: "linear-gradient(180deg, #0b0e1a 0%, #080b14 100%)", fontFamily: F, overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
+      {/* Ambient background glow */}
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 300, background: "radial-gradient(ellipse, rgba(14,165,233,0.04) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
 
-      {/* ── Header — clean, just platform status ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", height: 48, borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, gap: 8 }}>
+      {/* ── Header — refined with glass effect ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0, gap: 10, position: "relative", zIndex: 2, background: "rgba(8,11,20,0.6)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
 
         {/* Left: persona + status */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
           {selectedPersona ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", fontSize: 11, fontWeight: 700, color: "#0ea5e9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", boxShadow: "0 0 12px rgba(14,165,233,0.08)" }}>
                 {(selectedPersona as any).logo_url
                   ? <img src={(selectedPersona as any).logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A")}
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPersona.name}</span>
-              {hasData && (
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.1)", display: "inline-block" }} />
-                  {pulse?.totalAnalyses}
-                  {pulse?.avgHookScore && <span style={{ color: "rgba(255,255,255,0.45)" }}> · {pulse.avgHookScore.toFixed(1)}/10</span>}
-                </span>
-              )}
+                  : <span style={{ fontSize: 12, fontWeight: 800, color: "#0ea5e9" }}>{selectedPersona.name?.charAt(0)?.toUpperCase() || "A"}</span>}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", letterSpacing: "-0.01em" }}>{selectedPersona.name}</span>
+                {hasData && (
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", gap: 4 }}>
+                    {pulse?.totalAnalyses} analyses
+                    {pulse?.avgHookScore && <><span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} /> {pulse.avgHookScore.toFixed(1)}/10</>}
+                  </span>
+                )}
+              </div>
             </div>
           ) : (
             connectedPlatforms.length > 0 ? (
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 {connectedPlatforms.map(p => (
-                  <span key={p} style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 6 }}>
+                  <span key={p} style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)" }}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </span>
                 ))}
               </div>
             ) : (
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>AdBrief AI</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", animation: "pulseDotChat 2s ease infinite" }} />
+                <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.5)", letterSpacing: "-0.01em" }}>AdBrief AI</span>
+              </div>
             )
           )}
         </div>
@@ -1080,8 +1086,10 @@ export default function LoopV2() {
             />
           ))}
           <button onClick={() => loadPulse()}
-            style={{ width: 30, height: 30, borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginLeft: 4 }}>
-            <RefreshCw size={12} color="rgba(255,255,255,0.25)" />
+            style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginLeft: 4, transition: "all 0.15s" }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.07)"; el.style.borderColor = "rgba(255,255,255,0.15)"; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.08)"; }}>
+            <RefreshCw size={12} color="rgba(255,255,255,0.3)" />
           </button>
         </div>
 
