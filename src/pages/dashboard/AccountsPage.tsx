@@ -65,7 +65,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
   }[language] || { connect: "Connect", connecting: "Connecting...", soon: "Coming soon", disconnect: "Disconnect", save: "Save", add_id: "Add account ID", not_connected: "Not connected", connected: "Connected", active: "ACTIVE" };
 
   const load = async () => {
-    if (!accountId) return;
+    if (!accountId) { setLoading(false); return; }
     const { data } = await supabase.from("platform_connections" as any)
       .select("id, platform, ad_accounts, selected_account_id, connection_label, connected_at")
       .eq("user_id", userId).eq("persona_id", accountId).eq("status", "active");

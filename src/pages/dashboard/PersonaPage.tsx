@@ -29,7 +29,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
   const F = "'Inter', sans-serif";
 
   const loadConnections = async () => {
-    if (!personaId) return;
+    if (!personaId) { setLoading(false); return; }
     // Try with selected_account_id first, fall back without it
     let data: any[] | null = null;
     const { data: d1, error: e1 } = await supabase.from("platform_connections" as any)

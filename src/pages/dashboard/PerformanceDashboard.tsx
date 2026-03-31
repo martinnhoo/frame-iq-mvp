@@ -368,7 +368,7 @@ export default function PerformanceDashboard() {
   useEffect(()=>{ try{localStorage.setItem("adbrief_perf_metrics",JSON.stringify(activeMetrics));}catch{} },[activeMetrics]);
 
   const load = useCallback(async(showSpinner=false)=>{
-    if(!user||!selectedPersona) return;
+    if(!user||!selectedPersona) { setLoading(false); return; }
     if(showSpinner) setRefreshing(true); else setLoading(true);
     setError("");
     try {

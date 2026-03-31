@@ -121,7 +121,7 @@ export default function IntelligencePage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const load = async () => {
-    if (!user?.id) return;
+    if (!user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
       const [mR, eR, pR, aR] = await Promise.all([
