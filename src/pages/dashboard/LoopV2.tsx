@@ -587,6 +587,7 @@ export default function LoopV2() {
 
   // Realtime
   useEffect(() => {
+    if (!user?.id) return;
     const channel = supabase.channel("loop_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "analyses", filter: `user_id=eq.${user.id}` },
         async () => {
@@ -594,14 +595,14 @@ export default function LoopV2() {
           if (newPulse) {
             setMessages(prev => [...prev, {
               role: "assistant" as const,
-              blocks: [{ type: "insight" as const, title: "", content: `New analysis detected — ${newPulse.totalAnalyses} total${newPulse.avgHookScore ? `, avg ${newPulse.avgHookScore.toFixed(1)}/10` : ""}. Want me to review it?` }],
+              blocks: [{ type: "insight" as const, title: "", content: `New analysis detected \u2014 ${newPulse.totalAnalyses} total${newPulse.avgHookScore ? `, avg ${newPulse.avgHookScore.toFixed(1)}/10` : ""}. Want me to review it?` }],
               ts: Date.now(),
             }]);
           }
         })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user.id, loadPulse]);
+  }, [user?.id, loadPulse]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
