@@ -437,56 +437,52 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
   const iconColors = [BLUE, TEAL, GREEN, PURPLE];
   const iconComponents = [BarChart3, Zap, FileText, Target];
   return (
-    <div style={{ width: "100%", maxWidth: 660, animation: "welcomeIn 0.5s cubic-bezier(0.16,1,0.3,1) both" }}>
+    <div style={{ width: "100%", maxWidth: 660, animation: "chatMsgIn 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
       {/* Welcome hero */}
-      <div style={{ textAlign: "center", marginBottom: 32, padding: "20px 0 0" }}>
-        {/* Logo mark */}
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(6,182,212,0.08))", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: "0 0 40px rgba(14,165,233,0.1)" }}>
-          <Sparkles size={22} color={BLUE} strokeWidth={1.5} />
+      <div style={{ textAlign: "center", marginBottom: 28, padding: "12px 0 0" }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 14,
+          background: "linear-gradient(135deg, #0ea5e9, #06b6d4)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 14px", boxShadow: "0 4px 24px rgba(14,165,233,0.25)",
+        }}>
+          <Sparkles size={20} color="#fff" strokeWidth={2} />
         </div>
-        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           {hasData ? "Ready to work." : "AdBrief AI"}
         </h2>
-        <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>
           {hasData ? "Your account data is loaded. What should we optimize?" : "Ask about your campaigns, generate hooks, or analyze competitors."}
         </p>
       </div>
 
-      {/* Suggestion cards — 2x2 */}
-      <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      {/* Suggestion cards */}
+      <div className="suggestions-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         {suggestions.slice(0, 4).map((s, i) => {
           const Icon = iconComponents[i];
           const color = iconColors[i];
           return (
-            <button
-              key={i}
-              onClick={() => onSend(s)}
-              className="card-hover"
+            <button key={i} onClick={() => onSend(s)}
               style={{
-                display: "flex", alignItems: "flex-start", gap: 11, padding: "14px 14px",
-                borderRadius: 14,
-                background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderTopColor: "rgba(255,255,255,0.1)",
+                display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+                borderRadius: 12, background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
                 cursor: "pointer", textAlign: "left", fontFamily: F,
                 transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
-                animation: `fadeUp 0.3s ${0.1 + i * 0.07}s cubic-bezier(0.16,1,0.3,1) both`,
+                animation: `chatMsgIn 0.35s ${0.08 + i * 0.06}s cubic-bezier(0.16,1,0.3,1) both`,
               }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `linear-gradient(135deg, ${color}10 0%, rgba(255,255,255,0.02) 100%)`; el.style.borderColor = `${color}30`; el.style.transform = "translateY(-2px)"; el.style.boxShadow = `0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px ${color}15, inset 0 1px 0 rgba(255,255,255,0.06)`; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
-            >
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `${color}0c`; el.style.borderColor = `${color}25`; el.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.06)"; el.style.transform = "translateY(0)"; }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}10`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon size={14} color={color} strokeWidth={2} />
               </div>
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.55, fontWeight: 500, letterSpacing: "-0.01em" }}>{s}</span>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, fontWeight: 500 }}>{s}</span>
             </button>
           );
         })}
       </div>
       <style>{`
         @keyframes toolSlideIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes welcomeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
