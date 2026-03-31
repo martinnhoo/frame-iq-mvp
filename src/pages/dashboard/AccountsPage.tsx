@@ -89,8 +89,8 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     try {
       const { data } = await supabase.functions.invoke(fn, { body: { action: "get_auth_url", user_id: userId, persona_id: accountId } });
       if (data?.url) window.location.href = data.url;
-      else { toast.error("Falha ao obter URL de autenticação"); setConnecting(null); }
-    } catch { toast.error("Falha na conexão"); setConnecting(null); }
+      else { toast.error(language === "pt" ? "Falha ao obter URL de autenticação" : language === "es" ? "Error al obtener URL de autenticación" : "Failed to get authentication URL"); setConnecting(null); }
+    } catch { toast.error(language === "pt" ? "Falha na conexão" : language === "es" ? "Error de conexión" : "Connection failed"); setConnecting(null); }
   };
 
   const disconnect = async (platform: string) => {
@@ -141,6 +141,13 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
     finally { setChangingAccount(null); }
   };
 
+
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", padding: "20px 0" }}>
       <Loader2 size={16} color="rgba(255,255,255,0.3)" className="animate-spin" />
@@ -326,7 +333,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
     const ext = file.name.split(".").pop();
     const path = `${userId}/${account?.id || "new"}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("account-logos").upload(path, file, { upsert: true });
-    if (error) { toast.error("Falha no upload"); setUploading(false); return; }
+    if (error) { toast.error(language === "pt" ? "Falha no upload" : language === "es" ? "Error al subir" : "Upload failed"); setUploading(false); return; }
     const { data } = supabase.storage.from("account-logos").getPublicUrl(path);
     setLogoUrl(data.publicUrl);
     setUploading(false);
@@ -346,7 +353,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
     }
     setSaving(false);
     if (result) { toast.success(account?.id ? (language === "pt" ? "Conta atualizada" : language === "es" ? "Cuenta actualizada" : "Account updated") : (language === "pt" ? "Conta criada" : language === "es" ? "Cuenta creada" : "Account created")); onSave(result as Account); }
-    else toast.error("Failed to save");
+    else toast.error(language === "pt" ? "Falha ao salvar" : language === "es" ? "Error al guardar" : "Failed to save");
   };
 
   return (

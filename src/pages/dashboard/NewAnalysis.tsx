@@ -194,7 +194,7 @@ const NewAnalysis = () => {
       setFile(f);
       if (!title) setTitle(f.name.replace(/\.[^/.]+$/, ""));
     } else {
-      toast.error("Please drop a video file");
+      toast.error(language === "pt" ? "Solte um arquivo de vídeo" : language === "es" ? "Suelta un archivo de video" : "Please drop a video file");
     }
   };
 
@@ -240,7 +240,7 @@ const NewAnalysis = () => {
   };
 
   const startAnalysis = async () => {
-    if (!file && !videoUrl.trim()) { toast.error("Upload a video or paste a URL"); return; }
+    if (!file && !videoUrl.trim()) { toast.error(language === "pt" ? "Envie um vídeo ou cole uma URL" : language === "es" ? "Sube un video o pega una URL" : "Upload a video or paste a URL"); return; }
     setStep("idle");
     setProgress(0);
 
@@ -249,7 +249,7 @@ const NewAnalysis = () => {
       .insert({ user_id: user.id, persona_id: selectedPersona?.id || null, title: title || file?.name || "Untitled Analysis", video_url: videoUrl || null, status: "processing" })
       .select().single();
 
-    if (insertErr || !record) { toast.error("Failed to create analysis"); return; }
+    if (insertErr || !record) { toast.error(language === "pt" ? "Falha ao criar análise" : language === "es" ? "Error al crear análisis" : "Failed to create analysis"); return; }
 
     let fileToSend = file;
 

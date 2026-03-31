@@ -91,7 +91,7 @@ export default function BriefGenerator() {
   }, [selectedPersona]);
 
   const generate = async () => {
-    if (!product.trim()) { toast.error("Descreva o produto ou serviço primeiro"); return; }
+    if (!product.trim()) { toast.error(language === "pt" ? "Descreva o produto ou serviço primeiro" : language === "es" ? "Describe el producto o servicio primero" : "Please describe the product or service first"); return; }
     setLoading(true);
     setResult(null);
     try {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ArrowLeft, Save, Plus, Trash2, GripVertical, Loader2 } from "lucide-react";
@@ -46,6 +47,7 @@ const FIELD_OPTIONS = [
 
 export default function LoopSettingsPage() {
   const { user } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
 
   if (!user) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
@@ -86,7 +88,7 @@ export default function LoopSettingsPage() {
         updated_at: new Date().toISOString(),
       } as any, { onConflict: "user_id" });
       if (error) throw error;
-      toast.success("Configuração salva");
+      toast.success(language === "pt" ? "Configuração salva" : language === "es" ? "Configuración guardada" : "Settings saved");
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
     } finally {

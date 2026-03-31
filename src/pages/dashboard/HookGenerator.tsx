@@ -158,7 +158,7 @@ export default function HookGenerator() {
       }
       if (data.mock_mode) toast.info("Configure ANTHROPIC_API_KEY para hooks reais");
     } catch {
-      toast.error("Falha ao gerar hooks");
+      toast.error(language === "pt" ? "Falha ao gerar hooks" : language === "es" ? "Error al generar hooks" : "Failed to generate hooks");
     } finally {
       setLoading(false);
     }

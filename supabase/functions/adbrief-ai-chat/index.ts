@@ -1590,7 +1590,7 @@ Sobre Telegram: 1-2 frases curtas. Sem bullets, sem listas longas.
 - **Maker ($19/mês):** 50 msgs/dia, 5 hooks, acesso completo
 - **Pro ($49/mês):** 200 msgs/dia, 8 hooks, 30 dashboards/mês
 - **Studio ($149/mês):** 500 msgs/dia, 10 hooks, dashboards ilimitados
-- Trial pago: 1 dia com cartão — acesso completo antes de decidir
+- Trial pago: 3 dias com cartão — acesso completo antes de decidir
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **HOOKS — REGRA IMPORTANTE**
