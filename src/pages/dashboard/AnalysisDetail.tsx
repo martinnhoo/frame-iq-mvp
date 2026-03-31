@@ -79,15 +79,17 @@ const AnalysisDetail = () => {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchAnalysis = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("analyses").select("*")
       .eq("id", id!).eq("user_id", user.id).single();
     if (data) {
       setAnalysis(data as AnalysisData);
-      // Stop polling if done
       if (data.status === "completed" || data.status === "failed") {
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       }
+    } else if (error) {
+      // ID not found or unauthorized — stop polling and show not found
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     }
     setLoading(false);
   };
@@ -106,10 +108,12 @@ const AnalysisDetail = () => {
   );
 
   if (!analysis) return (
-    <div className="p-8 text-center">
-      <p className="text-white/50 text-sm mb-4">Analysis not found.</p>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, fontFamily: "'Inter',sans-serif" }}>
+      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Análise não encontrada.</p>
       <button onClick={() => navigate("/dashboard/analyses")}
-        className="text-sm text-white/50 hover:text-white underline">Back</button>
+        style={{ fontSize: 13, color: "#0ea5e9", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+        ← Voltar para análises
+      </button>
     </div>
   );
 

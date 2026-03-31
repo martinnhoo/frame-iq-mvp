@@ -156,6 +156,7 @@ const App = () => (
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
                 <Route path="loop/ai" element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="loop/guide" element={<LoopGuidePage />} />
+                <Route path="*" element={<Navigate to="/dashboard/ai" replace />} />
               </Route>
 
               {/* ── SEO: Tools ── */}

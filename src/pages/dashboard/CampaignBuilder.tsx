@@ -93,14 +93,21 @@ export default function CampaignBuilder() {
   const lastKey=useRef("");
 
   useEffect(()=>{
-    supabase.auth.getSession().then(async({data})=>{
+    const init = async () => {
+      let { data } = await supabase.auth.getSession();
+      // Try refresh if session expired
+      if (!data.session) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        data = refreshed as any;
+      }
       if(!data.session){navigate("/login");return;}
       const uid=data.session.user.id;
       setUserId(uid);
       const{data:ps}=await supabase.from("personas").select("id,name,result").eq("user_id",uid).order("created_at",{ascending:false});
       setPersonas(ps||[]);
       if(ps?.length)setPersona(ps[0]);
-    });
+    };
+    init();
   },[navigate]);
 
   useEffect(()=>{
