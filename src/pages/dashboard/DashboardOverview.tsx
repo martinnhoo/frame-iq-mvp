@@ -122,7 +122,7 @@ export default function DashboardOverview() {
       setInsights({ avgHookScore: count > 0 ? total / count : null, bestModel: Object.entries(models).sort((a, b) => b[1] - a[1])[0]?.[0] || null, mostUsedMarket: Object.entries(markets).sort((a, b) => b[1] - a[1])[0]?.[0] || null, totalAnalyzed: data.length });
     };
     run();
-  }, [user.id, dateFilter]);
+  }, [user?.id, dateFilter]);
 
   useEffect(() => {
     const run = async () => {
