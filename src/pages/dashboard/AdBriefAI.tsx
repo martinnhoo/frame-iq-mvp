@@ -2044,7 +2044,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#161b22",position:"relative" as const}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#090c14",position:"relative" as const}}>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
       {contextReady&&hasData&&(
@@ -2060,7 +2060,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",borderRadius:"12px 12px 0 0",position:"relative" as const,zIndex:1,maskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom, transparent 0px, black 28px, black calc(100% - 20px), transparent 100%)"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",position:"relative" as const,zIndex:1}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -2220,7 +2220,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"11px 16px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",fontSize:14,color:"rgba(255,255,255,0.92)",...m,lineHeight:1.65,boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}}>
+                  <div style={{padding:"12px 18px",borderRadius:"18px 18px 4px 18px",background:"linear-gradient(135deg, #0ea5e9, #0891d2)",fontSize:14,color:"#fff",...m,lineHeight:1.65,boxShadow:"0 4px 16px rgba(14,165,233,0.2)"}}>
                     {msg.userText}
                   </div>
                 </div>
@@ -2230,8 +2230,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <ABAvatar size={26} />
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"rgba(14,165,233,0.6)",letterSpacing:"0.10em",textTransform:"uppercase" as const}}>AdBrief</span>
+                    <div style={{width:28,height:28,borderRadius:9,background:"linear-gradient(135deg, #0ea5e9, #06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 10px rgba(14,165,233,0.2)"}}>
+                      <Sparkles size={13} color="#fff" strokeWidth={2}/>
+                    </div>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"#0ea5e9",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>ADBRIEF</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -2306,7 +2308,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"rgba(5,7,14,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",boxShadow:"0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"linear-gradient(180deg, transparent 0%, rgba(9,12,20,0.98) 30%)"}}>
         {/* ── Floating tool shortcuts ── */}
         <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
           <div style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none"}}>
@@ -2326,7 +2328,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             ))}
           </div>
         </div>
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",paddingTop:8}}>
           {/* Message counter — only for free users */}
           {(profile?.plan === "free" || !profile?.plan) && (() => {
             const used = messages.filter(m => m.role === "user").length;
@@ -2351,7 +2353,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderTopColor:"rgba(255,255,255,0.16)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:46,maxHeight:120,boxShadow:"inset 0 2px 6px rgba(0,0,0,0.3)"}} className="chat-textarea"
+              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"12px 16px",color:"#fff",fontSize:14,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:46,maxHeight:120,transition:"border-color 0.2s"}} className="chat-textarea"
               onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
               onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
@@ -2365,8 +2367,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </button>
             )}
             <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#6366f1)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-              {loading?<Loader2 size={15} color="#0ea5e9" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
+              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",transform:input.trim()&&!loading&&contextReady?"scale(1)":"scale(0.92)",boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.3)":"none"}}>
+              {loading?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
             </button>
           </div>
         </div>
