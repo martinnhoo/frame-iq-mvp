@@ -80,15 +80,6 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     exact ? location.pathname === url : location.pathname === url || location.pathname.startsWith(url + "/");
   const isAccountsActive = isActive("/dashboard/accounts");
 
-  const PRIMARY_NAV = [
-    { url: "/dashboard/campaigns/new", label: language==="pt" ? "Criar Campanha" : language==="es" ? "Crear Campaña" : "Create Campaign", icon: Rocket,    exact: false, hot: false, highlight: true  },
-    { url: "/dashboard/performance",   label: language==="pt" ? "Performance"    : language==="es" ? "Performance"    : "Performance",    icon: BarChart3, exact: false, hot: false, highlight: false },
-    { url: "/dashboard/ai",            label: "IA Chat",                                                                                    icon: Cpu,       exact: false, hot: true,  highlight: false },
-    { url: "/dashboard/intelligence",  label: language==="pt" ? "Inteligência"   : language==="es" ? "Inteligencia"   : "Intelligence",   icon: Brain,     exact: false, hot: false, highlight: false },
-    { url: "/dashboard/competitor",    label: dt("nav_competitor")||"Concorrentes",                                                         icon: ScanEye,   exact: false, hot: false, highlight: false },
-    { url: "/dashboard/analyses",      label: dt("nav_analyses")||"Análises",                                                               icon: TrendingUp, exact: false, hot: false, highlight: false },
-  ];
-
   const TOOLS_NAV = [
     { url: "/dashboard/hooks",        label: dt("nav_hooks")||"Gerador de Hooks",   icon: Zap },
     { url: "/dashboard/script",       label: dt("nav_script")||"Roteiro",           icon: Clapperboard },
@@ -274,9 +265,51 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
     );
   };
 
-  const sectionLabel = (txt: string) => (
-    <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: SB.sectionLabel, letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 12px 5px" }}>{txt}</p>
-  );
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+
+  const ANALYSIS_NAV = [
+    { url: "/dashboard/performance",  label: language==="pt" ? "Performance"   : language==="es" ? "Performance"   : "Performance",  icon: BarChart3  },
+    { url: "/dashboard/intelligence", label: language==="pt" ? "Inteligência"  : language==="es" ? "Inteligencia"  : "Intelligence", icon: Brain      },
+    { url: "/dashboard/competitor",   label: dt("nav_competitor")||"Concorrentes",                                                    icon: ScanEye    },
+    { url: "/dashboard/analyses",     label: dt("nav_analyses")||"Análises",                                                          icon: TrendingUp },
+  ];
+
+  const isAnalysisActive = ANALYSIS_NAV.some(i => location.pathname.startsWith(i.url));
+  const isToolsActive = TOOLS_NAV.some(i => location.pathname.startsWith(i.url));
+
+  const collapsibleSection = (
+    label: string,
+    icon: any,
+    items: { url: string; label: string; icon: any }[],
+    isOpen: boolean,
+    setOpen: (v: boolean) => void,
+    isActive: boolean
+  ) => {
+    const Icon = icon;
+    return (
+      <div style={{ margin: "2px 6px" }}>
+        <button onClick={() => setOpen(!isOpen)}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
+            borderRadius: 8, background: isActive && !isOpen ? SB.activeItem : "transparent",
+            border: `1px solid ${isActive && !isOpen ? SB.activeBorder : "transparent"}`,
+            cursor: "pointer", fontFamily: F, transition: "all 0.12s",
+          }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if (!isActive || isOpen) { el.style.background = SB.hoverBg; } }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; if (!isActive || isOpen) { el.style.background = "transparent"; } }}>
+          <Icon size={15} style={{ color: isActive ? SB.activeIcon : SB.idleIcon, flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? SB.activeText : SB.idleText, textAlign: "left" }}>{label}</span>
+          <ChevronDown size={11} color={SB.idleIcon} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+        </button>
+        {isOpen && (
+          <div style={{ marginTop: 2, paddingLeft: 6 }}>
+            {items.map(({ url, label, icon }) => toolItem(url, label, icon))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -300,18 +333,29 @@ export function DashboardSidebar({ user, profile, onProfileUpdate, open, onClose
         {/* ── Nav ── */}
         <nav style={{ flex: 1, paddingTop: 8, overflowY: "auto", overflowX: "hidden" }}>
 
-          {/* Primary */}
-          {PRIMARY_NAV.map(({ url, label, icon, exact, hot, highlight }) => primaryItem(url, label, icon, exact, hot, highlight))}
+          {/* Criar Campanha — destaque */}
+          {primaryItem("/dashboard/campaigns/new", language==="pt" ? "Criar Campanha" : language==="es" ? "Crear Campaña" : "Create Campaign", Rocket, false, false, true)}
+
+          {/* IA Chat — único item primário */}
+          {primaryItem("/dashboard/ai", "IA Chat", Cpu, false, true, false)}
 
           {/* Accounts with inline persona switcher */}
           {accountsItem()}
 
           {/* Divider */}
-          <div style={{ height: 1, background: SB.divider, margin: "10px 12px 2px" }} />
+          <div style={{ height: 1, background: SB.divider, margin: "8px 12px" }} />
 
-          {/* Tools section — lower visual weight than primary nav */}
-          <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.20)", letterSpacing: "0.10em", textTransform: "uppercase", padding: "6px 16px 2px", margin: 0 }}>{language==="pt" ? "Ferramentas" : language==="es" ? "Herramientas" : "Tools"}</p>
-          {TOOLS_NAV.map(({ url, label, icon }) => toolItem(url, label, icon))}
+          {/* Análise — colapsável */}
+          {collapsibleSection(
+            language==="pt" ? "Análise" : language==="es" ? "Análisis" : "Analytics",
+            BarChart3, ANALYSIS_NAV, analysisOpen, setAnalysisOpen, isAnalysisActive
+          )}
+
+          {/* Ferramentas — colapsável */}
+          {collapsibleSection(
+            language==="pt" ? "Ferramentas" : language==="es" ? "Herramientas" : "Tools",
+            Zap, TOOLS_NAV, toolsOpen, setToolsOpen, isToolsActive
+          )}
 
         </nav>
 
