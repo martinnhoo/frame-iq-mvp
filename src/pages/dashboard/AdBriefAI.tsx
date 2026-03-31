@@ -2308,7 +2308,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"rgba(5,7,14,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",boxShadow:"0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"linear-gradient(180deg, transparent 0%, rgba(9,12,20,0.98) 30%)"}}>
         {/* ── Floating tool shortcuts ── */}
         <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
           <div style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none"}}>
