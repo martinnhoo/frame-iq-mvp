@@ -273,7 +273,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .select("hook_type, hook_score, platform, created_at")
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
       (supabase as any).from("user_ai_profile")
-        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated, pain_point")
+        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated")
         .eq("user_id", user.id).maybeSingle(),
       (supabase as any).from("daily_snapshots")
         .select("date, total_spend, avg_ctr, active_ads, winners_count, losers_count, ai_insight")

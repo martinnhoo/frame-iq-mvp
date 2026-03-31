@@ -167,11 +167,12 @@ export default function DashboardLayout() {
       (supabase as any).from("telegram_connections").select("chat_id,telegram_username,active")
         .eq("user_id", session.user.id).eq("active", true).maybeSingle()
         .then(({ data }: any) => { if (mounted) setTelegramConn(data || null); });
-      // Load ai_profile for tool pre-fill
+      // Load ai_profile for tool pre-fill — select only base columns that always exist
+      // pain_point/avg_hook_score/creative_style may not exist yet if migration hasn't run
       (supabase as any).from("user_ai_profile")
-        .select("industry, pain_point, avg_hook_score, creative_style")
+        .select("industry, ai_summary, top_performing_models, best_platforms")
         .eq("user_id", session.user.id).maybeSingle()
-        .then(({ data }: any) => { if (mounted) setAiProfile(data || null); });
+        .then(({ data, error }: any) => { if (mounted && !error) setAiProfile(data || null); });
       if (profileData && mounted) {
         // Test account: reset onboarding every login
         const TEST_EMAIL = "testadbrief@yopmail.com";
