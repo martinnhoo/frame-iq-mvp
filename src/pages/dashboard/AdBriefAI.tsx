@@ -2353,7 +2353,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderTopColor:"rgba(255,255,255,0.16)",borderRadius:14,padding:"11px 14px",color:"#fff",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.5,minHeight:46,maxHeight:120,boxShadow:"inset 0 2px 6px rgba(0,0,0,0.3)"}} className="chat-textarea"
+              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"12px 16px",color:"#fff",fontSize:14,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:46,maxHeight:120,transition:"border-color 0.2s"}} className="chat-textarea"
               onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
               onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
               onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
