@@ -1548,7 +1548,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      platform_connections_safe: {
+        Row: {
+          ad_accounts: Json | null
+          connected_at: string | null
+          connection_label: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          persona_id: string | null
+          platform: string | null
+          selected_account_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ad_accounts?: Json | null
+          connected_at?: string | null
+          connection_label?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          persona_id?: string | null
+          platform?: string | null
+          selected_account_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ad_accounts?: Json | null
+          connected_at?: string | null
+          connection_label?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          persona_id?: string | null
+          platform?: string | null
+          selected_account_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       adbrief_invoke_function: {
