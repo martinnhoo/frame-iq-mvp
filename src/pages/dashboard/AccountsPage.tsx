@@ -468,6 +468,7 @@ export default function AccountsPage() {
   };
 
   const load = async () => {
+    if (!user?.id) { setLoading(false); return; }
     const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
     setAccounts((data || []) as Account[]);
     setLoading(false);
@@ -478,7 +479,7 @@ export default function AccountsPage() {
 
   useEffect(() => {
     load();
-  }, [user.id]);
+  }, [user?.id]);
 
   const deleteAccount = async (id: string) => {
     if (!confirm(t.delete_confirm)) return;
