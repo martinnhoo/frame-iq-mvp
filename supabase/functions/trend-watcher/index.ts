@@ -45,6 +45,14 @@ function toKey(term: string): string {
     .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/, "").slice(0, 60);
 }
 
+// Check if two terms are near-duplicates (same key or 80%+ overlap)
+function isSimilarKey(a: string, b: string): boolean {
+  if (a === b) return true;
+  // Remove common words for comparison
+  const clean = (s: string) => s.replace(/_?(brasil|hoje|viral|trending|trends|meme|memes|tiktok|top|em_alta|no_momento|da_internet|do_momento)_?/g, "_").replace(/^_|_$/g, "");
+  return clean(a) === clean(b);
+}
+
 async function fetchGoogleTrends(geo = "BR") {
   // Try multiple approaches — Google Trends RSS sometimes blocks server-side
   const urls = [
@@ -265,20 +273,30 @@ async function analyzeTrend(term: string, sources: string[]): Promise<{angle: st
 
 function computeRelevanceScore(trend: Record<string, any>, baseline: Record<string, any> | null): number {
   let score = 0;
-  const p75 = baseline?.p75 || 60;
-  const p90 = baseline?.p90 || 80;
+  // Use actual baseline or reasonable defaults for Brave Search volumes (50-70 range)
+  const p75 = baseline?.p75 || 55;
+  const p90 = baseline?.p90 || 65;
+
+  // Volume score — calibrated for real Brave Search output
   if (trend.last_volume >= p90) score += 40;
-  else if (trend.last_volume >= p75) score += 25;
-  else if (trend.last_volume >= 50) score += 15;
+  else if (trend.last_volume >= p75) score += 28;
+  else if (trend.last_volume >= 45) score += 15;
   else score += 5;
+
+  // Longevity — most valuable signal
   if (trend.days_active >= 5) score += 30;
-  else if (trend.days_active >= 3) score += 20;
-  else if (trend.days_active >= 2) score += 12;
-  else score += 5;
+  else if (trend.days_active >= 3) score += 22;
+  else if (trend.days_active >= 2) score += 14;
+  else score += 6; // day 1 still gets some score
+
+  // Return appearances — trend durability
   if (trend.appearances >= 4) score += 20;
-  else if (trend.appearances >= 2) score += 12;
-  if (trend.peak_volume >= 90) score += 10;
-  else if (trend.peak_volume >= 70) score += 6;
+  else if (trend.appearances >= 2) score += 14;
+  else score += 4; // first appearance still counts
+
+  // Peak bonus — trend with high peak relative to current
+  if (trend.peak_volume >= p90) score += 8;
+
   return Math.min(score, 100);
 }
 
@@ -305,8 +323,8 @@ Deno.serve(async (req) => {
       const { data: baseline } = await sb.from("trend_platform_baseline")
         .select("p75_volume,p90_volume").eq("geo", geo)
         .order("week_start", { ascending: false }).limit(1).maybeSingle();
-      const p75 = baseline?.p75_volume || 60;
-      const p90 = baseline?.p90_volume || 80;
+      const p75 = baseline?.p75_volume || 55;
+      const p90 = baseline?.p90_volume || 65;
       const scored = (trends || []).map(t => ({
         ...t, relevance_score: computeRelevanceScore(t, { p75, p90 })
       })).sort((a, b) => b.relevance_score - a.relevance_score);
@@ -364,6 +382,7 @@ Deno.serve(async (req) => {
 
     const today = new Date().toISOString().slice(0, 10);
     const results = [];
+    const processedKeys: string[] = []; // dedup within this run
 
     // Mark old as inactive
     await sb.from("trend_intelligence").update({ is_active: false })
@@ -373,6 +392,12 @@ Deno.serve(async (req) => {
     for (const { term, volume, position } of googleTrends) {
       if (isBlocked(term)) continue;
       const key = toKey(term);
+      // Skip near-duplicates within same run
+      if (processedKeys.some(k => isSimilarKey(k, key))) {
+        console.log(`[trend-watcher] Skipping near-duplicate: "${term}"`);
+        continue;
+      }
+      processedKeys.push(key);
       const now = new Date().toISOString();
       const { data: existing } = await sb.from("trend_intelligence").select("*").eq("term_key", key).maybeSingle();
       const { data: todayVol } = await sb.from("trend_daily_volumes").select("id").eq("term_key", key).eq("date", today).maybeSingle();
