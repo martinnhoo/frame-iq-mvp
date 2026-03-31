@@ -179,7 +179,13 @@ export default function PerformanceDashboard() {
       setData(res.data);
       setLastUpdated(new Date());
     }catch(e){
-      setError(String(e));
+      const msg = String(e);
+      // Hide technical CORS/network errors — show friendly message instead
+      if(msg.includes("CORS")||msg.includes("fetch")||msg.includes("network")||msg.includes("ERR_")){
+        setError("__connection__");
+      } else {
+        setError(msg);
+      }
     }finally{
       setLoading(false);
       setRefreshing(false);
@@ -275,23 +281,43 @@ export default function PerformanceDashboard() {
         </div>
       </div>
 
-      {/* Error */}
-      {error&&!loading&&(
-        <div style={{display:"flex",gap:10,padding:"14px 18px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,marginBottom:24}}>
-          <AlertCircle size={16} color={RED} style={{flexShrink:0,marginTop:1}}/>
-          <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
+      {/* No persona selected */}
+      {!selectedPersona&&!loading&&(
+        <div style={{textAlign:"center",padding:"80px 20px"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🏢</div>
+          <h3 style={{color:TX,fontSize:20,fontWeight:700,margin:"0 0 8px"}}>
+            {language==="es"?"Selecciona una cuenta":language==="pt"?"Selecione uma conta":"Select an account"}
+          </h3>
+          <p style={{color:MT,fontSize:14,margin:"0 0 24px",maxWidth:360,marginInline:"auto",lineHeight:1.6}}>
+            {language==="es"?"Elige la cuenta que quieres ver en el panel de performance.":language==="pt"?"Escolha a conta que quer visualizar no painel de performance.":"Choose the account you want to view in the performance dashboard."}
+          </p>
+          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 20px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
+            {language==="es"?"Ver cuentas":language==="pt"?"Ver contas":"View accounts"}
+          </button>
         </div>
       )}
 
-      {/* No connections */}
-      {noConnections&&(
-        <div style={{textAlign:"center",padding:"80px 0"}}>
-          <div style={{fontSize:48,marginBottom:16}}>📊</div>
-          <h3 style={{color:TX,fontSize:20,fontWeight:700,margin:"0 0 8px"}}>Nenhuma conta conectada</h3>
-          <p style={{color:MT,fontSize:14,margin:"0 0 24px"}}>Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.</p>
+      {/* Error — connection issue */}
+      {error==="__connection__"&&!loading&&(
+        <div style={{textAlign:"center",padding:"80px 20px"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🔌</div>
+          <h3 style={{color:TX,fontSize:20,fontWeight:700,margin:"0 0 8px"}}>
+            {language==="es"?"Sin conexión con la cuenta":language==="pt"?"Sem conexão com a conta":"No connection to account"}
+          </h3>
+          <p style={{color:MT,fontSize:14,margin:"0 0 24px",maxWidth:380,marginInline:"auto",lineHeight:1.6}}>
+            {language==="es"?"Conecta Meta Ads o Google Ads para ver tus datos en tiempo real.":language==="pt"?"Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.":"Connect Meta Ads or Google Ads to see your real-time data."}
+          </p>
           <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 20px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
-            Conectar conta
+            {language==="es"?"Conectar cuenta":language==="pt"?"Conectar conta":"Connect account"}
           </button>
+        </div>
+      )}
+
+      {/* Error — technical */}
+      {error&&error!=="__connection__"&&!loading&&(
+        <div style={{display:"flex",gap:10,padding:"14px 18px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,marginBottom:24}}>
+          <AlertCircle size={16} color={RED} style={{flexShrink:0,marginTop:1}}/>
+          <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
         </div>
       )}
 
