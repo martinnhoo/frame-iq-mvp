@@ -3,4 +3,4 @@ import App from "./App.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
-// build 7699bfb
+// sync 7699bfb
