@@ -575,7 +575,13 @@ export default function DashboardLayout() {
               style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
             >
               <ErrorBoundary>
-              <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
+              {profile ? (
+                <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 300 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+                </div>
+              )}
               </ErrorBoundary>
             </motion.div>
           </AnimatePresence>
