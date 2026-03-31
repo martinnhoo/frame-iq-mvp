@@ -59,6 +59,12 @@ export default function DashboardOverview() {
   const dt = useDashT(language);
   const [dismissedBanner, setDismissedBanner] = useState(() => localStorage.getItem("frameiq_dismiss_profile_banner") === "1");
   const [isLiteMode, setIsLiteMode] = useState(() => localStorage.getItem("adbrief_mode") === "lite");
+  const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
+  const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
+  const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
+
   function switchToLite() { localStorage.setItem("adbrief_mode", "lite"); setIsLiteMode(true); }
   function switchToPro()  { localStorage.setItem("adbrief_mode", "pro");  setIsLiteMode(false); }
 
@@ -68,12 +74,6 @@ export default function DashboardOverview() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
-
-  const [insights, setInsights] = useState<InsightsData>({ avgHookScore: null, bestModel: null, mostUsedMarket: null, totalAnalyzed: 0 });
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-  const [dateFilter, setDateFilter] = useState<"7d" | "30d" | "all">("30d");
-  const [intelFeed, setIntelFeed] = useState<IntelItem[]>([]);
-  const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
 
   // Auto-trigger Stripe checkout if ?checkout=plan param is present
   useEffect(() => {
