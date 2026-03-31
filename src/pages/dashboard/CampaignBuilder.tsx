@@ -271,7 +271,13 @@ export default function CampaignBuilder() {
           const active=platform===plt.id;
           const connected=connsReady&&isConnected(plt.id);
           return(
-            <button key={plt.id} onClick={()=>{setPlatform(plt.id);setStep(0);setAiMsgs([]);}}
+            <button key={plt.id} onClick={()=>{
+                setPlatform(plt.id);
+                setStep(0);
+                setAiMsgs([]);
+                setError("");
+                setForm(f=>({...f, objective:"", optimization_goal:"", channel_type:"SEARCH"}));
+              }}
               style={{display:"flex",alignItems:"center",gap:9,padding:"13px 20px",border:"none",borderBottom:`2px solid ${active?plt.color:"transparent"}`,background:"transparent",cursor:"pointer",fontFamily:"'DM Sans',system-ui,sans-serif",color:active?plt.color:MT,fontWeight:active?700:500,fontSize:14,transition:"all 0.15s"}}>
               <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",fontFamily:"serif",transition:"background 0.15s"}}>{plt.glyph}</div>
               {plt.label}
@@ -502,9 +508,28 @@ export default function CampaignBuilder() {
                   </div>
                 ))}
               </div>
-              <button onClick={launch} disabled={launching||(connsReady&&!isConnected(platform))}
-                style={{width:"100%",padding:"14px 0",background:!isConnected(platform)||launching?S2:platform==="google"?"linear-gradient(135deg,#4285F4,#34A853)":"linear-gradient(135deg,#0ea5e9,#0891b2)",color:isConnected(platform)?"#fff":MT,borderRadius:12,fontWeight:700,fontSize:15,border:"none",cursor:isConnected(platform)&&!launching?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"'DM Sans',system-ui,sans-serif",transition:"opacity 0.15s"}}>
-                {launching?<><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Criando...</>:<><Rocket size={17}/>Criar campanha pausada</>}
+              <button 
+                onClick={launch} 
+                disabled={launching || !connsReady || !isConnected(platform)}
+                style={{
+                  width:"100%", padding:"14px 0",
+                  background: (!connsReady || !isConnected(platform) || launching)
+                    ? S2
+                    : platform==="google"
+                      ? "linear-gradient(135deg,#4285F4,#34A853)"
+                      : "linear-gradient(135deg,#0ea5e9,#0891b2)",
+                  color: (!connsReady || !isConnected(platform)) ? MT : "#fff",
+                  borderRadius:12, fontWeight:700, fontSize:15, border:"none",
+                  cursor: (connsReady && isConnected(platform) && !launching) ? "pointer" : "not-allowed",
+                  display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+                  fontFamily:"'DM Sans',system-ui,sans-serif", transition:"all 0.15s",
+                }}>
+                {launching
+                  ? <><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Criando...</>
+                  : !connsReady
+                    ? <><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Verificando conexão...</>
+                    : <><Rocket size={17}/>Criar campanha pausada</>
+                }
               </button>
               {connsReady&&!isConnected(platform)&&(
                 <p style={{textAlign:"center",color:AMBER,fontSize:13,margin:"12px 0 0"}}>
