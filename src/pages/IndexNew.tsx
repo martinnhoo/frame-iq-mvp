@@ -3242,7 +3242,7 @@ export default function IndexNew() {
   const descMap: Record<Lang, string> = {
     en: "Connect Meta Ads and ask anything. AdBrief reads your real account data and answers like a senior media buyer — ROAS, hooks, what to pause, what to scale. 3-day free trial.",
     pt: "Conecte o Meta Ads e pergunte qualquer coisa. O AdBrief lê sua conta real e responde como um especialista — ROAS, hooks, o que pausar, o que escalar. Teste grátis por 3 dias.",
-    es: "Conecta Meta Ads y pregunta lo que quieras. AdBrief lee tu cuenta real y responde como un experto — ROAS, hooks, qué pausar, qué escalar. Prueba gratis 1 día.",
+    es: "Conecta Meta Ads y pregunta lo que quieras. AdBrief lee tu cuenta real y responde como un experto — ROAS, hooks, qué pausar, qué escalar. Prueba gratis 3 días.",
   };
 
   if (!ready) return <div style={{ minHeight: "100vh", background: BG }} />;

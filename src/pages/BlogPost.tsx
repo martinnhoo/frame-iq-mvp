@@ -924,7 +924,7 @@ const blogPosts: Record<string, {
       "The smartest teams in 2026 aren't choosing between AI and humans — they're using AI to make their eventual Creative Strategist hire 5x more effective. When you do hire, they'll spend zero time on repetitive research and briefing, and 100% on strategy, ideation, and creative direction.",
       "## The Bottom Line",
       "A 4-week AI test costs $200. A bad hire costs $30K+ in salary, severance, and lost time. Try the AI workflows first. If they solve 80% of your creative strategy needs, you just saved your company $90K/year. If they don't, you'll have a much clearer job description for the Creative Strategist you actually need.",
-      "Start your AI creative strategy test today with AdBrief — free for 14 days, no card required. AdBrief covers [hook scoring](/use-case/hook-score-tool), [script generation](/tools/ad-script-generator), [brief creation](/use-case/video-ad-brief-generator), and [pre-flight checks](/use-case/pre-flight-ad-check).",
+      "Start your AI creative strategy test today with AdBrief — free for 3 days, card required. AdBrief covers [hook scoring](/use-case/hook-score-tool), [script generation](/tools/ad-script-generator), [brief creation](/use-case/video-ad-brief-generator), and [pre-flight checks](/use-case/pre-flight-ad-check).",
     ],
   },
   "ai-replace-full-creative-team": {
@@ -1031,7 +1031,7 @@ const blogPosts: Record<string, {
       "Your ad spend exceeds $500K/month — the strategic decisions at this scale require dedicated human attention. You need brand building — AI handles performance creative, but brand strategy needs human vision. Your team lacks marketing fundamentals — AI amplifies expertise, it doesn't create it from scratch. You're in a highly regulated industry — compliance decisions need human judgment.",
       "## The Smart Play: AI First, Hire Later",
       "Start with AI tools. Use them for 3-6 months. If you hit a ceiling — you're spending $300K+/month, need brand-level strategy, or your AI outputs need too much human polishing — that's when you hire a Creative Strategist. And when you do, they'll be 5x more effective because the AI handles the grunt work.",
-      "Calculate your potential savings: try AdBrief free for 14 days and compare the output to your current creative production.",
+      "Calculate your potential savings: try AdBrief free for 3 days and compare the output to your current creative production.",
     ],
   },
   "signs-you-dont-need-creative-strategist": {
@@ -1062,7 +1062,7 @@ const blogPosts: Record<string, {
       "Most brands hit the 'need a strategist' point when they're spending $100K-200K/month on ads and producing 50+ variations per week. At that scale, the strategic decisions (what to test, what to scale, what to kill) become full-time work that AI can't handle alone.",
       "## Start Here",
       "Run AI creative tools for 3 months. Track your output, ROAS, and the time your team spends on creative. If the numbers work — you've saved $90K/year. If you hit a ceiling, you'll have clear data to write the perfect job description for the Creative Strategist you actually need.",
-      "Try AdBrief free for 14 days — no card required — and see if AI can cover your creative strategy needs. Start with the [hook score tool](/use-case/hook-score-tool), [brief generator](/use-case/video-ad-brief-generator), and [pre-flight check](/use-case/pre-flight-ad-check). creative strategy needs.",
+      "Try AdBrief free for 3 days — card required — and see if AI can cover your creative strategy needs. Start with the [hook score tool](/use-case/hook-score-tool), [brief generator](/use-case/video-ad-brief-generator), and [pre-flight check](/use-case/pre-flight-ad-check). creative strategy needs.",
     ],
   },
 
@@ -1133,7 +1133,7 @@ const blogPosts: Record<string, {
       "## How AdBrief Catches Fatigue Early",
       "AdBrief connects directly to your Meta Ads account and monitors creative performance continuously. Instead of manually checking frequency, hook rate, and CTR trends across every active ad, you ask: 'Which of my ads are showing fatigue signals?' and get a plain-English answer with the specific ads, the signals they're showing, and what to brief next.",
       "The creative brief generation is built directly from your account's historical winners — so the replacement creative has a higher baseline probability of performing.",
-      "Try AdBrief free for 1 day on any plan. Connect your Meta account and ask about creative fatigue in your active campaigns right now.",
+      "Try AdBrief free for 3 days on any plan. Connect your Meta account and ask about creative fatigue in your active campaigns right now.",
       "**Related:** See also: [hook rate metric](/blog/what-is-hook-rate-meta-ads), [creative brief guide](/blog/meta-ads-creative-brief-guide), [ROAS diagnostic](/blog/meta-ads-roas-dropped), and [creative fatigue detection with AdBrief](/use-case/detect-creative-fatigue).",
     ],
   },
@@ -1175,7 +1175,7 @@ const blogPosts: Record<string, {
       "The teams that improve fastest are the ones that document their learnings systematically — not just the wins, but the losses and the why behind them.",
       "## The Faster Version of This Checklist",
       "This entire weekly workflow can be compressed significantly with the right tools. AdBrief connects to your Meta Ads account and lets you run through the entire audit in a single conversation. Ask 'What needs my attention this week?' and get a prioritized breakdown of fatigued creatives, scaling opportunities, and anomalies — in plain English, with the specific ad names and numbers.",
-      "Try AdBrief for 1 day free on any plan. Run your first weekly review in under 10 minutes instead of 2 hours.",
+      "Try AdBrief for 3 days free on any plan. Run your first weekly review in under 10 minutes instead of 2 hours.",
       "**Related:** See also: [creative fatigue signals](/blog/creative-fatigue-meta-ads), [hook rate tracking](/blog/what-is-hook-rate-meta-ads), [brief framework](/blog/meta-ads-creative-brief-guide), and [AdBrief for weekly audits](/use-case/analyze-meta-campaign).",
     ],
   },
@@ -1255,7 +1255,7 @@ const blogPosts: Record<string, {
       "## From Account Data to Brief in Minutes",
       "The brief above requires knowing which of your ads performed best, what made them work, and what's ready to be replaced. Pulling that data manually takes an hour. AdBrief pulls it in seconds.",
       "Connect your Meta Ads account, ask 'What should I brief next based on my account's winners?', and get a structured brief with the hook, creative model, CTA logic, and specific performance data from your own campaigns — not templates.",
-      "Try AdBrief free for 1 day on any plan. Generate your first data-backed brief in under 5 minutes.",
+      "Try AdBrief free for 3 days on any plan. Generate your first data-backed brief in under 5 minutes.",
       "**Related:** See also: [hook writing guide](/blog/how-to-write-meta-ads-hooks), [creative fatigue detection](/blog/creative-fatigue-meta-ads), [weekly checklist](/blog/meta-ads-media-buyer-checklist), and [AdBrief brief generation](/use-case/brief-winning-ads).",
     ],
   },
@@ -1329,7 +1329,7 @@ const blogPosts: Record<string, {
       "## Using Account Data to Scale More Confidently",
       "Scaling decisions are only as good as your understanding of your current account state. Before any scale, you need to know: which creatives have room to grow (low frequency, strong CTR trend), which audiences are close to exhaustion, and what your creative pipeline looks like.",
       "AdBrief connects to your Meta Ads and gives you this picture in seconds. Ask 'Which of my campaigns are ready to scale?' and get a data-backed answer — not a guess.",
-      "Try AdBrief free for 1 day on any plan. Make your next scaling decision with real data behind it.",
+      "Try AdBrief free for 3 days on any plan. Make your next scaling decision with real data behind it.",
       "**Related:** See also: [creative fatigue](/blog/creative-fatigue-meta-ads), [hook rate monitoring](/blog/what-is-hook-rate-meta-ads), [ROAS diagnostic](/blog/meta-ads-roas-dropped), and [scaling with AdBrief](/use-case/scale-meta-ads).",
     ],
   },
@@ -1445,7 +1445,7 @@ const blogPosts: Record<string, {
       "Fix: address any active policy flags. Pause underperforming ads with high negative feedback rates. Build account quality back over 2-4 weeks of clean activity.",
       "## Diagnosing Your CPM Problem Faster",
       "Running through all 7 of these reasons manually takes time. AdBrief connects to your Meta Ads account and can identify which of these factors is driving your CPM issue in a single conversation. Ask 'Why is my CPM rising?' and get a specific answer based on your actual account data — not a generic checklist.",
-      "Try AdBrief free for 1 day on any plan. Diagnose your CPM problem in under 10 minutes.",
+      "Try AdBrief free for 3 days on any plan. Diagnose your CPM problem in under 10 minutes.",
       "**Related:** See also: [creative fatigue](/blog/creative-fatigue-meta-ads), [ROAS drop guide](/blog/meta-ads-roas-dropped), [scaling guide](/blog/meta-ads-scaling-guide), and [CPM reduction with AdBrief](/use-case/reduce-cpm).",
     ],
   },
@@ -1898,11 +1898,11 @@ const BlogPost = () => {
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.description} />
         <meta property="og:type" content="article" />
-        <meta property="og:image" content={`${baseUrl}/logo.png`} />
+        <meta property="og:image" content={`${baseUrl}/og-image.png`} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
         <meta name="twitter:description" content={post.description} />
-        <meta name="twitter:image" content={`${baseUrl}/logo.png`} />
+        <meta name="twitter:image" content={`${baseUrl}/og-image.png`} />
         <link rel="canonical" href={`${baseUrl}/blog/${slug}`} />
         <link rel="alternate" hrefLang="en" href={`${baseUrl}/blog/${slug}`} />
         <link rel="alternate" hrefLang="es" href={`${baseUrl}/blog/${slug}?lang=es`} />

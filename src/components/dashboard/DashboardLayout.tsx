@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +108,7 @@ export default function DashboardLayout() {
   const [welcomeMsg, setWelcomeMsg] = useState<{ title: string; body: string } | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  // checkout success detection uses window.location directly (inside init callback)
 
   const setSelectedPersona = (p: ActivePersona | null) => {
     setSelectedPersonaState(p);
@@ -262,6 +264,24 @@ export default function DashboardLayout() {
         setWelcomeMsg({ title: popup.title, body: popup.body });
         setVikaPopup(true);
         localStorage.setItem(popup.key, "1");
+      }
+      // Checkout success — show toast once and clean the URL param
+      const checkoutResult = new URLSearchParams(window.location.search).get("checkout");
+      if (checkoutResult === "success") {
+        const planName = profileData?.plan
+          ? profileData.plan.charAt(0).toUpperCase() + profileData.plan.slice(1)
+          : "";
+        const lang = profileData?.preferred_language || localStorage.getItem("adbrief_language") || "pt";
+        const msg = lang === "es"
+          ? `¡Plan ${planName} activado! 3 días gratis — sin cargo hasta el día 4.`
+          : lang === "en"
+          ? `${planName} plan activated! 3 days free — no charge until day 4.`
+          : `Plano ${planName} ativado! 3 dias grátis — sem cobrança até o 4º dia.`;
+        // Remove param from URL without reload
+        const url = new URL(window.location.href);
+        url.searchParams.delete("checkout");
+        window.history.replaceState({}, "", url.toString());
+        setTimeout(() => toast.success(msg, { duration: 6000 }), 800);
       }
       if (mounted) setLoading(false);
     };
