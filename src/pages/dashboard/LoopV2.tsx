@@ -500,6 +500,7 @@ export default function LoopV2() {
   const suggestions = hasData && pulse ? SUGGESTIONS_WITH_DATA_BY_LANG(pulse, language) : (SUGGESTIONS_EMPTY_BY_LANG[language] || SUGGESTIONS_EMPTY_BY_LANG["en"]);
 
   const loadPulse = useCallback(async () => {
+    if (!user?.id) return null;
     try {
       const [{ data: analyses }, { data: imp }, { data: conns }] = await Promise.all([
         supabase.from("analyses").select("id, created_at, result, hook_strength, status, title")
@@ -539,7 +540,7 @@ export default function LoopV2() {
       return newPulse;
     } catch (e) { console.error(e); return null; }
     finally { setLoading(false); }
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadPulse().then(p => {
