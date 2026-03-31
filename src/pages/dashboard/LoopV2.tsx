@@ -138,7 +138,7 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
     const toolIcons: Record<string, string> = {
       hooks: "⚡", script: "✍️", brief: "📋", competitor: "🔍", translate: "🌍", preflight: "🛫",
     };
-    const icon = toolIcons[block.tool_name || ""] || "✦";
+    const icon = toolIcons[block.tool_name || ""] || null;
     return (
       <div style={{ borderRadius: 14, border: `1px solid ${GREEN}25`, background: `linear-gradient(135deg, ${GREEN}06 0%, rgba(13,15,24,0.95) 100%)`, overflow: "hidden", marginBottom: 8 }}>
         {/* Tool result header */}
@@ -440,7 +440,7 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
       {/* Greeting line */}
       <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <span style={{ fontSize: 14 }}>✦</span>
+          <div style={{width:22,height:22,borderRadius:6,overflow:"hidden",background:"#0a0c10"}}><img src="/ab-avatar.png" alt="AB" width={22} height={22} style={{width:22,height:22,objectFit:"cover",display:"block"}}/></div>
         </div>
         <p style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.7)", margin: 0 }}>
           {hasData ? "Your account is connected. Ask me anything." : "What do you want to know about your ads?"}
@@ -1114,7 +1114,7 @@ export default function LoopV2() {
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   {/* Avatar */}
                   <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1, background: "linear-gradient(135deg, rgba(14,165,233,0.18), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                    {msg.loading ? <Loader2 size={11} color={BLUE} className="animate-spin" /> : "✦"}
+                    {msg.loading ? <Loader2 size={11} color={BLUE} className="animate-spin" /> : <img src="/ab-avatar.png" alt="AB" width={14} height={14} style={{borderRadius:3,objectFit:"cover"}}/>}
                   </div>
                   <div style={{ flex: 1 }}>
                     {msg.loading ? (

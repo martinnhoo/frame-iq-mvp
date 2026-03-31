@@ -1885,7 +1885,9 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
         <div style={{ padding:'14px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           {/* Left: AdBrief + account */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:30, height:30, borderRadius:9, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>✦</div>
+            <div style={{ width:30, height:30, borderRadius:9, overflow:'hidden', flexShrink:0, background:'#0a0c10' }}>
+                <img src="/ab-avatar.png" alt="AdBrief" width={30} height={30} style={{ width:30, height:30, objectFit:'cover', display:'block' }} />
+              </div>
             <div>
               <div style={{ fontFamily:F, fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.2 }}>AdBrief</div>
               <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{sampleLabel} · {scene.account}</div>
@@ -1936,7 +1938,9 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
 
           {/* AI response card — the hero */}
           <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-            <div style={{ width:28, height:28, borderRadius:8, background:'linear-gradient(135deg,#0ea5e9,#0284c7)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0, marginTop:1 }}>✦</div>
+            <div style={{ width:28, height:28, borderRadius:8, overflow:'hidden', flexShrink:0, marginTop:1, background:'#0a0c10' }}>
+              <img src="/ab-avatar.png" alt="AdBrief" width={28} height={28} style={{ width:28, height:28, objectFit:'cover', display:'block' }} />
+            </div>
             <div style={{ flex:1 }}>
 
               {/* Big result number — the first thing eyes go to */}
