@@ -1223,11 +1223,27 @@ export default function LoopV2() {
       )}
 
       {/* ── Input ── */}
-      <div className="loop-input-area" style={{ padding: "10px 16px 12px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
+      <div className="loop-input-area" style={{ padding: "12px 16px 14px", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "max(14px, env(safe-area-inset-bottom))", position: "relative", zIndex: 2, background: "linear-gradient(180deg, rgba(11,14,26,0.95) 0%, rgba(8,11,20,1) 100%)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
         <div style={{ maxWidth: 740, margin: "0 auto", width: "100%" }}>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "11px 14px 9px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.4)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.06)"; }}
-            onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.09)"; el.style.boxShadow = "none"; }}>
+          {/* Tool actions bar — above input */}
+          <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
+              <button key={t.action} onClick={() => handleToolAction(t.action)}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.15s" }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${t.color}35`; el.style.color = t.color; el.style.background = `${t.color}0c`; el.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "rgba(255,255,255,0.03)"; el.style.transform = "translateY(0)"; }}>
+                <t.icon size={12} strokeWidth={1.8} /> {t.label}
+              </button>
+            ))}
+            <span className="hidden lg:inline" style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginLeft: "auto", fontFamily: F }}>
+              {dt("loop_enter_to_send")}
+            </span>
+          </div>
+
+          {/* Input container */}
+          <div style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "12px 14px 10px", display: "flex", gap: 10, alignItems: "flex-end", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: "0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)" }}
+            onFocusCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(14,165,233,0.35)"; el.style.boxShadow = "0 0 0 3px rgba(14,165,233,0.06), 0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
+            onBlurCapture={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.boxShadow = "0 -4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"; }}>
             <textarea
               ref={inputRef}
               value={input}
@@ -1236,25 +1252,12 @@ export default function LoopV2() {
               placeholder={selectedPersona ? `Ask about ${selectedPersona.name}...` : (dt("loop_placeholder") || "Ask anything about your campaigns...")}
               rows={1}
               autoFocus
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.65, maxHeight: 140, overflowY: "auto", fontFamily: F, caretColor: BLUE }}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", resize: "none", color: "#fff", fontSize: 14, lineHeight: 1.7, maxHeight: 140, overflowY: "auto", fontFamily: F, caretColor: BLUE, letterSpacing: "-0.01em" }}
             />
             <button onClick={() => send(input)} disabled={!input.trim() || sending}
-              style={{ width: 32, height: 32, borderRadius: 10, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.05)", border: "none", cursor: input.trim() && !sending ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s", transform: input.trim() && !sending ? "scale(1)" : "scale(0.93)" }}>
-              {sending ? <Loader2 size={13} color="rgba(255,255,255,0.5)" className="animate-spin" /> : <Send size={13} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
+              style={{ width: 34, height: 34, borderRadius: 10, background: input.trim() && !sending ? `linear-gradient(135deg,${BLUE},${TEAL})` : "rgba(255,255,255,0.05)", border: "none", cursor: input.trim() && !sending ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)", transform: input.trim() && !sending ? "scale(1)" : "scale(0.9)", boxShadow: input.trim() && !sending ? "0 2px 12px rgba(14,165,233,0.25)" : "none" }}>
+              {sending ? <Loader2 size={14} color="rgba(255,255,255,0.5)" className="animate-spin" /> : <Send size={14} color={input.trim() ? "#000" : "rgba(255,255,255,0.2)"} />}
             </button>
-          </div>
-
-          {/* Tool actions — only non-connect tools */}
-          <div className="loop-tool-pills" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-            {(TOOLS_BY_LANG[language] || TOOLS_BY_LANG["en"]).map(t => (
-              <button key={t.action} onClick={() => handleToolAction(t.action)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer", fontFamily: F, transition: "all 0.1s" }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${t.color}40`; el.style.color = t.color; el.style.background = `${t.color}0a`; }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.color = "rgba(255,255,255,0.45)"; el.style.background = "transparent"; }}>
-                <t.icon size={11} /> {t.label}
-              </button>
-            ))}
-            <span className="hidden lg:inline" style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>{dt("loop_enter_to_send")}</span>
           </div>
         </div>
       </div>
