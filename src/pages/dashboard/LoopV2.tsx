@@ -471,19 +471,12 @@ function SuggestionBubble({ suggestions, onSend, hasData, dt }: {
 
 export default function LoopV2() {
   const { user, selectedPersona, profile } = useOutletContext<DashboardContext>();
-
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [feedback, setFeedback] = useState<Record<number, 'like' | 'dislike' | null>>({});
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-   const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
-   const navigate = useNavigate();
+  const [userPrefs, setUserPrefs] = useState<{ liked: string[]; disliked: string[] }>({ liked: [], disliked: [] });
+  const navigate = useNavigate();
 
   const [pulse, setPulse] = useState<AccountPulse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -507,6 +500,7 @@ export default function LoopV2() {
   const suggestions = hasData && pulse ? SUGGESTIONS_WITH_DATA_BY_LANG(pulse, language) : (SUGGESTIONS_EMPTY_BY_LANG[language] || SUGGESTIONS_EMPTY_BY_LANG["en"]);
 
   const loadPulse = useCallback(async () => {
+    if (!user?.id) return null;
     try {
       const [{ data: analyses }, { data: imp }, { data: conns }] = await Promise.all([
         supabase.from("analyses").select("id, created_at, result, hook_strength, status, title")
@@ -546,7 +540,7 @@ export default function LoopV2() {
       return newPulse;
     } catch (e) { console.error(e); return null; }
     finally { setLoading(false); }
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     loadPulse().then(p => {
@@ -593,6 +587,7 @@ export default function LoopV2() {
 
   // Realtime
   useEffect(() => {
+    if (!user?.id) return;
     const channel = supabase.channel("loop_realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "analyses", filter: `user_id=eq.${user.id}` },
         async () => {
@@ -600,16 +595,23 @@ export default function LoopV2() {
           if (newPulse) {
             setMessages(prev => [...prev, {
               role: "assistant" as const,
-              blocks: [{ type: "insight" as const, title: "", content: `New analysis detected — ${newPulse.totalAnalyses} total${newPulse.avgHookScore ? `, avg ${newPulse.avgHookScore.toFixed(1)}/10` : ""}. Want me to review it?` }],
+              blocks: [{ type: "insight" as const, title: "", content: `New analysis detected \u2014 ${newPulse.totalAnalyses} total${newPulse.avgHookScore ? `, avg ${newPulse.avgHookScore.toFixed(1)}/10` : ""}. Want me to review it?` }],
               ts: Date.now(),
             }]);
           }
         })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user.id, loadPulse]);
+  }, [user?.id, loadPulse]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
   const buildRichContext = async (): Promise<string> => {
     try {
