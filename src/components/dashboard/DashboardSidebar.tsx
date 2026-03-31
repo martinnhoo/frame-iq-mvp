@@ -188,14 +188,14 @@ export function DashboardSidebar({
               el.style.color = "rgba(255,255,255,0.52)";
             }
           }}>
-          {/* Animated left bar */}
+          {/* Animated left bar — thin, subtle */}
           <div style={{
             position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
-            width: 3, borderRadius: "0 2px 2px 0",
-            height: active ? 20 : 0,
-            background: `linear-gradient(180deg, ${accent}, ${accent}88)`,
+            width: 2, borderRadius: "0 2px 2px 0",
+            height: active ? 14 : 0,
+            background: "#0ea5e9",
             transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)",
-            boxShadow: active ? `0 0 8px ${accent}60` : "none",
+            boxShadow: active ? "0 0 6px rgba(14,165,233,0.5)" : "none",
           }} />
           <span style={{ flex: 1 }}>{label}</span>
           {opts?.badge && !opts?.soon && (
@@ -236,7 +236,7 @@ export function DashboardSidebar({
       <button onClick={() => setOpen(!isOpen)}
         style={{
           width: "calc(100% - 16px)", display: "flex", alignItems: "center",
-          padding: "7px 14px 7px 18px", borderRadius: 7, margin: "1px 8px",
+          padding: "7px 14px 7px 22px", borderRadius: 7, margin: "1px 8px",
           background: "transparent", border: "none", cursor: "pointer",
           fontFamily: F, transition: "background 0.15s",
         }}
@@ -277,14 +277,11 @@ export function DashboardSidebar({
           onMouseEnter={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.045)"; el.style.color = "rgba(255,255,255,0.82)"; }}}
           onMouseLeave={e => { if (!isAccountsActive) { const el = e.currentTarget as HTMLElement; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.52)"; }}}>
           {/* Left bar */}
-          <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 3, borderRadius: "0 2px 2px 0", height: isAccountsActive ? 20 : 0, background: `linear-gradient(180deg, ${accent}, ${accent}88)`, transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: isAccountsActive ? `0 0 8px ${accent}60` : "none" }} />
-          {/* Account logo avatar — small, no truncated name */}
-          {selectedPersona ? (
-            <div style={{ width: 16, height: 16, borderRadius: 4, overflow: "hidden", flexShrink: 0, background: `${accent}25`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {selectedPersona.logo_url
-                ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 8, fontWeight: 800, color: accent }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
-              }
+          <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 2, borderRadius: "0 2px 2px 0", height: isAccountsActive ? 14 : 0, background: "#0ea5e9", transition: "height 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: isAccountsActive ? "0 0 6px rgba(14,165,233,0.5)" : "none" }} />
+          {/* Avatar só se tiver logo real */}
+          {selectedPersona?.logo_url ? (
+            <div style={{ width: 16, height: 16, borderRadius: 4, overflow: "hidden", flexShrink: 0 }}>
+              <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           ) : null}
           <span style={{ flex: 1 }}>{pt ? "Contas" : es ? "Cuentas" : "Accounts"}</span>
@@ -391,7 +388,6 @@ export function DashboardSidebar({
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.13)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "rgba(14,165,233,0.08)"; }}>
               {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
-              <span style={{ fontSize: 9, fontWeight: 700, color: "#38bdf8", background: "rgba(14,165,233,0.15)", borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em", opacity: 0.8 }}>NOVO</span>
             </NavLink>
           </div>
 
@@ -399,7 +395,7 @@ export function DashboardSidebar({
           {accountsItem()}
 
           {/* Divider */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "10px 18px 8px" }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "14px 18px 10px" }} />
 
           {collapsibleSection(
             pt ? "Análise" : es ? "Análisis" : "Analytics",
@@ -441,6 +437,8 @@ export function DashboardSidebar({
           )}
 
           <LanguageSwitcher direction="up" />
+
+          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "2px 0" }} />
 
           {/* Profile */}
           <button onClick={() => onOpenProfile?.()}
