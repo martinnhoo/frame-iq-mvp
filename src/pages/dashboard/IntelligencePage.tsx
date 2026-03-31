@@ -113,27 +113,25 @@ export default function IntelligencePage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const load = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const [mR, eR, pR, aR] = await Promise.all([
+        (supabase as any).from("chat_memory").select("id,memory_text,memory_type,importance,created_at").eq("user_id", user.id).order("importance", { ascending: false }).limit(25),
+        (supabase as any).from("chat_examples").select("id,user_message,quality_score,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        (supabase as any).from("learned_patterns").select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner").eq("user_id", user.id).order("confidence", { ascending: false }).limit(15),
+        (supabase as any).from("ai_action_log").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+      setMemories(mR.data || []);
+      setExamples(eR.data || []);
+      setPatterns(pR.data || []);
+      setActionCount(aR.count || 0);
+    } finally { setLoading(false); }
+  };
+
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!user?.id) return;
-      setLoading(true);
-      try {
-        const [mR, eR, pR, aR] = await Promise.all([
-          (supabase as any).from("chat_memory").select("id,memory_text,memory_type,importance,created_at").eq("user_id", user.id).order("importance", { ascending: false }).limit(25),
-          (supabase as any).from("chat_examples").select("id,user_message,quality_score,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-          (supabase as any).from("learned_patterns").select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner").eq("user_id", user.id).order("confidence", { ascending: false }).limit(15),
-          (supabase as any).from("ai_action_log").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        ]);
-        if (!mounted) return;
-        setMemories(mR.data || []);
-        setExamples(eR.data || []);
-        setPatterns(pR.data || []);
-        setActionCount(aR.count || 0);
-      } finally { if (mounted) setLoading(false); }
-    };
     load();
-    return () => { mounted = false; };
   }, [user?.id, selectedPersona?.id]);
 
   const deleteMemory = async (id: string) => {

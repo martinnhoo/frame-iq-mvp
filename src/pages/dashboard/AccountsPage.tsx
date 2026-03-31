@@ -460,19 +460,17 @@ export default function AccountsPage() {
     setSelectedPersona(acc ? { ...acc } as any : null);
   };
 
+  const load = async () => {
+    const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
+    setAccounts((data || []) as Account[]);
+    setLoading(false);
+    if (data?.length && !selectedPersona) {
+      setSelectedPersona({ ...(data[0] as any) });
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
-      if (!mounted) return;
-      setAccounts((data || []) as Account[]);
-      setLoading(false);
-      if (data?.length && !selectedPersona) {
-        setSelectedPersona({ ...(data[0] as any) });
-      }
-    };
     load();
-    return () => { mounted = false; };
   }, [user.id]);
 
   const deleteAccount = async (id: string) => {
