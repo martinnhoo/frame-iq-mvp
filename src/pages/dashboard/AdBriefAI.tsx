@@ -549,14 +549,23 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
-function ProactiveBlock({ block, lang, onSend }: { block: Block; lang: string; onSend: (s: string) => void }) {
+function ProactiveBlock({ block, lang, onSend, connections }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[] }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
 
+  const hasMeta = connections?.includes("meta");
+  const hasGoogle = connections?.includes("google");
+  const hasData = hasMeta || hasGoogle;
   const quickActions: Record<string, string[]> = {
-    pt: ["Resumo da conta", "Gerar hooks", "Escrever roteiro", "O que pausar?"],
-    es: ["Resumen de cuenta", "Generar hooks", "Escribir guión", "¿Qué pausar?"],
-    en: ["Account summary", "Generate hooks", "Write script", "What to pause?"],
+    pt: hasData
+      ? ["O que pausar agora?", "Gerar hooks vencedores", "Escrever roteiro", "O que escalar?"]
+      : ["Gerar hooks para minha conta", "Escrever roteiro de anúncio", "Analisar concorrente", "Quais trends posso usar?"],
+    es: hasData
+      ? ["¿Qué pausar ahora?", "Generar hooks ganadores", "Escribir guión", "¿Qué escalar?"]
+      : ["Generar hooks para mi cuenta", "Escribir guión de anuncio", "Analizar competidor", "¿Qué trends usar?"],
+    en: hasData
+      ? ["What to pause now?", "Generate winning hooks", "Write a script", "What to scale?"]
+      : ["Generate hooks for my account", "Write an ad script", "Analyze a competitor", "Which trends can I use?"],
   };
   const actions = quickActions[lang] || quickActions.pt;
 
@@ -1164,7 +1173,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
 
 export default function AdBriefAI() {
-  const {user,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
+  const {user,profile,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
@@ -1542,24 +1551,28 @@ export default function AdBriefAI() {
         }
 
       } else {
-        // ── Sem nada conectado — onboarding guiado ────────────────────────────
+        // ── Sem nada conectado — onboarding consultivo ────────────────────────
         const aid = Date.now() + 1;
-        const step1 = lang === "es" ? "Conecta tu cuenta de anuncios" : lang === "pt" ? "Conecte sua conta de anúncios" : "Connect your ad account";
-        const step1sub = lang === "es" ? "Meta Ads o Google Ads — solo tarda 30 segundos" : lang === "pt" ? "Meta Ads ou Google Ads — leva 30 segundos" : "Meta Ads or Google Ads — takes 30 seconds";
-        const step2 = lang === "es" ? "Haz una pregunta" : lang === "pt" ? "Faça uma pergunta" : "Ask a question";
-        const step2sub = lang === "es" ? "'\u00bfQu\u00e9 debo pausar?', '\u00bfQu\u00e9 escalar hoy?'" : lang === "pt" ? "'O que pausar?', 'O que escalar hoje?'" : "'What should I pause?', 'What to scale today?'";
-        const step3 = lang === "es" ? "Recibe análisis real" : lang === "pt" ? "Receba análise real" : "Get real analysis";
-        const step3sub = lang === "es" ? "CTR, spend, creativos, predicciones — de tu cuenta real" : lang === "pt" ? "CTR, spend, criativos, predições — da sua conta real" : "CTR, spend, creatives, predictions — from your real account";
-        const intro = lang === "es" ? "Para darte análisis específicos necesito ver tu cuenta. Sin datos solo puedo dar respuestas genéricas." : lang === "pt" ? "Para te dar análises específicas preciso ver sua conta. Sem dados só consigo respostas genéricas." : "To give you specific insights I need to see your account. Without data I can only give generic answers.";
+        const niche = (selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "";
+        const nicheHint = niche
+          ? (lang === "pt" ? ` Para contas de ${niche}, já sei o que tende a funcionar.`
+           : lang === "es" ? ` Para cuentas de ${niche}, ya sé qué suele funcionar.`
+           : ` For ${niche} accounts, I already know what tends to work.`)
+          : "";
+
+        const intro = lang === "pt"
+          ? `Posso te ajudar com hooks, roteiros, análise de concorrentes e estratégia criativa — mesmo sem dados conectados.${nicheHint} Para análises específicas da sua conta (CTR, ROAS, o que pausar), conecte o Meta Ads ou Google Ads em Contas. Ou me diz o que você está trabalhando agora.`
+          : lang === "es"
+          ? `Puedo ayudarte con hooks, guiones, análisis de competidores y estrategia creativa — incluso sin datos conectados.${nicheHint} Para análisis específicos de tu cuenta (CTR, ROAS, qué pausar), conecta Meta Ads o Google Ads en Cuentas. O dime en qué estás trabajando ahora.`
+          : `I can help with hooks, scripts, competitor analysis and creative strategy — even without connected data.${nicheHint} For specific account analysis (CTR, ROAS, what to pause), connect Meta Ads or Google Ads in Accounts. Or just tell me what you're working on.`;
+
         const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
 
         setMessages([{
           role: "assistant",
           blocks: [
             { type: "insight" as any, title: greetingTitle, content: intro },
-            { type: "navigate" as any, title: `1. ${step1}`, content: step1sub, route: "/dashboard/accounts", cta },
-            { type: "insight" as any, title: `2. ${step2}`, content: step2sub },
-            { type: "insight" as any, title: `3. ${step3}`, content: step3sub },
+            { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads ou Google Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads or Google Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
           ],
           ts: aid, id: aid
         }]);
@@ -1767,7 +1780,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     setLoading(true);
     try{
       const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history}});
+      const aiTonePref = (() => { try { return localStorage.getItem("adbrief_ai_tone") || "direto"; } catch { return "direto"; } })();
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref}}});
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
       if(error) {
@@ -2207,7 +2221,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                   b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
                   b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={async(msg)=>{if(!msg||loading||!contextReady)return;setLoading(true);try{const{data}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history:[...messages].slice(-10).map(m=>({role:m.role,content:(m.blocks||[]).map((b:any)=>b.content||"").join(" ").slice(0,300)})).filter(m=>m.content)}});if(data?.blocks?.length){const aid=Date.now()+1;setMessages(prev=>[...prev,{role:"assistant",blocks:data.blocks,ts:aid,id:aid}]);}}catch(e){console.error("dashboard silent error",e);}finally{setLoading(false);}}}/>:
-                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send}/>:
+                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
                   (b.type as string)==="limit_warning"?(
                     <div key={bi} style={{marginTop:12,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
                       <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
@@ -2276,6 +2290,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* ── Input area ── */}
       <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"rgba(5,7,14,0.9)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",boxShadow:"0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"}}>
         <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
+          {/* Message counter — only for free users */}
+          {(profile?.plan === "free" || !profile?.plan) && (() => {
+            const used = messages.filter(m => m.role === "user").length;
+            const cap = 3;
+            const remaining = Math.max(0, cap - used);
+            const color = remaining === 0 ? "#ef4444" : remaining === 1 ? "#f59e0b" : "rgba(255,255,255,0.25)";
+            return (
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,padding:"3px 2px"}}>
+                <span style={{fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:"'Inter',sans-serif"}}>
+                  {lang==="pt"?"Plano Free":lang==="es"?"Plan Free":"Free plan"}
+                </span>
+                <span style={{fontSize:11,color,fontFamily:"'Inter',sans-serif",fontWeight:remaining===0?700:400}}>
+                  {remaining === 0
+                    ? (lang==="pt"?"Limite diário atingido":lang==="es"?"Límite diario alcanzado":"Daily limit reached")
+                    : (lang==="pt"?`${remaining} de ${cap} mensagens restantes`:lang==="es"?`${remaining} de ${cap} mensajes restantes`:`${remaining} of ${cap} messages left today`)}
+                </span>
+              </div>
+            );
+          })()}
           {/* Input row: [textarea] [clear] [send] */}
           <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
             <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}

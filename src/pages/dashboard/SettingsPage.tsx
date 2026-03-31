@@ -10,14 +10,54 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, LogOut, Shield } from "lucide-react";
+import { Loader2, LogOut, Shield, Brain } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const SettingsPage = () => {
   const { user, profile } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language, setLanguage } = useLanguage();
   const [name, setName] = useState(profile?.name || "");
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [aiTone, setAiTone] = useState<"direto" | "didático" | "técnico">(() => {
+    try { return (localStorage.getItem("adbrief_ai_tone") as any) || "direto"; } catch { return "direto"; }
+  });
+
+  const lang = language as "pt" | "en" | "es";
+  const T = {
+    title:      { pt: "Configurações",      en: "Settings",       es: "Configuración" },
+    subtitle:   { pt: "Gerencie sua conta e preferências.", en: "Manage your account and preferences.", es: "Gestiona tu cuenta y preferencias." },
+    profile:    { pt: "Perfil",             en: "Profile",        es: "Perfil" },
+    profileSub: { pt: "Suas informações pessoais.", en: "Your personal information.", es: "Tu información personal." },
+    fullName:   { pt: "Nome completo",      en: "Full Name",      es: "Nombre completo" },
+    save:       { pt: "Salvar",             en: "Save changes",   es: "Guardar" },
+    plan:       { pt: "Assinatura",         en: "Subscription",   es: "Suscripción" },
+    planSub:    { pt: "Seu plano atual e cobrança.", en: "Your current plan and billing.", es: "Tu plan actual y facturación." },
+    billing:    { pt: "Gerenciar cobrança", en: "Manage billing", es: "Gestionar facturación" },
+    upgrade:    { pt: "Fazer upgrade",      en: "Upgrade plan",   es: "Mejorar plan" },
+    language:   { pt: "Idioma da interface",en: "Interface language", es: "Idioma de la interfaz" },
+    languageSub:{ pt: "Idioma usado no dashboard.", en: "Language used across the dashboard.", es: "Idioma usado en el dashboard." },
+    aiPrefs:    { pt: "Preferências da IA", en: "AI Preferences", es: "Preferencias de IA" },
+    aiPrefsSub: { pt: "Personalize o tom e comportamento do AdBrief AI.", en: "Personalize the tone and behavior of AdBrief AI.", es: "Personaliza el tono y comportamiento del AdBrief AI." },
+    aiToneLbl:  { pt: "Tom das respostas",  en: "Response tone",  es: "Tono de respuestas" },
+    toneDir:    { pt: "Direto",             en: "Direct",         es: "Directo" },
+    toneDid:    { pt: "Didático",           en: "Educational",    es: "Didáctico" },
+    toneTec:    { pt: "Técnico",            en: "Technical",      es: "Técnico" },
+    toneDirSub: { pt: "Respostas curtas e acionáveis.",  en: "Short and actionable responses.",    es: "Respuestas cortas y accionables." },
+    toneDidSub: { pt: "Explica o raciocínio por trás de cada recomendação.", en: "Explains the reasoning behind each recommendation.", es: "Explica el razonamiento detrás de cada recomendación." },
+    toneTecSub: { pt: "Inclui métricas e terminologia de mídia.", en: "Includes metrics and media terminology.", es: "Incluye métricas y terminología de medios." },
+    security:   { pt: "Segurança",          en: "Security",       es: "Seguridad" },
+    signout:    { pt: "Sair",               en: "Sign out",       es: "Cerrar sesión" },
+    support:    { pt: "Suporte & Conta",    en: "Support & Account", es: "Soporte & Cuenta" },
+    supportSub: { pt: "Precisa de ajuda ou quer encerrar sua conta?", en: "Need help or want to close your account?", es: "¿Necesitas ayuda o quieres cerrar tu cuenta?" },
+    contact:    { pt: "Falar com suporte",  en: "Contact support", es: "Contactar soporte" },
+    contactSub: { pt: "Dúvidas, bugs ou qualquer problema", en: "Questions, bugs or any issue", es: "Dudas, bugs o cualquier problema" },
+    deleteAcc:  { pt: "Excluir conta",      en: "Delete account", es: "Eliminar cuenta" },
+    deleteSub:  { pt: "Todos os seus dados serão permanentemente removidos. Para excluir, envie e-mail para", en: "All your data will be permanently removed. To delete, email", es: "Todos tus datos serán eliminados permanentemente. Para eliminar, envía un email a" },
+    deleteWith: { pt: "com o assunto "Excluir minha conta".", en: "with subject "Delete my account".", es: "con asunto "Eliminar mi cuenta"." },
+  };
+  const t = (k: keyof typeof T) => T[k][lang] || T[k]["en"];
 
   const handleBillingPortal = async () => {
     setPortalLoading(true);
@@ -35,17 +75,20 @@ const SettingsPage = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ name: name.trim() })
-      .eq("id", user.id);
-
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ name: name.trim(), preferred_language: language })
+        .eq("id", user.id);
+      if (error) throw error;
+      // Save AI tone preference to localStorage
+      try { localStorage.setItem("adbrief_ai_tone", aiTone); } catch {}
+      toast.success(t("save") + " ✓");
+    } catch {
       toast.error("Falha ao atualizar perfil");
-    } else {
-      toast.success("Perfil atualizado");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleLogout = async () => {
@@ -57,15 +100,15 @@ const SettingsPage = () => {
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account and preferences.</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("subtitle")}</p>
       </div>
 
       {/* Profile */}
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-base">Profile</CardTitle>
-          <CardDescription>Your personal information.</CardDescription>
+          <CardTitle className="text-base">{t("profile")}</CardTitle>
+          <CardDescription>{t("profileSub")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
@@ -85,7 +128,7 @@ const SettingsPage = () => {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("fullName")}</Label>
               <Input
                 id="name"
                 value={name}
@@ -105,7 +148,7 @@ const SettingsPage = () => {
 
           <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0">
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Save changes
+            {t("save")}
           </Button>
         </CardContent>
       </Card>
@@ -113,8 +156,8 @@ const SettingsPage = () => {
       {/* Plan */}
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-base">Subscription</CardTitle>
-          <CardDescription>Your current plan and billing.</CardDescription>
+          <CardTitle className="text-base">{t("plan")}</CardTitle>
+          <CardDescription>{t("planSub")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -136,13 +179,75 @@ const SettingsPage = () => {
           </div>
           {profile?.plan === "free" ? (
             <Button variant="outline" className="border-border" onClick={() => navigate("/pricing")}>
-              Upgrade plan
+              {t("upgrade")}
             </Button>
           ) : (
             <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
-              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : "Gerenciar cobrança"}
+              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : t("billing")}
             </Button>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Language */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base">{t("language")}</CardTitle>
+          <CardDescription>{t("languageSub")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            {([["pt","Português 🇧🇷"],["en","English 🇺🇸"],["es","Español 🇲🇽"]] as const).map(([code, label]) => (
+              <button key={code} onClick={() => setLanguage(code)}
+                style={{
+                  padding: "7px 16px", borderRadius: 8, cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: language === code ? 600 : 400,
+                  background: language === code ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${language === code ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.1)"}`,
+                  color: language === code ? "#0ea5e9" : "rgba(255,255,255,0.55)",
+                  transition: "all 0.15s",
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            {lang === "pt" ? "Salve para aplicar o idioma." : lang === "es" ? "Guarda para aplicar el idioma." : "Save to apply the language change."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* AI Preferences */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            {t("aiPrefs")}
+          </CardTitle>
+          <CardDescription>{t("aiPrefsSub")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="mb-3 block">{t("aiToneLbl")}</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["direto",   t("toneDir"),  t("toneDirSub")] as const,
+                ["didático", t("toneDid"),  t("toneDidSub")] as const,
+                ["técnico",  t("toneTec"),  t("toneTecSub")] as const,
+              ]).map(([val, label, sub]) => (
+                <button key={val} onClick={() => setAiTone(val as any)}
+                  style={{
+                    padding: "10px 12px", borderRadius: 10, cursor: "pointer", textAlign: "left",
+                    background: aiTone === val ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${aiTone === val ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.08)"}`,
+                    transition: "all 0.15s",
+                  }}>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600, color: aiTone === val ? "#0ea5e9" : "rgba(255,255,255,0.7)", margin: "0 0 3px" }}>{label}</p>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.4 }}>{sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -183,13 +288,13 @@ const SettingsPage = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Security
+            {t("security")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button variant="outline" className="border-border" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
-            Sign out
+            {t("signout")}
           </Button>
         </CardContent>
       </Card>
@@ -197,15 +302,15 @@ const SettingsPage = () => {
       {/* Support & Account */}
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-base">Suporte & Conta</CardTitle>
-          <CardDescription>Precisa de ajuda ou quer encerrar sua conta?</CardDescription>
+          <CardTitle className="text-base">{t("support")}</CardTitle>
+          <CardDescription>{t("supportSub")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Support */}
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="text-sm font-medium text-foreground">Falar com suporte</p>
-              <p className="text-xs text-muted-foreground">Dúvidas, bugs ou qualquer problema</p>
+              <p className="text-sm font-medium text-foreground">{t("contact")}</p>
+              <p className="text-xs text-muted-foreground">{t("contactSub")}</p>
             </div>
             <a href="mailto:hello@adbrief.pro?subject=Suporte AdBrief"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
@@ -217,16 +322,14 @@ const SettingsPage = () => {
           <div className="pt-3 border-t border-border">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-destructive">Excluir conta</p>
+                <p className="text-sm font-medium text-destructive">{t("deleteAcc")}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Todos os seus dados serão permanentemente removidos — campanhas, análises, memórias e conexões. Esta ação não pode ser desfeita.
-                  <br />
-                  Para excluir, envie um e-mail para{" "}
+                  {t("deleteSub")}{" "}
                   <a href="mailto:hello@adbrief.pro?subject=Excluir minha conta AdBrief"
                     className="text-destructive underline underline-offset-2">
                     hello@adbrief.pro
                   </a>
-                  {" "}com o assunto <strong>"Excluir minha conta"</strong>.
+                  {" "}{t("deleteWith")}
                 </p>
               </div>
             </div>

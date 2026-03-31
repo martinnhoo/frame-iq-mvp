@@ -491,19 +491,48 @@ export default function PerformanceDashboard() {
 
       {/* Empty states */}
       {!selectedPersona&&!loading&&(
-        <div style={{textAlign:"center",padding:"80px 20px"}}>
-          <div style={{fontSize:48,marginBottom:16}}>🏢</div>
-          <h3 style={{color:TX,fontSize:20,fontWeight:700,margin:"0 0 8px"}}>Selecione uma conta</h3>
-          <p style={{color:MT,fontSize:14,margin:"0 0 24px"}}>Escolha a conta para ver no painel.</p>
-          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 20px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>Ver contas</button>
+        <div style={{textAlign:"center",padding:"60px 20px",maxWidth:480,margin:"0 auto"}}>
+          <div style={{fontSize:42,marginBottom:14}}>📊</div>
+          <h3 style={{color:TX,fontSize:18,fontWeight:700,margin:"0 0 8px"}}>
+            {lang==="pt"?"Selecione uma conta para ver o painel":lang==="es"?"Selecciona una cuenta para ver el panel":"Select an account to view the dashboard"}
+          </h3>
+          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.6}}>
+            {lang==="pt"?"Conecte Meta Ads ou Google Ads e veja CTR, spend, ROAS e fadiga criativa em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads y ve CTR, spend, ROAS y fatiga creativa en tiempo real.":"Connect Meta Ads or Google Ads and see CTR, spend, ROAS and creative fatigue in real time."}
+          </p>
+          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
+            {lang==="pt"?"Conectar conta":lang==="es"?"Conectar cuenta":"Connect account"}
+          </button>
+          {/* Benchmarks preview */}
+          <div style={{marginTop:32,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+            {[
+              {label:lang==="pt"?"CTR médio BR":lang==="es"?"CTR promedio":"Avg CTR",value:"1.2–2.4%",sub:lang==="pt"?"Meta Ads BR":lang==="es"?"Meta Ads":"Meta Ads"},
+              {label:"ROAS",value:"2.5–4x",sub:lang==="pt"?"e-commerce BR":lang==="es"?"e-commerce":"e-commerce"},
+              {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":lang==="es"?"audiencia fría":"cold audience"},
+            ].map(b=>(
+              <div key={b.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px 10px"}}>
+                <div style={{fontSize:10,color:MT,marginBottom:4,fontFamily:F}}>{b.label}</div>
+                <div style={{fontSize:16,fontWeight:700,color:TX,fontFamily:F}}>{b.value}</div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:F}}>{b.sub}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{marginTop:12,fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:F}}>
+            {lang==="pt"?"Benchmarks médios do setor — seus dados reais podem variar":lang==="es"?"Benchmarks promedio del sector — tus datos reales pueden variar":"Industry average benchmarks — your real data may vary"}
+          </p>
         </div>
       )}
       {error==="__connection__"&&!loading&&(
-        <div style={{textAlign:"center",padding:"80px 20px"}}>
-          <div style={{fontSize:48,marginBottom:16}}>🔌</div>
-          <h3 style={{color:TX,fontSize:20,fontWeight:700,margin:"0 0 8px"}}>Sem conexão com a conta</h3>
-          <p style={{color:MT,fontSize:14,margin:"0 0 24px",maxWidth:360,marginInline:"auto"}}>Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.</p>
-          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 20px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>Conectar conta</button>
+        <div style={{textAlign:"center",padding:"60px 20px",maxWidth:420,margin:"0 auto"}}>
+          <div style={{fontSize:42,marginBottom:14}}>🔌</div>
+          <h3 style={{color:TX,fontSize:18,fontWeight:700,margin:"0 0 8px"}}>
+            {lang==="pt"?"Sem conexão com a conta":lang==="es"?"Sin conexión con la cuenta":"No account connection"}
+          </h3>
+          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.6,maxWidth:360,marginInline:"auto"}}>
+            {lang==="pt"?"Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads para ver tus datos en tiempo real.":"Connect Meta Ads or Google Ads to see your data in real time."}
+          </p>
+          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
+            {lang==="pt"?"Conectar conta":lang==="es"?"Conectar cuenta":"Connect account"}
+          </button>
         </div>
       )}
       {error&&error!=="__connection__"&&!loading&&(

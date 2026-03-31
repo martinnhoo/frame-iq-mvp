@@ -549,7 +549,7 @@ Deno.serve(async (req) => {
       (supabase as any).from("trend_intelligence")
         .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,peak_volume")
         .eq("is_active", true).eq("is_blocked", false).lt("risk_score", 7)
-        .order("last_volume", { ascending: false }).limit(5)
+        .order("last_volume", { ascending: false }).limit(10)
         .then((r: any) => r.error ? { data: [] } : r),
       // 16. Trend baseline
       (supabase as any).from("trend_platform_baseline")
@@ -666,15 +666,28 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     try {
       const trendsData = (activeTrends || []) as any[];
       if (trendsData.length > 0) {
-        const p75 = (trendBaseline as any)?.p75_volume || 60;
-        const p90 = (trendBaseline as any)?.p90_volume || 80;
+        // Use calibrated defaults for Brave Search volumes (50-70 range)
+        // Matches the scoring in trend-watcher/index.ts
+        const p75 = (trendBaseline as any)?.p75_volume || 55;
+        const p90 = (trendBaseline as any)?.p90_volume || 65;
         const scored = trendsData.map((t: any) => {
           let score = 0;
+          // Volume score — calibrated for Brave Search output
           if (t.last_volume >= p90) score += 40;
-          else if (t.last_volume >= p75) score += 20;
-          if (t.days_active >= 3) score += 20;
-          if (t.appearances > 1) score += 20;
-          if (t.peak_volume > t.last_volume * 1.3) score += 10;
+          else if (t.last_volume >= p75) score += 28;
+          else if (t.last_volume >= 45) score += 15;
+          else score += 5;
+          // Longevity — most valuable signal
+          if (t.days_active >= 5) score += 30;
+          else if (t.days_active >= 3) score += 22;
+          else if (t.days_active >= 2) score += 14;
+          else score += 6; // day 1 still counts
+          // Return appearances — trend durability
+          if (t.appearances >= 4) score += 20;
+          else if (t.appearances >= 2) score += 14;
+          else score += 4;
+          // Peak bonus
+          if (t.peak_volume >= p90) score += 8;
           return { ...t, relevance_score: Math.min(score, 100) };
         }).sort((a: any, b: any) => b.relevance_score - a.relevance_score);
         trendContext = `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
@@ -682,7 +695,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           scored.map((t: any) =>
             `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
             (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
-            (t.days_active > 2 ? ` | ${t.days_active} dias ativa` : "") +
+            (t.days_active > 1 ? ` | ${t.days_active} dias ativa` : "") +
             `\n  → Ângulo criativo: ${t.ad_angle}` +
             (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "")
           ).join("\n");
@@ -1645,9 +1658,18 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 - **title** = máx 6 palavras, orientado a ação. NUNCA "Analysis", "Análise", "Insight", "Response"
 - **ZERO** perguntas de follow-up se você tem dados para agir`
 
-    const prefStr = user_prefs?.liked?.length || user_prefs?.disliked?.length
-      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}`
+    const toneMap: Record<string, string> = {
+      "direto":   "Respostas curtas, diretas e acionáveis. Sem explicações longas.",
+      "didático": "Explique o raciocínio por trás de cada recomendação. Mostre o porquê.",
+      "técnico":  "Use terminologia técnica de mídia paga. Inclua métricas e dados sempre que possível.",
+    };
+    const toneInstruction = user_prefs?.tone && toneMap[user_prefs.tone]
+      ? `\n\nTOM PREFERIDO DO USUÁRIO: ${toneMap[user_prefs.tone]}`
       : "";
+
+    const prefStr = (user_prefs?.liked?.length || user_prefs?.disliked?.length)
+      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}${toneInstruction}`
+      : toneInstruction;
 
     const aiMessages = [...historyMessages, { role: "user" as const, content: message }];
 

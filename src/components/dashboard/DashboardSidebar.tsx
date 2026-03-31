@@ -89,7 +89,7 @@ export function DashboardSidebar({
   });
   const [toolsOpen, setToolsOpen] = useState(() => {
     const p = window.location.pathname;
-    return p.includes("/hooks") || p.includes("/script") || p.includes("/translate") || p.includes("/preflight") || p.includes("/templates") || p.includes("/boards");
+    return p.includes("/hooks") || p.includes("/script") || p.includes("/brief") || p.includes("/translate") || p.includes("/preflight") || p.includes("/templates") || p.includes("/boards") || p.includes("/loop/v2");
   });
   const [perfData, setPerfData] = useState<number[] | null>(null);
   const [systemStatus, setSystemStatus] = useState<"ok" | "warn" | "loading">("loading");
@@ -142,18 +142,20 @@ export function DashboardSidebar({
   }, []);
 
   const ANALYSIS_NAV = [
+    { url: "/dashboard/analyses",     label: dt("nav_analyses")   || (pt ? "Análises" : es ? "Análisis" : "Analyses") },
     { url: "/dashboard/performance",  label: pt ? "Performance"  : es ? "Performance"  : "Performance"  },
     { url: "/dashboard/intelligence", label: pt ? "Inteligência" : es ? "Inteligencia" : "Intelligence" },
-    { url: "/dashboard/competitor",   label: dt("nav_competitor") || "Concorrentes"                      },
-    { url: "/dashboard/analyses",     label: dt("nav_analyses")   || "Análises"                          },
+    { url: "/dashboard/competitor",   label: dt("nav_competitor") || (pt ? "Concorrentes" : es ? "Competidores" : "Competitors") },
   ];
   const TOOLS_NAV = [
     { url: "/dashboard/hooks",     label: pt ? "Gerador de Hooks" : es ? "Generador de Hooks" : "Hook Generator" },
     { url: "/dashboard/script",    label: pt ? "Roteiro"          : es ? "Guión"               : "Script"         },
-    { url: "/dashboard/translate", label: pt ? "Traduzir"         : es ? "Traducir"            : "Translate"      },
+    { url: "/dashboard/brief",     label: pt ? "Brief"            : es ? "Brief"               : "Brief"          },
     { url: "/dashboard/preflight", label: pt ? "Check Criativo"   : es ? "Check Creativo"      : "Creative Check" },
+    { url: "/dashboard/translate", label: pt ? "Traduzir"         : es ? "Traducir"            : "Translate"      },
     { url: "/dashboard/templates", label: pt ? "Templates"        : es ? "Plantillas"          : "Templates"      },
     { url: "/dashboard/boards",    label: pt ? "Boards"           : es ? "Tableros"            : "Boards"         },
+    { url: "/dashboard/loop/v2",   label: pt ? "Importar Dados"   : es ? "Importar Datos"      : "Import Data"    },
   ];
   const isAnalysisActive = ANALYSIS_NAV.some(i => isActive(i.url));
   const isToolsActive    = TOOLS_NAV.some(i => isActive(i.url));
@@ -382,23 +384,6 @@ export function DashboardSidebar({
         {/* Nav */}
         <nav style={{ flex: 1, paddingTop: 12, paddingBottom: 8, overflowY: "auto", overflowX: "hidden" }}>
 
-          {/* Create campaign — fixed brand blue, not accent */}
-          <div style={{ margin: "0 8px 4px" }}>
-            <NavLink to="/dashboard/campaigns/new" onClick={onClose}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "7px 14px", borderRadius: 7,
-                background: isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "rgba(14,165,233,0.08)",
-                border: "1px solid rgba(14,165,233,0.2)",
-                fontSize: 13.5, fontWeight: 600, color: "#7dd3fc",
-                textDecoration: "none", transition: "all 0.15s", fontFamily: F,
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.13)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "rgba(14,165,233,0.08)"; }}>
-              {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
-            </NavLink>
-          </div>
-
           {navItem("/dashboard/ai", "IA Chat", { badge: "AI" })}
           {accountsItem()}
 
@@ -413,6 +398,23 @@ export function DashboardSidebar({
             pt ? "Ferramentas" : es ? "Herramientas" : "Tools",
             TOOLS_NAV, toolsOpen, setToolsOpen, isToolsActive
           )}
+
+          {/* Create campaign — at bottom, after tools */}
+          <div style={{ margin: "8px 8px 0" }}>
+            <NavLink to="/dashboard/campaigns/new" onClick={onClose}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "7px 14px", borderRadius: 7,
+                background: isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "transparent",
+                border: "1px solid rgba(14,165,233,0.15)",
+                fontSize: 13, fontWeight: 600, color: "#7dd3fc",
+                textDecoration: "none", transition: "all 0.15s", fontFamily: F,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isActive("/dashboard/campaigns/new") ? "rgba(14,165,233,0.18)" : "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.15)"; }}>
+              + {pt ? "Criar Campanha" : es ? "Crear Campaña" : "Create Campaign"}
+            </NavLink>
+          </div>
         </nav>
 
         {/* Footer */}
