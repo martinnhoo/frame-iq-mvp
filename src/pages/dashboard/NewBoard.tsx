@@ -437,7 +437,7 @@ const NewBoard = () => {
                 {selectedPersona && !marketOverridden && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto"
                     style={{ background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.25)", color: "#0ea5e9" }}>
-                    via {selectedPersona.name.split(" ")[0]}
+                    via {(selectedPersona.name || "Account").split(" ")[0]}
                   </span>
                 )}
               </CardTitle>
