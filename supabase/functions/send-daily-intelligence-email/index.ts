@@ -277,7 +277,13 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
+
+    // Internal only — require service role
+    const authH = req.headers.get("Authorization") ?? "";
+    if (authH !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
   try {
     const RESEND = Deno.env.get("RESEND_API_KEY") ?? "";
     const FROM   = Deno.env.get("RESEND_FROM_EMAIL") ?? "AdBrief <hello@adbrief.pro>";

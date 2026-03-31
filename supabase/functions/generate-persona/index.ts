@@ -60,7 +60,7 @@ function pickName(market: string, gender: string): string {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const { answers, user_id } = await req.json();
@@ -69,11 +69,20 @@ serve(async (req) => {
     // Rate limit check — use plan-based persona limit from _shared/plans.ts
     if (user_id) {
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+
+      // ── Auth: verify JWT matches user_id ───────────────────────────────────
+      const authHeader = req.headers.get("Authorization") ?? "";
+      if (authHeader.startsWith("Bearer ")) {
+        const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(authHeader.slice(7));
+        if (authErr || !authUser || authUser.id !== user_id) {
+          return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
       const { data: profile } = await supabase.from("profiles").select("plan, email").eq("id", user_id).single();
       const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
-      const limit = getLimit("personas", plan); // free=1, maker=10, pro=50, studio=unlimited
+      const limit = getLimit("personas", plan);
       if (limit !== -1) {
-        // Count existing personas for this user
         const { count } = await supabase.from("personas").select("id", { count: "exact", head: true }).eq("user_id", user_id);
         if ((count ?? 0) >= limit) {
           return new Response(JSON.stringify({ error: "Persona limit reached for your plan.", daily_limit: true }), {

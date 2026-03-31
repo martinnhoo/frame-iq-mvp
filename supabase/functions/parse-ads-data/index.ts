@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -22,6 +22,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing user_id or csv_data' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    // Auth: verify JWT matches user_id
+    const authH = req.headers.get('Authorization') ?? '';
+    if (authH.startsWith('Bearer ')) {
+      const { data: { user: aU }, error: aE } = await supabase.auth.getUser(authH.slice(7));
+      if (aE || !aU || aU.id !== user_id) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const truncated = csv_data.length > 40000 ? csv_data.slice(0, 40000) + '\n[truncated...]' : csv_data;

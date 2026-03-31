@@ -25,7 +25,7 @@ async function sendMessage(token: string, chat_id: string, text: string, reply_m
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
 
   try {
     const supabase = createClient(
@@ -37,6 +37,19 @@ Deno.serve(async (req) => {
 
     const { user_id, message, reply_markup, alert_id } = await req.json();
     if (!user_id || !message) return new Response(JSON.stringify({ error: "missing params" }), { status: 400, headers: cors });
+
+    // ── Auth: allow service role (internal cron/alerts) OR authenticated user ─
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const isServiceRole = authHeader === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+    if (!isServiceRole) {
+      if (!authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
+      }
+      const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(authHeader.slice(7));
+      if (authErr || !authUser || authUser.id !== user_id) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
+      }
+    }
 
     // Get user's telegram chat_id
     const { data: conn } = await (supabase as any)

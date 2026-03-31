@@ -18,6 +18,17 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // ── Auth: verify JWT matches user_id ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ messages: [] }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    const { data: { user: authUser }, error: authErr } = await sb.auth.getUser(authHeader.slice(7));
+    if (authErr || !authUser || authUser.id !== user_id) {
+      return new Response(JSON.stringify({ messages: [] }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     const ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
     if (!ANTHROPIC) {
       return new Response(JSON.stringify({ messages: [] }), {

@@ -63,7 +63,7 @@ function computeCooldownSeconds(
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const supabase = createClient(
@@ -78,6 +78,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Auth: verify JWT matches user_id ─────────────────────────────────────
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(authHeader.slice(7));
+    if (authErr || !authUser || authUser.id !== user_id) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const { data: profile } = await supabase
       .from('profiles').select('plan, last_ai_action_at, email').eq('id', user_id).single();
 

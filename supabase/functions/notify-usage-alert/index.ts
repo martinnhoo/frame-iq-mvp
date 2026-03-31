@@ -10,13 +10,19 @@ const ALERT_EMAIL     = Deno.env.get('OWNER_ALERT_EMAIL') ?? 'martinhovff@gmail.
 const FROM_EMAIL      = Deno.env.get('RESEND_FROM_EMAIL') ?? 'AdBrief <noreply@adbrief.pro>';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Internal only — called by check-usage which is already auth-protected
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (authHeader !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const { user_id, plan, cost_ratio, estimated_cost, plan_revenue } = await req.json();
 

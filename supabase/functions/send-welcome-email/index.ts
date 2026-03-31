@@ -50,7 +50,7 @@ const T: Record<Lang, {
     s3t: "Ask anything",
     s3d: "\"What's killing my ROAS?\" · \"Which creative should I pause?\" · \"Write 3 hooks for my account\" · \"What's trending in Brazil today?\"",
     cta: "Open AdBrief →",
-    ps: "1-day trial starts when you pick a plan. Full access. Cancel within 24 hours and pay nothing.",
+    ps: "3-day trial starts when you pick a plan. Full access. Cancel within 72 hours and pay nothing.",
     footer: "You signed up at adbrief.pro",
   },
   es: {
@@ -233,8 +233,14 @@ function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   try {
+    // Called by onboarding (user JWT) or internal cron (service role)
+    const authH = req.headers.get("Authorization") ?? "";
+    const isServiceRole = authH === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+    if (!isServiceRole && !authH.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
     const RESEND = Deno.env.get("RESEND_API_KEY") ?? "";
     const FROM   = Deno.env.get("RESEND_FROM_EMAIL") ?? "AdBrief <hello@adbrief.pro>";
     const APP    = Deno.env.get("APP_URL") ?? "https://adbrief.pro";

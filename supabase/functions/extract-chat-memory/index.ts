@@ -24,7 +24,7 @@ const isExplicitRemember = (text: string): boolean => {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
 
   const sb = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -39,6 +39,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: false, reason: "missing_params" }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+
+    // ── Auth: verify JWT matches user_id ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    const { data: { user: authUser }, error: authErr } = await sb.auth.getUser(authHeader.slice(7));
+    if (authErr || !authUser || authUser.id !== user_id) {
+      return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     // Filtro rápido — skip trocas sem valor de memória (economiza chamada ao Haiku)
