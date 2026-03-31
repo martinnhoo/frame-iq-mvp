@@ -1734,9 +1734,9 @@ const SELLING_POINTS: Record<Lang, SPScene[]> = {
       metric: "hook rate 38%",
       metricLabel: "padrão dos seus top criativos — base dos hooks abaixo",
       points: [
-        "**"Você treina há 3 meses e o ponteiro não se move — seus anúncios já sabem o porquê."**",
-        "**"3 de 4 transformações que você viu aqui custaram menos de R$18 de CAC. Quer ver a conta?"**",
-        "**"Seu concorrente está rodando o mesmo ângulo do seu melhor UGC — pausado há 9 dias."**",
+        "**\u201cVocê treina há 3 meses e o ponteiro não se move — seus anúncios já sabem o porquê.\u201d**",
+        "**\u201c3 de 4 transformações que você viu aqui custaram menos de R$18 de CAC. Quer ver a conta?\u201d**",
+        "**\u201cSeu concorrente está rodando o mesmo ângulo do seu melhor UGC — pausado há 9 dias.\u201d**",
       ],
       action: "Padrão dos seus winners: dor específica com dado real → sem clichê de motivação.",
     },
