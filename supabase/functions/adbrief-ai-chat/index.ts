@@ -1731,7 +1731,7 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
              systemPrompt.includes("DADOS DA CONTA") ||
              systemPrompt.includes("Meta Ads") && systemPrompt.includes("ROAS") ||
              systemPrompt.includes("TRENDS ATIVAS"));
-          return richCtx ? "claude-sonnet-4-5-20251022" : "claude-haiku-4-5-20251001";
+          return richCtx ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001";
         })(),
         max_tokens: 3000,
         system: systemPrompt + prefStr,
