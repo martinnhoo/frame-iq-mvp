@@ -1137,18 +1137,18 @@ export default function LoopV2() {
             <div key={i}>
               {/* User bubble */}
               {msg.role === "user" && (
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ maxWidth: "72%", padding: "11px 16px", borderRadius: "18px 18px 4px 18px", background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(6,182,212,0.1))", border: "1px solid rgba(14,165,233,0.22)" }}>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.65, fontFamily: F, margin: 0 }}>{msg.text}</p>
+                <div className="msg-enter" style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{ maxWidth: "72%", padding: "12px 18px", borderRadius: "20px 20px 6px 20px", background: "linear-gradient(135deg, rgba(14,165,233,0.14), rgba(6,182,212,0.08))", border: "1px solid rgba(14,165,233,0.18)", boxShadow: "0 2px 12px rgba(14,165,233,0.06)" }}>
+                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.92)", lineHeight: 1.7, fontFamily: F, margin: 0, letterSpacing: "-0.01em" }}>{msg.text}</p>
                   </div>
                 </div>
               )}
               {/* AI bubble */}
               {msg.role === "assistant" && (
-                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div className="msg-enter" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   {/* Avatar */}
-                  <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1, background: "linear-gradient(135deg, rgba(14,165,233,0.18), rgba(6,182,212,0.12))", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
-                    {msg.loading ? <Loader2 size={11} color={BLUE} className="animate-spin" /> : <img src="/ab-avatar.png" alt="AB" width={14} height={14} style={{borderRadius:3,objectFit:"cover"}}/>}
+                  <div style={{ width: 30, height: 30, borderRadius: 10, flexShrink: 0, marginTop: 2, background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.08))", border: "1px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 16px rgba(14,165,233,0.06)" }}>
+                    {msg.loading ? <Loader2 size={12} color={BLUE} className="animate-spin" /> : <Sparkles size={14} color={BLUE} strokeWidth={1.8} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     {msg.loading ? (
