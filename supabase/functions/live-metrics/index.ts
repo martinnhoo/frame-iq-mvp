@@ -19,10 +19,12 @@ serve(async (req) => {
 
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // Use a separate client with anon key for user token validation
+    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const body = await req.json();
     const { user_id, persona_id, period = "7d" } = body;
 
-    if (!await isUserAuthorized(req, sb, user_id)) return unauthorizedResponse(cors);
+    if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
 
     const days = period === "30d" ? 30 : period === "14d" ? 14 : 7;
     const now = new Date();
