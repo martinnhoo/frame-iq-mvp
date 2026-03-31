@@ -3,4 +3,4 @@ import App from "./App.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
-// build trigger 1773870527
+// build 557535f
