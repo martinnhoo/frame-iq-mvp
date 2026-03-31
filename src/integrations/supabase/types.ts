@@ -1551,6 +1551,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adbrief_invoke_function: {
+        Args: { fn_name: string; payload?: string }
+        Returns: undefined
+      }
       check_and_increment_ai_usage: {
         Args: { p_plan?: string; p_user_id: string }
         Returns: Json
