@@ -964,7 +964,10 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id, persona_id")
           .eq("user_id", user_id).eq("platform", "google").eq("status", "active");
         const gC = (gConns as any[]) || [];
-        const gRow = persona_id ? gC.find((c: any) => c.persona_id === persona_id) || null : null;
+        // Fix: if no persona_id, fall back to first active connection (not null)
+        const gRow = persona_id
+          ? gC.find((c: any) => c.persona_id === persona_id) || gC[0] || null
+          : gC[0] || null;
 
         if (gRow?.access_token) {
           let token = gRow.access_token;
