@@ -124,9 +124,7 @@ function NavItem({ url, label, opts, isActive, onClose }: {
           </span>
         )}
         {opts?.soon && (
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", fontWeight: 500 }}>
-            {language === "pt" ? "Em breve" : language === "es" ? "Pronto" : "Soon"}
-          </span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", fontWeight: 500 }}>Soon</span>
         )}
       </NavLink>
       {/* Hover tooltip */}
