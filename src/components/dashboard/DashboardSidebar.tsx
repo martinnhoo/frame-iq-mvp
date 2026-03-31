@@ -208,8 +208,6 @@ export function DashboardSidebar({
     check();
   }, []);
 
-  ];
-
   // ── Nav item with animated left bar ──────────────────────────────────────
   const navItem = (url: string, label: string, opts?: {
     badge?: string; soon?: boolean; tooltip?: React.ReactNode;
