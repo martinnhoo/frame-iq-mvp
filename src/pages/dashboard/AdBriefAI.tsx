@@ -2530,9 +2530,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         </div>
       </div>
 
-      <style>>
-      </div>
-
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
