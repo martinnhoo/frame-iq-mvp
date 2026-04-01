@@ -249,7 +249,7 @@ function DashboardBlock({block}:{block:Block}) {
             const isUp=metric.trend==="up",isDown=metric.trend==="down";
             const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
             return(
-              <div key={i} style={{padding:"16px 18px",background:"#181e2d",position:"relative",overflow:"hidden"}}>
+              <div key={i} style={{padding:"16px",background:"#181e2d",position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
                 <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
                 <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
@@ -265,7 +265,7 @@ function DashboardBlock({block}:{block:Block}) {
         </div>
       )}
       {block.chart&&block.chart.type==="bar"&&(
-        <div style={{padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
           {block.chart.labels.map((label,i)=>{
             const max=Math.max(...block.chart!.values);
             const pct=max>0?(block.chart!.values[i]/max)*100:0;
@@ -301,7 +301,7 @@ function DashboardBlock({block}:{block:Block}) {
         const roasDelta=firstRoas>0?((lastRoas-firstRoas)/firstRoas*100):0;
         const totalSpend=d.spend.reduce((a,b)=>a+b,0);
         return(
-          <div style={{padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+          <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
             <div style={{display:"flex",gap:16,marginBottom:10}}>
               <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:12,color:ctrDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
               <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:12,color:roasDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
@@ -403,7 +403,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   return(
     <div style={{borderRadius:16,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.04)",marginBottom:10,overflow:"hidden"}}>
       {/* Header */}
-      <div style={{padding:"14px 16px 10px",borderBottom:"1px solid rgba(251,146,60,0.12)"}}>
+      <div style={{padding:"16px 16px 12px",borderBottom:"1px solid rgba(251,146,60,0.12)"}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
           <span style={{fontSize:20}}>{icon}</span>
           <p style={{...j,fontSize:13,fontWeight:800,color:"#fb923c",margin:0}}>{block.title}</p>
@@ -422,7 +422,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
         <p style={{...m,fontSize:12,color:"rgba(251,146,60,0.6)",margin:0}}>⚠️ {t.warning}</p>
       </div>
       {/* Buttons */}
-      <div style={{padding:"12px 16px",display:"flex",gap:8}}>
+      <div style={{padding:"16px",display:"flex",gap:8}}>
         <button onClick={async()=>{
           setState("running");
           await onConfirm(block);
@@ -674,7 +674,7 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
   const ctr   = ctrMatch?.[1];
 
   return (
-    <div style={{ maxWidth: 680, margin: "0 auto 8px" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto 16px" }}>
       {/* Greeting header — ABAvatar + title */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
         <ABAvatar size={30} />
@@ -747,7 +747,7 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
   const t = labels[lang] || labels.pt;
 
   return (
-    <div style={{ borderRadius: 14, border: "1px solid rgba(14,165,233,0.25)", background: "rgba(14,165,233,0.05)", padding: "16px 18px", marginBottom: 8 }}>
+    <div style={{ borderRadius: 14, border: "1px solid rgba(14,165,233,0.25)", background: "rgba(14,165,233,0.05)", padding: "16px", marginBottom: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 16 }}>📊</span>
         <p style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#eef0f6", margin: 0 }}>{block.title}</p>
@@ -853,7 +853,7 @@ function Kpi({ label, value, sub, trend, spark, color = "#6366f1", warn = false 
       background: warn ? "rgba(251,113,133,0.03)" : "rgba(255,255,255,0.02)",
       border: `1px solid ${warn ? "rgba(251,113,133,0.12)" : "rgba(255,255,255,0.06)"}`,
       borderRadius: 12, display: "flex", flexDirection: "column", justifyContent: "space-between",
-      minHeight: 88, cursor: "default",
+      cursor: "default",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ ...I, fontSize: 12, fontWeight: 500, color: "#475569", letterSpacing: "0.04em" }}>{label}</span>
@@ -902,7 +902,7 @@ function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; a
 function CampRow({ c }: { c: any }) {
   const on = c.status === "ACTIVE" || c.status === "ENABLED";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
       <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "rgba(255,255,255,0.15)", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "rgba(255,255,255,0.3)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
       {c.budget && <span style={{ ...MONO, fontSize: 12, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
@@ -920,7 +920,7 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
     : { bg: "rgba(99,102,241,0.04)", br: "rgba(99,102,241,0.12)", dot: "#818cf8", title: "#818cf8" };
   return (
     <div className="lp-alert" onClick={() => ask(a.q)} style={{
-      display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", borderRadius: 10,
+      display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8,
       cursor: "pointer", background: c.bg, border: `1px solid ${c.br}`,
     }}>
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}60`, flexShrink: 0 }} />
@@ -1109,7 +1109,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ padding: "16px 20px 18px" }}>
+      <div style={{ padding: "16px 20px" }}>
 
         {/* Skeleton */}
         {busy && !pd && (
@@ -2151,7 +2151,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"20px 0 8px",background:"transparent",position:"relative" as const,zIndex:1}}>
+      <div style={{flex:1,overflowY:"auto",padding:"24px 0 8px",background:"transparent",position:"relative" as const,zIndex:1}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -2161,7 +2161,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               const isDismissing = alertsDismissing.has(alert.id);
               return (
                 <div key={alert.id} style={{
-                  padding:"12px 14px",borderRadius:14,
+                  padding:"12px 16px",borderRadius:12,
                   background: isHigh ? "rgba(248,113,113,0.07)" : "rgba(251,191,36,0.07)",
                   border: `1px solid ${isHigh ? "rgba(248,113,113,0.25)" : "rgba(251,191,36,0.25)"}`,
                   display:"flex",alignItems:"flex-start",gap:10,

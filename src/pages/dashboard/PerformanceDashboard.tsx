@@ -253,7 +253,7 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
           const Icon=m.icon; const isActive=active.includes(m.key);
           return (
             <button key={m.key} onClick={()=>toggle(m.key)}
-              style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:10,border:`1px solid ${isActive?m.accent+"40":BD}`,background:isActive?`${m.accent}10`:"transparent",cursor:"pointer",textAlign:"left",width:"100%",transition:"all 0.15s"}}>
+              style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",borderRadius:8,border:`1px solid ${isActive?m.accent+"40":BD}`,background:isActive?`${m.accent}10`:"transparent",cursor:"pointer",textAlign:"left",width:"100%",transition:"all 0.15s"}}>
               <div style={{width:26,height:26,borderRadius:7,background:isActive?`${m.accent}20`:S2,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 <Icon size={12} color={isActive?m.accent:MT}/>
               </div>
@@ -287,7 +287,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging }: { def:MetricDe
       border:`1px solid ${isDragging?def.accent+"60":BD}`,
       borderTopColor:isDragging?def.accent+"80":"rgba(255,255,255,0.12)",
       boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:"0 2px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.06)",
-      borderRadius:16,padding:"18px 20px",display:"flex",flexDirection:"column",gap:10,
+      borderRadius:12,padding:"16px",display:"flex",flexDirection:"column",gap:10,
       transition:"border-color 0.2s,box-shadow 0.2s",opacity:isDragging?0.9:1,
       cursor:"grab",height:"100%",boxSizing:"border-box" as const,
     }}>
@@ -322,7 +322,7 @@ function AdRow({ ad, rank }: { ad:any; rank:number }) {
   const badge=isWinner?{label:"↑ Escalar",color:GREEN,bg:"rgba(34,197,94,0.1)"}:isPauser?{label:"⏸ Pausar",color:RED,bg:"rgba(239,68,68,0.1)"}:null;
   const isMeta=ad.platform==="meta";
   return (
-    <div style={{display:"flex",alignItems:"center",gap:16,padding:"13px 0",borderBottom:`1px solid ${BD}`}}>
+    <div style={{display:"flex",alignItems:"center",gap:16,padding:"12px 0",borderBottom:`1px solid ${BD}`}}>
       <span style={{width:20,fontSize:12,color:MT,fontWeight:600,flexShrink:0}}>{rank}</span>
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
@@ -509,7 +509,7 @@ export default function PerformanceDashboard() {
               {label:"ROAS",value:"2.5–4x",sub:lang==="pt"?"e-commerce BR":lang==="es"?"e-commerce":"e-commerce"},
               {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":lang==="es"?"audiencia fría":"cold audience"},
             ].map(b=>(
-              <div key={b.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px 10px"}}>
+              <div key={b.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px"}}>
                 <div style={{fontSize: 12,color:MT,marginBottom:4,fontFamily:F}}>{b.label}</div>
                 <div style={{fontSize:16,fontWeight:700,color:TX,fontFamily:F}}>{b.value}</div>
                 <div style={{fontSize: 12,color:"rgba(255,255,255,0.25)",fontFamily:F}}>{b.sub}</div>
@@ -536,7 +536,7 @@ export default function PerformanceDashboard() {
         </div>
       )}
       {error&&error!=="__connection__"&&!loading&&(
-        <div style={{display:"flex",gap:10,padding:"14px 18px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,marginBottom:24}}>
+        <div style={{display:"flex",gap:10,padding:"16px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,marginBottom:24}}>
           <AlertCircle size={16} color={RED} style={{flexShrink:0,marginTop:1}}/>
           <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
         </div>
@@ -557,8 +557,8 @@ export default function PerformanceDashboard() {
       {/* Platform error banners */}
       {!loading&&data&&(
         <>
-          {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"10px 14px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Meta Ads: {data.meta.error}</p></div>}
-          {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"10px 14px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Google Ads: {data.google.error}</p></div>}
+          {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Meta Ads: {data.meta.error}</p></div>}
+          {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Google Ads: {data.google.error}</p></div>}
         </>
       )}
 
