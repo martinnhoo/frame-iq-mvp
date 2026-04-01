@@ -46,8 +46,15 @@ const m = { fontFamily: M } as const;
 const PLATFORMS = [
   { id: "meta",   label: "Meta Ads",   fn: "meta-oauth",   color: "#1877F2",
     Icon: ({ active }: { active: boolean }) => (
-      <svg width="16" height="10" viewBox="0 0 36 18" fill="none">
-        <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill={active ? "#1877F2" : "rgba(255,255,255,0.4)"}/>
+      <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+        <defs>
+          <linearGradient id="aiMetaGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0082FB"/>
+            <stop offset="100%" stopColor="#0064E0"/>
+          </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="13.5" fill={active ? "url(#aiMetaGrad)" : "rgba(255,255,255,0.08)"}/>
+        <path d="M10 20V13.5c0-.69.37-1.25.83-1.25.32 0 .62.22.87.63L14 15.9l2.3-3.02c.25-.41.55-.63.87-.63.46 0 .83.56.83 1.25V20h-1.67v-4.08l-1.45 2.08h-1.26l-1.45-2.08V20H10z" fill={active ? "white" : "rgba(255,255,255,0.35)"}/>
       </svg>
     )},
   { id: "tiktok", label: "TikTok Ads", fn: "tiktok-oauth", color: "#06b6d4", soon: true,
