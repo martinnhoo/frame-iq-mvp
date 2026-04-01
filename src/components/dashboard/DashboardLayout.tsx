@@ -302,7 +302,7 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div style={{
-        minHeight: "100dvh", background: "#0d1117", position: "fixed", inset: 0, zIndex: 9999,
+        minHeight: "100dvh", background: "#0c0f1a", position: "fixed", inset: 0, zIndex: 9999,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
@@ -374,7 +374,7 @@ export default function DashboardLayout() {
 
         /* Buttons: cap height and font on mobile */
         .dashboard-main button:not(.icon-btn):not([class*="h-8"]):not([class*="h-6"]):not([class*="w-8"]):not([class*="w-6"]) {
-          font-size: clamp(11px, 3vw, 14px) !important;
+          font-size: clamp(12px, 3vw, 14px) !important;
         }
 
         /* Tool pages: constrain content width */
@@ -418,7 +418,7 @@ export default function DashboardLayout() {
         .dashboard-main h1 { font-size: clamp(16px, 5.5vw, 22px) !important; }
       }
     `}</style>
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#0d1117", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "#0c0f1a", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <DashboardSidebar
         user={user}
         profile={profile}

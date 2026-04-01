@@ -311,7 +311,7 @@ export function DashboardSidebar({
 
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ width: 220, background: "linear-gradient(180deg, #0a0f1e 0%, #070b16 100%)", borderRight: "1px solid rgba(255,255,255,0.06)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0, boxShadow: "4px 0 32px rgba(0,0,0,0.5)" }}
+        style={{ width: 220, background: "#090c18", borderRight: "1px solid rgba(255,255,255,0.06)", fontFamily: F, display: "flex", flexDirection: "column", flexShrink: 0, boxShadow: "1px 0 0 rgba(255,255,255,0.05)" }}
       >
         {/* Logo */}
         <div style={{ height: 56, minHeight: 56, padding: "0 20px", flexShrink: 0, display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}>
@@ -327,7 +327,7 @@ export function DashboardSidebar({
           {/* Section label */}
           <div style={{ padding: "0 20px", marginBottom: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
-              {pt ? "Principal" : es ? "Principal" : "Main"}
+              {pt ? "Chat" : es ? "Chat" : "Chat"}
             </span>
           </div>
 
@@ -359,7 +359,7 @@ export function DashboardSidebar({
               boxShadow: systemStatus === "ok" ? "0 0 6px #22c55e60" : "none",
               animation: systemStatus === "loading" ? "pulseDot 1.2s ease infinite" : "none",
             }} />
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.22)", fontFamily: F }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontFamily: F }}>
               {systemStatus === "ok" ? (pt ? "Todos os sistemas OK" : es ? "Todos los sistemas OK" : "All systems OK") :
                systemStatus === "warn" ? (pt ? "Lentidão detectada" : es ? "Lentitud detectada" : "Slowness detected") :
                (pt ? "Verificando..." : es ? "Verificando..." : "Checking...")}

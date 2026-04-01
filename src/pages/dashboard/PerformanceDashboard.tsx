@@ -185,7 +185,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
                 onMouseEnter={()=>!isFuture&&setHovered(d)}
                 onMouseLeave={()=>setHovered(null)}
                 style={{
-                  textAlign:"center",padding:"6px 0",borderRadius:7,cursor:isFuture?"default":"pointer",
+                  textAlign:"center",padding:"6px 0",borderRadius:8,cursor:isFuture?"default":"pointer",
                   fontSize:12,fontFamily:F,fontWeight:isE?700:400,
                   background:isE?ACCENT:inR?`${ACCENT}22`:"transparent",
                   color:isE?"#fff":isFuture?"rgba(255,255,255,0.15)":inR?ACCENT:TX,
@@ -211,7 +211,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
           const active=fmt(value.from)===fmt(from)&&fmt(value.to)===fmt(today);
           return (
             <button key={p.days} onClick={()=>{onChange({from,to:today});onClose();}}
-              style={{fontFamily:F,fontSize:12,fontWeight:600,padding:"5px 12px",borderRadius:7,border:`1px solid ${active?ACCENT:BD}`,background:active?`${ACCENT}18`:"transparent",color:active?ACCENT:MT,cursor:"pointer",transition:"all 0.15s"}}>
+              style={{fontFamily:F,fontSize:12,fontWeight:600,padding:"5px 12px",borderRadius:8,border:`1px solid ${active?ACCENT:BD}`,background:active?`${ACCENT}18`:"transparent",color:active?ACCENT:MT,cursor:"pointer",transition:"all 0.15s"}}>
               Últimos {p.label}
             </button>
           );
@@ -254,7 +254,7 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
           return (
             <button key={m.key} onClick={()=>toggle(m.key)}
               style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",borderRadius:8,border:`1px solid ${isActive?m.accent+"40":BD}`,background:isActive?`${m.accent}10`:"transparent",cursor:"pointer",textAlign:"left",width:"100%",transition:"all 0.15s"}}>
-              <div style={{width:26,height:26,borderRadius:7,background:isActive?`${m.accent}20`:S2,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <div style={{width:26,height:26,borderRadius:8,background:isActive?`${m.accent}20`:S2,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 <Icon size={12} color={isActive?m.accent:MT}/>
               </div>
               <span style={{flex:1,fontFamily:F,fontSize:13,fontWeight:isActive?600:400,color:isActive?TX:MT}}>{m.labelPt}</span>
@@ -294,7 +294,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging }: { def:MetricDe
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <GripVertical size={13} color={MT} style={{opacity:0.5,flexShrink:0}}/>
-          <div style={{width:25,height:25,borderRadius:7,background:`${def.accent}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{width:25,height:25,borderRadius:8,background:`${def.accent}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <def.icon size={12} color={def.accent}/>
           </div>
           <span style={{fontFamily:F,fontSize: 12,fontWeight:700,color:MT,textTransform:"uppercase",letterSpacing:"0.08em"}}>{def.labelPt}</span>
@@ -616,7 +616,7 @@ export default function PerformanceDashboard() {
                     const active=chartMetric===key;
                     return (
                       <button key={key} onClick={()=>setChartMetric(key)}
-                        style={{padding:"4px 10px",borderRadius:7,border:`1px solid ${active?def.accent+"60":BD}`,background:active?`${def.accent}15`:"transparent",color:active?def.accent:MT,fontSize: 12,fontWeight:active?700:500,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
+                        style={{padding:"4px 10px",borderRadius:8,border:`1px solid ${active?def.accent+"60":BD}`,background:active?`${def.accent}15`:"transparent",color:active?def.accent:MT,fontSize: 12,fontWeight:active?700:500,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
                         {def.labelPt}
                       </button>
                     );
