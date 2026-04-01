@@ -447,7 +447,7 @@ export default function DashboardLayout() {
 
           {/* Sidebar toggle — works on all screen sizes */}
           <button
-            onClick={() => setSidebarOpen(s => !s)}
+            onClick={() => { setSidebarOpen(s => !s); if (profileOpen) setProfileOpen(false); }}
             title={sidebarOpen ? "Ocultar menu" : "Mostrar menu"}
             style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0, transition: "all 0.15s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
