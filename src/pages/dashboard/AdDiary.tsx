@@ -232,9 +232,12 @@ function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: bo
   );
 }
 
-export default function AdDiary() {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
-  const { language } = useLanguage();
+export default function AdDiary({ propUser, propPersona, propLang, embedded }: { propUser?: any; propPersona?: any; propLang?: string; embedded?: boolean } = {}) {
+  const { user: ctxUser, selectedPersona: ctxPersona } = useOutletContext<DashboardContext>();
+  const user = propUser ?? ctxUser;
+  const selectedPersona = propPersona ?? ctxPersona;
+  const { language: ctxLang } = useLanguage();
+  const language = propLang ?? ctxLang;
   const t = T[language as keyof typeof T] || T.pt;
 
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -274,11 +277,7 @@ export default function AdDiary() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (!loading && entries.length === 0 && user?.id && selectedIds.length > 0) {
-      selectedIds.forEach(pid => syncAccount(pid));
-    }
-  }, [loading, entries.length]);
+  // Auto-sync disabled — prevents infinite loop when embedded. User clicks Sync manually.
 
   const syncAccount = async (personaId: string) => {
     if (!user?.id) return;
@@ -336,7 +335,7 @@ export default function AdDiary() {
   );
 
   return (
-    <div style={{ maxWidth: 840, margin: "0 auto", padding: "clamp(16px,4vw,36px)", fontFamily: F }}>
+    <div style={{ maxWidth: embedded ? "none" : 840, margin: embedded ? "0" : "0 auto", padding: embedded ? "20px 0 40px" : "clamp(16px,4vw,36px)", fontFamily: F }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* Header */}

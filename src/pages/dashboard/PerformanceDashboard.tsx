@@ -680,7 +680,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Ads tab — Ad Diary ── */}
-      {activeTab === "ads" && <AdDiary/>}
+      {activeTab === "ads" && <AdDiary propUser={user} propPersona={selectedPersona} propLang={language} embedded/>}
     </div>
   );
 }
