@@ -73,6 +73,75 @@ function MemoryRow({ m, lang, deleting, onDelete }: {
   );
 }
 
+// ── Pattern row ──────────────────────────────────────────────────────────────
+function PatternRow({ p, showLess, showMore }: { p: Pattern; showLess:string; showMore:string }) {
+  const [exp, setExp] = useState(false);
+  const isLong = p.insight_text.length > 100;
+  return (
+    <div style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 12px", borderRadius:10,
+      background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
+      border:`1px solid ${p.is_winner ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}` }}>
+      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "✅" : "⚠️"}</span>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.5, margin:0,
+          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
+          {p.insight_text}
+        </p>
+        {isLong && (
+          <button onClick={() => setExp(e => !e)}
+            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:3,
+              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
+            {exp ? <><ChevronDown size={10}/>{showLess}</> : <><ChevronRight size={10}/>{showMore}</>}
+          </button>
+        )}
+      </div>
+      {p.avg_ctr > 0 && (
+        <div style={{ flexShrink:0, textAlign:"right" as const }}>
+          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr*100).toFixed(2)}%</div>
+          <div style={{ fontFamily:F, fontSize:10, color:"rgba(255,255,255,0.25)" }}>CTR</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Example row ───────────────────────────────────────────────────────────────
+function ExampleRow({ e, lang, deleting, onDelete, showLess, showMore }: {
+  e: Example; lang:string; deleting:boolean; onDelete:()=>void; showLess:string; showMore:string;
+}) {
+  const [exp, setExp] = useState(false);
+  const isLong = e.user_message.length > 80;
+  return (
+    <div style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"9px 12px", borderRadius:10,
+      background:"rgba(167,139,250,0.04)", border:"1px solid rgba(167,139,250,0.12)" }}>
+      <Star size={12} color="#a78bfa" style={{ flexShrink:0, marginTop:2 }}/>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.5, margin:0,
+          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:1, WebkitBoxOrient:"vertical" as const } : {}) }}>
+          {e.user_message}
+        </p>
+        {isLong && (
+          <button onClick={() => setExp(v => !v)}
+            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:2,
+              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
+            {exp ? <><ChevronDown size={10}/>{showLess}</> : <><ChevronRight size={10}/>{showMore}</>}
+          </button>
+        )}
+      </div>
+      <span style={{ fontFamily:M, fontSize:11, color:"rgba(255,255,255,0.2)", flexShrink:0, marginRight:4 }}>
+        {new Date(e.created_at).toLocaleDateString(lang==="pt"?"pt-BR":"en-US", { day:"2-digit", month:"short" })}
+      </span>
+      <button onClick={onDelete} disabled={deleting}
+        style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px",
+          color:"rgba(255,255,255,0.18)", display:"flex", alignItems:"center", flexShrink:0, transition:"color 0.15s" }}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#f87171"}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)"}}>
+        {deleting ? <span style={{fontSize:11}}>…</span> : <Trash2 size={12}/>}
+      </button>
+    </div>
+  );
+}
+
 // ── Collapsible section ───────────────────────────────────────────────────────
 function Section({ icon, color, title, subtitle, count, children }: {
   icon: React.ReactNode; color:string; title:string; subtitle:string;
@@ -354,37 +423,9 @@ export default function IntelligencePage() {
               </div>
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                {patterns.map(p => {
-                  const [exp, setExp] = useState(false);
-                  const isLong = p.insight_text.length > 100;
-                  return (
-                    <div key={p.id} style={{ display:"flex", alignItems:"flex-start", gap:10,
-                      padding:"10px 12px", borderRadius:10,
-                      background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
-                      border:`1px solid ${p.is_winner ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}` }}>
-                      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "✅" : "⚠️"}</span>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.5, margin:0,
-                          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
-                          {p.insight_text}
-                        </p>
-                        {isLong && (
-                          <button onClick={() => setExp(e => !e)}
-                            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:3,
-                              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
-                            {exp ? <><ChevronDown size={10}/>{t.show_less}</> : <><ChevronRight size={10}/>{t.show_more}</>}
-                          </button>
-                        )}
-                      </div>
-                      {p.avg_ctr > 0 && (
-                        <div style={{ flexShrink:0, textAlign:"right" as const }}>
-                          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr*100).toFixed(2)}%</div>
-                          <div style={{ fontFamily:F, fontSize:10, color:"rgba(255,255,255,0.25)" }}>CTR</div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {patterns.map(p => (
+                  <PatternRow key={p.id} p={p} showLess={t.show_less} showMore={t.show_more}/>
+                ))}
               </div>
             )}
           </Section>
@@ -398,41 +439,11 @@ export default function IntelligencePage() {
               </div>
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                {examples.map(e => {
-                  const [exp, setExp] = useState(false);
-                  const isLong = e.user_message.length > 80;
-                  return (
-                    <div key={e.id} style={{ display:"flex", alignItems:"flex-start", gap:10,
-                      padding:"9px 12px", borderRadius:10,
-                      background:"rgba(167,139,250,0.04)", border:"1px solid rgba(167,139,250,0.12)" }}>
-                      <Star size={12} color="#a78bfa" style={{ flexShrink:0, marginTop:2 }}/>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.5, margin:0,
-                          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:1, WebkitBoxOrient:"vertical" as const } : {}) }}>
-                          {e.user_message}
-                        </p>
-                        {isLong && (
-                          <button onClick={() => setExp(v => !v)}
-                            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:2,
-                              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
-                            {exp ? <><ChevronDown size={10}/>{t.show_less}</> : <><ChevronRight size={10}/>{t.show_more}</>}
-                          </button>
-                        )}
-                      </div>
-                      <span style={{ fontFamily:M, fontSize:11, color:"rgba(255,255,255,0.2)", flexShrink:0, marginRight:4 }}>
-                        {new Date(e.created_at).toLocaleDateString(lang==="pt"?"pt-BR":"en-US", { day:"2-digit", month:"short" })}
-                      </span>
-                      <button onClick={() => deleteExample(e.id)} disabled={deleting===e.id}
-                        style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px",
-                          color:"rgba(255,255,255,0.18)", display:"flex", alignItems:"center", flexShrink:0,
-                          transition:"color 0.15s" }}
-                        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#f87171"}}
-                        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)"}}>
-                        {deleting===e.id ? <span style={{fontSize:11}}>…</span> : <Trash2 size={12}/>}
-                      </button>
-                    </div>
-                  );
-                })}
+                {examples.map(e => (
+                  <ExampleRow key={e.id} e={e} lang={lang}
+                    deleting={deleting===e.id} onDelete={() => deleteExample(e.id)}
+                    showLess={t.show_less} showMore={t.show_more}/>
+                ))}
               </div>
             )}
           </Section>
