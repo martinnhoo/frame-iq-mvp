@@ -103,6 +103,7 @@ const T = {
   },
 } as const;
 type Lang = keyof typeof T;
+type TStrings = typeof T[Lang];
 
 // ── Platform config ───────────────────────────────────────────────────────────
 const PLATFORMS = [
@@ -190,7 +191,7 @@ function PlatformIcon({ id }: { id:string }) {
 
 // ── Platform row ──────────────────────────────────────────────────────────────
 function PlatformRow({ p, userId, accountId, t }: {
-  p: typeof PLATFORMS[0]; userId:string; accountId:string; t: typeof T.en;
+  p: typeof PLATFORMS[0]; userId:string; accountId:string; t: TStrings;
 }) {
   const [conn, setConn]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
@@ -475,7 +476,7 @@ function PlatformRow({ p, userId, accountId, t }: {
 
 // ── Account form (inline) ─────────────────────────────────────────────────────
 function AccountForm({ account, userId, t, onSave, onCancel }: {
-  account?: any; userId:string; t:typeof T.en;
+  account?: any; userId:string; t: TStrings;
   onSave:()=>void; onCancel:()=>void;
 }) {
   const [name, setName]         = useState(account?.name || "");
