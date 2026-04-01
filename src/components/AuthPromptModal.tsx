@@ -65,7 +65,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm"
             onClick={dismiss}
           />
 
@@ -75,7 +75,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-0 z-[101] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[501] flex items-center justify-center p-4"
           >
             <div
               className="relative w-full max-w-md rounded-2xl p-8 text-center"

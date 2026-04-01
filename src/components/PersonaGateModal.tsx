@@ -69,7 +69,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[80]"
+            className="fixed inset-0 z-[500]"
             style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
           />
 
@@ -79,7 +79,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="fixed z-[81] left-0 right-0 top-1/2 -translate-y-1/2 mx-auto w-[calc(100%-2rem)] max-w-[480px]"
+            className="fixed z-[501] left-0 right-0 top-1/2 -translate-y-1/2 mx-auto w-[calc(100%-2rem)] max-w-[480px]"
           >
             <div className="relative rounded-3xl overflow-hidden"
               style={{

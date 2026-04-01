@@ -493,7 +493,7 @@ export default function DashboardLayout() {
             {/* Dropdown */}
             {personaPickerOpen && (
               <div style={{
-                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 99999,
+                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200,
                 width: 260, maxWidth: "calc(100vw - 24px)",
                 background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 12, overflow: "hidden",
@@ -614,7 +614,7 @@ export default function DashboardLayout() {
 
       {/* Welcome popup */}
       {vikaPopup && welcomeMsg && (
-        <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
+        <div className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
           <div className="relative w-full max-w-sm rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()}
             style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(14,165,233,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
             <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }
@@ -658,7 +658,7 @@ export default function DashboardLayout() {
         <div
           onClick={e => { if (e.target === e.currentTarget) setTelegramModalOpen(false); }}
           style={{
-            position: "fixed", inset: 0, zIndex: 99999,
+            position: "fixed", inset: 0, zIndex: 500,
             background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: 20,

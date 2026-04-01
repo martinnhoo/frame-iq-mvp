@@ -432,9 +432,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .panel-enter { animation: panelIn 0.25s cubic-bezier(.23,1,.32,1) both; }
       `}</style>
 
-      <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-[700] bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[111] flex flex-col profile-panel-width"
+      <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[701] flex flex-col profile-panel-width"
         style={{ width: "min(400px, 100vw)", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
 
         {/* Header */}
