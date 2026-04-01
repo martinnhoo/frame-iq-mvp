@@ -691,27 +691,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   </div>
                 ) : (
                   <>
-                    {/* Summary card with reload */}
-                    {intel?.profile?.ai_summary && (
-                      <div style={{ padding: "14px 16px 12px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)", position: "relative" as const }}>
-                        <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(14,165,233,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 7 }}>
-                          {language === "pt" ? "O que aprendi sobre você" : language === "es" ? "Lo que aprendí sobre ti" : "What I've learned"}
-                        </p>
-                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.75)", lineHeight: 1.65, margin: 0 }}>{intel.profile.ai_summary}</p>
-                        {intel.profile.last_updated && (
-                          <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.25)", marginTop: 5 }}>
-                            {language === "pt" ? "Atualizado" : "Updated"}: {new Date(intel.profile.last_updated).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}
-                          </p>
-                        )}
-                        <button onClick={() => { setIntel(null); setIntelLoading(true); }}
-                          title={language === "pt" ? "Recarregar" : "Reload"}
-                          style={{ position: "absolute" as const, bottom: 8, right: 8, width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.45 }}
-                          onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                          onMouseLeave={e => (e.currentTarget.style.opacity = "0.45")}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(238,240,246,0.7)" strokeWidth="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                        </button>
-                      </div>
-                    )}
+                    {/* Summary removed from here — ai_summary is global (not per-account scoped).
+                        Real per-account intelligence is shown in the patterns/snapshots below. */}
 
                     {/* Meta Ads real performance */}
                     {hasSnaps && s0 ? (
@@ -891,15 +872,17 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                       </div>
                     )}
 
-                    {/* Empty */}
-                    {!intel?.profile?.ai_summary && !hasSnaps && realPatterns.length === 0 && prefPatterns.length === 0 && (
+                    {/* Empty — shown when no per-account data exists */}
+                    {!hasSnaps && realPatterns.length === 0 && prefPatterns.length === 0 && (
                       <div style={{ padding: "32px 16px", textAlign: "center" as const, borderRadius: 12, border: "1px dashed rgba(255,255,255,0.09)" }}>
-                        <div style={{ fontSize: 26, marginBottom: 10 }}>🧠</div>
-                        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
-                          {language === "pt" ? "Ainda aprendendo..." : "Still learning..."}
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+                        </div>
+                        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
+                          {language === "pt" ? "Sem dados para esta conta ainda" : language === "es" ? "Sin datos para esta cuenta aún" : "No data for this account yet"}
                         </p>
-                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
-                          {language === "pt" ? "Conecte Meta Ads ou Google Ads e use o produto — o sistema aprende com os resultados reais." : "Connect Meta Ads or Google Ads and use the product — it learns from real results."}
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.55 }}>
+                          {language === "pt" ? "Conecte Meta Ads ou Google Ads — o sistema aprende com os resultados reais desta conta." : language === "es" ? "Conecta Meta Ads o Google Ads — el sistema aprende con los resultados reales de esta cuenta." : "Connect Meta Ads or Google Ads — the system learns from this account's real results."}
                         </p>
                       </div>
                     )}
