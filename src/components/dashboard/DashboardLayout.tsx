@@ -85,7 +85,7 @@ export default function DashboardLayout() {
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" && window.innerWidth >= 1024);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [aiProfile, setAiProfile] = useState<{ industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null>(null);
@@ -130,21 +130,9 @@ export default function DashboardLayout() {
     } catch {}
   };
 
-  // ── Responsive sidebar: close on mobile resize & route change ──────────────
+  // ── Close sidebar on mobile route change ──────────────────────────────────
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) setSidebarOpen(false);
-      else setSidebarOpen(true);
-    };
-    window.addEventListener("resize", handleResize);
-    // Set correct initial state based on actual viewport
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    if (window.innerWidth < 1024) setSidebarOpen(false);
+    if (window.innerWidth < 768) setSidebarOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -427,21 +415,8 @@ export default function DashboardLayout() {
         transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
         overflow: "hidden",
         position: "relative",
-      }} className="lg:block hidden">
-        <DashboardSidebar
-          user={user}
-          profile={profile}
-          onProfileUpdate={(p) => setProfile(p as typeof profile)}
-          open={true}
-          onClose={() => {}}
-          onOpenProfile={() => setProfileOpen(true)}
-          savedPersonas={savedPersonas}
-          selectedPersona={selectedPersona}
-          onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
-        />
-      </div>
-      {/* Mobile sidebar — overlay style */}
-      <div className="lg:hidden">
+        zIndex: 50,
+      }}>
         <DashboardSidebar
           user={user}
           profile={profile}

@@ -141,21 +141,15 @@ export function DashboardSidebar({
       <style>{`
         @keyframes sb-in { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:translateY(0) } }
         .sb-hover:hover { background: rgba(255,255,255,0.04) !important; }
-        .sidebar-transition { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
       `}</style>
 
-      {open && (
-        <div className="fixed inset-0 z-40 lg:hidden" onClick={onClose}
-          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }} />
-      )}
-
       <aside
-        className={`fixed lg:relative lg:h-full inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
         style={{
-          width: 224, background: "#080b14",
+          width: 224, height: "100%", background: "#080b14",
           borderRight: "1px solid rgba(255,255,255,0.05)",
           display: "flex", flexDirection: "column", flexShrink: 0,
           fontFamily: "'Plus Jakarta Sans', sans-serif",
+          position: "relative",
         }}>
 
         {/* Logo */}
