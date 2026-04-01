@@ -87,10 +87,10 @@ export default function OAuthCallback() {
 
         if (accs.length === 0) {
           setStatus("success");
-          // Google: no accounts returned from token exchange — user must enter Customer ID in Accounts page
           const dest = `/dashboard/accounts?connected=${platform || ""}`;
+          const savedId = data?.saved_id;
           setMessage(platform === "google"
-            ? `Google Ads conectado. Abra Contas → Google Ads → insira seu Customer ID para continuar.`
+            ? `Google Ads conectado${savedId ? " ✓" : ""}. Vá em Contas → Google Ads → insira seu Customer ID.`
             : `${pl.name} connected.`);
           setTimeout(() => navigate(dest), 2800);
           return;

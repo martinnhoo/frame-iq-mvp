@@ -639,13 +639,17 @@ export default function AccountsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Show hint after returning from Google OAuth
+  // Show hint after returning from Google OAuth + force reload accounts
   useEffect(() => {
     const connected = searchParams.get("connected");
-    if (connected === "google") {
+    if (connected) {
       setTimeout(() => {
-        toast.success("Google Ads conectado! Expanda a conexão Google e insira seu Customer ID.", { duration: 6000 });
-      }, 800);
+        // Reload accounts to reflect fresh connection
+        load();
+        if (connected === "google") {
+          toast.success("Google Ads conectado! Expanda a conta e insira seu Customer ID para finalizar.", { duration: 7000 });
+        }
+      }, 600);
     }
   }, []);
 
