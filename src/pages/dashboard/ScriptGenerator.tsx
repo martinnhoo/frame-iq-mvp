@@ -29,12 +29,6 @@ function deriveMarket(lang?: string): string | null {
 export default function ScriptGenerator() {
   const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
 
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
@@ -47,6 +41,18 @@ export default function ScriptGenerator() {
   const [angle, setAngle] = useState("");
   const [extraContext, setExtraContext] = useState("");
   const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [copied, setCopied] = useState<number | null>(null);
+  const [personaApplied, setPersonaApplied] = useState(false);
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+
   useEffect(() => {
     const p = searchParams.get("product"); if (p) setProduct(p);
     const o = searchParams.get("offer"); if (o) setOffer(o);
@@ -56,10 +62,6 @@ export default function ScriptGenerator() {
     const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [copied, setCopied] = useState<number | null>(null);
-  const [personaApplied, setPersonaApplied] = useState(false);
 
   // Auto-fill from active persona
   useEffect(() => {

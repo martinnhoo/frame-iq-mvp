@@ -66,7 +66,19 @@ export default function HookGenerator() {
   const plan = (profile as any)?.plan || "free";
   const hookCount = HOOK_CAPS[plan] ?? 3;
   const dt = useDashT(language);
-
+  const [product, setProduct] = useState("");
+  const [niche, setNiche] = useState("");
+  const [market, setMarket] = useState("GLOBAL");
+  const [platform, setPlatform] = useState("TikTok");
+  const [searchParams] = useSearchParams();
+  const [tone, setTone] = useState("Aggressive / Urgent");
+  const [funnelStage, setFunnelStage] = useState("tofu");
+  const [loading, setLoading] = useState(false);
+  const [hooks, setHooks] = useState<Hook[]>([]);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [mockMode, setMockMode] = useState(false);
+  const [feedback, setFeedback] = useState<Record<number, "up" | "down">>({});
   if (!user) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
       <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
@@ -74,11 +86,6 @@ export default function HookGenerator() {
     </div>
   );
 
-  const [product, setProduct] = useState("");
-  const [niche, setNiche] = useState("");
-  const [market, setMarket] = useState("GLOBAL");
-  const [platform, setPlatform] = useState("TikTok");
-  const [searchParams] = useSearchParams();
   useEffect(() => {
     // Pre-fill product — only name, not full description (too verbose)
     if (selectedPersona?.name && !product) {
@@ -111,21 +118,15 @@ export default function HookGenerator() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiProfile, profile, selectedPersona?.id]);
 
+
+
   useEffect(() => {
     const p = searchParams.get("product"); if (p) setProduct(p);
     const n = searchParams.get("niche"); if (n) setNiche(n);
     const m = searchParams.get("market"); if (m) setMarket(m);
     const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
   }, []);
-  const [tone, setTone] = useState("Aggressive / Urgent");
-  const [funnelStage, setFunnelStage] = useState("tofu");
 
-  const [loading, setLoading] = useState(false);
-  const [hooks, setHooks] = useState<Hook[]>([]);
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-  const [mockMode, setMockMode] = useState(false);
-  const [feedback, setFeedback] = useState<Record<number, "up" | "down">>({});
 
   const generate = async () => {
     if (!product.trim()) { toast.error(language === "pt" ? "Descreva seu produto primeiro" : language === "es" ? "Describe tu producto primero" : "Describe your product first"); return; }

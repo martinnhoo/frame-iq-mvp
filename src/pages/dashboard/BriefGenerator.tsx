@@ -30,25 +30,12 @@ function deriveMarket(lang?: string): string | null {
 export default function BriefGenerator() {
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
 
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
   const { language } = useLanguage();
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [searchParams] = useSearchParams();
   // Pre-fill from AI navigation
-  useEffect(() => {
-    const p = searchParams.get("product"); if (p) setProduct(p);
-    const o = searchParams.get("offer"); if (o) setOffer(o);
-    const m = searchParams.get("market"); if (m) setMarket(m);
-    const a = searchParams.get("audience"); if (a) setAudience(a);
-    const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
-  }, []);
   const [objective, setObjective] = useState("conversion");
   const [market, setMarket] = useState(() => language === "pt" ? "BR" : language === "es" ? "MX" : "US");
   const [audience, setAudience] = useState("");
@@ -58,6 +45,21 @@ export default function BriefGenerator() {
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [personaApplied, setPersonaApplied] = useState(false);
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+
+  useEffect(() => {
+    const p = searchParams.get("product"); if (p) setProduct(p);
+    const o = searchParams.get("offer"); if (o) setOffer(o);
+    const m = searchParams.get("market"); if (m) setMarket(m);
+    const a = searchParams.get("audience"); if (a) setAudience(a);
+    const ctx = searchParams.get("context"); if (ctx) setExtraContext(ctx);
+  }, []);
 
   // Auto-fill from active persona
   useEffect(() => {
