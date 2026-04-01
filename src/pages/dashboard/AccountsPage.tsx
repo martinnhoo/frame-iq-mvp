@@ -121,12 +121,48 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
       if (!/^\d{10}$/.test(id)) {
         toast.error(language === "pt"
           ? "Customer ID inválido — deve ter exatamente 10 dígitos (ex: 512-522-3131)"
-          : language === "es"
-          ? "Customer ID inválido — debe tener exactamente 10 dígitos"
           : "Invalid Customer ID — must be exactly 10 digits (e.g. 512-522-3131)");
         return;
       }
+      // ── Verify account via edge function before saving ───────────────────────
+      setChangingAccount(platform);
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-google-account", {
+          body: { user_id: userId, persona_id: accountId, customer_id: id },
+        });
+        if (error || !data?.valid) {
+          toast.error(language === "pt"
+            ? (data?.reason === "not_found"
+                ? "Conta não encontrada — verifique o Customer ID"
+                : data?.reason === "no_access"
+                  ? "Sem acesso a essa conta — verifique as permissões"
+                  : "Customer ID inválido ou sem acesso")
+            : (data?.reason === "not_found"
+                ? "Account not found — check your Customer ID"
+                : data?.reason === "no_access"
+                  ? "No access to this account — check permissions"
+                  : "Invalid Customer ID or no access"));
+          return;
+        }
+        const verifiedName = data.name || `Account ${id}`;
+        const conn = connections[platform];
+        const existing = conn?.accounts || [];
+        const already = existing.find((a: any) => a.id === id);
+        const newAcc = { id, name: verifiedName };
+        const updated = already
+          ? existing.map((a: any) => a.id === id ? newAcc : a)
+          : [...existing, newAcc];
+        await supabase.from("platform_connections" as any)
+          .update({ ad_accounts: updated, selected_account_id: id })
+          .eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
+        toast.success(`✓ ${verifiedName}`);
+        setManualAccountId(""); setExpandedPlatform(null); load();
+      } catch {
+        toast.error(language === "pt" ? "Erro ao verificar conta — tente novamente" : "Error verifying account");
+      } finally { setChangingAccount(null); }
+      return;
     }
+    // Non-Google platforms
     setChangingAccount(platform);
     try {
       const conn = connections[platform];
@@ -135,7 +171,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
       const newAcc = already || { id, name: `Account ${id}` };
       const updated = already ? existing : [...existing, newAcc];
       await supabase.from("platform_connections" as any).update({ ad_accounts: updated, selected_account_id: id }).eq("user_id", userId).eq("persona_id", accountId).eq("platform", platform);
-      toast.success(language === "pt" ? `Customer ID ${id} salvo — a IA vai usar esta conta.` : language === "es" ? `Customer ID ${id} guardado.` : `Customer ID ${id} saved.`);
+      toast.success(language === "pt" ? `Customer ID ${id} salvo.` : `Customer ID ${id} saved.`);
       setManualAccountId(""); setExpandedPlatform(null); load();
     } catch { toast.error("Erro ao salvar ID"); }
     finally { setChangingAccount(null); }
