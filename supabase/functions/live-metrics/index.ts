@@ -189,7 +189,7 @@ serve(async (req) => {
           });
 
           const gQuery = async (query: string): Promise<any> => {
-            const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+            const url = `https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`;
             const body = JSON.stringify({ query });
             // First try without login-customer-id
             const r1 = await fetch(url, { method: "POST", headers: makeHdr(false), body });

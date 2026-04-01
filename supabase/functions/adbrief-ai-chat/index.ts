@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
           if (acc) {
             const custId = acc.id.replace(/-/g,"");
             const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??""}; // login-customer-id removed
-            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
+            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
             const [cr,ar,tr] = await Promise.allSettled([
               gq(`SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
               gq(`SELECT ad_group_ad.ad.name,ad_group_ad.ad.type,campaign.name,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
@@ -1027,7 +1027,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
                 ...(withLoginId ? { "login-customer-id": custId } : {}),
               });
               const safeGQuery = async (query: string): Promise<any> => {
-                const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+                const url = `https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`;
                 const body = JSON.stringify({ query });
                 const r1 = await fetch(url, { method: "POST", headers: makeGHdr(false), body });
                 const t1 = await r1.text();

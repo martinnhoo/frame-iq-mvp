@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
     // First try: list accessible customers (doesn't require knowing the customer ID)
     console.log("[verify-google] Trying listAccessibleCustomers first...");
-    const listRes = await fetch("https://googleads.googleapis.com/v19/customers:listAccessibleCustomers", {
+    const listRes = await fetch("https://googleads.googleapis.com/v23/customers:listAccessibleCustomers", {
       method: "GET",
       headers: {
         "Authorization": "Bearer " + token,
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
       
       console.log("[verify-google] Querying custId:", custId, "| login-customer-id:", loginId || "(none)");
       
-      const r = await fetch("https://googleads.googleapis.com/v19/customers/" + custId + "/googleAds:search", {
+      const r = await fetch("https://googleads.googleapis.com/v23/customers/" + custId + "/googleAds:search", {
         method: "POST", headers, body: JSON.stringify({ query }),
       });
       const text = await r.text();

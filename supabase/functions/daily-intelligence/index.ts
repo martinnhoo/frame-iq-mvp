@@ -235,7 +235,7 @@ async function processGoogleLearning(sb: any, anthropicKey: string | undefined) 
 
       // Fetch top ads — try without login-customer-id first, fallback with it for MCC accounts
       const query = `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, metrics.ctr, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`;
-      const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+      const url = `https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`;
       let resText = '';
       const r1 = await fetch(url, { method: 'POST', headers: makeHdrL(false), body: JSON.stringify({ query }) });
       resText = await r1.text();
@@ -1121,7 +1121,7 @@ async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, u
     ...(withLoginId ? { 'login-customer-id': custId } : {}),
   });
   const safeQuery = async (query: string): Promise<any> => {
-    const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+    const url = `https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`;
     const body = JSON.stringify({ query });
     const r1 = await fetch(url, { method: 'POST', headers: makeHdr(false), body });
     const t1 = await r1.text();
