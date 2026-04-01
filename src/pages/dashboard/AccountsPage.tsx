@@ -211,16 +211,6 @@ function PlatformRow({ p, userId, accountId, t }: {
 
   useEffect(() => { load(); }, [load]);
 
-  // Show hint after returning from Google OAuth
-  useEffect(() => {
-    const connected = searchParams.get("connected");
-    if (connected === "google") {
-      setTimeout(() => {
-        toast.success("Google Ads conectado! Expanda a conexão Google e insira seu Customer ID.", { duration: 6000 });
-      }, 800);
-    }
-  }, []);
-
   const connect = async () => {
     setConn2(true);
     try {
@@ -648,6 +638,16 @@ export default function AccountsPage() {
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Show hint after returning from Google OAuth
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    if (connected === "google") {
+      setTimeout(() => {
+        toast.success("Google Ads conectado! Expanda a conexão Google e insira seu Customer ID.", { duration: 6000 });
+      }, 800);
+    }
+  }, []);
 
   const activate = (acc: any) => {
     setSelectedPersona({ ...acc } as any);
