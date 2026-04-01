@@ -103,7 +103,7 @@ export function DashboardSidebar({
   const location = useLocation();
   const { language } = useLanguage();
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const [kpi, setKpi] = useState<{ spend: number; ctr: number; ads: number } | null>(null);
+  const [kpi, setKpi] = useState<{ spend: number; ctr: number; ads: number; trend: "up" | "down" | "flat" | null } | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const plan = profile?.plan || "free";
@@ -117,13 +117,20 @@ export function DashboardSidebar({
   useEffect(() => {
     if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
     (supabase as any).from("daily_snapshots")
-      .select("total_spend, avg_ctr, active_ads")
+      .select("total_spend, avg_ctr, active_ads, yesterday_ctr")
       .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
-      .order("date", { ascending: false }).limit(1).maybeSingle()
+      .order("date", { ascending: false }).limit(2)
       .then(({ data }: any) => {
-        if (data && (data.total_spend > 0 || data.avg_ctr > 0)) {
-          setKpi({ spend: data.total_spend || 0, ctr: (data.avg_ctr || 0) * 100, ads: data.active_ads || 0 });
-        } else setKpi(null);
+        const rows = data || [];
+        const latest = rows[0];
+        const prev = rows[1];
+        if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) { setKpi(null); return; }
+        const ctr = (latest.avg_ctr || 0) * 100;
+        const prevCtr = prev ? (prev.avg_ctr || 0) * 100 : null;
+        const trend = prevCtr !== null && prevCtr > 0
+          ? ctr > prevCtr * 1.05 ? "up" : ctr < prevCtr * 0.95 ? "down" : "flat"
+          : null;
+        setKpi({ spend: latest.total_spend || 0, ctr, ads: latest.active_ads || 0, trend });
       })
       .catch(() => setKpi(null));
   }, [user?.id, selectedPersona?.id]);
@@ -199,12 +206,25 @@ export function DashboardSidebar({
                 <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: selectedPersona ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.01em" }}>
                   {selectedPersona?.name || (pt ? "Sem conta" : "No account")}
                 </p>
-                {/* Spend + CTR — o que o gestor quer ver */}
-                {kpi != null && (
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.38)", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    R${kpi.spend.toFixed(0)} · {kpi.ctr.toFixed(2)}% CTR
+                {/* Ads ativos + CTR + tendência — o que o gestor precisa */}
+                {kpi != null ? (
+                  <p style={{ margin: 0, fontSize: 11, lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+                    {kpi.ads > 0 && (
+                      <span style={{ color: "#22c55e" }}>● {kpi.ads} {pt ? "ativos" : "active"}</span>
+                    )}
+                    {kpi.ads > 0 && kpi.ctr > 0 && <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>}
+                    {kpi.ctr > 0 && (
+                      <span style={{ color: "rgba(255,255,255,0.45)" }}>
+                        {kpi.ctr.toFixed(2)}% CTR
+                        {kpi.trend === "up" && <span style={{ color: "#22c55e", marginLeft: 2 }}>↑</span>}
+                        {kpi.trend === "down" && <span style={{ color: "#f87171", marginLeft: 2 }}>↓</span>}
+                      </span>
+                    )}
+                    {kpi.ads === 0 && kpi.ctr === 0 && (
+                      <span style={{ color: "rgba(255,255,255,0.25)" }}>{pt ? "sem campanhas ativas" : "no active campaigns"}</span>
+                    )}
                   </p>
-                )}
+                ) : null}
               </div>
               {savedPersonas.length > 0 && (
                 <ChevronDown size={12} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
