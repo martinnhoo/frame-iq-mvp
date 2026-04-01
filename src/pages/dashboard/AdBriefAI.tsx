@@ -684,11 +684,11 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
   const ctr   = ctrMatch?.[1];
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto 16px" }}>
+    <div style={{ maxWidth: 640, margin: "auto auto 0", display:"flex", flexDirection:"column", alignItems:"flex-start", padding:"0 32px" }}>
       {/* Greeting header — ABAvatar + title */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <ABAvatar size={30} />
-        <span style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>{block.title}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+        <ABAvatar size={36} />
+        <span style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.03em" }}>{block.title}</span>
       </div>
 
       {/* If real data: show KPI callout row + message */}
@@ -714,7 +714,7 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
       )}
 
       {/* Message body */}
-      <p style={{ fontFamily: M, fontSize: 14, color: "rgba(238,240,246,0.80)", lineHeight: 1.75, margin: "0 0 16px", letterSpacing: "-0.01em" }}>
+      <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.58)", lineHeight: 1.8, margin: "0 0 22px", letterSpacing: "-0.01em", maxWidth: 540 }}>
         {/* Strip spend/CTR from content since we showed them as cards */}
         {hasRealData
           ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
@@ -725,9 +725,9 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
       <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
         {actions.map((label, i) => (
           <button key={i} onClick={() => onSend(label)}
-            style={{ padding: "6px 14px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.45)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.09)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.color = "rgba(238,240,246,0.9)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; e.currentTarget.style.color = "rgba(238,240,246,0.45)"; }}>
+            style={{ padding: "8px 16px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.65)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.10)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.28)"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}>
             {label}
           </button>
         ))}
@@ -2176,9 +2176,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#0c0f1a",position:"relative" as const}}>
       {/* Background orbs — same as Login */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(ellipse at center,hsla(199,83%,58%,0.09) 0%,transparent 65%)",filter:"blur(80px)",top:"-20%",left:"10%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
-        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,hsla(320,80%,60%,0.06) 0%,transparent 65%)",filter:"blur(80px)",bottom:"10%",right:"5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,0.025) 1px,transparent 1px)",backgroundSize:"60px 60px",opacity:1}}/>
+        <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(ellipse at center,hsla(199,83%,58%,0.11) 0%,transparent 65%)",filter:"blur(80px)",top:"-20%",left:"10%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
+        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,hsla(260,70%,60%,0.07) 0%,transparent 65%)",filter:"blur(80px)",bottom:"10%",right:"5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)",backgroundSize:"48px 48px",opacity:1}}/>
       </div>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
@@ -2195,7 +2195,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"24px 0 8px",background:"transparent",position:"relative" as const,zIndex:1}}>
+      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -2318,7 +2318,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,margin:"0 auto 28px",padding:"0 24px"}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,margin:"0 auto 32px",padding:"0 32px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end",position:"relative" as const}} className="user-msg-row">
                 <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
@@ -2336,7 +2336,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"11px 16px",borderRadius:"16px 16px 4px 16px",background:"#0ea5e9",fontSize:14,color:"#fff",...m,lineHeight:1.65,boxShadow:"0 4px 16px rgba(14,165,233,0.2)"}}>
+                  <div style={{padding:"12px 18px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.10)",border:"1px solid rgba(255,255,255,0.14)",fontSize:14,color:"#f0f2f8",...m,lineHeight:1.7,backdropFilter:"blur(8px)"}}>
                     {msg.userText}
                   </div>
                 </div>
@@ -2346,10 +2346,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <div style={{width:24,height:24,borderRadius:8,background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                      <Sparkles size={11} color="rgba(14,165,233,0.9)" strokeWidth={2}/>
+                    <div style={{width:28,height:28,borderRadius:9,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
+                      <ABAvatar size={28}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"0.04em"}}>AdBrief</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.55)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -2374,7 +2374,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:10,paddingLeft:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:0,opacity:0.6,transition:"opacity 0.15s"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
                     style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
                     onMouseEnter={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
@@ -2590,6 +2590,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
         }
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
+        .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
+        .msg-body{font-size:14px;line-height:1.75;}
+        .msg-body p{margin:0 0 12px;}
+        .msg-body p:last-child{margin-bottom:0;}
+        .msg-body strong{font-weight:600;color:#f0f2f8;}
+        .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
         .user-msg-row .user-msg-actions button:hover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.6)!important;}
       `}</style>
 
