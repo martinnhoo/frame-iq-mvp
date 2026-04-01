@@ -34,7 +34,7 @@ export default function OAuthCallback() {
       if (error) {
         setStatus("error");
         setMessage(`${pl.name} connection was cancelled.`);
-        setTimeout(() => navigate("/dashboard/ai"), 2500);
+        setTimeout(() => navigate("/dashboard/accounts"), 2500);
         return;
       }
 
@@ -76,8 +76,12 @@ export default function OAuthCallback() {
 
         if (accs.length === 0) {
           setStatus("success");
-          setMessage(`${pl.name} connected — no ad accounts found.`);
-          setTimeout(() => navigate("/dashboard/ai"), 2000);
+          // Google: no accounts returned from token exchange — user must enter Customer ID in Accounts page
+          const dest = `/dashboard/accounts?connected=${platform || ""}`;
+          setMessage(platform === "google"
+            ? `Google Ads conectado. Abra Contas → Google Ads → insira seu Customer ID para continuar.`
+            : `${pl.name} connected.`);
+          setTimeout(() => navigate(dest), 2800);
           return;
         }
 
@@ -86,7 +90,7 @@ export default function OAuthCallback() {
           await saveSelectedAccount(uid, accs[0].id, pid);
           setStatus("success");
           setMessage(`${pl.name} connected with ${accs[0].name || accs[0].id}.`);
-          setTimeout(() => navigate("/dashboard/ai"), 2000);
+          setTimeout(() => navigate(`/dashboard/accounts?connected=${platform || ""}`), 2000);
           return;
         }
 
@@ -98,7 +102,7 @@ export default function OAuthCallback() {
       } catch (e: any) {
         setStatus("error");
         setMessage(e.message || "Connection failed. Please try again.");
-        setTimeout(() => navigate("/dashboard/ai"), 3500);
+        setTimeout(() => navigate("/dashboard/accounts"), 3500);
       }
     };
     run();
@@ -196,7 +200,7 @@ export default function OAuthCallback() {
             ))}
 
             <button
-              onClick={() => navigate("/dashboard/ai")}
+              onClick={() => navigate("/dashboard/accounts")}
               style={{ marginTop: 8, padding: "10px", borderRadius: 9, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer", fontFamily: F, width: "100%" }}
             >
               Skip for now
@@ -205,7 +209,7 @@ export default function OAuthCallback() {
         )}
 
         {(status === "success" || status === "error") && (
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>Redirecting to Loop...</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>Redirecionando para Contas...</p>
         )}
       </div>
     </div>

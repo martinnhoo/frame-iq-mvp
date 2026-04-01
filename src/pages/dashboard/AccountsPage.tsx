@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -210,25 +211,50 @@ function PlatformRow({ p, userId, accountId, t }: {
 
   useEffect(() => { load(); }, [load]);
 
+  // Show hint after returning from Google OAuth
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    if (connected === "google") {
+      setTimeout(() => {
+        toast.success("Google Ads conectado! Expanda a conexão Google e insira seu Customer ID.", { duration: 6000 });
+      }, 800);
+    }
+  }, []);
+
   const connect = async () => {
     setConn2(true);
     try {
-      const { data } = await supabase.functions.invoke(p.fn, {
+      const { data, error: fnErr } = await supabase.functions.invoke(p.fn, {
         body: { action:"get_auth_url", user_id:userId, persona_id:accountId },
       });
-      if (data?.url) window.location.href = data.url;
-      else toast.error(t.connect + " failed");
-    } catch { toast.error(t.connect + " failed"); }
-    finally { setConn2(false); }
+      if (fnErr) throw new Error(fnErr.message || String(fnErr));
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Não foi possível iniciar conexão — tente novamente");
+      }
+    } catch (e:any) {
+      console.error("[AdBrief] connect:", e);
+      toast.error("Erro ao conectar: " + (e?.message?.slice(0,80) || "tente novamente"));
+      setConn2(false);
+    }
   };
 
   const disconnect = async () => {
     if (!confirm(t.disconnect + " " + p.label + "?")) return;
     setDisc(true);
-    await supabase.from("platform_connections" as any).delete()
-      .eq("user_id", userId).eq("platform", p.id).eq("persona_id", accountId);
-    toast.success(p.label + " " + t.disconnect + "ed");
-    setConn(null); setDisc(false); setExpanded(false);
+    try {
+      const { error } = await supabase.from("platform_connections" as any).delete()
+        .eq("user_id", userId).eq("platform", p.id).eq("persona_id", accountId);
+      if (error) throw error;
+      toast.success(p.label + " desconectado");
+      setConn(null); setExpanded(false);
+    } catch (e:any) {
+      console.error("[AdBrief] disconnect:", e);
+      toast.error("Erro ao desconectar — tente novamente");
+    }
+    setDisc(false);
   };
 
   const selectAcc = async (id: string) => {
@@ -243,24 +269,45 @@ function PlatformRow({ p, userId, accountId, t }: {
     if (!/^\d{10}$/.test(id)) { toast.error(t.invalid_id); return; }
     setVerifying(true);
     try {
-      const { data:vd } = await supabase.functions.invoke("verify-google-account", {
+      const { data:vd, error:fnErr } = await supabase.functions.invoke("verify-google-account", {
         body: { user_id:userId, persona_id:accountId, customer_id:id },
       });
+      if (fnErr) {
+        // Edge function invocation error (network, auth, timeout)
+        const msg = fnErr?.message || String(fnErr);
+        if (msg.includes("401") || msg.includes("unauthorized")) {
+          toast.error("Sessão expirada — faça login novamente");
+        } else if (msg.includes("non_2xx") || msg.includes("500")) {
+          toast.error("Erro no servidor — tente novamente em instantes");
+        } else {
+          toast.error("Erro ao verificar: " + msg.slice(0, 60));
+        }
+        return;
+      }
       if (!vd?.valid) {
-        toast.error(vd?.reason === "not_found" ? "Account not found" : vd?.reason === "no_access" ? "No access" : t.invalid_id);
+        const reason = vd?.reason;
+        if (reason === "not_found") toast.error("Conta não encontrada — verifique o ID");
+        else if (reason === "no_access") toast.error("Sem acesso a esta conta — verifique as permissões do Google Ads");
+        else if (reason === "no_token") toast.error("Reconecte o Google Ads — token expirado");
+        else if (reason === "invalid_format") toast.error(t.invalid_id);
+        else toast.error(vd?.message || t.invalid_id);
         return;
       }
       const accs: any[] = conn?.ad_accounts || [];
-      const newAcc = { id, name: vd.name || `Account ${id}` };
+      const newAcc = { id, name: vd.name || `Account ${id}`, currency: vd.currency };
       const updated = accs.find((a:any) => a.id === id)
         ? accs.map((a:any) => a.id === id ? newAcc : a)
         : [...accs, newAcc];
-      await supabase.from("platform_connections" as any)
+      const { error: updateErr } = await supabase.from("platform_connections" as any)
         .update({ ad_accounts:updated, selected_account_id:id })
         .eq("user_id",userId).eq("persona_id",accountId).eq("platform",p.id);
-      toast.success(`✓ ${newAcc.name}`);
+      if (updateErr) { toast.error("Erro ao salvar conta"); return; }
+      toast.success(`✓ ${newAcc.name}${vd.currency ? " · " + vd.currency : ""}`);
       setCustId(""); setExpanded(false); load();
-    } catch { toast.error("Error verifying"); }
+    } catch (e:any) {
+      console.error("[AdBrief] verifyGoogle:", e);
+      toast.error("Erro inesperado: " + (e?.message || "tente novamente"));
+    }
     finally { setVerifying(false); }
   };
 
@@ -391,8 +438,13 @@ function PlatformRow({ p, userId, accountId, t }: {
           {/* Google: manual Customer ID */}
           {p.id === "google" && (
             <div>
-              <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
-                textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>{t.cid_label}</p>
+              <div style={{ marginBottom:8 }}>
+                <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                  textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 3px" }}>{t.cid_label}</p>
+                <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:0 }}>
+                  O Google não compartilha a conta automaticamente — é preciso informar o ID
+                </p>
+              </div>
               <div style={{ display:"flex", gap:8, marginBottom:6 }}>
                 <input value={custId} onChange={e=>setCustId(e.target.value)}
                   placeholder={t.cid_ph}
@@ -409,7 +461,10 @@ function PlatformRow({ p, userId, accountId, t }: {
                   {verifying ? <Loader2 size={13} className="animate-spin" style={{display:"block"}}/> : t.verify}
                 </button>
               </div>
-              <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.22)", margin:0 }}>{t.cid_hint}</p>
+              <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.22)", margin:"6px 0 0", lineHeight:1.5 }}>
+                {t.cid_hint}<br/>
+                <span style={{ color:"rgba(14,165,233,0.55)" }}>Formato: 123-456-7890 (10 dígitos)</span>
+              </p>
             </div>
           )}
         </div>
@@ -568,6 +623,7 @@ export default function AccountsPage() {
   const { user, selectedPersona, setSelectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const t = T[(language as Lang)] || T.pt;
+  const [searchParams] = useSearchParams();
 
   const [accounts, setAccounts]   = useState<any[]>([]);
   const [loading, setLoading]     = useState(true);
