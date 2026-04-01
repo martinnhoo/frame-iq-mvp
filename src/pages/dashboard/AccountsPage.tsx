@@ -202,6 +202,7 @@ function PlatformRow({ p, userId, accountId, t }: {
 }) {
   const [conn, setConn]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [connecting, setConn2]    = useState(false);
   const [disconnecting, setDisc]  = useState(false);
   const [expanded, setExpanded]   = useState(false);
@@ -209,22 +210,34 @@ function PlatformRow({ p, userId, accountId, t }: {
   const [verifying, setVerifying] = useState(false);
 
   const load = useCallback(async () => {
-    // Query platform_connections directly (safe columns only — tokens are revoked from authenticated)
-    const { data, error } = await supabase.from("platform_connections" as any)
-      .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
-      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
-      .maybeSingle();
-    if (error) {
-      // Fallback to safe view if direct query fails
-      const { data: fallback } = await supabase.from("platform_connections_safe" as any)
-        .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
-        .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
-        .maybeSingle();
-      setConn(fallback || null);
-    } else {
-      setConn(data || null);
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("platform_connections" as any)
+          .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
+          .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
+          .maybeSingle()
+      );
+      if (error) {
+        const { data: fallback, error: fallbackError } = await withTimeout(
+          supabase.from("platform_connections_safe" as any)
+            .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
+            .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
+            .maybeSingle()
+        );
+        if (fallbackError) throw fallbackError;
+        setConn(fallback || null);
+      } else {
+        setConn(data || null);
+      }
+    } catch (e) {
+      console.error("[AdBrief] platform row load:", e);
+      setConn(null);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [userId, accountId, p.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -364,7 +377,9 @@ function PlatformRow({ p, userId, accountId, t }: {
           </div>
           <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.35)", margin:0,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-            {isConnected
+            {loadError
+              ? "Erro ao carregar conexão"
+              : isConnected
               ? (selAcc ? `${selAcc.name || selAcc.id}${ads.length>1?` · ${ads.length} contas`:""}` : t.connected)
               : t.not_connected}
           </p>
