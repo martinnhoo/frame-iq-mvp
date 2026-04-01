@@ -181,14 +181,18 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   const submit = () => { if(val.trim()){onSend(cfg.buildMsg(val.trim(),platform,tone));onClose();}};
 
   return (
-    <div style={{borderRadius:16,overflow:"hidden",border:`1px solid ${cfg.color}22`,background:`linear-gradient(135deg,${cfg.color}07 0%,rgba(10,12,20,0.98) 100%)`,margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px 10px",borderBottom:`1px solid ${cfg.color}15`}}>
+    <div style={{borderRadius:16,overflow:"hidden",border:`1px solid rgba(255,255,255,0.10)`,background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",boxShadow:`0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35), 0 0 40px ${cfg.color}08`,backdropFilter:"blur(16px)",margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px 10px",borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:15}}>{cfg.icon}</span>
-          <span style={{...j,fontSize:13,fontWeight:700,color:"#fff"}}>{cfg.title[l]}</span>
+          <div style={{width:24,height:24,borderRadius:7,background:`${cfg.color}20`,border:`1px solid ${cfg.color}35`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{fontSize:12}}>{cfg.icon}</span>
+          </div>
+          <span style={{...j,fontSize:13,fontWeight:700,color:"#f0f2f8",letterSpacing:"-0.01em"}}>{cfg.title[l]}</span>
         </div>
-        <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.3)",cursor:"pointer",fontSize:15,display:"flex",padding:4}}>
-          <X size={14}/>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:7,color:"rgba(255,255,255,0.5)",cursor:"pointer",display:"flex",padding:"4px 6px",transition:"all 0.15s"}}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}>
+          <X size={13}/>
         </button>
       </div>
       <div style={{padding:"12px 16px 14px",display:"flex",flexDirection:"column",gap:10}}>
@@ -214,15 +218,15 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
           </div>
         )}
         <textarea value={val} onChange={e=>setVal(e.target.value)} placeholder={cfg.placeholder[l]} rows={3} autoFocus
-          style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 12px",color:"#fff",fontSize:13,lineHeight:1.6,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box"}}
-          onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}45`;}}
-          onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";}}
+          style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"10px 14px",color:"#f0f2f8",fontSize:13,lineHeight:1.65,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box",transition:"border-color 0.2s, background 0.2s, box-shadow 0.2s"}}
+          onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}55`;e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.boxShadow=`0 0 0 1px ${cfg.color}20`;}}
+          onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.boxShadow="none";}}
           onKeyDown={e=>{if(e.key==="Enter"&&e.metaKey)submit();}}
         />
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
           <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
           <button onClick={submit} disabled={!val.trim()}
-            style={{padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?`linear-gradient(135deg,${cfg.color},${cfg.color}bb)`:"rgba(255,255,255,0.05)",color:val.trim()?"#000":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s"}}>
+            style={{padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?`linear-gradient(135deg,#0ea5e9,#06b6d4)`:"rgba(255,255,255,0.06)",color:val.trim()?"#fff":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s",boxShadow:val.trim()?"0 4px 16px rgba(14,165,233,0.35)":"none"}}>
             {cfg.cta[l]}
           </button>
         </div>
@@ -2301,25 +2305,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {/* Inline tool panel */}
-        {activeTool&&activeTool!=="upload"&&(
-          <div style={{maxWidth:620,margin:"0 auto 4px"}}>
-            <InlineToolPanel
-              action={activeTool}
-              onClose={()=>setActiveTool(null)}
-              onSend={send}
-              lang={lang}
-              accountCtx={{
-                product: (profile as any)?.product || selectedPersona?.name || undefined,
-                niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
-                market: (profile as any)?.market || lang.toUpperCase(),
-                platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
-                angle: undefined,
-              }}
-            />
-          </div>
-        )}
-
         {messages.map((msg)=>(
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,margin:"0 auto 28px",padding:"0 24px"}}>
             {msg.role==="user"?(
@@ -2423,6 +2408,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
             })()}/>
         )}
+        {/* Inline tool panel — always at bottom of chat, after messages */}
+        {activeTool&&activeTool!=="upload"&&(
+          <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 24px"}}>
+            <InlineToolPanel
+              action={activeTool}
+              onClose={()=>setActiveTool(null)}
+              onSend={send}
+              lang={lang}
+              accountCtx={{
+                product: (profile as any)?.product || selectedPersona?.name || undefined,
+                niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
+                market: (profile as any)?.market || lang.toUpperCase(),
+                platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
+                angle: undefined,
+              }}
+            />
+          </div>
+        )}
+
         <div ref={bottomRef} style={{height:8}}/>
       </div>
 
