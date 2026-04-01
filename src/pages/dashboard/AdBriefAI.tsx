@@ -1374,26 +1374,20 @@ export default function AdBriefAI() {
           const hasAnyConn = hasMetaConn || hasGoogleConn;
 
           if(!snap && hasAnyConn){
-            if(hasMetaConn){
-              // Meta connected — use daily-intelligence (supports Meta snapshots)
-              supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
-                .then(()=>{
-                  (supabase as any).from("daily_snapshots")
-                    .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
-                    .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
-                    .then((r2:any)=>{
-                      const all2 = (r2.data || []) as any[];
-                      const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
-                      if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
-                    })
-                    .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
-                })
-                .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
-            } else {
-              // Google-only — daily-intelligence doesn't support Google snapshots yet
-              // Fall through to greeting with connection context (no snapshot)
-              if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn);
-            }
+            // Both Meta and Google now supported by daily-intelligence
+            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
+              .then(()=>{
+                (supabase as any).from("daily_snapshots")
+                  .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
+                  .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
+                  .then((r2:any)=>{
+                    const all2 = (r2.data || []) as any[];
+                    const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
+                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
+                  })
+                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
+              })
+              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
           } else {
             if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn);
           }
@@ -1597,11 +1591,14 @@ export default function AdBriefAI() {
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
         const parts: string[] = [];
+        // Google Ads uses $ (USD-based reporting), Meta BR uses R$
+        const isGoogleOnly = hasGoogleConn && !hasMetaConn;
+        const currSymbol = isGoogleOnly ? "$" : "R$";
         if (lang === "pt") {
-          parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — R$${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
+          parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — ${currSymbol}${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
           if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, R$${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
+          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, ${currSymbol}${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
           if (fatigued.length) parts.push(`"${fatigued[0].name?.slice(0, 40)}" freq. ${fatigued[0].frequency?.toFixed(1)}x — fadiga criativa, troque o criativo.`);
           if (approachingFatigue.length) parts.push(`⚠️ "${approachingFatigue[0].name?.slice(0, 35)}" — ${approachingFatigue[0].predictCritical}: prepare uma variação agora.`);
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);

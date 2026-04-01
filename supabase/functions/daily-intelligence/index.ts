@@ -20,23 +20,42 @@ Deno.serve(async (req) => {
     const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id);
     if (!authed) return unauthorizedResponse(cors);
 
-    // Cron mode: run for all active Meta users
-    const targets: { user_id: string; persona_id: string | null }[] = [];
+    // Cron mode: run for all active Meta users + Google-only users
+    const targets: { user_id: string; persona_id: string | null; platform: 'meta' | 'google' }[] = [];
     if (user_id) {
-      targets.push({ user_id, persona_id: persona_id || null });
+      // User-triggered: check which platforms are connected for this persona
+      const { data: metaConn } = await sb.from('platform_connections' as any)
+        .select('user_id').eq('user_id', user_id).eq('platform', 'meta').eq('status', 'active')
+        .eq('persona_id', persona_id || null).maybeSingle();
+      const { data: googleConn } = await sb.from('platform_connections' as any)
+        .select('user_id').eq('user_id', user_id).eq('platform', 'google').eq('status', 'active')
+        .eq('persona_id', persona_id || null).maybeSingle();
+      if (metaConn) targets.push({ user_id, persona_id: persona_id || null, platform: 'meta' });
+      if (googleConn && !metaConn) targets.push({ user_id, persona_id: persona_id || null, platform: 'google' });
     } else {
-      const { data: conns } = await sb.from('platform_connections' as any)
+      // Cron mode: Meta accounts
+      const { data: metaConns } = await sb.from('platform_connections' as any)
         .select('user_id, persona_id').eq('platform', 'meta').eq('status', 'active');
-      // Process ALL personas per user (each = one ad account in AdBrief)
-      (conns || []).forEach((c: any) => {
-        targets.push({ user_id: c.user_id, persona_id: c.persona_id });
+      (metaConns || []).forEach((c: any) => {
+        targets.push({ user_id: c.user_id, persona_id: c.persona_id, platform: 'meta' });
+      });
+      // Cron mode: Google-only accounts (no Meta connection for same persona)
+      const { data: googleConns } = await sb.from('platform_connections' as any)
+        .select('user_id, persona_id').eq('platform', 'google').eq('status', 'active');
+      const metaSet = new Set((metaConns || []).map((c: any) => `${c.user_id}:${c.persona_id}`));
+      (googleConns || []).forEach((c: any) => {
+        if (!metaSet.has(`${c.user_id}:${c.persona_id}`)) {
+          targets.push({ user_id: c.user_id, persona_id: c.persona_id, platform: 'google' });
+        }
       });
     }
 
     const results = [];
     for (const target of targets) {
       try {
-        const r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+        const r = target.platform === 'google'
+          ? await analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id)
+          : await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
         results.push({ ...target, result: r });
       } catch (e) { results.push({ ...target, error: String(e) }); }
     }
@@ -977,3 +996,221 @@ Retorne JSON:
   };
 }
 // redeploy 202603270200
+
+// ── analyzeGoogleAccount — Google Ads snapshot + learned_patterns ─────────────
+// Mirrors analyzeAccount() but for Google Ads connections.
+// Saves to daily_snapshots so the proactive greeting works for Google-only accounts.
+async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
+  const GOOGLE_DEV_TOKEN = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN') ?? '';
+  const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') ?? '';
+  const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '';
+  if (!GOOGLE_DEV_TOKEN) return { skipped: 'no_google_dev_token' };
+
+  // ── Get Google token ────────────────────────────────────────────────────────
+  let gConn: any = null;
+  if (persona_id) {
+    const { data } = await sb.from('platform_connections' as any)
+      .select('access_token, refresh_token, expires_at, ad_accounts, selected_account_id')
+      .eq('user_id', user_id).eq('platform', 'google').eq('persona_id', persona_id).maybeSingle();
+    gConn = data;
+  } else {
+    const { data } = await sb.from('platform_connections' as any)
+      .select('access_token, refresh_token, expires_at, ad_accounts, selected_account_id')
+      .eq('user_id', user_id).eq('platform', 'google').eq('status', 'active').maybeSingle();
+    gConn = data;
+  }
+  if (!gConn?.access_token) return { skipped: 'No Google connection' };
+
+  // Refresh token if expired
+  let token = gConn.access_token;
+  if (gConn.refresh_token && gConn.expires_at && new Date(gConn.expires_at) < new Date(Date.now() + 5 * 60 * 1000)) {
+    try {
+      const rr = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, client_secret: GOOGLE_CLIENT_SECRET, refresh_token: gConn.refresh_token, grant_type: 'refresh_token' })
+      });
+      if (rr.ok) {
+        const rd = await rr.json();
+        if (rd.access_token) {
+          token = rd.access_token;
+          await sb.from('platform_connections' as any).update({
+            access_token: token,
+            expires_at: new Date(Date.now() + (rd.expires_in || 3600) * 1000).toISOString()
+          }).eq('user_id', user_id).eq('platform', 'google').eq('persona_id', persona_id);
+        }
+      }
+    } catch { /* use existing token */ }
+  }
+
+  const accs = (gConn.ad_accounts as any[]) || [];
+  const acc = (gConn.selected_account_id && accs.find((a: any) => a.id === gConn.selected_account_id)) || accs[0];
+  if (!acc?.id) return { skipped: 'No Google account selected' };
+
+  const custId = acc.id.replace(/-/g, '');
+  const today = new Date().toISOString().split('T')[0];
+  const since7 = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  const since14 = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  // Get persona info
+  let accountMarket = 'BR';
+  let personaName = acc.name || acc.id || 'Google Ads';
+  if (persona_id) {
+    const { data: pd } = await sb.from('personas').select('name, result').eq('id', persona_id).maybeSingle();
+    if (pd) {
+      personaName = pd.name || personaName;
+      accountMarket = (pd.result as any)?.preferred_market || (pd.result as any)?.market || 'BR';
+    }
+  }
+
+  const hdr = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'developer-token': GOOGLE_DEV_TOKEN,
+    'login-customer-id': custId,
+  };
+  const gQuery = (query: string) =>
+    fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
+      method: 'POST', headers: hdr, body: JSON.stringify({ query }),
+    }).then(r => r.json());
+
+  // ── Fetch data ──────────────────────────────────────────────────────────────
+  const [adsRes, campaignsRes, keywordsRes, timeSeriesRes, ydRes] = await Promise.allSettled([
+    gQuery(`SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group.name, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since7}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`),
+    gQuery(`SELECT campaign.name, campaign.status, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since7}' AND '${today}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
+    gQuery(`SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM keyword_view WHERE segments.date BETWEEN '${since7}' AND '${today}' ORDER BY metrics.cost_micros DESC LIMIT 15`),
+    gQuery(`SELECT segments.date, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${since14}' AND '${today}' ORDER BY segments.date ASC LIMIT 14`),
+    gQuery(`SELECT metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date = '${yesterday}'`),
+  ]);
+
+  const parse = (r: any) => r.status === 'fulfilled' ? (r.value?.results || []) : [];
+  const gAds       = parse(adsRes);
+  const gCampaigns = parse(campaignsRes);
+  const gKeywords  = parse(keywordsRes);
+  const gTimeSeries = parse(timeSeriesRes);
+  const ydData     = parse(ydRes)[0]?.metrics || {};
+
+  // ── Compute KPIs ────────────────────────────────────────────────────────────
+  const totalSpend   = gAds.reduce((s: number, a: any) => s + (a.metrics?.costMicros || 0) / 1e6, 0);
+  const totalClicks  = gAds.reduce((s: number, a: any) => s + (a.metrics?.clicks || 0), 0);
+  const totalImps    = gAds.reduce((s: number, a: any) => s + (a.metrics?.impressions || 0), 0);
+  const totalConv    = gAds.reduce((s: number, a: any) => s + (a.metrics?.conversions || 0), 0);
+  const avgCtr       = totalImps > 0 ? totalClicks / totalImps : 0;
+  const ydSpend      = (ydData.costMicros || 0) / 1e6;
+  const ydCtr        = ydData.impressions > 0 ? (ydData.clicks || 0) / ydData.impressions : 0;
+
+  // ── Classify ads as scalable / needs pause ──────────────────────────────────
+  const enriched = gAds.map((a: any) => {
+    const m = a.metrics || {};
+    const spend  = (m.costMicros || 0) / 1e6;
+    const ctr    = m.ctr || 0;
+    const conv   = m.conversions || 0;
+    const cpc    = (m.averageCpc || 0) / 1e6;
+    const name   = a.adGroupAd?.ad?.name || a.adGroupAd?.ad?.type || 'Ad';
+    const campaign = a.campaign?.name || a.adGroupAd?.adGroup?.name || '';
+    return { name, campaign, spend, ctr, conv, cpc,
+      isScalable:  ctr > avgCtr * 1.3 && spend > 0,
+      needsPause:  ctr < avgCtr * 0.5 && spend > 5,
+      isFatigued:  false, // Google Ads doesn't have frequency like Meta
+    };
+  });
+  const active    = enriched.filter((a: any) => a.spend > 0);
+  const scalable  = enriched.filter((a: any) => a.isScalable).slice(0, 5);
+  const toPause   = enriched.filter((a: any) => a.needsPause).slice(0, 5);
+
+  // Top keywords context
+  const topKeywords = gKeywords.slice(0, 5).map((k: any) => ({
+    text: k.adGroupCriterion?.keyword?.text || '',
+    matchType: k.adGroupCriterion?.keyword?.matchType || '',
+    ctr: ((k.metrics?.ctr || 0) * 100).toFixed(2),
+    spend: ((k.metrics?.costMicros || 0) / 1e6).toFixed(0),
+    conv: (k.metrics?.conversions || 0).toFixed(1),
+  }));
+
+  // ── AI insight via Claude ───────────────────────────────────────────────────
+  let aiInsight = '';
+  if (anthropicKey && active.length > 0) {
+    try {
+      const ctx = [
+        `Google Ads account: ${personaName} | Market: ${accountMarket}`,
+        `7d: spend=$${totalSpend.toFixed(0)} ctr=${(avgCtr*100).toFixed(2)}% clicks=${totalClicks} conv=${totalConv.toFixed(0)} active_ads=${active.length}`,
+        scalable.length ? `Scalable: ${scalable.map((a: any) => `"${a.name.slice(0,30)}" ctr=${(a.ctr*100).toFixed(2)}%`).join(', ')}` : '',
+        toPause.length  ? `Pause candidates: ${toPause.map((a: any) => `"${a.name.slice(0,30)}" ctr=${(a.ctr*100).toFixed(2)}%`).join(', ')}` : '',
+        topKeywords.length ? `Top keywords: ${topKeywords.map(k => `"${k.text}" [${k.matchType}] ctr=${k.ctr}% spend=$${k.spend}`).join(', ')}` : '',
+      ].filter(Boolean).join('\n');
+
+      const ir = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001', max_tokens: 120,
+          messages: [{ role: 'user', content: `You are a Google Ads analyst. In 1-2 sentences, give the most important actionable insight for this account. Be specific with numbers. Portuguese.\n\n${ctx}` }]
+        })
+      });
+      if (ir.ok) aiInsight = (await ir.json()).content?.[0]?.text?.trim() || '';
+    } catch { /* non-fatal */ }
+  }
+
+  // ── Save to daily_snapshots ─────────────────────────────────────────────────
+  const snapshot = {
+    user_id, persona_id: persona_id || null, date: today,
+    account_id: acc.id, account_name: personaName,
+    total_spend: totalSpend,
+    avg_ctr: avgCtr,
+    total_clicks: totalClicks,
+    active_ads: active.length,
+    winners_count: scalable.length,
+    losers_count: toPause.length,
+    yesterday_spend: ydSpend,
+    yesterday_ctr: ydCtr,
+    top_ads: active.slice(0, 15).map((a: any) => ({
+      name: a.name, campaign: a.campaign, spend: a.spend,
+      ctr: a.ctr, cpc: a.cpc, conversions: a.conv,
+      isScalable: a.isScalable, needsPause: a.needsPause, isFatigued: false,
+    })),
+    ai_insight: aiInsight,
+    raw_period: {
+      since: since7, until: today,
+      platform: 'google',
+      top_keywords: topKeywords,
+      campaigns: gCampaigns.slice(0, 5).map((c: any) => ({
+        name: c.campaign?.name, status: c.campaign?.status,
+        spend: ((c.metrics?.costMicros || 0) / 1e6).toFixed(0),
+        ctr: ((c.metrics?.ctr || 0) * 100).toFixed(2),
+        conv: (c.metrics?.conversions || 0).toFixed(0),
+      })),
+    },
+  };
+
+  await sb.from('daily_snapshots' as any).upsert(snapshot, { onConflict: 'user_id,persona_id,date' });
+
+  // ── Feed learned_patterns ───────────────────────────────────────────────────
+  // Reuse processGoogleLearning logic inline for this specific connection
+  const adsToLearn = enriched.filter((a: any) => a.ctr > 0 && a.spend > 0).slice(0, 15);
+  for (const ad of adsToLearn) {
+    const adKey = `google_ad_${ad.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 35)}`;
+    await sb.functions.invoke('capture-learning', {
+      body: {
+        user_id, event_type: 'performance_reported',
+        data: {
+          hook_type: 'direct',
+          hook_text: ad.name.slice(0, 100),
+          ctr: ad.ctr,
+          roas: ad.conv > 0 && ad.spend > 0 ? (ad.conv * 10 / ad.spend) : null, // estimated
+          platform: 'google',
+          market: accountMarket,
+          persona_id,
+        }
+      }
+    }).catch(() => {});
+  }
+
+  return {
+    ok: true, platform: 'google',
+    account: personaName,
+    spend: totalSpend.toFixed(2), ctr: (avgCtr * 100).toFixed(3),
+    ads: active.length, scalable: scalable.length, pause: toPause.length,
+    insight: aiInsight.slice(0, 80),
+  };
+}
