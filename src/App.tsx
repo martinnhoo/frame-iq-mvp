@@ -35,6 +35,7 @@ const Careers      = lazy(() => import("./pages/Careers"));
 const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
+const AdDiary         = lazy(() => import("./pages/dashboard/AdDiary"));
 const AnalysesList     = lazy(() => import("./pages/dashboard/AnalysesList"));
 const AnalysisDetail   = lazy(() => import("./pages/dashboard/AnalysisDetail"));
 const NewAnalysis      = lazy(() => import("./pages/dashboard/NewAnalysis"));
@@ -131,6 +132,7 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="ai" element={<AdBriefAI />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
+                <Route path="diary" element={<AdDiary />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />
                 <Route path="analyses/:id" element={<AnalysisDetail />} />

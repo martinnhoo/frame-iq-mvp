@@ -1,5 +1,5 @@
 // DashboardSidebar v7 — ferramentas no espaço vazio, hierarquia clara
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Cpu } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Cpu, BookOpen } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -142,6 +142,7 @@ export function DashboardSidebar({
   ];
 
   const TOOLS = [
+    { url: "/dashboard/diary",       label: pt ? "Diário de Ads" : es ? "Diario de Ads" : "Ad Diary", icon: BookOpen },
     { url: "/dashboard/hooks",       label: pt ? "Hooks" : "Hooks",            icon: Sparkles },
     { url: "/dashboard/script",      label: pt ? "Roteiro" : es ? "Guión" : "Script",     icon: Clapperboard },
     { url: "/dashboard/brief",       label: "Brief",                            icon: FileText },
