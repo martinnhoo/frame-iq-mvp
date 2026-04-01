@@ -2432,23 +2432,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Input area ── */}
       <div style={{flexShrink:0,position:"relative" as const,zIndex:1}}>
-        {/* Gradient fade above input */}
-        <div style={{height:32,background:"linear-gradient(to bottom, transparent, #0c0f1a)",pointerEvents:"none"}}/>
-        <div style={{background:"rgba(12,15,26,0.95)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(255,255,255,0.07)",padding:"12px 0 16px"}}>
+        {/* Gradient fade */}
+        <div style={{height:28,background:"linear-gradient(to bottom,transparent,rgba(10,13,22,0.98))",pointerEvents:"none",marginBottom:-1}}/>
+        <div style={{background:"rgba(10,13,22,0.97)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderTop:"1px solid rgba(255,255,255,0.07)",padding:"10px 0 16px"}}>
           {/* ── Tool pills ── */}
-          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 10px"}}>
-            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
+          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
+            <div className="tool-pills-row" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
               {TOOLS.map(tool=>(
                 <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
                   style={{
-                    display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:8,flexShrink:0,
-                    background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.05)",
-                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.10)"}`,
-                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.45)",
-                    fontSize:12,fontWeight:activeTool===tool.action?600:400,cursor:"pointer",
-                    fontFamily:"'Inter',system-ui,sans-serif",
+                    display:"flex",alignItems:"center",gap:6,padding:"7px 13px",borderRadius:8,flexShrink:0,
+                    background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.06)",
+                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.11)"}`,
+                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.55)",
+                    fontSize:12.5,fontWeight:activeTool===tool.action?600:500,cursor:"pointer",
+                    fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",
                     transition:"all 0.15s",letterSpacing:"-0.01em",
-                    backdropFilter:"blur(8px)",
                   }}
                   onMouseEnter={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.09)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.7)"}}}
                   onMouseLeave={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)"}}}>
@@ -2479,7 +2478,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             })()}
 
             {/* Input box */}
-            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:16,padding:"10px 10px 10px 16px",transition:"border-color 0.2s, box-shadow 0.2s",boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35)"}} className="input-box-wrap">
+            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:16,padding:"12px 12px 12px 18px",transition:"border-color 0.2s, box-shadow 0.2s",boxShadow:"0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4)"}} className="input-box-wrap">
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
@@ -2508,7 +2507,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.45)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(14,165,233,0.20), 0 0 24px rgba(14,165,233,0.10)!important;}
+        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
         .msg-body p{margin-bottom:10px!important;}
