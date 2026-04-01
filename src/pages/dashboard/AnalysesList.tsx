@@ -44,9 +44,8 @@ export default function AnalysesList() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"date" | "score">("date");
 
-  // Guard — wait for user to be available
-
   useEffect(() => {
+    if (!user?.id) return;
     let mounted = true;
     const load = async () => {
       const { data } = await supabase.from("analyses").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
@@ -56,14 +55,13 @@ export default function AnalysesList() {
     };
     load();
     return () => { mounted = false; };
-  }, [user.id]);
+  }, [user?.id]);
 
   const filtered = useMemo(() => {
     let list = analyses.filter(a => !search || (a.title || "").toLowerCase().includes(search.toLowerCase()));
     if (sort === "score") list = [...list].sort((a, b) => ((b.result?.hook_score as number) ?? 0) - ((a.result?.hook_score as number) ?? 0));
     return list;
   }, [analyses, search, sort]);
-
 
   if (!user) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
