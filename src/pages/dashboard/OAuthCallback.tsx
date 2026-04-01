@@ -68,7 +68,18 @@ export default function OAuthCallback() {
           body: { action: "exchange_code", code, user_id: uid, persona_id: pid, state },
         });
 
-        if (fnError) throw fnError;
+        if (fnError) {
+          // Extract real error from FunctionsHttpError — .message is generic, actual error is in context
+          let realMsg = fnError.message;
+          try {
+            const ctx = (fnError as any).context;
+            if (ctx) {
+              const body = typeof ctx === "string" ? JSON.parse(ctx) : (await ctx?.json?.() ?? ctx);
+              realMsg = body?.error || body?.message || realMsg;
+            }
+          } catch {}
+          throw new Error(realMsg);
+        }
         if (data?.error) throw new Error(data.error);
 
         const accs: any[] = data?.ad_accounts || data?.customers || 

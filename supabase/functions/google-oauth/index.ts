@@ -56,13 +56,16 @@ Deno.serve(async (req) => {
       }
 
       // Exchange code for tokens
+      console.log("[google-oauth] exchange_code: redirect_uri =", REDIRECT_URI);
+      console.log("[google-oauth] exchange_code: client_id present =", !!CLIENT_ID, "secret present =", !!CLIENT_SECRET);
       const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ code, client_id: CLIENT_ID, client_secret: CLIENT_SECRET, redirect_uri: REDIRECT_URI, grant_type: "authorization_code" }),
       });
       const tokenData = await tokenRes.json();
-      if (tokenData.error) throw new Error(tokenData.error_description || tokenData.error);
+      console.log("[google-oauth] token response:", JSON.stringify({ error: tokenData.error, error_description: tokenData.error_description, has_access_token: !!tokenData.access_token }));
+      if (tokenData.error) throw new Error(`${tokenData.error}: ${tokenData.error_description || tokenData.error}`);
 
       const { access_token, refresh_token, expires_in } = tokenData;
 
