@@ -177,41 +177,40 @@ serve(async (req) => {
 
         if (acc?.id && DEV_TOKEN) {
           const custId = acc.id.replace(/-/g, "");
-          const hdr = {
+
+          // Build headers — try without login-customer-id first (direct accounts)
+          // If API returns HTML (auth error), it means this is an MCC-managed account
+          const makeHdr = (withLoginId: boolean) => ({
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
             "developer-token": DEV_TOKEN,
-            // login-customer-id omitted — causes empty results on non-MCC accounts
+            ...(withLoginId ? { "login-customer-id": custId } : {}),
+          });
+
+          const gQuery = async (query: string): Promise<any> => {
+            const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+            const body = JSON.stringify({ query });
+            // First try without login-customer-id
+            const r1 = await fetch(url, { method: "POST", headers: makeHdr(false), body });
+            const text1 = await r1.text();
+            if (!text1.trim().startsWith("<")) return JSON.parse(text1);
+            // HTML response = auth/routing issue, retry with login-customer-id
+            const r2 = await fetch(url, { method: "POST", headers: makeHdr(true), body });
+            const text2 = await r2.text();
+            if (!text2.trim().startsWith("<")) return JSON.parse(text2);
+            return { results: [], error: "auth_error" };
           };
 
           const gSince = since.replace(/-/g, "");
           const gToday = today.replace(/-/g, "");
           const gPrevSince = prevSince.replace(/-/g, "");
 
-          const [currRes, prevRes, adsRes, dailyRes] = await Promise.all([
-            // Current period totals
-            fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-              method: "POST", headers: hdr,
-              body: JSON.stringify({ query: `SELECT metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions, metrics.conversions_value FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}'` }),
-            }),
-            // Previous period for delta
-            fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-              method: "POST", headers: hdr,
-              body: JSON.stringify({ query: `SELECT metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions FROM customer WHERE segments.date BETWEEN '${prevSince}' AND '${since}'` }),
-            }),
-            // Top ads
-            fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-              method: "POST", headers: hdr,
-              body: JSON.stringify({ query: `SELECT ad_group_ad.ad.name, ad_group.name, campaign.name, metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions, metrics.conversions_value FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 10` }),
-            }),
-            // Daily breakdown
-            fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-              method: "POST", headers: hdr,
-              body: JSON.stringify({ query: `SELECT segments.date, metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC` }),
-            }),
+          const [curr, prev, adsData, dailyData] = await Promise.all([
+            gQuery(`SELECT metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions, metrics.conversions_value FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}'`),
+            gQuery(`SELECT metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions FROM customer WHERE segments.date BETWEEN '${prevSince}' AND '${since}'`),
+            gQuery(`SELECT ad_group_ad.ad.name, ad_group.name, campaign.name, metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions, metrics.conversions, metrics.conversions_value FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 10`),
+            gQuery(`SELECT segments.date, metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC`),
           ]);
-
-          const [curr, prev, adsData, dailyData] = await Promise.all([currRes.json(), prevRes.json(), adsRes.json(), dailyRes.json()]);
 
           const sumMetrics = (results: any[]) => results.reduce((acc, r) => {
             const m = r.metrics || {};

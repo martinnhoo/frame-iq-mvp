@@ -1020,16 +1020,23 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               gKeywords    = gCached.keywords;
               gTimeSeries  = gCached.timeSeries;
             } else {
-              const gHeaders = {
+              const makeGHdr = (withLoginId: boolean) => ({
                 Authorization: `Bearer ${token}`,
                 "developer-token": devToken,
-                // login-customer-id omitted — causes empty results on non-MCC accounts
                 "Content-Type": "application/json",
+                ...(withLoginId ? { "login-customer-id": custId } : {}),
+              });
+              const safeGQuery = async (query: string): Promise<any> => {
+                const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+                const body = JSON.stringify({ query });
+                const r1 = await fetch(url, { method: "POST", headers: makeGHdr(false), body });
+                const t1 = await r1.text();
+                if (!t1.trim().startsWith("<")) return JSON.parse(t1);
+                const r2 = await fetch(url, { method: "POST", headers: makeGHdr(true), body });
+                const t2 = await r2.text();
+                return t2.trim().startsWith("<") ? { results: [] } : JSON.parse(t2);
               };
-              const gQuery = (query: string) =>
-                fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-                  method: "POST", headers: gHeaders, body: JSON.stringify({ query }),
-                }).then(r => r.json());
+              const gQuery = safeGQuery;
 
               const [cRes, aRes, kRes, tRes] = await Promise.allSettled([
                 // Campaigns

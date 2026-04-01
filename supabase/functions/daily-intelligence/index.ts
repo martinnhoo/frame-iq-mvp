@@ -227,21 +227,25 @@ async function processGoogleLearning(sb: any, anthropicKey: string | undefined) 
       if (!acc?.id) continue;
 
       const custId = acc.id.replace(/-/g, '');
-      const hdr = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+      const makeHdrL = (withId: boolean) => ({
+        'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json',
         'developer-token': GOOGLE_DEV_TOKEN,
-        // login-customer-id omitted — causes empty results on non-MCC accounts
-      };
-
-      // Fetch top ads by spend in last 7 days
-      const res = await fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-        method: 'POST', headers: hdr,
-        body: JSON.stringify({ query: `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, metrics.ctr, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20` })
+        ...(withId ? { 'login-customer-id': custId } : {}),
       });
-      if (!res.ok) continue;
 
-      const data = await res.json();
+      // Fetch top ads — try without login-customer-id first, fallback with it for MCC accounts
+      const query = `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, metrics.ctr, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`;
+      const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+      let resText = '';
+      const r1 = await fetch(url, { method: 'POST', headers: makeHdrL(false), body: JSON.stringify({ query }) });
+      resText = await r1.text();
+      if (resText.trim().startsWith('<')) {
+        const r2 = await fetch(url, { method: 'POST', headers: makeHdrL(true), body: JSON.stringify({ query }) });
+        resText = await r2.text();
+      }
+      if (resText.trim().startsWith('<')) continue;
+
+      const data = JSON.parse(resText);
       const ads = (data.results || []) as any[];
 
       // Get persona market
@@ -1110,16 +1114,23 @@ async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, u
     }
   }
 
-  const hdr = {
+  const makeHdr = (withLoginId: boolean) => ({
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
     'developer-token': GOOGLE_DEV_TOKEN,
-    // login-customer-id omitted — causes empty results on non-MCC accounts
+    ...(withLoginId ? { 'login-customer-id': custId } : {}),
+  });
+  const safeQuery = async (query: string): Promise<any> => {
+    const url = `https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`;
+    const body = JSON.stringify({ query });
+    const r1 = await fetch(url, { method: 'POST', headers: makeHdr(false), body });
+    const t1 = await r1.text();
+    if (!t1.trim().startsWith('<')) return JSON.parse(t1);
+    const r2 = await fetch(url, { method: 'POST', headers: makeHdr(true), body });
+    const t2 = await r2.text();
+    return t2.trim().startsWith('<') ? { results: [] } : JSON.parse(t2);
   };
-  const gQuery = (query: string) =>
-    fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
-      method: 'POST', headers: hdr, body: JSON.stringify({ query }),
-    }).then(r => r.json());
+  const gQuery = safeQuery;
 
   // ── Fetch data ──────────────────────────────────────────────────────────────
   const [adsRes, campaignsRes, keywordsRes, timeSeriesRes, ydRes] = await Promise.allSettled([
