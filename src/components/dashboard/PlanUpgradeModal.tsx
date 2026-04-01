@@ -137,7 +137,7 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
         onClick={onClose}
       >
         <div
-          className="modal-enter w-full max-w-3xl bg-[#0d0d0d] rounded-3xl border border-white/[0.15] shadow-2xl overflow-hidden"
+          className="modal-enter w-full max-w-3xl rounded-3xl overflow-hidden" style={{background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(12,15,26,0.98) 100%)",border:"1px solid rgba(14,165,233,0.30)",boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 80px rgba(0,0,0,0.7), 0 0 80px rgba(14,165,233,0.08)",backdropFilter:"blur(24px)"}}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}

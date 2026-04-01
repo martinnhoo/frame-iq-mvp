@@ -389,6 +389,12 @@ export default function DashboardLayout() {
         .lp-chip { font-size: 12px !important; padding: 5px 10px !important; }
 
         /* Input/textarea: prevent zoom on iOS (font-size >= 16px) */
+        .dashboard-main input:focus, .dashboard-main textarea:focus, .dashboard-main select:focus {
+          border-color: rgba(14,165,233,0.55) !important;
+          background: rgba(14,165,233,0.05) !important;
+          box-shadow: 0 0 0 1px rgba(14,165,233,0.15) !important;
+          outline: none !important;
+        }
         .dashboard-main input, .dashboard-main textarea, .dashboard-main select {
           font-size: 16px !important;
         }
@@ -438,10 +444,10 @@ export default function DashboardLayout() {
           display: "flex", alignItems: "center",
           paddingLeft: 12, paddingRight: 12, gap: 8,
           position: "sticky", top: 0, zIndex: 100,
-          background: "rgba(5,7,14,0.85)",
-          backdropFilter: "blur(20px) saturate(1.5)",
-          WebkitBackdropFilter: "blur(20px) saturate(1.5)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(12,15,26,0.88)",
+          backdropFilter: "blur(24px) saturate(1.5)",
+          WebkitBackdropFilter: "blur(24px) saturate(1.5)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)",
         }}>
 
@@ -588,7 +594,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 100% 40% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 60%), #05070e", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 80% 35% at 50% 0%, rgba(14,165,233,0.07) 0%, transparent 55%), radial-gradient(ellipse 60% 30% at 80% 10%, rgba(139,92,246,0.04) 0%, transparent 50%), #0c0f1a", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

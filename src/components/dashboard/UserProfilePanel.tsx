@@ -435,7 +435,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       <div role="button" aria-label="Close profile" tabIndex={0} className="fixed inset-0 z-[700] bg-black/60 backdrop-blur-sm" onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose()} />
 
       <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[701] flex flex-col profile-panel-width"
-        style={{ width: "min(400px, 100vw)", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
+        style={{ width: "min(400px, 100vw)", background: "linear-gradient(180deg,rgba(14,17,24,0.98) 0%,rgba(9,12,20,0.99) 100%)", backdropFilter: "blur(24px)", borderLeft: "1px solid rgba(14,165,233,0.18)", boxShadow: "-24px 0 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset", fontFamily: F }}>
 
         {/* Header */}
         <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>

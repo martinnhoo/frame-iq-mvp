@@ -2430,7 +2430,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div style={{flexShrink:0,position:"relative" as const,zIndex:1}}>
         {/* Gradient fade above input */}
         <div style={{height:32,background:"linear-gradient(to bottom, transparent, #0c0f1a)",pointerEvents:"none"}}/>
-        <div style={{background:"#0c0f1a",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"12px 0 16px"}}>
+        <div style={{background:"rgba(12,15,26,0.95)",backdropFilter:"blur(24px)",borderTop:"1px solid rgba(255,255,255,0.07)",padding:"12px 0 16px"}}>
           {/* ── Tool pills ── */}
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 10px"}}>
             <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
@@ -2438,15 +2438,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
                   style={{
                     display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:8,flexShrink:0,
-                    background:activeTool===tool.action?`${tool.color}18`:"transparent",
-                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.08)"}`,
-                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)",
+                    background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.05)",
+                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.10)"}`,
+                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.45)",
                     fontSize:12,fontWeight:activeTool===tool.action?600:400,cursor:"pointer",
                     fontFamily:"'Inter',system-ui,sans-serif",
                     transition:"all 0.15s",letterSpacing:"-0.01em",
+                    backdropFilter:"blur(8px)",
                   }}
-                  onMouseEnter={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.14)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.65)"}}}
-                  onMouseLeave={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="transparent";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.4)"}}}>
+                  onMouseEnter={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.09)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.7)"}}}
+                  onMouseLeave={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)"}}}>
                   <tool.icon size={12} strokeWidth={1.8}/>
                   {tool.label}
                 </button>
@@ -2474,7 +2475,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             })()}
 
             {/* Input box */}
-            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"10px 10px 10px 16px",transition:"border-color 0.2s",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}} className="input-box-wrap">
+            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:16,padding:"10px 10px 10px 16px",transition:"border-color 0.2s, box-shadow 0.2s",boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35)"}} className="input-box-wrap">
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
@@ -2491,7 +2492,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </button>
                 )}
                 <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-                  style={{width:34,height:34,borderRadius:10,background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s",boxShadow:input.trim()&&!loading&&contextReady?"0 2px 12px rgba(14,165,233,0.35)":"none"}}>
+                  style={{width:36,height:36,borderRadius:11,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9 0%,#06b6d4 100%)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s",boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.45)":"none"}}>
                   {loading?<Loader2 size={14} color="rgba(255,255,255,0.6)" className="animate-spin"/>:<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.18)"}/>}
                 </button>
               </div>
@@ -2503,7 +2504,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.28)!important;box-shadow:0 2px 16px rgba(14,165,233,0.08),0 0 0 1px rgba(14,165,233,0.10)!important;}
+        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.45)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(14,165,233,0.20), 0 0 24px rgba(14,165,233,0.10)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
         .msg-body p{margin-bottom:10px!important;}

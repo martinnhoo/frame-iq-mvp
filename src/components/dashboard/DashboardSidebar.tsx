@@ -50,7 +50,7 @@ function NavPrimary({ url, label, icon: Icon, isActive, onClose, badge }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "9px 12px", borderRadius: 8, margin: "1px 8px",
         color: isActive ? "#f0f2f8" : hov ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.55)",
-        background: isActive ? "rgba(14,165,233,0.11)" : hov ? "rgba(255,255,255,0.04)" : "transparent",
+        background: isActive ? "rgba(14,165,233,0.13)" : hov ? "rgba(255,255,255,0.05)" : "transparent",
         fontSize: 13.5, fontWeight: isActive ? 600 : 400,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -58,7 +58,7 @@ function NavPrimary({ url, label, icon: Icon, isActive, onClose, badge }: {
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       {isActive && (
-        <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 2, height: 18, borderRadius: "0 2px 2px 0", background: "#0ea5e9", boxShadow: "0 0 8px rgba(14,165,233,0.6)" }} />
+        <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 2, height: 18, borderRadius: "0 2px 2px 0", background: "linear-gradient(180deg,#0ea5e9,#06b6d4)", boxShadow: "0 0 12px rgba(14,165,233,0.8)" }} />
       )}
       <Icon size={16} strokeWidth={isActive ? 2 : 1.6}
         style={{ color: isActive ? "#0ea5e9" : "inherit", flexShrink: 0 }} />
@@ -181,8 +181,9 @@ export function DashboardSidebar({
         <div style={{ padding: "10px 8px 0", flexShrink: 0 }}>
           <div style={{
             borderRadius: 10,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset",
             overflow: "hidden",
           }}>
             <button

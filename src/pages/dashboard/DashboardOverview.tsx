@@ -369,7 +369,7 @@ export default function DashboardOverview() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Intelligence feed — 2 cols */}
-          <div className="md:col-span-2 rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="md:col-span-2 rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.3)", backdropFilter: "blur(12px)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center gap-2">
                 <Brain size={14} style={{ color: "#0ea5e9" }} />
@@ -467,7 +467,7 @@ export default function DashboardOverview() {
 
         {/* ── RECENT WORK ────────────────────────────────────── */}
         {recentActivity.length > 0 && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.3)", backdropFilter: "blur(12px)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div className="flex items-center gap-2">
                 <Clock size={13} className="text-white/30" />
