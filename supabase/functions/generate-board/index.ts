@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
       title,
       context,
       persona_context,
+      persona_id: bodyPersonaId,
       funnel_stage = 'tofu',
     } = body;
 
@@ -327,6 +328,7 @@ IMPORTANT: If talent is involved, every scene's visual_description MUST referenc
       .from('boards')
       .insert({
         user_id,
+        persona_id: bodyPersonaId || null,
         title: (board.overview as Record<string, unknown>)?.campaign_title as string || prompt.substring(0, 100),
         prompt,
         market_flag: `${marketConfig.flag} ${marketConfig.code}`,

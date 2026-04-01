@@ -809,6 +809,7 @@ export default function DashboardLayout() {
           user={user}
           profile={profile as any}
           onProfileUpdate={(p) => setProfile(p as typeof profile)}
+          selectedPersona={selectedPersona}
         />
       )}
     </div>

@@ -210,6 +210,7 @@ const NewBoard = () => {
             product_only: productOnly,
             context: context.trim() || undefined,
             user_id: user.id,
+            persona_id: selectedPersona?.id || null,
             funnel_stage: funnelStage,
             persona_context: selectedPersona ? {
               name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,

@@ -51,6 +51,7 @@ interface Props {
   user: SupaUser;
   profile: Profile | null;
   onProfileUpdate: (p: Profile) => void;
+  selectedPersona?: { id: string; name: string } | null;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -234,7 +235,7 @@ function PersonaDetailView({
 
 // ── Main Panel ─────────────────────────────────────────────────────────────────
 
-export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate }: Props) {
+export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate, selectedPersona }: Props) {
   // Close on ESC key
   useEffect(() => {
     const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -265,19 +266,27 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   useEffect(() => {
     if (tab !== "intelligence" || !user?.id) return;
     setIntelLoading(true);
+    const personaId = selectedPersona?.id || null;
+    // learned_patterns: scope by persona_id when available (persona_id column exists)
+    const patternsQuery = (supabase as any).from("learned_patterns")
+      .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, sample_size")
+      .eq("user_id", user.id)
+      .order("confidence", { ascending: false }).limit(15);
+    // If a persona is selected, filter by it (ignore global patterns with null persona_id)
+    if (personaId) patternsQuery.eq("persona_id", personaId);
+
     Promise.all([
-      (supabase as any).from("learned_patterns")
-        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, sample_size")
-        .eq("user_id", user.id).order("confidence", { ascending: false }).limit(15),
+      patternsQuery,
       (supabase as any).from("creative_memory")
         .select("hook_type, hook_score, platform, created_at")
         .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
       (supabase as any).from("user_ai_profile")
-        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated")
+        .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated, pain_point")
         .eq("user_id", user.id).maybeSingle(),
       (supabase as any).from("daily_snapshots")
         .select("date, total_spend, avg_ctr, active_ads, winners_count, losers_count, ai_insight")
-        .eq("user_id", user.id).order("date", { ascending: false }).limit(7),
+        .eq("user_id", user.id)
+        .order("date", { ascending: false }).limit(7),
     ]).then(([patterns, memory, aiProfile, snaps]) => {
       setIntel({ patterns: patterns.data || [], memory: memory.data || [], profile: aiProfile.data, snaps: snaps.data || [] });
       // Load existing instructions
@@ -287,7 +296,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         setInstructionsText(items.join("\n"));
       }
     }).catch(() => {}).finally(() => setIntelLoading(false));
-  }, [tab, user?.id]);
+  }, [tab, user?.id, selectedPersona?.id]);
 
   useEffect(() => {
     if (!open || !user?.id) return;

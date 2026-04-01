@@ -15,10 +15,11 @@ interface Board {
   status: string;
   created_at: string;
   content: Record<string, unknown> | null;
+  persona_id?: string | null;
 }
 
 const BoardsList = () => {
-  const { user } = useOutletContext<DashboardContext>();
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const dt = useDashT(language);
@@ -36,15 +37,24 @@ const BoardsList = () => {
   useEffect(() => {
     let mounted = true;
     const run = async () => {
-      const { data } = await supabase
+      setLoading(true);
+      let query = supabase
         .from("boards").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+
+      // If a persona is selected, show boards scoped to it + legacy unscoped boards (persona_id IS NULL)
+      // This way old boards still appear and new ones get properly scoped
+      if (selectedPersona?.id) {
+        query = (query as any).or(`persona_id.eq.${selectedPersona.id},persona_id.is.null`);
+      }
+
+      const { data } = await query;
       if (!mounted) return;
       if (data) setBoards(data as Board[]);
       setLoading(false);
     };
     run();
     return () => { mounted = false; };
-  }, [user.id]);
+  }, [user.id, selectedPersona?.id]);
 
   const handleDelete = async (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
