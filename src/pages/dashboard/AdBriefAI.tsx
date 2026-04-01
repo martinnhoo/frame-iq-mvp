@@ -1182,9 +1182,17 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
             {/* Empty state */}
             {isEmpty && (
-              <div style={{ padding: "20px", textAlign: "center" }}>
-                <p style={{ ...I, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.35)", margin: "0 0 4px" }}>Sem campanhas ativas nos últimos 14 dias</p>
-                {accName && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0 }}>{accName}</p>}
+              <div style={{ padding: "24px 16px", textAlign: "center" }}>
+                <p style={{ ...I, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
+                  {lang==="pt"?"Nenhuma campanha ativa nos últimos 14 dias":lang==="es"?"Sin campañas activas en los últimos 14 días":"No active campaigns in the last 14 days"}
+                </p>
+                {accName && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.22)", margin: "0 0 16px" }}>{accName}</p>}
+                <button onClick={() => onSend(lang==="pt"?"O que devo fazer para reativar minhas campanhas?":lang==="es"?"¿Qué debo hacer para reactivar mis campañas?":"What should I do to reactivate my campaigns?")}
+                  style={{ ...I, fontSize: 12, fontWeight: 500, padding: "7px 16px", borderRadius: 8, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", color: "rgba(14,165,233,0.8)", cursor: "pointer", transition: "all 0.15s" }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.14)"}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"}}>
+                  {lang==="pt"?"Pedir orientação à IA →":lang==="es"?"Pedir orientación →":"Ask AI for guidance →"}
+                </button>
               </div>
             )}
 
@@ -2235,16 +2243,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {!hasData ? (
               /* ── No account connected — force connect ── */
-              <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{textAlign:"center",padding:"48px 24px"}}>
                 {/* Icon */}
-                <div style={{width:64,height:64,borderRadius:18,background:"linear-gradient(135deg,rgba(14,165,233,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",boxShadow:"0 0 32px rgba(14,165,233,0.08))"}}>
-                  <Sparkles size={26} color="#0ea5e9"/>
+                <div style={{width:52,height:52,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(14,165,233,0.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 14h5"/></svg>
                 </div>
-                <h3 style={{...j,fontSize:18,fontWeight:900,color:"#fff",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
+                <h3 style={{...j,fontSize:17,fontWeight:700,color:"#f0f2f8",margin:"0 0 8px",letterSpacing:"-0.02em"}}>
                   {lang==="pt"?"Conecte sua conta de anúncios":lang==="es"?"Conecta tu cuenta de anuncios":"Connect your ad account"}
                 </h3>
-                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.65,margin:"0 0 28px",maxWidth:340,marginLeft:"auto",marginRight:"auto"}}>
-                  {lang==="pt"?"Sem conexão, a IA só consegue responder de forma genérica. Com sua conta, ela vê CTR, spend, o que pausar e o que escalar.":lang==="es"?"Sin conexión la IA responde de forma genérica. Con tu cuenta ve CTR, spend, qué pausar y escalar.":"Without connection, AI gives generic answers. With your account it sees CTR, spend, what to pause and scale."}
+                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.65,margin:"0 0 24px",maxWidth:320,marginLeft:"auto",marginRight:"auto"}}>
+                  {lang==="pt"?"Sem conexão, a IA responde de forma genérica. Com sua conta, ela vê CTR, spend, o que pausar e o que escalar.":lang==="es"?"Sin conexión la IA responde de forma genérica. Con tu cuenta ve CTR, spend, qué pausar y escalar.":"Without connection, AI gives generic answers. With your account it sees CTR, spend, what to pause and scale."}
                 </p>
                 {selectedPersona ? (
                   <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>

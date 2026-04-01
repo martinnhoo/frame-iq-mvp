@@ -491,47 +491,56 @@ export default function PerformanceDashboard() {
 
       {/* Empty states */}
       {!selectedPersona&&!loading&&(
-        <div style={{textAlign:"center",padding:"60px 20px",maxWidth:480,margin:"0 auto"}}>
-          <div style={{fontSize:42,marginBottom:14}}>📊</div>
-          <h3 style={{color:TX,fontSize:18,fontWeight:700,margin:"0 0 8px"}}>
+        <div style={{textAlign:"center",padding:"64px 24px",maxWidth:480,margin:"0 auto"}}>
+          {/* Clean icon — no emoji */}
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(14,165,233,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
+          </div>
+          <h3 style={{color:TX,fontSize:17,fontWeight:700,margin:"0 0 8px",letterSpacing:"-0.02em",fontFamily:F}}>
             {lang==="pt"?"Selecione uma conta para ver o painel":lang==="es"?"Selecciona una cuenta para ver el panel":"Select an account to view the dashboard"}
           </h3>
-          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.6}}>
+          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.65,fontFamily:F}}>
             {lang==="pt"?"Conecte Meta Ads ou Google Ads e veja CTR, spend, ROAS e fadiga criativa em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads y ve CTR, spend, ROAS y fatiga creativa en tiempo real.":"Connect Meta Ads or Google Ads and see CTR, spend, ROAS and creative fatigue in real time."}
           </p>
-          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
-            {lang==="pt"?"Conectar conta":lang==="es"?"Conectar cuenta":"Connect account"}
+          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F,transition:"opacity 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.85"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}}>
+            {lang==="pt"?"Conectar conta →":lang==="es"?"Conectar cuenta →":"Connect account →"}
           </button>
-          {/* Benchmarks preview */}
-          <div style={{marginTop:32,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {/* Benchmarks — value is primary, label is secondary */}
+          <div style={{marginTop:32,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
             {[
-              {label:lang==="pt"?"CTR médio BR":lang==="es"?"CTR promedio":"Avg CTR",value:"1.2–2.4%",sub:lang==="pt"?"Meta Ads BR":lang==="es"?"Meta Ads":"Meta Ads"},
-              {label:"ROAS",value:"2.5–4x",sub:lang==="pt"?"e-commerce BR":lang==="es"?"e-commerce":"e-commerce"},
-              {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":lang==="es"?"audiencia fría":"cold audience"},
+              {label:lang==="pt"?"CTR médio BR":lang==="es"?"CTR promedio":"Avg CTR",value:"1.2–2.4%",sub:"Meta Ads"},
+              {label:"ROAS",value:"2.5–4×",sub:lang==="pt"?"e-commerce BR":"e-commerce"},
+              {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":"cold audience"},
             ].map(b=>(
-              <div key={b.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px"}}>
-                <div style={{fontSize: 12,color:MT,marginBottom:4,fontFamily:F}}>{b.label}</div>
-                <div style={{fontSize:16,fontWeight:700,color:TX,fontFamily:F}}>{b.value}</div>
-                <div style={{fontSize: 12,color:"rgba(255,255,255,0.25)",fontFamily:F}}>{b.sub}</div>
+              <div key={b.label} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+                <div style={{fontSize:18,fontWeight:700,color:TX,fontFamily:F,letterSpacing:"-0.02em",lineHeight:1,marginBottom:4}}>{b.value}</div>
+                <div style={{fontSize: 12,color:MT,fontFamily:F,fontWeight:500}}>{b.label}</div>
+                <div style={{fontSize: 12,color:"rgba(255,255,255,0.2)",fontFamily:F,marginTop:2}}>{b.sub}</div>
               </div>
             ))}
           </div>
-          <p style={{marginTop:12,fontSize: 12,color:"rgba(255,255,255,0.2)",fontFamily:F}}>
-            {lang==="pt"?"Benchmarks médios do setor — seus dados reais podem variar":lang==="es"?"Benchmarks promedio del sector — tus datos reales pueden variar":"Industry average benchmarks — your real data may vary"}
+          <p style={{marginTop:12,fontSize: 12,color:"rgba(255,255,255,0.18)",fontFamily:F,lineHeight:1.5}}>
+            {lang==="pt"?"Benchmarks médios do setor":lang==="es"?"Benchmarks del sector":"Industry average benchmarks"}
           </p>
         </div>
       )}
       {error==="__connection__"&&!loading&&(
-        <div style={{textAlign:"center",padding:"60px 20px",maxWidth:420,margin:"0 auto"}}>
-          <div style={{fontSize:42,marginBottom:14}}>🔌</div>
-          <h3 style={{color:TX,fontSize:18,fontWeight:700,margin:"0 0 8px"}}>
+        <div style={{textAlign:"center",padding:"64px 24px",maxWidth:420,margin:"0 auto"}}>
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+          </div>
+          <h3 style={{color:TX,fontSize:17,fontWeight:700,margin:"0 0 8px",letterSpacing:"-0.02em",fontFamily:F}}>
             {lang==="pt"?"Sem conexão com a conta":lang==="es"?"Sin conexión con la cuenta":"No account connection"}
           </h3>
-          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.6,maxWidth:360,marginInline:"auto"}}>
+          <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.65,maxWidth:360,marginInline:"auto",fontFamily:F}}>
             {lang==="pt"?"Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads para ver tus datos en tiempo real.":"Connect Meta Ads or Google Ads to see your data in real time."}
           </p>
-          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>
-            {lang==="pt"?"Conectar conta":lang==="es"?"Conectar cuenta":"Connect account"}
+          <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F,transition:"opacity 0.15s"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.85"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}}>
+            {lang==="pt"?"Conectar conta →":lang==="es"?"Conectar cuenta →":"Connect account →"}
           </button>
         </div>
       )}
@@ -557,8 +566,8 @@ export default function PerformanceDashboard() {
       {/* Platform error banners */}
       {!loading&&data&&(
         <>
-          {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Meta Ads: {data.meta.error}</p></div>}
-          {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}>Google Ads: {data.google.error}</p></div>}
+          {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Meta Ads</strong> — {data.meta.error}</p></div>}
+          {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Google Ads</strong> — {data.google.error}</p></div>}
         </>
       )}
 
