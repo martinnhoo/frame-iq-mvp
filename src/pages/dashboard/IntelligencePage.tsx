@@ -1,299 +1,458 @@
-// IntelligencePage — O que a IA aprendeu sobre você
-// Redesign completo: 3 seções claras, zero confusão
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, Star, TrendingUp, Trash2, MessageSquare, Zap, ChevronRight, RefreshCw } from "lucide-react";
+import { Brain, TrendingUp, MessageSquare, Zap, Star, Trash2, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
-interface Memory { id: string; memory_text: string; memory_type: string; importance: number; created_at: string; }
-interface Example { id: string; user_message: string; quality_score: number; created_at: string; }
-interface Pattern { id: string; pattern_key: string; insight_text: string; avg_ctr: number; confidence: number; is_winner: boolean; }
+const F = "'Plus Jakarta Sans', sans-serif";
+const M = "'DM Mono', monospace";
 
-// TYPE_PT now uses t object (multilanguage)
-const TYPE_COLOR: Record<string, string> = { preference: "#60a5fa", rule: "#a78bfa", decision: "#34d399", context: "#fbbf24" };
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface Memory  { id:string; memory_text:string; memory_type:string; importance:number; created_at:string; }
+interface Example { id:string; user_message:string; quality_score:number; created_at:string; }
+interface Pattern { id:string; pattern_key:string; insight_text:string; avg_ctr:number; confidence:number; is_winner:boolean; }
 
-function SectionHeader({ icon, color, title, subtitle, count }: { icon: React.ReactNode; color: string; title: string; subtitle: string; count: number }) {
+// ── Compact memory row ────────────────────────────────────────────────────────
+const TYPE_COLOR: Record<string,string> = {
+  preference:"#38bdf8", decision:"#a78bfa", rule:"#34d399", context:"#fb923c",
+};
+const TYPE_LABEL: Record<string,Record<string,string>> = {
+  preference:{ pt:"Preferência",  es:"Preferencia",  en:"Preference"  },
+  decision:  { pt:"Decisão",      es:"Decisión",      en:"Decision"    },
+  rule:      { pt:"Regra",        es:"Regla",         en:"Rule"        },
+  context:   { pt:"Contexto",     es:"Contexto",      en:"Context"     },
+};
+
+function MemoryRow({ m, lang, deleting, onDelete }: {
+  m: Memory; lang: string; deleting: boolean; onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = m.memory_text.length > 90;
+  const color = TYPE_COLOR[m.memory_type] || "#888";
+  const label = TYPE_LABEL[m.memory_type]?.[lang] || m.memory_type;
+
   return (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:14 }}>
-      <div style={{ width:28, height:28, borderRadius:8, background:`${color}18`, display:"flex", alignItems:"center", justifyContent:"center", color, flexShrink:0, marginTop:1 }}>{icon}</div>
-      <div style={{ flex:1 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <span style={{ fontSize:14, fontWeight:600, color:"#fff" }}>{title}</span>
-          {count > 0 && <span style={{ fontSize: 12, fontWeight:600, color, background:`${color}18`, border:`1px solid ${color}30`, borderRadius:20, padding:"1px 8px" }}>{count}</span>}
-        </div>
-        <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.38)", lineHeight:1.5 }}>{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
-function MemoryRow({ text, importance, typeColor, deleting, onDelete }: { text: string; importance: number; typeColor: string; deleting: boolean; onDelete: () => void }) {
-  return (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:10, background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:9, padding:"10px 12px 10px 14px" }}>
+    <div style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 12px", borderRadius:10,
+      background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)",
+      transition:"background 0.15s" }}>
+      <div style={{ width:4, borderRadius:2, background:color, flexShrink:0, alignSelf:"stretch", minHeight:16 }}/>
       <div style={{ flex:1, minWidth:0 }}>
-        <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,0.82)", lineHeight:1.55 }}>{text}</p>
+        <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3 }}>
+          <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color, letterSpacing:"0.07em", textTransform:"uppercase" as const }}>
+            {label}
+          </span>
+          <span style={{ fontFamily:M, fontSize:10, color:"rgba(255,255,255,0.2)" }}>
+            {"★".repeat(Math.min(m.importance, 5))}
+          </span>
+        </div>
+        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.55, margin:0,
+          ...(isLong && !expanded ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
+          {m.memory_text}
+        </p>
+        {isLong && (
+          <button onClick={() => setExpanded(e => !e)}
+            style={{ marginTop:4, background:"none", border:"none", cursor:"pointer", padding:0,
+              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
+            {expanded
+              ? <><ChevronDown size={10}/>{lang==="pt"?"Ver menos":lang==="es"?"Ver menos":"Show less"}</>
+              : <><ChevronRight size={10}/>{lang==="pt"?"Ver tudo":lang==="es"?"Ver todo":"Show all"}</>}
+          </button>
+        )}
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-        <span style={{ fontSize: 12, color:typeColor, letterSpacing:1 }}>{"★".repeat(Math.min(importance,5))}</span>
-        <button onClick={onDelete} disabled={deleting} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.2)", padding:2, display:"flex", alignItems:"center", opacity:deleting?0.4:1 }}><Trash2 size={12} /></button>
-      </div>
+      <button onClick={onDelete} disabled={deleting}
+        style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px",
+          color:"rgba(255,255,255,0.18)", display:"flex", alignItems:"center", flexShrink:0,
+          transition:"color 0.15s" }}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#f87171"}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)"}}>
+        {deleting ? <span style={{fontSize:11}}>…</span> : <Trash2 size={12}/>}
+      </button>
     </div>
   );
 }
 
+// ── Collapsible section ───────────────────────────────────────────────────────
+function Section({ icon, color, title, subtitle, count, children }: {
+  icon: React.ReactNode; color:string; title:string; subtitle:string;
+  count:number; children:React.ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{ marginBottom:20 }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"12px 14px",
+          borderRadius:12, background:`${color}08`, border:`1px solid ${color}20`,
+          cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=`${color}12`}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=`${color}08`}}>
+        <div style={{ width:28, height:28, borderRadius:8, background:`${color}18`,
+          border:`1px solid ${color}28`, display:"flex", alignItems:"center", justifyContent:"center",
+          flexShrink:0, color }}>
+          {icon}
+        </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontFamily:F, fontSize:14, fontWeight:600, color:"#f0f2f8" }}>{title}</span>
+            <span style={{ fontFamily:M, fontSize:12, color, background:`${color}15`,
+              borderRadius:99, padding:"1px 8px" }}>{count}</span>
+          </div>
+          <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.35)", margin:0, marginTop:1 }}>{subtitle}</p>
+        </div>
+        <ChevronDown size={14} color="rgba(255,255,255,0.3)"
+          style={{ flexShrink:0, transform:open?"none":"rotate(-90deg)", transition:"transform 0.2s" }}/>
+      </button>
+
+      {open && (
+        <div style={{ marginTop:8, paddingLeft:0 }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function IntelligencePage() {
-  const { user, selectedPersona, lang } = useOutletContext<DashboardContext>();
-  const language = lang || "pt";
-  const isPT = language === "pt";
-  const isES = language === "es";
-
-
-  const t = {
-    title: isPT ? "O que a IA sabe sobre" : isES ? "Lo que la IA sabe sobre" : "What the AI knows about",
-    subtitle: isPT ? "Tudo que aprendi em conversas — usado automaticamente para melhorar cada resposta"
-      : isES ? "Todo lo que aprendí en conversaciones — usado automáticamente para mejorar cada respuesta"
-      : "Everything I learned in conversations — used automatically to improve every response",
-    refresh: isPT ? "Atualizar" : isES ? "Actualizar" : "Refresh",
-    memories_title: isPT ? "Memórias persistentes" : isES ? "Memorias persistentes" : "Persistent memories",
-    memories_sub: isPT ? "Fatos que aprendi em conversas — usados em todas as respostas sem você precisar repetir"
-      : isES ? "Hechos que aprendí en conversaciones — usados en todas las respuestas sin que tengas que repetirlos"
-      : "Facts I learned in conversations — used in every response without you repeating yourself",
-    patterns_title: isPT ? "Padrões aprendidos dos seus anúncios" : isES ? "Patrones aprendidos de tus anuncios" : "Patterns learned from your ads",
-    patterns_sub: isPT ? "Extraídos dos dados reais de campanha — criativos vencedores, o que parar e o que escalar"
-      : isES ? "Extraídos de datos reales de campaña — creativos ganadores, qué pausar y qué escalar"
-      : "Extracted from real campaign data — winning creatives, what to stop and what to scale",
-    examples_title: isPT ? "Respostas que você aprovou" : isES ? "Respuestas que aprobaste" : "Responses you approved",
-    examples_sub: isPT ? "Quando você curte 👍 uma resposta, salvo o estilo para calibrar as próximas"
-      : isES ? "Cuando das 👍 a una respuesta, guardo el estilo para calibrar las siguientes"
-      : "When you 👍 a response, I save the style to calibrate future ones",
-    actions_title: isPT ? "Ações executadas pela IA" : isES ? "Acciones ejecutadas por la IA" : "Actions executed by AI",
-    actions_sub: isPT ? "Pausas, escaladas e ajustes de budget feitos no Meta Ads ou Google Ads, com sua confirmação"
-      : isES ? "Pausas, escaladas y ajustes de presupuesto en Meta Ads o Google Ads, con tu confirmación"
-      : "Pauses, scales and budget adjustments on Meta Ads or Google Ads, with your confirmation",
-    empty_title: isPT ? "Ainda sem inteligência acumulada" : isES ? "Aún sin inteligencia acumulada" : "No accumulated intelligence yet",
-    empty_sub: isPT ? "Converse com a IA sobre sua conta. Curta (👍) respostas que gostar."
-      : isES ? "Habla con la IA sobre tu cuenta. Dale 👍 a las respuestas que te gusten."
-      : "Chat with the AI about your account. Like (👍) responses you enjoy.",
-    open_chat: isPT ? "Abrir IA Chat" : isES ? "Abrir IA Chat" : "Open AI Chat",
-    no_patterns: isPT ? "Nenhum padrão ainda" : isES ? "Ningún patrón aún" : "No patterns yet",
-    no_patterns_sub: isPT ? "Conecte Meta Ads ou Google Ads e rode campanhas — os padrões são extraídos automaticamente a cada dia"
-      : isES ? "Conecta Meta Ads o Google Ads y corre campañas — los patrones se extraen automáticamente cada día"
-      : "Connect Meta Ads or Google Ads and run campaigns — patterns are extracted automatically each day",
-    no_examples: isPT ? "Nenhum exemplo ainda" : isES ? "Ningún ejemplo aún" : "No examples yet",
-    no_examples_sub: isPT ? "No IA Chat, clique 👍 nas respostas que você gostar"
-      : isES ? "En el IA Chat, haz 👍 en las respuestas que te gusten"
-      : "In the AI Chat, click 👍 on responses you like",
-    no_actions: isPT ? "Nenhuma ação ainda" : isES ? "Ninguna acción aún" : "No actions yet",
-    no_actions_sub: isPT ? "No chat, peça para a IA pausar ou escalar um criativo — ela pede confirmação antes"
-      : isES ? "En el chat, pide a la IA pausar o escalar un creativo — pide confirmación antes"
-      : "In chat, ask the AI to pause or scale a creative — it asks for confirmation first",
-    type_preference: isPT ? "Preferência" : isES ? "Preferencia" : "Preference",
-    type_rule: isPT ? "Regra" : isES ? "Regla" : "Rule",
-    type_decision: isPT ? "Decisão" : isES ? "Decisión" : "Decision",
-    type_context: isPT ? "Contexto" : isES ? "Contexto" : "Context",
-    winner: isPT ? "vencedor" : isES ? "ganador" : "winner",
-    loser: isPT ? "problema" : isES ? "problema" : "issue",
-    conf: isPT ? "conf." : "conf.",
-    memories_label: isPT ? "memórias" : isES ? "memorias" : "memories",
-    examples_label: isPT ? "exemplos" : isES ? "ejemplos" : "examples",
-    patterns_label: isPT ? "padrões" : isES ? "patrones" : "patterns",
-    actions_label: isPT ? "ações" : isES ? "acciones" : "actions",
-    mem_desc: isPT ? "fatos sobre você e a conta" : isES ? "hechos sobre ti y la cuenta" : "facts about you and account",
-    ex_desc: isPT ? "respostas que você aprovou" : isES ? "respuestas que aprobaste" : "responses you approved",
-    pat_desc: isPT ? "do que funcionou nos ads" : isES ? "de lo que funcionó en los ads" : "from what worked in ads",
-    act_desc: isPT ? "executadas no Meta/Google" : isES ? "ejecutadas en Meta/Google" : "executed on Meta/Google",
-    actions_count: (n: number) => isPT ? `${n} ação${n !== 1 ? "ões" : ""} executada${n !== 1 ? "s" : ""}` : isES ? `${n} acción${n !== 1 ? "es" : ""} ejecutada${n !== 1 ? "s" : ""}` : `${n} action${n !== 1 ? "s" : ""} executed`,
-    actions_hist: isPT ? "Histórico de ações tomadas com sua confirmação" : isES ? "Historial de acciones tomadas con tu confirmación" : "History of actions taken with your confirmation",
-  };
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
   const navigate = useNavigate();
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [examples, setExamples] = useState<Example[]>([]);
-  const [patterns, setPatterns] = useState<Pattern[]>([]);
-  const [actionCount, setActionCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const lang = language || "pt";
+  const isPT = lang === "pt", isES = lang === "es";
 
-  const load = async () => {
+  const [memories, setMemories]     = useState<Memory[]>([]);
+  const [examples, setExamples]     = useState<Example[]>([]);
+  const [patterns, setPatterns]     = useState<Pattern[]>([]);
+  const [actionCount, setActionCount] = useState(0);
+  const [loading, setLoading]       = useState(true);
+  const [deleting, setDeleting]     = useState<string | null>(null);
+
+  // i18n
+  const t = {
+    title:       isPT ? "Inteligência da IA" : isES ? "Inteligencia de la IA" : "AI Intelligence",
+    subtitle:    isPT ? "Tudo que aprendi em conversas — usado automaticamente em cada resposta"
+                     : isES ? "Todo lo que aprendí en conversaciones — usado automáticamente en cada respuesta"
+                     : "Everything I've learned — used automatically in every response",
+    refresh:     isPT ? "Atualizar" : isES ? "Actualizar" : "Refresh",
+    account:     isPT ? "Conta" : isES ? "Cuenta" : "Account",
+    global:      isPT ? "Global" : isES ? "Global" : "Global",
+    memories:    isPT ? "Memórias" : isES ? "Memorias" : "Memories",
+    mem_sub:     isPT ? "Fatos sobre você e a conta, extraídos das conversas"
+                     : isES ? "Hechos sobre ti y la cuenta, extraídos de conversaciones"
+                     : "Facts about you and account, extracted from conversations",
+    patterns:    isPT ? "Padrões de ads" : isES ? "Patrones de anuncios" : "Ad patterns",
+    pat_sub:     isPT ? "Do que funcionou nas campanhas conectadas"
+                     : isES ? "De lo que funcionó en las campañas conectadas"
+                     : "From what worked in connected campaigns",
+    examples:    isPT ? "Respostas aprovadas" : isES ? "Respuestas aprobadas" : "Approved responses",
+    ex_sub:      isPT ? "Quando você curte 👍 uma resposta, salvo o estilo"
+                     : isES ? "Cuando das 👍 a una respuesta, guardo el estilo"
+                     : "When you 👍 a response, I save the style",
+    actions:     isPT ? "Ações executadas" : isES ? "Acciones ejecutadas" : "Actions executed",
+    act_sub:     isPT ? "Pausas e escaladas feitas via IA com sua confirmação"
+                     : isES ? "Pausas y escalados hechos via IA con tu confirmación"
+                     : "Pauses and scale-ups done via AI with your confirmation",
+    empty:       isPT ? "Ainda sem inteligência acumulada"
+                     : isES ? "Aún sin inteligencia acumulada"
+                     : "No intelligence accumulated yet",
+    empty_sub:   isPT ? "Converse com a IA sobre esta conta e curta (👍) as respostas que gostar."
+                     : isES ? "Conversa con la IA sobre esta cuenta y dale 👍 a las respuestas que te gusten."
+                     : "Chat with the AI about this account and 👍 responses you like.",
+    open_chat:   isPT ? "Abrir IA Chat" : isES ? "Abrir IA Chat" : "Open AI Chat",
+    no_patterns: isPT ? "Nenhum padrão ainda — conecte Meta Ads ou Google Ads"
+                     : isES ? "Sin patrones aún — conecta Meta Ads o Google Ads"
+                     : "No patterns yet — connect Meta Ads or Google Ads",
+    no_examples: isPT ? "Nenhum exemplo — curta 👍 respostas no chat"
+                     : isES ? "Sin ejemplos — da 👍 a respuestas en el chat"
+                     : "No examples — 👍 responses in chat",
+    no_actions:  isPT ? "Nenhuma ação ainda"
+                     : isES ? "Sin acciones aún"
+                     : "No actions yet",
+    actions_desc:isPT ? "No chat, peça para a IA pausar ou escalar um criativo"
+                     : isES ? "En el chat, pide a la IA pausar o escalar un creativo"
+                     : "In chat, ask the AI to pause or scale a creative",
+    show_less:   isPT ? "Ver menos" : isES ? "Ver menos" : "Show less",
+    show_more:   isPT ? "Ver tudo" : isES ? "Ver todo" : "Show all",
+    scope_account: isPT ? "desta conta" : isES ? "de esta cuenta" : "for this account",
+    scope_global:  isPT ? "globais" : isES ? "globales" : "global",
+  };
+
+  const load = useCallback(async () => {
     if (!user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
-      // learned_patterns scoped by persona_id when a persona is selected
-      const patternsQ = (supabase as any).from("learned_patterns")
+      // Memories: scoped by persona if selected, else null persona (global)
+      const memQ = (supabase as any).from("chat_memory")
+        .select("id,memory_text,memory_type,importance,created_at")
+        .eq("user_id", user.id)
+        .order("importance", { ascending:false }).limit(30);
+      if (selectedPersona?.id) memQ.eq("persona_id", selectedPersona.id);
+      else memQ.is("persona_id", null);
+
+      // Patterns: scoped by persona
+      const patQ = (supabase as any).from("learned_patterns")
         .select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner")
         .eq("user_id", user.id)
-        .order("confidence", { ascending: false }).limit(15);
-      if (selectedPersona?.id) patternsQ.eq("persona_id", selectedPersona.id);
+        .order("confidence", { ascending:false }).limit(15);
+      if (selectedPersona?.id) patQ.eq("persona_id", selectedPersona.id);
 
-      const [mR, eR, pR, aR] = await Promise.all([
-        (supabase as any).from("chat_memory").select("id,memory_text,memory_type,importance,created_at").eq("user_id", user.id).order("importance", { ascending: false }).limit(25),
-        (supabase as any).from("chat_examples").select("id,user_message,quality_score,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-        patternsQ,
-        (supabase as any).from("ai_action_log").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      ]);
+      // Examples: global per user (style preference, not account-specific)
+      const exQ = (supabase as any).from("chat_examples")
+        .select("id,user_message,quality_score,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending:false }).limit(10);
+
+      // Actions: global
+      const actQ = (supabase as any).from("ai_action_log")
+        .select("id", { count:"exact", head:true }).eq("user_id", user.id);
+
+      const [mR, pR, eR, aR] = await Promise.all([memQ, patQ, exQ, actQ]);
       setMemories(mR.data || []);
-      setExamples(eR.data || []);
       setPatterns(pR.data || []);
+      setExamples(eR.data || []);
       setActionCount(aR.count || 0);
     } finally { setLoading(false); }
-  };
-
-  useEffect(() => {
-    load();
   }, [user?.id, selectedPersona?.id]);
 
+  useEffect(() => { load(); }, [load]);
 
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
   const deleteMemory = async (id: string) => {
     setDeleting(id);
-    try { await (supabase as any).from("chat_memory").delete().eq("id", id); setMemories(p => p.filter(m => m.id !== id)); }
-    catch { }
+    try {
+      await (supabase as any).from("chat_memory").delete().eq("id", id);
+      setMemories(p => p.filter(m => m.id !== id));
+      toast.success(isPT ? "Memória removida" : "Memory removed");
+    } catch { toast.error("Error"); }
     finally { setDeleting(null); }
   };
-  const deleteExample = async (id: string) => { setDeleting(id); await (supabase as any).from("chat_examples").delete().eq("id", id); setExamples(p => p.filter(e => e.id !== id)); setDeleting(null); };
 
-  const accountName = selectedPersona?.name || "sua conta";
+  const deleteExample = async (id: string) => {
+    setDeleting(id);
+    try {
+      await (supabase as any).from("chat_examples").delete().eq("id", id);
+      setExamples(p => p.filter(e => e.id !== id));
+    } catch { toast.error("Error"); }
+    finally { setDeleting(null); }
+  };
 
-  if (loading) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:400 }}>
-      <div style={{ width:28, height:28, border:"2px solid rgba(255,255,255,0.1)", borderTopColor:"#0ea5e9", borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  if (!user) return null;
+
+  const accountLabel = selectedPersona?.name || t.global;
+  const hasAny = memories.length > 0 || examples.length > 0 || patterns.length > 0;
 
   return (
-    <div style={{ maxWidth:820, margin:"0 auto", padding:"28px 24px 60px", fontFamily:"'Inter', sans-serif" }}>
+    <div style={{ maxWidth:720, margin:"0 auto", padding:"28px 24px 60px", fontFamily:F }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* Header */}
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:32 }}>
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:28, gap:12, flexWrap:"wrap" }}>
         <div>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-            <Brain size={22} color="#0ea5e9" />
-            <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:"#fff", letterSpacing:-0.5 }}>{t.title} {accountName}</h1>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
+            <Brain size={20} color="#0ea5e9"/>
+            <h1 style={{ margin:0, fontSize:"clamp(18px,3vw,22px)", fontWeight:800, color:"#f0f2f8", letterSpacing:"-0.03em" }}>
+              {t.title}
+            </h1>
           </div>
-          <p style={{ margin:0, fontSize:13.5, color:"rgba(255,255,255,0.45)", lineHeight:1.5 }}>Tudo que aprendi em conversas — usado automaticamente para melhorar cada resposta</p>
+          <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,0.4)" }}>{t.subtitle}</p>
+          {/* Scope badge */}
+          <div style={{ marginTop:8, display:"inline-flex", alignItems:"center", gap:5,
+            padding:"3px 10px", borderRadius:99,
+            background: selectedPersona ? "rgba(14,165,233,0.10)" : "rgba(255,255,255,0.06)",
+            border: selectedPersona ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.10)" }}>
+            <div style={{ width:6, height:6, borderRadius:"50%",
+              background: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.3)" }}/>
+            <span style={{ fontFamily:F, fontSize:12, fontWeight:600,
+              color: selectedPersona ? "#38bdf8" : "rgba(255,255,255,0.5)" }}>
+              {accountLabel}
+            </span>
+          </div>
         </div>
-        <button onClick={load} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, color:"rgba(255,255,255,0.5)", fontSize:12, cursor:"pointer" }}>
-          <RefreshCw size={12} /> Atualizar
+        <button onClick={load} disabled={loading}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px",
+            background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)",
+            borderRadius:9, color:"rgba(255,255,255,0.5)", fontFamily:F, fontSize:12,
+            cursor:"pointer", transition:"all 0.15s" }}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.09)"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)"}}>
+          <RefreshCw size={12} style={{ animation:loading?"spin 1s linear infinite":"none" }}/>
+          {t.refresh}
         </button>
       </div>
 
-      {/* Stats */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:10, marginBottom:32 }}>
+      {/* Stats row */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:8, marginBottom:28 }}>
         {[
-          { n:memories.length, label:t.memories_label, color:"#0ea5e9", desc:t.mem_desc },
-          { n:examples.length, label:t.examples_label, color:"#a78bfa", desc:t.ex_desc },
-          { n:patterns.length, label:t.patterns_label, color:"#34d399", desc:t.pat_desc },
-          { n:actionCount, label:t.actions_label, color:"#fb923c", desc:t.act_desc },
+          { n:memories.length,  label:t.memories, color:"#0ea5e9" },
+          { n:patterns.length,  label:t.patterns, color:"#34d399" },
+          { n:examples.length,  label:t.examples, color:"#a78bfa" },
+          { n:actionCount,      label:t.actions,  color:"#fb923c" },
         ].map(s => (
-          <div key={s.label} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px" }}>
-            <div style={{ fontSize:26, fontWeight:700, color:s.color, lineHeight:1 }}>{s.n}</div>
-            <div style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)", marginTop:4 }}>{s.label}</div>
-            <div style={{ fontSize: 12, color:"rgba(255,255,255,0.3)", marginTop:2 }}>{s.desc}</div>
+          <div key={s.label} style={{ padding:"12px 14px", borderRadius:12,
+            background:"linear-gradient(160deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
+            border:"1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ fontFamily:M, fontSize:24, fontWeight:700, color:s.color, lineHeight:1 }}>{s.n}</div>
+            <div style={{ fontFamily:F, fontSize:12, fontWeight:500, color:"rgba(255,255,255,0.5)", marginTop:4 }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Empty state */}
-      {memories.length === 0 && examples.length === 0 && patterns.length === 0 && (
-        <div style={{ background:"rgba(14,165,233,0.05)", border:"1px solid rgba(14,165,233,0.15)", borderRadius:14, padding:"32px 28px", textAlign:"center" }}>
-          <Brain size={36} color="rgba(14,165,233,0.4)" style={{ marginBottom:12 }} />
-          <p style={{ margin:"0 0 8px", fontSize:15, fontWeight:600, color:"#fff" }}>Ainda sem inteligência acumulada</p>
-          <p style={{ margin:"0 0 20px", fontSize:13, color:"rgba(255,255,255,0.4)", maxWidth:400, marginInline:"auto" }}>Converse com a IA sobre sua conta. Curta (👍) respostas que gostar.</p>
-          <button onClick={() => navigate("/dashboard/ai")} style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"9px 18px", background:"#0ea5e9", border:"none", borderRadius:8, color:"#fff", fontSize:13, fontWeight:600, cursor:"pointer" }}>
-            Abrir IA Chat <ChevronRight size={14} />
+      {!loading && !hasAny && (
+        <div style={{ textAlign:"center", padding:"48px 24px", borderRadius:16,
+          background:"rgba(14,165,233,0.04)", border:"1px solid rgba(14,165,233,0.12)" }}>
+          <Brain size={40} color="rgba(14,165,233,0.35)" style={{ marginBottom:14 }}/>
+          <p style={{ margin:"0 0 6px", fontSize:16, fontWeight:700, color:"#f0f2f8" }}>{t.empty}</p>
+          <p style={{ margin:"0 0 20px", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.6 }}>{t.empty_sub}</p>
+          <button onClick={() => navigate("/dashboard/ai")}
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"9px 20px",
+              background:"linear-gradient(135deg,#0ea5e9,#06b6d4)", border:"none", borderRadius:10,
+              color:"#fff", fontFamily:F, fontSize:13, fontWeight:700, cursor:"pointer",
+              boxShadow:"0 4px 16px rgba(14,165,233,0.35)" }}>
+            {t.open_chat}<ChevronRight size={14}/>
           </button>
         </div>
       )}
 
-      {/* SEÇÃO 1 — MEMÓRIAS */}
-      {memories.length > 0 && (
-        <section style={{ marginBottom:36 }}>
-          <SectionHeader icon={<Brain size={15} />} color="#0ea5e9" title={t.memories_title} subtitle={t.memories_sub} count={memories.length} />
-          {(["preference","decision","rule","context"] as const).map(type => {
-            const group = memories.filter(m => m.memory_type === type);
-            if (!group.length) return null;
-            return (
-              <div key={type} style={{ marginBottom:16 }}>
-                <div style={{ fontSize: 12, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" as const, color:TYPE_COLOR[type]||"#888", marginBottom:8, paddingLeft:2 }}>{({"preference":t.type_preference,"decision":t.type_decision,"rule":t.type_rule,"context":t.type_context}[type]||type)}s</div>
-                <div style={{ display:"flex", flexDirection:"column" as const, gap:6 }}>
-                  {group.map(m => <MemoryRow key={m.id} text={m.memory_text} importance={m.importance} typeColor={TYPE_COLOR[m.memory_type]||"#888"} deleting={deleting===m.id} onDelete={() => deleteMemory(m.id)} />)}
-                </div>
-              </div>
-            );
-          })}
-        </section>
+      {loading && (
+        <div style={{ display:"flex", justifyContent:"center", padding:"60px 0" }}>
+          <div style={{ width:24, height:24, border:"2px solid rgba(255,255,255,0.1)", borderTopColor:"#0ea5e9", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>
+        </div>
       )}
 
-      {/* SEÇÃO 2 — PADRÕES */}
-      <section style={{ marginBottom:36 }}>
-        <SectionHeader icon={<TrendingUp size={15} />} color="#34d399" title={t.patterns_title} subtitle={t.patterns_sub} count={patterns.length} />
-        {patterns.length === 0 ? (
-          <div style={{ background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.1)", borderRadius:10, padding:"20px 18px", display:"flex", alignItems:"center", gap:16 }}>
-            <TrendingUp size={20} color="rgba(255,255,255,0.2)" />
-            <div>
-              <p style={{ margin:0, fontSize:13.5, fontWeight:500, color:"rgba(255,255,255,0.5)" }}>Nenhum padrão ainda</p>
-              <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.3)" }}>Conecte Meta Ads ou Google Ads e rode campanhas — os padrões são extraídos automaticamente a cada dia</p>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display:"flex", flexDirection:"column" as const, gap:8 }}>
-            {patterns.map(p => (
-              <div key={p.id} style={{ display:"flex", alignItems:"flex-start", gap:12, background:p.is_winner?"rgba(52,211,153,0.04)":"rgba(255,255,255,0.02)", border:`1px solid ${p.is_winner?"rgba(52,211,153,0.15)":"rgba(255,255,255,0.07)"}`, borderRadius:10, padding:"12px 14px" }}>
-                <span style={{ fontSize:14, flexShrink:0, marginTop:1 }}>{p.is_winner?"✅":"⚠️"}</span>
-                <p style={{ flex:1, margin:0, fontSize:13, color:"rgba(255,255,255,0.85)", lineHeight:1.5 }}>{p.insight_text}</p>
-                <div style={{ flexShrink:0, textAlign:"right" as const, fontSize: 12, color:"rgba(255,255,255,0.35)" }}>
-                  {p.avg_ctr > 0 && <div>CTR {(p.avg_ctr * 100).toFixed(2)}%</div>}
-                  <div>conf. {(p.confidence * 100).toFixed(0)}%</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {!loading && hasAny && (
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
 
-      {/* SEÇÃO 3 — EXEMPLOS */}
-      <section style={{ marginBottom:36 }}>
-        <SectionHeader icon={<MessageSquare size={15} />} color="#a78bfa" title={t.examples_title} subtitle={t.examples_sub} count={examples.length} />
-        {examples.length === 0 ? (
-          <div style={{ background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.1)", borderRadius:10, padding:"20px 18px", display:"flex", alignItems:"center", gap:16 }}>
-            <Star size={20} color="rgba(255,255,255,0.2)" />
-            <div>
-              <p style={{ margin:0, fontSize:13.5, fontWeight:500, color:"rgba(255,255,255,0.5)" }}>Nenhum exemplo ainda</p>
-              <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.3)" }}>No IA Chat, clique 👍 nas respostas que você gostar</p>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display:"flex", flexDirection:"column" as const, gap:6 }}>
-            {examples.map(e => (
-              <div key={e.id} style={{ display:"flex", alignItems:"center", gap:10, background:"rgba(167,139,250,0.04)", border:"1px solid rgba(167,139,250,0.12)", borderRadius:9, padding:"10px 12px 10px 14px" }}>
-                <Star size={12} color="#a78bfa" style={{ flexShrink:0 }} />
-                <span style={{ flex:1, fontSize:13, color:"rgba(255,255,255,0.75)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const }}>{e.user_message}</span>
-                <span style={{ fontSize: 12, color:"rgba(255,255,255,0.25)", flexShrink:0, marginRight:6 }}>{new Date(e.created_at).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" })}</span>
-                <button onClick={() => deleteExample(e.id)} disabled={deleting===e.id} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.2)", padding:2, display:"flex", alignItems:"center" }}><Trash2 size={12} /></button>
+          {/* Memories */}
+          <Section icon={<Brain size={14}/>} color="#0ea5e9"
+            title={t.memories} subtitle={t.mem_sub} count={memories.length}>
+            {memories.length === 0 ? (
+              <div style={{ padding:"14px 14px", borderRadius:10, background:"rgba(255,255,255,0.02)",
+                border:"1px dashed rgba(255,255,255,0.08)", textAlign:"center" }}>
+                <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.3)", margin:0 }}>
+                  {t.empty_sub}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {memories.map(m => (
+                  <MemoryRow key={m.id} m={m} lang={lang}
+                    deleting={deleting === m.id}
+                    onDelete={() => deleteMemory(m.id)}/>
+                ))}
+              </div>
+            )}
+          </Section>
 
-      {/* SEÇÃO 4 — AÇÕES */}
-      <section>
-        <SectionHeader icon={<Zap size={15} />} color="#fb923c" title={t.actions_title} subtitle={t.actions_sub} count={actionCount} />
-        <div style={{ background:"rgba(251,146,60,0.04)", border:"1px solid rgba(251,146,60,0.12)", borderRadius:10, padding:"16px 18px", display:"flex", alignItems:"center", gap:16 }}>
-          <div style={{ fontSize:32, fontWeight:700, color:"#fb923c", lineHeight:1 }}>{actionCount}</div>
-          <div>
-            <p style={{ margin:0, fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.7)" }}>{actionCount === 0 ? t.no_actions : t.actions_count(actionCount)}</p>
-            <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.35)" }}>{actionCount === 0 ? "No chat, peça para a IA pausar ou escalar um criativo — ela pede confirmação antes" : "Histórico de ações tomadas com sua confirmação"}</p>
-          </div>
+          {/* Patterns */}
+          <Section icon={<TrendingUp size={14}/>} color="#34d399"
+            title={t.patterns} subtitle={t.pat_sub} count={patterns.length}>
+            {patterns.length === 0 ? (
+              <div style={{ padding:"14px", borderRadius:10, background:"rgba(255,255,255,0.02)",
+                border:"1px dashed rgba(255,255,255,0.08)" }}>
+                <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.3)", margin:0 }}>{t.no_patterns}</p>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {patterns.map(p => {
+                  const [exp, setExp] = useState(false);
+                  const isLong = p.insight_text.length > 100;
+                  return (
+                    <div key={p.id} style={{ display:"flex", alignItems:"flex-start", gap:10,
+                      padding:"10px 12px", borderRadius:10,
+                      background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
+                      border:`1px solid ${p.is_winner ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}` }}>
+                      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "✅" : "⚠️"}</span>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.5, margin:0,
+                          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
+                          {p.insight_text}
+                        </p>
+                        {isLong && (
+                          <button onClick={() => setExp(e => !e)}
+                            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:3,
+                              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
+                            {exp ? <><ChevronDown size={10}/>{t.show_less}</> : <><ChevronRight size={10}/>{t.show_more}</>}
+                          </button>
+                        )}
+                      </div>
+                      {p.avg_ctr > 0 && (
+                        <div style={{ flexShrink:0, textAlign:"right" as const }}>
+                          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr*100).toFixed(2)}%</div>
+                          <div style={{ fontFamily:F, fontSize:10, color:"rgba(255,255,255,0.25)" }}>CTR</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+
+          {/* Examples */}
+          <Section icon={<Star size={14}/>} color="#a78bfa"
+            title={t.examples} subtitle={t.ex_sub} count={examples.length}>
+            {examples.length === 0 ? (
+              <div style={{ padding:"14px", borderRadius:10, background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.08)" }}>
+                <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.3)", margin:0 }}>{t.no_examples}</p>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                {examples.map(e => {
+                  const [exp, setExp] = useState(false);
+                  const isLong = e.user_message.length > 80;
+                  return (
+                    <div key={e.id} style={{ display:"flex", alignItems:"flex-start", gap:10,
+                      padding:"9px 12px", borderRadius:10,
+                      background:"rgba(167,139,250,0.04)", border:"1px solid rgba(167,139,250,0.12)" }}>
+                      <Star size={12} color="#a78bfa" style={{ flexShrink:0, marginTop:2 }}/>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.5, margin:0,
+                          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:1, WebkitBoxOrient:"vertical" as const } : {}) }}>
+                          {e.user_message}
+                        </p>
+                        {isLong && (
+                          <button onClick={() => setExp(v => !v)}
+                            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:2,
+                              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
+                            {exp ? <><ChevronDown size={10}/>{t.show_less}</> : <><ChevronRight size={10}/>{t.show_more}</>}
+                          </button>
+                        )}
+                      </div>
+                      <span style={{ fontFamily:M, fontSize:11, color:"rgba(255,255,255,0.2)", flexShrink:0, marginRight:4 }}>
+                        {new Date(e.created_at).toLocaleDateString(lang==="pt"?"pt-BR":"en-US", { day:"2-digit", month:"short" })}
+                      </span>
+                      <button onClick={() => deleteExample(e.id)} disabled={deleting===e.id}
+                        style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px",
+                          color:"rgba(255,255,255,0.18)", display:"flex", alignItems:"center", flexShrink:0,
+                          transition:"color 0.15s" }}
+                        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#f87171"}}
+                        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)"}}>
+                        {deleting===e.id ? <span style={{fontSize:11}}>…</span> : <Trash2 size={12}/>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+
+          {/* Actions */}
+          <Section icon={<Zap size={14}/>} color="#fb923c"
+            title={t.actions} subtitle={t.act_sub} count={actionCount}>
+            <div style={{ padding:"14px 16px", borderRadius:10,
+              background:"rgba(251,146,60,0.04)", border:"1px solid rgba(251,146,60,0.12)",
+              display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ fontFamily:M, fontSize:28, fontWeight:700, color:"#fb923c", lineHeight:1 }}>{actionCount}</div>
+              <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
+                {actionCount === 0 ? t.no_actions : `${actionCount} ${t.actions.toLowerCase()}`}<br/>
+                <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>{t.actions_desc}</span>
+              </p>
+            </div>
+          </Section>
+
         </div>
-      </section>
-
+      )}
     </div>
   );
 }
