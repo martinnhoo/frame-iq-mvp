@@ -48,7 +48,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
       style={{
         display: "flex", alignItems: "center", gap: 10,
         padding: "9px 12px", borderRadius: 8, margin: "1px 8px",
-        color: isActive ? "#f0f2f8" : hov ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.42)",
+        color: isActive ? "#f0f2f8" : hov ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.58)",
         background: isActive ? "rgba(14,165,233,0.11)" : hov ? "rgba(255,255,255,0.04)" : "transparent",
         fontSize: 13, fontWeight: isActive ? 600 : 400,
         textDecoration: "none", transition: "all 0.12s",
@@ -65,7 +65,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         }} />
       )}
       <Icon size={15} strokeWidth={isActive ? 2 : 1.6}
-        style={{ color: isActive ? "#0ea5e9" : "inherit", flexShrink: 0, opacity: isActive ? 1 : 0.75 }} />
+        style={{ color: isActive ? "#0ea5e9" : "inherit", flexShrink: 0, opacity: isActive ? 1 : 0.85 }} />
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{
@@ -137,7 +137,7 @@ export function DashboardSidebar({
       )}
 
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
         style={{
           width: 224, background: "#080b14",
           borderRight: "1px solid rgba(255,255,255,0.05)",
@@ -183,10 +183,10 @@ export function DashboardSidebar({
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: selectedPersona ? "#f0f2f8" : "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.35 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: selectedPersona ? "#f0f2f8" : "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.35 }}>
                   {selectedPersona?.name || (pt ? "Nenhuma conta" : es ? "Sin cuenta" : "No account")}
                 </p>
-                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.3, fontFamily: kpi ? "'DM Mono', monospace" : "inherit", color: kpi ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.22)" }}>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.3, fontFamily: kpi ? "'DM Mono', monospace" : "inherit", color: kpi ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)" }}>
                   {kpi
                     ? `R$${kpi.spend.toFixed(0)} · ${kpi.ctr.toFixed(2)}% CTR`
                     : pt ? "Selecionar conta" : es ? "Seleccionar" : "Select account"
@@ -195,7 +195,7 @@ export function DashboardSidebar({
               </div>
 
               {savedPersonas.length > 0 && (
-                <ChevronDown size={13} color="rgba(255,255,255,0.22)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
+                <ChevronDown size={13} color="rgba(255,255,255,0.38)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
               )}
             </button>
 
@@ -215,7 +215,7 @@ export function DashboardSidebar({
                           : <span style={{ fontSize: 12, fontWeight: 600, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.35)" }}>{p.name.charAt(0).toUpperCase()}</span>
                         }
                       </div>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.48)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.62)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {p.name}
                       </span>
                       {isSel && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", flexShrink: 0, boxShadow: "0 0 4px rgba(34,197,94,0.5)" }} />}
@@ -227,7 +227,7 @@ export function DashboardSidebar({
                   style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 11px", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
                   className="sb-row">
                   <Plus size={12} color="rgba(14,165,233,0.5)" />
-                  <span style={{ fontSize: 12, color: "rgba(14,165,233,0.6)", fontWeight: 400 }}>
+                  <span style={{ fontSize: 12, color: "rgba(14,165,233,0.75)", fontWeight: 400 }}>
                     {pt ? "Adicionar conta" : es ? "Agregar cuenta" : "Add account"}
                   </span>
                 </button>
@@ -286,7 +286,7 @@ export function DashboardSidebar({
               <AvatarFallback style={{ fontSize: 13, fontWeight: 700, borderRadius: 8, background: "rgba(14,165,233,0.12)", color: "#0ea5e9" }}>{initials}</AvatarFallback>
             </Avatar>
             <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, lineHeight: 1.3 }}>{displayName}</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.88)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, lineHeight: 1.3 }}>{displayName}</p>
               <p style={{ fontSize: 12, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
             </div>
           </button>

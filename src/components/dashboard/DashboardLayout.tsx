@@ -419,17 +419,40 @@ export default function DashboardLayout() {
       }
     `}</style>
     <div className="dashboard-root" style={{ height: "100dvh", background: "#0c0f1a", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
-      <DashboardSidebar
-        user={user}
-        profile={profile}
-        onProfileUpdate={(p) => setProfile(p as typeof profile)}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onOpenProfile={() => setProfileOpen(true)}
-        savedPersonas={savedPersonas}
-        selectedPersona={selectedPersona}
-        onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
-      />
+      <div style={{
+        width: sidebarOpen ? 224 : 0,
+        minWidth: sidebarOpen ? 224 : 0,
+        flexShrink: 0,
+        transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
+        overflow: "hidden",
+        position: "relative",
+      }} className="lg:block hidden">
+        <DashboardSidebar
+          user={user}
+          profile={profile}
+          onProfileUpdate={(p) => setProfile(p as typeof profile)}
+          open={true}
+          onClose={() => {}}
+          onOpenProfile={() => setProfileOpen(true)}
+          savedPersonas={savedPersonas}
+          selectedPersona={selectedPersona}
+          onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
+        />
+      </div>
+      {/* Mobile sidebar — overlay style */}
+      <div className="lg:hidden">
+        <DashboardSidebar
+          user={user}
+          profile={profile}
+          onProfileUpdate={(p) => setProfile(p as typeof profile)}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onOpenProfile={() => setProfileOpen(true)}
+          savedPersonas={savedPersonas}
+          selectedPersona={selectedPersona}
+          onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
+        />
+      </div>
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
@@ -446,18 +469,22 @@ export default function DashboardLayout() {
           boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)",
         }}>
 
-          {/* Mobile hamburger (hidden on desktop) */}
+          {/* Sidebar toggle — works on all screen sizes */}
           <button
-            className="lg:hidden"
             onClick={() => setSidebarOpen(s => !s)}
-            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", color: "rgba(255,255,255,0.55)", flexShrink: 0 }}>
+            title={sidebarOpen ? "Ocultar menu" : "Mostrar menu"}
+            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0, transition: "all 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}>
             <Menu className="h-4 w-4" />
           </button>
 
-          {/* Logo (mobile only, desktop has sidebar) */}
-          <div className="lg:hidden" style={{ flexShrink: 0 }}>
-            <Logo size="sm" />
-          </div>
+          {/* Logo (only when sidebar is hidden) */}
+          {!sidebarOpen && (
+            <div style={{ flexShrink: 0 }}>
+              <Logo size="sm" />
+            </div>
+          )}
 
           {/* Account picker */}
           <div className="relative" style={{ flexShrink: 0, minWidth: 0 }}>
