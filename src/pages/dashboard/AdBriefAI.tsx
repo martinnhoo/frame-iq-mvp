@@ -1338,7 +1338,7 @@ export default function AdBriefAI() {
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
     if(!pid){setConnections([]);return;}
-    supabase.from("platform_connections" as any)
+    supabase.from("platform_connections_safe" as any)
       .select("platform,status")
       .eq("user_id",user.id)
       .eq("persona_id",pid)
