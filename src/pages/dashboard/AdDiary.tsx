@@ -3,21 +3,134 @@ import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, ChevronDown, ChevronUp, Layers, LayoutList } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'DM Mono', monospace";
 
-const V = {
-  winner:  { label: "Vencedor",  bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.16)",  bar: "#22c55e", num: "#4ade80", badge: "rgba(34,197,94,0.12)"  },
-  scaled:  { label: "Escalado",  bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.16)", bar: "#0ea5e9", num: "#38bdf8", badge: "rgba(14,165,233,0.12)" },
-  testing: { label: "Testando",  bg: "rgba(251,191,36,0.05)", border: "rgba(251,191,36,0.13)", bar: "#fbbf24", num: "#fcd34d", badge: "rgba(251,191,36,0.10)" },
-  loser:   { label: "Pausado",   bg: "rgba(239,68,68,0.05)",  border: "rgba(239,68,68,0.13)",  bar: "#ef4444", num: "#f87171", badge: "rgba(239,68,68,0.10)"  },
+const T = {
+  pt: {
+    title: "Diário de Anúncios",
+    updated: "Atualizado às",
+    sync: "Sincronizar",
+    syncing: "Sincronizando...",
+    combined: "Combinado",
+    separate: "Separado",
+    win_rate: "Taxa de acerto",
+    winners_of: (w: number, t: number) => `${w} vencedor${w !== 1 ? "es" : ""} de ${t} anúncios`,
+    invested: "Investido",
+    last90: "últimos 90 dias",
+    roas_label: "ROAS geral",
+    return_label: "Retorno",
+    return_suffix: "retorno",
+    no_conv: "sem dados de conversão",
+    all: "Todos",
+    winners: "Vencedores",
+    scaled: "Escalados",
+    testing: "Testando",
+    paused: "Pausados",
+    no_name: "Sem nome",
+    launched: "Lançado",
+    paused_on: "Pausado",
+    select_account: "Selecione uma conta",
+    select_sub: "Escolha acima qual conta quer analisar",
+    no_ads: "Nenhum anúncio ainda",
+    no_ads_sub: "Conecte Meta Ads ou Google Ads e clique em Sincronizar",
+    sync_now: "Sincronizar agora",
+    importing: "Importando anúncios...",
+    importing_sub: "Isso pode levar alguns segundos",
+    no_category: "Nenhum anúncio nessa categoria",
+    more_ads: (n: number) => `+${n} anúncios`,
+    accounts_label: (n: number) => `${n} contas`,
+    verdict: { winner: "Vencedor", scaled: "Escalado", testing: "Testando", loser: "Pausado" },
+    metrics: { spend: "Gasto", impressions: "Impressões", clicks: "Cliques", cpc: "CPC", conversions: "Conversões", frequency: "Frequência", days: "Dias", ctr: "CTR", roas: "ROAS" },
+    date_locale: "pt-BR",
+  },
+  es: {
+    title: "Diario de Anuncios",
+    updated: "Actualizado a las",
+    sync: "Sincronizar",
+    syncing: "Sincronizando...",
+    combined: "Combinado",
+    separate: "Separado",
+    win_rate: "Tasa de acierto",
+    winners_of: (w: number, t: number) => `${w} ganador${w !== 1 ? "es" : ""} de ${t} anuncios`,
+    invested: "Invertido",
+    last90: "últimos 90 días",
+    roas_label: "ROAS general",
+    return_label: "Retorno",
+    return_suffix: "retorno",
+    no_conv: "sin datos de conversión",
+    all: "Todos",
+    winners: "Ganadores",
+    scaled: "Escalados",
+    testing: "Probando",
+    paused: "Pausados",
+    no_name: "Sin nombre",
+    launched: "Lanzado",
+    paused_on: "Pausado",
+    select_account: "Selecciona una cuenta",
+    select_sub: "Elige arriba qué cuenta quieres analizar",
+    no_ads: "Sin anuncios aún",
+    no_ads_sub: "Conecta Meta Ads o Google Ads y haz clic en Sincronizar",
+    sync_now: "Sincronizar ahora",
+    importing: "Importando anuncios...",
+    importing_sub: "Esto puede tardar unos segundos",
+    no_category: "Sin anuncios en esta categoría",
+    more_ads: (n: number) => `+${n} anuncios`,
+    accounts_label: (n: number) => `${n} cuentas`,
+    verdict: { winner: "Ganador", scaled: "Escalado", testing: "Probando", loser: "Pausado" },
+    metrics: { spend: "Gasto", impressions: "Impresiones", clicks: "Clics", cpc: "CPC", conversions: "Conversiones", frequency: "Frecuencia", days: "Días", ctr: "CTR", roas: "ROAS" },
+    date_locale: "es-MX",
+  },
+  en: {
+    title: "Ad Diary",
+    updated: "Updated at",
+    sync: "Sync",
+    syncing: "Syncing...",
+    combined: "Combined",
+    separate: "Separate",
+    win_rate: "Win rate",
+    winners_of: (w: number, t: number) => `${w} winner${w !== 1 ? "s" : ""} of ${t} ads`,
+    invested: "Invested",
+    last90: "last 90 days",
+    roas_label: "Overall ROAS",
+    return_label: "Return",
+    return_suffix: "return",
+    no_conv: "no conversion data",
+    all: "All",
+    winners: "Winners",
+    scaled: "Scaled",
+    testing: "Testing",
+    paused: "Paused",
+    no_name: "Untitled",
+    launched: "Launched",
+    paused_on: "Paused",
+    select_account: "Select an account",
+    select_sub: "Choose which account to analyze above",
+    no_ads: "No ads yet",
+    no_ads_sub: "Connect Meta Ads or Google Ads and click Sync",
+    sync_now: "Sync now",
+    importing: "Importing ads...",
+    importing_sub: "This may take a few seconds",
+    no_category: "No ads in this category",
+    more_ads: (n: number) => `+${n} ads`,
+    accounts_label: (n: number) => `${n} accounts`,
+    verdict: { winner: "Winner", scaled: "Scaled", testing: "Testing", loser: "Paused" },
+    metrics: { spend: "Spend", impressions: "Impressions", clicks: "Clicks", cpc: "CPC", conversions: "Conversions", frequency: "Frequency", days: "Days", ctr: "CTR", roas: "ROAS" },
+    date_locale: "en-US",
+  },
 };
 
-type Verdict = keyof typeof V;
+const V_STYLE = {
+  winner:  { bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.18)",  bar: "#22c55e", num: "#4ade80", badge: "rgba(34,197,94,0.12)"  },
+  scaled:  { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.18)", bar: "#0ea5e9", num: "#38bdf8", badge: "rgba(14,165,233,0.12)" },
+  testing: { bg: "rgba(251,191,36,0.05)", border: "rgba(251,191,36,0.15)", bar: "#fbbf24", num: "#fcd34d", badge: "rgba(251,191,36,0.10)" },
+  loser:   { bg: "rgba(239,68,68,0.05)",  border: "rgba(239,68,68,0.15)",  bar: "#ef4444", num: "#f87171", badge: "rgba(239,68,68,0.10)"  },
+};
 
+type Verdict = keyof typeof V_STYLE;
 interface Account { id: string; name: string | null; }
-
 interface Entry {
   id: string; ad_id: string; ad_name: string; campaign_name: string;
   adset_name: string; platform: string; status: string;
@@ -25,20 +138,20 @@ interface Entry {
   spend: number; impressions: number; clicks: number; ctr: number; cpc: number;
   conversions: number; conv_value: number; roas: number | null;
   frequency: number | null; verdict: Verdict; verdict_reason: string;
-  peak_ctr: number; synced_at: string;
-  persona_id: string;
-}
-
-function money(n: number) {
-  if (n >= 1000) return `R$${(n / 1000).toFixed(1)}k`;
-  return `R$${n.toFixed(0)}`;
+  peak_ctr: number; synced_at: string; persona_id: string;
 }
 
 const PLAT_COLOR: Record<string, string> = { meta: "#1877F2", google: "#4285F4" };
 const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
 
-function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boolean; onToggle: () => void }) {
-  const cfg = V[entry.verdict] || V.testing;
+function money(n: number) {
+  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
+  return `$${n.toFixed(0)}`;
+}
+
+function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt }) {
+  const cfg = V_STYLE[entry.verdict] || V_STYLE.testing;
+  const verdictLabel = t.verdict[entry.verdict as keyof typeof t.verdict] || entry.verdict;
   const ctr = (entry.ctr * 100).toFixed(2);
   const isPos = entry.verdict === "winner" || entry.verdict === "scaled";
   const platColor = PLAT_COLOR[entry.platform] || "#666";
@@ -46,14 +159,14 @@ function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boole
   return (
     <div style={{ borderRadius: 12, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden" }}>
       <button onClick={onToggle} style={{ width: "100%", display: "flex", alignItems: "center", padding: 0, background: "none", border: "none", cursor: "pointer" }}>
-        <div style={{ width: 3, alignSelf: "stretch", background: cfg.bar, flexShrink: 0, opacity: 0.7 }} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "14px 16px" }}>
+        <div style={{ width: 3, alignSelf: "stretch", background: cfg.bar, flexShrink: 0, opacity: 0.75 }} />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "13px 15px" }}>
           <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#f0f2f8", fontFamily: F, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {entry.ad_name || "Sem nome"}
+              {entry.ad_name || t.no_name}
             </p>
             <p style={{ margin: "3px 0 0", fontSize: 11.5, color: "rgba(255,255,255,0.3)", fontFamily: F, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <span style={{ color: platColor, fontWeight: 600 }}>{PLAT_LABEL[entry.platform]}</span>
+              <span style={{ color: platColor, fontWeight: 600 }}>{PLAT_LABEL[entry.platform] || entry.platform}</span>
               {entry.campaign_name && ` · ${entry.campaign_name}`}
               {entry.days_running > 0 && ` · ${entry.days_running}d`}
             </p>
@@ -71,12 +184,12 @@ function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boole
             ) : (
               <>
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend)}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>Gasto</p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
               </>
             )}
           </div>
           <div style={{ padding: "3px 9px", borderRadius: 5, background: cfg.badge, flexShrink: 0 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: cfg.num, fontFamily: F }}>{cfg.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: cfg.num, fontFamily: F }}>{verdictLabel}</span>
           </div>
           <div style={{ color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -85,18 +198,18 @@ function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boole
       </button>
 
       {expanded && (
-        <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "14px 19px 16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 7, marginBottom: 12 }}>
+        <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "13px 18px 15px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 7, marginBottom: 12 }}>
             {[
-              { l: "Gasto",      v: money(entry.spend) },
-              { l: "Impressões", v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
-              { l: "Cliques",    v: String(entry.clicks) },
-              { l: "CTR",        v: `${(entry.ctr*100).toFixed(2)}%` },
-              { l: "CPC",        v: `R$${entry.cpc.toFixed(2)}` },
-              ...(entry.conversions > 0 ? [{ l: "Conversões", v: entry.conversions.toFixed(0) }] : []),
-              ...(entry.roas ? [{ l: "ROAS", v: `${entry.roas.toFixed(2)}×` }] : []),
-              ...(entry.frequency ? [{ l: "Frequência", v: `${entry.frequency.toFixed(1)}×` }] : []),
-              ...(entry.days_running > 0 ? [{ l: "Dias", v: String(entry.days_running) }] : []),
+              { l: t.metrics.spend,       v: money(entry.spend) },
+              { l: t.metrics.impressions, v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
+              { l: t.metrics.clicks,      v: String(entry.clicks) },
+              { l: t.metrics.ctr,         v: `${(entry.ctr*100).toFixed(2)}%` },
+              { l: t.metrics.cpc,         v: `$${entry.cpc.toFixed(2)}` },
+              ...(entry.conversions > 0   ? [{ l: t.metrics.conversions, v: entry.conversions.toFixed(0) }] : []),
+              ...(entry.roas              ? [{ l: t.metrics.roas,        v: `${entry.roas.toFixed(2)}×`   }] : []),
+              ...(entry.frequency         ? [{ l: t.metrics.frequency,   v: `${entry.frequency.toFixed(1)}×` }] : []),
+              ...(entry.days_running > 0  ? [{ l: t.metrics.days,        v: String(entry.days_running)    }] : []),
             ].map(m => (
               <div key={m.l} style={{ padding: "8px 10px", borderRadius: 7, background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.05)" }}>
                 <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: F, textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.l}</p>
@@ -104,13 +217,13 @@ function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boole
               </div>
             ))}
           </div>
-          <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.4)", fontFamily: F, lineHeight: 1.6, borderLeft: `2px solid ${cfg.bar}`, paddingLeft: 10 }}>
+          <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.4)", fontFamily: F, lineHeight: 1.6, borderLeft: `2px solid ${cfg.bar}`, paddingLeft: 10, borderRadius: 0 }}>
             {entry.verdict_reason}
           </p>
           {(entry.launched_at || entry.paused_at) && (
             <p style={{ margin: "8px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: F }}>
-              {entry.launched_at && `Lançado ${new Date(entry.launched_at).toLocaleDateString("pt-BR")}`}
-              {entry.paused_at && ` · Pausado ${new Date(entry.paused_at).toLocaleDateString("pt-BR")}`}
+              {entry.launched_at && `${t.launched} ${new Date(entry.launched_at).toLocaleDateString(t.date_locale)}`}
+              {entry.paused_at && ` · ${t.paused_on} ${new Date(entry.paused_at).toLocaleDateString(t.date_locale)}`}
             </p>
           )}
         </div>
@@ -121,14 +234,15 @@ function DiaryRow({ entry, expanded, onToggle }: { entry: Entry; expanded: boole
 
 export default function AdDiary() {
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const { language } = useLanguage();
+  const t = T[language as keyof typeof T] || T.pt;
 
-  // All state hooks before any return
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"combined" | "separate">("combined");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState<string | null>(null); // persona_id being synced
+  const [syncing, setSyncing] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Verdict | "all">("all");
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -137,10 +251,7 @@ export default function AdDiary() {
   useEffect(() => {
     if (!user?.id) return;
     supabase.from("personas").select("id, name").eq("user_id", user.id).order("created_at")
-      .then(({ data }) => {
-        const list = (data || []) as Account[];
-        setAccounts(list);
-      });
+      .then(({ data }) => setAccounts((data || []) as Account[]));
   }, [user?.id]);
 
   // Sync selected with active persona from sidebar
@@ -150,16 +261,12 @@ export default function AdDiary() {
     }
   }, [selectedPersona?.id]);
 
-  // Load entries for selected accounts
   const load = useCallback(async () => {
     if (!user?.id || selectedIds.length === 0) { setLoading(false); return; }
     setLoading(true);
     const { data } = await (supabase as any).from("ad_diary")
-      .select("*")
-      .eq("user_id", user.id)
-      .in("persona_id", selectedIds)
-      .order("spend", { ascending: false })
-      .limit(500);
+      .select("*").eq("user_id", user.id).in("persona_id", selectedIds)
+      .order("spend", { ascending: false }).limit(500);
     setEntries((data || []) as Entry[]);
     if (data?.length) setLastSync(new Date((data[0] as any).synced_at));
     setLoading(false);
@@ -167,7 +274,6 @@ export default function AdDiary() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-sync if empty
   useEffect(() => {
     if (!loading && entries.length === 0 && user?.id && selectedIds.length > 0) {
       selectedIds.forEach(pid => syncAccount(pid));
@@ -190,12 +296,11 @@ export default function AdDiary() {
   const toggleAccount = (id: string) => {
     setSelectedIds(prev =>
       prev.includes(id)
-        ? prev.length > 1 ? prev.filter(x => x !== id) : prev // keep at least 1
+        ? prev.length > 1 ? prev.filter(x => x !== id) : prev
         : [...prev, id]
     );
   };
 
-  // Group entries by persona for separate view
   const entriesByAccount = useMemo(() => {
     const map: Record<string, Entry[]> = {};
     for (const e of entries) {
@@ -217,11 +322,11 @@ export default function AdDiary() {
   }, [entries]);
 
   const TABS = [
-    { key: "all" as const,     label: "Todos",      count: entries.length },
-    { key: "winner" as const,  label: "Vencedores", count: entries.filter(e => e.verdict === "winner").length },
-    { key: "scaled" as const,  label: "Escalados",  count: entries.filter(e => e.verdict === "scaled").length },
-    { key: "testing" as const, label: "Testando",   count: entries.filter(e => e.verdict === "testing").length },
-    { key: "loser" as const,   label: "Pausados",   count: entries.filter(e => e.verdict === "loser").length },
+    { key: "all" as const,     label: t.all,     count: entries.length },
+    { key: "winner" as const,  label: t.winners, count: entries.filter(e => e.verdict === "winner").length },
+    { key: "scaled" as const,  label: t.scaled,  count: entries.filter(e => e.verdict === "scaled").length },
+    { key: "testing" as const, label: t.testing, count: entries.filter(e => e.verdict === "testing").length },
+    { key: "loser" as const,   label: t.paused,  count: entries.filter(e => e.verdict === "loser").length },
   ];
 
   if (!user) return (
@@ -237,36 +342,30 @@ export default function AdDiary() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "clamp(20px,3vw,26px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em" }}>Diário de Anúncios</h1>
-          {lastSync && (
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: F }}>
-              Atualizado {lastSync.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            </p>
-          )}
+          <h1 style={{ margin: 0, fontSize: "clamp(20px,3vw,26px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em" }}>{t.title}</h1>
+          {lastSync && <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{t.updated} {lastSync.toLocaleTimeString(t.date_locale, { hour: "2-digit", minute: "2-digit" })}</p>}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* View mode toggle */}
           {selectedIds.length > 1 && (
             <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
-              <button onClick={() => setViewMode("combined")} title="Combinado"
-                style={{ padding: "5px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: viewMode === "combined" ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === "combined" ? "#f0f2f8" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontFamily: F }}>
-                <Layers size={13} /> Combinado
-              </button>
-              <button onClick={() => setViewMode("separate")} title="Separado"
-                style={{ padding: "5px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: viewMode === "separate" ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === "separate" ? "#f0f2f8" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontFamily: F }}>
-                <LayoutList size={13} /> Separado
-              </button>
+              {(["combined", "separate"] as const).map(mode => (
+                <button key={mode} onClick={() => setViewMode(mode)}
+                  style={{ padding: "5px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: viewMode === mode ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === mode ? "#f0f2f8" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontFamily: F }}>
+                  {mode === "combined" ? <Layers size={12} /> : <LayoutList size={12} />}
+                  {mode === "combined" ? t.combined : t.separate}
+                </button>
+              ))}
             </div>
           )}
           <button onClick={syncAll} disabled={!!syncing}
             style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 9, background: syncing ? "rgba(255,255,255,0.04)" : "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 13, fontWeight: 600, cursor: syncing ? "default" : "pointer", opacity: syncing ? 0.5 : 1, fontFamily: F, whiteSpace: "nowrap" }}>
             <RefreshCw size={13} style={{ animation: syncing ? "spin 1s linear infinite" : "none" }} />
-            {syncing ? "Sincronizando..." : "Sincronizar"}
+            {syncing ? t.syncing : t.sync}
           </button>
         </div>
       </div>
 
-      {/* Account selector */}
+      {/* Account selector — só aparece se há mais de 1 conta */}
       {accounts.length > 1 && (
         <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
           {accounts.map(acc => {
@@ -274,9 +373,11 @@ export default function AdDiary() {
             const isSyncing = syncing === acc.id;
             return (
               <button key={acc.id} onClick={() => toggleAccount(acc.id)}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${isSel ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.08)"}`, background: isSel ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.45)", fontSize: 12.5, fontWeight: isSel ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
-                {isSyncing && <div style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />}
-                {!isSyncing && isSel && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9" }} />}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${isSel ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.08)"}`, background: isSel ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.4)", fontSize: 12.5, fontWeight: isSel ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
+                {isSyncing
+                  ? <div style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+                  : isSel && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9" }} />
+                }
                 {acc.name || "Conta"}
               </button>
             );
@@ -286,12 +387,12 @@ export default function AdDiary() {
 
       {/* Summary */}
       {entries.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
           <div style={{ gridColumn: "span 2", padding: "18px 20px", borderRadius: 14, background: stats.winRate >= 40 ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.07)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div>
-              <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Taxa de acerto</p>
+              <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
               <p style={{ margin: "5px 0 3px", fontSize: 38, fontWeight: 900, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{stats.winners} vencedor{stats.winners !== 1 ? "es" : ""} de {entries.length} anúncios</p>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{t.winners_of(stats.winners, entries.length)}</p>
             </div>
             <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 40 }}>
               {[
@@ -304,19 +405,17 @@ export default function AdDiary() {
             </div>
           </div>
           <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Investido</p>
-            <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
-              {stats.totalSpend >= 1000 ? `R$${(stats.totalSpend/1000).toFixed(1)}k` : `R$${stats.totalSpend.toFixed(0)}`}
-            </p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>últimos 90 dias</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.invested}</p>
+            <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend)}</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{t.last90}</p>
           </div>
           <div style={{ padding: "14px 16px", borderRadius: 12, background: stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.07)"}` }}>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? "ROAS geral" : "Retorno"}</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? t.roas_label : t.return_label}</p>
             <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.4)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
               {stats.overallRoas ? `${stats.overallRoas.toFixed(2)}×` : stats.totalReturn > 0 ? money(stats.totalReturn) : "—"}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-              {stats.overallRoas ? money(stats.totalReturn) + " retorno" : "sem dados de conversão"}
+              {stats.overallRoas ? `${money(stats.totalReturn)} ${t.return_suffix}` : t.no_conv}
             </p>
           </div>
         </div>
@@ -325,9 +424,9 @@ export default function AdDiary() {
       {/* Filter tabs */}
       {entries.length > 0 && (
         <div style={{ display: "flex", gap: 4, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
-          {TABS.filter(t => t.count > 0 || t.key === "all").map(tab => {
+          {TABS.filter(tab => tab.count > 0 || tab.key === "all").map(tab => {
             const isActive = filter === tab.key;
-            const color = tab.key !== "all" ? V[tab.key].bar : undefined;
+            const color = tab.key !== "all" ? V_STYLE[tab.key].bar : undefined;
             return (
               <button key={tab.key} onClick={() => setFilter(tab.key)}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12.5, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "rgba(255,255,255,0.08)" : "transparent", borderColor: isActive ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)", color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.38)" }}>
@@ -347,54 +446,59 @@ export default function AdDiary() {
         </div>
       )}
 
-      {/* Syncing empty state */}
-      {syncing && entries.length === 0 && (
+      {/* Syncing empty */}
+      {!loading && syncing && entries.length === 0 && (
         <div style={{ textAlign: "center", padding: "80px 0" }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.15)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: 0 }}>Importando anúncios...</p>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, marginTop: 5 }}>Isso pode levar alguns segundos</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: 0 }}>{t.importing}</p>
+          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, marginTop: 5 }}>{t.importing_sub}</p>
         </div>
       )}
 
       {/* No account selected */}
       {!loading && selectedIds.length === 0 && (
         <div style={{ textAlign: "center", padding: "80px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)" }}>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>Selecione uma conta</p>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: 0 }}>Escolha acima qual conta quer analisar</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.select_account}</p>
+          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: 0 }}>{t.select_sub}</p>
         </div>
       )}
 
-      {/* Empty after sync */}
+      {/* Empty */}
       {!loading && !syncing && entries.length === 0 && selectedIds.length > 0 && (
         <div style={{ textAlign: "center", padding: "80px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)" }}>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>Nenhum anúncio ainda</p>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: "0 0 20px" }}>Conecte Meta Ads ou Google Ads e clique em Sincronizar</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.no_ads}</p>
+          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: "0 0 20px" }}>{t.no_ads_sub}</p>
           <button onClick={syncAll} style={{ padding: "10px 24px", borderRadius: 9, background: "linear-gradient(135deg,#0ea5e9,#0891b2)", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-            Sincronizar agora
+            {t.sync_now}
           </button>
         </div>
       )}
 
-      {/* ── COMBINED VIEW ── */}
+      {/* Combined view */}
       {!loading && filteredEntries.length > 0 && (viewMode === "combined" || selectedIds.length <= 1) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {filteredEntries.map(entry => (
-            <DiaryRow key={entry.id} entry={entry}
+            <DiaryRow key={entry.id} entry={entry} t={t}
               expanded={expanded === entry.id}
               onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
             />
           ))}
+          {filteredEntries.length < entries.length && (
+            <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: "4px 0 0" }}>
+              {t.more_ads(entries.length - filteredEntries.length)}
+            </p>
+          )}
         </div>
       )}
 
-      {/* ── SEPARATE VIEW ── */}
+      {/* Separate view */}
       {!loading && selectedIds.length > 1 && viewMode === "separate" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           {selectedIds.map(pid => {
             const acc = accounts.find(a => a.id === pid);
             const accEntries = (entriesByAccount[pid] || []).filter(e => filter === "all" || e.verdict === filter);
             if (accEntries.length === 0) return null;
-            const accWinRate = Math.round((accEntries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length / accEntries.length) * 100);
+            const accWin = Math.round((accEntries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length / accEntries.length) * 100);
             return (
               <div key={pid}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -403,15 +507,13 @@ export default function AdDiary() {
                   </div>
                   <div>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#f0f2f8", fontFamily: F }}>{acc?.name || "Conta"}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: F }}>{accEntries.length} anúncios · {accWinRate}% acerto</p>
+                    <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: F }}>{accEntries.length} ads · {accWin}%</p>
                   </div>
-                  {syncing === pid && (
-                    <div style={{ width: 12, height: 12, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", marginLeft: "auto" }} />
-                  )}
+                  {syncing === pid && <div style={{ width: 12, height: 12, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", marginLeft: "auto" }} />}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {accEntries.map(entry => (
-                    <DiaryRow key={entry.id} entry={entry}
+                    <DiaryRow key={entry.id} entry={entry} t={t}
                       expanded={expanded === entry.id}
                       onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
                     />
@@ -424,9 +526,7 @@ export default function AdDiary() {
       )}
 
       {!loading && filteredEntries.length === 0 && entries.length > 0 && (
-        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 14, padding: "40px 0" }}>
-          Nenhum anúncio nessa categoria
-        </p>
+        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 14, padding: "40px 0" }}>{t.no_category}</p>
       )}
     </div>
   );
