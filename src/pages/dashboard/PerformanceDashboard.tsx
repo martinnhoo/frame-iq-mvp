@@ -10,6 +10,7 @@ import {
   BarChart3, Activity, Users, Repeat
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import AdDiary from "./AdDiary";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
@@ -354,6 +355,7 @@ export default function PerformanceDashboard() {
   const [dateRange, setDateRange] = useState<DateRange>({from:addDays(today,-6),to:today});
   const [showCalendar, setShowCalendar] = useState(false);
   const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
+  const [activeTab, setActiveTab] = useState<"metrics"|"ads">("metrics");
   const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(()=>{ try{const s=localStorage.getItem("adbrief_perf_metrics"); return s?JSON.parse(s):DEFAULT_METRICS;}catch{return DEFAULT_METRICS;} });
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [chartMetric, setChartMetric] = useState<MetricKey>("spend");
@@ -450,21 +452,36 @@ export default function PerformanceDashboard() {
         }
       `}</style>
 
-      {/* Header */}
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24,flexWrap:"wrap",gap:14}}>
+      {/* Header + Tabs */}
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:14}}>
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
             <h1 style={{margin:0,fontSize:22,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
-            {(hasMeta||hasGoogle)&&!loading&&(
+            {activeTab==="metrics"&&(hasMeta||hasGoogle)&&!loading&&(
               <span style={{display:"flex",alignItems:"center",gap:5,fontSize: 12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
                 <span style={{width:5,height:5,borderRadius:"50%",background:GREEN,boxShadow:"0 0 6px #22c55e"}}/>LIVE
               </span>
             )}
           </div>
-          {lastUpdated&&<p style={{margin:0,fontSize: 12,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
+          {activeTab==="metrics"&&lastUpdated&&<p style={{margin:0,fontSize: 12,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
+          {/* Tabs */}
+          <div style={{display:"flex",gap:2,marginTop:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:3,width:"fit-content"}}>
+            {([["metrics",language==="pt"?"Métricas":language==="es"?"Métricas":"Metrics"],["ads",language==="pt"?"Ads":"Ads"]] as const).map(([tab,label])=>(
+              <button key={tab} onClick={()=>setActiveTab(tab)}
+                style={{padding:"6px 18px",borderRadius:7,border:"none",cursor:"pointer",
+                  fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:13,fontWeight:activeTab===tab?700:500,
+                  background:activeTab===tab?"linear-gradient(135deg,rgba(14,165,233,0.20),rgba(6,182,212,0.12))":"transparent",
+                  color:activeTab===tab?"#f0f2f8":"rgba(255,255,255,0.45)",
+                  border:activeTab===tab?"1px solid rgba(14,165,233,0.28)":"1px solid transparent",
+                  boxShadow:activeTab===tab?"0 2px 8px rgba(14,165,233,0.15)":"none",
+                  transition:"all 0.15s"}}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
+        {activeTab === "metrics" && <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
           {/* Platform tabs */}
           <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
             {([["meta","Meta Ads",ACCENT],["google","Google Ads",GBLUE]] as const).map(([plt,label,color])=>{
@@ -508,7 +525,7 @@ export default function PerformanceDashboard() {
       </div>
 
       {/* Empty states */}
-      {!selectedPersona&&!loading&&(
+      {activeTab==="metrics"&&!selectedPersona&&!loading&&(
         <div style={{textAlign:"center",padding:"64px 24px",maxWidth:480,margin:"0 auto"}}>
           {/* Clean icon — no emoji */}
           <div style={{width:48,height:48,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
@@ -544,7 +561,7 @@ export default function PerformanceDashboard() {
           </p>
         </div>
       )}
-      {error==="__connection__"&&!loading&&(
+      {activeTab==="metrics"&&error==="__connection__"&&!loading&&(
         <div style={{textAlign:"center",padding:"64px 24px",maxWidth:420,margin:"0 auto"}}>
           <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
@@ -562,7 +579,7 @@ export default function PerformanceDashboard() {
           </button>
         </div>
       )}
-      {error&&error!=="__connection__"&&!loading&&(
+      {activeTab==="metrics"&&error&&error!=="__connection__"&&!loading&&(
         <div style={{display:"flex",gap:10,padding:"16px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,marginBottom:24}}>
           <AlertCircle size={16} color={RED} style={{flexShrink:0,marginTop:1}}/>
           <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
@@ -570,7 +587,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* Loading skeleton */}
-      {loading&&(
+      {activeTab==="metrics"&&loading&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14,marginBottom:14}}>
             {[...Array(6)].map((_,i)=>(
@@ -582,7 +599,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* Platform error banners */}
-      {!loading&&data&&(
+      {activeTab==="metrics"&&!loading&&data&&(
         <>
           {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Meta Ads</strong> — {data.meta.error}</p></div>}
           {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Google Ads</strong> — {data.google.error}</p></div>}
@@ -590,7 +607,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* Metric cards — drag & drop */}
-      {!loading&&d&&(
+      {activeTab==="metrics"&&!loading&&d&&(
         <>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(195px,1fr))",gap:14,marginBottom:20}}>
             {validMetrics.map((key,i)=>{
@@ -661,6 +678,9 @@ export default function PerformanceDashboard() {
           )}
         </>
       )}
+
+      {/* ── Ads tab — Ad Diary ── */}
+      {activeTab === "ads" && <AdDiary/>}
     </div>
   );
 }
