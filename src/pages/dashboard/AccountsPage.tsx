@@ -187,13 +187,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
 
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-  if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "20px 0" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 120 }}>
       <Loader2 size={16} color="rgba(255,255,255,0.3)" className="animate-spin" />
     </div>
   );
@@ -494,13 +488,6 @@ export default function AccountsPage() {
   const dt = useDashT(language);
   const navigate = useNavigate();
 
-  // Guard — user not loaded yet
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 300 }}>
-      <Loader2 size={20} color="rgba(255,255,255,0.3)" className="animate-spin" />
-    </div>
-  );
-
   const L: Record<string, Record<string,string>> = {
     pt: { title: "Contas", sub: "Cada conta conecta à sua própria conta de anúncios. A IA usa a ativa no chat.", new_btn: "Nova conta", new_label: "Nova conta", no_accounts: "Nenhuma conta ainda", no_accounts_sub: "Crie uma conta para conectar o Meta Ads e começar a usar o chat de IA.", create_first: "Criar primeira conta", your_accounts: "Suas contas", unnamed: "Conta sem nome", delete_confirm: "Excluir esta conta? Isso não pode ser desfeito.", deleted: "Conta excluída", set_active: "Usar no chat", active: "Ativa no chat", save: "Salvar" },
     es: { title: "Cuentas", sub: "Cada cuenta conecta a su propia cuenta de anuncios. La IA usa la activa en el chat.", new_btn: "Nueva cuenta", new_label: "Nueva cuenta", no_accounts: "Sin cuentas aún", no_accounts_sub: "Crea una cuenta para conectar Meta Ads y empezar a usar el chat de IA.", create_first: "Crear primera cuenta", your_accounts: "Tus cuentas", unnamed: "Cuenta sin nombre", delete_confirm: "¿Eliminar esta cuenta? Esta acción no se puede deshacer.", deleted: "Cuenta eliminada", set_active: "Usar en chat", active: "Activa en chat", save: "Guardar" },
@@ -508,11 +495,19 @@ export default function AccountsPage() {
   };
   const t = L[language] || L.en;
 
+  // All hooks BEFORE any early return (React rules of hooks)
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Guard — user not loaded yet (AFTER all hooks)
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 300 }}>
+      <Loader2 size={20} color="rgba(255,255,255,0.3)" className="animate-spin" />
+    </div>
+  );
 
   // activeId synced with global selectedPersona
   const activeId = selectedPersona?.id ?? null;
@@ -523,11 +518,18 @@ export default function AccountsPage() {
 
   const load = async () => {
     if (!user?.id) { setLoading(false); return; }
-    const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
-    setAccounts((data || []) as Account[]);
-    setLoading(false);
-    if (data?.length && !selectedPersona) {
-      setSelectedPersona({ ...(data[0] as any) });
+    try {
+      const { data } = await supabase.from("personas").select("id, user_id, name, logo_url, website, description, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
+      const list = (data || []) as Account[];
+      setAccounts(list);
+      // Always auto-select first account if none is selected
+      if (list.length > 0 && !selectedPersona) {
+        setSelectedPersona({ ...list[0] } as any);
+      }
+    } catch (e) {
+      console.error("AccountsPage load error:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
