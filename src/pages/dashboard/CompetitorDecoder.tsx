@@ -112,7 +112,7 @@ function ScoreBar({ score }: { score: number }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
       <div>
         <span style={{ ...F, fontSize: 30, fontWeight: 900, color: c, lineHeight: 1 }}>{score}</span>
-        <span style={{ ...M, fontSize: 11, color: "rgba(238,240,246,0.25)" }}>/1000</span>
+        <span style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.25)" }}>/1000</span>
       </div>
       <div style={{ flex: 1, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
         <div style={{ height: "100%", borderRadius: 99, background: `linear-gradient(90deg,#a78bfa,${c})`, width: `${Math.min(100, score / 10)}%`, transition: "width 0.7s ease" }} />
@@ -125,9 +125,9 @@ function Section({ label, content, onCopy, copied }: { label: string; content: s
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>{label}</span>
+        <span style={{ ...M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const }}>{label}</span>
         {onCopy && (
-          <button onClick={onCopy} style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", ...M, fontSize: 10, color: "rgba(238,240,246,0.38)" }}>
+          <button onClick={onCopy} style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", ...M, fontSize: 12, color: "rgba(238,240,246,0.38)" }}>
             {copied ? <><Check size={9}/> Copiado</> : <><Copy size={9}/> Copiar</>}
           </button>
         )}
@@ -279,7 +279,7 @@ export default function CompetitorDecoder() {
       {/* Brand search tab */}
       {tab === "brand" && (
         <div style={{ marginBottom: 14 }}>
-          <label style={{ ...M, display: "block", fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 6 }}>{t.brand_label}</label>
+          <label style={{ ...M, display: "block", fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 6 }}>{t.brand_label}</label>
           <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
             <input
               value={brandQuery}
@@ -303,7 +303,7 @@ export default function CompetitorDecoder() {
               <button key={c.code}
                 onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${c.code === "ALL" ? "ALL" : c.code}&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
                 disabled={!brandQuery.trim()}
-                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: brandQuery.trim() ? "pointer" : "default", ...M, fontSize: 11, color: brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)", transition: "all 0.15s" }}
+                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: brandQuery.trim() ? "pointer" : "default", ...M, fontSize: 12, color: brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)", transition: "all 0.15s" }}
                 onMouseEnter={e => { if (brandQuery.trim()) { e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)"; e.currentTarget.style.color = "#eef0f6"; }}}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)"; }}>
                 <span>{c.flag}</span> {c.label}
@@ -345,7 +345,7 @@ export default function CompetitorDecoder() {
                 <Film size={16} color={transcribing ? "#0ea5e9" : transcript ? "#34d399" : "rgba(238,240,246,0.40)"} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ ...M, fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.80)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{videoFile.name}</p>
-                  <p style={{ ...M, fontSize: 11, color: "rgba(238,240,246,0.38)", margin: "2px 0 0" }}>
+                  <p style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.38)", margin: "2px 0 0" }}>
                     {transcribing ? t.transcribing : transcript ? `${t.video_ready} · ${transcript.slice(0, 60)}...` : ""}
                   </p>
                 </div>
@@ -377,7 +377,7 @@ ${t.link_placeholder}`} rows={5}
 
       {/* Observation */}
       <div style={{ marginBottom: 14 }}>
-        <label style={{ ...M, display: "block", fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 5 }}>{t.obs_label}</label>
+        <label style={{ ...M, display: "block", fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 5 }}>{t.obs_label}</label>
         <input value={observation} onChange={e => setObservation(e.target.value)} placeholder={t.obs_placeholder}
           style={{ width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 9, padding: "9px 14px", color: "#eef0f6", ...M, fontSize: 13, outline: "none", boxSizing: "border-box" as const, transition: "border-color 0.15s" }}
           onFocus={e => { e.currentTarget.style.borderColor = "rgba(34,211,238,0.30)"; }}
@@ -419,14 +419,14 @@ ${t.link_placeholder}`} rows={5}
               {/* Meta */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div>
-                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 3 }}>{t.industry}</span>
+                  <span style={{ ...M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 3 }}>{t.industry}</span>
                   <span style={{ ...F, fontSize: 13, fontWeight: 700, color: "#eef0f6" }}>{result.industry}</span>
-                  {result.market && <span style={{ ...M, fontSize: 11, color: "rgba(238,240,246,0.38)", marginLeft: 8 }}>{result.market}</span>}
+                  {result.market && <span style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.38)", marginLeft: 8 }}>{result.market}</span>}
                 </div>
                 <div style={{ textAlign: "right" as const, minWidth: 160 }}>
-                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 3 }}>{t.hook}</span>
+                  <span style={{ ...M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.10em", textTransform: "uppercase" as const, display: "block", marginBottom: 3 }}>{t.hook}</span>
                   <ScoreBar score={result.hook_score} />
-                  {result.hook_score_label && <span style={{ ...M, fontSize: 10, color: "rgba(238,240,246,0.38)" }}>{result.hook_score_label}</span>}
+                  {result.hook_score_label && <span style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.38)" }}>{result.hook_score_label}</span>}
                 </div>
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 20 }} />
@@ -437,9 +437,9 @@ ${t.link_placeholder}`} rows={5}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <Target size={12} color="#22d3ee" />
-                    <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(34,211,238,0.55)", letterSpacing: "0.10em", textTransform: "uppercase" as const }}>{t.steal_label}</span>
+                    <span style={{ ...M, fontSize: 12, fontWeight: 700, color: "rgba(34,211,238,0.55)", letterSpacing: "0.10em", textTransform: "uppercase" as const }}>{t.steal_label}</span>
                   </div>
-                  <button onClick={() => cp("steal", result.steal_this)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 5, background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.18)", cursor: "pointer", ...M, fontSize: 10, color: "#22d3ee" }}>
+                  <button onClick={() => cp("steal", result.steal_this)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 5, background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.18)", cursor: "pointer", ...M, fontSize: 12, color: "#22d3ee" }}>
                     {copied["steal"] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
                   </button>
                 </div>
@@ -447,13 +447,13 @@ ${t.link_placeholder}`} rows={5}
               </div>
               {result.hooks?.length > 0 && (
                 <div>
-                  <span style={{ ...M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const, display: "block", marginBottom: 10 }}>{t.hooks_label}</span>
+                  <span style={{ ...M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.28)", letterSpacing: "0.12em", textTransform: "uppercase" as const, display: "block", marginBottom: 10 }}>{t.hooks_label}</span>
                   <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
                     {result.hooks.map((hook, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        <span style={{ ...M, fontSize: 10, fontWeight: 800, color: "rgba(238,240,246,0.20)", flexShrink: 0, marginTop: 3, minWidth: 14 }}>#{i + 1}</span>
+                        <span style={{ ...M, fontSize: 12, fontWeight: 800, color: "rgba(238,240,246,0.20)", flexShrink: 0, marginTop: 3, minWidth: 14 }}>#{i + 1}</span>
                         <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.85)", lineHeight: 1.55, margin: 0, flex: 1 }}>{hook}</p>
-                        <button onClick={() => cp(`h${i}`, hook)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", ...M, fontSize: 10, color: "rgba(238,240,246,0.45)", flexShrink: 0 }}>
+                        <button onClick={() => cp(`h${i}`, hook)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer", ...M, fontSize: 12, color: "rgba(238,240,246,0.45)", flexShrink: 0 }}>
                           {copied[`h${i}`] ? <><Check size={9}/> {t.copied}</> : <><Copy size={9}/> {t.copy}</>}
                         </button>
                       </div>

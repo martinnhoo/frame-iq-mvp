@@ -288,8 +288,8 @@ export default function DashboardOverview() {
           </div>
           <div className="flex items-center gap-2 shrink-0 mt-1">
             <div style={{ display: "flex", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: 2, gap: 0 }}>
-              <button onClick={switchToLite} style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}>LITE</button>
-              <button style={{ ...syne, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em" }}>PRO</button>
+              <button onClick={switchToLite} style={{ ...syne, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}>LITE</button>
+              <button style={{ ...syne, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em" }}>PRO</button>
             </div>
             {(!profile?.plan || profile.plan === "free") && (
               <button onClick={() => navigate("/pricing")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ ...syne, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", color: "#000" }}>

@@ -106,7 +106,7 @@ function AreaChart({ daily, metricKey }: { daily: any[]; metricKey: MetricKey })
       {ticks.map((t,i)=>(
         <g key={i}>
           <line x1={PAD.left} y1={t.y} x2={W-PAD.right} y2={t.y} stroke={BD} strokeWidth={1} strokeDasharray="4,3"/>
-          <text x={PAD.left-8} y={t.y+4} textAnchor="end" style={{fontSize:10,fill:MT,fontFamily:F}}>{t.label}</text>
+          <text x={PAD.left-8} y={t.y+4} textAnchor="end" style={{fontSize: 12,fill:MT,fontFamily:F}}>{t.label}</text>
         </g>
       ))}
       <path d={area} fill="url(#areaGrad)"/>
@@ -116,7 +116,7 @@ function AreaChart({ daily, metricKey }: { daily: any[]; metricKey: MetricKey })
       ))}
       {labelIdx.map(i=>{
         const d=new Date(daily[i].date+"T12:00:00");
-        return <text key={i} x={pts[i][0]} y={H-4} textAnchor="middle" style={{fontSize:10,fill:MT,fontFamily:F}}>{fmtLabel(d)}</text>;
+        return <text key={i} x={pts[i][0]} y={H-4} textAnchor="middle" style={{fontSize: 12,fill:MT,fontFamily:F}}>{fmtLabel(d)}</text>;
       })}
     </svg>
   );
@@ -166,7 +166,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
           {["D","S","T","Q","Q","S","S"].map((d,i)=>(
-            <div key={i} style={{textAlign:"center",fontSize:10,fontWeight:600,color:MT,padding:"4px 0",fontFamily:F}}>{d}</div>
+            <div key={i} style={{textAlign:"center",fontSize: 12,fontWeight:600,color:MT,padding:"4px 0",fontFamily:F}}>{d}</div>
           ))}
           {cells.map((d,i)=>{
             if(!d) return <div key={i}/>;
@@ -265,17 +265,17 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
           );
         })}
       </div>
-      <p style={{fontFamily:F,fontSize:11,color:MT,marginTop:10,textAlign:"center"}}>{active.length}/{available.length} ativas · arraste cards para reordenar</p>
+      <p style={{fontFamily:F,fontSize: 12,color:MT,marginTop:10,textAlign:"center"}}>{active.length}/{available.length} ativas · arraste cards para reordenar</p>
     </div>
   );
 }
 
 // ── Delta ─────────────────────────────────────────────────────────────────────
 function Delta({ value, higherIsBetter }: { value:number|null; higherIsBetter:boolean }) {
-  if(value===null||isNaN(value)) return <span style={{color:MT,fontSize:11}}>—</span>;
+  if(value===null||isNaN(value)) return <span style={{color:MT,fontSize: 12}}>—</span>;
   const positive=higherIsBetter?value>=0:value<=0;
   const Icon=value>=0?TrendingUp:TrendingDown;
-  return <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:11,fontWeight:600,color:positive?GREEN:RED}}><Icon size={11}/>{Math.abs(value).toFixed(1)}%</span>;
+  return <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize: 12,fontWeight:600,color:positive?GREEN:RED}}><Icon size={11}/>{Math.abs(value).toFixed(1)}%</span>;
 }
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
@@ -297,7 +297,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging }: { def:MetricDe
           <div style={{width:25,height:25,borderRadius:7,background:`${def.accent}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <def.icon size={12} color={def.accent}/>
           </div>
-          <span style={{fontFamily:F,fontSize:10,fontWeight:700,color:MT,textTransform:"uppercase",letterSpacing:"0.08em"}}>{def.labelPt}</span>
+          <span style={{fontFamily:F,fontSize: 12,fontWeight:700,color:MT,textTransform:"uppercase",letterSpacing:"0.08em"}}>{def.labelPt}</span>
         </div>
         {sparkData&&<Sparkline data={sparkData} color={def.accent}/>}
       </div>
@@ -306,7 +306,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging }: { def:MetricDe
         {delta!==undefined&&delta!==null&&(
           <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6}}>
             <Delta value={delta} higherIsBetter={def.higherIsBetter}/>
-            <span style={{fontSize:11,color:MT}}>vs anterior</span>
+            <span style={{fontSize: 12,color:MT}}>vs anterior</span>
           </div>
         )}
       </div>
@@ -327,17 +327,17 @@ function AdRow({ ad, rank }: { ad:any; rank:number }) {
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
           <p style={{margin:0,fontSize:13,fontWeight:500,color:TX,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ad.name||"—"}</p>
-          <span style={{fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:5,background:isMeta?"rgba(14,165,233,0.1)":"rgba(66,133,244,0.1)",border:`1px solid ${isMeta?"rgba(14,165,233,0.25)":"rgba(66,133,244,0.25)"}`,color:isMeta?ACCENT:GBLUE,flexShrink:0}}>
+          <span style={{fontSize: 12,fontWeight:700,padding:"1px 7px",borderRadius:5,background:isMeta?"rgba(14,165,233,0.1)":"rgba(66,133,244,0.1)",border:`1px solid ${isMeta?"rgba(14,165,233,0.25)":"rgba(66,133,244,0.25)"}`,color:isMeta?ACCENT:GBLUE,flexShrink:0}}>
             {isMeta?"Meta":"Google"}
           </span>
         </div>
-        <p style={{margin:0,fontSize:11,color:MT}}>{ad.campaign||""}</p>
+        <p style={{margin:0,fontSize: 12,color:MT}}>{ad.campaign||""}</p>
       </div>
       <div style={{display:"flex",gap:20,flexShrink:0,alignItems:"center"}}>
-        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:TX}}>R${(ad.spend||0).toFixed(0)}</p><p style={{margin:0,fontSize:10,color:MT}}>Spend</p></div>
-        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ctr>2?GREEN:ctr<0.5?RED:TX}}>{ctr.toFixed(2)}%</p><p style={{margin:0,fontSize:10,color:MT}}>CTR</p></div>
-        {ad.roas!=null&&<div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX}}>{ad.roas.toFixed(1)}×</p><p style={{margin:0,fontSize:10,color:MT}}>ROAS</p></div>}
-        {badge&&<span style={{fontSize:11,fontWeight:700,color:badge.color,background:badge.bg,borderRadius:6,padding:"3px 8px",whiteSpace:"nowrap"}}>{badge.label}</span>}
+        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:TX}}>R${(ad.spend||0).toFixed(0)}</p><p style={{margin:0,fontSize: 12,color:MT}}>Spend</p></div>
+        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ctr>2?GREEN:ctr<0.5?RED:TX}}>{ctr.toFixed(2)}%</p><p style={{margin:0,fontSize: 12,color:MT}}>CTR</p></div>
+        {ad.roas!=null&&<div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX}}>{ad.roas.toFixed(1)}×</p><p style={{margin:0,fontSize: 12,color:MT}}>ROAS</p></div>}
+        {badge&&<span style={{fontSize: 12,fontWeight:700,color:badge.color,background:badge.bg,borderRadius:6,padding:"3px 8px",whiteSpace:"nowrap"}}>{badge.label}</span>}
       </div>
     </div>
   );
@@ -438,12 +438,12 @@ export default function PerformanceDashboard() {
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
             <h1 style={{margin:0,fontSize:22,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
             {(hasMeta||hasGoogle)&&!loading&&(
-              <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
+              <span style={{display:"flex",alignItems:"center",gap:5,fontSize: 12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
                 <span style={{width:5,height:5,borderRadius:"50%",background:GREEN,boxShadow:"0 0 6px #22c55e"}}/>LIVE
               </span>
             )}
           </div>
-          {lastUpdated&&<p style={{margin:0,fontSize:11,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
+          {lastUpdated&&<p style={{margin:0,fontSize: 12,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
         </div>
 
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}}>
@@ -475,7 +475,7 @@ export default function PerformanceDashboard() {
               style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?`${ACCENT}15`:S1,border:`1px solid ${showCustomizer?ACCENT+"50":BD}`,borderRadius:10,color:showCustomizer?ACCENT:MT,fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
               <Settings2 size={14}/>
               <span style={{fontWeight:600}}>Métricas</span>
-              <span style={{fontSize:11,background:`${ACCENT}20`,color:ACCENT,borderRadius:5,padding:"1px 6px",fontWeight:700}}>{activeMetrics.length}</span>
+              <span style={{fontSize: 12,background:`${ACCENT}20`,color:ACCENT,borderRadius:5,padding:"1px 6px",fontWeight:700}}>{activeMetrics.length}</span>
             </button>
             {showCustomizer&&<MetricCustomizer active={activeMetrics} platform={activePlatform} onChange={setActiveMetrics} onClose={()=>setShowCustomizer(false)}/>}
           </div>
@@ -510,13 +510,13 @@ export default function PerformanceDashboard() {
               {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":lang==="es"?"audiencia fría":"cold audience"},
             ].map(b=>(
               <div key={b.label} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px 10px"}}>
-                <div style={{fontSize:10,color:MT,marginBottom:4,fontFamily:F}}>{b.label}</div>
+                <div style={{fontSize: 12,color:MT,marginBottom:4,fontFamily:F}}>{b.label}</div>
                 <div style={{fontSize:16,fontWeight:700,color:TX,fontFamily:F}}>{b.value}</div>
-                <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontFamily:F}}>{b.sub}</div>
+                <div style={{fontSize: 12,color:"rgba(255,255,255,0.25)",fontFamily:F}}>{b.sub}</div>
               </div>
             ))}
           </div>
-          <p style={{marginTop:12,fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:F}}>
+          <p style={{marginTop:12,fontSize: 12,color:"rgba(255,255,255,0.2)",fontFamily:F}}>
             {lang==="pt"?"Benchmarks médios do setor — seus dados reais podem variar":lang==="es"?"Benchmarks promedio del sector — tus datos reales pueden variar":"Industry average benchmarks — your real data may vary"}
           </p>
         </div>
@@ -600,7 +600,7 @@ export default function PerformanceDashboard() {
                     const active=chartMetric===key;
                     return (
                       <button key={key} onClick={()=>setChartMetric(key)}
-                        style={{padding:"4px 10px",borderRadius:7,border:`1px solid ${active?def.accent+"60":BD}`,background:active?`${def.accent}15`:"transparent",color:active?def.accent:MT,fontSize:11,fontWeight:active?700:500,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
+                        style={{padding:"4px 10px",borderRadius:7,border:`1px solid ${active?def.accent+"60":BD}`,background:active?`${def.accent}15`:"transparent",color:active?def.accent:MT,fontSize: 12,fontWeight:active?700:500,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
                         {def.labelPt}
                       </button>
                     );
@@ -624,9 +624,9 @@ export default function PerformanceDashboard() {
                 </button>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:16,padding:"10px 0 10px 28px",borderBottom:`1px solid ${BD}`,marginTop:16}}>
-                <span style={{flex:1,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
+                <span style={{flex:1,fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
                 <div style={{display:"flex",gap:20,flexShrink:0}}>
-                  {["Spend","CTR","ROAS","Status"].map(h=><span key={h} style={{fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",width:h==="Status"?80:60,textAlign:"right"}}>{h}</span>)}
+                  {["Spend","CTR","ROAS","Status"].map(h=><span key={h} style={{fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",width:h==="Status"?80:60,textAlign:"right"}}>{h}</span>)}
                 </div>
               </div>
               {(d.top_ads||[]).slice(0,10).map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}

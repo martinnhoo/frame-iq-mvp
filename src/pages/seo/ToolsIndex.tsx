@@ -13,7 +13,7 @@ export default function ToolsIndex() {
     <SeoLayout title="Free Ad Creative Tools — AdBrief" description="Free AI tools for performance marketers: hook generator, creative analyzer, script generator, competitor decoder, CTR estimator." canonical="/tools">
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Free Tools</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Free Tools</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 14 }}>
             AI tools for better<br />
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ad creatives</span>
@@ -31,7 +31,7 @@ export default function ToolsIndex() {
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, background: `${typeColor[tool.type] ?? "#0ea5e9"}15`, border: `1px solid ${typeColor[tool.type] ?? "#0ea5e9"}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{tool.emoji}</div>
-                {tool.isFree && <span style={{ ...m, fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>FREE</span>}
+                {tool.isFree && <span style={{ ...m, fontSize: 12, padding: "3px 8px", borderRadius: 20, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>FREE</span>}
               </div>
               <h2 style={{ ...j, fontSize: 16, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.02em" }}>{tool.name}</h2>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 16 }}>{tool.description}</p>

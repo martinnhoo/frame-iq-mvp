@@ -84,7 +84,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
 
   return (
     <div style={{ marginTop: 8, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
+      <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
         Connected Ad Accounts
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -104,7 +104,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: connected ? "#fff" : "rgba(255,255,255,0.45)" }}>{p.label}</p>
-                  <p style={{ fontFamily: F, fontSize: 11, color: connected ? p.color : "rgba(255,255,255,0.25)" }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: connected ? p.color : "rgba(255,255,255,0.25)" }}>
                     {connected
                       ? selectedAcc ? `Active: ${selectedAcc.name || selectedAcc.id}` : `${accounts.length} account${accounts.length !== 1 ? "s" : ""} connected`
                       : "Not connected"}
@@ -112,12 +112,12 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                 </div>
                 {!connected && (
                   <button onClick={() => connect(p.id, p.fn)} disabled={connecting === p.id}
-                    style={{ fontFamily: F, fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 7, background: `${p.color}14`, color: p.color, border: `1px solid ${p.color}28`, cursor: "pointer" }}>
+                    style={{ fontFamily: F, fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 7, background: `${p.color}14`, color: p.color, border: `1px solid ${p.color}28`, cursor: "pointer" }}>
                     {connecting === p.id ? "Connecting..." : "Connect"}
                   </button>
                 )}
                 {connected && accounts.length <= 1 && (
-                  <span style={{ fontFamily: F, fontSize: 10, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 600 }}>
+                  <span style={{ fontFamily: F, fontSize: 12, padding: "3px 8px", borderRadius: 99, background: `${p.color}10`, color: p.color, border: `1px solid ${p.color}22`, fontWeight: 600 }}>
                     ACTIVE
                   </span>
                 )}
@@ -129,7 +129,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   <button
                     onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
                     style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 12px", background: "transparent", border: "none", borderTop: `1px solid ${p.color}15`, cursor: "pointer" }}>
-                    <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+                    <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
                       {accounts.length} accounts available — change
                     </span>
                     <ChevronDown size={13} color="rgba(255,255,255,0.3)" style={{ transform: expandedPlatform === p.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -148,11 +148,11 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                                 <span style={{ fontFamily: F, fontSize: 12, color: isSelected ? "#fff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
                                   {acc.name || acc.id}
                                 </span>
-                                <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+                                <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                                   {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}
                                 </span>
                               </div>
-                              {isSelected && <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
+                              {isSelected && <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: p.color, letterSpacing: "0.06em" }}>ACTIVE</span>}
                             </button>
                           );
                         })}
@@ -165,7 +165,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
           );
         })}
       </div>
-      <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.22)", marginTop: 8, lineHeight: 1.5 }}>
+      <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.22)", marginTop: 8, lineHeight: 1.5 }}>
         The AI uses the active account when you switch to this persona.
       </p>
     </div>
@@ -1396,7 +1396,7 @@ export default function PersonaPage() {
             style={{ padding: "12px 28px", borderRadius: 12, background: BRAND, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: F }}>
             Upgrade to create personas →
           </button>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>3-day free trial on any plan</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>3-day free trial on any plan</p>
         </div>
       </div>
     );

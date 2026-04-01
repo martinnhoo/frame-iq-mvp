@@ -155,7 +155,7 @@ export default function OAuthCallback() {
         {/* Account selector */}
         {status === "selecting" && accounts.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {accounts.length} account{accounts.length > 1 ? "s" : ""} available
             </p>
             {accounts.map((acc: any) => (
@@ -185,7 +185,7 @@ export default function OAuthCallback() {
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {acc.name || `Account ${acc.id}`}
                   </p>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
                     ID: {acc.id}
                     {acc.currency ? ` · ${acc.currency}` : ""}
                     {acc.account_status === 1 ? " · Active" : ""}
@@ -205,7 +205,7 @@ export default function OAuthCallback() {
         )}
 
         {(status === "success" || status === "error") && (
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>Redirecting to Loop...</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>Redirecting to Loop...</p>
         )}
       </div>
     </div>

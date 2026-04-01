@@ -138,7 +138,7 @@ export default function MetaOAuthCallback() {
               {status === "error" && <span style={{ fontSize: 22 }}>✕</span>}
             </div>
             <div>
-              <p style={{ ...M, fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Meta Ads</p>
+              <p style={{ ...M, fontSize: 12, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Meta Ads</p>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", margin: 0 }}>
                 {status === "loading" && L("connecting")}
                 {status === "success" && L("connected")}
@@ -161,7 +161,7 @@ export default function MetaOAuthCallback() {
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: isDone ? 1 : isActive ? 1 : 0.28, transition: "opacity 0.4s" }}>
                   <div style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: isDone ? "rgba(52,211,153,0.15)" : isActive ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${isDone ? "rgba(52,211,153,0.4)" : isActive ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`, transition: "all 0.4s" }}>
                     {isDone
-                      ? <span style={{ fontSize: 9, color: "#34d399" }}>✓</span>
+                      ? <span style={{ fontSize: 12, color: "#34d399" }}>✓</span>
                       : isActive
                       ? <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", animation: "pulse 1s ease-in-out infinite" }} />
                       : <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
@@ -179,7 +179,7 @@ export default function MetaOAuthCallback() {
               {/* Accounts found */}
               {accounts.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <p style={{ ...M, fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  <p style={{ ...M, fontSize: 12, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
                     {accounts.length} {accounts.length === 1 ? L("accounts") : L("accountsP")}
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -212,7 +212,7 @@ export default function MetaOAuthCallback() {
 
           {/* Error state */}
           {status === "error" && (
-            <p style={{ ...M, fontSize: 11, color: "rgba(248,113,113,0.7)", textAlign: "center" }}>{L("error_back")}</p>
+            <p style={{ ...M, fontSize: 12, color: "rgba(248,113,113,0.7)", textAlign: "center" }}>{L("error_back")}</p>
           )}
         </div>
       </div>

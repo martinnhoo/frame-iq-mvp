@@ -174,7 +174,7 @@ const Signup = () => {
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t("auth_or_email")}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t("auth_or_email")}</span>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
@@ -252,7 +252,7 @@ const Signup = () => {
                         }} />
                       ))}
                     </div>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
                       {t("pw_strength")}: <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{strength.label}</span>
                     </p>
                   </div>
@@ -281,13 +281,13 @@ const Signup = () => {
               </motion.div>
 
               {/* Trust bar */}
-              <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: 0, lineHeight: 1.6 }}>
+              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0, lineHeight: 1.6 }}>
                 {t("auth_trust")}
               </p>
             </form>
 
             {/* Legal */}
-            <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 16, lineHeight: 1.6 }}>
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 16, lineHeight: 1.6 }}>
               {t("auth_legal")}{" "}
               <Link to="/terms" style={{ color: '#38bdf8', textDecoration: 'none' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{t("auth_legal_terms")}</Link>
               {" "}{t("auth_legal_and")}{" "}

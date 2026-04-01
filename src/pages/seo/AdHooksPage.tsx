@@ -69,7 +69,7 @@ export default function AdHooksPage() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 52 }}>
-          <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Ad Hooks Library</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Ad Hooks Library</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 14 }}>
             The hooks that<br />
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>stop the scroll</span>
@@ -104,10 +104,10 @@ export default function AdHooksPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: `${scoreColor(ex.score)}15`, border: `1px solid ${scoreColor(ex.score)}30` }}>
                       <span style={{ ...m, fontSize: 13, fontWeight: 700, color: scoreColor(ex.score) }}>{ex.score}</span>
-                      <span style={{ fontSize: 10, color: scoreColor(ex.score), opacity: 0.7 }}>{scoreLabel(ex.score)}</span>
+                      <span style={{ fontSize: 12, color: scoreColor(ex.score), opacity: 0.7 }}>{scoreLabel(ex.score)}</span>
                     </div>
-                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{ex.platform}</span>
-                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{ex.industry}</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{ex.platform}</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{ex.industry}</span>
                   </div>
                   <p style={{ ...j, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.5, fontStyle: ex.text.startsWith("[") ? "italic" : "normal" }}>
                     "{ex.text}"

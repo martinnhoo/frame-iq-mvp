@@ -128,10 +128,10 @@ export default function CreativeLoopPage() {
         <div style={{ width: 32, height: 32, borderRadius: 10, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon size={15} style={{ color }} />
         </div>
-        <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
+        <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
       </div>
       <p style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</p>
-      {sub && <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{sub}</p>}
+      {sub && <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{sub}</p>}
     </div>
   );
 
@@ -165,7 +165,7 @@ export default function CreativeLoopPage() {
             </div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>Performance Loop</h1>
           </div>
-          <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>
+          <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>
             AI learns from your ad data — every import makes the next brief smarter
           </p>
         </div>
@@ -185,12 +185,12 @@ export default function CreativeLoopPage() {
       {/* ── Coming soon banner — subtle ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", marginBottom: 24, width: "fit-content" }}>
         <span style={{ fontSize: 12 }}>⚡</span>
-        <span style={{ ...m, fontSize: 10, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Coming soon: direct Meta Ads connection</span>
+        <span style={{ ...m, fontSize: 12, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Coming soon: direct Meta Ads connection</span>
       </div>
 
       {/* ── Loop steps — horizontal timeline ── */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px 24px", marginBottom: 20 }}>
-        <p style={{ ...m, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", marginBottom: 18 }}>The loop</p>
+        <p style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", marginBottom: 18 }}>The loop</p>
         <div style={{ display: "flex", alignItems: "flex-start", overflowX: "auto", paddingBottom: 4 }}>
           {CYCLE_STEPS.map((step, i) => {
             const done = i < activeStep;
@@ -209,8 +209,8 @@ export default function CreativeLoopPage() {
                     {done ? <CheckCircle2 size={16} style={{ color: step.color }} /> : <step.icon size={16} style={{ color: current ? "#000" : done ? step.color : "rgba(255,255,255,0.18)" }} />}
                   </div>
                   <div style={{ textAlign: "center" }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: current || done ? "#fff" : "rgba(255,255,255,0.22)", marginBottom: 2, whiteSpace: "nowrap" }}>{step.label}</p>
-                    <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.2)", lineHeight: 1.4, maxWidth: 80 }}>{step.desc}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: current || done ? "#fff" : "rgba(255,255,255,0.22)", marginBottom: 2, whiteSpace: "nowrap" }}>{step.label}</p>
+                    <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)", lineHeight: 1.4, maxWidth: 80 }}>{step.desc}</p>
                   </div>
                 </div>
                 {i < CYCLE_STEPS.length - 1 && (
@@ -233,10 +233,10 @@ export default function CreativeLoopPage() {
           <div key={s.label} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <s.icon size={13} style={{ color: s.color, opacity: 0.7 }} />
-              <span style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{s.label}</span>
+              <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{s.label}</span>
             </div>
             <p style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.value}</p>
-            {s.sub && <p style={{ ...m, fontSize: 10, color: s.color, marginTop: 4, opacity: 0.7 }}>{s.sub}</p>}
+            {s.sub && <p style={{ ...m, fontSize: 12, color: s.color, marginTop: 4, opacity: 0.7 }}>{s.sub}</p>}
           </div>
         ))}
       </div>
@@ -270,7 +270,7 @@ export default function CreativeLoopPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <Sparkles size={14} style={{ color: "#fbbf24" }} />
             <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Winning Patterns</span>
-            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>outperform avg CTR by 20%+</span>
+            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>outperform avg CTR by 20%+</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {patterns.filter(p => p.is_winner).slice(0, 6).map(p => (
@@ -281,15 +281,15 @@ export default function CreativeLoopPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 5 }}>
                     {Object.entries(p.variables).filter(([_, v]) => v !== "unknown").map(([k, v]) => (
-                      <span key={k} style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>{v as string}</span>
+                      <span key={k} style={{ ...m, fontSize: 12, padding: "2px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>{v as string}</span>
                     ))}
                   </div>
-                  {p.insight_text && <p style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, marginBottom: 5 }}>{p.insight_text}</p>}
+                  {p.insight_text && <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, marginBottom: 5 }}>{p.insight_text}</p>}
                   <div style={{ display: "flex", gap: 12 }}>
-                    {p.avg_ctr && <span style={{ ...m, fontSize: 10, color: "#34d399" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
-                    {p.avg_roas && <span style={{ ...m, fontSize: 10, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
-                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} samples</span>
-                    <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% conf</span>
+                    {p.avg_ctr && <span style={{ ...m, fontSize: 12, color: "#34d399" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
+                    {p.avg_roas && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} samples</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% conf</span>
                   </div>
                 </div>
               </div>
@@ -304,14 +304,14 @@ export default function CreativeLoopPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <Brain size={14} style={{ color: "#0ea5e9" }} />
             <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>All Patterns</span>
-            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{patterns.length} discovered</span>
+            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{patterns.length} discovered</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
                   {["Combination", "CTR", "ROAS", "Samples", "Confidence", ""].map(h => (
-                    <th key={h} style={{ ...m, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", padding: "6px 10px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{h}</th>
+                    <th key={h} style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", padding: "6px 10px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -321,7 +321,7 @@ export default function CreativeLoopPage() {
                     <td style={{ padding: "10px" }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
                         {Object.entries(p.variables).filter(([_, v]) => v !== "unknown").map(([k, v]) => (
-                          <span key={k} style={{ ...m, fontSize: 9, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)" }}>{v as string}</span>
+                          <span key={k} style={{ ...m, fontSize: 12, padding: "1px 6px", borderRadius: 999, background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)" }}>{v as string}</span>
                         ))}
                       </div>
                     </td>
@@ -338,7 +338,7 @@ export default function CreativeLoopPage() {
                       </div>
                     </td>
                     <td style={{ padding: "10px" }}>
-                      {p.is_winner && <span style={{ ...m, fontSize: 9, padding: "2px 7px", borderRadius: 999, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>WIN</span>}
+                      {p.is_winner && <span style={{ ...m, fontSize: 12, padding: "2px 7px", borderRadius: 999, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>WIN</span>}
                     </td>
                   </tr>
                 ))}

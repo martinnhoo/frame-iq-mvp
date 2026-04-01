@@ -140,7 +140,7 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderBottom: `1px solid ${GREEN}10` }}>
           <Zap size={13} color={GREEN} strokeWidth={2} />
           <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: GREEN }}>{block.title}</span>
-          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: `${GREEN}12`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto", letterSpacing: "0.03em" }}>GENERATED</span>
+          <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 20, background: `${GREEN}12`, color: GREEN, fontFamily: F, fontWeight: 600, marginLeft: "auto", letterSpacing: "0.03em" }}>GENERATED</span>
         </div>
         <div style={{ padding: "12px 14px" }}>
           {block.result_content && (
@@ -154,7 +154,7 @@ function Block({ block, onNav }: { block: AIBlock; onNav: (r: string) => void })
           ))}
           {(block.result_items || block.result_content) && (
             <button onClick={() => { const text = block.result_items ? block.result_items.join("\n\n") : (block.result_content || ""); navigator.clipboard.writeText(text); }}
-              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, cursor: "pointer", transition: "all 0.15s" }}
+              style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.35)", fontSize: 12, fontFamily: F, cursor: "pointer", transition: "all 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -229,8 +229,8 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
             <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setMenuOpen(false)} />
             <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100, background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden", minWidth: 160, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
               <div style={{ padding: "8px 12px 6px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: platform.activeColor }}>{platform.label}</p>
-                <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{dt("loop_connected")}</p>
+                <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: platform.activeColor }}>{platform.label}</p>
+                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{dt("loop_connected")}</p>
               </div>
               <button
                 onClick={() => { setMenuOpen(false); onDisconnect(); }}
@@ -262,7 +262,7 @@ function PlatformBadge({ platform, connected, onConnect, onDisconnect, requiresP
         >
           <Icon active={false} />
           <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>{platform.label}</span>
-          <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{dt("loop_soon")}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{dt("loop_soon")}</span>
         </div>
       </div>
     );
@@ -375,7 +375,7 @@ function InlineToolPanel({ action, prefill, onClose, onSend, language, dt }: {
             <div style={{ display: "flex", gap: 4 }}>
               {platforms.map(p => (
                 <button key={p} onClick={() => setPlatform(p)}
-                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: platform === p ? cfg.color : "rgba(255,255,255,0.06)", color: platform === p ? "#000" : "rgba(255,255,255,0.4)", transition: "all 0.12s" }}>
+                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: platform === p ? cfg.color : "rgba(255,255,255,0.06)", color: platform === p ? "#000" : "rgba(255,255,255,0.4)", transition: "all 0.12s" }}>
                   {p.charAt(0).toUpperCase() + p.slice(1)}
                 </button>
               ))}
@@ -384,7 +384,7 @@ function InlineToolPanel({ action, prefill, onClose, onSend, language, dt }: {
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
               {Object.entries(tones).map(([k, v]) => (
                 <button key={k} onClick={() => setTone(k)}
-                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: tone === k ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)", color: tone === k ? "#fff" : "rgba(255,255,255,0.35)", transition: "all 0.12s" }}>
+                  style={{ padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "inherit", background: tone === k ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)", color: tone === k ? "#fff" : "rgba(255,255,255,0.35)", transition: "all 0.12s" }}>
                   {v[lang]}
                 </button>
               ))}
@@ -407,7 +407,7 @@ function InlineToolPanel({ action, prefill, onClose, onSend, language, dt }: {
 
         {/* Submit */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>⌘↵</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>⌘↵</span>
           <button onClick={handleSubmit} disabled={!val.trim()}
             style={{ padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: val.trim() ? `linear-gradient(135deg, ${cfg.color}, ${cfg.color}bb)` : "rgba(255,255,255,0.06)", color: val.trim() ? "#000" : "rgba(255,255,255,0.25)", border: "none", cursor: val.trim() ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "all 0.15s" }}>
             {cfg.cta[lang]}
@@ -1041,7 +1041,7 @@ export default function LoopV2() {
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", letterSpacing: "-0.01em" }}>{selectedPersona.name}</span>
                 {hasData && (
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 4 }}>
                     {pulse?.totalAnalyses} analyses
                     {pulse?.avgHookScore && <><span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-block" }} /> {pulse.avgHookScore.toFixed(1)}/10</>}
                   </span>
@@ -1092,7 +1092,7 @@ export default function LoopV2() {
             <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: F, margin: 0 }}>
               {language === "pt" ? "Conecte o Meta Ads para comecar" : language === "es" ? "Conecta Meta Ads para empezar" : "Connect Meta Ads to get started"}
             </p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: F, margin: "2px 0 0" }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontFamily: F, margin: "2px 0 0" }}>
               {language === "pt" ? "A IA usa seus dados reais de campanha" : language === "es" ? "La IA usa tus datos reales" : "AI uses your real campaign data to respond"}
             </p>
           </div>
@@ -1139,7 +1139,7 @@ export default function LoopV2() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Label */}
-                    <p style={{ fontSize: 11, fontWeight: 700, color: BLUE, marginBottom: 6, letterSpacing: "0.04em", textTransform: "uppercase" }}>ADBRIEF</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: BLUE, marginBottom: 6, letterSpacing: "0.04em", textTransform: "uppercase" }}>ADBRIEF</p>
                     {msg.loading ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, paddingTop: 2 }}>
                         {[0,1,2].map(d => (
@@ -1163,13 +1163,13 @@ export default function LoopV2() {
                           </button>
                           <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.06)", margin: "0 2px" }} />
                           <button onClick={() => handleCopy(i, msg.blocks || [])}
-                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: copiedIdx === i ? "rgba(52,211,153,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${copiedIdx === i ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", color: copiedIdx === i ? GREEN : "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}>
+                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: copiedIdx === i ? "rgba(52,211,153,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${copiedIdx === i ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.06)"}`, cursor: "pointer", color: copiedIdx === i ? GREEN : "rgba(255,255,255,0.35)", fontSize: 12, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                             {copiedIdx === i ? "Copied" : "Copy"}
                           </button>
                           {i === messages.length - 1 && (
                             <button onClick={handleRegenerate}
-                              style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}
+                              style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 10px", height: 28, borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 12, fontFamily: F, fontWeight: 500, transition: "all 0.15s" }}
                               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.15)"; el.style.color = "rgba(255,255,255,0.6)"; }}
                               onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.06)"; el.style.color = "rgba(255,255,255,0.35)"; }}>
                               <RefreshCw size={11} /> Retry
@@ -1256,7 +1256,7 @@ export default function LoopV2() {
                   style={{
                     display: "flex", alignItems: "center", gap: 5, padding: "5px 10px",
                     borderRadius: 8, background: "transparent",
-                    border: "none", color: "rgba(255,255,255,0.35)", fontSize: 11,
+                    border: "none", color: "rgba(255,255,255,0.35)", fontSize: 12,
                     fontWeight: 500, cursor: "pointer", fontFamily: F, transition: "all 0.15s",
                   }}
                   onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = t.color; el.style.background = `${t.color}0a`; }}
@@ -1264,7 +1264,7 @@ export default function LoopV2() {
                   <t.icon size={12} strokeWidth={1.8} /> {t.label}
                 </button>
               ))}
-              <span className="hidden lg:inline" style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", marginLeft: "auto", fontFamily: F }}>
+              <span className="hidden lg:inline" style={{ fontSize: 12, color: "rgba(255,255,255,0.15)", marginLeft: "auto", fontFamily: F }}>
                 Enter
               </span>
             </div>

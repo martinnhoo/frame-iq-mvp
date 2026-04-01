@@ -19,7 +19,7 @@ export default function GuidesIndex() {
     <SeoLayout title="Advertising Guides — AdBrief" description="Free guides on TikTok ads, ad hooks, creative testing, and scaling. Written for performance marketers and media buyers." canonical="/guides">
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ marginBottom: 52 }}>
-          <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Guides</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Guides</p>
           <h1 style={{ ...j, fontSize: 44, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
             Learn to make ads<br />
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>that actually convert</span>
@@ -32,7 +32,7 @@ export default function GuidesIndex() {
         {Object.entries(clusters).map(([cluster, guides]) => (
           <div key={cluster} style={{ marginBottom: 48 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <span style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>{guides[0].clusterLabel}</span>
+              <span style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>{guides[0].clusterLabel}</span>
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
             </div>
             {guides.map((g, i) => (
@@ -46,7 +46,7 @@ export default function GuidesIndex() {
                   <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>{g.subtitle}</p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{g.readTime} min</span>
+                  <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{g.readTime} min</span>
                   <span style={{ color: "rgba(255,255,255,0.2)" }}>→</span>
                 </div>
               </div>

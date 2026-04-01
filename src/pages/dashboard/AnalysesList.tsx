@@ -155,7 +155,7 @@ export default function AnalysesList() {
                     <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {a.title || t.untitled}
                     </p>
-                    <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.32)", margin: "3px 0 0" }}>
+                    <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.32)", margin: "3px 0 0" }}>
                       {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                     </p>
                   </div>
@@ -166,7 +166,7 @@ export default function AnalysesList() {
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 8, background: cfg.bg, border: "1px solid " + cfg.border, flexShrink: 0 }}>
                     <StatusIcon size={11} color={cfg.color} />
-                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: cfg.color }}>{statusLabel}</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: cfg.color }}>{statusLabel}</span>
                   </div>
                   <button onClick={e => handleDelete(e, a.id, a.status)} disabled={deleting === a.id}
                     style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "1px solid transparent", cursor: "pointer", flexShrink: 0, color: "rgba(255,255,255,0.25)", transition: "all 0.12s" }}
@@ -195,7 +195,7 @@ export default function AnalysesList() {
                       ].map(action => (
                         <button key={action.label}
                           onClick={e => { e.stopPropagation(); navigate(action.url); }}
-                          style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, fontFamily: F, fontSize: 11, fontWeight: 600, cursor: "pointer", color: action.color, background: action.bg, border: "1px solid " + action.border, transition: "all 0.12s" }}>
+                          style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer", color: action.color, background: action.bg, border: "1px solid " + action.border, transition: "all 0.12s" }}>
                           {action.icon} {action.label}
                         </button>
                       ))}

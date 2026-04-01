@@ -171,7 +171,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 14 }}>
             <Zap size={11} color="#0ea5e9" />
-            <span style={{ fontFamily: M, fontSize: 11, color: "#0ea5e9", fontWeight: 600 }}>
+            <span style={{ fontFamily: M, fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>
               {lang === "pt" ? "3 dias grátis · Cancele quando quiser" : lang === "es" ? "3 días gratis · Cancela cuando quieras" : "3 days free · Cancel anytime"}
             </span>
           </div>
@@ -197,12 +197,12 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
             <div key={plan.key} style={{ padding: "16px", borderRadius: 14, background: plan.highlight ? "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))" : "rgba(255,255,255,0.03)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}`, position: "relative" }}>
               {plan.badge && (
                 <div style={{ position: "absolute", top: -9, left: 16, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", borderRadius: 5, padding: "2px 10px" }}>
-                  <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>{plan.badge}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>{plan.badge}</span>
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
-                  <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>{plan.name}</p>
+                  <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>{plan.name}</p>
                   <p style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</p>
                 </div>
                 <button
@@ -216,7 +216,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
                 {((plan.features as any)[lang] || (plan.features as any).en).map((f: string) => (
                   <div key={f} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <Check size={10} color={plan.highlight ? "#0ea5e9" : "rgba(255,255,255,0.3)"} strokeWidth={2.5} />
-                    <span style={{ fontFamily: M, fontSize: 11.5, color: plan.highlight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{f}</span>
+                    <span style={{ fontFamily: M, fontSize: 13, color: plan.highlight ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -225,7 +225,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         </div>
 
         {/* Footer */}
-        <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
           {FOOTER[lang] || FOOTER.en}
         </p>
       </div>
@@ -271,11 +271,11 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           <div key={plan.key} style={{ padding: "20px 16px", borderRadius: 14, background: plan.highlight ? "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 14, position: "relative", boxShadow: plan.highlight ? "0 0 32px rgba(14,165,233,0.08)" : "none" }}>
             {plan.badge && (
               <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#0ea5e9,#6366f1)", borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap", boxShadow: "0 0 12px rgba(14,165,233,0.3)" }}>
-                <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>{plan.badge}</span>
+                <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>{plan.badge}</span>
               </div>
             )}
             <div>
-              <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>{plan.name}</p>
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>{plan.name}</p>
               <p style={{ fontFamily: F, fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{plan.price}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1 }}>
@@ -296,7 +296,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         ))}
       </div>
 
-      <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center" }}>
+      <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.18)", textAlign: "center" }}>
         {FOOTER[lang] || FOOTER.en}
       </p>
     </div>

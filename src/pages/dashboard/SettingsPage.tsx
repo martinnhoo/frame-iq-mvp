@@ -250,7 +250,7 @@ const SettingsPage = () => {
                     transition: "all 0.15s",
                   }}>
                   <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600, color: aiTone === val ? "#0ea5e9" : "rgba(255,255,255,0.7)", margin: "0 0 3px" }}>{label}</p>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.4 }}>{sub}</p>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.4 }}>{sub}</p>
                 </button>
               ))}
             </div>

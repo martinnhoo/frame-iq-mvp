@@ -32,7 +32,7 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
         )}
 
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <p style={{ ...j, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600, marginBottom: 10 }}>CHOOSE A PLAN TO CONTINUE</p>
+          <p style={{ ...j, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", fontWeight: 600, marginBottom: 10 }}>CHOOSE A PLAN TO CONTINUE</p>
           <h2 style={{ ...j, fontSize: "clamp(22px,3vw,32px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#fff", marginBottom: 10, lineHeight: 1.2 }}>
             {feature ? `"${feature}" requires a plan` : "Start your free trial"}
           </h2>
@@ -48,19 +48,19 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {PLANS.map((plan) => (
             <div key={plan.name} style={{ padding: "22px 18px", borderRadius: 16, background: plan.highlight ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
-              {plan.badge && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "2px 12px" }}><span style={{ ...j, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", fontWeight: 700 }}>{plan.badge}</span></div>}
+              {plan.badge && <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: BRAND, borderRadius: 999, padding: "2px 12px" }}><span style={{ ...j, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", fontWeight: 700 }}>{plan.badge}</span></div>}
               <div>
-                <p style={{ ...j, fontSize: 10, color: "rgba(255,255,255,0.28)", fontWeight: 700, letterSpacing: "0.06em", marginBottom: 6 }}>{plan.name.toUpperCase()}</p>
+                <p style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)", fontWeight: 700, letterSpacing: "0.06em", marginBottom: 6 }}>{plan.name.toUpperCase()}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
                   <span style={{ ...j, fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
-                  <span style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.28)" }}>{plan.desc}</span>
+                  <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{plan.desc}</span>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
                 {plan.features.map(f => (
                   <div key={f} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                     <Check size={11} color="#0ea5e9" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ ...j, fontSize: 11.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>{f}</span>
+                    <span style={{ ...j, fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -72,7 +72,7 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
           ))}
         </div>
 
-        <p style={{ ...j, fontSize: 11, color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: 20 }}>
+        <p style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: 20 }}>
           By starting a trial you agree to our Terms of Service. Cancel before 72 hours (3 days) and you won't be charged.
         </p>
       </div>

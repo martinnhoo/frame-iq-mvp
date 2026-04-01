@@ -415,7 +415,7 @@ export default function Onboarding() {
             {/* ── STEP 1 ── */}
             {step === 1 && (
               <div>
-                <p style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
+                <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
                   {t.s1_tag}
                 </p>
                 <h1 style={{ fontSize: "clamp(36px,6vw,48px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", lineHeight: 1.1, letterSpacing: "-0.04em", whiteSpace: "pre-line" as const }}>
@@ -456,7 +456,7 @@ export default function Onboarding() {
                           onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.09)"; }}
                           onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}>
                           <span style={{ fontSize: 20, lineHeight: 1 }}>{n.icon}</span>
-                          <span style={{ fontFamily: M, fontSize: 10, textAlign: "center", lineHeight: 1.25, fontWeight: active ? 700 : 400, color: active ? "#fff" : "rgba(255,255,255,0.5)" }}>
+                          <span style={{ fontFamily: M, fontSize: 12, textAlign: "center", lineHeight: 1.25, fontWeight: active ? 700 : 400, color: active ? "#fff" : "rgba(255,255,255,0.5)" }}>
                             {n.label}
                           </span>
                         </button>
@@ -499,7 +499,7 @@ export default function Onboarding() {
             {/* ── STEP 2 ── */}
             {step === 2 && (
               <div>
-                <p style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
+                <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
                   {t.s2_tag}
                 </p>
                 <h1 style={{ fontSize: "clamp(32px,5vw,44px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", lineHeight: 1.1, letterSpacing: "-0.04em", whiteSpace: "pre-line" as const }}>
@@ -512,13 +512,13 @@ export default function Onboarding() {
                 {/* Before / After */}
                 <div className="compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
                   <div style={{ padding: "16px", borderRadius: 16, background: "rgba(248,113,113,0.07)", border: "2px solid rgba(248,113,113,0.2)" }}>
-                    <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
+                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
                     <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0, fontStyle: "italic" as const }}>{t.s2_generic}</p>
                   </div>
                   <motion.div style={{ padding: "16px", borderRadius: 16 }}
                     animate={{ background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)", borderWidth: "2px", borderStyle: "solid" }}
                     transition={{ duration: 0.5 }}>
-                    <motion.p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}
+                    <motion.p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}
                       animate={{ color: revealed ? BLUE : "rgba(255,255,255,0.25)" }} transition={{ duration: 0.3 }}>
                       {t.s2_adbrief_label}
                     </motion.p>
@@ -531,7 +531,7 @@ export default function Onboarding() {
 
                 {/* O que a IA lê */}
                 <div style={{ padding: "18px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "2px solid rgba(255,255,255,0.10)", marginBottom: 12 }}>
-                  <p style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_reads_label}</p>
+                  <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_reads_label}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                     {t.s2_items.map((item: any, i: number) => (
                       <motion.div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}
@@ -543,7 +543,7 @@ export default function Onboarding() {
                     ))}
                   </div>
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 14 }}>
-                    <p style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 10px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_extras_label}</p>
+                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 10px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_extras_label}</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                       {t.s2_extras.map((extra: string, i: number) => (
                         <motion.div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}
@@ -578,7 +578,7 @@ export default function Onboarding() {
             {/* ── STEP 3 ── */}
             {step === 3 && (
               <div>
-                <p style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
+                <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
                   {t.s3_tag}
                 </p>
                 <h1 style={{ fontSize: "clamp(36px,6vw,48px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", lineHeight: 1.1, letterSpacing: "-0.04em", whiteSpace: "pre-line" as const }}>

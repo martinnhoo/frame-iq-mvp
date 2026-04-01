@@ -101,11 +101,11 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* Binance-style segmented toggle — LITE active */}
         <div style={{ display: "flex", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: 2, gap: 0 }}>
           <button
-            style={{ ...j, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}
+            style={{ ...j, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}
           >LITE</button>
           <button
             onClick={onSwitchToPro}
-            style={{ ...j, fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}
+            style={{ ...j, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.35)", border: "none", transition: "all 0.2s", letterSpacing: "0.04em" }}
           >PRO</button>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 20px 100px", position: "relative" }}>
 
         {/* Greeting */}
-        <p style={{ ...m, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 6 }}>{greeting}</p>
+        <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 6 }}>{greeting}</p>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.15, marginBottom: 6 }}>
           {name}, <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>what are we building?</span>
         </h1>
@@ -128,14 +128,14 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
               <div key={s.label} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 12px", textAlign: "center" }}>
                 <div style={{ color: s.color, display: "flex", justifyContent: "center", marginBottom: 6 }}>{s.icon}</div>
                 <p style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{s.value}</p>
-                <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.label}</p>
+                <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2 }}>{s.label}</p>
               </div>
             ))}
           </div>
         )}
 
         {/* Actions — main goal cards */}
-        <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Quick actions</p>
+        <p style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Quick actions</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 32 }}>
           {GOALS.map(g => (
             <button
@@ -154,7 +154,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.9)", marginBottom: 2 }}>{g.label}</p>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{g.desc}</p>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{g.desc}</p>
               </div>
               <ArrowRight size={14} color="rgba(255,255,255,0.12)" style={{ flexShrink: 0 }} />
             </button>
@@ -164,13 +164,13 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* Recent activity */}
         {recentTitles.length > 0 && (
           <div style={{ marginBottom: 32 }}>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Recent</p>
+            <p style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Recent</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {recentTitles.map((r, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
                   <BarChart3 size={12} color="rgba(255,255,255,0.2)" />
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
-                  <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.15)" }}>{r.time}</span>
+                  <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{r.time}</span>
                 </div>
               ))}
             </div>
@@ -192,7 +192,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9", marginBottom: 2 }}>Switch to PRO view</p>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>Full dashboard with analytics, trends, intel feed & all creative tools.</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>Full dashboard with analytics, trends, intel feed & all creative tools.</p>
             </div>
             <ChevronRight size={14} color="rgba(14,165,233,0.4)" />
           </button>
@@ -200,7 +200,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
 
         {/* Quick links */}
         <div style={{ marginTop: 28 }}>
-          <p style={{ ...m, fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", marginBottom: 10 }}>Quick jump</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.15)", marginBottom: 10 }}>Quick jump</p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {[
               { label: "My analyses", route: "/dashboard/analyses", icon: <BarChart3 size={11} /> },
@@ -209,7 +209,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
               { label: "Templates",   route: "/dashboard/templates", icon: <Layers size={11} /> },
               { label: "Translate",   route: "/dashboard/translate", icon: <Languages size={11} /> },
             ].map(item => (
-              <button key={item.route} onClick={() => navigate(item.route)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 11, background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", transition: "all 0.15s" }}>
+              <button key={item.route} onClick={() => navigate(item.route)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 13px", borderRadius: 999, fontSize: 12, background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", transition: "all 0.15s" }}>
                 {item.icon} {item.label}
               </button>
             ))}

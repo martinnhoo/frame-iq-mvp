@@ -69,10 +69,10 @@ export default function Levels() {
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <button onClick={() => navigate(-1)} style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", marginBottom: 32, letterSpacing: "0.06em" }}>
+          <button onClick={() => navigate(-1)} style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", marginBottom: 32, letterSpacing: "0.06em" }}>
             ← back
           </button>
-          <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 10 }}>AdBrief Mastery</p>
+          <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 10 }}>AdBrief Mastery</p>
           <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 10, lineHeight: 1.15 }}>
             Five levels.<br />
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -103,7 +103,7 @@ export default function Levels() {
               <div style={{ flex: 1, paddingTop: 4 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <h2 style={{ fontSize: 17, fontWeight: 700, color: level.color }}>{level.name}</h2>
-                  <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
+                  <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
                     {level.min === 0 ? "Start" : `${level.min}+ actions`}
                   </span>
                 </div>
@@ -123,7 +123,7 @@ export default function Levels() {
                 {i < LEVELS.length - 1 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 18 }}>
                     <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg,${level.color}20,${LEVELS[i+1].color}20)` }} />
-                    <span style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.15)", letterSpacing: "0.1em" }}>next level</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.15)", letterSpacing: "0.1em" }}>next level</span>
                     <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg,${LEVELS[i+1].color}20,transparent)` }} />
                   </div>
                 )}

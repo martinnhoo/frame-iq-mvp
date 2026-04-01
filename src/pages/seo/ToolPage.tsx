@@ -47,8 +47,8 @@ export default function ToolPage() {
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-            <span style={{ ...m, fontSize: 10, padding: "3px 10px", borderRadius: 20, background: `${accent}15`, color: accent, border: `1px solid ${accent}30`, letterSpacing: "0.12em", textTransform: "uppercase" }}>{tool.type}</span>
-            {tool.isFree && <span style={{ ...m, fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>FREE</span>}
+            <span style={{ ...m, fontSize: 12, padding: "3px 10px", borderRadius: 20, background: `${accent}15`, color: accent, border: `1px solid ${accent}30`, letterSpacing: "0.12em", textTransform: "uppercase" }}>{tool.type}</span>
+            {tool.isFree && <span style={{ ...m, fontSize: 12, padding: "3px 8px", borderRadius: 20, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>FREE</span>}
           </div>
           <h1 style={{ ...j, fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 16, lineHeight: 1.1 }}>{tool.name}</h1>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: 28 }}>{tool.description}</p>
@@ -87,7 +87,7 @@ export default function ToolPage() {
 
         {/* Related tools — clean grid */}
         <div style={{ marginBottom: 24 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 14 }}>More free tools</p>
+          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 14 }}>More free tools</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
             {SEO_TOOLS.filter(t => t.slug !== slug).slice(0, 6).map(t => (
               <button key={t.slug} onClick={() => navigate(`/tools/${t.slug}`)}
@@ -95,7 +95,7 @@ export default function ToolPage() {
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.3)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"}>
                 <p style={{ ...j, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 3 }}>{t.name}</p>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{t.description.slice(0, 55)}…</p>
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>{t.description.slice(0, 55)}…</p>
               </button>
             ))}
           </div>

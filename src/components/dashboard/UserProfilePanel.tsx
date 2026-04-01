@@ -458,9 +458,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#eef0f6", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.name || user.email?.split("@")[0]}</p>
-              <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.42)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
+              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
             </div>
-            <div style={{ flexShrink: 0, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40`, fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color }}>{plan.label}</div>
+            <div style={{ flexShrink: 0, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40`, fontFamily: M, fontSize: 12, fontWeight: 700, color: plan.color }}>{plan.label}</div>
           </div>
 
           {/* Tabs */}
@@ -484,17 +484,17 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {tab === "profile" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Nome" : language === "es" ? "Nombre" : "Name"}</label>
+                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Nome" : language === "es" ? "Nombre" : "Name"}</label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder={language === "pt" ? "Seu nome" : language === "es" ? "Tu nombre" : "Your name"}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
                   onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }} onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }} />
               </div>
               <div>
-                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>Email</label>
+                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>Email</label>
                 <input value={user.email || ""} disabled style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(238,240,246,0.30)", fontFamily: M, fontSize: 13, boxSizing: "border-box" as const, cursor: "not-allowed" }} />
               </div>
               <div>
-                <label style={{ display: "block", fontFamily: M, fontSize: 10, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : "Language"}</label>
+                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : "Language"}</label>
                 <select value={lang} onChange={e => setLang(e.target.value)}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const, cursor: "pointer" }}>
                   <option value="pt">🇧🇷 Português</option>
@@ -544,8 +544,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 {/* ── Telegram ── */}
                 <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
                   <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
-                    <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0, flex: 1 }}>Telegram Alerts</p>
-                    {telegramConn && <span style={{ fontFamily: M, fontSize: 10, color: "#34d399", fontWeight: 600 }}>● Ativo</span>}
+                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0, flex: 1 }}>Telegram Alerts</p>
+                    {telegramConn && <span style={{ fontFamily: M, fontSize: 12, color: "#34d399", fontWeight: 600 }}>● Ativo</span>}
                   </div>
                   <div style={{ padding: "12px 14px" }}>
                     {telegramConn ? (
@@ -554,11 +554,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : "Conectado"}
                           {telegramConn.connected_at ? ` · ${new Date(telegramConn.connected_at).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}` : ""}
                         </p>
-                        <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "0 0 10px", lineHeight: 1.5 }}>Recebendo alertas via @AdBriefAlertsBot</p>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: "0 0 10px", lineHeight: 1.5 }}>Recebendo alertas via @AdBriefAlertsBot</p>
                         <button onClick={async () => {
                           await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user.id);
                           setTelegramConn(null); setPairingLink(null);
-                        }} style={{ fontFamily: M, fontSize: 11, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                        }} style={{ fontFamily: M, fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
                           Desconectar
                         </button>
                       </div>
@@ -568,10 +568,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           Abra o link no Telegram e toque <b>/start</b>:
                         </p>
                         <a href={pairingLink} target="_blank" rel="noreferrer"
-                          style={{ display: "block", fontFamily: M, fontSize: 11, color: "#0ea5e9", wordBreak: "break-all" as const, marginBottom: 6 }}>
+                          style={{ display: "block", fontFamily: M, fontSize: 12, color: "#0ea5e9", wordBreak: "break-all" as const, marginBottom: 6 }}>
                           {pairingLink}
                         </a>
-                        <p style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.2)", margin: 0 }}>Expira em 10 minutos</p>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>Expira em 10 minutos</p>
                       </div>
                     ) : (
                       <div>
@@ -602,7 +602,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: `radial-gradient(circle, ${plan.color}20, transparent 70%)`, pointerEvents: "none" }} />
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <p style={{ fontFamily: F, fontSize: 18, fontWeight: 900, color: "#eef0f6", letterSpacing: "-0.02em" }}>{plan.label}</p>
-                    <span style={{ fontFamily: M, fontSize: 11, fontWeight: 700, color: plan.color, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40` }}>
+                    <span style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: plan.color, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40` }}>
                       {language==="pt"?"Plano atual":"Current plan"}
                     </span>
                   </div>
@@ -638,7 +638,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
                 {/* Support */}
                 <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <p style={{ fontFamily: M, fontSize: 11, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                  <p style={{ fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
                     {language==="pt"?"Suporte":"Support"}
                   </p>
                   <a href="mailto:support@adbrief.pro"
@@ -685,12 +685,12 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     {/* Summary card with reload */}
                     {intel?.profile?.ai_summary && (
                       <div style={{ padding: "14px 16px 12px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)", position: "relative" as const }}>
-                        <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(14,165,233,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 7 }}>
+                        <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(14,165,233,0.60)", letterSpacing: "0.10em", textTransform: "uppercase" as const, marginBottom: 7 }}>
                           {language === "pt" ? "O que aprendi sobre você" : language === "es" ? "Lo que aprendí sobre ti" : "What I've learned"}
                         </p>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.75)", lineHeight: 1.65, margin: 0 }}>{intel.profile.ai_summary}</p>
                         {intel.profile.last_updated && (
-                          <p style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)", marginTop: 5 }}>
+                          <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.25)", marginTop: 5 }}>
                             {language === "pt" ? "Atualizado" : "Updated"}: {new Date(intel.profile.last_updated).toLocaleDateString(language === "pt" ? "pt-BR" : "en")}
                           </p>
                         )}
@@ -708,10 +708,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     {hasSnaps && s0 ? (
                       <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
                         <div style={{ padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.30)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                          <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.30)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
                             {language === "pt" ? "Performance da conta" : "Account Performance"}
                           </p>
-                          <span style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.25)" }}>{s0.date}</span>
+                          <span style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.25)" }}>{s0.date}</span>
                         </div>
                         <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                           {[
@@ -721,29 +721,29 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           ].map((item, i) => (
                             <div key={i} style={{ textAlign: "center" as const }}>
                               <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 18, fontWeight: 900, color: item.color, margin: 0 }}>{item.val}</p>
-                              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.35)", margin: "2px 0 0" }}>{item.label}</p>
-                              {(item as any).extra && <p style={{ fontFamily: M, fontSize: 9, color: (item as any).extraColor, margin: "1px 0 0" }}>{(item as any).extra}</p>}
+                              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.35)", margin: "2px 0 0" }}>{item.label}</p>
+                              {(item as any).extra && <p style={{ fontFamily: M, fontSize: 12, color: (item as any).extraColor, margin: "1px 0 0" }}>{(item as any).extra}</p>}
                             </div>
                           ))}
                         </div>
                         {(s0.winners_count > 0 || s0.losers_count > 0) && (
                           <div style={{ padding: "0 14px 10px", display: "flex", gap: 6 }}>
                             {s0.winners_count > 0 && <div style={{ flex: 1, padding: "6px 8px", borderRadius: 7, background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", textAlign: "center" as const }}>
-                              <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#34d399", margin: 0 }}>↑ {s0.winners_count} {language === "pt" ? "escalar" : "scale"}</p>
+                              <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#34d399", margin: 0 }}>↑ {s0.winners_count} {language === "pt" ? "escalar" : "scale"}</p>
                             </div>}
                             {s0.losers_count > 0 && <div style={{ flex: 1, padding: "6px 8px", borderRadius: 7, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.18)", textAlign: "center" as const }}>
-                              <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "#f87171", margin: 0 }}>⏸ {s0.losers_count} {language === "pt" ? "pausar" : "pause"}</p>
+                              <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", margin: 0 }}>⏸ {s0.losers_count} {language === "pt" ? "pausar" : "pause"}</p>
                             </div>}
                           </div>
                         )}
                         {s0.ai_insight && (
                           <div style={{ padding: "8px 14px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                            <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.60)", lineHeight: 1.55, margin: 0 }}>💡 {s0.ai_insight}</p>
+                            <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.60)", lineHeight: 1.55, margin: 0 }}>💡 {s0.ai_insight}</p>
                           </div>
                         )}
                         {intel.snaps.length > 1 && (
                           <div style={{ padding: "4px 14px 10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                            <p style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.22)", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>7 dias</p>
+                            <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>7 dias</p>
                             <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 22 }}>
                               {intel.snaps.slice(0, 7).reverse().map((sn: any, i: number) => {
                                 const maxC = Math.max(...intel.snaps.slice(0, 7).map((x: any) => x.avg_ctr || 0.001));
@@ -766,11 +766,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     {/* ── Permanent Instructions ── */}
                     <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: 8 }}>
                       <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                        <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
                           {language === "pt" ? "Instruções permanentes" : language === "es" ? "Instrucciones permanentes" : "Permanent instructions"}
                         </p>
                         <button onClick={() => setEditingInstructions(e => !e)}
-                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "rgba(14,165,233,0.7)", fontFamily: M, padding: "2px 6px" }}>
+                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "rgba(14,165,233,0.7)", fontFamily: M, padding: "2px 6px" }}>
                           {editingInstructions ? (language === "pt" ? "Fechar" : "Close") : (language === "pt" ? "Editar" : "Edit")}
                         </button>
                       </div>
@@ -827,7 +827,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     {realPatterns.length > 0 && (
                       <div style={{ borderRadius: 12, border: "1px solid rgba(52,211,153,0.14)", overflow: "hidden" }}>
                         <div style={{ padding: "9px 14px", background: "rgba(52,211,153,0.03)", borderBottom: "1px solid rgba(52,211,153,0.09)" }}>
-                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(52,211,153,0.50)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                          <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(52,211,153,0.50)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
                             {language === "pt" ? "Padrões com dados reais" : "Data-backed patterns"}
                           </p>
                         </div>
@@ -835,14 +835,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           {realPatterns.slice(0, 6).map((p: any, i: number) => (
                             <div key={i} style={{ padding: "9px 10px", borderRadius: 8, marginBottom: 3, background: "rgba(255,255,255,0.025)", display: "flex", gap: 8, alignItems: "flex-start" }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontFamily: M, fontSize: 11, fontWeight: 600, color: p.is_winner ? "#34d399" : "rgba(238,240,246,0.55)", margin: 0 }}>
+                                <p style={{ fontFamily: M, fontSize: 12, fontWeight: 600, color: p.is_winner ? "#34d399" : "rgba(238,240,246,0.55)", margin: 0 }}>
                                   {p.is_winner ? "✓ " : ""}{translatePatternKey(p.pattern_key)}
                                 </p>
-                                {p.insight_text && <p style={{ fontFamily: M, fontSize: 10, color: "rgba(238,240,246,0.38)", margin: "2px 0 0", lineHeight: 1.4 }}>{p.insight_text.slice(0, 75)}</p>}
+                                {p.insight_text && <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.38)", margin: "2px 0 0", lineHeight: 1.4 }}>{p.insight_text.slice(0, 75)}</p>}
                                 <div style={{ display: "flex", gap: 7, marginTop: 3 }}>
-                                  {p.avg_ctr > 0 && <span style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "rgba(52,211,153,0.70)" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
-                                  {p.avg_roas > 0 && <span style={{ fontFamily: M, fontSize: 9, fontWeight: 700, color: "rgba(14,165,233,0.70)" }}>ROAS {p.avg_roas.toFixed(2)}x</span>}
-                                  <span style={{ fontFamily: M, fontSize: 9, color: "rgba(238,240,246,0.22)" }}>{p.sample_size}×</span>
+                                  {p.avg_ctr > 0 && <span style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(52,211,153,0.70)" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
+                                  {p.avg_roas > 0 && <span style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(14,165,233,0.70)" }}>ROAS {p.avg_roas.toFixed(2)}x</span>}
+                                  <span style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)" }}>{p.sample_size}×</span>
                                 </div>
                               </div>
                               <button onClick={() => deletePattern(p.pattern_key)}
@@ -862,14 +862,14 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     {prefPatterns.length > 0 && (
                       <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
                         <div style={{ padding: "9px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                          <p style={{ fontFamily: M, fontSize: 10, fontWeight: 700, color: "rgba(238,240,246,0.22)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
+                          <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(238,240,246,0.22)", letterSpacing: "0.10em", textTransform: "uppercase" as const, margin: 0 }}>
                             {language === "pt" ? "Preferências de uso" : "Usage preferences"}
                           </p>
                         </div>
                         <div style={{ padding: "8px" }}>
                           {prefPatterns.slice(0, 4).map((p: any, i: number) => (
                             <div key={i} style={{ padding: "8px 10px", borderRadius: 7, marginBottom: 3, background: "rgba(255,255,255,0.015)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.45)", margin: 0 }}>{translatePatternKey(p.pattern_key)}</p>
+                              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.45)", margin: 0 }}>{translatePatternKey(p.pattern_key)}</p>
                               <button onClick={() => deletePattern(p.pattern_key)}
                                 style={{ width: 18, height: 18, borderRadius: 4, background: "transparent", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4, flexShrink: 0 }}
                                 onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
@@ -889,7 +889,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
                           {language === "pt" ? "Ainda aprendendo..." : "Still learning..."}
                         </p>
-                        <p style={{ fontFamily: M, fontSize: 11, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
+                        <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.5 }}>
                           {language === "pt" ? "Conecte Meta Ads ou Google Ads e use o produto — o sistema aprende com os resultados reais." : "Connect Meta Ads or Google Ads and use the product — it learns from real results."}
                         </p>
                       </div>

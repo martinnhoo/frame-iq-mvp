@@ -102,7 +102,7 @@ export default function LoopGuidePage() {
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase" }}>How it works</span>
+          <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em", textTransform: "uppercase" }}>How it works</span>
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", marginBottom: 8 }}>
           The Performance Loop — step by step
@@ -130,7 +130,7 @@ export default function LoopGuidePage() {
               {/* Content */}
               <div style={{ flex: 1, paddingTop: 2 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span style={{ ...m, fontSize: 9, color: step.color, letterSpacing: "0.15em" }}>{step.n}</span>
+                  <span style={{ ...m, fontSize: 12, color: step.color, letterSpacing: "0.15em" }}>{step.n}</span>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{step.title}</h3>
                 </div>
                 <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 8 }}>{step.what}</p>
@@ -140,13 +140,13 @@ export default function LoopGuidePage() {
                 {/* Tip */}
                 <div style={{ display: "flex", gap: 8, padding: "8px 12px", borderRadius: 10, background: `${step.color}08`, border: `1px solid ${step.color}18`, marginBottom: 10 }}>
                   <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>💡</span>
-                  <p style={{ ...m, fontSize: 11, color: `${step.color}cc`, lineHeight: 1.6 }}>{step.tip}</p>
+                  <p style={{ ...m, fontSize: 12, color: `${step.color}cc`, lineHeight: 1.6 }}>{step.tip}</p>
                 </div>
                 {/* Simulation */}
                 <div style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 14px" }}>
-                  <p style={{ ...m, fontSize: 9, color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>Example output</p>
+                  <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>Example output</p>
                   {step.sim.map((line, li) => (
-                    <p key={li} style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: li < step.sim.length - 1 ? 2 : 0 }}>{line}</p>
+                    <p key={li} style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: li < step.sim.length - 1 ? 2 : 0 }}>{line}</p>
                   ))}
                 </div>
               </div>

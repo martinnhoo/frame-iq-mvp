@@ -41,13 +41,13 @@ export default function GuidePage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 28, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
           <button onClick={() => navigate("/guides")} style={{ color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", fontSize: 12 }}>Guides</button>
           <span>/</span>
-          <span style={{ ...m, fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "rgba(14,165,233,0.1)", color: "#0ea5e9" }}>{guide.clusterLabel}</span>
+          <span style={{ ...m, fontSize: 12, padding: "2px 8px", borderRadius: 10, background: "rgba(14,165,233,0.1)", color: "#0ea5e9" }}>{guide.clusterLabel}</span>
         </div>
 
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <span style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{guide.readTime} min read</span>
+            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{guide.readTime} min read</span>
           </div>
           <h1 style={{ ...j, fontSize: 38, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 16, lineHeight: 1.1 }}>{guide.title}</h1>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{guide.subtitle}</p>
@@ -63,7 +63,7 @@ export default function GuidePage() {
           {guide.sections.map((sec, i) => (
             <div key={i}>
               <h2 style={{ ...j, fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.2)", width: 24 }}>{String(i + 1).padStart(2, "0")}</span>
+                <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)", width: 24 }}>{String(i + 1).padStart(2, "0")}</span>
                 {sec.heading}
               </h2>
               <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.8, paddingLeft: 34 }}>{sec.body}</p>
@@ -83,7 +83,7 @@ export default function GuidePage() {
         {/* Related guides */}
         {related.length > 0 && (
           <div style={{ marginBottom: 48 }}>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>Related guides</p>
+            <p style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>Related guides</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {related.map(r => (
                 <div key={r.slug} onClick={() => navigate(`/guides/${r.slug}`)}
@@ -92,7 +92,7 @@ export default function GuidePage() {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"}>
                   <div>
                     <p style={{ ...j, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{r.title}</p>
-                    <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{r.readTime} min</p>
+                    <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{r.readTime} min</p>
                   </div>
                   <span style={{ color: "rgba(255,255,255,0.2)" }}>→</span>
                 </div>

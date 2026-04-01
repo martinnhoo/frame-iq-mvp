@@ -110,7 +110,7 @@ export default function Features() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 72 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", marginBottom: 16 }}>Everything you need</p>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(14,165,233,0.7)", marginBottom: 16 }}>Everything you need</p>
           <h1 style={{ fontSize: "clamp(32px,5vw,52px)", fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 16 }}>
             The AI that saves your<br />
             <span style={{ background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
@@ -138,7 +138,7 @@ export default function Features() {
                     {f.icon}
                   </div>
                   <div>
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: f.accent, padding: "2px 8px", borderRadius: 20, background: `${f.accent}12`, border: `1px solid ${f.accent}20` }}>{f.tag}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: f.accent, padding: "2px 8px", borderRadius: 20, background: `${f.accent}12`, border: `1px solid ${f.accent}20` }}>{f.tag}</span>
                     <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginTop: 4 }}>{f.title}</p>
                   </div>
                 </div>

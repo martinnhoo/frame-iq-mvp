@@ -193,17 +193,17 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                     {p.label}
                   </span>
                   {isSoon && (
-                    <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.08em" }}>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.08em" }}>
                       SOON
                     </span>
                   )}
                   {connected && (
-                    <span style={{ fontFamily: F, fontSize: 9, fontWeight: 700, color: p.color, background: `${p.color}12`, border: `1px solid ${p.color}25`, borderRadius: 99, padding: "2px 7px", letterSpacing: "0.08em" }}>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: p.color, background: `${p.color}12`, border: `1px solid ${p.color}25`, borderRadius: 99, padding: "2px 7px", letterSpacing: "0.08em" }}>
                       ● {t.active}
                     </span>
                   )}
                 </div>
-                <p style={{ fontFamily: F, fontSize: 11, color: connected ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.22)", margin: "3px 0 0" }}>
+                <p style={{ fontFamily: F, fontSize: 12, color: connected ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.22)", margin: "3px 0 0" }}>
                   {connected
                     ? selAcc ? `${selAcc.name || selAcc.id}${accs.length > 1 ? ` · ${accs.length} contas` : ""}` : t.connected
                     : t.not_connected}
@@ -219,14 +219,14 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                   </button>
                 )}
                 {!connected && isSoon && (
-                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.2)" }}>{t.soon}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{t.soon}</span>
                 )}
                 {connected && (
                   <>
                     {/* Switch account button */}
                     {(accs.length > 0 || p.id === "google" || p.id === "meta") && (
                       <button onClick={() => setExpandedPlatform(expandedPlatform === p.id ? null : p.id)}
-                        style={{ fontFamily: F, fontSize: 11, fontWeight: 500, padding: "6px 10px", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                        style={{ fontFamily: F, fontSize: 12, fontWeight: 500, padding: "6px 10px", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
                         <span>{accs.length > 1 ? `${accs.length} contas` : "Trocar conta"}</span>
                         <ChevronDown size={11} style={{ transform: expandedPlatform === p.id ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                       </button>
@@ -252,12 +252,12 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                   <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "#fbbf24", margin: 0 }}>
                     {language === "pt" ? "Customer ID obrigatório" : language === "es" ? "Customer ID requerido" : "Customer ID required"}
                   </p>
-                  <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>
                     {language === "pt" ? "Adicione seu ID para a IA acessar seus dados reais do Google Ads" : language === "es" ? "Agrega tu ID para que la IA acceda a tus datos reales de Google Ads" : "Add your ID so the AI can access your real Google Ads data"}
                   </p>
                 </div>
                 <button onClick={() => setExpandedPlatform(p.id)}
-                  style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "6px 12px", borderRadius: 7, background: "#fbbf24", color: "#000", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                  style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 7, background: "#fbbf24", color: "#000", border: "none", cursor: "pointer", flexShrink: 0 }}>
                   {language === "pt" ? "Adicionar" : language === "es" ? "Agregar" : "Add ID"}
                 </button>
               </div>
@@ -274,7 +274,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                         <div style={{ width: 7, height: 7, borderRadius: "50%", background: isSel ? p.color : "rgba(255,255,255,0.2)", flexShrink: 0 }} />
                         <div style={{ flex: 1 }}>
                           <p style={{ fontFamily: F, fontSize: 12, fontWeight: isSel ? 600 : 400, color: isSel ? "#fff" : "rgba(255,255,255,0.6)", margin: 0 }}>{acc.name || acc.id}</p>
-                          <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", margin: "1px 0 0" }}>{acc.id}</p>
+                          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: "1px 0 0" }}>{acc.id}</p>
                         </div>
                         {isSel && <CheckCircle2 size={13} color={p.color} />}
                       </button>
@@ -285,9 +285,9 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                     <input value={manualAccountId} onChange={e => setManualAccountId(e.target.value)}
                       placeholder={p.id === "google" ? (language === "pt" ? "Customer ID (10 dígitos, ex: 512-522-3131)" : "Customer ID (10 digits, e.g. 512-522-3131)") : "act_XXXXXXXXX"}
                       onKeyDown={e => { if (e.key === "Enter") saveManualAccount(p.id, manualAccountId); }}
-                      style={{ flex: 1, fontFamily: F, fontSize: 11, padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }} />
+                      style={{ flex: 1, fontFamily: F, fontSize: 12, padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }} />
                     {p.id === "google" && (
-                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>
+                      <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>
                         {language === "pt" ? "Onde achar: " : "Where to find: "}
                         <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(14,165,233,0.6)", textDecoration: "none" }}>
                           {language === "pt" ? "Google Ads → canto superior direito" : "Google Ads → top right corner"}
@@ -295,7 +295,7 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                       </p>
                     )}
                       <button onClick={() => saveManualAccount(p.id, manualAccountId)} disabled={!manualAccountId.trim() || changingAccount === p.id}
-                      style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "8px 14px", borderRadius: 7, background: manualAccountId.trim() ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() ? "#fff" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() ? "pointer" : "default" }}>
+                      style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "8px 14px", borderRadius: 7, background: manualAccountId.trim() ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() ? "#fff" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() ? "pointer" : "default" }}>
                       {changingAccount === p.id ? "..." : t.save}
                     </button>
                   </div>
@@ -369,15 +369,15 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
             logoUrl ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> :
               <div style={{ textAlign: "center" }}>
                 <Upload size={18} color="rgba(255,255,255,0.25)" />
-                <p style={{ fontFamily: F, fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 4, lineHeight: 1.2 }}>Logo</p>
+                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginTop: 4, lineHeight: 1.2 }}>Logo</p>
               </div>}
         </div>
         <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
         <div style={{ flex: 1 }}>
           <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 4 }}>Account logo</p>
-          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>PNG, JPG or SVG · Max 2MB<br />Used as avatar in the chat</p>
+          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>PNG, JPG or SVG · Max 2MB<br />Used as avatar in the chat</p>
           {logoUrl && (
-            <button onClick={() => setLogoUrl("")} style={{ marginTop: 6, fontFamily: F, fontSize: 11, color: "rgba(248,113,113,0.7)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}>
+            <button onClick={() => setLogoUrl("")} style={{ marginTop: 6, fontFamily: F, fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}>
               <X size={10} /> Remove
             </button>
           )}
@@ -387,7 +387,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
       {/* Fields */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+          <label style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
             {language === "pt" ? "Nome da conta *" : language === "es" ? "Nombre de la cuenta *" : "Account name *"}
           </label>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="FitCore Brasil, Nike MX, Eluck BR…"
@@ -397,7 +397,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
         </div>
 
         <div>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Website</label>
+          <label style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Website</label>
           <div style={{ position: "relative" }}>
             <Globe size={13} color="rgba(255,255,255,0.25)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
             <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="fitcore.com.br"
@@ -408,7 +408,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
         </div>
 
         <div>
-          <label style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
+          <label style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>
             {language === "pt" ? "Descrição" : language === "es" ? "Descripción" : "Description"}
           </label>
           <textarea value={description} onChange={e => setDescription(e.target.value)}
@@ -417,7 +417,7 @@ function AccountForm({ account, userId, onSave, onCancel, language = "pt" }: {
             style={{ width: "100%", fontFamily: F, fontSize: 14, color: "#fff", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 13px", outline: "none", resize: "none", boxSizing: "border-box", transition: "border-color 0.15s", lineHeight: 1.6 }}
             onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }}
             onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }} />
-          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 5 }}>
+          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginTop: 5 }}>
             {language === "pt" ? "A IA usa isso como contexto para cada pergunta." : language === "es" ? "La IA usa esto como contexto para cada pregunta." : "The AI reads this as context for every question you ask."}
           </p>
         </div>
@@ -543,7 +543,7 @@ export default function AccountsPage() {
 
           {/* Account list */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.your_accounts}</p>
+            <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>{t.your_accounts}</p>
             {accounts.map(acc => {
               const isActive = acc.id === activeId;
               return (
@@ -561,12 +561,12 @@ export default function AccountsPage() {
                       {acc.name || t.unnamed}
                     </p>
                     {acc.website && (
-                      <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.28)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{acc.website}</p>
+                      <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.28)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{acc.website}</p>
                     )}
                   </div>
                   {isActive
                     ? <div style={{ width: 7, height: 7, borderRadius: "50%", background: BLUE, flexShrink: 0, boxShadow: `0 0 6px ${BLUE}` }} />
-                    : <div style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.3)", flexShrink: 0, opacity: 0, transition: "opacity 0.12s" }} className="set-active-hint">→</div>
+                    : <div style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, opacity: 0, transition: "opacity 0.12s" }} className="set-active-hint">→</div>
                   }
                 </button>
               );
@@ -587,7 +587,7 @@ export default function AccountsPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <h2 style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff", margin: 0 }}>{activeAccount.name || t.unnamed}</h2>
-                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: BLUE, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.25)", borderRadius: 20, padding: "2px 8px", letterSpacing: "0.05em" }}>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: BLUE, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.25)", borderRadius: 20, padding: "2px 8px", letterSpacing: "0.05em" }}>
                       ● {t.active}
                     </span>
                   </div>
@@ -621,14 +621,14 @@ export default function AccountsPage() {
                   <>
                     {activeAccount.description && (
                       <div style={{ marginBottom: 20, padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Description</p>
+                        <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Description</p>
                         <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.65 }}>{activeAccount.description}</p>
                       </div>
                     )}
 
                     {/* Platform connections */}
                     <div>
-                      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Contas de anúncios</p>
+                      <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Contas de anúncios</p>
                       <AccountPlatformConnections accountId={activeAccount.id} userId={user.id} language={language} />
                     </div>
 

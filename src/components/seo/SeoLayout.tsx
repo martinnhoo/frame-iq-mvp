@@ -138,7 +138,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
               </div>
               {Object.entries(FOOTER_LINKS).map(([section, links]) => (
                 <div key={section}>
-                  <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14, fontFamily: "'DM Mono', monospace" }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14, fontFamily: "'DM Mono', monospace" }}>
                     {section}
                   </p>
                   {links.map(l => (

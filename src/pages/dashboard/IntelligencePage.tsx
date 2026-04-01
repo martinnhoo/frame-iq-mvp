@@ -20,7 +20,7 @@ function SectionHeader({ icon, color, title, subtitle, count }: { icon: React.Re
       <div style={{ flex:1 }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <span style={{ fontSize:14, fontWeight:600, color:"#fff" }}>{title}</span>
-          {count > 0 && <span style={{ fontSize:11, fontWeight:600, color, background:`${color}18`, border:`1px solid ${color}30`, borderRadius:20, padding:"1px 8px" }}>{count}</span>}
+          {count > 0 && <span style={{ fontSize: 12, fontWeight:600, color, background:`${color}18`, border:`1px solid ${color}30`, borderRadius:20, padding:"1px 8px" }}>{count}</span>}
         </div>
         <p style={{ margin:"3px 0 0", fontSize:12, color:"rgba(255,255,255,0.38)", lineHeight:1.5 }}>{subtitle}</p>
       </div>
@@ -35,7 +35,7 @@ function MemoryRow({ text, importance, typeColor, deleting, onDelete }: { text: 
         <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,0.82)", lineHeight:1.55 }}>{text}</p>
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-        <span style={{ fontSize:10, color:typeColor, letterSpacing:1 }}>{"★".repeat(Math.min(importance,5))}</span>
+        <span style={{ fontSize: 12, color:typeColor, letterSpacing:1 }}>{"★".repeat(Math.min(importance,5))}</span>
         <button onClick={onDelete} disabled={deleting} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.2)", padding:2, display:"flex", alignItems:"center", opacity:deleting?0.4:1 }}><Trash2 size={12} /></button>
       </div>
     </div>
@@ -186,7 +186,7 @@ export default function IntelligencePage() {
           <div key={s.label} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px" }}>
             <div style={{ fontSize:26, fontWeight:700, color:s.color, lineHeight:1 }}>{s.n}</div>
             <div style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)", marginTop:4 }}>{s.label}</div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.3)", marginTop:2 }}>{s.desc}</div>
+            <div style={{ fontSize: 12, color:"rgba(255,255,255,0.3)", marginTop:2 }}>{s.desc}</div>
           </div>
         ))}
       </div>
@@ -212,7 +212,7 @@ export default function IntelligencePage() {
             if (!group.length) return null;
             return (
               <div key={type} style={{ marginBottom:16 }}>
-                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" as const, color:TYPE_COLOR[type]||"#888", marginBottom:8, paddingLeft:2 }}>{({"preference":t.type_preference,"decision":t.type_decision,"rule":t.type_rule,"context":t.type_context}[type]||type)}s</div>
+                <div style={{ fontSize: 12, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" as const, color:TYPE_COLOR[type]||"#888", marginBottom:8, paddingLeft:2 }}>{({"preference":t.type_preference,"decision":t.type_decision,"rule":t.type_rule,"context":t.type_context}[type]||type)}s</div>
                 <div style={{ display:"flex", flexDirection:"column" as const, gap:6 }}>
                   {group.map(m => <MemoryRow key={m.id} text={m.memory_text} importance={m.importance} typeColor={TYPE_COLOR[m.memory_type]||"#888"} deleting={deleting===m.id} onDelete={() => deleteMemory(m.id)} />)}
                 </div>
@@ -239,7 +239,7 @@ export default function IntelligencePage() {
               <div key={p.id} style={{ display:"flex", alignItems:"flex-start", gap:12, background:p.is_winner?"rgba(52,211,153,0.04)":"rgba(255,255,255,0.02)", border:`1px solid ${p.is_winner?"rgba(52,211,153,0.15)":"rgba(255,255,255,0.07)"}`, borderRadius:10, padding:"12px 14px" }}>
                 <span style={{ fontSize:14, flexShrink:0, marginTop:1 }}>{p.is_winner?"✅":"⚠️"}</span>
                 <p style={{ flex:1, margin:0, fontSize:13, color:"rgba(255,255,255,0.85)", lineHeight:1.5 }}>{p.insight_text}</p>
-                <div style={{ flexShrink:0, textAlign:"right" as const, fontSize:11, color:"rgba(255,255,255,0.35)" }}>
+                <div style={{ flexShrink:0, textAlign:"right" as const, fontSize: 12, color:"rgba(255,255,255,0.35)" }}>
                   {p.avg_ctr > 0 && <div>CTR {(p.avg_ctr * 100).toFixed(2)}%</div>}
                   <div>conf. {(p.confidence * 100).toFixed(0)}%</div>
                 </div>
@@ -266,7 +266,7 @@ export default function IntelligencePage() {
               <div key={e.id} style={{ display:"flex", alignItems:"center", gap:10, background:"rgba(167,139,250,0.04)", border:"1px solid rgba(167,139,250,0.12)", borderRadius:9, padding:"10px 12px 10px 14px" }}>
                 <Star size={12} color="#a78bfa" style={{ flexShrink:0 }} />
                 <span style={{ flex:1, fontSize:13, color:"rgba(255,255,255,0.75)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const }}>{e.user_message}</span>
-                <span style={{ fontSize:11, color:"rgba(255,255,255,0.25)", flexShrink:0, marginRight:6 }}>{new Date(e.created_at).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" })}</span>
+                <span style={{ fontSize: 12, color:"rgba(255,255,255,0.25)", flexShrink:0, marginRight:6 }}>{new Date(e.created_at).toLocaleDateString("pt-BR", { day:"2-digit", month:"short" })}</span>
                 <button onClick={() => deleteExample(e.id)} disabled={deleting===e.id} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.2)", padding:2, display:"flex", alignItems:"center" }}><Trash2 size={12} /></button>
               </div>
             ))}

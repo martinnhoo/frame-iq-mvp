@@ -13,7 +13,7 @@ export function CompareIndex() {
     <SeoLayout title="AdBrief vs AdSpy, BigSpy, Minea & More — AdBrief" description="Honest, feature-by-feature comparisons of AdBrief against other ad intelligence tools." canonical="/compare">
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px 0" }}>
         <div style={{ marginBottom: 52 }}>
-          <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>Comparisons</p>
           <h1 style={{ ...j, fontSize: 40, fontWeight: 800, letterSpacing: "-0.035em", marginBottom: 14, lineHeight: 1.1 }}>
             How AdBrief compares<br />
             <span style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>to other ad tools</span>
@@ -80,7 +80,7 @@ export function CompareDetail() {
 
         {/* Verdict badge */}
         <div style={{ borderRadius: 14, padding: "14px 20px", background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", marginBottom: 40 }}>
-          <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 6 }}>Verdict</p>
+          <p style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 6 }}>Verdict</p>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{comp.verdict}</p>
         </div>
 
@@ -88,9 +88,9 @@ export function CompareDetail() {
         {"featureTable" in comp && comp.featureTable && (
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 40 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "rgba(14,165,233,0.08)", padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Feature</span>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", textAlign: "center" }}>AdBrief</span>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>{comp.competitorName}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>Feature</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", textAlign: "center" }}>AdBrief</span>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>{comp.competitorName}</span>
           </div>
           {comp.featureTable.map((row, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "13px 20px", borderTop: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)" }}>
@@ -105,7 +105,7 @@ export function CompareDetail() {
         {/* Pros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
           <div style={{ borderRadius: 16, padding: 20, background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 14 }}>AdBrief strengths</p>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: 14 }}>AdBrief strengths</p>
             {comp.adbriefPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
                 <span style={{ color: "#34d399", flexShrink: 0 }}>✓</span>{p}
@@ -113,7 +113,7 @@ export function CompareDetail() {
             ))}
           </div>
           <div style={{ borderRadius: 16, padding: 20, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>{comp.competitorName} strengths</p>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>{comp.competitorName} strengths</p>
             {comp.competitorPros.map(p => (
               <div key={p} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
                 <span style={{ flexShrink: 0, color: "rgba(255,255,255,0.2)" }}>✓</span>{p}
@@ -124,7 +124,7 @@ export function CompareDetail() {
 
         {/* Other comparisons — clean grid */}
         <div style={{ marginBottom: 48 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>More comparisons</p>
+          <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>More comparisons</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {SEO_COMPARISONS.filter(c => c.slug !== slug).map(c => (
               <button key={c.slug} onClick={() => navigate(`/compare/${c.slug}`)}

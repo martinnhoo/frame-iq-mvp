@@ -216,15 +216,15 @@ export default function ResetPassword() {
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                <span style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                   {t("pw_strength")}
                 </span>
-                <span style={{ fontFamily: M, fontSize: 11, fontWeight: 600, color: strength.color }}>
+                <span style={{ fontFamily: M, fontSize: 12, fontWeight: 600, color: strength.color }}>
                   {strength.score === 1 ? t("pw_weak") : strength.score === 2 ? t("pw_fair") : strength.score === 3 ? t("pw_good") : t("pw_strong")}
                 </span>
               </div>
               {password.length < 8 && (
-                <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+                <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
                   {language === "pt" ? "Mínimo 8 caracteres" : language === "es" ? "Mínimo 8 caracteres" : "Minimum 8 characters"}
                 </p>
               )}
@@ -253,10 +253,10 @@ export default function ResetPassword() {
             </button>
           </div>
           {mismatch && (
-            <p style={{ fontFamily: M, fontSize: 11, color: "#ef4444", marginTop: 5 }}>{t("reset_no_match")}</p>
+            <p style={{ fontFamily: M, fontSize: 12, color: "#ef4444", marginTop: 5 }}>{t("reset_no_match")}</p>
           )}
           {confirm.length > 0 && !mismatch && (
-            <p style={{ fontFamily: M, fontSize: 11, color: "#22c55e", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
+            <p style={{ fontFamily: M, fontSize: 12, color: "#22c55e", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
               <CheckCircle size={10} /> {language === "pt" ? "Senhas iguais" : language === "es" ? "Contraseñas iguales" : "Passwords match"}
             </p>
           )}

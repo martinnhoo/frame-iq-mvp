@@ -27,7 +27,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
         </div>
       </nav>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "64px 24px 80px" }}>
-        {badge && <p style={{ ...m, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: accentColor, marginBottom: 16 }}>{badge}</p>}
+        {badge && <p style={{ ...m, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: accentColor, marginBottom: 16 }}>{badge}</p>}
         <h1 style={{ ...j, fontSize: 38, fontWeight: 800, letterSpacing: "-0.035em", lineHeight: 1.1, marginBottom: 16 }}>{headline}</h1>
         <p style={{ fontSize: 17, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 32 }}>{subheadline}</p>
         <div style={{ display: "flex", gap: 12, marginBottom: 48 }}>
@@ -61,7 +61,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
         )}
         {relatedLinks.length > 0 && (
           <div style={{ borderRadius: 16, padding: 18, background: "#090910", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 32 }}>
-            <p style={{ ...m, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Related</p>
+            <p style={{ ...m, fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 12 }}>Related</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {relatedLinks.map(l => <button key={l.href} onClick={() => navigate(l.href)} style={{ fontSize: 13, padding: "7px 14px", borderRadius: 20, background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}22`, cursor: "pointer" }}>{l.label}</button>)}
             </div>

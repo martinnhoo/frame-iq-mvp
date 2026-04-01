@@ -207,8 +207,8 @@ export default function HookGenerator() {
           <h1 className="text-xl font-bold text-white" style={syne}>{dt("hg_title")}</h1>
           <p className="text-xs text-white/50 mt-0.5">{language === "pt" ? "Hooks gerados por IA com score de performance previsto" : language === "es" ? "Hooks generados por IA con puntaje de rendimiento previsto" : "AI-generated hooks with predicted performance scores — ready to test"}</p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 5, padding: "3px 10px", borderRadius: 99, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
           </div>
         </div>
       </div>

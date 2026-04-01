@@ -147,21 +147,21 @@ export default function LoopSettingsPage() {
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "20px" }} className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2 col-span-2">
-            <label style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Example filename</label>
+            <label style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Example filename</label>
             <Input value={exampleFilename} onChange={e => setExampleFilename(e.target.value)} placeholder="UGC-BR-JD-260314-MT-ACME-9v16-01" />
           </div>
           <div className="space-y-2">
-            <label style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Separator</label>
+            <label style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Separator</label>
             <Input value={separator} onChange={e => setSeparator(e.target.value)} placeholder="-" className="text-center" />
           </div>
         </div>
 
         {/* Live preview */}
         <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 14, padding: "14px 16px" }}>
-          <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>LIVE PREVIEW</p>
+          <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>LIVE PREVIEW</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {Object.entries(parsedPreview).map(([label, value]) => (
-              <span key={label} style={{ ...m, fontSize: 11, padding: "4px 10px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9" }}>
+              <span key={label} style={{ ...m, fontSize: 12, padding: "4px 10px", borderRadius: 999, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9" }}>
                 <span style={{ color: "rgba(255,255,255,0.3)" }}>{label}:</span> {value}
               </span>
             ))}
@@ -181,7 +181,7 @@ export default function LoopSettingsPage() {
         <div className="space-y-2">
           {fields.map((field, idx) => (
             <div key={idx} className="flex items-center gap-3" style={{ padding: "8px 12px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <span style={{ ...m, fontSize: 11, color: "rgba(255,255,255,0.2)", width: 20, textAlign: "center" }}>{idx}</span>
+              <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)", width: 20, textAlign: "center" }}>{idx}</span>
               <select
                 value={field.name}
                 onChange={e => {
@@ -193,7 +193,7 @@ export default function LoopSettingsPage() {
                   <option key={o.name} value={o.name}>{o.label}</option>
                 ))}
               </select>
-              <span style={{ ...m, fontSize: 11, color: "rgba(14,165,233,0.6)", minWidth: 60 }}>
+              <span style={{ ...m, fontSize: 12, color: "rgba(14,165,233,0.6)", minWidth: 60 }}>
                 → {exampleFilename.split(separator)[idx] || "—"}
               </span>
               <button onClick={() => removeField(idx)} style={{ color: "rgba(255,255,255,0.15)", cursor: "pointer", background: "none", border: "none" }}>

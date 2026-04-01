@@ -211,7 +211,7 @@ export default function LoopImportPage() {
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "24px 20px" }} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Platform</label>
+            <label style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Platform</label>
             <Select value={platform} onValueChange={setPlatform}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -223,7 +223,7 @@ export default function LoopImportPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>File</label>
+            <label style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>File</label>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
               onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
             <Button variant="outline" onClick={() => fileRef.current?.click()} className="w-full gap-2">
@@ -235,13 +235,13 @@ export default function LoopImportPage() {
         {/* Preview */}
         {preview.length > 0 && (
           <div className="space-y-3">
-            <p style={{ ...m, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Preview (first 5 rows)</p>
+            <p style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>Preview (first 5 rows)</p>
             <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 {preview.map((row, ri) => (
                   <tr key={ri} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: ri === 0 ? "rgba(255,255,255,0.03)" : "transparent" }}>
                     {row.slice(0, 8).map((cell, ci) => (
-                      <td key={ci} style={{ ...m, fontSize: 10, padding: "6px 8px", color: ri === 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.5)", fontWeight: ri === 0 ? 700 : 400, whiteSpace: "nowrap" }}>
+                      <td key={ci} style={{ ...m, fontSize: 12, padding: "6px 8px", color: ri === 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.5)", fontWeight: ri === 0 ? 700 : 400, whiteSpace: "nowrap" }}>
                         {cell?.toString().slice(0, 30)}
                       </td>
                     ))}
@@ -259,10 +259,10 @@ export default function LoopImportPage() {
               const parsed = parseFilename(sampleName);
               return (
                 <div style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.12)", borderRadius: 14, padding: "14px 16px" }}>
-                  <p style={{ ...m, fontSize: 10, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>PARSED FROM: <span style={{ color: "#0ea5e9" }}>{sampleName}</span></p>
+                  <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>PARSED FROM: <span style={{ color: "#0ea5e9" }}>{sampleName}</span></p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {Object.entries(parsed).map(([k, v]) => (
-                      <span key={k} style={{ ...m, fontSize: 10, padding: "3px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)" }}>
+                      <span key={k} style={{ ...m, fontSize: 12, padding: "3px 8px", borderRadius: 999, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)" }}>
                         <span style={{ color: "rgba(255,255,255,0.25)" }}>{k}:</span> {v}
                       </span>
                     ))}

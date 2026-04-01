@@ -320,7 +320,7 @@ export default function DashboardLayout() {
               <span style={{ fontSize: 36, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>ad</span>
               <span style={{ fontSize: 36, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>brief</span>
             </div>
-            <p style={{ fontSize: 11, color: "rgba(238,240,246,0.30)", letterSpacing: "0.16em", textTransform: "uppercase", margin: 0, fontFamily: "'Inter', sans-serif" }}>
+            <p style={{ fontSize: 12, color: "rgba(238,240,246,0.30)", letterSpacing: "0.16em", textTransform: "uppercase", margin: 0, fontFamily: "'Inter', sans-serif" }}>
               {dt("ov_loading")}
             </p>
           </div>
@@ -471,7 +471,7 @@ export default function DashboardLayout() {
                 cursor: "pointer", maxWidth: "min(220px, calc(100vw - 130px))",
               }}>
               {/* Initials badge */}
-              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.4)", flexShrink: 0, overflow: "hidden" }}>
+              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.4)", flexShrink: 0, overflow: "hidden" }}>
                 {selectedPersona
                   ? (selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: 22, height: 22, objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A"))
                   : <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.4)" }} />
@@ -497,7 +497,7 @@ export default function DashboardLayout() {
                 boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
               }}>
                 <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
                     {language === "pt" ? "Conta ativa" : language === "es" ? "Cuenta activa" : "Active account"}
                   </p>
                 </div>
@@ -518,12 +518,12 @@ export default function DashboardLayout() {
                         style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
                         onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                         onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, fontWeight: 800, color: "#0ea5e9", overflow: "hidden" }}>
+                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#0ea5e9", overflow: "hidden" }}>
                           {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 500, color: "#e8e8f0", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
-                          {p.website && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
+                          {p.website && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
                         </div>
                         {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
                       </button>
@@ -680,14 +680,14 @@ export default function DashboardLayout() {
                 <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 15, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
                   AdBrief Alerts
                 </p>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
                   @AdBriefAlertsBot
                 </p>
               </div>
               {telegramConn && (
                 <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "#34d399", fontWeight: 600 }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "#34d399", fontWeight: 600 }}>
                     {language === "pt" ? "Ativo" : language === "es" ? "Activo" : "Active"}
                   </span>
                 </div>
@@ -735,7 +735,7 @@ export default function DashboardLayout() {
                     {language === "pt" ? "Abrir @AdBriefAlertsBot" : language === "es" ? "Abrir @AdBriefAlertsBot" : "Open @AdBriefAlertsBot"}
                   </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.2)", margin: 0 }}>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>
                       {language === "pt" ? "Expira em 10 minutos" : language === "es" ? "Expira en 10 minutos" : "Expires in 10 minutes"}
                     </p>
                     <button
@@ -745,7 +745,7 @@ export default function DashboardLayout() {
                         if (btn) { btn.textContent = language === "pt" ? "Copiado ✓" : language === "es" ? "Copiado ✓" : "Copied ✓"; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
                       }}
                       id="tg-copy-btn"
-                      style={{ fontFamily: "'Inter',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+                      style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
                       {language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"}

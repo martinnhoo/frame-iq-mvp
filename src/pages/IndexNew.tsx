@@ -1357,7 +1357,7 @@ function InlineSuggestions({ qa, qi, jump, lang, industry }: {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 40 }}>
-      <p style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em', margin: '0 0 4px', textTransform: 'uppercase' as const, fontWeight: 600 }}>{label}</p>
+      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.08em', margin: '0 0 4px', textTransform: 'uppercase' as const, fontWeight: 600 }}>{label}</p>
       {others.map(({ item, i }) => (
         <button key={i} onClick={() => { setVisible(false); jump(i); }}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'transparent', border: `1px solid rgba(255,255,255,0.06)`, cursor: 'pointer', textAlign: 'left' as const, transition: 'all 0.15s', fontFamily: F }}
@@ -1391,7 +1391,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
       <div style={{ position: 'relative', padding: '10px 12px 10px 10px', borderRadius: 11, background: `${industry.color}12`, border: `1px solid ${industry.color}28`, transition: 'all 0.2s' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{icons[qi]}</span>
-          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: '#fff', lineHeight: 1.45, margin: 0, flex: 1 }}>
+          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff', lineHeight: 1.45, margin: 0, flex: 1 }}>
             {activeQ?.q.slice(0,52)}{activeQ?.q.length > 52 ? '…' : ''}
           </p>
           {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3, boxShadow: '0 0 5px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />}
@@ -1403,7 +1403,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
       <button onClick={() => setOpen(o => !o)}
         style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 8px', marginTop: 5, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', width: '100%' }}>
         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
-        <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
           {open ? '↑' : '↓'} {sugLabel}
         </span>
         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
@@ -1573,7 +1573,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
             <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontFamily: F, fontSize: 10, color: 'rgba(52,211,153,0.9)', fontWeight: 600 }}>Meta</span>
+            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(52,211,153,0.9)', fontWeight: 600 }}>Meta</span>
           </div>
         </div>
 
@@ -1624,7 +1624,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
             />
           </div>
 
-          <p style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>
+          <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>
             {lang === 'pt' ? 'Demo · com sua conta, usa dados reais' : lang === 'es' ? 'Demo · con tu cuenta, usa datos reales' : 'Demo · with your account, uses real data'}
           </p>
         </div>
@@ -1890,7 +1890,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
               </div>
             <div>
               <div style={{ fontFamily:F, fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'-0.02em', lineHeight:1.2 }}>AdBrief</div>
-              <div style={{ fontFamily:F, fontSize:10, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{sampleLabel} · {scene.account}</div>
+              <div style={{ fontFamily:F, fontSize: 12, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{sampleLabel} · {scene.account}</div>
             </div>
           </div>
           {/* Right: live dot */}
@@ -1898,7 +1898,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
             <MetaBadge />
             <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:20, border:'1px solid rgba(34,197,94,0.25)', background:'rgba(34,197,94,0.06)' }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px rgba(34,197,94,0.8)', animation:'pulse 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily:F, fontSize:9, color:'#4ade80', letterSpacing:'0.06em', textTransform:'uppercase' as const, fontWeight:600 }}>live</span>
+              <span style={{ fontFamily:F, fontSize: 12, color:'#4ade80', letterSpacing:'0.06em', textTransform:'uppercase' as const, fontWeight:600 }}>live</span>
             </div>
           </div>
         </div>
@@ -1946,7 +1946,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
               {/* Big result number — the first thing eyes go to */}
               <div style={{ marginBottom:12, padding:'12px 16px', borderRadius:12, background:'linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(14,165,233,0.04) 100%)', border:'1px solid rgba(14,165,233,0.2)' }}>
                 <div style={{ fontFamily:F, fontSize:22, fontWeight:900, letterSpacing:'-0.04em', color:'#38bdf8', lineHeight:1 }}>{scene.metric}</div>
-                <div style={{ fontFamily:F, fontSize:11, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
+                <div style={{ fontFamily:F, fontSize: 12, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
               </div>
 
               {/* Key points — hook tabs get numbered style, others get icon style */}
@@ -2052,7 +2052,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       {/* Eyebrow */}
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content' }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
-        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0ea5e9' }}>
+        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0ea5e9' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
       </div>
@@ -2106,24 +2106,24 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       </div>
 
       {/* Fine print */}
-      <p style={{ fontFamily: F, fontSize: 11.5, color: 'rgba(255,255,255,0.22)', margin: '0 0 28px' }}>{finePrint}</p>
+      <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.22)', margin: '0 0 28px' }}>{finePrint}</p>
 
       {/* Platform badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>
+        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 36 18" fill="none">
             <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
           </svg>
-          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Meta Ads</span>
+          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Meta Ads</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-          <span style={{ fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
+          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
         </div>
-        <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', fontFamily: F, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+        <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
           TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>{t.tiktok_soon}</span>
         </div>
       </div>
@@ -2275,7 +2275,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
@@ -2303,7 +2303,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: isAct ? "#fff" : "rgba(255,255,255,0.55)", margin: 0, transition: "color 0.18s" }}>{d.name[lang]}</p>
-                    <p style={{ fontFamily: F, fontSize: 11, color: isAct ? d.color : "rgba(255,255,255,0.25)", margin: "2px 0 0", lineHeight: 1.3, transition: "color 0.18s", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{d.tagline[lang]}</p>
+                    <p style={{ fontFamily: F, fontSize: 12, color: isAct ? d.color : "rgba(255,255,255,0.25)", margin: "2px 0 0", lineHeight: 1.3, transition: "color 0.18s", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{d.tagline[lang]}</p>
                   </div>
                   {isAct && (
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: tool.color, flexShrink: 0 }} />
@@ -2329,7 +2329,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" as const }}>
                       <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>{tool.name[lang]}</h3>
-                      <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20, background: tool.color + "18", color: tool.color, border: `1px solid ${tool.color}30`, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{tool.badge[lang]}</span>
+                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 20, background: tool.color + "18", color: tool.color, border: `1px solid ${tool.color}30`, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{tool.badge[lang]}</span>
                     </div>
                     <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, margin: 0 }}>{tool.desc[lang]}</p>
                   </div>
@@ -2345,7 +2345,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                     <div style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
-                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{inputLabel[lang]}</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{inputLabel[lang]}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tool.color, flexShrink: 0, opacity: 0.7 }} />
@@ -2359,12 +2359,12 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                     <div style={{ width: 18, height: 18, borderRadius: 5, background: tool.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke={tool.color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
-                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: tool.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, opacity: 0.8 }}>{outputLabel[lang]}</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: tool.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, opacity: 0.8 }}>{outputLabel[lang]}</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                     {tool.output[lang].map((line, i) => (
                       <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 12px", borderRadius: 9, background: i === 0 ? tool.color + "0d" : "rgba(255,255,255,0.03)", border: `1px solid ${i === 0 ? tool.color + "22" : "rgba(255,255,255,0.06)"}` }}>
-                        <span style={{ fontFamily: F, fontSize: 11, color: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 1, fontWeight: 700 }}>{i + 1}</span>
+                        <span style={{ fontFamily: F, fontSize: 12, color: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 1, fontWeight: 700 }}>{i + 1}</span>
                         <span style={{ fontFamily: F, fontSize: 12, color: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{line}</span>
                       </div>
                     ))}
@@ -2508,7 +2508,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         {/* Label */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>
             {c.label}
           </p>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
@@ -2526,7 +2526,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
           <div className="pain-col-left" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Sem AdBrief" : lang === "es" ? "Sin AdBrief" : "Without AdBrief"}
               </span>
             </div>
@@ -2556,7 +2556,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
               backdropFilter: "blur(8px)",
               whiteSpace: "nowrap" as const,
             }}>
-              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 800, color: "#38bdf8", letterSpacing: "0.04em" }}>{c.divider}</span>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 800, color: "#38bdf8", letterSpacing: "0.04em" }}>{c.divider}</span>
             </div>
             <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, rgba(255,255,255,0.08), transparent)", minHeight: 60 }} />
           </div>
@@ -2565,7 +2565,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
           <div className="pain-col-right" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", display: "inline-block", boxShadow: "0 0 6px #0ea5e9" }} />
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Com AdBrief" : lang === "es" ? "Con AdBrief" : "With AdBrief"}
               </span>
             </div>
@@ -2609,7 +2609,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
     <Section id="how" bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
         </div>
@@ -2623,7 +2623,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
               <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1, marginBottom: 20 }}>{step.desc}</p>
               <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 8, background: `${step.color}08`, border: `1px solid ${step.color}18` }}>
                 <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke={step.color} strokeOpacity="0.4" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke={step.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: F, fontSize: 11.5, color: step.color, fontWeight: 500, opacity: 0.85 }}>{step.result}</span>
+                <span style={{ fontFamily: F, fontSize: 13, color: step.color, fontWeight: 500, opacity: 0.85 }}>{step.result}</span>
               </div>
             </div>
           ))}
@@ -2646,7 +2646,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
     <Section id="for" bg="default">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
         <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
@@ -2720,7 +2720,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>
+            <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>
               TELEGRAM ALERTS
             </span>
           </div>
@@ -2754,7 +2754,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
               </div>
               <div>
                 <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#fff", margin: 0 }}>AdBrief Alerts</p>
-                <p style={{ fontFamily: F, fontSize: 11, color: "#27AEE1", margin: 0 }}>bot</p>
+                <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", margin: 0 }}>bot</p>
               </div>
             </div>
             {/* Messages */}
@@ -2768,7 +2768,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                   <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>⚠️ Alerta AdBrief</p>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.55 }}>
                     <strong style={{ color: "#fff" }}>Creative_042</strong> com frequência 4.8x. CTR caiu de 2.1% → 0.4% nas últimas 6h.<br/>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>FitCore Brasil · agora</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>FitCore Brasil · agora</span>
                   </p>
                 </div>
               </div>
@@ -2787,7 +2787,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.9)", margin: 0, lineHeight: 1.55 }}>
                     ✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>
                     Registrado no AdBrief às 14:32.<br/>
-                    <span style={{ color: "#34d399", fontSize: 11.5 }}>Economia estimada: R$180/dia</span>
+                    <span style={{ color: "#34d399", fontSize: 13 }}>Economia estimada: R$180/dia</span>
                   </p>
                 </div>
               </div>
@@ -2836,7 +2836,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
     <Section id="pricing" bg="accent">
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,2.8vw,38px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 10px", color: "#fff" }}>{t.pricing_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
           {/* Toggle */}
@@ -2851,7 +2851,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <span style={{ fontFamily: F, fontSize: 13, color: annual ? "#fff" : "rgba(255,255,255,0.3)", fontWeight: 500, transition: "color 0.2s" }}>
               {lang === 'pt' ? 'Anual' : lang === 'es' ? 'Anual' : 'Annual'}
             </span>
-            <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>{lang === "pt" ? "Economize 20%" : lang === "es" ? "Ahorra 20%" : "Save 20%"}</span>
+            <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>{lang === "pt" ? "Economize 20%" : lang === "es" ? "Ahorra 20%" : "Save 20%"}</span>
           </div>
         </div>
         <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -2871,11 +2871,11 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             }}>
               {plan.badge && (
                 <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 6, padding: "4px 14px", whiteSpace: "nowrap" as const, boxShadow: "0 0 16px rgba(14,165,233,0.4)" }}>
-                  <span style={{ fontFamily: F, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#fff", fontWeight: 800 }}>{plan.badge}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#fff", fontWeight: 800 }}>{plan.badge}</span>
                 </div>
               )}
               <div>
-                <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{plan.name}</p>
+                <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{plan.name}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                   <span style={{ fontFamily: F, fontSize: 42, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
                   <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{plan.desc}</span>
@@ -2906,7 +2906,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)';}else{el.style.opacity='0.8';} }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(14,165,233,0.25)':'none'; }}
               >{t.pricing_cta}</button>
-              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" as const }}>{t.pricing_note}</p>
+              <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
           ))}
         </div>
@@ -2923,7 +2923,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
     <Section bg="dark">
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -3046,7 +3046,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
       {/* Label — mesmo estilo de "O PROBLEMA" */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 14 }}>
         <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>{label}</p>
+        <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>{label}</p>
         <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
       </div>
 
@@ -3067,8 +3067,8 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
           <div style={{ display: "flex", gap: 5 }}>
             {["#ff5f57","#febc2e","#28c840"].map(c => <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />)}
           </div>
-          <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.3)", flex: 1, textAlign: "center" }}>adbrief.pro/ai</span>
-          <span style={{ fontFamily: M, fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.1)", color: "rgba(14,165,233,0.7)", border: "1px solid rgba(14,165,233,0.15)" }}>
+          <span style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", flex: 1, textAlign: "center" }}>adbrief.pro/ai</span>
+          <span style={{ fontFamily: M, fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.1)", color: "rgba(14,165,233,0.7)", border: "1px solid rgba(14,165,233,0.15)" }}>
             {lang === "pt" ? "∞ Meta" : lang === "es" ? "∞ Meta" : "∞ Meta"}
           </span>
         </div>
@@ -3090,7 +3090,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
               ) : (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                   <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
-                    <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, color: "#0ea5e9" }}>ab</span>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#0ea5e9" }}>ab</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
                     {(msg.lines || []).map((line: string, li: number) => (
@@ -3134,7 +3134,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
         {/* Label — mesmo padrão de "O PROBLEMA" */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
+          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
@@ -3180,14 +3180,14 @@ function Footer({ t }: { t: Record<string, string> }) {
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               {["Meta Ads", "Google Ads"].map(p => (
-                <span key={p} style={{ fontFamily: "'Inter',sans-serif", fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
+                <span key={p} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
               ))}
             </div>
           </div>
           {/* Links */}
           <div className="footer-links" style={{ display: "flex", gap: 48, flexWrap: "wrap" as const }}>
             <div>
-              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_product}</p>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_product}</p>
               {([[t.footer_pricing, "/pricing"], [t.footer_how, "#how"], [t.footer_for, "#for"], [t.footer_tools, "/tools"]] as [string, string][]).map(([l, h]) => (
                 <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
@@ -3196,7 +3196,7 @@ function Footer({ t }: { t: Record<string, string> }) {
               ))}
             </div>
             <div>
-              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_legal}</p>
+              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_legal}</p>
               {([[t.footer_privacy, "/privacy"], [t.footer_terms, "/terms"], [t.footer_faq, "/faq"]] as [string, string][]).map(([l, h]) => (
                 <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
@@ -3425,3 +3425,4 @@ export default function IndexNew() {
 // force-sync 2026-03-24T23:23:48Z// build 037868
 // build 037873
 // build 038117
+// build 038341

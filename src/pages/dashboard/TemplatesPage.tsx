@@ -1816,7 +1816,7 @@ const TemplatesPage = () => {
             <span>{cat.emoji}</span>
             {(language !== "en" ? getCategoryLabel(cat.value, language) : null) || cat.label}
             {catCounts[cat.value] !== undefined && (
-              <span style={{ opacity: 0.5, ...mono, fontSize: 10 }}>
+              <span style={{ opacity: 0.5, ...mono, fontSize: 12 }}>
                 {catCounts[cat.value]}
               </span>
             )}
@@ -1864,7 +1864,7 @@ const TemplatesPage = () => {
                         {meta?.emoji} {(language !== "en" ? getCategoryLabel(template.category, language) : null) || meta?.label || template.category}
                       </span>
                       {(usageCounts[template.id] || 0) >= 3 && (
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", letterSpacing: "0.06em" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", letterSpacing: "0.06em" }}>
                           🔥 POPULAR
                         </span>
                       )}

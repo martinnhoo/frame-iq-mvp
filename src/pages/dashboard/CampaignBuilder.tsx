@@ -59,7 +59,7 @@ const BLUE="#0ea5e9",GREEN="#22c55e",AMBER="#f59e0b",GBLUE="#4285F4";
 const pColor=(p:Platform)=>p==="google"?GBLUE:BLUE;
 
 const Label=({children}:{children:React.ReactNode})=>(
-  <span style={{fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:8}}>{children}</span>
+  <span style={{fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:8}}>{children}</span>
 );
 
 const Toggle=({on,onChange}:{on:boolean;onChange:()=>void})=>(
@@ -224,7 +224,7 @@ export default function CampaignBuilder() {
           <h2 style={{fontSize:24,fontWeight:800,color:TX,margin:"0 0 8px"}}>Campanha criada!</h2>
           <p style={{color:MT,fontSize:14,margin:"0 0 28px"}}>Criada como <strong style={{color:"#fcd34d"}}>PAUSADA</strong> — revise no {result.platform==="google"?"Google Ads":"Meta Ads Manager"} antes de ativar.</p>
           <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:12,padding:18,textAlign:"left",marginBottom:20}}>
-            <p style={{margin:"0 0 2px",fontSize:11,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Campaign ID</p>
+            <p style={{margin:"0 0 2px",fontSize: 12,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Campaign ID</p>
             <p style={{color:TX,fontSize:13,fontFamily:"monospace",margin:0}}>{result.campaign_id}</p>
           </div>
           <div style={{display:"flex",gap:12}}>
@@ -587,7 +587,7 @@ export default function CampaignBuilder() {
           <div style={{padding:"14px 18px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:7,height:7,borderRadius:"50%",background:aiLoading?pc:GREEN,animation:aiLoading?"pulse 1s infinite":"none"}}/>
             <p style={{margin:0,fontSize:13,fontWeight:600,color:TX}}>Co-piloto IA</p>
-            <span style={{marginLeft:"auto",fontSize:11,color:MT}}>Dados reais</span>
+            <span style={{marginLeft:"auto",fontSize: 12,color:MT}}>Dados reais</span>
           </div>
           <div ref={aiRef} style={{flex:1,overflowY:"auto",padding:14}}>
             {aiMsgs.length===0&&!aiLoading&&(
@@ -612,7 +612,7 @@ export default function CampaignBuilder() {
           <div style={{padding:"10px 14px",borderTop:`1px solid ${BD}`}}>
             <div style={{display:"flex",gap:5,alignItems:"center"}}>
               <TrendingUp size={11} color={MT}/>
-              <p style={{margin:0,fontSize:11,color:MT}}>{persona?persona.name:"Selecione uma conta"}</p>
+              <p style={{margin:0,fontSize: 12,color:MT}}>{persona?persona.name:"Selecione uma conta"}</p>
             </div>
           </div>
         </div>
