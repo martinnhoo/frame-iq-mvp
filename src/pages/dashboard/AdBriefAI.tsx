@@ -1591,11 +1591,18 @@ export default function AdBriefAI() {
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
         const parts: string[] = [];
-        // Google Ads uses $ (USD-based reporting), Meta BR uses R$
+        // Currency: Google-only = $, Meta (or both) = R$ for PT
         const isGoogleOnly = hasGoogleConn && !hasMetaConn;
+        const isBoth = hasMetaConn && hasGoogleConn;
         const currSymbol = isGoogleOnly ? "$" : "R$";
+        // Google spend from raw_period when both connected
+        const googleRaw = isBoth ? (snapshot.raw_period as any)?.google : null;
         if (lang === "pt") {
-          parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — ${currSymbol}${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
+          if (isBoth && googleRaw && !googleRaw.skipped) {
+            parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — Meta: R$${snapshot.total_spend?.toFixed(0)} gastos, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}% | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, CTR ${parseFloat(googleRaw.ctr||0).toFixed(2)}%.`);
+          } else {
+            parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — ${currSymbol}${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
+          }
           if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, ${currSymbol}${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
@@ -1604,12 +1611,20 @@ export default function AdBriefAI() {
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
           parts.push("O que quer fazer?");
         } else if (lang === "es") {
-          parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
+          if (isBoth && googleRaw && !googleRaw.skipped) {
+            parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — Meta: $${snapshot.total_spend?.toFixed(0)} gastados, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}% | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, CTR ${parseFloat(googleRaw.ctr||0).toFixed(2)}%.`);
+          } else {
+            parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
+          }
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
           parts.push("¿Qué quieres hacer?");
         } else {
-          parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
+          if (isBoth && googleRaw && !googleRaw.skipped) {
+            parts.push(`Checked ${accountName || "your account"} — Meta: R$${snapshot.total_spend?.toFixed(0)} spent, ${(snapshot.avg_ctr*100)?.toFixed(2)}% CTR | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, ${parseFloat(googleRaw.ctr||0).toFixed(2)}% CTR.`);
+          } else {
+            parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
+          }
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
           if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
           parts.push((lang as string) === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");

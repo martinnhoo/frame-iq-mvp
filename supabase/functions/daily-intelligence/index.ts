@@ -20,42 +20,88 @@ Deno.serve(async (req) => {
     const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id);
     if (!authed) return unauthorizedResponse(cors);
 
-    // Cron mode: run for all active Meta users + Google-only users
-    const targets: { user_id: string; persona_id: string | null; platform: 'meta' | 'google' }[] = [];
+    // Build targets — detect connected platforms per persona, support Meta+Google simultaneously
+    const targets: { user_id: string; persona_id: string | null; platform: 'meta' | 'google' | 'both' }[] = [];
     if (user_id) {
-      // User-triggered: check which platforms are connected for this persona
-      const { data: metaConn } = await sb.from('platform_connections' as any)
-        .select('user_id').eq('user_id', user_id).eq('platform', 'meta').eq('status', 'active')
-        .eq('persona_id', persona_id || null).maybeSingle();
-      const { data: googleConn } = await sb.from('platform_connections' as any)
-        .select('user_id').eq('user_id', user_id).eq('platform', 'google').eq('status', 'active')
-        .eq('persona_id', persona_id || null).maybeSingle();
-      if (metaConn) targets.push({ user_id, persona_id: persona_id || null, platform: 'meta' });
-      if (googleConn && !metaConn) targets.push({ user_id, persona_id: persona_id || null, platform: 'google' });
+      // User-triggered: detect which platforms are connected for this persona
+      const pid = persona_id || null;
+      const [{ data: metaConn }, { data: googleConn }] = await Promise.all([
+        sb.from('platform_connections' as any).select('user_id')
+          .eq('user_id', user_id).eq('platform', 'meta').eq('status', 'active')
+          .eq('persona_id', pid).maybeSingle(),
+        sb.from('platform_connections' as any).select('user_id')
+          .eq('user_id', user_id).eq('platform', 'google').eq('status', 'active')
+          .eq('persona_id', pid).maybeSingle(),
+      ]);
+      const hasMeta = !!metaConn;
+      const hasGoogle = !!googleConn;
+      if (hasMeta && hasGoogle) targets.push({ user_id, persona_id: pid, platform: 'both' });
+      else if (hasMeta)         targets.push({ user_id, persona_id: pid, platform: 'meta' });
+      else if (hasGoogle)       targets.push({ user_id, persona_id: pid, platform: 'google' });
     } else {
-      // Cron mode: Meta accounts
-      const { data: metaConns } = await sb.from('platform_connections' as any)
-        .select('user_id, persona_id').eq('platform', 'meta').eq('status', 'active');
-      (metaConns || []).forEach((c: any) => {
-        targets.push({ user_id: c.user_id, persona_id: c.persona_id, platform: 'meta' });
-      });
-      // Cron mode: Google-only accounts (no Meta connection for same persona)
-      const { data: googleConns } = await sb.from('platform_connections' as any)
-        .select('user_id, persona_id').eq('platform', 'google').eq('status', 'active');
-      const metaSet = new Set((metaConns || []).map((c: any) => `${c.user_id}:${c.persona_id}`));
-      (googleConns || []).forEach((c: any) => {
-        if (!metaSet.has(`${c.user_id}:${c.persona_id}`)) {
-          targets.push({ user_id: c.user_id, persona_id: c.persona_id, platform: 'google' });
-        }
-      });
+      // Cron mode: collect all connections, group by (user_id, persona_id)
+      const [{ data: metaConns }, { data: googleConns }] = await Promise.all([
+        sb.from('platform_connections' as any).select('user_id, persona_id').eq('platform', 'meta').eq('status', 'active'),
+        sb.from('platform_connections' as any).select('user_id, persona_id').eq('platform', 'google').eq('status', 'active'),
+      ]);
+      const metaSet   = new Set((metaConns   || []).map((c: any) => `${c.user_id}:${c.persona_id}`));
+      const googleSet = new Set((googleConns || []).map((c: any) => `${c.user_id}:${c.persona_id}`));
+      const allKeys   = new Set([...metaSet, ...googleSet]);
+      for (const key of allKeys) {
+        const [uid, pid] = key.split(':');
+        const hasMeta   = metaSet.has(key);
+        const hasGoogle = googleSet.has(key);
+        const platform  = (hasMeta && hasGoogle) ? 'both' : hasMeta ? 'meta' : 'google';
+        targets.push({ user_id: uid, persona_id: pid === 'null' ? null : pid, platform });
+      }
     }
 
     const results = [];
     for (const target of targets) {
       try {
-        const r = target.platform === 'google'
-          ? await analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id)
-          : await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+        let r: any;
+        if (target.platform === 'both') {
+          // Run both analyzers concurrently, then merge into a single snapshot
+          const [metaResult, googleResult] = await Promise.allSettled([
+            analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id),
+            analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id),
+          ]);
+          // Merge: Meta is primary (richer data), Google enriches via raw_period
+          // The Meta analyzeAccount already upserted its snapshot. We update it with Google data.
+          if (metaResult.status === 'fulfilled' && googleResult.status === 'fulfilled') {
+            const meta   = metaResult.value  as any;
+            const google = googleResult.value as any;
+            // Fetch the just-saved Meta snapshot and add Google section to raw_period
+            const today = new Date().toISOString().split('T')[0];
+            const { data: snap } = await sb.from('daily_snapshots' as any)
+              .select('raw_period').eq('user_id', target.user_id)
+              .eq('persona_id', target.persona_id).eq('date', today).maybeSingle();
+            if (snap) {
+              const merged = {
+                ...(snap.raw_period || {}),
+                google: google.spend !== undefined ? {
+                  spend: google.spend, ctr: google.ctr,
+                  ads: google.ads, scalable: google.scalable, pause: google.pause,
+                  insight: google.insight,
+                } : { skipped: true },
+                platforms: ['meta', 'google'],
+              };
+              await sb.from('daily_snapshots' as any)
+                .update({ raw_period: merged })
+                .eq('user_id', target.user_id)
+                .eq('persona_id', target.persona_id)
+                .eq('date', today);
+            }
+            r = { ...meta, google_also: google };
+          } else {
+            // Fall back: run whichever succeeded
+            r = metaResult.status === 'fulfilled' ? metaResult.value : googleResult.status === 'fulfilled' ? googleResult.value : { skipped: 'both failed' };
+          }
+        } else if (target.platform === 'google') {
+          r = await analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+        } else {
+          r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+        }
         results.push({ ...target, result: r });
       } catch (e) { results.push({ ...target, error: String(e) }); }
     }
