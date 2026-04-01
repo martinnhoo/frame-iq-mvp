@@ -168,37 +168,41 @@ export function DashboardSidebar({
         <div style={{ padding: "10px 8px 0", flexShrink: 0 }}>
           <div style={{
             borderRadius: 10,
-            background: selectedPersona ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.03)",
-            border: selectedPersona ? "1px solid rgba(14,165,233,0.13)" : "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
             overflow: "hidden",
           }}>
             <button
               onClick={() => savedPersonas.length > 0 ? setAccountsOpen(o => !o) : navigate("/dashboard/accounts")}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 11px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 10px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
               className="sb-hover">
+              {/* Avatar */}
               <div style={{
-                width: 30, height: 30, borderRadius: 7, flexShrink: 0, overflow: "hidden",
-                background: selectedPersona ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                width: 28, height: 28, borderRadius: 7, flexShrink: 0, overflow: "hidden",
+                background: selectedPersona ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.06)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {selectedPersona?.logo_url
                   ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : selectedPersona
-                    ? <span style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9" }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
-                    : <Building2 size={14} color="rgba(255,255,255,0.25)" />
+                    ? <span style={{ fontSize: 12, fontWeight: 700, color: "#38bdf8", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
+                    : <Building2 size={13} color="rgba(255,255,255,0.3)" />
                 }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: selectedPersona ? "#f0f2f8" : "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.35 }}>
-                  {selectedPersona?.name || (pt ? "Nenhuma conta" : "No account")}
+                {/* Account name — clean, not caps */}
+                <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: selectedPersona ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.01em" }}>
+                  {selectedPersona?.name || (pt ? "Sem conta" : "No account")}
                 </p>
-                <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.3, color: "rgba(255,255,255,0.35)", fontFamily: spend ? "'DM Mono', monospace" : "inherit" }}>
-                  {spend != null ? `R$${spend.toFixed(0)} / semana` : selectedPersona ? (pt ? "sem dados" : "no data") : (pt ? "selecionar" : "select")}
-                </p>
+                {/* Spend — subtle, not monospace */}
+                {spend != null && (
+                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    R${spend.toFixed(0)} esta semana
+                  </p>
+                )}
               </div>
               {savedPersonas.length > 0 && (
-                <ChevronDown size={13} color="rgba(255,255,255,0.3)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
+                <ChevronDown size={12} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
               )}
             </button>
 
