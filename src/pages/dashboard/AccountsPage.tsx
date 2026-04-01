@@ -110,6 +110,42 @@ const PLATFORMS = [
   { id:"tiktok", label:"TikTok Ads", color:"#ffffff", fn:"tiktok-oauth", soon:true  },
 ];
 
+
+// ── Account avatar — consistent color per name, clean letter ─────────────────
+const AVATAR_PALETTE = [
+  { bg:"rgba(14,165,233,0.15)",  border:"rgba(14,165,233,0.28)",  text:"#38bdf8"  },
+  { bg:"rgba(167,139,250,0.15)", border:"rgba(167,139,250,0.28)", text:"#c4b5fd"  },
+  { bg:"rgba(52,211,153,0.12)",  border:"rgba(52,211,153,0.25)",  text:"#6ee7b7"  },
+  { bg:"rgba(251,146,60,0.12)",  border:"rgba(251,146,60,0.25)",  text:"#fcd34d"  },
+  { bg:"rgba(248,113,113,0.12)", border:"rgba(248,113,113,0.25)", text:"#fca5a5"  },
+  { bg:"rgba(6,182,212,0.13)",   border:"rgba(6,182,212,0.26)",   text:"#67e8f9"  },
+  { bg:"rgba(244,114,182,0.12)", border:"rgba(244,114,182,0.25)", text:"#f9a8d4"  },
+];
+function avatarColor(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+}
+function AccountAvatar({ name, logoUrl, size = 44, radius = 12 }: { name: string; logoUrl?: string | null; size?: number; radius?: number }) {
+  const c = avatarColor(name || "?");
+  const letter = (name || "?").charAt(0).toUpperCase();
+  const fontSize = Math.round(size * 0.42);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: radius, flexShrink: 0, overflow: "hidden",
+      background: c.bg, border: `1px solid ${c.border}`,
+      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12)`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      {logoUrl
+        ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+        : <span style={{ fontFamily: F, fontSize, fontWeight: 800, color: c.text, letterSpacing: "-0.02em", lineHeight: 1, userSelect: "none" }}>
+            {letter}
+          </span>
+      }
+    </div>
+  );
+}
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const focusOn  = (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement>) => {
   e.currentTarget.style.borderColor = "rgba(14,165,233,0.55)";
@@ -670,16 +706,7 @@ export default function AccountsPage() {
                 style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"16px 18px",
                   background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
                 {/* Avatar */}
-                <div style={{ width:44, height:44, borderRadius:12, overflow:"hidden", flexShrink:0,
-                  background: isActive ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.07)",
-                  border:`1px solid ${isActive ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.10)"}`,
-                  display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  {acc.logo_url
-                    ? <img src={acc.logo_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-                    : <span style={{ fontSize:17, fontWeight:800, color: isActive ? BLUE : "rgba(255,255,255,0.45)" }}>
-                        {(acc.name||"?").charAt(0).toUpperCase()}
-                      </span>}
-                </div>
+                <AccountAvatar name={acc.name||"?"} logoUrl={acc.logo_url} size={44} radius={12}/>
 
                 {/* Name + meta */}
                 <div style={{ flex:1, minWidth:0, textAlign:"left" }}>

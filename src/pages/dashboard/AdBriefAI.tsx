@@ -234,7 +234,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
           <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
           <button onClick={submit} disabled={!val.trim()}
-            style={{padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?`linear-gradient(135deg,#0ea5e9,#06b6d4)`:"rgba(255,255,255,0.06)",color:val.trim()?"#fff":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s",boxShadow:val.trim()?"0 4px 16px rgba(14,165,233,0.35)":"none"}}>
+            style={{padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?"#0ea5e9":"rgba(255,255,255,0.06)",color:val.trim()?"#fff":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s",boxShadow:val.trim()?"0 4px 16px rgba(14,165,233,0.35)":"none"}}>
             {cfg.cta[l]}
           </button>
         </div>
@@ -249,7 +249,7 @@ function DashboardBlock({block}:{block:Block}) {
   return (
     <div style={{borderRadius:16,border:"1px solid rgba(14,165,233,0.15)",background:"linear-gradient(135deg,rgba(14,165,233,0.04) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:10,boxShadow:"0 4px 24px rgba(0,0,0,0.25)"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:9}}>
-        <div style={{width:26,height:26,borderRadius:8,background:"linear-gradient(135deg,#0ea5e9,#06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <div style={{width:26,height:26,borderRadius:8,background:"#0ea5e9",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           <BarChart2 size={12} color="#000"/>
         </div>
         <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
@@ -441,7 +441,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
           setResult(`${actionLabel}${target?` — ${target}`:""} executado com sucesso`);
           setState("done");
         }} disabled={state==="running"}
-          style={{...j,fontSize:13,fontWeight:700,padding:"10px 20px",borderRadius:10,background:state==="running"?"rgba(251,146,60,0.3)":"linear-gradient(135deg,#fb923c,#f97316)",color:state==="running"?"#fb923c":"#000",border:state==="running"?"1px solid rgba(251,146,60,0.3)":"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6,flex:1,justifyContent:"center"}}>
+          style={{...j,fontSize:13,fontWeight:700,padding:"10px 20px",borderRadius:10,background:state==="running"?"rgba(251,146,60,0.3)":"#fb923c",color:state==="running"?"#fb923c":"#000",border:state==="running"?"1px solid rgba(251,146,60,0.3)":"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6,flex:1,justifyContent:"center"}}>
           {state==="running"?<><Loader2 size={13} className="animate-spin"/>{t.running}</>:t.confirm}
         </button>
         <button onClick={()=>setState("cancelled")}
@@ -801,7 +801,7 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
         <p style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#eef0f6", textAlign: "center", margin: "0 0 10px" }}>{m.title}</p>
         <p style={{ fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.55)", lineHeight: 1.65, textAlign: "center", margin: "0 0 22px" }}>{m.sub}</p>
         <button onClick={() => { navigate("/dashboard/ai"); onClose(); setTimeout(() => navigate("/pricing"), 50); }}
-          style={{ width: "100%", padding: "12px", borderRadius: 12, background: "linear-gradient(135deg,#0ea5e9,#06b6d4)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
+          style={{ width: "100%", padding: "12px", borderRadius: 12, background: "#0ea5e9", border: "none", cursor: "pointer", fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
           {m.cta} →
         </button>
         <button onClick={onClose}
@@ -2295,7 +2295,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {selectedPersona ? (
                   <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
                     <button onClick={()=>handleConnect("meta","meta-oauth")}
-                      style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"linear-gradient(135deg,#1877F2,#0ea5e9)",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 24px rgba(14,165,233,0.2)",transition:"all 0.2s"}}
+                      style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"#1877F2",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 24px rgba(14,165,233,0.2)",transition:"all 0.2s"}}
                       onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
                       onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
                       {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
@@ -2365,7 +2365,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
                       {(b as any).will_hit_limit&&(
                         <button onClick={()=>setShowUpgradeWall(true)}
-                          style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"linear-gradient(135deg,#0ea5e9,#6366f1)",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
+                          style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
                           {lang==="pt"?"Ver planos →":lang==="es"?"Ver planes →":"See plans →"}
                         </button>
                       )}
@@ -2535,7 +2535,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
                   style={{
                     width:38,height:38,borderRadius:12,border:"none",
-                    background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.07)",
+                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.07)",
                     cursor:input.trim()&&contextReady?"pointer":"not-allowed",
                     display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
                     transition:"all 0.2s",

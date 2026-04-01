@@ -375,7 +375,7 @@ export default function IntelligencePage() {
           <p style={{ margin:"0 0 20px", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.6 }}>{t.empty_sub}</p>
           <button onClick={() => navigate("/dashboard/ai")}
             style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"9px 20px",
-              background:"linear-gradient(135deg,#0ea5e9,#06b6d4)", border:"none", borderRadius:10,
+              background:"#0ea5e9", border:"none", borderRadius:10,
               color:"#fff", fontFamily:F, fontSize:13, fontWeight:700, cursor:"pointer",
               boxShadow:"0 4px 16px rgba(14,165,233,0.35)" }}>
             {t.open_chat}<ChevronRight size={14}/>

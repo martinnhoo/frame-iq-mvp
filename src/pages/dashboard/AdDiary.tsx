@@ -467,7 +467,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
         <div style={{ textAlign: "center", padding: "80px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)" }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.no_ads}</p>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: "0 0 20px" }}>{t.no_ads_sub}</p>
-          <button onClick={syncAll} style={{ padding: "10px 24px", borderRadius: 9, background: "linear-gradient(135deg,#0ea5e9,#0891b2)", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          <button onClick={syncAll} style={{ padding: "10px 24px", borderRadius: 9, background: "#0ea5e9", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             {t.sync_now}
           </button>
         </div>

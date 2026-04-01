@@ -41,6 +41,21 @@ const PLANS: Record<string, { label: string; color: string }> = {
 const F = "'Plus Jakarta Sans', sans-serif";
 const BLUE = "#0ea5e9";
 
+
+const SB_AVATAR_PALETTE = [
+  { bg:"rgba(14,165,233,0.18)",  border:"rgba(14,165,233,0.32)",  text:"#38bdf8"  },
+  { bg:"rgba(167,139,250,0.18)", border:"rgba(167,139,250,0.32)", text:"#c4b5fd"  },
+  { bg:"rgba(52,211,153,0.15)",  border:"rgba(52,211,153,0.28)",  text:"#6ee7b7"  },
+  { bg:"rgba(251,146,60,0.15)",  border:"rgba(251,146,60,0.28)",  text:"#fcd34d"  },
+  { bg:"rgba(248,113,113,0.15)", border:"rgba(248,113,113,0.28)", text:"#fca5a5"  },
+  { bg:"rgba(6,182,212,0.15)",   border:"rgba(6,182,212,0.28)",   text:"#67e8f9"  },
+  { bg:"rgba(244,114,182,0.15)", border:"rgba(244,114,182,0.28)", text:"#f9a8d4"  },
+];
+function sbAvatarColor(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return SB_AVATAR_PALETTE[Math.abs(h) % SB_AVATAR_PALETTE.length];
+}
 // ── Primary nav item ───────────────────────────────────────────────────────────
 function NavPrimary({ url, label, icon: Icon, isActive, onClose, badge }: {
   url: string; label: string; icon: React.ElementType;
@@ -74,7 +89,7 @@ function NavPrimary({ url, label, icon: Icon, isActive, onClose, badge }: {
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{ fontSize: 10, fontWeight: 800, color: "#fff",
-          background: "linear-gradient(135deg,#0ea5e9,#06b6d4)",
+          background: "#0ea5e9",
           borderRadius: 5, padding: "2px 6px", letterSpacing: "0.04em",
           fontFamily: "'DM Mono', monospace", boxShadow: "0 2px 8px rgba(14,165,233,0.4)" }}>
           {badge}
@@ -228,17 +243,19 @@ export function DashboardSidebar({
               {/* Avatar */}
               <div style={{
                 width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: "hidden",
-                background: selectedPersona ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.07)",
-                border: `1px solid ${selectedPersona ? "rgba(14,165,233,0.30)" : "rgba(255,255,255,0.10)"}`,
+                background: selectedPersona ? sbAvatarColor(selectedPersona.name||"?").bg : "rgba(255,255,255,0.07)",
+                border: `1px solid ${selectedPersona ? sbAvatarColor(selectedPersona.name||"?").border : "rgba(255,255,255,0.10)"}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: selectedPersona ? "0 0 0 2px rgba(14,165,233,0.12)" : "none",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10)",
               }}>
                 {selectedPersona?.logo_url
-                  ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ? <img src={selectedPersona.logo_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
                   : selectedPersona
-                    ? <span style={{ fontSize: 13, fontWeight: 800, color: "#38bdf8", fontFamily: F }}>
-                        {(selectedPersona.name || "?").charAt(0).toUpperCase()}
-                      </span>
+                    ? (() => { const av = sbAvatarColor(selectedPersona.name||"?"); return (
+                        <span style={{ fontSize:13, fontWeight:800, color:av.text, fontFamily:F, letterSpacing:"-0.02em" }}>
+                          {(selectedPersona.name||"?").charAt(0).toUpperCase()}
+                        </span>
+                      ); })()
                     : <Building2 size={13} color="rgba(255,255,255,0.35)" />
                 }
               </div>
@@ -297,10 +314,12 @@ export function DashboardSidebar({
                         background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)",
                         display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {p.logo_url
-                          ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : <span style={{ fontSize: 11, fontWeight: 700, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.4)" }}>
-                              {(p.name || "?").charAt(0).toUpperCase()}
-                            </span>}
+                          ? <img src={p.logo_url} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                          : (() => { const av = sbAvatarColor(p.name||"?"); return (
+                              <span style={{ fontSize:11, fontWeight:700, color:av.text }}>
+                                {(p.name||"?").charAt(0).toUpperCase()}
+                              </span>
+                            ); })()}
                       </div>
                       <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400,
                         color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.65)",

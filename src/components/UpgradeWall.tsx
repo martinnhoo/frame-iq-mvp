@@ -196,7 +196,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           {plans.map(plan => (
             <div key={plan.key} style={{ padding: "16px", borderRadius: 14, background: plan.highlight ? "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))" : "rgba(255,255,255,0.03)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.07)"}`, position: "relative" }}>
               {plan.badge && (
-                <div style={{ position: "absolute", top: -9, left: 16, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", borderRadius: 5, padding: "2px 10px" }}>
+                <div style={{ position: "absolute", top: -9, left: 16, background: "#0ea5e9", borderRadius: 5, padding: "2px 10px" }}>
                   <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>{plan.badge}</span>
                 </div>
               )}
@@ -208,7 +208,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
                 <button
                   onClick={() => handlePlan(plan.key, plan.action)}
                   disabled={!!loading}
-                  style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 10, background: plan.highlight ? "linear-gradient(135deg,#0ea5e9,#6366f1)" : "rgba(255,255,255,0.08)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, opacity: loading && loading !== plan.key ? 0.5 : 1, flexShrink: 0 }}>
+                  style={{ fontFamily: F, fontSize: 13, fontWeight: 700, padding: "10px 20px", borderRadius: 10, background: plan.highlight ? "#0ea5e9" : "rgba(255,255,255,0.08)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, opacity: loading && loading !== plan.key ? 0.5 : 1, flexShrink: 0 }}>
                   {loading === plan.key ? <Loader2 size={13} className="animate-spin" /> : <>{lang === "pt" ? "Testar grátis" : lang === "es" ? "Probar gratis" : "Start free"} <ArrowRight size={12} /></>}
                 </button>
               </div>
@@ -270,7 +270,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         {plans.map(plan => (
           <div key={plan.key} style={{ padding: "20px 16px", borderRadius: 14, background: plan.highlight ? "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06))" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.highlight ? "rgba(14,165,233,0.28)" : "rgba(255,255,255,0.07)"}`, display: "flex", flexDirection: "column", gap: 14, position: "relative", boxShadow: plan.highlight ? "0 0 32px rgba(14,165,233,0.08)" : "none" }}>
             {plan.badge && (
-              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#0ea5e9,#6366f1)", borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap", boxShadow: "0 0 12px rgba(14,165,233,0.3)" }}>
+              <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#0ea5e9", borderRadius: 6, padding: "3px 12px", whiteSpace: "nowrap", boxShadow: "0 0 12px rgba(14,165,233,0.3)" }}>
                 <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: "0.08em", textTransform: "uppercase" }}>{plan.badge}</span>
               </div>
             )}
@@ -289,7 +289,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
             <button
               onClick={() => handlePlan(plan.key, plan.action)}
               disabled={!!loading}
-              style={{ fontFamily: F, width: "100%", padding: "12px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: plan.highlight ? "linear-gradient(135deg,#0ea5e9,#6366f1)" : "rgba(255,255,255,0.07)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.5)", border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loading && loading !== plan.key ? 0.5 : 1, boxShadow: plan.highlight ? "0 0 20px rgba(14,165,233,0.2)" : "none", transition: "all 0.15s" }}>
+              style={{ fontFamily: F, width: "100%", padding: "12px", borderRadius: 10, fontSize: 13, fontWeight: 700, background: plan.highlight ? "#0ea5e9" : "rgba(255,255,255,0.07)", color: plan.highlight ? "#fff" : "rgba(255,255,255,0.5)", border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: loading && loading !== plan.key ? 0.5 : 1, boxShadow: plan.highlight ? "0 0 20px rgba(14,165,233,0.2)" : "none", transition: "all 0.15s" }}>
               {loading === plan.key ? <Loader2 size={12} className="animate-spin" /> : <>{lang === "pt" ? "Testar grátis" : lang === "es" ? "Probar gratis" : "Start free trial"} <ArrowRight size={11} /></>}
             </button>
           </div>

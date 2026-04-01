@@ -512,7 +512,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 </select>
               </div>
               <button onClick={handleSave} disabled={saving}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: saved ? "#34d399" : "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: saving ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", opacity: saving ? 0.7 : 1 }}>
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: saved ? "#34d399" : "#0ea5e9", border: "none", cursor: saving ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", opacity: saving ? 0.7 : 1 }}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                 {saving ? (language === "pt" ? "Salvando..." : "Saving...") : saved ? (language === "pt" ? "Salvo!" : "Saved!") : (language === "pt" ? "Salvar alterações" : language === "es" ? "Guardar cambios" : "Save changes")}
               </button>
@@ -638,7 +638,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     </p>
                     <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.50)", lineHeight: 1.5, marginBottom: 12 }}>{next.pitch}</p>
                     <button onClick={() => setPlanModalOpen(true)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px", borderRadius: 10, background: "linear-gradient(135deg,#0ea5e9,#6366f1)", border: "none", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px", borderRadius: 10, background: "#0ea5e9", border: "none", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff" }}>
                       <Zap className="h-4 w-4" />
                       {language==="pt"?`Fazer upgrade para ${next.label}`:`Upgrade to ${next.label}`}
                     </button>

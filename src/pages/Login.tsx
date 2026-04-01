@@ -220,7 +220,7 @@ const Login = () => {
                   disabled={isFormDisabled}
                   style={{
                     width: '100%', height: 50, borderRadius: 12, border: 'none', cursor: isFormDisabled ? 'not-allowed' : 'pointer',
-                    background: isFormDisabled ? 'rgba(14,165,233,0.3)' : 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+                    background: isFormDisabled ? 'rgba(14,165,233,0.3)' : '#0ea5e9',
                     color: '#ffffff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
                     boxShadow: isFormDisabled ? 'none' : '0 4px 24px rgba(14,165,233,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
