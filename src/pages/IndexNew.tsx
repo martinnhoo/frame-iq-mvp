@@ -1418,7 +1418,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}>
               <span style={{ fontSize: 12, flexShrink: 0, opacity: 0.55, marginTop: 1 }}>{icons[i]}</span>
-              <span style={{ fontFamily: F, fontSize: 10.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+              <span style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
                 {item.q.slice(0,42)}{item.q.length > 42 ? '…' : ''}
               </span>
             </button>
@@ -1885,7 +1885,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
         <div style={{ padding:'14px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           {/* Left: AdBrief + account */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:30, height:30, borderRadius:9, overflow:'hidden', flexShrink:0, background:'#0a0c10' }}>
+            <div style={{ width:30, height:30, borderRadius:8, overflow:'hidden', flexShrink:0, background:'#0a0c10' }}>
                 <img src="/ab-avatar.png" alt="AdBrief" width={30} height={30} style={{ width:30, height:30, objectFit:'cover', display:'block' }} />
               </div>
             <div>
@@ -1975,7 +1975,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
               </div>
 
               {/* Action line */}
-              <div style={{ marginTop:12, padding:'9px 13px', borderRadius:9, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ marginTop:12, padding:'9px 13px', borderRadius:8, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', display:'flex', alignItems:'center', gap:8 }}>
                 <span style={{ fontSize:12, flexShrink:0 }}>⚡</span>
                 <p style={{ fontFamily:F, fontSize:12.5, color:'#7dd3fc', fontWeight:600, lineHeight:1.4, margin:0 }}>{scene.action}</p>
               </div>
@@ -1996,7 +1996,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
               {lang==='pt' ? 'Pergunte sobre sua conta...' : lang==='es' ? 'Pregunta sobre tu cuenta...' : 'Ask about your account...'}
             </p>
             <button onClick={onCTA} style={{
-              fontFamily:F, fontSize:12, fontWeight:700, padding:'8px 16px', borderRadius:9,
+              fontFamily:F, fontSize:12, fontWeight:700, padding:'8px 16px', borderRadius:8,
               background:'linear-gradient(135deg,#0ea5e9,#0284c7)', color:'#fff',
               border:'none', cursor:'pointer', whiteSpace:'nowrap' as const, flexShrink:0,
               boxShadow:'0 2px 14px rgba(14,165,233,0.4)', transition:'all 0.15s',
@@ -3431,3 +3431,4 @@ export default function IndexNew() {
 // build 038739
 // build 038884
 // build 039031
+// build 039466
