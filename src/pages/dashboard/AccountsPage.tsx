@@ -330,9 +330,12 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
                         </a>
                       </p>
                     )}
-                      <button onClick={() => saveManualAccount(p.id, manualAccountId)} disabled={!manualAccountId.trim() || changingAccount === p.id}
-                      style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "8px 14px", borderRadius: 7, background: manualAccountId.trim() ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() ? "#fff" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() ? "pointer" : "default" }}>
-                      {changingAccount === p.id ? "..." : t.save}
+                      <button onClick={() => saveManualAccount(p.id, manualAccountId)} 
+                      disabled={!manualAccountId.trim() || changingAccount === p.id}
+                      style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "8px 14px", borderRadius: 7, background: manualAccountId.trim() && changingAccount !== p.id ? p.color : "rgba(255,255,255,0.06)", color: manualAccountId.trim() && changingAccount !== p.id ? "#fff" : "rgba(255,255,255,0.3)", border: "none", cursor: manualAccountId.trim() && changingAccount !== p.id ? "pointer" : "default", whiteSpace: "nowrap" }}>
+                      {changingAccount === p.id
+                        ? (p.id === "google" ? (language === "pt" ? "Verificando..." : "Verifying...") : "...")
+                        : (t.save || "Salvar")}
                     </button>
                   </div>
                 </div>
@@ -484,9 +487,9 @@ export default function AccountsPage() {
   const navigate = useNavigate();
 
   const L: Record<string, Record<string,string>> = {
-    pt: { title: "Contas", sub: "Cada conta conecta à sua própria conta de anúncios. A IA usa a ativa no chat.", new_btn: "Nova conta", new_label: "Nova conta", no_accounts: "Nenhuma conta ainda", no_accounts_sub: "Crie uma conta para conectar o Meta Ads e começar a usar o chat de IA.", create_first: "Criar primeira conta", your_accounts: "Suas contas", unnamed: "Conta sem nome", delete_confirm: "Excluir esta conta? Isso não pode ser desfeito.", deleted: "Conta excluída", set_active: "Usar no chat", active: "Ativa no chat" },
-    es: { title: "Cuentas", sub: "Cada cuenta conecta a su propia cuenta de anuncios. La IA usa la activa en el chat.", new_btn: "Nueva cuenta", new_label: "Nueva cuenta", no_accounts: "Sin cuentas aún", no_accounts_sub: "Crea una cuenta para conectar Meta Ads y empezar a usar el chat de IA.", create_first: "Crear primera cuenta", your_accounts: "Tus cuentas", unnamed: "Cuenta sin nombre", delete_confirm: "¿Eliminar esta cuenta? Esta acción no se puede deshacer.", deleted: "Cuenta eliminada", set_active: "Usar en chat", active: "Activa en chat" },
-    en: { title: "Accounts", sub: "Each account connects to its own ad account. The AI uses the active one in the chat.", new_btn: "New account", new_label: "New account", no_accounts: "No accounts yet", no_accounts_sub: "Create an account to connect Meta Ads and start using the AI chat.", create_first: "Create first account", your_accounts: "Your accounts", unnamed: "Unnamed account", delete_confirm: "Delete this account? This cannot be undone.", deleted: "Account deleted", set_active: "Use in chat", active: "Active in chat" },
+    pt: { title: "Contas", sub: "Cada conta conecta à sua própria conta de anúncios. A IA usa a ativa no chat.", new_btn: "Nova conta", new_label: "Nova conta", no_accounts: "Nenhuma conta ainda", no_accounts_sub: "Crie uma conta para conectar o Meta Ads e começar a usar o chat de IA.", create_first: "Criar primeira conta", your_accounts: "Suas contas", unnamed: "Conta sem nome", delete_confirm: "Excluir esta conta? Isso não pode ser desfeito.", deleted: "Conta excluída", set_active: "Usar no chat", active: "Ativa no chat", save: "Salvar" },
+    es: { title: "Cuentas", sub: "Cada cuenta conecta a su propia cuenta de anuncios. La IA usa la activa en el chat.", new_btn: "Nueva cuenta", new_label: "Nueva cuenta", no_accounts: "Sin cuentas aún", no_accounts_sub: "Crea una cuenta para conectar Meta Ads y empezar a usar el chat de IA.", create_first: "Crear primera cuenta", your_accounts: "Tus cuentas", unnamed: "Cuenta sin nombre", delete_confirm: "¿Eliminar esta cuenta? Esta acción no se puede deshacer.", deleted: "Cuenta eliminada", set_active: "Usar en chat", active: "Activa en chat", save: "Guardar" },
+    en: { title: "Accounts", sub: "Each account connects to its own ad account. The AI uses the active one in the chat.", new_btn: "New account", new_label: "New account", no_accounts: "No accounts yet", no_accounts_sub: "Create an account to connect Meta Ads and start using the AI chat.", create_first: "Create first account", your_accounts: "Your accounts", unnamed: "Unnamed account", delete_confirm: "Delete this account? This cannot be undone.", deleted: "Account deleted", set_active: "Use in chat", active: "Active in chat", save: "Save" },
   };
   const t = L[language] || L.en;
 
