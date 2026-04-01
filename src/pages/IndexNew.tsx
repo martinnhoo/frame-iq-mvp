@@ -1660,9 +1660,15 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
 function MetaBadge() {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5, background:'rgba(24,119,242,0.12)', border:'1px solid rgba(24,119,242,0.28)' }}>
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 36 18" fill="none">
-        <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
-      </svg>
+      <svg width="11" height="6" viewBox="0 0 56 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="metaOff11" x1="0" y1="14" x2="56" y2="14" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0082FB"/>
+          <stop offset="1" stopColor="#0064E0"/>
+        </linearGradient>
+      </defs>
+      <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3 0.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6 0.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-0.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-0.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0zm0 5c2.6 0 5 1.3 7.5 4.1l3.3 3.7-3.3 3.7c-2.5 2.8-4.9 4.1-7.5 4.1-1.9 0-3.7-0.6-5.1-1.8C6.6 17.4 5.5 15.7 5.5 13.5c0-2.2 1.1-3.9 2.9-5.3C9.8 7.4 11.6 5 13.5 5zm29 0c1.9 0 3.7 0.6 5.1 1.8 1.8 1.4 2.9 3.1 2.9 5.3 0 2.2-1.1 3.9-2.9 5.3C45.7 18.6 43.9 19 42 19c-2.6 0-5-1.3-7.5-4.1L31.2 11.2 34.5 7.5C37 4.7 39.4 5 42.5 5z" fill="url(#metaOff11)"/>
+    </svg>
       <span style={{ fontFamily:F, fontSize:9.5, color:'#6ba3f5', fontWeight:700, letterSpacing:'0.02em' }}>Meta Ads</span>
     </div>
   );
@@ -2114,9 +2120,15 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 36 18" fill="none">
-            <path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8 0.6 5.2 0 7 0 9c0 2 0.6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-0.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-0.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 0.9-5.5 2.4L18 6l-4-3.6C12.5 0.9 10.7 0 8.5 0zm0 4c1.2 0 2.2 0.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-0.8-3.8-2C4 11 3.6 10 3.6 9s0.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9 0.8 3.8 2 0.7 1 1.1 2 1.1 3s-0.4 2-1.1 3c-0.9 1.2-2.2 2-3.8 2-1.2 0-2.2-0.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#1877F2"/>
-          </svg>
+          <svg width="11" height="6" viewBox="0 0 56 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="metaOff11" x1="0" y1="14" x2="56" y2="14" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0082FB"/>
+          <stop offset="1" stopColor="#0064E0"/>
+        </linearGradient>
+      </defs>
+      <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3 0.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6 0.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-0.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-0.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0zm0 5c2.6 0 5 1.3 7.5 4.1l3.3 3.7-3.3 3.7c-2.5 2.8-4.9 4.1-7.5 4.1-1.9 0-3.7-0.6-5.1-1.8C6.6 17.4 5.5 15.7 5.5 13.5c0-2.2 1.1-3.9 2.9-5.3C9.8 7.4 11.6 5 13.5 5zm29 0c1.9 0 3.7 0.6 5.1 1.8 1.8 1.4 2.9 3.1 2.9 5.3 0 2.2-1.1 3.9-2.9 5.3C45.7 18.6 43.9 19 42 19c-2.6 0-5-1.3-7.5-4.1L31.2 11.2 34.5 7.5C37 4.7 39.4 5 42.5 5z" fill="url(#metaOff11)"/>
+    </svg>
           <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Meta Ads</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -3492,3 +3504,4 @@ export default function IndexNew() {
 // build 076948
 // build 077149
 // build 077407
+// build 077751
