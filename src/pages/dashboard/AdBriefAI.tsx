@@ -2432,34 +2432,47 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Input area ── */}
       <div style={{flexShrink:0,position:"relative" as const,zIndex:1}}>
-        {/* Gradient fade */}
-        <div style={{height:28,background:"linear-gradient(to bottom,transparent,rgba(10,13,22,0.98))",pointerEvents:"none",marginBottom:-1}}/>
-        <div style={{background:"rgba(10,13,22,0.97)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderTop:"1px solid rgba(255,255,255,0.07)",padding:"10px 0 16px"}}>
-          {/* ── Tool pills ── */}
-          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
-            <div className="tool-pills-row" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
-              {TOOLS.map(tool=>(
-                <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
-                  style={{
-                    display:"flex",alignItems:"center",gap:6,padding:"7px 13px",borderRadius:8,flexShrink:0,
-                    background:activeTool===tool.action?`${tool.color}18`:"rgba(255,255,255,0.06)",
-                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.11)"}`,
-                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.55)",
-                    fontSize:12.5,fontWeight:activeTool===tool.action?600:500,cursor:"pointer",
-                    fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",
-                    transition:"all 0.15s",letterSpacing:"-0.01em",
-                  }}
-                  onMouseEnter={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.09)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.7)"}}}
-                  onMouseLeave={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)"}}}>
-                  <tool.icon size={12} strokeWidth={1.8}/>
-                  {tool.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Gradient fade into solid bar */}
+        <div style={{height:32,background:"linear-gradient(to bottom,transparent,rgba(9,12,20,1))",pointerEvents:"none",marginBottom:-2}}/>
 
-          {/* ── Main input row ── */}
+        <div style={{background:"#090c14",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"12px 0 18px"}}>
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px"}}>
+
+            {/* ── Tool pills — colored, readable ── */}
+            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",marginBottom:10} as any}>
+              {TOOLS.map(tool=>{
+                const isActive = activeTool===tool.action;
+                return (
+                  <button key={tool.action}
+                    onClick={()=>setActiveTool(isActive?null:tool.action)}
+                    style={{
+                      display:"flex",alignItems:"center",gap:6,
+                      padding:"6px 14px",borderRadius:99,flexShrink:0,
+                      background: isActive ? tool.color : "rgba(255,255,255,0.07)",
+                      border:`1px solid ${isActive ? tool.color : "rgba(255,255,255,0.12)"}`,
+                      color: isActive ? "#000" : "rgba(255,255,255,0.70)",
+                      fontSize:12.5,fontWeight:600,cursor:"pointer",
+                      fontFamily:"'Plus Jakarta Sans',sans-serif",
+                      letterSpacing:"-0.01em",transition:"all 0.15s",
+                      boxShadow: isActive ? `0 0 14px ${tool.color}55` : "none",
+                    }}
+                    onMouseEnter={e=>{if(!isActive){
+                      (e.currentTarget as HTMLElement).style.background=`${tool.color}22`;
+                      (e.currentTarget as HTMLElement).style.borderColor=`${tool.color}60`;
+                      (e.currentTarget as HTMLElement).style.color=tool.color;
+                    }}}
+                    onMouseLeave={e=>{if(!isActive){
+                      (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)";
+                      (e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.12)";
+                      (e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.70)";
+                    }}}>
+                    <tool.icon size={12} strokeWidth={2}/>
+                    {tool.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Free plan counter */}
             {(profile?.plan === "free" || !profile?.plan) && (() => {
               const used = messages.filter(m => m.role === "user").length;
@@ -2477,8 +2490,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               );
             })()}
 
-            {/* Input box */}
-            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:16,padding:"12px 12px 12px 18px",transition:"border-color 0.2s, box-shadow 0.2s",boxShadow:"0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4)"}} className="input-box-wrap">
+            {/* ── Input box ── */}
+            <div style={{
+              display:"flex",gap:8,alignItems:"flex-end",
+              background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",
+              border:"1px solid rgba(255,255,255,0.13)",
+              borderRadius:16,padding:"12px 12px 12px 18px",
+              boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset",
+              transition:"border-color 0.2s,box-shadow 0.2s",
+            }} className="input-box-wrap">
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
@@ -2488,20 +2508,29 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
                 {messages.length>0&&(
                   <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.2)"}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
+                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.09)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.09)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
                     <RotateCcw size={13}/>
                   </button>
                 )}
                 <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-                  style={{width:36,height:36,borderRadius:11,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9 0%,#06b6d4 100%)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s",boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.45)":"none"}}>
-                  {loading?<Loader2 size={14} color="rgba(255,255,255,0.6)" className="animate-spin"/>:<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.18)"}/>}
+                  style={{width:36,height:36,borderRadius:11,
+                    background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.06)",
+                    border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",
+                    display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+                    transition:"all 0.2s",
+                    boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.5)":"none"}}>
+                  {loading?<Loader2 size={14} color="rgba(255,255,255,0.6)" className="animate-spin"/>:<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
                 </button>
               </div>
             </div>
+
           </div>
         </div>
+      </div>
+
+      <style>>
       </div>
 
       <style>{`
