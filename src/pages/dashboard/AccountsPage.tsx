@@ -471,6 +471,8 @@ function PlatformRow({ p, userId, accountId, t }: {
               <div style={{ display:"flex", gap:8, marginBottom:6 }}>
                 <input value={custId} onChange={e=>setCustId(e.target.value)}
                   placeholder={t.cid_ph}
+                  id="google-ads-customer-id"
+                  name="googleAdsCustomerId"
                   style={{ ...iStyle, flex:1, padding:"9px 12px", fontSize:13, borderRadius:10 }}
                   onFocus={focusOn as any} onBlur={focusOff as any}
                   onKeyDown={e=>{ if(e.key==="Enter") verifyGoogle(); }}
