@@ -231,7 +231,7 @@ async function processGoogleLearning(sb: any, anthropicKey: string | undefined) 
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         'developer-token': GOOGLE_DEV_TOKEN,
-        'login-customer-id': custId,
+        // login-customer-id omitted — causes empty results on non-MCC accounts
       };
 
       // Fetch top ads by spend in last 7 days
@@ -1114,7 +1114,7 @@ async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, u
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
     'developer-token': GOOGLE_DEV_TOKEN,
-    'login-customer-id': custId,
+    // login-customer-id omitted — causes empty results on non-MCC accounts
   };
   const gQuery = (query: string) =>
     fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {

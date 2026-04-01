@@ -181,7 +181,7 @@ serve(async (req) => {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
             "developer-token": DEV_TOKEN,
-            "login-customer-id": custId,
+            // login-customer-id omitted — causes empty results on non-MCC accounts
           };
 
           const gSince = since.replace(/-/g, "");

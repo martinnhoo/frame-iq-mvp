@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
           const acc = (gc.ad_accounts||[]).find((a:any)=>a.id===gc.selected_account_id)||(gc.ad_accounts||[])[0];
           if (acc) {
             const custId = acc.id.replace(/-/g,"");
-            const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??"","login-customer-id":custId};
+            const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??""}; // login-customer-id removed
             const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
             const [cr,ar,tr] = await Promise.allSettled([
               gq(`SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
@@ -1023,7 +1023,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               const gHeaders = {
                 Authorization: `Bearer ${token}`,
                 "developer-token": devToken,
-                "login-customer-id": custId,
+                // login-customer-id omitted — causes empty results on non-MCC accounts
                 "Content-Type": "application/json",
               };
               const gQuery = (query: string) =>
