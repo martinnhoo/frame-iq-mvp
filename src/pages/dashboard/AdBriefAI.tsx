@@ -1371,21 +1371,29 @@ export default function AdBriefAI() {
             : all[0];
           const hasMetaConn = connections.includes("meta");
           const hasGoogleConn = connections.includes("google");
-          if(!snap && hasMetaConn){
-            // Has Meta but no snapshot yet — run intelligence first
-            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
-              .then(()=>{
-                (supabase as any).from("daily_snapshots")
-                  .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
-                  .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
-                  .then((r2:any)=>{
-                    const all2 = (r2.data || []) as any[];
-                    const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
-                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
-                  })
-                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
-              })
-              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
+          const hasAnyConn = hasMetaConn || hasGoogleConn;
+
+          if(!snap && hasAnyConn){
+            if(hasMetaConn){
+              // Meta connected — use daily-intelligence (supports Meta snapshots)
+              supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
+                .then(()=>{
+                  (supabase as any).from("daily_snapshots")
+                    .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
+                    .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
+                    .then((r2:any)=>{
+                      const all2 = (r2.data || []) as any[];
+                      const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
+                      if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
+                    })
+                    .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
+                })
+                .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
+            } else {
+              // Google-only — daily-intelligence doesn't support Google snapshots yet
+              // Fall through to greeting with connection context (no snapshot)
+              if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn);
+            }
           } else {
             if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn);
           }
