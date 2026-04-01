@@ -127,24 +127,32 @@ function AccountPlatformConnections({ accountId, userId, language = "pt" }: { ac
       // ── Verify account via edge function before saving ───────────────────────
       setChangingAccount(platform);
       try {
-        const { data, error } = await supabase.functions.invoke("verify-google-account", {
-          body: { user_id: userId, persona_id: accountId, customer_id: id },
-        });
-        if (error || !data?.valid) {
+        let verifyData: any = null;
+        let verifyError: any = null;
+        try {
+          const result = await supabase.functions.invoke("verify-google-account", {
+            body: { user_id: userId, persona_id: accountId, customer_id: id },
+          });
+          verifyData = result.data;
+          verifyError = result.error;
+        } catch (e) {
+          verifyError = e;
+        }
+        if (verifyError || !verifyData?.valid) {
           toast.error(language === "pt"
-            ? (data?.reason === "not_found"
+            ? (verifyData?.reason === "not_found"
                 ? "Conta não encontrada — verifique o Customer ID"
-                : data?.reason === "no_access"
+                : verifyData?.reason === "no_access"
                   ? "Sem acesso a essa conta — verifique as permissões"
                   : "Customer ID inválido ou sem acesso")
-            : (data?.reason === "not_found"
+            : (verifyData?.reason === "not_found"
                 ? "Account not found — check your Customer ID"
-                : data?.reason === "no_access"
+                : verifyData?.reason === "no_access"
                   ? "No access to this account — check permissions"
                   : "Invalid Customer ID or no access"));
           return;
         }
-        const verifiedName = data.name || `Account ${id}`;
+        const verifiedName = verifyData.name || `Account ${id}`;
         const conn = connections[platform];
         const existing = conn?.accounts || [];
         const already = existing.find((a: any) => a.id === id);
@@ -485,6 +493,13 @@ export default function AccountsPage() {
   const { language } = useLanguage();
   const dt = useDashT(language);
   const navigate = useNavigate();
+
+  // Guard — user not loaded yet
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 300 }}>
+      <Loader2 size={20} color="rgba(255,255,255,0.3)" className="animate-spin" />
+    </div>
+  );
 
   const L: Record<string, Record<string,string>> = {
     pt: { title: "Contas", sub: "Cada conta conecta à sua própria conta de anúncios. A IA usa a ativa no chat.", new_btn: "Nova conta", new_label: "Nova conta", no_accounts: "Nenhuma conta ainda", no_accounts_sub: "Crie uma conta para conectar o Meta Ads e começar a usar o chat de IA.", create_first: "Criar primeira conta", your_accounts: "Suas contas", unnamed: "Conta sem nome", delete_confirm: "Excluir esta conta? Isso não pode ser desfeito.", deleted: "Conta excluída", set_active: "Usar no chat", active: "Ativa no chat", save: "Salvar" },
