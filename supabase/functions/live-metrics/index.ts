@@ -22,16 +22,17 @@ serve(async (req) => {
     // Use a separate client with anon key for user token validation
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const body = await req.json();
-    const { user_id, persona_id, period = "7d" } = body;
+    const { user_id, persona_id, period = "7d", date_from, date_to } = body;
 
     if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
 
     const days = period === "90d" ? 90 : period === "60d" ? 60 : period === "30d" ? 30 : period === "14d" ? 14 : 7;
     const now = new Date();
     const fmt = (d: Date) => d.toISOString().split("T")[0];
-    const today = fmt(now);
-    const since = fmt(new Date(now.getTime() - days * 86400000));
-    const prevSince = fmt(new Date(now.getTime() - days * 2 * 86400000));
+    // Use explicit date range if provided, otherwise calculate from period
+    const today = date_to || fmt(now);
+    const since = date_from || fmt(new Date(now.getTime() - days * 86400000));
+    const prevSince = fmt(new Date(new Date(since).getTime() - (new Date(today).getTime() - new Date(since).getTime())));
 
     // ── Get both Meta and Google connections ──────────────────────────────────
     const { data: allConns } = await sb.from("platform_connections" as any)
@@ -212,25 +213,34 @@ serve(async (req) => {
             gQuery(`SELECT segments.date, metrics.cost_micros, metrics.clicks, metrics.ctr, metrics.impressions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC`),
           ]);
 
-          const sumMetrics = (results: any[]) => results.reduce((acc, r) => {
+          const sumMetrics = (rows: any[]) => rows.reduce((acc, r) => {
             const m = r.metrics || {};
             return {
               cost: acc.cost + (parseN(m.costMicros) / 1e6),
               clicks: acc.clicks + parseN(m.clicks),
-              ctr: acc.ctr + parseN(m.ctr),
               impressions: acc.impressions + parseN(m.impressions),
               conversions: acc.conversions + parseN(m.conversions),
               conv_value: acc.conv_value + parseN(m.conversionsValue),
-              count: acc.count + 1,
             };
-          }, { cost: 0, clicks: 0, ctr: 0, impressions: 0, conversions: 0, conv_value: 0, count: 0 });
+          }, { cost: 0, clicks: 0, impressions: 0, conversions: 0, conv_value: 0 });
 
           const c = sumMetrics(curr.results || []);
           const p = sumMetrics(prev.results || []);
 
-          const avgCtr = c.count > 0 ? c.ctr / c.count : 0;
-          const prevAvgCtr = p.count > 0 ? p.ctr / p.count : 0;
+          // Real CTR = clicks / impressions (not average of daily CTR%)
+          const avgCtr = c.impressions > 0 ? c.clicks / c.impressions : 0;
+          const prevAvgCtr = p.impressions > 0 ? p.clicks / p.impressions : 0;
           const gRoas = c.cost > 0 && c.conv_value > 0 ? c.conv_value / c.cost : null;
+
+          // Debug: capture what API returned
+          const debugInfo = {
+            customer_id: custId,
+            date_range: `${since} to ${today}`,
+            curr_rows: curr.results?.length ?? 0,
+            curr_error: curr.error,
+            cost_raw: c.cost,
+            clicks_raw: c.clicks,
+          };
 
           const deltaRatio = (cur: number, prev: number) => prev > 0 ? ((cur - prev) / prev) * 100 : null;
 
@@ -290,6 +300,7 @@ serve(async (req) => {
             daily,
             account_name: acc.name || "Google Ads",
             account_id: acc.id,
+            _debug: debugInfo,
           };
         }
       } catch (e) {
