@@ -130,15 +130,16 @@ const iStyle: React.CSSProperties = {
 
 function PlatformIcon({ id }: { id:string }) {
   if (id === "meta") return (
-    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+    <svg width="22" height="14" viewBox="0 0 60 38" fill="none">
       <defs>
-        <linearGradient id="metaGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#0082FB"/>
-          <stop offset="100%" stop-color="#0064E0"/>
+        <linearGradient id="metaLoopGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#0082FB"/>
+          <stop offset="100%" stopColor="#0064E0"/>
         </linearGradient>
       </defs>
-      <path d="M16 2.5C8.544 2.5 2.5 8.544 2.5 16S8.544 29.5 16 29.5 29.5 23.456 29.5 16 23.456 2.5 16 2.5z" fill="url(#metaGrad)"/>
-      <path d="M9.5 20.5V13c0-.828.448-1.5 1-1.5.38 0 .74.26 1.04.76L14 15.8l2.46-3.54c.3-.5.66-.76 1.04-.76.552 0 1 .672 1 1.5v7.5h-2v-4.9l-1.74 2.5h-1.52l-1.74-2.5v4.9h-2z" fill="white"/>
+      <path d="M10 19C10 13.5 12.5 9 16 9c2.2 0 4.2 1.5 6 4.5l8-9.5C27 1.5 23.5 0 19.5 0 11.5 0 5 8.5 5 19s6.5 19 14.5 19c4 0 7.5-1.5 10.5-4L22 25c-1.8 3-3.8 4.5-6 4.5C12.5 29.5 10 24.5 10 19z" fill="url(#metaLoopGrad)"/>
+      <path d="M50 19C50 24.5 47.5 29.5 44 29.5c-2.2 0-4.2-1.5-6-4.5l-8 8.5C33 36.5 36.5 38 40.5 38 48.5 38 55 29.5 55 19S48.5 0 40.5 0c-4 0-7.5 1.5-10.5 4L38 13c1.8-3 3.8-4.5 6-4.5C47.5 9 50 13.5 50 19z" fill="#0064E0"/>
+      <path d="M30 13.5c-1.8 3-3 6-3 5.5 0 .5 1.2 2.5 3 5.5 1.8-3 3-5 3-5.5 0-.5-1.2-2.5-3-5.5z" fill="#0055C8"/>
     </svg>
   );
   if (id === "google") return (

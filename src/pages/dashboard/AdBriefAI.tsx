@@ -46,15 +46,16 @@ const m = { fontFamily: M } as const;
 const PLATFORMS = [
   { id: "meta",   label: "Meta Ads",   fn: "meta-oauth",   color: "#1877F2",
     Icon: ({ active }: { active: boolean }) => (
-      <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+      <svg width="20" height="13" viewBox="0 0 60 38" fill="none" opacity={active ? 1 : 0.35}>
         <defs>
-          <linearGradient id="aiMetaGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#0082FB"/>
-            <stop offset="100%" stopColor="#0064E0"/>
+          <linearGradient id="metaLiveGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#29B6F6"/>
+            <stop offset="100%" stopColor="#1565C0"/>
           </linearGradient>
         </defs>
-        <circle cx="16" cy="16" r="13.5" fill={active ? "url(#aiMetaGrad)" : "rgba(255,255,255,0.08)"}/>
-        <path d="M10 20V13.5c0-.69.37-1.25.83-1.25.32 0 .62.22.87.63L14 15.9l2.3-3.02c.25-.41.55-.63.87-.63.46 0 .83.56.83 1.25V20h-1.67v-4.08l-1.45 2.08h-1.26l-1.45-2.08V20H10z" fill={active ? "white" : "rgba(255,255,255,0.35)"}/>
+        <path d="M10 19C10 13.5 12.5 9 16 9c2.2 0 4.2 1.5 6 4.5l8-9.5C27 1.5 23.5 0 19.5 0 11.5 0 5 8.5 5 19s6.5 19 14.5 19c4 0 7.5-1.5 10.5-4L22 25c-1.8 3-3.8 4.5-6 4.5C12.5 29.5 10 24.5 10 19z" fill="url(#metaLiveGrad)"/>
+        <path d="M50 19C50 24.5 47.5 29.5 44 29.5c-2.2 0-4.2-1.5-6-4.5l-8 8.5C33 36.5 36.5 38 40.5 38 48.5 38 55 29.5 55 19S48.5 0 40.5 0c-4 0-7.5 1.5-10.5 4L38 13c1.8-3 3.8-4.5 6-4.5C47.5 9 50 13.5 50 19z" fill="#1565C0"/>
+        <path d="M30 13.5c-1.8 3-3 6-3 5.5 0 .5 1.2 2.5 3 5.5 1.8-3 3-5 3-5.5 0-.5-1.2-2.5-3-5.5z" fill="#0D47A1"/>
       </svg>
     )},
   { id: "tiktok", label: "TikTok Ads", fn: "tiktok-oauth", color: "#06b6d4", soon: true,
