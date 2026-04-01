@@ -1194,7 +1194,7 @@ async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, u
         `7d: spend=$${totalSpend.toFixed(0)} ctr=${(avgCtr*100).toFixed(2)}% clicks=${totalClicks} conv=${totalConv.toFixed(0)} active_ads=${active.length}`,
         scalable.length ? `Scalable: ${scalable.map((a: any) => `"${a.name.slice(0,30)}" ctr=${(a.ctr*100).toFixed(2)}%`).join(', ')}` : '',
         toPause.length  ? `Pause candidates: ${toPause.map((a: any) => `"${a.name.slice(0,30)}" ctr=${(a.ctr*100).toFixed(2)}%`).join(', ')}` : '',
-        topKeywords.length ? `Top keywords: ${topKeywords.map(k => `"${k.text}" [${k.matchType}] ctr=${k.ctr}% spend=$${k.spend}`).join(', ')}` : '',
+        topKeywords.length ? `Top keywords: ${topKeywords.map((k: any) => `"${k.text}" [${k.matchType}] ctr=${k.ctr}% spend=$${k.spend}`).join(', ')}` : '',
       ].filter(Boolean).join('\n');
 
       const ir = await fetch('https://api.anthropic.com/v1/messages', {
