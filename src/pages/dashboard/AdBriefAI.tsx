@@ -2168,6 +2168,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#0c0f1a",position:"relative" as const}}>
+      {/* Background orbs — same as Login */}
+      <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+        <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(ellipse at center,hsla(199,83%,58%,0.09) 0%,transparent 65%)",filter:"blur(80px)",top:"-20%",left:"10%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
+        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,hsla(320,80%,60%,0.06) 0%,transparent 65%)",filter:"blur(80px)",bottom:"10%",right:"5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,233,0.025) 1px,transparent 1px)",backgroundSize:"60px 60px",opacity:1}}/>
+      </div>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
       {contextReady&&hasData&&(
@@ -2431,40 +2437,44 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:1}}>
-        {/* Gradient fade into solid bar */}
-        <div style={{height:32,background:"linear-gradient(to bottom,transparent,rgba(9,12,20,1))",pointerEvents:"none",marginBottom:-2}}/>
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:2}}>
 
-        <div style={{background:"#090c14",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"12px 0 18px"}}>
-          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px"}}>
+        {/* Fade from chat → input */}
+        <div style={{height:48,background:"linear-gradient(to bottom,transparent,rgba(9,12,20,0.95))",pointerEvents:"none",marginBottom:-1}}/>
 
-            {/* ── Tool pills — colored, readable ── */}
-            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",marginBottom:10} as any}>
+        {/* Main input surface */}
+        <div style={{background:"rgba(9,12,20,0.98)",padding:"10px 0 20px"}}>
+          <div style={{maxWidth:720,margin:"0 auto",padding:"0 20px"}}>
+
+            {/* Tool pills */}
+            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:12} as any}>
               {TOOLS.map(tool=>{
-                const isActive = activeTool===tool.action;
+                const isOn = activeTool===tool.action;
                 return (
                   <button key={tool.action}
-                    onClick={()=>setActiveTool(isActive?null:tool.action)}
+                    onClick={()=>setActiveTool(isOn?null:tool.action)}
                     style={{
                       display:"flex",alignItems:"center",gap:6,
                       padding:"6px 14px",borderRadius:99,flexShrink:0,
-                      background: isActive ? tool.color : "rgba(255,255,255,0.07)",
-                      border:`1px solid ${isActive ? tool.color : "rgba(255,255,255,0.12)"}`,
-                      color: isActive ? "#000" : "rgba(255,255,255,0.70)",
-                      fontSize:12.5,fontWeight:600,cursor:"pointer",
+                      background: isOn ? tool.color : "rgba(255,255,255,0.07)",
+                      border:`1px solid ${isOn ? "transparent" : "rgba(255,255,255,0.11)"}`,
+                      color: isOn ? "#000" : "rgba(255,255,255,0.65)",
+                      fontSize:12.5,fontWeight:isOn?700:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans',sans-serif",
                       letterSpacing:"-0.01em",transition:"all 0.15s",
-                      boxShadow: isActive ? `0 0 14px ${tool.color}55` : "none",
+                      boxShadow: isOn ? `0 0 16px ${tool.color}60` : "none",
                     }}
-                    onMouseEnter={e=>{if(!isActive){
-                      (e.currentTarget as HTMLElement).style.background=`${tool.color}22`;
-                      (e.currentTarget as HTMLElement).style.borderColor=`${tool.color}60`;
-                      (e.currentTarget as HTMLElement).style.color=tool.color;
+                    onMouseEnter={e=>{if(!isOn){
+                      const el=e.currentTarget as HTMLElement;
+                      el.style.background=`${tool.color}1a`;
+                      el.style.borderColor=`${tool.color}55`;
+                      el.style.color=tool.color;
                     }}}
-                    onMouseLeave={e=>{if(!isActive){
-                      (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.07)";
-                      (e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.12)";
-                      (e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.70)";
+                    onMouseLeave={e=>{if(!isOn){
+                      const el=e.currentTarget as HTMLElement;
+                      el.style.background="rgba(255,255,255,0.07)";
+                      el.style.borderColor="rgba(255,255,255,0.11)";
+                      el.style.color="rgba(255,255,255,0.65)";
                     }}}>
                     <tool.icon size={12} strokeWidth={2}/>
                     {tool.label}
@@ -2474,54 +2484,59 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             </div>
 
             {/* Free plan counter */}
-            {(profile?.plan === "free" || !profile?.plan) && (() => {
-              const used = messages.filter(m => m.role === "user").length;
-              const cap = 3;
-              const remaining = Math.max(0, cap - used);
-              const color = remaining === 0 ? "#ef4444" : remaining === 1 ? "#f59e0b" : "rgba(255,255,255,0.2)";
-              return (
-                <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",marginBottom:6}}>
-                  <span style={{fontSize:12,color,fontFamily:"'Inter',sans-serif",fontWeight:remaining===0?600:400}}>
-                    {remaining === 0
-                      ? (lang==="pt"?"Limite diário atingido":lang==="es"?"Límite diario alcanzado":"Daily limit reached")
-                      : (lang==="pt"?`${remaining}/${cap} mensagens`:lang==="es"?`${remaining}/${cap} mensajes`:`${remaining}/${cap} left today`)}
+            {(profile?.plan==="free"||!profile?.plan)&&(()=>{
+              const used=messages.filter(m=>m.role==="user").length;
+              const cap=3,remaining=Math.max(0,cap-used);
+              const col=remaining===0?"#ef4444":remaining===1?"#f59e0b":"rgba(255,255,255,0.18)";
+              return(
+                <div style={{display:"flex",justifyContent:"flex-end",marginBottom:6}}>
+                  <span style={{fontSize:11.5,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:remaining===0?600:400}}>
+                    {remaining===0?(lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached"):`${remaining}/${cap} ${lang==="pt"?"mensagens":"messages"}`}
                   </span>
                 </div>
               );
             })()}
 
-            {/* ── Input box ── */}
-            <div style={{
-              display:"flex",gap:8,alignItems:"flex-end",
+            {/* Input card — Login glass style */}
+            <div className="input-box-wrap" style={{
+              display:"flex",alignItems:"flex-end",gap:10,
               background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",
-              border:"1px solid rgba(255,255,255,0.13)",
-              borderRadius:16,padding:"12px 12px 12px 18px",
-              boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset",
+              border:"1px solid rgba(255,255,255,0.12)",
+              borderRadius:18,
+              padding:"14px 14px 14px 20px",
+              boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset,0 8px 32px rgba(0,0,0,0.4)",
               transition:"border-color 0.2s,box-shadow 0.2s",
-            }} className="input-box-wrap">
+            }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"3px 0",color:"#f0f2f8",fontSize:14,resize:"none",outline:"none",...m,lineHeight:1.65,minHeight:26,maxHeight:140,caretColor:"#0ea5e9"}} className="chat-textarea"
+                style={{flex:1,background:"transparent",border:"none",padding:"2px 0",color:"#f0f2f8",fontSize:14.5,resize:"none",outline:"none",...m,lineHeight:1.7,minHeight:28,maxHeight:140,caretColor:"#0ea5e9"}}
+                className="chat-textarea"
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}}
               />
-              <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+              <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,paddingBottom:1}}>
                 {messages.length>0&&(
-                  <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.09)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.09)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
+                  <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}}
+                    title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
+                    onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.18)";el.style.color="rgba(255,255,255,0.55)";}}
+                    onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
                     <RotateCcw size={13}/>
                   </button>
                 )}
                 <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-                  style={{width:36,height:36,borderRadius:11,
-                    background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.06)",
-                    border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",
+                  style={{
+                    width:38,height:38,borderRadius:12,border:"none",
+                    background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.07)",
+                    cursor:input.trim()&&contextReady?"pointer":"not-allowed",
                     display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
                     transition:"all 0.2s",
-                    boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.5)":"none"}}>
-                  {loading?<Loader2 size={14} color="rgba(255,255,255,0.6)" className="animate-spin"/>:<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
+                    boxShadow:input.trim()&&!loading&&contextReady?"0 4px 20px rgba(14,165,233,0.5)":"none",
+                  }}>
+                  {loading
+                    ?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>
+                    :<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.22)"}/>
+                  }
                 </button>
               </div>
             </div>
@@ -2532,6 +2547,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
+        @keyframes orbFloat1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(8%,12%) scale(1.08)}}
+        @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
