@@ -41,7 +41,7 @@ export default function OAuthCallback() {
       if (!code) {
         setStatus("error");
         setMessage("Invalid callback — missing code.");
-        setTimeout(() => navigate("/dashboard/ai"), 2500);
+        setTimeout(() => navigate("/dashboard/accounts"), 2500);
         return;
       }
 
@@ -101,8 +101,15 @@ export default function OAuthCallback() {
 
       } catch (e: any) {
         setStatus("error");
-        setMessage(e.message || "Connection failed. Please try again.");
-        setTimeout(() => navigate("/dashboard/accounts"), 3500);
+        const errMsg = e.message || e?.details || String(e) || "Connection failed. Please try again.";
+        // Extract meaningful part if it's a Supabase function error
+        let display = errMsg;
+        if (errMsg.includes("redirect_uri_mismatch")) display = "redirect_uri_mismatch — a URL de callback não está registrada no Google Cloud Console";
+        else if (errMsg.includes("invalid_grant")) display = "Código expirado ou já usado — tente conectar novamente";
+        else if (errMsg.includes("invalid_client")) display = "Credenciais OAuth inválidas — verifique GOOGLE_CLIENT_ID e SECRET";
+        else if (errMsg.includes("access_denied")) display = "Acesso negado — o usuário cancelou ou não tem permissão";
+        setMessage(display);
+        setTimeout(() => navigate("/dashboard/accounts"), 5000);
       }
     };
     run();
@@ -129,7 +136,7 @@ export default function OAuthCallback() {
       setStatus("success");
       const acc = accounts.find(a => a.id === accountId);
       setMessage(`${pl.name} connected with "${acc?.name || accountId}".`);
-      setTimeout(() => navigate("/dashboard/ai"), 2000);
+      setTimeout(() => navigate("/dashboard/accounts"), 2000);
     } catch (e: any) {
       setSaving(false);
       setSelectedId(null);
@@ -155,6 +162,11 @@ export default function OAuthCallback() {
         </h2>
 
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: 20 }}>{message}</p>
+        {status === "error" && message && (
+          <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.20)", borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono', monospace", margin: 0, wordBreak: "break-all" }}>{message}</p>
+          </div>
+        )}
 
         {/* Account selector */}
         {status === "selecting" && accounts.length > 0 && (
