@@ -103,6 +103,7 @@ const T = {
   },
 } as const;
 type Lang = keyof typeof T;
+type TStrings = typeof T[Lang];
 
 // ── Platform config ───────────────────────────────────────────────────────────
 const PLATFORMS = [
