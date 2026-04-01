@@ -196,9 +196,11 @@ export default function DashboardOverview() {
   useEffect(() => {
     if (!user) return;
     const run = async () => {
+      let boardsQ = supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4);
+      if (selectedPersona?.id) boardsQ = (boardsQ as any).or(`persona_id.eq.${selectedPersona.id},persona_id.is.null`);
       const [{ data: analyses }, { data: boards }] = await Promise.all([
         supabase.from("analyses").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
-        supabase.from("boards").select("id, title, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
+        boardsQ,
       ]);
       setRecentActivity([
         ...(analyses || []).map(a => ({ id: a.id, type: "analysis" as const, title: a.title || "Untitled", created_at: a.created_at })),
@@ -206,7 +208,7 @@ export default function DashboardOverview() {
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6));
     };
     run();
-  }, [user?.id]);
+  }, [user?.id, selectedPersona?.id]);
 
   const timeAgo = (d: string) => {
     const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);

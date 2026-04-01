@@ -124,10 +124,17 @@ export default function IntelligencePage() {
     if (!user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
+      // learned_patterns scoped by persona_id when a persona is selected
+      const patternsQ = (supabase as any).from("learned_patterns")
+        .select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner")
+        .eq("user_id", user.id)
+        .order("confidence", { ascending: false }).limit(15);
+      if (selectedPersona?.id) patternsQ.eq("persona_id", selectedPersona.id);
+
       const [mR, eR, pR, aR] = await Promise.all([
         (supabase as any).from("chat_memory").select("id,memory_text,memory_type,importance,created_at").eq("user_id", user.id).order("importance", { ascending: false }).limit(25),
         (supabase as any).from("chat_examples").select("id,user_message,quality_score,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-        (supabase as any).from("learned_patterns").select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner").eq("user_id", user.id).order("confidence", { ascending: false }).limit(15),
+        patternsQ,
         (supabase as any).from("ai_action_log").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
       setMemories(mR.data || []);
