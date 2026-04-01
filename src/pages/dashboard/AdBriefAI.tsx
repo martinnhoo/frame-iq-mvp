@@ -197,7 +197,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
             <div style={{display:"flex",gap:4}}>
               {["meta","tiktok","google"].map(p=>(
                 <button key={p} onClick={()=>setPlatform(p)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.05)",color:platform===p?"#000":"rgba(255,255,255,0.4)",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.05)",color:platform===p?"#000":"rgba(255,255,255,0.4)",transition:"all 0.1s"}}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
                 </button>
               ))}
@@ -206,7 +206,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
               {tones.map(t=>(
                 <button key={t} onClick={()=>setTone(t)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:tone===t?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:tone===t?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.1s"}}>
                   {toneLabels[t][l]}
                 </button>
               ))}
@@ -220,7 +220,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
           onKeyDown={e=>{if(e.key==="Enter"&&e.metaKey)submit();}}
         />
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
-          <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
+          <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
           <button onClick={submit} disabled={!val.trim()}
             style={{padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?`linear-gradient(135deg,${cfg.color},${cfg.color}bb)`:"rgba(255,255,255,0.05)",color:val.trim()?"#000":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s"}}>
             {cfg.cta[l]}
@@ -241,7 +241,7 @@ function DashboardBlock({block}:{block:Block}) {
           <BarChart2 size={12} color="#000"/>
         </div>
         <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
-        <span style={{...m,fontSize:10,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
+        <span style={{...m,fontSize:12,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
       </div>
       {block.metrics && block.metrics.length>0 && (
         <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.03)"}}>
@@ -251,12 +251,12 @@ function DashboardBlock({block}:{block:Block}) {
             return(
               <div key={i} style={{padding:"16px 18px",background:"#181e2d",position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
-                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
+                <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
                 <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
                 {metric.delta&&(
                   <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.10)"}`}}>
                     {isDown?<TrendingDown size={9} color="#f87171"/>:isUp?<TrendingUp size={9} color="#34d399"/>:null}
-                    <span style={{...m,fontSize:10,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
+                    <span style={{...m,fontSize:12,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
                   </div>
                 )}
               </div>
@@ -273,8 +273,8 @@ function DashboardBlock({block}:{block:Block}) {
             return(
               <div key={i} style={{marginBottom:10}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{...m,fontSize:11,color:"rgba(255,255,255,0.6)"}}>{label}</span>
-                  <span style={{...j,fontSize:11,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
+                  <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.6)"}}>{label}</span>
+                  <span style={{...j,fontSize:12,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
                 </div>
                 <div style={{height:6,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}>
                   <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${color},${color}99)`,borderRadius:3}}/>
@@ -303,18 +303,18 @@ function DashboardBlock({block}:{block:Block}) {
         return(
           <div style={{padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
             <div style={{display:"flex",gap:16,marginBottom:10}}>
-              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:10,color:ctrDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
-              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:10,color:roasDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
-              <div><span style={{...m,fontSize:10,color:"rgba(255,255,255,0.3)",display:"block"}}>Spend {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>${totalSpend.toFixed(0)}</span></div>
+              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:12,color:ctrDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:12,color:roasDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>Spend {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>${totalSpend.toFixed(0)}</span></div>
             </div>
             <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",maxWidth:W}}>
               {d.ctr.some(v=>v>0)&&path(d.ctr,"#0ea5e9")}
               {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#4ade80")}
             </svg>
             <div style={{display:"flex",gap:12,marginTop:6}}>
-              <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0ea5e9",display:"inline-block",borderRadius:1}}/> CTR</span>
-              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:10,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
-              <span style={{...m,fontSize:10,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0ea5e9",display:"inline-block",borderRadius:1}}/> CTR</span>
+              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
             </div>
           </div>
         );
@@ -324,7 +324,7 @@ function DashboardBlock({block}:{block:Block}) {
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead><tr style={{background:"rgba(255,255,255,0.02)"}}>
               {block.table.headers.map((h,i)=>(
-                <th key={i} style={{...m,fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
+                <th key={i} style={{...m,fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
               ))}
             </tr></thead>
             <tbody>{block.table.rows.map((row,ri)=>(
@@ -419,7 +419,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
       </div>
       {/* Warning */}
       <div style={{padding:"8px 16px",background:"rgba(251,146,60,0.06)",borderBottom:"1px solid rgba(251,146,60,0.08)"}}>
-        <p style={{...m,fontSize:11,color:"rgba(251,146,60,0.6)",margin:0}}>⚠️ {t.warning}</p>
+        <p style={{...m,fontSize:12,color:"rgba(251,146,60,0.6)",margin:0}}>⚠️ {t.warning}</p>
       </div>
       {/* Buttons */}
       <div style={{padding:"12px 16px",display:"flex",gap:8}}>
@@ -442,6 +442,94 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 }
 
 // ── Block card ────────────────────────────────────────────────────────────────
+// ── Markdown renderer — bold, italic, headers, lists, inline code ─────────────
+function renderMarkdown(text: string): React.ReactNode[] {
+  if (!text) return [];
+  const lines = text.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let listBuffer: string[] = [];
+  const F = "'Plus Jakarta Sans',sans-serif";
+  const M = "'Inter',sans-serif";
+  const MONO = "'DM Mono',monospace";
+
+  const flushList = (key: string) => {
+    if (listBuffer.length === 0) return;
+    nodes.push(
+      <ul key={key} style={{ margin: "10px 0 14px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+        {listBuffer.map((item, i) => (
+          <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, marginTop: 8 }} />
+            <span style={{ fontFamily: M, fontSize: 14, color: "rgba(240,242,248,0.85)", lineHeight: 1.72, letterSpacing: "-0.01em" }}>{inlineFormat(item)}</span>
+          </li>
+        ))}
+      </ul>
+    );
+    listBuffer = [];
+  };
+
+  const inlineFormat = (str: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    let remaining = str;
+    let idx = 0;
+    while (remaining.length > 0) {
+      const boldMatch = remaining.match(/^(.*?)\*\*(.+?)\*\*(.*$)/s);
+      const codeMatch = remaining.match(/^(.*?)`([^`]+)`(.*$)/s);
+      if (boldMatch && (!codeMatch || boldMatch[1].length <= (codeMatch[1]?.length ?? Infinity))) {
+        if (boldMatch[1]) parts.push(<span key={idx++}>{boldMatch[1]}</span>);
+        parts.push(<strong key={idx++} style={{ fontWeight: 700, color: "#f0f2f8" }}>{boldMatch[2]}</strong>);
+        remaining = boldMatch[3];
+      } else if (codeMatch) {
+        if (codeMatch[1]) parts.push(<span key={idx++}>{codeMatch[1]}</span>);
+        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: 12, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 5px", color: "#67e8f9" }}>{codeMatch[2]}</code>);
+        remaining = codeMatch[3];
+      } else {
+        parts.push(<span key={idx++}>{remaining}</span>);
+        break;
+      }
+    }
+    return parts.length === 1 ? parts[0] : <>{parts}</>;
+  };
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trim();
+    // H2/H3
+    if (/^###\s/.test(trimmed)) {
+      flushList(`fl-${i}`);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "#0ea5e9", letterSpacing: "0.07em", textTransform: "uppercase", margin: "18px 0 8px" }}>{trimmed.replace(/^###\s/, "")}</p>);
+      return;
+    }
+    if (/^##\s/.test(trimmed)) {
+      flushList(`fl-${i}`);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "20px 0 8px" }}>{trimmed.replace(/^##\s/, "")}</p>);
+      return;
+    }
+    // Bullet lists
+    if (/^[-*•]\s/.test(trimmed)) {
+      listBuffer.push(trimmed.replace(/^[-*•]\s/, ""));
+      return;
+    }
+    // Numbered list
+    if (/^\d+\.\s/.test(trimmed)) {
+      listBuffer.push(trimmed.replace(/^\d+\.\s/, ""));
+      return;
+    }
+    // Blank line
+    if (!trimmed) {
+      flushList(`fl-${i}`);
+      return;
+    }
+    // Regular paragraph
+    flushList(`fl-${i}`);
+    nodes.push(
+      <p key={i} style={{ fontFamily: M, fontSize: 14.5, color: "rgba(240,242,248,0.88)", lineHeight: 1.78, margin: "0 0 12px", letterSpacing: "-0.01em" }}>
+        {inlineFormat(trimmed)}
+      </p>
+    );
+  });
+  flushList("final");
+  return nodes;
+}
+
 function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans',sans-serif";
@@ -491,7 +579,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent"}}>
             {/* Número */}
             <div style={{width:32,paddingTop:14,paddingBottom:12,flexShrink:0,display:"flex",justifyContent:"flex-end",paddingRight:8}}>
-              <span style={{fontFamily:MONO,fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:"0.02em"}}>{i+1}</span>
+              <span style={{fontFamily:MONO,fontSize:12,color:"rgba(255,255,255,0.2)",letterSpacing:"0.02em"}}>{i+1}</span>
             </div>
             {/* Texto */}
             <div style={{flex:1,padding:"12px 12px 12px 0",minWidth:0}}>
@@ -502,14 +590,14 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
               <button onClick={()=>copyItem(item,i)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:copied?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${copied?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:10,color:copied?"#34d399":"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.15s",whiteSpace:"nowrap" as const,transform:copied?"scale(1.04)":"scale(1)"}}>
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:copied?"rgba(52,211,153,0.1)":"transparent",border:`1px solid ${copied?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.1)"}`,cursor:"pointer",fontSize:12,color:copied?"#34d399":"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.15s",whiteSpace:"nowrap" as const,transform:copied?"scale(1.04)":"scale(1)"}}>
                 {copied
                   ?<><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg><span>{lang==="pt"?"Copiado":lang==="es"?"Copiado":"Copied"}</span></>
                   :<><Copy size={9}/><span>{lang==="pt"?"Copiar":lang==="es"?"Copiar":lang==="es"?"Copiar":"Copiar"}</span></>
                 }
               </button>
               <button onClick={()=>useAsScript(item)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontSize:10,color:"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.12s",whiteSpace:"nowrap" as const}}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontSize:12,color:"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.12s",whiteSpace:"nowrap" as const}}
                 onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.2)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}
                 onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.1)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}>
                 {lang==="pt"?"Roteiro":lang==="es"?"Guión":"Script"}
@@ -526,19 +614,21 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
     <p style={{fontFamily:M,fontSize:14,color:"rgba(255,255,255,0.75)",lineHeight:1.7,margin:"0 0 4px"}}>{block.content||block.title}</p>
   );
 
-  // ── DEFAULT: insight / prose — texto é rei ──
+  // ── DEFAULT: insight / prose — markdown rendered ──
   const hasItems = block.items && block.items.length > 0;
   return(
-    <div style={{marginBottom:hasItems?10:4}}>
+    <div style={{marginBottom:hasItems?10:4}} className="msg-body">
       {block.content&&(
-        <p style={{fontFamily:M,fontSize:15,color:"rgba(255,255,255,0.88)",lineHeight:1.78,margin:hasItems?"0 0 14px":"0",letterSpacing:"-0.01em"}}>{block.content}</p>
+        <div style={{margin:hasItems?"0 0 14px":"0"}}>
+          {renderMarkdown(block.content)}
+        </div>
       )}
       {hasItems&&(
         <div style={{display:"flex",flexDirection:"column",gap:0,marginTop:block.content?2:0}}>
           {block.items!.map((item,i)=>(
-            <div key={i} style={{display:"flex",gap:0,alignItems:"flex-start",borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"9px 0"}}>
-              <span style={{fontFamily:MONO,fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:3,flexShrink:0,width:24,letterSpacing:"0.02em"}}>{String(i+1).padStart(2,"0")}</span>
-              <span style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.78)",lineHeight:1.68,flex:1,letterSpacing:"-0.01em"}}>{item}</span>
+            <div key={i} style={{display:"flex",gap:0,alignItems:"flex-start",borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"10px 0"}}>
+              <span style={{fontFamily:MONO,fontSize:12,color:"rgba(255,255,255,0.2)",marginTop:4,flexShrink:0,width:24,letterSpacing:"0.02em"}}>{String(i+1).padStart(2,"0")}</span>
+              <span style={{fontFamily:M,fontSize:14,color:"rgba(240,242,248,0.82)",lineHeight:1.72,flex:1,letterSpacing:"-0.01em"}}>{item}</span>
             </div>
           ))}
         </div>
@@ -596,7 +686,7 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
         <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" as const }}>
           {spend && (
             <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", flex: "1 1 120px", minWidth: 120 }}>
-              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Esta semana" : lang === "es" ? "Esta semana" : "This week"}
               </p>
               <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>
@@ -606,7 +696,7 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
           )}
           {ctr && (
             <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", flex: "1 1 100px", minWidth: 100 }}>
-              <p style={{ fontFamily: M, fontSize: 9, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>CTR</p>
+              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>CTR</p>
               <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#34d399", margin: 0, letterSpacing: "-0.03em" }}>{ctr}%</p>
             </div>
           )}
@@ -664,7 +754,7 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
       </div>
       <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.65)", lineHeight: 1.65, margin: "0 0 14px" }}>{block.content}</p>
       {typeof block.remaining === "number" && block.remaining <= 3 && (
-        <p style={{ fontFamily: M, fontSize: 11, color: block.remaining === 0 ? "#f87171" : "#fbbf24", marginBottom: 12 }}>
+        <p style={{ fontFamily: M, fontSize: 12, color: block.remaining === 0 ? "#f87171" : "#fbbf24", marginBottom: 12 }}>
           {block.remaining === 0 ? "⚠️ " : "⚡ "}{block.remaining} {t.remaining}
         </p>
       )}
@@ -766,13 +856,13 @@ function Kpi({ label, value, sub, trend, spark, color = "#6366f1", warn = false 
       minHeight: 88, cursor: "default",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ ...I, fontSize: 10, fontWeight: 500, color: "#475569", letterSpacing: "0.04em" }}>{label}</span>
+        <span style={{ ...I, fontSize: 12, fontWeight: 500, color: "#475569", letterSpacing: "0.04em" }}>{label}</span>
         {spark && spark.length >= 2 && <Spark d={spark} c={warn ? "#fb7185" : color} />}
       </div>
       <div>
         <div style={{ ...I, fontSize: 24, fontWeight: 600, color: vc, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 4 }}>{value}</div>
         {sub && (
-          <div style={{ ...I, fontSize: 11, fontWeight: 400, color: sc, display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ ...I, fontSize: 12, fontWeight: 400, color: sc, display: "flex", alignItems: "center", gap: 3 }}>
             {trend === "up" && "↑"}{trend === "down" && "↓"}{sub}
           </div>
         )}
@@ -797,12 +887,12 @@ function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; a
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0, boxShadow: isW ? "0 0 5px rgba(52,211,153,0.6)" : isR ? "0 0 5px rgba(251,113,133,0.6)" : "none" }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ ...I, fontSize: 12, fontWeight: 500, color: "#cbd5e1", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || "—"}</p>
-        {a.campaign && <p style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.35)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
+        {a.campaign && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
       <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-        <span style={{ ...MONO, fontSize: 11, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
-        {fr && <span style={{ ...MONO, fontSize: 11, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.3)" }}>f{fr}</span>}
-        <span style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.35)" }}>R${sp}</span>
+        <span style={{ ...MONO, fontSize: 12, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
+        {fr && <span style={{ ...MONO, fontSize: 12, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.3)" }}>f{fr}</span>}
+        <span style={{ ...MONO, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>R${sp}</span>
       </div>
     </div>
   );
@@ -815,8 +905,8 @@ function CampRow({ c }: { c: any }) {
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.04)" }}>
       <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "rgba(255,255,255,0.15)", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "rgba(255,255,255,0.3)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-      {c.budget && <span style={{ ...MONO, fontSize: 10, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
-      {c.ctr && <span style={{ ...MONO, fontSize: 10, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.3)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+      {c.budget && <span style={{ ...MONO, fontSize: 12, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
+      {c.ctr && <span style={{ ...MONO, fontSize: 12, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.3)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
@@ -836,7 +926,7 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}60`, flexShrink: 0 }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 600, color: c.title, whiteSpace: "nowrap" }}>{a.title}</span>
       <span style={{ ...I, fontSize: 12, color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.detail}</span>
-      <span style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
+      <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
     </div>
   );
 }
@@ -860,7 +950,7 @@ const Div = () => <div style={{ height: 1, background: "rgba(255,255,255,0.04)",
 
 // ── Section label ─────────────────────────────────────────────────────────────
 const Sec = ({ c, children }: { c: string; children: React.ReactNode }) => (
-  <p style={{ ...I, fontSize: 10, fontWeight: 600, color: c, letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 7px" }}>{children}</p>
+  <p style={{ ...I, fontSize: 12, fontWeight: 600, color: c, letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 7px" }}>{children}</p>
 );
 
 // ── Main LivePanel ────────────────────────────────────────────────────────────
@@ -923,7 +1013,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.6)" : "none", marginRight: 8, flexShrink: 0 }} />
 
         {/* Platform */}
-        <span style={{ fontSize: 10, fontWeight: 600, color: "#475569", letterSpacing: "0.07em", textTransform: "uppercase", marginRight: 16, flexShrink: 0 }}>{tcfg[tab]?.label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#475569", letterSpacing: "0.07em", textTransform: "uppercase", marginRight: 16, flexShrink: 0 }}>{tcfg[tab]?.label}</span>
 
         {/* KPIs */}
         {data && !data.error && !busy && (
@@ -936,9 +1026,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             ].filter(Boolean).map((item: any, i, arr) => (
               <React.Fragment key={item.lbl}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 5, padding: "0 14px", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                  <span style={{ fontSize: 9, fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
-                  <span style={{ ...MONO, fontSize: 11, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
-                  {item.tr !== "flat" && <span style={{ fontSize: 9, color: item.tr === "up" ? "#34d399" : "#fb7185" }}>{item.tr === "up" ? "↑" : "↓"}</span>}
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
+                  <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
+                  {item.tr !== "flat" && <span style={{ fontSize: 12, color: item.tr === "up" ? "#34d399" : "#fb7185" }}>{item.tr === "up" ? "↑" : "↓"}</span>}
                 </div>
               </React.Fragment>
             ))}
@@ -946,19 +1036,19 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {alerts.some(a => a.t === "warn") && (
               <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 14px" }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fb7185", boxShadow: "0 0 4px rgba(251,113,133,0.6)" }} />
-                <span style={{ fontSize: 10, color: "#fb7185", fontWeight: 500 }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
+                <span style={{ fontSize: 12, color: "#fb7185", fontWeight: 500 }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
               </div>
             )}
             {(data.winners || []).length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 14px" }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 4px rgba(52,211,153,0.5)" }} />
-                <span style={{ fontSize: 10, color: "#34d399", fontWeight: 500 }}>{(data.winners || []).length} pra escalar</span>
+                <span style={{ fontSize: 12, color: "#34d399", fontWeight: 500 }}>{(data.winners || []).length} pra escalar</span>
               </div>
             )}
           </div>
         )}
-        {busy && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
-        {fail && !busy && <span style={{ fontSize: 10, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
+        {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
+        {fail && !busy && <span style={{ fontSize: 12, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
 
         <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0, marginLeft: "auto" }} />
       </div>
@@ -992,7 +1082,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             );
           })}
           {/* Account name */}
-          {accName && <span style={{ ...I, fontSize: 11, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>}
+          {accName && <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>}
         </div>
 
         {/* Right controls */}
@@ -1002,7 +1092,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               ? <Loader2 size={9} style={{ color: "#475569", animation: "lp-spin 1s linear infinite" }} />
               : <span style={{ width: 5, height: 5, borderRadius: "50%", background: fail ? "#fb7185" : "#34d399", boxShadow: !fail ? "0 0 5px rgba(52,211,153,0.5)" : "none", animation: !fail ? "lp-glow 2.5s ease-in-out infinite" : "none" }} />
             }
-            <span style={{ ...I, fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+            <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
               {busy ? "atualizando..." : ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "ao vivo"}
             </span>
           </div>
@@ -1039,7 +1129,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {fail && !busy && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(251,113,133,0.04)", border: "1px solid rgba(251,113,133,0.1)" }}>
             <span style={{ ...I, fontSize: 12, color: "#f87171" }}>{fail}</span>
-            <button onClick={load} style={{ ...I, fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 7, background: "rgba(251,113,133,0.08)", border: "1px solid rgba(251,113,133,0.15)", color: "#f87171", cursor: "pointer" }}>
+            <button onClick={load} style={{ ...I, fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 7, background: "rgba(251,113,133,0.08)", border: "1px solid rgba(251,113,133,0.15)", color: "#f87171", cursor: "pointer" }}>
               Tentar novamente
             </button>
           </div>
@@ -1093,7 +1183,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {isEmpty && (
               <div style={{ padding: "20px", textAlign: "center" }}>
                 <p style={{ ...I, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.35)", margin: "0 0 4px" }}>Sem campanhas ativas nos últimos 14 dias</p>
-                {accName && <p style={{ ...I, fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0 }}>{accName}</p>}
+                {accName && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0 }}>{accName}</p>}
               </div>
             )}
 
@@ -1155,7 +1245,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 { l: "Por que caiu?",     q: "Por que meu ROAS caiu? Qual a causa raiz?" },
               ].map(({ l, q }) => (
                 <button key={q} className="lp-chip" onClick={() => onSend(q)} style={{
-                  ...I, fontSize: 11, fontWeight: 400, padding: "5px 12px", borderRadius: 20,
+                  ...I, fontSize: 12, fontWeight: 400, padding: "5px 12px", borderRadius: 20,
                   background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
                   color: "rgba(255,255,255,0.35)", cursor: "pointer", transition: "all 0.15s",
                 }}>
@@ -2044,7 +2134,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#090c14",position:"relative" as const}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#0c0f1a",position:"relative" as const}}>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
       {contextReady&&hasData&&(
@@ -2081,7 +2171,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 }}>
                   <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "🔴" : "🟡"}</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <p style={{margin:"0 0 2px",fontSize:11,fontWeight:700,color: isHigh ? "#f87171" : alert.type==="system" ? "rgba(14,165,233,0.8)" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
+                    <p style={{margin:"0 0 2px",fontSize:12,fontWeight:700,color: isHigh ? "#f87171" : alert.type==="system" ? "rgba(14,165,233,0.8)" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
                       {(() => {
                         const t = alert.type;
                         const labels: Record<string,Record<string,string>> = {
@@ -2097,13 +2187,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     {alert.ad_name && (
                       <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                         {alert.ad_name}
-                        {alert.campaign_name && <span style={{fontWeight:400,color:"rgba(238,240,246,0.4)",fontSize:11}}> · {alert.campaign_name}</span>}
+                        {alert.campaign_name && <span style={{fontWeight:400,color:"rgba(238,240,246,0.4)",fontSize:12}}> · {alert.campaign_name}</span>}
                       </p>
                     )}
                     <p style={{margin:0,fontSize:12,color:"rgba(238,240,246,0.65)",lineHeight:1.5,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                       {alert.detail}
                     </p>
-                    <p style={{margin:"4px 0 0",fontSize:10,color:"rgba(238,240,246,0.3)",fontFamily:"'DM Mono',monospace"}}>
+                    <p style={{margin:"4px 0 0",fontSize:12,color:"rgba(238,240,246,0.3)",fontFamily:"'DM Mono',monospace"}}>
                       {new Date(alert.created_at).toLocaleString(lang==="pt"?"pt-BR":"en-US",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
                     </p>
                   </div>
@@ -2174,7 +2264,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     {lang==="pt"?"Criar conta primeiro →":lang==="es"?"Crear cuenta primero →":"Create account first →"}
                   </button>
                 )}
-                <p style={{...m,fontSize:11,color:"rgba(255,255,255,0.15)",marginTop:16}}>
+                <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.15)",marginTop:16}}>
                   {lang==="pt"?"Conectar leva menos de 2 minutos":lang==="es"?"Conectar toma menos de 2 minutos":"Takes less than 2 minutes to connect"}
                 </p>
               </div>
@@ -2208,15 +2298,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <div style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
                   {/* Hover actions — shown via CSS class */}
                   <div className="user-msg-actions" style={{display:"flex",alignItems:"center",gap:4,opacity:0,transition:"opacity 0.15s",pointerEvents:"none" as const}}>
-                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"rgba(255,255,255,0.2)",marginRight:4}}>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.2)",marginRight:4}}>
                       {new Date(typeof msg.ts === "number" ? msg.ts : Date.now()).toLocaleTimeString(lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"})}
                     </span>
                     <button onClick={(e)=>{navigator.clipboard.writeText(msg.userText||"");const b=e.currentTarget;b.style.color="#34d399";b.style.borderColor="rgba(52,211,153,0.3)";b.style.background="rgba(52,211,153,0.08)";b.style.transform="scale(1.06)";setTimeout(()=>{b.style.color="rgba(255,255,255,0.3)";b.style.borderColor="rgba(255,255,255,0.08)";b.style.background="rgba(255,255,255,0.05)";b.style.transform="scale(1)";},1600);}}
-                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.18s"}}>
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:12,...m,transition:"all 0.18s"}}>
                       <Copy size={9}/>Copy
                     </button>
                     <button onClick={()=>send(msg.userText||"")}
-                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:10,...m,transition:"all 0.12s"}}>
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:12,...m,transition:"all 0.12s"}}>
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
@@ -2233,7 +2323,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <div style={{width:28,height:28,borderRadius:9,background:"linear-gradient(135deg, #0ea5e9, #06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 10px rgba(14,165,233,0.2)"}}>
                       <Sparkles size={13} color="#fff" strokeWidth={2}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:10,fontWeight:700,color:"#0ea5e9",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>ADBRIEF</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:700,color:"#0ea5e9",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>ADBRIEF</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -2273,14 +2363,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </button>
                   <div style={{width:1,height:14,background:"rgba(255,255,255,0.07)",margin:"0 2px"}}/>
                   <button onClick={()=>handleCopy(msg.id,msg.blocks||[])}
-                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:copiedId===msg.id?"rgba(52,211,153,0.08)":"transparent",border:`1px solid ${copiedId===msg.id?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:copiedId===msg.id?"#34d399":"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.18s",transform:copiedId===msg.id?"scale(1.06)":"scale(1)"}}
+                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:copiedId===msg.id?"rgba(52,211,153,0.08)":"transparent",border:`1px solid ${copiedId===msg.id?"rgba(52,211,153,0.25)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:copiedId===msg.id?"#34d399":"rgba(255,255,255,0.25)",fontSize:12,...m,transition:"all 0.18s",transform:copiedId===msg.id?"scale(1.06)":"scale(1)"}}
                     onMouseEnter={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
                     onMouseLeave={e=>{if(copiedId!==msg.id)(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
                     {copiedId===msg.id?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
                     {copiedId===msg.id?"Copiado!":lang==="es"?"Copiar":"Copiar"}
                   </button>
                   <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
-                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:10,...m,transition:"all 0.12s"}}
+                    style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:12,...m,transition:"all 0.12s"}}
                     onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
                     onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
                     <RefreshCw size={9}/>Retry
@@ -2308,76 +2398,88 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{padding:"8px 0 14px",flexShrink:0,position:"relative" as const,zIndex:1,background:"linear-gradient(180deg, transparent 0%, rgba(9,12,20,0.98) 30%)"}}>
-        {/* ── Floating tool shortcuts ── */}
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 8px"}}>
-          <div style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none"}}>
-            {TOOLS.map(tool=>(
-              <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
-                style={{
-                  display:"flex",alignItems:"center",gap:5,padding:"5px 11px",borderRadius:20,flexShrink:0,
-                  background:activeTool===tool.action?`${tool.color}22`:"rgba(255,255,255,0.04)",
-                  border:`1px solid ${activeTool===tool.action?`${tool.color}50`:"rgba(255,255,255,0.07)"}`,
-                  color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.38)",
-                  fontSize:11.5,fontWeight:activeTool===tool.action?600:400,cursor:"pointer",
-                  fontFamily:"'Inter',system-ui,sans-serif",transition:"all 0.15s",
-                }}>
-                <tool.icon size={11} color={activeTool===tool.action?tool.color:"rgba(255,255,255,0.3)"}/>
-                {tool.label}
-              </button>
-            ))}
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:1}}>
+        {/* Gradient fade above input */}
+        <div style={{height:32,background:"linear-gradient(to bottom, transparent, #0c0f1a)",pointerEvents:"none"}}/>
+        <div style={{background:"#0c0f1a",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"12px 0 16px"}}>
+          {/* ── Tool pills ── */}
+          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 10px"}}>
+            <div style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
+              {TOOLS.map(tool=>(
+                <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
+                  style={{
+                    display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:8,flexShrink:0,
+                    background:activeTool===tool.action?`${tool.color}18`:"transparent",
+                    border:`1px solid ${activeTool===tool.action?`${tool.color}45`:"rgba(255,255,255,0.08)"}`,
+                    color:activeTool===tool.action?tool.color:"rgba(255,255,255,0.4)",
+                    fontSize:12,fontWeight:activeTool===tool.action?600:400,cursor:"pointer",
+                    fontFamily:"'Inter',system-ui,sans-serif",
+                    transition:"all 0.15s",letterSpacing:"-0.01em",
+                  }}
+                  onMouseEnter={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.14)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.65)"}}}
+                  onMouseLeave={e=>{if(activeTool!==tool.action){(e.currentTarget as HTMLElement).style.background="transparent";(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.4)"}}}>
+                  <tool.icon size={12} strokeWidth={1.8}/>
+                  {tool.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",paddingTop:8}}>
-          {/* Message counter — only for free users */}
-          {(profile?.plan === "free" || !profile?.plan) && (() => {
-            const used = messages.filter(m => m.role === "user").length;
-            const cap = 3;
-            const remaining = Math.max(0, cap - used);
-            const color = remaining === 0 ? "#ef4444" : remaining === 1 ? "#f59e0b" : "rgba(255,255,255,0.25)";
-            return (
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,padding:"3px 2px"}}>
-                <span style={{fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:"'Inter',sans-serif"}}>
-                  {lang==="pt"?"Plano Free":lang==="es"?"Plan Free":"Free plan"}
-                </span>
-                <span style={{fontSize:11,color,fontFamily:"'Inter',sans-serif",fontWeight:remaining===0?700:400}}>
-                  {remaining === 0
-                    ? (lang==="pt"?"Limite diário atingido":lang==="es"?"Límite diario alcanzado":"Daily limit reached")
-                    : (lang==="pt"?`${remaining} de ${cap} mensagens restantes`:lang==="es"?`${remaining} de ${cap} mensajes restantes`:`${remaining} of ${cap} messages left today`)}
-                </span>
-              </div>
-            );
-          })()}
-          {/* Input row: [textarea] [clear] [send] */}
-          <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
-            <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-              placeholder={L.placeholder} rows={1}
-              style={{flex:1,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"12px 16px",color:"#fff",fontSize:14,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:46,maxHeight:120,transition:"border-color 0.2s"}} className="chat-textarea"
-              onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,120)+"px";}}
-              onFocus={e=>{e.currentTarget.style.borderColor="rgba(14,165,233,0.3)";}}
-              onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}}
-            />
-            {messages.length>0&&(
-              <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                style={{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.25)"}}
-                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.55)";}}
-                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.25)";}}>
-                <RotateCcw size={14}/>
-              </button>
-            )}
-            <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
-              style={{width:42,height:42,borderRadius:12,background:input.trim()&&!loading&&contextReady?"linear-gradient(135deg,#0ea5e9,#06b6d4)":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.25s cubic-bezier(0.16,1,0.3,1)",transform:input.trim()&&!loading&&contextReady?"scale(1)":"scale(0.92)",boxShadow:input.trim()&&!loading&&contextReady?"0 4px 16px rgba(14,165,233,0.3)":"none"}}>
-              {loading?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>:<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.2)"}/>}
-            </button>
-          </div>
-        </div>
 
+          {/* ── Main input row ── */}
+          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px"}}>
+            {/* Free plan counter */}
+            {(profile?.plan === "free" || !profile?.plan) && (() => {
+              const used = messages.filter(m => m.role === "user").length;
+              const cap = 3;
+              const remaining = Math.max(0, cap - used);
+              const color = remaining === 0 ? "#ef4444" : remaining === 1 ? "#f59e0b" : "rgba(255,255,255,0.2)";
+              return (
+                <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",marginBottom:6}}>
+                  <span style={{fontSize:12,color,fontFamily:"'Inter',sans-serif",fontWeight:remaining===0?600:400}}>
+                    {remaining === 0
+                      ? (lang==="pt"?"Limite diário atingido":lang==="es"?"Límite diario alcanzado":"Daily limit reached")
+                      : (lang==="pt"?`${remaining}/${cap} mensagens`:lang==="es"?`${remaining}/${cap} mensajes`:`${remaining}/${cap} left today`)}
+                  </span>
+                </div>
+              );
+            })()}
+
+            {/* Input box */}
+            <div style={{display:"flex",gap:8,alignItems:"flex-end",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"10px 10px 10px 16px",transition:"border-color 0.2s",boxShadow:"0 2px 12px rgba(0,0,0,0.25)"}} className="input-box-wrap">
+              <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+                placeholder={L.placeholder} rows={1}
+                style={{flex:1,background:"transparent",border:"none",padding:"3px 0",color:"#f0f2f8",fontSize:14,resize:"none",outline:"none",...m,lineHeight:1.65,minHeight:26,maxHeight:140,caretColor:"#0ea5e9"}} className="chat-textarea"
+                onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}}
+              />
+              <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+                {messages.length>0&&(
+                  <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}} title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.2)"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)";}}>
+                    <RotateCcw size={13}/>
+                  </button>
+                )}
+                <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
+                  style={{width:34,height:34,borderRadius:10,background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.05)",border:"none",cursor:input.trim()&&contextReady?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s",boxShadow:input.trim()&&!loading&&contextReady?"0 2px 12px rgba(14,165,233,0.35)":"none"}}>
+                  {loading?<Loader2 size={14} color="rgba(255,255,255,0.6)" className="animate-spin"/>:<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.18)"}/>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.28)!important;box-shadow:0 2px 16px rgba(14,165,233,0.08),0 0 0 1px rgba(14,165,233,0.10)!important;}
+        .chat-textarea{caret-color:#0ea5e9;}
+        .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
+        .msg-body p{margin-bottom:10px!important;}
+        .msg-body p:last-child{margin-bottom:0!important;}
+        .msg-body strong{font-weight:700;color:#f0f2f8;}
         @media(max-width:640px){
           .chat-footer-hint{display:none!important}
           textarea::placeholder{font-size:12px!important;opacity:0.35!important}
@@ -2388,7 +2490,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .chat-input-wrap{padding:0 12px!important}
           .msg-body p{font-size:13px!important;line-height:1.65!important}
         }
-        .chat-textarea::placeholder{color:rgba(255,255,255,0.22)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .user-msg-row .user-msg-actions button:hover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.6)!important;}
       `}</style>
