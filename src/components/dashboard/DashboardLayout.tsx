@@ -545,7 +545,7 @@ export default function DashboardLayout() {
             )}
           </div>
 
-          {personaPickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
+          {personaPickerOpen && <div role="button" aria-label="Close menu" tabIndex={-1} className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
 
           {/* Flex spacer */}
           <div style={{ flex: 1 }} />
@@ -614,7 +614,7 @@ export default function DashboardLayout() {
 
       {/* Welcome popup */}
       {vikaPopup && welcomeMsg && (
-        <div className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)}>
+        <div role="button" aria-label="Close" tabIndex={0} className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setVikaPopup(false)} onKeyDown={e => e.key === "Escape" && setVikaPopup(false)}>
           <div className="relative w-full max-w-sm rounded-3xl overflow-hidden" onClick={e => e.stopPropagation()}
             style={{ background: "linear-gradient(135deg, #1a1025, #0d0d15)", border: "1px solid rgba(14,165,233,0.3)", animation: "modalIn 0.3s cubic-bezier(.23,1,.32,1) both" }}>
             <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(12px); } to { opacity:1; transform:scale(1) translateY(0); } }

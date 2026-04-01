@@ -432,7 +432,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .panel-enter { animation: panelIn 0.25s cubic-bezier(.23,1,.32,1) both; }
       `}</style>
 
-      <div className="fixed inset-0 z-[700] bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div role="button" aria-label="Close profile" tabIndex={0} className="fixed inset-0 z-[700] bg-black/60 backdrop-blur-sm" onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose()} />
 
       <div role="dialog" aria-label="User profile" className="panel-enter fixed right-0 top-0 bottom-0 z-[701] flex flex-col profile-panel-width"
         style={{ width: "min(400px, 100vw)", background: "#0e1118", borderLeft: "1px solid rgba(255,255,255,0.10)", boxShadow: "-24px 0 80px rgba(0,0,0,0.6)", fontFamily: F }}>
@@ -789,7 +789,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                                     last_updated: new Date().toISOString(),
                                   }, { onConflict: "user_id" });
                                   setEditingInstructions(false);
-                                } catch {}
+                                } catch (e) {
+                                  console.error("[AdBrief] save instructions", e);
+                                  toast.error(language === "pt" ? "Falha ao salvar" : language === "es" ? "Error al guardar" : "Failed to save");
+                                }
                                 setSavingInstructions(false);
                               }}
                               style={{ padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9", fontSize: 12, fontWeight: 700, fontFamily: M, cursor: "pointer" }}>

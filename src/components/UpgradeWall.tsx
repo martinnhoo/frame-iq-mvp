@@ -318,7 +318,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
       {/* Mobile bottom sheet */}
       <div className="upgrade-mobile" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "flex-end", justifyContent: "center", overflowY: "auto" }}>
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }} onClick={onClose} />
+        <div role="button" aria-label="Close" tabIndex={0} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose?.()} />
         <div style={{ position: "relative", width: "100%" }}>
           <MobileSheet />
         </div>
@@ -326,7 +326,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
       {/* Desktop centered modal */}
       <div className="upgrade-desktop" style={{ position: "fixed", inset: 0, zIndex: 9999, alignItems: "flex-start", justifyContent: "center", padding: "24px 24px 40px", overflowY: "auto" }}>
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }} onClick={onClose} />
+        <div role="button" aria-label="Close" tabIndex={0} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose?.()} />
         <div style={{ position: "relative" }}>
           <DesktopModal />
         </div>

@@ -783,7 +783,7 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
 
   return (
     <>
-      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 500 }} onClick={onClose} />
+      <div role="button" aria-label="Close" tabIndex={0} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 500 }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose()} />
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: 360, background: "#131720", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "28px 24px", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
         <div style={{ fontSize: 36, marginBottom: 14, textAlign: "center" }}>📊</div>
         <p style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#eef0f6", textAlign: "center", margin: "0 0 10px" }}>{m.title}</p>

@@ -21,7 +21,7 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       {/* Backdrop */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(6,8,18,0.92)", backdropFilter: "blur(12px)" }} onClick={onClose} />
+      <div role="button" aria-label="Close" tabIndex={0} style={{ position: "absolute", inset: 0, background: "rgba(6,8,18,0.92)", backdropFilter: "blur(12px)" }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose?.()} />
 
       {/* Modal */}
       <div style={{ position: "relative", width: "100%", maxWidth: 720, background: "#0a0b1a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 24, padding: "40px 36px", boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }}>
