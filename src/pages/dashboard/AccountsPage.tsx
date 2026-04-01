@@ -166,6 +166,13 @@ const iStyle: React.CSSProperties = {
   transition:"border-color 0.2s, background 0.2s, box-shadow 0.2s",
 };
 
+const withTimeout = async <T,>(promise: PromiseLike<T>, ms = 10000): Promise<T> => {
+  return await Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+  ]);
+};
+
 function PlatformIcon({ id }: { id:string }) {
   if (id === "meta") return (
 <svg width="22" height="11" viewBox="0 0 56 27" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -628,6 +635,7 @@ export default function AccountsPage() {
 
   const [accounts, setAccounts]   = useState<any[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [openId, setOpenId]       = useState<string | null>(null);     // which account card is expanded
   const [editingId, setEditingId] = useState<string | null>(null);     // which is in edit mode
   const [creating, setCreating]   = useState(false);
@@ -638,14 +646,35 @@ export default function AccountsPage() {
   }, [selectedPersona?.id]);
 
   const load = useCallback(async () => {
-    if (!user?.id) return;
-    const { data } = await supabase.from("personas")
-      .select("id,user_id,name,logo_url,website,description,created_at")
-      .eq("user_id", user.id).order("created_at", { ascending:true });
-    const list = (data || []) as any[];
-    setAccounts(list);
-    if (list.length > 0 && !openId) setOpenId(list[0].id);
-    setLoading(false);
+    if (!user?.id) {
+      setLoading(false);
+      setLoadError("Sessão não encontrada. Recarregue a página.");
+      return;
+    }
+
+    setLoading(true);
+    setLoadError(null);
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from("personas")
+          .select("id,user_id,name,logo_url,website,description,created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending:true })
+      );
+
+      if (error) throw error;
+
+      const list = (data || []) as any[];
+      setAccounts(list);
+      setOpenId(prev => prev || list[0]?.id || null);
+    } catch (e) {
+      console.error("[AdBrief] accounts load:", e);
+      setAccounts([]);
+      setLoadError("Não foi possível carregar suas contas agora.");
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -680,9 +709,18 @@ export default function AccountsPage() {
     setDeleting(null);
   };
 
-  if (!user || loading) return (
+  if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:300 }}>
       <Loader2 size={20} color="rgba(255,255,255,0.3)" className="animate-spin"/>
+    </div>
+  );
+
+  if (!user) return (
+    <div style={{ maxWidth:720, margin:"0 auto", padding:"clamp(16px,4vw,36px)", fontFamily:F }}>
+      <div style={{ borderRadius:16, padding:"16px 18px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.18)" }}>
+        <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fca5a5" }}>Não foi possível abrir Accounts</p>
+        <p style={{ margin:"4px 0 0", fontSize:13, color:"rgba(255,255,255,0.55)" }}>Sua sessão não está disponível no momento.</p>
+      </div>
     </div>
   );
 
@@ -730,8 +768,21 @@ export default function AccountsPage() {
         </div>
       )}
 
+      {loadError && !creating && (
+        <div style={{ marginBottom:16, borderRadius:16, padding:"16px 18px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.18)", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+          <div>
+            <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fca5a5" }}>Erro ao carregar Accounts</p>
+            <p style={{ margin:"4px 0 0", fontSize:13, color:"rgba(255,255,255,0.55)" }}>{loadError}</p>
+          </div>
+          <button onClick={() => load()}
+            style={{ padding:"9px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontFamily:F, fontSize:13, fontWeight:600, cursor:"pointer" }}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
       {/* ── Empty state ── */}
-      {accounts.length === 0 && !creating && (
+      {accounts.length === 0 && !creating && !loadError && (
         <div style={{ textAlign:"center", padding:"64px 24px", borderRadius:20,
           background:CARD, border:"1px solid rgba(255,255,255,0.10)",
           boxShadow:SHD, backdropFilter:"blur(16px)", animation:"fadeUp 0.3s ease" }}>
