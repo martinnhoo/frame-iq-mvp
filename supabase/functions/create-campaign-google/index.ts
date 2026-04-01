@@ -62,7 +62,7 @@ serve(async (req) => {
       "developer-token": DEV_TOKEN,
       "login-customer-id": custId,
     };
-    const base = `https://googleads.googleapis.com/v19/customers/${custId}`;
+    const base = `https://googleads.googleapis.com/v23/customers/${custId}`;
 
     // ── 1. Create Campaign ───────────────────────────────────────────────────
     const budgetMicros = Math.round(parseFloat(campaign.daily_budget || "50") * 1_000_000);

@@ -124,11 +124,11 @@ Deno.serve(async (req) => {
 
         const gQuery = async (query: string) => {
           const hdr: Record<string, string> = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", "developer-token": DEV_TOKEN };
-          const r = await fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, { method: "POST", headers: hdr, body: JSON.stringify({ query }) });
+          const r = await fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`, { method: "POST", headers: hdr, body: JSON.stringify({ query }) });
           const text = await r.text();
           if (text.trim().startsWith("<")) {
             hdr["login-customer-id"] = custId;
-            const r2 = await fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, { method: "POST", headers: hdr, body: JSON.stringify({ query }) });
+            const r2 = await fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`, { method: "POST", headers: hdr, body: JSON.stringify({ query }) });
             const t2 = await r2.text();
             return t2.trim().startsWith("<") ? { results: [] } : JSON.parse(t2);
           }

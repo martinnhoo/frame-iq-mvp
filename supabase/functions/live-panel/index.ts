@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
           };
 
           const gQuery = (query: string) =>
-            fetch(`https://googleads.googleapis.com/v19/customers/${custId}/googleAds:search`, {
+            fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`, {
               method: "POST", headers: gHeaders, body: JSON.stringify({ query }),
             }).then(r => r.json());
 
