@@ -45,12 +45,6 @@ export default function ScriptGenerator() {
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState<number | null>(null);
   const [personaApplied, setPersonaApplied] = useState(false);
-  if (!user) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
 
 
   useEffect(() => {
@@ -131,6 +125,13 @@ export default function ScriptGenerator() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiProfile]);
 
+
+  if (!user) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
   const generate = async () => {
     if (!product.trim()) { toast.error(language === "es" ? "Describe tu producto primero" : "Descreva seu produto primeiro"); return; }
     setLoading(true);
