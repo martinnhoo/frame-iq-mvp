@@ -183,7 +183,7 @@ export function DashboardSidebar({
                 {selectedPersona?.logo_url
                   ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : selectedPersona
-                    ? <span style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9" }}>{selectedPersona.name.charAt(0).toUpperCase()}</span>
+                    ? <span style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9" }}>{(selectedPersona.name || "?").charAt(0).toUpperCase()}</span>
                     : <Building2 size={14} color="rgba(255,255,255,0.25)" />
                 }
               </div>
@@ -211,7 +211,7 @@ export function DashboardSidebar({
                       className="sb-hover">
                       <div style={{ width: 22, height: 22, borderRadius: 5, flexShrink: 0, overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : <span style={{ fontSize: 11, fontWeight: 700, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.35)" }}>{p.name.charAt(0).toUpperCase()}</span>}
+                          : <span style={{ fontSize: 11, fontWeight: 700, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.35)" }}>{(p.name || "?").charAt(0).toUpperCase()}</span>}
                       </div>
                       <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.62)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
                       {isSel && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />}

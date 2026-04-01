@@ -122,7 +122,7 @@ export default function DashboardLayout() {
 
   const fetchUsage = async (userId: string) => {
     const currentPeriod = new Date().toISOString().slice(0, 7);
-    const { data } = await supabase.from("usage").select("*").eq("user_id", userId).eq("period", currentPeriod).single();
+    const { data } = await supabase.from("usage").select("*").eq("user_id", userId).eq("period", currentPeriod).maybeSingle();
     if (data) setUsage({ analyses_count: data.analyses_count, boards_count: data.boards_count });
     try {
       const { data: d } = await supabase.functions.invoke("check-usage", { body: { user_id: userId } });
@@ -152,7 +152,7 @@ export default function DashboardLayout() {
       setUser(session.user);
 
       // Fetch profile in parallel with usage — don't wait sequentially
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
       // Load telegram connection status
       (supabase as any).from("telegram_connections").select("chat_id,telegram_username,active")
         .eq("user_id", session.user.id).eq("active", true).maybeSingle()
@@ -257,7 +257,7 @@ export default function DashboardLayout() {
       const checkoutResult = new URLSearchParams(window.location.search).get("checkout");
       if (checkoutResult === "success") {
         const planName = profileData?.plan
-          ? profileData.plan.charAt(0).toUpperCase() + profileData.plan.slice(1)
+          ? (profileData.plan || "").charAt(0).toUpperCase() + (profileData.plan || "").slice(1)
           : "";
         const lang = profileData?.preferred_language || localStorage.getItem("adbrief_language") || "pt";
         const msg = lang === "es"
