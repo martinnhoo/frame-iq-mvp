@@ -7,7 +7,7 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, Sparkles, RotateCcw, Brain,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
-  ScanLine, Zap, Clapperboard, ScanEye, LayoutDashboard, X,
+  Zap, Clapperboard, ScanEye, LayoutDashboard, X,
   TrendingUp, TrendingDown, AlertTriangle, BarChart2,
   Upload, FileText, BarChart3,
   Activity, ChevronDown, ChevronUp, ExternalLink,
@@ -79,21 +79,18 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 };
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
-    { icon: ScanLine,       label: "Upload ad",      action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Write script",   action: "script",     color: "#34d399" },
     { icon: ScanEye,        label: "Competitors",     action: "competitor", color: "#a78bfa" },
     { icon: LayoutDashboard,label: "Dashboard",      action: "dashboard",  color: "#0ea5e9" },
   ],
   pt: [
-    { icon: ScanLine,       label: "Upload anúncio",    action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Gerar hooks",        action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",     color: "#34d399" },
     { icon: ScanEye,        label: "Concorrentes",        action: "competitor", color: "#a78bfa" },
     { icon: LayoutDashboard,label: "Dashboard",          action: "dashboard",  color: "#0ea5e9" },
   ],
   es: [
-    { icon: ScanLine,       label: "Subir anuncio",     action: "upload",     color: "#60a5fa" },
     { icon: Zap,            label: "Generar hooks",     action: "hooks",      color: "#06b6d4" },
     { icon: Clapperboard,   label: "Escribir guión",    action: "script",     color: "#34d399" },
     { icon: ScanEye,        label: "Competidores",        action: "competitor", color: "#a78bfa" },
@@ -2422,8 +2419,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             })()}/>
         )}
         {/* Inline tool panel — always at bottom of chat, after messages */}
-        {activeTool&&activeTool!=="upload"&&(
-          <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 24px"}}>
+        {activeTool&&activeTool!=="dashboard"&&(
+          <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
               onClose={()=>setActiveTool(null)}
@@ -2459,8 +2456,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               {TOOLS.map(tool=>{
                 const isOn = activeTool===tool.action;
                 return (
-                  <button key={tool.action}
-                    onClick={()=>setActiveTool(isOn?null:tool.action)}
+                  <button key={tool.action} className={isOn?"tool-pill tool-pill-on":"tool-pill"}
+                    onClick={()=>{
+                      if(tool.action==="dashboard"){
+                        // Dashboard: send immediately with default context request
+                        if(!isOn){
+                          const defMsg=lang==="pt"?"[DASHBOARD] Mostrar resumo da conta — campanhas, ROAS e criativos ativos":lang==="es"?"[DASHBOARD] Mostrar resumen de la cuenta":"[DASHBOARD] Show account summary — campaigns, ROAS and active creatives";
+                          send(defMsg);
+                        }
+                        return;
+                      }
+                      setActiveTool(isOn?null:tool.action);
+                    }}
                     style={{
                       display:"flex",alignItems:"center",gap:6,
                       padding:"5px 12px",borderRadius:99,flexShrink:0,
@@ -2472,18 +2479,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       letterSpacing:"-0.01em",transition:"all 0.15s",
                       boxShadow: isOn ? `0 0 16px ${tool.color}60` : "none",
                     }}
-                    onMouseEnter={e=>{if(!isOn){
-                      const el=e.currentTarget as HTMLElement;
-                      el.style.background=`${tool.color}1a`;
-                      el.style.borderColor=`${tool.color}55`;
-                      el.style.color=tool.color;
-                    }}}
-                    onMouseLeave={e=>{if(!isOn){
-                      const el=e.currentTarget as HTMLElement;
-                      el.style.background="rgba(255,255,255,0.07)";
-                      el.style.borderColor="rgba(255,255,255,0.11)";
-                      el.style.color="rgba(255,255,255,0.65)";
-                    }}}>
+>
                     <tool.icon size={12} strokeWidth={2}/>
                     {tool.label}
                   </button>
@@ -2558,6 +2554,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes orbFloat1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(8%,12%) scale(1.08)}}
         @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
