@@ -8,6 +8,7 @@ import type { User as SupaUser } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanUpgradeModal } from "./PlanUpgradeModal";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
@@ -103,6 +104,7 @@ export function DashboardSidebar({
   const { language } = useLanguage();
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [spend, setSpend] = useState<number | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const plan = profile?.plan || "free";
   const isLifetime = LIFETIME.includes(user?.email || "");
@@ -257,13 +259,15 @@ export function DashboardSidebar({
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 8px" }} />
 
           {plan === "free" && !isLifetime && (
-            <button onClick={() => { navigate("/pricing"); onClose(); }}
+            <button onClick={() => setUpgradeOpen(true)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 8, marginBottom: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.17)", cursor: "pointer", width: "100%", transition: "all 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.14)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.08)"; }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Zap size={13} color="#0ea5e9" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f2f8" }}>{pt ? "Fazer upgrade" : "Upgrade"}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f2f8" }}>
+                  {pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade"}
+                </span>
               </div>
               <ArrowUpRight size={13} color="rgba(14,165,233,0.55)" />
             </button>
@@ -284,6 +288,13 @@ export function DashboardSidebar({
           </button>
         </div>
       </aside>
+
+      <PlanUpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        currentPlan={plan}
+        language={language}
+      />
     </>
   );
 }
