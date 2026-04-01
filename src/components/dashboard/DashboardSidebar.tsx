@@ -103,7 +103,7 @@ export function DashboardSidebar({
   const location = useLocation();
   const { language } = useLanguage();
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const [spend, setSpend] = useState<number | null>(null);
+  const [kpi, setKpi] = useState<{ spend: number; ctr: number; ads: number } | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const plan = profile?.plan || "free";
@@ -115,12 +115,17 @@ export function DashboardSidebar({
   const isAt = (url: string) => location.pathname === url || location.pathname.startsWith(url + "/");
 
   useEffect(() => {
-    if (!user?.id || !selectedPersona?.id) { setSpend(null); return; }
+    if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
     (supabase as any).from("daily_snapshots")
-      .select("total_spend").eq("user_id", user.id).eq("persona_id", selectedPersona.id)
+      .select("total_spend, avg_ctr, active_ads")
+      .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
       .order("date", { ascending: false }).limit(1).maybeSingle()
-      .then(({ data }: any) => setSpend(data?.total_spend > 0 ? data.total_spend : null))
-      .catch(() => setSpend(null));
+      .then(({ data }: any) => {
+        if (data && (data.total_spend > 0 || data.avg_ctr > 0)) {
+          setKpi({ spend: data.total_spend || 0, ctr: (data.avg_ctr || 0) * 100, ads: data.active_ads || 0 });
+        } else setKpi(null);
+      })
+      .catch(() => setKpi(null));
   }, [user?.id, selectedPersona?.id]);
 
   const PRIMARY = [
@@ -194,10 +199,10 @@ export function DashboardSidebar({
                 <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: selectedPersona ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.01em" }}>
                   {selectedPersona?.name || (pt ? "Sem conta" : "No account")}
                 </p>
-                {/* Spend — subtle, not monospace */}
-                {spend != null && (
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    R${spend.toFixed(0)} esta semana
+                {/* Spend + CTR — o que o gestor quer ver */}
+                {kpi != null && (
+                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.38)", lineHeight: 1.3, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    R${kpi.spend.toFixed(0)} · {kpi.ctr.toFixed(2)}% CTR
                   </p>
                 )}
               </div>
