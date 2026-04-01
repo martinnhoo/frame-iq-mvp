@@ -191,7 +191,7 @@ function PlatformIcon({ id }: { id:string }) {
 
 // ── Platform row ──────────────────────────────────────────────────────────────
 function PlatformRow({ p, userId, accountId, t }: {
-  p: typeof PLATFORMS[0]; userId:string; accountId:string; t: typeof T.en;
+  p: typeof PLATFORMS[0]; userId:string; accountId:string; t: TStrings;
 }) {
   const [conn, setConn]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
