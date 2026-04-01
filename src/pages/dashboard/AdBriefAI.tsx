@@ -458,7 +458,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
       <ul key={key} style={{ margin: "10px 0 14px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
         {listBuffer.map((item, i) => (
           <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0, marginTop: 8 }} />
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.7)", flexShrink: 0, marginTop: 9 }} />
             <span style={{ fontFamily: M, fontSize: 14, color: "rgba(240,242,248,0.85)", lineHeight: 1.72, letterSpacing: "-0.01em" }}>{inlineFormat(item)}</span>
           </li>
         ))}
@@ -495,7 +495,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
     // H2/H3
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "#0ea5e9", letterSpacing: "0.07em", textTransform: "uppercase", margin: "18px 0 8px" }}>{trimmed.replace(/^###\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.65)", letterSpacing: "0.06em", textTransform: "uppercase", margin: "20px 0 6px" }}>{trimmed.replace(/^###\s/, "")}</p>);
       return;
     }
     if (/^##\s/.test(trimmed)) {
@@ -560,7 +560,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
   // ── WARNING — linha colorida discreta, sem caixa ──
   if(block.type==="warning") return(
-    <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"10px 14px",borderRadius:8,background:"rgba(251,191,36,0.06)",border:"1px solid rgba(251,191,36,0.15)"}}>
+    <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"12px 14px 12px 16px",borderRadius:8,background:"rgba(251,191,36,0.05)",borderLeft:"3px solid rgba(251,191,36,0.4)"}}>
       <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}>⚠</span>
       <p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.8)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
     </div>
@@ -611,7 +611,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
   // ── ACTION — inline, sem caixa verde ──
   if(block.type==="action") return(
-    <p style={{fontFamily:M,fontSize:14,color:"rgba(255,255,255,0.75)",lineHeight:1.7,margin:"0 0 4px"}}>{block.content||block.title}</p>
+    <p style={{fontFamily:M,fontSize:14,color:"rgba(240,242,248,0.72)",lineHeight:1.75,margin:"0 0 6px"}}>{block.content||block.title}</p>
   );
 
   // ── DEFAULT: insight / prose — markdown rendered ──
@@ -1002,55 +1002,52 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   if (!open) {
     return (
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
-        ...I, display: "flex", alignItems: "center", gap: 0, height: 36,
-        padding: "0 18px", cursor: "pointer", userSelect: "none",
-        background: "rgba(10,14,23,0.7)", backdropFilter: "blur(12px)",
+        ...I, display: "flex", alignItems: "center", gap: 0, height: 38,
+        padding: "0 20px", cursor: "pointer", userSelect: "none",
+        background: "#0a0d18",
         borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s",
       }}>
         <style>{LP_CSS}</style>
 
         {/* Live dot */}
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.6)" : "none", marginRight: 8, flexShrink: 0 }} />
+        <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.5)" : "none", marginRight: 10, flexShrink: 0 }} />
 
         {/* Platform */}
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#475569", letterSpacing: "0.07em", textTransform: "uppercase", marginRight: 16, flexShrink: 0 }}>{tcfg[tab]?.label}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.3)", letterSpacing: "0.02em", marginRight: 20, flexShrink: 0 }}>{tcfg[tab]?.label}</span>
 
-        {/* KPIs */}
+        {/* KPIs — separated by space only, no borders */}
         {data && !data.error && !busy && (
-          <div style={{ display: "flex", gap: 0, flex: 1, overflow: "hidden", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 20, flex: 1, overflow: "hidden", alignItems: "center" }}>
             {[
               k.spend && { lbl: "Spend", val: `R$${parseFloat(k.spend).toFixed(0)}`, warn: false, tr: sTr },
               k.ctr   && { lbl: "CTR",   val: `${parseFloat(k.ctr).toFixed(2)}%`,    warn: parseFloat(k.ctr) < 0.5, tr: cTr },
-              k.frequency && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
+              k.frequency && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}×`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
               k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
-            ].filter(Boolean).map((item: any, i, arr) => (
-              <React.Fragment key={item.lbl}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 5, padding: "0 14px", borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.lbl}</span>
-                  <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: item.warn ? "#fb7185" : "#64748b" }}>{item.val}</span>
-                  {item.tr !== "flat" && <span style={{ fontSize: 12, color: item.tr === "up" ? "#34d399" : "#fb7185" }}>{item.tr === "up" ? "↑" : "↓"}</span>}
-                </div>
-              </React.Fragment>
+            ].filter(Boolean).map((item: any) => (
+              <div key={item.lbl} style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.28)", letterSpacing: "0.02em" }}>{item.lbl}</span>
+                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 500, color: item.warn ? "#fb7185" : "rgba(255,255,255,0.7)" }}>{item.val}</span>
+                {item.tr !== "flat" && <span style={{ fontSize: 12, color: item.tr === "up" ? "#34d399" : "#fb7185", lineHeight: 1 }}>{item.tr === "up" ? "↑" : "↓"}</span>}
+              </div>
             ))}
-            {/* Alert / winner dots */}
             {alerts.some(a => a.t === "warn") && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 14px" }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fb7185", boxShadow: "0 0 4px rgba(251,113,133,0.6)" }} />
-                <span style={{ fontSize: 12, color: "#fb7185", fontWeight: 500 }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#fb7185" }} />
+                <span style={{ fontSize: 12, color: "rgba(251,113,133,0.8)", fontWeight: 400 }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
               </div>
             )}
             {(data.winners || []).length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 14px" }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", boxShadow: "0 0 4px rgba(52,211,153,0.5)" }} />
-                <span style={{ fontSize: 12, color: "#34d399", fontWeight: 500 }}>{(data.winners || []).length} pra escalar</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#34d399" }} />
+                <span style={{ fontSize: 12, color: "rgba(52,211,153,0.8)", fontWeight: 400 }}>{(data.winners || []).length} pra escalar</span>
               </div>
             )}
           </div>
         )}
-        {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
+        {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
         {fail && !busy && <span style={{ fontSize: 12, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
 
-        <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0, marginLeft: "auto" }} />
+        <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0, marginLeft: "auto" }} />
       </div>
     );
   }
@@ -2292,7 +2289,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 20px",padding:"0 20px"}}>
+          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 28px",padding:"0 24px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end",position:"relative" as const}} className="user-msg-row">
                 <div style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
@@ -2310,7 +2307,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"12px 18px",borderRadius:"18px 18px 4px 18px",background:"linear-gradient(135deg, #0ea5e9, #0891d2)",fontSize:14,color:"#fff",...m,lineHeight:1.65,boxShadow:"0 4px 16px rgba(14,165,233,0.2)"}}>
+                  <div style={{padding:"11px 16px",borderRadius:"16px 16px 4px 16px",background:"#0ea5e9",fontSize:14,color:"#fff",...m,lineHeight:1.65,boxShadow:"0 4px 16px rgba(14,165,233,0.2)"}}>
                     {msg.userText}
                   </div>
                 </div>
@@ -2319,11 +2316,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div>
                 {/* AB avatar — only for non-proactive (proactive renders its own) */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <div style={{width:28,height:28,borderRadius:9,background:"linear-gradient(135deg, #0ea5e9, #06b6d4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 10px rgba(14,165,233,0.2)"}}>
-                      <Sparkles size={13} color="#fff" strokeWidth={2}/>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <div style={{width:24,height:24,borderRadius:7,background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <Sparkles size={11} color="rgba(14,165,233,0.9)" strokeWidth={2}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:700,color:"#0ea5e9",letterSpacing:"0.08em",textTransform:"uppercase" as const}}>ADBRIEF</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"0.04em"}}>AdBrief</span>
                   </div>
                 )}
                 {/* Blocks */}
@@ -2348,7 +2345,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:2}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:10,paddingLeft:0}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
                     style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
                     onMouseEnter={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}

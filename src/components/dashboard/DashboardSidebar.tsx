@@ -88,25 +88,23 @@ function NavItem({ url, label, opts, isActive, onClose }: {
       <NavLink to={url} onClick={opts?.soon ? undefined : onClose}
         className="sidebar-nav-item"
         style={{
-          display: "flex", alignItems: "center", padding: "8px 14px 8px 18px",
-          borderRadius: 9, margin: "2px 10px",
-          color: active ? "#fff" : opts?.soon ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.48)",
-          background: active ? "rgba(14,165,233,0.08)" : "transparent",
-          fontSize: 13.5, fontWeight: active ? 600 : 450,
-          textDecoration: "none", transition: "all 0.18s cubic-bezier(0.16,1,0.3,1)", fontFamily: "'Inter', system-ui, sans-serif",
+          display: "flex", alignItems: "center", padding: "8px 12px",
+          borderRadius: 8, margin: "1px 8px",
+          color: active ? "#f0f2f8" : opts?.soon ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.42)",
+          background: active ? "rgba(14,165,233,0.12)" : "transparent",
+          fontSize: 13, fontWeight: active ? 600 : 400,
+          textDecoration: "none", transition: "all 0.15s", fontFamily: "'Inter', system-ui, sans-serif",
           cursor: opts?.soon ? "default" : "pointer",
           pointerEvents: opts?.soon ? "none" : "auto",
           position: "relative", overflow: "visible",
           letterSpacing: "-0.01em",
-          borderLeft: active ? "2px solid #0ea5e9" : "2px solid transparent",
-          boxShadow: active ? "inset 0 0 20px rgba(14,165,233,0.04)" : "none",
         }}
         onMouseEnter={e => {
           setHovered(true);
           if (!active && !opts?.soon) {
             const el = e.currentTarget as HTMLElement;
-            el.style.background = "rgba(255,255,255,0.04)";
-            el.style.color = "rgba(255,255,255,0.8)";
+            el.style.background = "rgba(255,255,255,0.05)";
+            el.style.color = "rgba(255,255,255,0.75)";
           }
         }}
         onMouseLeave={e => {
@@ -114,17 +112,17 @@ function NavItem({ url, label, opts, isActive, onClose }: {
           if (!active && !opts?.soon) {
             const el = e.currentTarget as HTMLElement;
             el.style.background = "transparent";
-            el.style.color = "rgba(255,255,255,0.48)";
+            el.style.color = "rgba(255,255,255,0.42)";
           }
         }}>
         <span style={{ flex: 1 }}>{label}</span>
         {opts?.badge && !opts?.soon && (
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.1)", borderRadius: 5, padding: "2px 7px", letterSpacing: "0.05em", border: "1px solid rgba(14,165,233,0.15)" }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.1)", borderRadius: 5, padding: "2px 7px", letterSpacing: "0.05em", border: "1px solid rgba(14,165,233,0.15)" }}>
             {opts.badge}
           </span>
         )}
         {opts?.soon && (
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.18)", fontWeight: 500 }}>Soon</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", fontWeight: 500 }}>Soon</span>
         )}
       </NavLink>
       {/* Hover tooltip */}
@@ -265,7 +263,7 @@ export function DashboardSidebar({
                 <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                   {p.logo_url
                     ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <span style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: 0 }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
+                    : <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.4)", letterSpacing: 0 }}>{(p.name || "?").charAt(0).toUpperCase()}</span>
                   }
                 </div>
                 {/* Name — never bold, active is just slightly brighter */}
@@ -292,7 +290,7 @@ export function DashboardSidebar({
   // ── Performance tooltip content ───────────────────────────────────────────
   const perfTooltip = perfData ? (
     <div>
-      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>Spend 7 dias</p>
+      <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>Spend 7 dias</p>
       <MiniSparkline data={perfData} color={accent} />
       <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", margin: "6px 0 0" }}>
         R${perfData.reduce((a, b) => a + b, 0).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
@@ -328,7 +326,7 @@ export function DashboardSidebar({
         <nav style={{ flex: 1, paddingTop: 16, paddingBottom: 12, overflowY: "auto", overflowX: "hidden" }}>
           {/* Section label */}
           <div style={{ padding: "0 20px", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
               {pt ? "Principal" : es ? "Principal" : "Main"}
             </span>
           </div>
@@ -341,7 +339,7 @@ export function DashboardSidebar({
 
           {/* Section label */}
           <div style={{ padding: "0 20px", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.18)", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: F }}>
               {pt ? "Ferramentas" : es ? "Herramientas" : "Tools"}
             </span>
           </div>
@@ -361,7 +359,7 @@ export function DashboardSidebar({
               boxShadow: systemStatus === "ok" ? "0 0 6px #22c55e60" : "none",
               animation: systemStatus === "loading" ? "pulseDot 1.2s ease infinite" : "none",
             }} />
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", fontFamily: F }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.22)", fontFamily: F }}>
               {systemStatus === "ok" ? (pt ? "Todos os sistemas OK" : es ? "Todos los sistemas OK" : "All systems OK") :
                systemStatus === "warn" ? (pt ? "Lentidão detectada" : es ? "Lentitud detectada" : "Slowness detected") :
                (pt ? "Verificando..." : es ? "Verificando..." : "Checking...")}
@@ -390,11 +388,11 @@ export function DashboardSidebar({
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
             <Avatar style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 8 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback style={{ fontSize: 11, fontWeight: 700, background: `linear-gradient(135deg, ${accent}, ${accent}88)`, color: "#fff", borderRadius: 8 }}>{initials}</AvatarFallback>
+              <AvatarFallback style={{ fontSize: 12, fontWeight: 700, background: `linear-gradient(135deg, ${accent}, ${accent}88)`, color: "#fff", borderRadius: 8 }}>{initials}</AvatarFallback>
             </Avatar>
             <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
               <p style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{displayName}</p>
-              <p style={{ fontSize: 11, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
+              <p style={{ fontSize: 12, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
             </div>
           </button>
         </div>
