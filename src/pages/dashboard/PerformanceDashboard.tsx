@@ -27,18 +27,18 @@ interface MetricDef {
 }
 
 const METRICS: MetricDef[] = [
-  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v)=>`R$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,   higherIsBetter:false, platforms:["both"]   },
+  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v)=>`$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,    higherIsBetter:false, platforms:["both"]   },
   { key:"ctr",         label:"CTR",         labelPt:"CTR",          labelEs:"CTR",          icon:MousePointer,accent:GREEN,     format:(v)=>`${(v*100).toFixed(2)}%`,                                higherIsBetter:true,  platforms:["both"]   },
   { key:"clicks",      label:"Clicks",      labelPt:"Cliques",      labelEs:"Clics",        icon:Target,      accent:"#a78bfa", format:(v)=>v>=1000?(v/1000).toFixed(1)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
-  { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         accent:"#f97316", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["meta"]   },
+  { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         accent:"#f97316", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
   { key:"conversions", label:"Conversions", labelPt:"Conversões",   labelEs:"Conversiones", icon:TrendingUp,  accent:AMBER,     format:(v)=>String(Math.round(v)),                                   higherIsBetter:true,  platforms:["both"]   },
   { key:"roas",        label:"ROAS",        labelPt:"ROAS",         labelEs:"ROAS",         icon:BarChart3,   accent:GREEN,     format:(v)=>`${v.toFixed(2)}×`,                                      higherIsBetter:true,  platforms:["both"]   },
-  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v)=>`R$${v.toFixed(0)}`,                                     higherIsBetter:false, platforms:["both"]   },
-  { key:"cpm",         label:"CPM",         labelPt:"CPM",          labelEs:"CPM",          icon:Users,       accent:"#06b6d4", format:(v)=>`R$${v.toFixed(2)}`,                                     higherIsBetter:false, platforms:["meta"]   },
-  { key:"cpc",         label:"CPC",         labelPt:"CPC",          labelEs:"CPC",          icon:Repeat,      accent:"#8b5cf6", format:(v)=>`R$${v.toFixed(2)}`,                                     higherIsBetter:false, platforms:["google"] },
+  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v)=>`$${v.toFixed(0)}`,                                      higherIsBetter:false, platforms:["both"]   },
+  { key:"cpm",         label:"CPM",         labelPt:"CPM",          labelEs:"CPM",          icon:Users,       accent:"#06b6d4", format:(v)=>`$${v.toFixed(2)}`,                                      higherIsBetter:false, platforms:["meta"]   },
+  { key:"cpc",         label:"CPC",         labelPt:"CPC",          labelEs:"CPC",          icon:Repeat,      accent:"#8b5cf6", format:(v)=>`$${v.toFixed(2)}`,                                      higherIsBetter:false, platforms:["both"]   },
   { key:"reach",       label:"Reach",       labelPt:"Alcance",      labelEs:"Alcance",      icon:Users,       accent:"#14b8a6", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["meta"]   },
   { key:"frequency",   label:"Frequency",   labelPt:"Frequência",   labelEs:"Frecuencia",   icon:Repeat,      accent:AMBER,     format:(v)=>v.toFixed(2),                                            higherIsBetter:false, platforms:["meta"]   },
-  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v)=>`R$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,   higherIsBetter:true,  platforms:["both"]   },
+  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v)=>`$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,    higherIsBetter:true,  platforms:["both"]   },
 ];
 
 const DEFAULT_METRICS: MetricKey[] = ["spend","ctr","clicks","roas","conversions","cpa"];
@@ -390,12 +390,23 @@ export default function PerformanceDashboard() {
 
   useEffect(()=>{ if(data){ if(hasMeta) setActivePlatform("meta"); else if(hasGoogle) setActivePlatform("google"); } },[data,hasMeta,hasGoogle]);
 
+  // Filter active metrics to only those valid for current platform
+  const validMetrics = useMemo(()=>{
+    const filtered = activeMetrics.filter(key=>{
+      const def = METRICS.find(m=>m.key===key);
+      return def && (def.platforms.includes("both") || def.platforms.includes(activePlatform));
+    });
+    // Ensure at least spend + ctr always shown
+    if(filtered.length < 2) return ["spend","ctr"] as MetricKey[];
+    return filtered;
+  },[activeMetrics, activePlatform]);
+
   const d = activePlatform==="google"?data?.google:data?.meta;
 
   const sparkData = useMemo(()=>{
     const daily=d?.daily||[];
     const result:Partial<Record<MetricKey,number[]>>={};
-    for(const m of activeMetrics) result[m]=daily.map((day:any)=>getMetricValue(day,m));
+    for(const m of validMetrics) result[m]=daily.map((day:any)=>getMetricValue(day,m));
     return result;
   },[d,activeMetrics]);
 
@@ -582,7 +593,7 @@ export default function PerformanceDashboard() {
       {!loading&&d&&(
         <>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(195px,1fr))",gap:14,marginBottom:20}}>
-            {activeMetrics.map((key,i)=>{
+            {validMetrics.map((key,i)=>{
               const def=METRICS.find(m=>m.key===key);
               if(!def) return null;
               const value=getMetricValue(d,key);
@@ -611,7 +622,7 @@ export default function PerformanceDashboard() {
                   <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>{dateLabel} · {activePlatform==="meta"?"Meta Ads":"Google Ads"}</p>
                 </div>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap" as const}}>
-                  {activeMetrics.slice(0,6).map(key=>{
+                  {validMetrics.slice(0,6).map(key=>{
                     const def=METRICS.find(m=>m.key===key); if(!def) return null;
                     const active=chartMetric===key;
                     return (
