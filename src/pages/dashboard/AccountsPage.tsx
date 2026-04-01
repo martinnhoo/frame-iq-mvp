@@ -476,7 +476,7 @@ function PlatformRow({ p, userId, accountId, t }: {
 
 // ── Account form (inline) ─────────────────────────────────────────────────────
 function AccountForm({ account, userId, t, onSave, onCancel }: {
-  account?: any; userId:string; t:typeof T.en;
+  account?: any; userId:string; t: TStrings;
   onSave:()=>void; onCancel:()=>void;
 }) {
   const [name, setName]         = useState(account?.name || "");
