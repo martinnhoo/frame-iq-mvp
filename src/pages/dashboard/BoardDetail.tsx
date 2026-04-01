@@ -116,7 +116,6 @@ const BoardDetail = () => {
       const personaBrandLogo = (selectedPersona as any)?.brand_kit?.logo_data_url as string | undefined;
       const brandLogo = boardBrandLogo || personaBrandLogo;
 
-      console.log("[BoardDetail] Brand logo source:", boardBrandLogo ? "board" : personaBrandLogo ? "persona" : "none", "length:", brandLogo?.length || 0);
 
       const { data, error } = await supabase.functions.invoke("generate-scene-image", {
         body: {

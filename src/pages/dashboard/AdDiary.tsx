@@ -173,18 +173,18 @@ function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: bo
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
             <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: cfg.num, fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{ctr}%</p>
-            <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>CTR</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>CTR</p>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 52 }}>
             {entry.roas && entry.roas > 0 ? (
               <>
                 <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: isPos ? "#4ade80" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>ROAS</p>
+                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>ROAS</p>
               </>
             ) : (
               <>
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend)}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
               </>
             )}
           </div>
@@ -212,7 +212,7 @@ function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: bo
               ...(entry.days_running > 0  ? [{ l: t.metrics.days,        v: String(entry.days_running)    }] : []),
             ].map(m => (
               <div key={m.l} style={{ padding: "8px 10px", borderRadius: 7, background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: F, textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.l}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: F, textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.l}</p>
                 <p style={{ margin: "3px 0 0", fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.85)", fontFamily: M, letterSpacing: "-0.02em" }}>{m.v}</p>
               </div>
             ))}
@@ -287,7 +287,7 @@ export default function AdDiary() {
       await supabase.functions.invoke("sync-ad-diary", { body: { user_id: user.id, persona_id: personaId } });
       await load();
       setLastSync(new Date());
-    } catch {}
+    } catch (e) { console.error("[AdBrief]", e); }
     setSyncing(null);
   };
 

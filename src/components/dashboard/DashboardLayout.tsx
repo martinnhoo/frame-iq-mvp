@@ -127,7 +127,7 @@ export default function DashboardLayout() {
     try {
       const { data: d } = await supabase.functions.invoke("check-usage", { body: { user_id: userId } });
       if (d) setUsageDetails(d);
-    } catch {}
+    } catch (e) { console.error("[AdBrief]", e); }
   };
 
   // ── Close sidebar on mobile route change ──────────────────────────────────
@@ -224,7 +224,7 @@ export default function DashboardLayout() {
       setSelectedPersonaState(prev => {
         if (!prev) return null;
         if (!loadedPersonas.some(p => p.id === prev.id)) {
-          try { localStorage.removeItem("frameiq_active_persona"); } catch {}
+          try { localStorage.removeItem("frameiq_active_persona"); } catch (e) { console.error("[AdBrief]", e); }
           return null;
         }
         return prev;
@@ -787,7 +787,7 @@ export default function DashboardLayout() {
                         expires_at: new Date(Date.now() + 10*60*1000).toISOString(),
                       });
                       setTelegramPairingLink("https://t.me/AdBriefAlertsBot?start=" + tok);
-                    } catch {}
+                    } catch (e) { console.error("[AdBrief]", e); }
                     setTelegramLinkLoading(false);
                   }} style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: telegramLinkLoading ? "rgba(39,175,225,0.15)" : "linear-gradient(135deg, #27AEE1, #1a8fc2)", border: "none", color: telegramLinkLoading ? "#27AEE1" : "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Plus Jakarta Sans',sans-serif", cursor: telegramLinkLoading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxSizing: "border-box" as const }}>
                     {telegramLinkLoading ? "..." : (

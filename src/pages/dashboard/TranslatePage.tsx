@@ -197,7 +197,6 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
       formData.append("transcribe_only", "true");
 
       const data = await uploadWithProgress(formData);
-      console.log("Transcription response:", data);
 
       if (data?.error) {
         toast.error(data.message || "Transcrição falhou");
@@ -223,7 +222,6 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         setProgress(50);
         const lang = LANGUAGES.find(l => l.code === targetLang) || LANGUAGES[0];
         try {
-          console.log("Starting translation to", targetLang);
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
           const { data: { session: tSess } } = await supabase.auth.getSession();
           const tToken = tSess?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -239,7 +237,6 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
             }),
           });
           const tData = await res.json().catch(() => null);
-          console.log("Translation response:", res.status, tData);
           if (!res.ok || !tData?.success) {
             const errMsg = tData?.error || `HTTP ${res.status}`;
             console.error("Translation error:", errMsg, tData);

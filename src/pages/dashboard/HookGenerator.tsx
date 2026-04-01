@@ -186,7 +186,7 @@ export default function HookGenerator() {
           hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
           notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
         } as any);
-      } catch {} // non-critical — feedback loss is acceptable
+      } catch (e) { console.error("[AdBrief]", e); } // non-critical — feedback loss is acceptable
       supabase.functions.invoke("update-ai-profile", {
         body: { user_id: user.id, trigger: "hook_feedback", vote, hook_type: hook.hook_type, platform, predicted_score: hook.predicted_score }
       }).catch(() => {});
