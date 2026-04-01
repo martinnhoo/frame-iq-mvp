@@ -201,7 +201,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
   return (
     <div ref={ref} style={{
       position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,
-      background:S1,border:`1px solid ${BD}`,borderRadius:16,
+      background:"#111827",border:`1px solid ${BD}`,borderRadius:16,
       boxShadow:"0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04)",
       padding:20,width:560,display:"flex",flexDirection:"column",gap:16,
     }}>
@@ -243,7 +243,7 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
     else onChange([...active,key]);
   };
   return (
-    <div ref={ref} style={{position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,background:S1,border:`1px solid ${BD}`,borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",padding:20,width:300}}>
+    <div ref={ref} style={{position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,background:"#111827",border:`1px solid ${BD}`,borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",padding:20,width:300}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
         <span style={{fontFamily:F,fontSize:14,fontWeight:700,color:TX}}>Personalizar métricas</span>
         <button onClick={onClose} style={{background:"none",border:"none",color:MT,cursor:"pointer",display:"flex"}}><X size={14}/></button>
@@ -466,7 +466,7 @@ export default function PerformanceDashboard() {
 
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
           {/* Platform tabs */}
-          <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
+          <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
             {([["meta","Meta Ads",ACCENT],["google","Google Ads",GBLUE]] as const).map(([plt,label,color])=>{
               const active=activePlatform===plt,hasData=plt==="meta"?hasMeta:hasGoogle;
               return (
@@ -481,7 +481,7 @@ export default function PerformanceDashboard() {
           {/* Date picker */}
           <div style={{position:"relative"}}>
             <button onClick={()=>{setShowCalendar(!showCalendar);setShowCustomizer(false);}}
-              style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:showCalendar?`${ACCENT}15`:S1,border:`1px solid ${showCalendar?ACCENT+"50":BD}`,borderRadius:10,color:showCalendar?ACCENT:TX,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
+              style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",background:showCalendar?`${ACCENT}15`:"rgba(255,255,255,0.06)",border:`1px solid ${showCalendar?ACCENT+"50":BD}`,borderRadius:10,color:showCalendar?ACCENT:TX,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
               <Calendar size={13}/>{dateLabel}
             </button>
             {showCalendar&&<CalendarPicker value={dateRange} onChange={r=>{setDateRange(r);}} onClose={()=>setShowCalendar(false)}/>}
@@ -490,7 +490,7 @@ export default function PerformanceDashboard() {
           {/* Metric customizer */}
           <div style={{position:"relative"}}>
             <button onClick={()=>{setShowCustomizer(!showCustomizer);setShowCalendar(false);}}
-              style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?`${ACCENT}15`:S1,border:`1px solid ${showCustomizer?ACCENT+"50":BD}`,borderRadius:10,color:showCustomizer?ACCENT:MT,fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
+              style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?`${ACCENT}15`:"rgba(255,255,255,0.06)",border:`1px solid ${showCustomizer?ACCENT+"50":BD}`,borderRadius:10,color:showCustomizer?ACCENT:MT,fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
               <Settings2 size={14}/>
               <span style={{fontWeight:600}}>Métricas</span>
               <span style={{fontSize: 12,background:`${ACCENT}20`,color:ACCENT,borderRadius:5,padding:"1px 6px",fontWeight:700}}>{activeMetrics.length}</span>
@@ -498,7 +498,7 @@ export default function PerformanceDashboard() {
             {showCustomizer&&<MetricCustomizer active={activeMetrics} platform={activePlatform} onChange={setActiveMetrics} onClose={()=>setShowCustomizer(false)}/>}
           </div>
 
-          <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:S1,border:`1px solid ${BD}`,borderRadius:10,color:MT,fontSize:13,cursor:"pointer",fontFamily:F}}>
+          <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:"rgba(255,255,255,0.06)",border:`1px solid ${BD}`,borderRadius:10,color:MT,fontSize:13,cursor:"pointer",fontFamily:F}}>
             <RefreshCw size={13} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
           </button>
           <button onClick={()=>navigate("/dashboard/campaigns/new")} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"linear-gradient(135deg,#0ea5e9,#0891b2)",border:"none",borderRadius:10,color:"#000",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:F}}>
@@ -574,10 +574,10 @@ export default function PerformanceDashboard() {
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14,marginBottom:14}}>
             {[...Array(6)].map((_,i)=>(
-              <div key={i} style={{height:110,background:S1,borderRadius:16,border:`1px solid ${BD}`,opacity:1-i*0.08,animation:"fadeIn 0.4s ease both",animationDelay:`${i*0.05}s`}}/>
+              <div key={i} style={{height:110,background:"rgba(255,255,255,0.04)",borderRadius:16,border:`1px solid ${BD}`,opacity:1-i*0.08,animation:"fadeIn 0.4s ease both",animationDelay:`${i*0.05}s`}}/>
             ))}
           </div>
-          <div style={{height:220,background:S1,borderRadius:16,border:`1px solid ${BD}`}}/>
+          <div style={{height:220,background:"rgba(255,255,255,0.04)",borderRadius:16,border:`1px solid ${BD}`}}/>
         </div>
       )}
 
@@ -615,7 +615,7 @@ export default function PerformanceDashboard() {
 
           {/* Chart */}
           {(d.daily||[]).length>1&&(
-            <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24,marginBottom:20}}>
+            <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:16,padding:24,marginBottom:20}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap" as const,gap:12}}>
                 <div>
                   <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Tendência</p>

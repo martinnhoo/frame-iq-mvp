@@ -389,14 +389,13 @@ export default function DashboardLayout() {
         .lp-chip { font-size: 12px !important; padding: 5px 10px !important; }
 
         /* Input/textarea: prevent zoom on iOS (font-size >= 16px) */
-        .dashboard-main input:focus, .dashboard-main textarea:focus, .dashboard-main select:focus {
-          border-color: rgba(14,165,233,0.55) !important;
-          background: rgba(14,165,233,0.05) !important;
-          box-shadow: 0 0 0 1px rgba(14,165,233,0.15) !important;
-          outline: none !important;
-        }
         .dashboard-main input, .dashboard-main textarea, .dashboard-main select {
           font-size: 16px !important;
+        }
+        /* Default focus style for inputs that don't have custom onFocus handlers */
+        .dashboard-main input:not([class]):focus, .dashboard-main select:focus {
+          border-color: rgba(14,165,233,0.55) !important;
+          outline: none !important;
         }
         .chat-textarea { font-size: 16px !important; }
 

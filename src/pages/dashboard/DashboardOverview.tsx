@@ -303,7 +303,7 @@ export default function DashboardOverview() {
 
         {/* ── ONBOARDING WIZARD — new users (< 5 actions) ────── */}
         {totalActions < 5 && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: "#0d0d15", border: "1px solid rgba(14,165,233,0.2)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.03) 100%)", border: "1px solid rgba(14,165,233,0.20)", backdropFilter: "blur(12px)" }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div>
                 <p className="text-xs font-bold text-white/70">Get started — 3 steps to your first money-saving insight</p>
@@ -433,7 +433,7 @@ export default function DashboardOverview() {
                 { label: "Boards", value: String(usedBoards), color: "#60a5fa", sub: `/ ${limits.boards > 9990 ? "∞" : limits.boards}` },
                 { label: "Est. saved", value: usedAnalyses > 0 ? `$${(usedAnalyses * 47).toLocaleString()}` : "—", color: "#fbbf24", sub: "~$47 per caught ad" },
               ].map(s => (
-                <div key={s.label} className="rounded-xl p-3" style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div key={s.label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="text-xl font-extrabold" style={{ color: s.color, fontFamily: "'Plus Jakarta Sans',sans-serif", letterSpacing: "-0.04em" }}>{s.value}</p>
                   <p className="text-[10px] text-white/40 mt-0.5">{s.label}</p>
                   <p className="text-[10px] text-white/20">{s.sub}</p>
@@ -457,7 +457,7 @@ export default function DashboardOverview() {
             ].map(a => (
               <button key={a.label} onClick={() => navigate(a.url)}
                 className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all hover:bg-white/[0.04]"
-                style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.07)", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "rgba(255,255,255,0.65)" }}>
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "rgba(255,255,255,0.65)" }}>
                 <span className="flex items-center gap-2"><a.icon size={14} style={{ color: a.color }} />{a.label}</span>
                 <ChevronRight size={13} className="text-white/20" />
               </button>
@@ -499,7 +499,7 @@ export default function DashboardOverview() {
             {tools.map(tool => (
               <button key={tool.title} onClick={() => navigate(tool.url)}
                 className="flex items-center gap-3 p-3 rounded-xl text-left transition-all hover:bg-white/[0.04]"
-                style={{ background: "#0d0d15", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${tool.accent}35`; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
