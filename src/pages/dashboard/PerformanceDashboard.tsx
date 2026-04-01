@@ -423,13 +423,20 @@ export default function PerformanceDashboard() {
   };
 
   return (
-    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"24px 28px 60px"}}>
+    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"24px 28px 60px"}} className="perf-page">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         .perf-card{animation:fadeIn 0.3s ease both}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
+        @media(max-width:640px){
+          .perf-page{padding:16px 16px 60px!important}
+          .perf-header-actions{gap:6px!important}
+          .perf-platform-tabs button{padding:5px 10px!important;font-size:12px!important}
+          .perf-action-btn{padding:6px 10px!important;font-size:12px!important}
+          .perf-new-btn span{display:none}
+        }
       `}</style>
 
       {/* Header */}
@@ -446,9 +453,9 @@ export default function PerformanceDashboard() {
           {lastUpdated&&<p style={{margin:0,fontSize: 12,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
         </div>
 
-        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
           {/* Platform tabs */}
-          <div style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
+          <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:S2,border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
             {([["meta","Meta Ads",ACCENT],["google","Google Ads",GBLUE]] as const).map(([plt,label,color])=>{
               const active=activePlatform===plt,hasData=plt==="meta"?hasMeta:hasGoogle;
               return (

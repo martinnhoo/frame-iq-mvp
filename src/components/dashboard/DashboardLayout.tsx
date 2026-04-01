@@ -397,14 +397,14 @@ export default function DashboardLayout() {
         /* Modal: full width on mobile */
         .dash-modal { width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important; padding: 20px 16px !important; }
 
-        /* Chips/pills: smaller on mobile */
-        .lp-chip { font-size: 11px !important; padding: 4px 10px !important; }
+        /* Chips/pills: smaller on mobile — floor at 12px */
+        .lp-chip { font-size: 12px !important; padding: 5px 10px !important; }
 
         /* Input/textarea: prevent zoom on iOS (font-size >= 16px) */
         .dashboard-main input, .dashboard-main textarea, .dashboard-main select {
           font-size: 16px !important;
         }
-        .chat-textarea { font-size: 15px !important; }
+        .chat-textarea { font-size: 16px !important; }
 
         /* Suggestion pills row: horizontal scroll */
         .suggestions-bar { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }

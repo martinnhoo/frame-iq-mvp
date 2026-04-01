@@ -1017,7 +1017,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* KPIs — separated by space only, no borders */}
         {data && !data.error && !busy && (
-          <div style={{ display: "flex", gap: 20, flex: 1, overflow: "hidden", alignItems: "center" }}>
+          <div className="lp-kpis-row" style={{ display: "flex", gap: 20, flex: 1, overflow: "hidden", alignItems: "center" }}>
             {[
               k.spend && { lbl: "Spend", val: `R$${parseFloat(k.spend).toFixed(0)}`, warn: false, tr: sTr },
               k.ctr   && { lbl: "CTR",   val: `${parseFloat(k.ctr).toFixed(2)}%`,    warn: parseFloat(k.ctr) < 0.5, tr: cTr },
@@ -2301,10 +2301,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.map((msg)=>(
-          <div key={msg.id} style={{maxWidth:720,margin:"0 auto 28px",padding:"0 24px"}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,margin:"0 auto 28px",padding:"0 24px"}}>
             {msg.role==="user"?(
               <div style={{display:"flex",justifyContent:"flex-end",position:"relative" as const}} className="user-msg-row">
-                <div style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
+                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
                   {/* Hover actions — shown via CSS class */}
                   <div className="user-msg-actions" style={{display:"flex",alignItems:"center",gap:4,opacity:0,transition:"opacity 0.15s",pointerEvents:"none" as const}}>
                     <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.2)",marginRight:4}}>
@@ -2413,7 +2413,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{background:"#0c0f1a",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"12px 0 16px"}}>
           {/* ── Tool pills ── */}
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px 10px"}}>
-            <div style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
+            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"} as any}>
               {TOOLS.map(tool=>(
                 <button key={tool.action} onClick={()=>setActiveTool(activeTool===tool.action?null:tool.action)}
                   style={{
@@ -2490,14 +2490,31 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .msg-body p:last-child{margin-bottom:0!important;}
         .msg-body strong{font-weight:700;color:#f0f2f8;}
         @media(max-width:640px){
+          /* Hide footer hint */
           .chat-footer-hint{display:none!important}
-          textarea::placeholder{font-size:12px!important;opacity:0.35!important}
+          /* iOS textarea zoom prevention */
+          .chat-textarea{font-size:16px!important;}
+          .chat-textarea::placeholder{font-size:14px!important;opacity:0.25!important}
+          /* Message padding tighter on mobile */
+          .msg-wrap-inner{padding:0 16px!important}
+          /* KPI cards: 2 per row */
           .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
-          .lp-chip{font-size:11px!important;padding:5px 10px!important}
-          .ad-row{padding:8px 10px!important;font-size:12px!important}
-          .sec-title{font-size:10px!important}
+          /* Chips */
+          .lp-chip{font-size:12px!important;padding:5px 10px!important}
+          /* Ad/camp rows */
+          .ad-row{padding:8px 10px!important}
+          /* Section title */
+          .sec-title{font-size:12px!important}
+          /* Input wrap */
           .chat-input-wrap{padding:0 12px!important}
-          .msg-body p{font-size:13px!important;line-height:1.65!important}
+          /* Pill scrolling */
+          .tool-pills-row{-webkit-overflow-scrolling:touch!important}
+          /* AI message body */
+          .msg-body p{font-size:13.5px!important;line-height:1.7!important}
+          /* User bubble max width */
+          .user-bubble-wrap{max-width:88%!important}
+          /* Live Panel KPIs row */
+          .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
         }
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .user-msg-row .user-msg-actions button:hover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.6)!important;}
