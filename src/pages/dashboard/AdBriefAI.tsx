@@ -1047,7 +1047,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
         {fail && !busy && <span style={{ fontSize: 12, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
 
-        <ChevronDown size={12} style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0, marginLeft: "auto" }} />
+        <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.45)", flexShrink: 0, marginLeft: "auto" }} />
       </div>
     );
   }
@@ -1094,12 +1094,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             </span>
           </div>
           <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "rgba(255,255,255,0.3)", display: "flex", padding: 3, transition: "color 0.15s" }}>
-            <RefreshCw size={11} style={{ animation: busy ? "lp-spin 1s linear infinite" : "none" }} />
+            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, transition: "all 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}>
+            <RefreshCw size={13} style={{ animation: busy ? "lp-spin 1s linear infinite" : "none" }} />
           </button>
           <button onClick={() => setOpen(false)} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", display: "flex", padding: 3, transition: "color 0.15s" }}>
-            <ChevronUp size={12} />
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, transition: "all 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}>
+            <ChevronUp size={15} />
           </button>
         </div>
       </div>
