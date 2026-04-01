@@ -422,6 +422,7 @@ export default function DashboardLayout() {
       <div style={{
         width: sidebarOpen ? 224 : 0,
         minWidth: sidebarOpen ? 224 : 0,
+        height: "100%",
         flexShrink: 0,
         transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
         overflow: "hidden",

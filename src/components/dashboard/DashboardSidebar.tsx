@@ -150,7 +150,7 @@ export function DashboardSidebar({
       )}
 
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed lg:relative lg:h-full inset-y-0 left-0 z-50 flex flex-col sidebar-transition ${open ? "translate-x-0" : "-translate-x-full"}`}
         style={{
           width: 224, background: "#080b14",
           borderRight: "1px solid rgba(255,255,255,0.05)",
