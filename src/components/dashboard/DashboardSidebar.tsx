@@ -148,7 +148,7 @@ export function DashboardSidebar({
   useEffect(() => {
     if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
     // First check if any platform is actually connected for this account
-    (supabase as any).from("platform_connections_safe")
+    (supabase as any).from("platform_connections")
       .select("platform", { count: "exact", head: true })
       .eq("user_id", user.id).eq("persona_id", selectedPersona.id).eq("status", "active")
       .then(({ count }: any) => {

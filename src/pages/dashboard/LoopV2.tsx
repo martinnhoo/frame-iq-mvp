@@ -517,7 +517,7 @@ export default function LoopV2() {
         supabase.from("analyses").select("id, created_at, result, hook_strength, status, title")
           .eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(100),
         supabase.from("ads_data_imports" as never).select("platform, created_at" as never).eq("user_id" as never, user.id),
-        supabase.from("platform_connections_safe" as any).select("platform, status, ad_accounts").eq("user_id", user.id),
+        supabase.from("platform_connections" as any).select("platform, status, ad_accounts").eq("user_id", user.id),
       ]);
 
       const rows = (analyses || []) as any[];

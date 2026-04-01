@@ -201,11 +201,21 @@ function PlatformRow({ p, userId, accountId, t }: {
   const [verifying, setVerifying] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from("platform_connections_safe" as any)
-      .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at")
+    // Query platform_connections directly (safe columns only — tokens are revoked from authenticated)
+    const { data, error } = await supabase.from("platform_connections" as any)
+      .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
       .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
       .maybeSingle();
-    setConn(data || null);
+    if (error) {
+      // Fallback to safe view if direct query fails
+      const { data: fallback } = await supabase.from("platform_connections_safe" as any)
+        .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
+        .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
+        .maybeSingle();
+      setConn(fallback || null);
+    } else {
+      setConn(data || null);
+    }
     setLoading(false);
   }, [userId, accountId, p.id]);
 

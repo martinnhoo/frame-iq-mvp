@@ -113,7 +113,7 @@ export default function CampaignBuilder() {
   useEffect(()=>{
     if(!userId||!persona)return;
     setConnsReady(false);
-    (supabase as any).from("platform_connections_safe" as any)
+    (supabase as any).from("platform_connections" as any)
       .select("platform,status,ad_accounts,selected_account_id")
       .eq("user_id",userId).eq("persona_id",persona.id).eq("status","active")
       .then(({data}:any)=>{setConns(data||[]);setConnsReady(true);});

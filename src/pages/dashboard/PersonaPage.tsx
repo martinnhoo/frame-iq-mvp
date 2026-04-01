@@ -32,13 +32,13 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
     if (!personaId) { setLoading(false); return; }
     // Try with selected_account_id first, fall back without it
     let data: any[] | null = null;
-    const { data: d1, error: e1 } = await supabase.from("platform_connections_safe" as any)
+    const { data: d1, error: e1 } = await supabase.from("platform_connections" as any)
       .select("platform, ad_accounts, selected_account_id").eq("user_id", userId);
     if (!e1) {
       data = d1;
     } else {
       // Column might not exist yet — query without it
-      const { data: d2 } = await supabase.from("platform_connections_safe" as any)
+      const { data: d2 } = await supabase.from("platform_connections" as any)
         .select("platform, ad_accounts").eq("user_id", userId);
       data = d2;
     }
