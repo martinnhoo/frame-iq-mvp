@@ -9,6 +9,7 @@ export const LIFETIME_ACCOUNTS: Record<string, string> = {
   "victoriafnogueira@hotmail.com": "studio",
   "isadoradblima@gmail.com": "studio",
   "denis.magalhaes10@gmail.com": "studio",
+  "denis@adbrief.pro": "studio",
 };
 
 /** Returns the effective plan, overriding DB value for lifetime accounts */
