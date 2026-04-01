@@ -19,9 +19,9 @@ const PLANS = [
     accent: "text-blue-400",
     badge: null,
     features: {
-      pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas", "3 personas"],
-      es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas", "3 personas"],
-      en: ["50 AI messages/day", "1 ad account", "All tools", "3 personas"],
+      pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas"],
+      es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas"],
+      en: ["50 AI messages/day", "1 ad account", "All tools"],
     },
   },
   {
@@ -33,9 +33,9 @@ const PLANS = [
     accent: "text-sky-400",
     badge: { pt: "Mais popular", es: "Más popular", en: "Most Popular" },
     features: {
-      pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Personas ilimitadas", "Multi-mercado"],
-      es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Personas ilimitadas", "Multi-mercado"],
-      en: ["200 AI messages/day", "3 ad accounts", "All tools", "Unlimited personas", "Multi-market"],
+      pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Multi-mercado"],
+      es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Multi-mercado"],
+      en: ["200 AI messages/day", "3 ad accounts", "All tools", "Multi-market"],
     },
   },
   {

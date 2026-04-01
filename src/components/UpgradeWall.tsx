@@ -66,11 +66,11 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   en: [
     {
       key: "maker", name: "Maker", price: "$19/mo", highlight: false, action: "/signup?plan=maker",
-      features: { en: ["50 AI messages / day", "1 ad account", "All tools", "3 personas"] },
+      features: { en: ["50 AI messages / day", "1 ad account", "All tools", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mo", badge: "Most popular", highlight: true, action: "/signup?plan=pro",
-      features: { en: ["200 AI messages / day", "3 ad accounts", "All tools", "Unlimited personas", "Multi-market"] },
+      features: { en: ["200 AI messages / day", "3 ad accounts", "All tools", "Unlimited accounts", "Multi-market"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mo", highlight: false, action: "/signup?plan=studio",
@@ -80,11 +80,11 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   pt: [
     {
       key: "maker", name: "Maker", price: "$19/mês", highlight: false, action: "/signup?plan=maker",
-      features: { pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas", "3 personas"] },
+      features: { pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mês", badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
-      features: { pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Personas ilimitadas", "Multi-mercado"] },
+      features: { pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mês", highlight: false, action: "/signup?plan=studio",
@@ -94,11 +94,11 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   es: [
     {
       key: "maker", name: "Maker", price: "$19/mes", highlight: false, action: "/signup?plan=maker",
-      features: { es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas", "3 personas"] },
+      features: { es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mes", badge: "Más popular", highlight: true, action: "/signup?plan=pro",
-      features: { es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Personas ilimitadas", "Multi-mercado"] },
+      features: { es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Contas ilimitadas", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mes", highlight: false, action: "/signup?plan=studio",

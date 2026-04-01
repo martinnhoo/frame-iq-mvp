@@ -5,8 +5,8 @@ const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
 
 const PLANS = [
-  { name: "Maker", price: "$19", desc: "/mo", features: ["1 ad account connected", "Unlimited AI chat", "3 personas or brands", "AI memory up to 20 analyses"], action: "/signup?plan=maker", highlight: false },
-  { name: "Pro", price: "$49", desc: "/mo", features: ["3 ad accounts", "Unlimited AI chat", "Unlimited personas + brands", "Multi-market support", "AI memory up to 60 analyses"], action: "/signup?plan=pro", highlight: true, badge: "Most popular" },
+  { name: "Maker", price: "$19", desc: "/mo", features: ["1 ad account connected", "Unlimited AI chat", "1 conta de anúncios", "AI memory up to 20 analyses"], action: "/signup?plan=maker", highlight: false },
+  { name: "Pro", price: "$49", desc: "/mo", features: ["3 ad accounts", "Unlimited AI chat", "Contas ilimitadas", "Multi-market support", "AI memory up to 60 analyses"], action: "/signup?plan=pro", highlight: true, badge: "Most popular" },
   { name: "Studio", price: "$149", desc: "/mo", features: ["Unlimited ad accounts", "Unlimited AI chat", "Agency client workspace", "Full account memory"], action: "/signup?plan=studio", highlight: false },
 ];
 
