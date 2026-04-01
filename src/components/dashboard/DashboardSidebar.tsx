@@ -286,8 +286,8 @@ export function DashboardSidebar({
                     )}
                   </div>
                 ) : selectedPersona ? (
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.28)", fontFamily: F }}>
-                    {pt ? "sem dados ainda" : "no data yet"}
+                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F }}>
+                    {pt ? "conectar Meta ou Google Ads" : es ? "conectar Meta o Google Ads" : "connect Meta or Google Ads"}
                   </p>
                 ) : null}
               </div>

@@ -2452,7 +2452,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         {/* Main input surface */}
         <div style={{background:"#0a0d16",padding:"8px 0 18px"}}>
-          <div style={{maxWidth:720,margin:"0 auto",padding:"0 40px",boxSizing:"border-box" as const}}>
+          <div style={{maxWidth:720,margin:"0 auto",padding:"0 24px",boxSizing:"border-box" as const}}>
 
             {/* Tool pills */}
             <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10} as any}>
@@ -2463,11 +2463,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     onClick={()=>setActiveTool(isOn?null:tool.action)}
                     style={{
                       display:"flex",alignItems:"center",gap:6,
-                      padding:"6px 14px",borderRadius:99,flexShrink:0,
+                      padding:"5px 12px",borderRadius:99,flexShrink:0,
                       background: isOn ? tool.color : "rgba(255,255,255,0.07)",
                       border:`1px solid ${isOn ? "transparent" : "rgba(255,255,255,0.11)"}`,
                       color: isOn ? "#000" : "rgba(255,255,255,0.65)",
-                      fontSize:12.5,fontWeight:isOn?700:500,cursor:"pointer",
+                      fontSize:12,fontWeight:isOn?600:400,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans',sans-serif",
                       letterSpacing:"-0.01em",transition:"all 0.15s",
                       boxShadow: isOn ? `0 0 16px ${tool.color}60` : "none",
@@ -2507,7 +2507,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
             {/* Input card — Login glass style */}
             <div className="input-box-wrap" style={{
-              display:"flex",alignItems:"flex-end",gap:10,
+              display:"flex",alignItems:"center",gap:10,
               background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",
               border:"1px solid rgba(255,255,255,0.12)",
               borderRadius:18,
@@ -2518,7 +2518,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"2px 0",color:"#f0f2f8",fontSize:14.5,resize:"none",outline:"none",...m,lineHeight:1.7,minHeight:28,maxHeight:140,caretColor:"#0ea5e9"}}
+                style={{flex:1,background:"transparent",border:"none",padding:"0",color:"#f0f2f8",fontSize:14.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:24,maxHeight:140,caretColor:"#0ea5e9"}}
                 className="chat-textarea"
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}}
               />
@@ -2583,7 +2583,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           /* Input wrap */
           .chat-input-wrap{padding:0 16px!important}
           /* Pill scrolling */
-          .tool-pills-row{-webkit-overflow-scrolling:touch!important}
+          .tool-pills-row{-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important}
           /* AI message body */
           .msg-body p{font-size:13.5px!important;line-height:1.7!important}
           /* User bubble max width */
