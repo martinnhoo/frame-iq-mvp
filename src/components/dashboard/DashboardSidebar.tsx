@@ -1,5 +1,5 @@
-// DashboardSidebar v6 — clean, sem espaço vazio, sem language switcher inline, KPI simples
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight } from "lucide-react";
+// DashboardSidebar v7 — ferramentas no espaço vazio, hierarquia clara
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Cpu } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -37,7 +37,8 @@ const PLANS: Record<string, { label: string; color: string }> = {
   scale:   { label: "Studio", color: "#a78bfa" },
 };
 
-function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
+// ── Primary nav item — larger, more weight ─────────────────────────────────
+function NavPrimary({ url, label, icon: Icon, isActive, onClose, badge }: {
   url: string; label: string; icon: React.ElementType;
   isActive: boolean; onClose: () => void; badge?: string;
 }) {
@@ -46,34 +47,49 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
     <NavLink to={url} onClick={onClose}
       style={{
         display: "flex", alignItems: "center", gap: 10,
-        padding: "10px 14px", borderRadius: 8, margin: "1px 8px",
+        padding: "9px 12px", borderRadius: 8, margin: "1px 8px",
         color: isActive ? "#f0f2f8" : hov ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.55)",
-        background: isActive ? "rgba(14,165,233,0.11)" : hov ? "rgba(255,255,255,0.045)" : "transparent",
+        background: isActive ? "rgba(14,165,233,0.11)" : hov ? "rgba(255,255,255,0.04)" : "transparent",
         fontSize: 13.5, fontWeight: isActive ? 600 : 400,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         letterSpacing: "-0.01em", position: "relative",
       }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}>
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       {isActive && (
-        <div style={{
-          position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)",
-          width: 2, height: 18, borderRadius: "0 2px 2px 0",
-          background: "#0ea5e9", boxShadow: "0 0 8px rgba(14,165,233,0.6)",
-        }} />
+        <div style={{ position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", width: 2, height: 18, borderRadius: "0 2px 2px 0", background: "#0ea5e9", boxShadow: "0 0 8px rgba(14,165,233,0.6)" }} />
       )}
       <Icon size={16} strokeWidth={isActive ? 2 : 1.6}
         style={{ color: isActive ? "#0ea5e9" : "inherit", flexShrink: 0 }} />
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
-        <span style={{
-          fontSize: 11, fontWeight: 700, color: "#0ea5e9",
-          background: "rgba(14,165,233,0.12)", borderRadius: 4,
-          padding: "2px 6px", border: "1px solid rgba(14,165,233,0.2)",
-          fontFamily: "'DM Mono', monospace", letterSpacing: "0.03em",
-        }}>{badge}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#0ea5e9", background: "rgba(14,165,233,0.12)", borderRadius: 4, padding: "2px 6px", border: "1px solid rgba(14,165,233,0.2)", fontFamily: "'DM Mono', monospace" }}>{badge}</span>
       )}
+    </NavLink>
+  );
+}
+
+// ── Secondary nav item — smaller, lighter ─────────────────────────────────
+function NavSecondary({ url, label, icon: Icon, isActive, onClose }: {
+  url: string; label: string; icon: React.ElementType;
+  isActive: boolean; onClose: () => void;
+}) {
+  const [hov, setHov] = useState(false);
+  return (
+    <NavLink to={url} onClick={onClose}
+      style={{
+        display: "flex", alignItems: "center", gap: 9,
+        padding: "7px 12px", borderRadius: 6, margin: "0 8px",
+        color: isActive ? "#e0e4f0" : hov ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.38)",
+        background: isActive ? "rgba(255,255,255,0.06)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
+        fontSize: 12.5, fontWeight: isActive ? 500 : 400,
+        textDecoration: "none", transition: "all 0.1s",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        letterSpacing: "-0.005em",
+      }}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+      <Icon size={13} strokeWidth={1.5} style={{ flexShrink: 0, opacity: isActive ? 0.9 : 0.6 }} />
+      <span>{label}</span>
     </NavLink>
   );
 }
@@ -96,21 +112,28 @@ export function DashboardSidebar({
   const pt = language === "pt", es = language === "es";
   const isAt = (url: string) => location.pathname === url || location.pathname.startsWith(url + "/");
 
-  // Load only spend — simpler, one number
   useEffect(() => {
     if (!user?.id || !selectedPersona?.id) { setSpend(null); return; }
     (supabase as any).from("daily_snapshots")
-      .select("total_spend")
-      .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
+      .select("total_spend").eq("user_id", user.id).eq("persona_id", selectedPersona.id)
       .order("date", { ascending: false }).limit(1).maybeSingle()
       .then(({ data }: any) => setSpend(data?.total_spend > 0 ? data.total_spend : null))
       .catch(() => setSpend(null));
   }, [user?.id, selectedPersona?.id]);
 
-  const NAV = [
-    { url: "/dashboard/ai",          label: "IA Chat",                                           icon: MessageSquare, badge: "AI" },
-    { url: "/dashboard/performance",  label: "Performance",                                       icon: BarChart2 },
-    { url: "/dashboard/boards",       label: pt ? "Boards" : es ? "Tableros" : "Boards",         icon: LayoutGrid },
+  const PRIMARY = [
+    { url: "/dashboard/ai",          label: "IA Chat",        icon: MessageSquare, badge: "AI" },
+    { url: "/dashboard/performance",  label: "Performance",    icon: BarChart2 },
+    { url: "/dashboard/boards",       label: "Boards",         icon: LayoutGrid },
+  ];
+
+  const TOOLS = [
+    { url: "/dashboard/hooks",       label: pt ? "Hooks" : "Hooks",            icon: Sparkles },
+    { url: "/dashboard/script",      label: pt ? "Roteiro" : es ? "Guión" : "Script",     icon: Clapperboard },
+    { url: "/dashboard/brief",       label: "Brief",                            icon: FileText },
+    { url: "/dashboard/competitor",  label: pt ? "Concorrentes" : "Competitor", icon: ScanEye },
+    { url: "/dashboard/preflight",   label: "Preflight",                        icon: ScanLine },
+    { url: "/dashboard/intelligence",label: pt ? "Inteligência" : "Intelligence",icon: Cpu },
   ];
 
   return (
@@ -135,7 +158,7 @@ export function DashboardSidebar({
           fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}>
 
-        {/* ── Logo ── */}
+        {/* Logo */}
         <div style={{ height: 54, minHeight: 54, padding: "0 16px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", opacity: 0.92, transition: "opacity 0.15s" }}
@@ -145,55 +168,44 @@ export function DashboardSidebar({
           </button>
         </div>
 
-        {/* ── Account card ── */}
-        <div style={{ padding: "12px 10px 0", flexShrink: 0 }}>
+        {/* Account card */}
+        <div style={{ padding: "10px 8px 0", flexShrink: 0 }}>
           <div style={{
             borderRadius: 10,
             background: selectedPersona ? "rgba(14,165,233,0.07)" : "rgba(255,255,255,0.03)",
-            border: selectedPersona ? "1px solid rgba(14,165,233,0.14)" : "1px solid rgba(255,255,255,0.07)",
+            border: selectedPersona ? "1px solid rgba(14,165,233,0.13)" : "1px solid rgba(255,255,255,0.07)",
             overflow: "hidden",
           }}>
             <button
               onClick={() => savedPersonas.length > 0 ? setAccountsOpen(o => !o) : navigate("/dashboard/accounts")}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 11px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
               className="sb-hover">
-              {/* Avatar */}
               <div style={{
-                width: 32, height: 32, borderRadius: 8, flexShrink: 0, overflow: "hidden",
+                width: 30, height: 30, borderRadius: 7, flexShrink: 0, overflow: "hidden",
                 background: selectedPersona ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.07)",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 {selectedPersona?.logo_url
                   ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : selectedPersona
                     ? <span style={{ fontSize: 14, fontWeight: 700, color: "#0ea5e9" }}>{selectedPersona.name.charAt(0).toUpperCase()}</span>
-                    : <Building2 size={15} color="rgba(255,255,255,0.25)" />
+                    : <Building2 size={14} color="rgba(255,255,255,0.25)" />
                 }
               </div>
-
               <div style={{ flex: 1, minWidth: 0 }}>
-                {/* Account name — primary */}
-                <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: selectedPersona ? "#f0f2f8" : "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.3 }}>
-                  {selectedPersona?.name || (pt ? "Nenhuma conta" : es ? "Sin cuenta" : "No account")}
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: selectedPersona ? "#f0f2f8" : "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.35 }}>
+                  {selectedPersona?.name || (pt ? "Nenhuma conta" : "No account")}
                 </p>
-                {/* Spend — single metric, subtle */}
-                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.3, color: "rgba(255,255,255,0.38)", fontFamily: spend ? "'DM Mono', monospace" : "inherit" }}>
-                  {spend != null
-                    ? `R$${spend.toFixed(0)} esta semana`
-                    : selectedPersona
-                      ? (pt ? "Sem dados ainda" : es ? "Sin datos" : "No data yet")
-                      : (pt ? "Selecionar conta" : es ? "Seleccionar" : "Select")}
+                <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.3, color: "rgba(255,255,255,0.35)", fontFamily: spend ? "'DM Mono', monospace" : "inherit" }}>
+                  {spend != null ? `R$${spend.toFixed(0)} / semana` : selectedPersona ? (pt ? "sem dados" : "no data") : (pt ? "selecionar" : "select")}
                 </p>
               </div>
-
               {savedPersonas.length > 0 && (
-                <ChevronDown size={14} color="rgba(255,255,255,0.35)"
-                  style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
+                <ChevronDown size={13} color="rgba(255,255,255,0.3)" style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
               )}
             </button>
 
-            {/* Dropdown */}
             {accountsOpen && savedPersonas.length > 0 && (
               <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", animation: "sb-in 0.14s ease" }}>
                 {savedPersonas.map(p => {
@@ -201,89 +213,79 @@ export function DashboardSidebar({
                   return (
                     <button key={p.id}
                       onClick={() => { onSelectPersona?.(p); navigate("/dashboard/ai"); onClose(); setAccountsOpen(false); }}
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 12px", background: isSel ? "rgba(14,165,233,0.08)" : "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 11px", background: isSel ? "rgba(14,165,233,0.08)" : "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
                       className="sb-hover">
-                      <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {p.logo_url
-                          ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : <span style={{ fontSize: 12, fontWeight: 700, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.4)" }}>{p.name.charAt(0).toUpperCase()}</span>
-                        }
+                      <div style={{ width: 22, height: 22, borderRadius: 5, flexShrink: 0, overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : <span style={{ fontSize: 11, fontWeight: 700, color: isSel ? "#0ea5e9" : "rgba(255,255,255,0.35)" }}>{p.name.charAt(0).toUpperCase()}</span>}
                       </div>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {p.name}
-                      </span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? "#f0f2f8" : "rgba(255,255,255,0.62)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
                       {isSel && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />}
                     </button>
                   );
                 })}
-                <button
-                  onClick={() => { navigate("/dashboard/accounts"); onClose(); setAccountsOpen(false); }}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
+                <button onClick={() => { navigate("/dashboard/accounts"); onClose(); setAccountsOpen(false); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 11px", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
                   className="sb-hover">
-                  <Plus size={13} color="rgba(14,165,233,0.6)" />
-                  <span style={{ fontSize: 12.5, color: "rgba(14,165,233,0.7)", fontWeight: 400 }}>
-                    {pt ? "Adicionar conta" : es ? "Agregar cuenta" : "Add account"}
-                  </span>
+                  <Plus size={12} color="rgba(14,165,233,0.55)" />
+                  <span style={{ fontSize: 12, color: "rgba(14,165,233,0.7)" }}>{pt ? "Adicionar conta" : "Add account"}</span>
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Nav ── */}
-        <nav style={{ padding: "16px 0 0", flexShrink: 0 }}>
-          {NAV.map(item => (
-            <NavItem
-              key={item.url}
-              url={item.url}
-              label={item.label}
-              icon={item.icon}
-              isActive={isAt(item.url)}
-              onClose={onClose}
-              badge={(item as any).badge}
-            />
+        {/* Primary nav */}
+        <nav style={{ padding: "10px 0 0", flexShrink: 0 }}>
+          {PRIMARY.map(item => (
+            <NavPrimary key={item.url} url={item.url} label={item.label} icon={item.icon}
+              isActive={isAt(item.url)} onClose={onClose} badge={(item as any).badge} />
           ))}
         </nav>
 
-        {/* ── Spacer ── */}
+        {/* Divider + Tools section */}
+        <div style={{ padding: "12px 8px 0", flexShrink: 0 }}>
+          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
+          <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.2)", letterSpacing: "0.08em", textTransform: "uppercase", padding: "0 4px", marginBottom: 4 }}>
+            {pt ? "Ferramentas" : es ? "Herramientas" : "Tools"}
+          </p>
+          {TOOLS.map(item => (
+            <NavSecondary key={item.url} url={item.url} label={item.label} icon={item.icon}
+              isActive={isAt(item.url)} onClose={onClose} />
+          ))}
+        </div>
+
+        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* ── Footer ── */}
-        <div style={{ padding: "0 10px 16px", display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
+        {/* Footer */}
+        <div style={{ padding: "0 8px 14px", flexShrink: 0 }}>
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 8px" }} />
 
-          {/* Upgrade */}
           {plan === "free" && !isLifetime && (
             <button onClick={() => { navigate("/pricing"); onClose(); }}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "10px 12px", borderRadius: 8, marginBottom: 4,
-                background: "rgba(14,165,233,0.08)",
-                border: "1px solid rgba(14,165,233,0.18)",
-                cursor: "pointer", width: "100%", transition: "all 0.15s",
-              }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 8, marginBottom: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.17)", cursor: "pointer", width: "100%", transition: "all 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.14)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(14,165,233,0.08)"; }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Zap size={14} color="#0ea5e9" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f2f8" }}>{pt ? "Fazer upgrade" : es ? "Mejorar" : "Upgrade"}</span>
+                <Zap size={13} color="#0ea5e9" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#f0f2f8" }}>{pt ? "Fazer upgrade" : "Upgrade"}</span>
               </div>
-              <ArrowUpRight size={13} color="rgba(14,165,233,0.6)" />
+              <ArrowUpRight size={13} color="rgba(14,165,233,0.55)" />
             </button>
           )}
 
-          {/* Profile */}
           <button onClick={() => onOpenProfile?.()}
-            style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 8px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", width: "100%", transition: "background 0.1s" }}
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 8px", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", width: "100%", transition: "background 0.1s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <Avatar style={{ width: 30, height: 30, flexShrink: 0, borderRadius: 8 }}>
+            <Avatar style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 7 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback style={{ fontSize: 13, fontWeight: 700, borderRadius: 8, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.08)" }}>{initials}</AvatarFallback>
+              <AvatarFallback style={{ fontSize: 12, fontWeight: 700, borderRadius: 7, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>{initials}</AvatarFallback>
             </Avatar>
             <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.82)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, lineHeight: 1.35 }}>{displayName}</p>
-              <p style={{ fontSize: 12, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, lineHeight: 1.3 }}>{displayName}</p>
+              <p style={{ fontSize: 11.5, color: isLifetime ? "#fbbf24" : pm.color, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{isLifetime ? "∞ Lifetime" : pm.label}</p>
             </div>
           </button>
         </div>
