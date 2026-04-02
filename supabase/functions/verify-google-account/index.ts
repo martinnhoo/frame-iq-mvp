@@ -63,45 +63,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // List accessible customers to validate the ID
-    console.log("[verify-google] Trying listAccessibleCustomers...");
-    const listRes = await fetch("https://googleads.googleapis.com/v23/customers:listAccessibleCustomers", {
-      method: "GET",
-      headers: {
-        "Authorization": "Bearer " + token,
-        "developer-token": DEV_TOKEN,
-      },
-    });
-    const listText = await listRes.text();
-    console.log("[verify-google] listAccessibleCustomers status:", listRes.status, "| body:", listText.slice(0, 500));
-
-    if (!listRes.ok) {
-      console.log("[verify-google] listAccessibleCustomers failed");
-      // If even listing fails, accept the ID without API validation (graceful fallback)
-      const name = "Google Ads " + customer_id;
-      console.log("[verify-google] Fallback accept:", name);
-      return new Response(JSON.stringify({ valid: true, name, currency: "USD" }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
-    let accessibleIds: string[] = [];
-    try {
-      const listData = JSON.parse(listText);
-      const resourceNames: string[] = listData.resourceNames || [];
-      accessibleIds = resourceNames.map((r: string) => r.replace("customers/", ""));
-      console.log("[verify-google] Accessible customer IDs:", accessibleIds.join(", "));
-    } catch (e) {
-      console.log("[verify-google] Failed to parse list:", String(e));
-    }
-
-    // Check if the requested ID is among accessible accounts
-    if (accessibleIds.length > 0 && !accessibleIds.includes(custId)) {
-      console.log("[verify-google] custId", custId, "not in accessible list");
-      return new Response(JSON.stringify({ valid: false, reason: "no_access", message: "Este Customer ID nao esta acessivel com a conta Google conectada. IDs disponiveis: " + accessibleIds.join(", ") }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
+    // Developer token in test mode cannot validate real accounts via listAccessibleCustomers
+    // Accept any valid 10-digit customer ID and attempt to get account name
+    console.log("[verify-google] Accepting customer ID without list validation (developer token test mode):", custId);
 
     // Try to get account name via query, but don't fail if token is test-only
     let name = "Google Ads " + customer_id;
