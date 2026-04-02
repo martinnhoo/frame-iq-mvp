@@ -1,7 +1,5 @@
 // verify-google-account v2 — validates a Google Ads Customer ID against the real API
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
-
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -12,13 +10,12 @@ Deno.serve(async (req) => {
 
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { user_id, persona_id, customer_id } = await req.json();
 
     console.log("[verify-google] Start:", JSON.stringify({ user_id, persona_id, customer_id }));
 
-    if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
-    if (!customer_id || !/^\d{3,}$/.test(customer_id.replace(/-/g, ""))) {
+    if (!user_id || !persona_id) return new Response(JSON.stringify({ valid: false, reason: "missing_params" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    if (!customer_id || !/^\d{10}$/.test(customer_id.replace(/-/g, ""))) {
       console.log("[verify-google] Invalid format:", customer_id);
       return new Response(JSON.stringify({ valid: false, reason: "invalid_format" }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
