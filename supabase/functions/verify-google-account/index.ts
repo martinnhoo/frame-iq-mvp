@@ -138,6 +138,27 @@ Deno.serve(async (req) => {
     }
 
     console.log("[verify-google] SUCCESS:", name, currency);
+
+    // Save verified customer_id to ad_accounts[] and selected_account_id
+    const newAccount = { id: custId, name, currency };
+    const { data: existingConn } = await sb.from("platform_connections" as any)
+      .select("ad_accounts")
+      .eq("user_id", user_id).eq("persona_id", persona_id)
+      .eq("platform", "google").eq("status", "active")
+      .maybeSingle();
+
+    if (existingConn) {
+      const existing = (existingConn.ad_accounts || []) as any[];
+      const updated = existing.find((a: any) => a.id === custId)
+        ? existing.map((a: any) => a.id === custId ? newAccount : a)
+        : [...existing, newAccount];
+      await sb.from("platform_connections" as any)
+        .update({ ad_accounts: updated, selected_account_id: custId })
+        .eq("user_id", user_id).eq("persona_id", persona_id)
+        .eq("platform", "google").eq("status", "active");
+      console.log("[verify-google] saved to ad_accounts:", custId);
+    }
+
     return new Response(JSON.stringify({ valid: true, name, currency }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
