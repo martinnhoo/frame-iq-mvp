@@ -1,4 +1,4 @@
-// adbrief-ai-chat v17 — formatação: bold + quebras de linha obrigatórios, zero bloco corrido
+// adbrief-ai-chat v18 — fix: removida contradição "sem markdown" no schema, escapes corrigidos
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 
@@ -1545,7 +1545,7 @@ Bloco "dashboard" com dados REAIS do contexto. Se sem dados: *"Conecte seu Meta 
 Retorne APENAS um array JSON válido. Zero texto fora do array.
 
 **Schemas:**
-\`{ "type": "insight"|"action"|"warning", "title": "máx 6 palavras — específico, nunca 'Análise' ou 'Insight'", "content": "prose limpo, sem markdown interno" }\`
+\`{ "type": "insight"|"action"|"warning", "title": "máx 6 palavras — específico, nunca 'Análise' ou 'Insight'", "content": "use **negrito** e \\n\\n para estrutura — veja regras de formatação abaixo" }\`
 
 **Regra de ouro:** UM bloco por resposta, salvo quando há genuinamente duas coisas separadas. Nunca divida o que é um pensamento só.
 
@@ -1561,16 +1561,19 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 - **ZERO** perguntas de follow-up se você tem dados para agir
 
 **FORMATAÇÃO DO CONTENT — OBRIGATÓRIO:**
-Use markdown dentro do content para estrutura visual clara:
-- \\`**texto**\\` para negrito — use em números-chave, nomes de campanha, ações principais
-- \\n\\n para separar blocos distintos — não jogue tudo num parágrafo único
-- Máximo 3-4 negritos por resposta — critério, não em tudo
+O campo "content" DEVE usar markdown para estrutura visual. Nunca retorne texto corrido.
 
-Estrutura ideal para múltiplos pontos:\n\\`"**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** público pequeno demais.\\n\\n**Ação:** expanda o público."\\`
+REGRAS:
+1. Use **negrito** (dois asteriscos) para números-chave, nomes de campanha e ações. Ex: **CPM subiu 40%**
+2. Use \\n\\n (dois backslash-n) entre blocos distintos — nunca escreva tudo em um parágrafo só
+3. Máximo 3-4 negritos por resposta — só no que importa
 
-NÃO faça bloco de texto corrido sem negrito ou quebra de linha.
-NÃO use listas com traços — use **negrito** + \\n\\n.
-NÃO use ## headers — apenas **negrito** para destacar.`
+EXEMPLO correto de content: "**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** público muito pequeno.\\n\\n**Ação:** expanda o interesse do público-alvo."
+
+PROIBIDO:
+- Bloco de texto corrido sem nenhum negrito ou quebra de linha
+- Listas com traço (- item) — use **negrito** + \\n\\n
+- Headers com ## — apenas **negrito**`
 
     const toneMap: Record<string, string> = {
       "direto":   "Respostas curtas, diretas e acionáveis. Sem explicações longas.",
