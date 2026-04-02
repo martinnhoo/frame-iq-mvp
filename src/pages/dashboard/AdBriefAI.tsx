@@ -2081,9 +2081,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       blocks=blocks.map(b=>{
         // Clean all text
         const c={...b,
+          // stripMd only on title — content/items need markdown preserved for renderMarkdown
           title:b.title?translateTitle(stripMd(b.title), b.type):b.title,
-          content:b.content?stripMd(b.content):b.content,
-          items:b.items?.map((it:string)=>stripMd(it)),
+          content:b.content, // preserve markdown for renderMarkdown (**bold**, \n\n)
+          items:b.items, // preserve markdown in hook items too
         };
         // Upgrade insight→dashboard when requested and no dashboard block exists
         if(isDashReq&&(c.type==="insight"||c.type==="action")&&!blocks.some(bb=>bb.type==="dashboard")){
