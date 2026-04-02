@@ -1,4 +1,4 @@
-// adbrief-ai-chat v14 — Google Ads live data + cross-platform intelligence + persona_id scoped
+// adbrief-ai-chat v15 — zero alucinação, tom calibrado, sem exemplos hardcoded
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 
