@@ -7,9 +7,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
         status: 503, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
@@ -69,14 +69,14 @@ ${brand_logo_url ? '- IMPORTANT: Leave a natural surface visible where a brand l
 
     console.log(`[Step 1] Generating base scene ${scene_index}: ${scene_title}`);
 
-    const sceneRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const sceneRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${ANTHROPIC_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
+        model: "claude-haiku-4-5-20251001",
         messages: [{ role: "user", content: scenePrompt }],
         modalities: ["image", "text"],
       }),
@@ -133,14 +133,14 @@ CRITICAL RULES:
 - The logo should be clearly visible but naturally integrated
 - Match the surface's perspective and lighting`;
 
-    const compositeRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const compositeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${ANTHROPIC_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
+        model: "claude-haiku-4-5-20251001",
         messages: [{
           role: "user",
           content: [

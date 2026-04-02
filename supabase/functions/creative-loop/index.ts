@@ -27,8 +27,8 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action, user_id, variables, analysis_data } = body;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -255,10 +255,11 @@ ${winnerPatterns.map(p => `- ${p.pattern_key}: CTR ${(p.avg_ctr! * 100).toFixed(
 Return JSON: { "pattern_key": "insight text", ... }`;
 
         try {
-          const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: [{ role: "user", content: prompt }] }),
+            headers: { "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "claude-haiku-4-5-20251001", messages: [{ role: "user", content: prompt }] }),
           });
           if (aiRes.ok) {
             const aiData = await aiRes.json();
@@ -336,11 +337,12 @@ Return JSON: { "pattern_key": "insight text", ... }`;
       let reasoning = `Based on ${matching.length} similar patterns, this combination ${rawScore >= 60 ? "aligns with your winning creatives" : "hasn't shown strong results yet"}.`;
 
       try {
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          headers: { "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
+            model: "claude-haiku-4-5-20251001",
             messages: [{ role: "user", content: `Based on ad performance data: Predicted CTR ${(weightedCtr * 100).toFixed(2)}% (avg ${(globalAvg * 100).toFixed(2)}%), Score ${rawScore}/100, ${matching.length} patterns, Variables: ${JSON.stringify(variables)}. Write 2-sentence prediction. Be specific, no fluff.` }],
           }),
         });

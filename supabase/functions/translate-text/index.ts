@@ -74,8 +74,8 @@ Deno.serve(async (req) => {
 
     const results: Array<{ lang: string; translated_text: string; cultural_adaptation: string }> = [];
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    const LOVABLE_API_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    const LOVABLE_API_URL = "https://api.anthropic.com/v1/messages";
 
     for (const target of targets) {
       const systemPrompt = `You are an expert advertising translator and cultural strategist specializing in performance marketing ads. Your job is to translate ad scripts, captions, hooks, and VO copy so they feel native — not translated.
@@ -103,7 +103,7 @@ Return ONLY valid JSON.`;
       const res = await fetch(LOVABLE_API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

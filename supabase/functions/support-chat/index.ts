@@ -94,9 +94,9 @@ serve(async (req) => {
 Use this to give more personalized answers.`;
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
         JSON.stringify({
           reply:
@@ -108,17 +108,18 @@ Use this to give more personalized answers.`;
       );
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 400,
+        system: systemPrompt,
         messages: [
-          { role: "system", content: systemPrompt },
           ...(messages || []).map((m: { role: string; content: string }) => ({
             role: m.role,
             content: m.content,
@@ -142,7 +143,7 @@ Use this to give more personalized answers.`;
 
     const data = await response.json();
     const reply =
-      data.choices?.[0]?.message?.content ||
+      data.content?.[0]?.text ||
       (language === "pt"
         ? "Vou encaminhar isso para a equipe. Email: hello@adbrief.pro"
         : "I'll escalate this to the team. Email hello@adbrief.pro");

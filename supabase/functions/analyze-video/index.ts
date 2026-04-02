@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     const market = (formData.get('market') as string) || '';
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
     const startTime = Date.now();
 
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     let transcript = '';
     let duration = 30;
 
-    if (videoFile && LOVABLE_API_KEY) {
+    if (videoFile && ANTHROPIC_API_KEY) {
       try {
         
         // Convert file to base64 for Gemini
@@ -91,10 +91,10 @@ Deno.serve(async (req) => {
         // Determine MIME type
         const mimeType = videoFile.type || (videoFile.name?.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg');
         
-        const transcribeRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const transcribeRes = await fetch("https://api.anthropic.com/v1/messages", {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
         transcript = '[Audio transcription failed — analyzing visual context only]';
       }
     } else if (videoFile && OPENAI_API_KEY) {
-      // Fallback to Whisper if no LOVABLE_API_KEY
+      // Fallback to Whisper if no ANTHROPIC_API_KEY
       try {
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');
@@ -178,12 +178,12 @@ Deno.serve(async (req) => {
     // ── Transcribe-only mode ──────────────────────────────────────────────
     if (transcribe_only) {
       // Fail only if truly no transcript at all or no AI key available
-      const hasKey = LOVABLE_API_KEY || OPENAI_API_KEY;
+      const hasKey = ANTHROPIC_API_KEY || OPENAI_API_KEY;
       const transcriptFailed = !transcript || (transcript.startsWith('[') && (
         transcript.includes('failed') || transcript.includes('exhausted') || transcript.includes('Rate limited') || transcript.includes('error')
       ));
       if (!hasKey || !videoFile) {
-        const reason = !videoFile ? 'No video file received' : 'No AI API key configured (LOVABLE_API_KEY or OPENAI_API_KEY)';
+        const reason = !videoFile ? 'No video file received' : 'No AI API key configured (ANTHROPIC_API_KEY or OPENAI_API_KEY)';
         console.error('transcribe_only failed:', reason);
         return new Response(JSON.stringify({ 
           error: 'transcription_failed', transcript: '', message: reason
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
         message: 'Missing analysis_id for analysis run'
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    if (!LOVABLE_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
+    if (!ANTHROPIC_API_KEY && !Deno.env.get('ANTHROPIC_API_KEY')) {
       if (analysisId) {
         await supabase.from('analyses').update({
           status: 'failed',
@@ -266,12 +266,12 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
 
     let analysis: Record<string, unknown>;
 
-    if (LOVABLE_API_KEY) {
+    if (ANTHROPIC_API_KEY) {
       // Use Lovable AI Gateway
-      const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

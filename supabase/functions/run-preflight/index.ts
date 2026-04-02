@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       if (authUser) verified_user_id = authUser.id;
     }
 
-    if (!LOVABLE_API_KEY) {
+    if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "AI API key not configured" }), {
         status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -388,14 +388,14 @@ Return ONLY valid JSON (no markdown, no backticks):
     }
 
     console.log("Calling AI for pre-flight analysis...");
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${ANTHROPIC_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-haiku-4-5-20251001",
         messages: [{ role: "user", content: prompt }],
       }),
     });

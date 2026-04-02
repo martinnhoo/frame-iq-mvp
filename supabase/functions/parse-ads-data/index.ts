@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -105,10 +105,10 @@ Return JSON:
   ]
 }`;
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResp = await fetch("https://api.anthropic.com/v1/messages", {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

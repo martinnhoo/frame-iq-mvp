@@ -64,7 +64,7 @@ serve(async (req) => {
 
   try {
     const { answers, user_id } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
     // Rate limit check — use plan-based persona limit from _shared/plans.ts
     if (user_id) {
@@ -92,7 +92,7 @@ serve(async (req) => {
       }
     }
 
-    if (!LOVABLE_API_KEY) {
+    if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "AI not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -134,14 +134,15 @@ Return ONLY a valid JSON object with these exact keys:
   "avatar_emoji": "one emoji that perfectly represents their vibe"
 }`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-haiku-4-5-20251001",
         messages: [{ role: "user", content: prompt }],
       }),
     });
