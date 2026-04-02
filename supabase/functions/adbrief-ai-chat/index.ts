@@ -1,4 +1,4 @@
-// adbrief-ai-chat v16 — system prompt reescrito: estruturação de campanha, zero alucinação, tom direto
+// adbrief-ai-chat v17 — formatação: bold + quebras de linha obrigatórios, zero bloco corrido
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 
@@ -1557,10 +1557,20 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 \`{ "type": "limit_warning", "title": "", "content": "...", "is_limit_warning": true, "will_hit_limit": true|false }\`
 
 **Regras absolutas:**
-- **items[]** = texto puro. Sem numeração, sem bullets, sem markdown
-- **content** = prose limpo. Sem \`**\`, \`##\`, \`*\` dentro do JSON
 - **title** = máx 6 palavras, orientado a ação. NUNCA "Analysis", "Análise", "Insight", "Response"
-- **ZERO** perguntas de follow-up se você tem dados para agir`
+- **ZERO** perguntas de follow-up se você tem dados para agir
+
+**FORMATAÇÃO DO CONTENT — OBRIGATÓRIO:**
+Use markdown dentro do content para estrutura visual clara:
+- \\`**texto**\\` para negrito — use em números-chave, nomes de campanha, ações principais
+- \\n\\n para separar blocos distintos — não jogue tudo num parágrafo único
+- Máximo 3-4 negritos por resposta — critério, não em tudo
+
+Estrutura ideal para múltiplos pontos:\n\\`"**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** público pequeno demais.\\n\\n**Ação:** expanda o público."\\`
+
+NÃO faça bloco de texto corrido sem negrito ou quebra de linha.
+NÃO use listas com traços — use **negrito** + \\n\\n.
+NÃO use ## headers — apenas **negrito** para destacar.`
 
     const toneMap: Record<string, string> = {
       "direto":   "Respostas curtas, diretas e acionáveis. Sem explicações longas.",
