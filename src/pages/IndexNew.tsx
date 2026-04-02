@@ -113,7 +113,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
     hero_badge: "AI CONNECTED TO YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
-    hero_sub: "Connect Meta Ads or Google Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
+    hero_sub: "Connect Meta Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
     hero_cta: "Try free for 3 days", hero_see: "See it in action",
     hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
@@ -132,7 +132,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_label: "HOW IT WORKS", how_h2: "Three steps. Zero friction.",
     how_sub: "No CSV uploads. No manual data. Just connect and ask.",
     how_s1_title: "Create your account", how_s1_desc: "Sign up and create an account for each brand or client. Add website and context — the AI uses all of it to personalize every answer.",
-    how_s2_title: "Connect Meta or Google Ads", how_s2_desc: "Link your ad account in one click via OAuth. AdBrief reads spend, CTR, creatives and performance — in real time.",
+    how_s2_title: "Connect Meta Ads", how_s2_desc: "Link your ad account in one click via OAuth. AdBrief reads spend, CTR, creatives and performance — in real time.",
     how_s3_title: "Ask anything. Get real answers.", how_s3_desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next.",
     for_label: "WHO IT'S FOR", for_h2: "Built for performance teams.",
     for_tab0: "Agencies", for_tab1: "Media Buyers", for_tab2: "In-house Teams",
@@ -161,7 +161,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "FAQ", faq_h2: "Common questions",
     faq_q0: "How does the 3-day free trial work?", faq_a0: "When you sign up, you get full access for 3 days at no charge. If you cancel within that period, you won't be billed.",
     faq_q1: "Why do I need a card to start?", faq_a1: "Requiring a card filters for serious users and lets us give you genuine full access. We don't charge anything for 72 hours (3 days).",
-    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads and Google Ads — fully connected and reading your data in real time. TikTok Ads is coming soon.",
+    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads — fully connected and reading your data in real time. Google Ads and TikTok Ads are coming soon.",
     faq_q3: "Is my data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your credentials. Tokens are encrypted at rest.",
     faq_q4: "Can I use it for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts, Studio unlimited. Most agencies use one persona per brand.",
     faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its ad accounts (Meta Ads, Google Ads). The AI uses this context to personalize every answer.",
@@ -189,7 +189,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
     hero_badge: "IA CONECTADA NA SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com\nseus anúncios.",
-    hero_sub: "Conecta em Meta Ads ou Google Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
+    hero_sub: "Conecta em Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
     hero_cta: "Testar grátis por 3 dias", hero_see: "Ver na prática",
     hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
@@ -208,7 +208,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_label: "COMO FUNCIONA", how_h2: "Conecte. Pergunte. Escale.",
     how_sub: "Do zero à sua primeira resposta em menos de 2 minutos.",
     how_s1_title: "Crie sua conta", how_s1_desc: "30 segundos. Adicione o nome da marca, site e contexto — a IA usa isso para personalizar cada resposta com a identidade do seu negócio.",
-    how_s2_title: "Conecte Meta ou Google Ads", how_s2_desc: "Um clique via OAuth. O AdBrief lê spend, CTR, frequência, criativos e performance dos últimos 90 dias — em tempo real, sem CSV.",
+    how_s2_title: "Conecte Meta Ads", how_s2_desc: "Um clique via OAuth. O AdBrief lê spend, CTR, frequência, criativos e performance dos últimos 90 dias — em tempo real, sem CSV.",
     how_s3_title: "Pergunte. Receba diagnóstico.", how_s3_desc: "Interface de chat — mas com seus dados reais. Pergunte por que o ROAS caiu, o que pausar, quais hooks criar. A IA responde com contexto real.",
     for_label: "PARA QUEM", for_h2: "Para quem gerencia anúncios a sério.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
@@ -237,7 +237,7 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "FAQ", faq_h2: "Perguntas frequentes",
     faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
     faq_q1: "Por que preciso de cartão?", faq_a1: "Filtra usuários sérios e te dá acesso genuíno. Não cobramos nada em 72h.",
-    faq_q2: "O que conecta?", faq_a2: "Meta Ads e Google Ads — conectados e lendo seus dados em tempo real. TikTok Ads em breve.",
+    faq_q2: "O que conecta?", faq_a2: "Meta Ads — conectado e lendo seus dados em tempo real. Google Ads e TikTok Ads em breve.",
     faq_q3: "Meus dados são seguros?", faq_a3: "Sim. Usamos OAuth. Nunca armazenamos suas credenciais. Tokens criptografados.",
     faq_q4: "Posso usar para vários clientes?", faq_a4: "Sim. Pro: 3 contas. Studio: ilimitado. A maioria usa uma persona por marca.",
     faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado às suas contas de anúncios (Meta Ads, Google Ads). A IA usa esse contexto em cada resposta.",
@@ -265,7 +265,7 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
-    hero_sub: "Conecta Meta Ads o Google Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
+    hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
     hero_cta: "Probar gratis 3 días", hero_see: "Verlo en acción",
     hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
     stat_1: "30s", stat_1_label: "Para conectar Meta Ads",
@@ -3433,4 +3433,4 @@ export default function IndexNew() {
     </div>
   );
 }
-// build 999003
+// build 999004
