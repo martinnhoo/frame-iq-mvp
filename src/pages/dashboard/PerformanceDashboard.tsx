@@ -443,7 +443,7 @@ export default function PerformanceDashboard() {
   };
 
   return (
-    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"24px 28px 60px"}} className="perf-page">
+    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"24px 28px 100px"}} className="perf-page">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -451,7 +451,7 @@ export default function PerformanceDashboard() {
         .perf-card{animation:fadeIn 0.3s ease both}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
         @media(max-width:640px){
-          .perf-page{padding:16px 16px 60px!important}
+          .perf-page{padding:16px 16px 100px!important}
           .perf-header-actions{gap:6px!important}
           .perf-platform-tabs button{padding:5px 10px!important;font-size:12px!important}
           .perf-action-btn{padding:6px 10px!important;font-size:12px!important}
