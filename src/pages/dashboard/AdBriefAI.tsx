@@ -409,7 +409,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 // ── Block card ────────────────────────────────────────────────────────────────
 // ── Markdown renderer — bold, italic, headers, lists, inline code ─────────────
 function renderMarkdown(text: string): React.ReactNode[] {
-  if (!text) return [];
+  if (!text || typeof text !== "string") return [];
   // Normalizar: \n\n real ou literal "\\n\\n" → separador de parágrafo
   const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
   const lines = normalized.split("\n");
@@ -1598,8 +1598,28 @@ export default function AdBriefAI() {
               }
             }else if(fn==="generate-script"&&(data?.script||data?.content)){
               nb[bi]={type:"insight",title:lang==="es"?"Guión":"Roteiro",content:data.script||data.content};
-            }else if(fn==="generate-brief"&&(data?.brief||data?.content)){
-              nb[bi]={type:"insight",title:"Brief",content:data.brief||data.content};
+            }else if(fn==="generate-brief"&&data?.brief){
+              // brief is a structured JSON object — convert to readable markdown
+              const b=data.brief as any;
+              const lines:string[]=[];
+              if(b.objective) lines.push(`**Objetivo:** ${b.objective}`);
+              if(b.core_message) lines.push(`\n**Mensagem central:** ${b.core_message}`);
+              if(b.value_proposition) lines.push(`\n**Proposta de valor:** ${b.value_proposition}`);
+              if(b.target_audience){
+                const ta=b.target_audience;
+                lines.push(`\n**Público-alvo:**`);
+                if(ta.demographics) lines.push(`- ${ta.demographics}`);
+                if(ta.psychographics) lines.push(`- ${ta.psychographics}`);
+                if(ta.pain_points?.length) lines.push(`- Dores: ${ta.pain_points.join(", ")}`);
+              }
+              if(b.tone_and_voice) lines.push(`\n**Tom:** ${b.tone_and_voice}`);
+              if(b.key_messages?.length) lines.push(`\n**Mensagens-chave:**\n${b.key_messages.map((m:string)=>`- ${m}`).join("\n")}`);
+              if(b.formats?.length) lines.push(`\n**Formatos:**\n${b.formats.map((f:any)=>`- ${f.format}${f.duration?` (${f.duration})`:""} — ${f.rationale}`).join("\n")}`);
+              if(b.visual_direction) lines.push(`\n**Direção visual:** ${b.visual_direction}`);
+              if(b.cta) lines.push(`\n**CTA:** ${b.cta}`);
+              if(b.do_not?.length) lines.push(`\n**Não fazer:**\n${b.do_not.map((d:string)=>`- ${d}`).join("\n")}`);
+              if(b.compliance_notes) lines.push(`\n**Compliance:** ${b.compliance_notes}`);
+              nb[bi]={type:"insight",title:"Brief",content:lines.join("\n")};
             }else{
               nb[bi]={type:"warning",title:"Sem resultado",content:lang==="pt"?"Tente novamente com mais contexto.":"Try again with more context."};
             }
@@ -2625,7 +2645,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   <button key={tool.action} className={isOn?"tool-pill tool-pill-on":"tool-pill"}
                     onClick={()=>{
                       if(tool.action==="dashboard"){
-                        // Dashboard: send immediately with default context request
                         if(!isOn){
                           const defMsg=lang==="pt"?"[DASHBOARD] Mostrar resumo da conta — campanhas, ROAS e criativos ativos":lang==="es"?"[DASHBOARD] Mostrar resumen de la cuenta":"[DASHBOARD] Show account summary — campaigns, ROAS and active creatives";
                           send(defMsg);
@@ -2635,18 +2654,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       setActiveTool(isOn?null:tool.action);
                     }}
                     style={{
-                      display:"flex",alignItems:"center",gap:6,
+                      display:"flex",alignItems:"center",gap:5,
                       padding:"5px 12px",borderRadius:99,flexShrink:0,
                       background: isOn ? tool.color : "rgba(255,255,255,0.07)",
                       border:`1px solid ${isOn ? "transparent" : "rgba(255,255,255,0.11)"}`,
-                      color: isOn ? "#000" : "rgba(255,255,255,0.65)",
-                      fontSize:12,fontWeight:isOn?600:400,cursor:"pointer",
+                      color: isOn ? "#000" : "rgba(255,255,255,0.6)",
+                      fontSize:12,fontWeight:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans',sans-serif",
-                      letterSpacing:"-0.01em",transition:"all 0.15s",
-                      boxShadow: isOn ? `0 0 16px ${tool.color}60` : "none",
+                      letterSpacing:"-0.01em",
+                      transition:"background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s",
+                      boxShadow: isOn ? `0 0 12px ${tool.color}50` : "0 0 0px transparent",
                     }}
->
-                    <tool.icon size={12} strokeWidth={2}/>
+                  >
+                    <tool.icon size={12} strokeWidth={isOn?2.5:2}/>
                     {tool.label}
                   </button>
                 );
