@@ -824,8 +824,10 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
-            const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
+            const since = historicalSince || new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString().split("T")[0];
             const until = historicalUntil || new Date().toISOString().split("T")[0];
+            // Lifetime since (for all-time top performers)
+            const lifetimeSince = new Date(Date.now() - 3 * 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
 
             // ── In-memory cache (15 min per account) ─────────────────────────
             // Prevents redundant Meta API calls. Evicts expired keys on each write.
@@ -844,25 +846,28 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               timeSeriesRaw = cached.timeSeriesRaw;
               placementRaw  = cached.placementRaw;
             } else {
-              // ── FIX 1: Limit 20→50 ads + FIX 4: Add adsets + FIX 3: Time series + FIX 2: Placements
+              // Comprehensive Meta Ads data fetch: 90 days + lifetime top performers
               const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
-              const [r1, r2, r3, r4, r5] = await Promise.allSettled([
-                // FIX 1: 50 ads (was 20)
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
-                // Campaigns: 50 (was 20)
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
-                // FIX 4: Adsets with targeting + budget + status
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=50&access_token=${token}`),
-                // FIX 3: Time series — daily CTR, spend, impressions for last 14 days
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${new Date(Date.now()-14*24*3600000).toISOString().split("T")[0]}","until":"${until}"}&time_increment=1&limit=14&access_token=${token}`),
-                // FIX 2: Placement breakdown
+              const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
+                // 90-day ad insights sorted by spend
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`),
+                // All campaigns including paused/ended — full history
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status,created_time,start_time,stop_time&limit=100&access_token=${token}`),
+                // Adsets with targeting + budget + status
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=100&access_token=${token}`),
+                // Monthly time series — last 90 days daily
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=12&access_token=${token}`),
+                // Placement breakdown 90 days
                 fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
+                // Lifetime top ads — all-time best performers (3 years)
+                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
               ]);
               adsRaw        = r1.status === "fulfilled" ? await r1.value.json() : null;
               campsRaw      = r2.status === "fulfilled" ? await r2.value.json() : null;
               adsetsRaw     = r3.status === "fulfilled" ? await r3.value.json() : null;
               timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
               placementRaw  = r5.status === "fulfilled" ? await r5.value.json() : null;
+              const lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
 
               // Cache results — evict stale entries first to prevent unbounded growth
               const metaCache = (globalThis as any).__metaCache;
@@ -922,8 +927,29 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               liveMetaData += `ADS: Nenhum gasto de anúncio no período.\n`;
             }
 
-            // FIX 3: Time series — daily trend
+            // ALL-TIME TOP PERFORMERS (3 years lifetime)
+            if (lifetimeAdsRaw?.data?.length) {
+              const lifetimeLines = lifetimeAdsRaw.data.slice(0, 20).map((ad: any) => {
+                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
+                const conv = purchases !== "0" ? ` purch=${purchases}` : "";
+                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions||0).toLocaleString()}${conv} | ${ad.campaign_name}`;
+              }).join("\n");
+              liveMetaData += `\nALL-TIME TOP ADS (últimos 3 anos):\n${lifetimeLines}\n`;
+            }
+
+            // Monthly breakdown — macro trends
             if (timeSeriesRaw?.data?.length) {
+              const monthlyLines = timeSeriesRaw.data
+                .filter((d: any) => parseFloat(d.spend||0) > 0)
+                .map((d: any) => {
+                  const purch = d.actions?.find((a:any)=>a.action_type==="purchase")?.value || "";
+                  return `  ${d.date_start?.slice(0,7)}: spend=$${parseFloat(d.spend||0).toFixed(0)} ctr=${parseFloat(d.ctr||0).toFixed(2)}% cpm=$${parseFloat(d.cpm||0).toFixed(1)}${purch?` purch=${purch}`:""}`;
+                }).join("\n");
+              if (monthlyLines) liveMetaData += `MONTHLY BREAKDOWN:\n${monthlyLines}\n`;
+            }
+
+            // Daily trend
+            if (false && timeSeriesRaw?.data?.length) {
               const series = timeSeriesRaw.data
                 .filter((d: any) => parseFloat(d.spend||0) > 0)
                 .slice(-14)
