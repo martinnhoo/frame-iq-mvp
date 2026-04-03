@@ -63,13 +63,14 @@ Deno.serve(async (req) => {
 
           console.log("[sync-ad-diary] Meta account:", acc.id);
           const fields = "id,name,status,adset{name},campaign{name},created_time,updated_time,insights.date_preset(last_90_days){spend,impressions,clicks,ctr,cpc,actions,action_values,frequency}";
-          // effective_status includes PAUSED/ARCHIVED — default only returns ACTIVE
-          const statusFilter = encodeURIComponent(JSON.stringify(["ACTIVE","PAUSED","ARCHIVED"]));
-          const res = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${encodeURIComponent(fields)}&effective_status=${statusFilter}&limit=200&access_token=${conn.access_token}`);
+          // effective_status: Meta only returns ACTIVE by default — must explicitly include PAUSED/ARCHIVED
+          const res = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${encodeURIComponent(fields)}&effective_status=[%22ACTIVE%22,%22PAUSED%22,%22ARCHIVED%22]&limit=200&access_token=${conn.access_token}`);
           if (!res.ok) { errors.push(`Meta HTTP ${res.status}`); continue; }
 
           const j = await res.json();
-          if (j.error) { errors.push(`Meta: ${j.error.message}`); continue; }
+          console.log("[sync-ad-diary] Meta raw ads:", j.data?.length ?? 0, j.error?.message || "ok");
+          if (j.error) { errors.push(`Meta API: ${j.error.message} (code ${j.error.code})`); continue; }
+          if (!j.data?.length) { errors.push(`Meta: API retornou 0 ads (conta: ${acc.id})`); continue; }
 
           const rows = (j.data || []).map((ad: any) => {
             const ins = ad.insights?.data?.[0] || {};
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
     }
 
     console.log("[sync-ad-diary] total:", totalSynced, "errors:", errors);
-    return ok({ ok: true, synced: totalSynced, errors: errors.length ? errors : undefined,
+    return ok({ ok: true, synced: totalSynced, errors: errors.length ? errors : undefined, debug: `Meta ads fetched, saved: ${totalSynced}`,
       message: totalSynced > 0 ? `${totalSynced} anúncios sincronizados` : errors.length ? "Erros: " + errors[0] : "Nenhum anúncio encontrado" });
 
   } catch (e: any) {
