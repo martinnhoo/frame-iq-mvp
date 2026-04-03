@@ -2412,7 +2412,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       <RefreshCw size={9}/>Retry
                     </button>
                   </div>
-                  <div style={{padding:"12px 18px",borderRadius:"18px 18px 4px 18px",background:"rgba(255,255,255,0.09)",border:"1px solid rgba(255,255,255,0.12)",fontSize:14,color:"#eef0f8",...m,lineHeight:1.7,backdropFilter:"blur(8px)"}}>
+                  <div style={{padding:"4px 0",fontSize:14,color:"rgba(240,242,248,0.82)",...m,lineHeight:1.7}}>
                     {msg.userText}
                   </div>
                 </div>
