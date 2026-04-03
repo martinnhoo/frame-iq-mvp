@@ -525,7 +525,9 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
   if(block.type==="warning") return(
     <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"12px 14px 12px 16px",borderRadius:8,background:"rgba(251,191,36,0.05)",borderLeft:"3px solid rgba(251,191,36,0.4)"}}>
       <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}>⚠</span>
-      <p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.8)",lineHeight:1.65,margin:0}}>{block.content||block.title}</p>
+      <div className="msg-body" style={{fontSize:13.5,lineHeight:1.65,margin:0,flex:1}}>
+        {renderMarkdown(block.content||block.title||"")}
+      </div>
     </div>
   );
 
@@ -574,7 +576,9 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
 
   // ── ACTION — inline, sem caixa verde ──
   if(block.type==="action") return(
-    <p style={{fontFamily:M,fontSize:14,color:"rgba(240,242,248,0.72)",lineHeight:1.75,margin:"0 0 6px"}}>{block.content||block.title}</p>
+    <div className="msg-body" style={{fontSize:14,lineHeight:1.75,margin:"0 0 6px"}}>
+      {renderMarkdown(block.content||block.title||"")}
+    </div>
   );
 
   // ── DEFAULT: insight / prose — markdown rendered ──
