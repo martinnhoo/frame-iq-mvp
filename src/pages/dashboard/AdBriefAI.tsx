@@ -2071,8 +2071,14 @@ export default function AdBriefAI() {
 
     if(data?.campaigns){
       const rows=(data.campaigns as any[]).map((c:any)=>[c.name,c.effective_status||c.status,c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
-      const id=Date.now();
-      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"dashboard",title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}}]}]);
+      const dashBlock={type:"dashboard" as const,title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}};
+      setMessages(prev=>{
+        const idx=[...prev].reverse().findIndex((m:any)=>m.blocks?.some((b:any)=>b.meta_action==="list_campaigns"||b.meta_action==="get_campaigns"));
+        const realIdx=idx>=0?prev.length-1-idx:-1;
+        if(realIdx>=0){return prev.map((m,i)=>i===realIdx?{...m,blocks:[dashBlock]}:m);}
+        const id=Date.now();
+        return[...prev,{role:"assistant" as const,id,ts:id,blocks:[dashBlock]}];
+      });
     } else if(data?.success && block.meta_action){
       // Show success confirmation
       const id=Date.now();
