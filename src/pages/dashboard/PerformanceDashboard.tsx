@@ -323,29 +323,60 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
 }
 
 // ── Ad Row ────────────────────────────────────────────────────────────────────
+// ── Ads list with compact/expand ─────────────────────────────────────────────
+function AdsCompact({ ads }: { ads: any[] }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const LIMIT = 5;
+  const visible = expanded ? ads : ads.slice(0, LIMIT);
+  const extra = ads.length - LIMIT;
+  return (
+    <div style={{paddingBottom:8}}>
+      {visible.map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}
+      {ads.length > LIMIT && (
+        <button onClick={()=>setExpanded(e=>!e)} style={{marginTop:10,width:"100%",padding:"8px 0",background:"rgba(255,255,255,0.03)",border:`1px solid rgba(255,255,255,0.07)`,borderRadius:8,color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}
+          onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.7)")}
+          onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.4)")}>
+          {expanded ? "▲ Mostrar menos" : `▼ Ver mais ${extra} anúncio${extra>1?"s":""}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Column widths — must match header exactly
+const COL={spend:70,ctr:70,roas:70,status:90};
+
 function AdRow({ ad, rank }: { ad:any; rank:number }) {
   const ctr=(ad.ctr||0)*100;
   const isWinner=ctr>2||(ad.roas&&ad.roas>2);
   const isPauser=ctr<0.3&&ad.spend>20;
-  const badge=isWinner?{label:"↑ Escalar",color:GREEN,bg:"rgba(34,197,94,0.1)"}:isPauser?{label:"⏸ Pausar",color:RED,bg:"rgba(239,68,68,0.1)"}:null;
   const isMeta=ad.platform==="meta";
   return (
-    <div style={{display:"flex",alignItems:"center",gap:16,padding:"12px 0",borderBottom:`1px solid ${BD}`}}>
-      <span style={{width:20,fontSize:12,color:MT,fontWeight:600,flexShrink:0}}>{rank}</span>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-          <p style={{margin:0,fontSize:13,fontWeight:500,color:TX,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ad.name||"—"}</p>
-          <span style={{fontSize: 12,fontWeight:700,padding:"1px 7px",borderRadius:5,background:isMeta?"rgba(14,165,233,0.1)":"rgba(66,133,244,0.1)",border:`1px solid ${isMeta?"rgba(14,165,233,0.25)":"rgba(66,133,244,0.25)"}`,color:isMeta?ACCENT:GBLUE,flexShrink:0}}>
+    <div style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${BD}`,gap:0}}>
+      <span style={{width:28,fontSize:12,color:MT,fontWeight:600,flexShrink:0}}>{rank}</span>
+      <div style={{flex:1,minWidth:0,paddingRight:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <p style={{margin:0,fontSize:13,fontWeight:500,color:TX,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.name||"—"}</p>
+          <span style={{fontSize:11,fontWeight:700,padding:"1px 6px",borderRadius:4,background:isMeta?"rgba(14,165,233,0.1)":"rgba(66,133,244,0.1)",border:`1px solid ${isMeta?"rgba(14,165,233,0.2)":"rgba(66,133,244,0.2)"}`,color:isMeta?ACCENT:GBLUE,flexShrink:0,whiteSpace:"nowrap"}}>
             {isMeta?"Meta":"Google"}
           </span>
         </div>
-        {ad.campaign && ad.campaign !== ad.name && <p style={{margin:0,fontSize: 12,color:MT,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.campaign}</p>}
+        {ad.campaign&&ad.campaign!==ad.name&&<p style={{margin:"2px 0 0",fontSize:11,color:MT,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.campaign}</p>}
       </div>
-      <div style={{display:"flex",gap:20,flexShrink:0,alignItems:"center"}}>
-        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:TX}}>R${(ad.spend||0).toFixed(0)}</p><p style={{margin:0,fontSize: 12,color:MT}}>Spend</p></div>
-        <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ctr>2?GREEN:ctr<0.5?RED:TX}}>{ctr.toFixed(2)}%</p><p style={{margin:0,fontSize: 12,color:MT}}>CTR</p></div>
-        {ad.roas!=null&&<div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX}}>{ad.roas.toFixed(1)}×</p><p style={{margin:0,fontSize: 12,color:MT}}>ROAS</p></div>}
-        {badge&&<span style={{fontSize: 12,fontWeight:700,color:badge.color,background:badge.bg,borderRadius:6,padding:"3px 8px",whiteSpace:"nowrap"}}>{badge.label}</span>}
+      {/* Fixed-width columns — must align with header */}
+      <div style={{width:COL.spend,textAlign:"right",flexShrink:0}}>
+        <p style={{margin:0,fontSize:13,fontWeight:700,color:TX}}>R${(ad.spend||0).toFixed(0)}</p>
+      </div>
+      <div style={{width:COL.ctr,textAlign:"right",flexShrink:0}}>
+        <p style={{margin:0,fontSize:13,fontWeight:700,color:ctr>2?GREEN:ctr<0.5?RED:TX}}>{ctr.toFixed(2)}%</p>
+      </div>
+      <div style={{width:COL.roas,textAlign:"right",flexShrink:0}}>
+        {ad.roas!=null?<p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX}}>{ad.roas.toFixed(1)}×</p>:<p style={{margin:0,fontSize:13,color:MT}}>—</p>}
+      </div>
+      <div style={{width:COL.status,textAlign:"right",flexShrink:0}}>
+        {isWinner&&<span style={{fontSize:12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",borderRadius:6,padding:"3px 8px"}}>↑ Escalar</span>}
+        {isPauser&&<span style={{fontSize:12,fontWeight:700,color:RED,background:"rgba(239,68,68,0.1)",borderRadius:6,padding:"3px 8px"}}>⏸ Pausar</span>}
+        {!isWinner&&!isPauser&&<span style={{fontSize:12,color:MT}}>—</span>}
       </div>
     </div>
   );
@@ -674,13 +705,15 @@ export default function PerformanceDashboard() {
                   Analisar com IA<ArrowUpRight size={12}/>
                 </button>
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:16,padding:"10px 0 10px 28px",borderBottom:`1px solid ${BD}`,marginTop:16}}>
-                <span style={{flex:1,fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
-                <div style={{display:"flex",gap:20,flexShrink:0}}>
-                  {["Spend","CTR","ROAS","Status"].map(h=><span key={h} style={{fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",width:h==="Status"?80:60,textAlign:"right"}}>{h}</span>)}
-                </div>
+              <div style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${BD}`,marginTop:16,gap:0}}>
+                <span style={{width:28,flexShrink:0}}/>
+                <span style={{flex:1,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
+                <span style={{width:COL.spend,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Spend</span>
+                <span style={{width:COL.ctr,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>CTR</span>
+                <span style={{width:COL.roas,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>ROAS</span>
+                <span style={{width:COL.status,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Status</span>
               </div>
-              <div style={{paddingBottom:8}}>{(d.top_ads||[]).slice(0,10).map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}</div>
+              <AdsCompact ads={d.top_ads||[]}/>
             </div>
           )}
         </>
