@@ -182,3 +182,5 @@ Deno.serve(async (req) => {
     return ok({ error: e.message }, 500);
   }
 });
+
+// force-redeploy 2026-04-03T19:00:00Z — use insights endpoint, time_range fix
