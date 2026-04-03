@@ -1,4 +1,4 @@
-// AdBrief AI — v20 clean rewrite
+// AdBrief AI Chat v2
 // Removed: dead imports (Sparkles, Brain, Radio, Wifi etc), unused vars (PLATFORMS, BS, SUGGS, metaConn),
 //          duplicate LP_CSS injection, LP_CSS as separate string
 // Fixed: DashboardLimitPopup missing plan prop, LABEL.en.placeholder bug,
