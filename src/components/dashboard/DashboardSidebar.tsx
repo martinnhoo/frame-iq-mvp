@@ -157,7 +157,7 @@ export function DashboardSidebar({
         if (!count || count === 0) { setKpi(null); return; }
         // Platform is connected — show connected state even without snapshots yet
         setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
-        // Only fetch KPI if at least one platform is connected
+        // Try to enrich with snapshot data if available
         return (supabase as any).from("daily_snapshots")
           .select("total_spend, avg_ctr, active_ads, yesterday_ctr")
           .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
@@ -165,7 +165,8 @@ export function DashboardSidebar({
           .then(({ data }: any) => {
             const rows = data || [];
             const latest = rows[0], prev = rows[1];
-            if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) { setKpi(null); return; }
+            // If no snapshot or zero data — keep "connected" state, don't revert to null
+            if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
             const ctr = (latest.avg_ctr || 0) * 100;
             const prevCtr = prev ? (prev.avg_ctr || 0) * 100 : null;
             const trend = prevCtr !== null && prevCtr > 0
