@@ -452,7 +452,9 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 // ── Markdown renderer — bold, italic, headers, lists, inline code ─────────────
 function renderMarkdown(text: string): React.ReactNode[] {
   if (!text) return [];
-  const lines = text.split("\n");
+  // Normalizar: \n\n real ou literal "\\n\\n" → separador de parágrafo
+  const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
+  const lines = normalized.split("\n");
   const nodes: React.ReactNode[] = [];
   let listBuffer: string[] = [];
   const F = "'Plus Jakarta Sans',sans-serif";
@@ -462,11 +464,11 @@ function renderMarkdown(text: string): React.ReactNode[] {
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
     nodes.push(
-      <ul key={key} style={{ margin: "10px 0 14px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
         {listBuffer.map((item, i) => (
           <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.7)", flexShrink: 0, marginTop: 9 }} />
-            <span style={{ fontFamily: M, fontSize: 14, color: "rgba(240,242,248,0.85)", lineHeight: 1.72, letterSpacing: "-0.01em" }}>{inlineFormat(item)}</span>
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.8)", flexShrink: 0, marginTop: 8 }} />
+            <span style={{ fontFamily: M, fontSize: 14, color: "rgba(240,242,248,0.88)", lineHeight: 1.7, letterSpacing: "-0.01em" }}>{inlineFormat(item)}</span>
           </li>
         ))}
       </ul>
@@ -483,7 +485,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
       const codeMatch = remaining.match(/^(.*?)`([^`]+)`(.*$)/s);
       if (boldMatch && (!codeMatch || boldMatch[1].length <= (codeMatch[1]?.length ?? Infinity))) {
         if (boldMatch[1]) parts.push(<span key={idx++}>{boldMatch[1]}</span>);
-        parts.push(<strong key={idx++} style={{ fontWeight: 700, color: "#f0f2f8" }}>{boldMatch[2]}</strong>);
+        parts.push(<strong key={idx++} style={{ fontWeight: 700, color: "#ffffff", background: "rgba(14,165,233,0.10)", borderRadius: 3, padding: "0 2px" }}>{boldMatch[2]}</strong>);
         remaining = boldMatch[3];
       } else if (codeMatch) {
         if (codeMatch[1]) parts.push(<span key={idx++}>{codeMatch[1]}</span>);
@@ -499,41 +501,37 @@ function renderMarkdown(text: string): React.ReactNode[] {
 
   lines.forEach((line, i) => {
     const trimmed = line.trim();
-    // H2/H3
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.65)", letterSpacing: "0.06em", textTransform: "uppercase", margin: "20px 0 6px" }}>{trimmed.replace(/^###\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px" }}>{trimmed.replace(/^###\s/, "")}</p>);
       return;
     }
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "20px 0 8px" }}>{trimmed.replace(/^##\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px" }}>{trimmed.replace(/^##\s/, "")}</p>);
       return;
     }
-    // Bullet lists
     if (/^[-*•]\s/.test(trimmed)) {
       listBuffer.push(trimmed.replace(/^[-*•]\s/, ""));
       return;
     }
-    // Numbered list
     if (/^\d+\.\s/.test(trimmed)) {
       listBuffer.push(trimmed.replace(/^\d+\.\s/, ""));
       return;
     }
-    // Blank line
     if (!trimmed) {
       flushList(`fl-${i}`);
       return;
     }
-    // Regular paragraph
     flushList(`fl-${i}`);
     nodes.push(
-      <p key={i} style={{ fontFamily: M, fontSize: 14.5, color: "rgba(240,242,248,0.88)", lineHeight: 1.78, margin: "0 0 12px", letterSpacing: "-0.01em" }}>
+      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em" }}>
         {inlineFormat(trimmed)}
       </p>
     );
   });
   flushList("final");
+  // Remove margem do último parágrafo
   return nodes;
 }
 
@@ -2392,61 +2390,89 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {messages.length > 0 && <div style={{height:28,flexShrink:0}}/>}
+        {messages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
         {messages.map((msg)=>(
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 28px",padding:"0 40px",boxSizing:"border-box" as const}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 20px",padding:"0 32px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
-              <div style={{display:"flex",justifyContent:"flex-end",position:"relative" as const}} className="user-msg-row">
-                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"78%"}}>
-                  {/* Hover actions — shown via CSS class */}
+              /* ── Bolha do usuário — direita, azul ── */
+              <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
+                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:6,maxWidth:"72%"}}>
+                  <div style={{
+                    padding:"11px 16px",
+                    borderRadius:"18px 18px 4px 18px",
+                    background:"rgba(14,165,233,0.18)",
+                    border:"1px solid rgba(14,165,233,0.32)",
+                    fontSize:14,fontWeight:500,
+                    color:"#e8f4fd",
+                    lineHeight:1.65,
+                    ...m,
+                    backdropFilter:"blur(4px)",
+                    boxShadow:"0 2px 12px rgba(14,165,233,0.12)",
+                  }}>
+                    {msg.userText}
+                  </div>
+                  {/* Ações no hover */}
                   <div className="user-msg-actions" style={{display:"flex",alignItems:"center",gap:4,opacity:0,transition:"opacity 0.15s",pointerEvents:"none" as const}}>
-                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"rgba(255,255,255,0.2)",marginRight:4}}>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:"rgba(255,255,255,0.18)"}}>
                       {new Date(typeof msg.ts === "number" ? msg.ts : Date.now()).toLocaleTimeString(lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"})}
                     </span>
-                    <button onClick={(e)=>{navigator.clipboard.writeText(msg.userText||"");const b=e.currentTarget;b.style.color="#34d399";b.style.borderColor="rgba(52,211,153,0.3)";b.style.background="rgba(52,211,153,0.08)";b.style.transform="scale(1.06)";setTimeout(()=>{b.style.color="rgba(255,255,255,0.3)";b.style.borderColor="rgba(255,255,255,0.08)";b.style.background="rgba(255,255,255,0.05)";b.style.transform="scale(1)";},1600);}}
-                      style={{display:"flex",alignItems:"center",gap:3,height:26,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:12,...m,transition:"all 0.18s"}}>
-                      <Copy size={9}/>Copy
+                    <button onClick={(e)=>{navigator.clipboard.writeText(msg.userText||"");const b=e.currentTarget;b.style.color="#34d399";setTimeout(()=>{b.style.color="rgba(255,255,255,0.25)";},1600);}}
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 7px",borderRadius:5,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:11,...m,transition:"color 0.18s"}}>
+                      <Copy size={8}/>Copiar
                     </button>
                     <button onClick={()=>send(msg.userText||"")}
-                      style={{display:"flex",alignItems:"center",gap:3,height:26,padding:"0 8px",borderRadius:6,background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:12,...m,transition:"all 0.12s"}}>
-                      <RefreshCw size={9}/>Retry
+                      style={{display:"flex",alignItems:"center",gap:3,height:22,padding:"0 7px",borderRadius:5,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:11,...m,transition:"color 0.12s"}}>
+                      <RefreshCw size={8}/>Retry
                     </button>
-                  </div>
-                  <div style={{padding:"4px 0",fontSize:14,color:"rgba(240,242,248,0.82)",...m,lineHeight:1.7}}>
-                    {msg.userText}
                   </div>
                 </div>
               </div>
             ):(
+              /* ── Bolha da IA — esquerda, card escuro ── */
               <div>
-                {/* AB avatar — only for non-proactive (proactive renders its own) */}
+                {/* Avatar + label */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <div style={{width:28,height:28,borderRadius:9,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
-                      <ABAvatar size={28}/>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
+                      <ABAvatar size={26}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.55)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
-                {/* Blocks */}
-                {msg.blocks?.map((b,bi)=>
-                  b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
-                  b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
-                  b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={async(msg)=>{if(!msg||loading||!contextReady)return;setLoading(true);try{const{data}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history:[...messages].slice(-10).map(m=>({role:m.role,content:(m.blocks||[]).map((b:any)=>b.content||"").join(" ").slice(0,300)})).filter(m=>m.content)}});if(data?.blocks?.length){const aid=Date.now()+1;setMessages(prev=>[...prev,{role:"assistant",blocks:data.blocks,ts:aid,id:aid}]);}}catch(e){console.error("dashboard silent error",e);}finally{setLoading(false);}}}/>:
-                  (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
-                  (b.type as string)==="limit_warning"?(
-                    <div key={bi} style={{marginTop:12,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
-                      <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
-                      {(b as any).will_hit_limit&&(
-                        <button onClick={()=>setShowUpgradeWall(true)}
-                          style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
-                          {lang==="pt"?"Ver planos →":lang==="es"?"Ver planes →":"See plans →"}
-                        </button>
-                      )}
-                    </div>
-                  ):
-                  (b as any)._pendingTool?null:
-                  <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
+                {/* Blocks — envolvidos em card sutil da IA */}
+                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") ? (
+                  <div style={{
+                    background:"rgba(255,255,255,0.035)",
+                    border:"1px solid rgba(255,255,255,0.07)",
+                    borderRadius:"4px 18px 18px 18px",
+                    padding:"14px 18px",
+                    boxShadow:"0 1px 8px rgba(0,0,0,0.2)",
+                  }}>
+                    {msg.blocks?.map((b,bi)=>
+                      b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
+                      b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
+                      b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={async(msg)=>{if(!msg||loading||!contextReady)return;setLoading(true);try{const{data}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history:[...messages].slice(-10).map(m=>({role:m.role,content:(m.blocks||[]).map((b:any)=>b.content||"").join(" ").slice(0,300)})).filter(m=>m.content)}});if(data?.blocks?.length){const aid=Date.now()+1;setMessages(prev=>[...prev,{role:"assistant",blocks:data.blocks,ts:aid,id:aid}]);}}catch(e){console.error("dashboard silent error",e);}finally{setLoading(false);}}}/>:
+                      (b.type as string)==="limit_warning"?(
+                        <div key={bi} style={{marginTop:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
+                          <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
+                          {(b as any).will_hit_limit&&(
+                            <button onClick={()=>setShowUpgradeWall(true)}
+                              style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
+                              {lang==="pt"?"Ver planos →":lang==="es"?"Ver planes →":"See plans →"}
+                            </button>
+                          )}
+                        </div>
+                      ):
+                      (b as any)._pendingTool?null:
+                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
+                    )}
+                  </div>
+                ) : (
+                  /* Proactive — sem card, renderiza direto */
+                  msg.blocks?.map((b,bi)=>
+                    (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
+                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
+                  )
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
@@ -2685,13 +2711,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         }
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
-        .msg-body{font-size:14.5px;line-height:1.8;color:rgba(238,240,246,0.88);}
-        .msg-body p{margin:0 0 12px;}
+        .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);}
+        .msg-body p{margin:0 0 10px;}
         .msg-body p:last-child{margin-bottom:0;}
-        .msg-body strong{font-weight:600;color:#f0f2f8;}
+        .msg-body strong{font-weight:700;color:#ffffff;background:rgba(14,165,233,0.10);border-radius:3px;padding:0 2px;}
         .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
-        .user-msg-row .user-msg-actions button:hover{background:rgba(255,255,255,0.08)!important;border-color:rgba(255,255,255,0.15)!important;color:rgba(255,255,255,0.6)!important;}
-      `}</style>
+        .user-msg-row .user-msg-actions button:hover{color:rgba(255,255,255,0.6)!important;}
+        @media(max-width:640px){
+          .chat-textarea{font-size:16px!important;}
+          .msg-wrap-inner{padding:0 16px!important}
+          .user-bubble-wrap{max-width:88%!important}
+          .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
+          .tool-pills-row{-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important}
+          .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
+        }</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
       {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}

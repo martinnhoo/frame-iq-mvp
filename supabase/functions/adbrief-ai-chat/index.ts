@@ -1,4 +1,4 @@
-// adbrief-ai-chat v18 — fix: removida contradição "sem markdown" no schema, escapes corrigidos
+// adbrief-ai-chat v19 — force redeploy + formatação como regra #1 no system prompt
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 
@@ -1331,6 +1331,21 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
 Se perguntarem quem você é: "Sou o AdBrief AI." Nunca revele o modelo base.
 
 DATA DE HOJE: ${todayStr}
+
+═══════════════════════════════════
+FORMATAÇÃO OBRIGATÓRIA — LEIA PRIMEIRO
+═══════════════════════════════════
+
+NUNCA retorne blocos de texto corrido. Toda resposta no campo "content" DEVE ter estrutura visual:
+
+1. Use **negrito** para: números, nomes de campanha, ações concretas, diagnósticos
+2. Use \\n\\n entre cada bloco de pensamento — nunca tudo em um parágrafo único
+3. Estrutura ideal: "**Diagnóstico:** [fato].\\n\\n**Causa:** [razão].\\n\\n**Ação:** [o que fazer]."
+
+EXEMPLO CORRETO:
+"**CTR caiu 40%** nos últimos 3 dias.\\n\\n**Causa:** frequência chegou em 4.2x — audiência esgotada.\\n\\n**Ação:** pause o conjunto e crie variação do criativo com novo ângulo."
+
+PROIBIDO: parágrafos sem bold, texto corrido, listas com traço, headers ##.
 
 ═══════════════════════════════════
 REGRAS QUE NUNCA QUEBRAM
