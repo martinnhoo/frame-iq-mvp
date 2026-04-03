@@ -939,16 +939,34 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
 }
 
 // ── Smart alerts ──────────────────────────────────────────────────────────────
-function mkAlerts(d: any) {
+function mkAlerts(d: any, lang: string) {
   if (!d || d.error) return [];
   const k = d.kpis || {}, W = d.winners || [], R = d.at_risk || [];
   const fr = parseFloat(k.frequency || 0), ctr = parseFloat(k.ctr || 0), sp = parseFloat(k.spend || 0);
   const out: Array<{ t: "warn" | "ok" | "info"; title: string; detail: string; q: string }> = [];
-  if (fr > 3.5) out.push({ t: "warn", title: "Frequência crítica", detail: `${fr.toFixed(1)}x — fadiga se aproximando`, q: "Minha frequência está alta. O que devo fazer agora?" });
-  if (ctr < 0.5 && sp > 50) out.push({ t: "warn", title: "CTR abaixo do esperado", detail: `${ctr.toFixed(2)}% — revise os hooks`, q: "Por que meu CTR está baixo? Quais criativos estão prejudicando?" });
-  if (R.length > 0) out.push({ t: "warn", title: `${R.length} criativo${R.length > 1 ? "s" : ""} em risco`, detail: "Fadiga detectada — pausa recomendada", q: "Quais criativos devo pausar agora e por quê?" });
-  if (W.length > 0) out.push({ t: "ok", title: `${W.length} criativo${W.length > 1 ? "s" : ""} prontos pra escalar`, detail: "Janela aberta — CTR alto, freq baixa", q: "Quais criativos posso escalar agora e como?" });
-  if (!out.length && ctr > 1.5 && fr < 2.5) out.push({ t: "ok", title: "Conta saudável", detail: `CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — tudo bem`, q: "Minha conta está performando bem. Como aproveitar este momento?" });
+  const L = {
+    highFreq:   { pt:"Frequência crítica",       es:"Frecuencia crítica",       en:"Critical frequency"    },
+    highFreqD:  { pt:`${fr.toFixed(1)}x — fadiga se aproximando`, es:`${fr.toFixed(1)}x — fatiga próxima`, en:`${fr.toFixed(1)}x — fatigue approaching` },
+    highFreqQ:  { pt:"Minha frequência está alta. O que devo fazer agora?", es:"Mi frecuencia está alta. ¿Qué hago ahora?", en:"My frequency is high. What should I do now?" },
+    lowCtr:     { pt:"CTR abaixo do esperado",   es:"CTR por debajo de lo esperado", en:"CTR below benchmark" },
+    lowCtrD:    { pt:`${ctr.toFixed(2)}% — revise os hooks`, es:`${ctr.toFixed(2)}% — revisa los hooks`, en:`${ctr.toFixed(2)}% — review hooks` },
+    lowCtrQ:    { pt:"Por que meu CTR está baixo? Quais criativos estão prejudicando?", es:"¿Por qué mi CTR está bajo?", en:"Why is my CTR low? Which creatives are hurting it?" },
+    atRisk:     { pt:`${R.length} criativo${R.length>1?"s":""} em risco`, es:`${R.length} creativo${R.length>1?"s":""} en riesgo`, en:`${R.length} creative${R.length>1?"s":""} at risk` },
+    atRiskD:    { pt:"Fadiga detectada — pausa recomendada", es:"Fatiga detectada — pausar recomendado", en:"Fatigue detected — pause recommended" },
+    atRiskQ:    { pt:"Quais criativos devo pausar agora e por quê?", es:"¿Cuáles creativos debo pausar y por qué?", en:"Which creatives should I pause now and why?" },
+    winners:    { pt:`${W.length} criativo${W.length>1?"s":""} prontos pra escalar`, es:`${W.length} creativo${W.length>1?"s":""} listos para escalar`, en:`${W.length} creative${W.length>1?"s":""} ready to scale` },
+    winnersD:   { pt:"Janela aberta — CTR alto, freq baixa", es:"Ventana abierta — CTR alto, freq baja", en:"Window open — high CTR, low frequency" },
+    winnersQ:   { pt:"Quais criativos posso escalar agora e como?", es:"¿Cuáles creativos puedo escalar ahora?", en:"Which creatives can I scale now and how?" },
+    healthy:    { pt:"Conta saudável",            es:"Cuenta saludable",           en:"Healthy account"       },
+    healthyD:   { pt:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — tudo bem`, es:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — todo bien`, en:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — looking good` },
+    healthyQ:   { pt:"Minha conta está performando bem. Como aproveitar este momento?", es:"Mi cuenta está bien. ¿Cómo aprovechar este momento?", en:"My account is performing well. How can I capitalize on this?" },
+  };
+  const t = (k: keyof typeof L) => (L[k] as any)[lang] || (L[k] as any).en;
+  if (fr > 3.5) out.push({ t: "warn", title: t("highFreq"), detail: t("highFreqD"), q: t("highFreqQ") });
+  if (ctr < 0.5 && sp > 50) out.push({ t: "warn", title: t("lowCtr"), detail: t("lowCtrD"), q: t("lowCtrQ") });
+  if (R.length > 0) out.push({ t: "warn", title: t("atRisk"), detail: t("atRiskD"), q: t("atRiskQ") });
+  if (W.length > 0) out.push({ t: "ok", title: t("winners"), detail: t("winnersD"), q: t("winnersQ") });
+  if (!out.length && ctr > 1.5 && fr < 2.5) out.push({ t: "ok", title: t("healthy"), detail: t("healthyD"), q: t("healthyQ") });
   return out;
 }
 
@@ -996,7 +1014,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const cS  = (data?.time_series || []).map((d: any) => d.ctr);
   const sTr = spS.length >= 2 ? (spS[spS.length - 1] > spS[0] ? "up" : "down") as "up" | "down" : "flat";
   const cTr = cS.length   >= 2 ? (cS[cS.length - 1]   > cS[0]   ? "up" : "down") as "up" | "down" : "flat";
-  const alerts = tab === "meta" ? mkAlerts(data) : [];
+  const alerts = tab === "meta" ? mkAlerts(data, lang) : [];
   const accName = data?.account_name || "";
   const isEmpty = data && !data.error && !parseInt(k.active_ads || k.active_campaigns || "0") && !(data.top_ads?.length) && !(data.campaigns?.length);
 
@@ -1026,7 +1044,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {data && !data.error && !busy && (
           <div className="lp-kpis-row" style={{ display: "flex", gap: 20, flex: 1, overflow: "hidden", alignItems: "center" }}>
             {[
-              k.spend && { lbl: "Spend", val: `R$${parseFloat(k.spend).toFixed(0)}`, warn: false, tr: sTr },
+              k.spend && { lbl: "Spend", val: `${data.currency_symbol||"$"}${parseFloat(k.spend).toFixed(0)}`, warn: false, tr: sTr },
               k.ctr   && { lbl: "CTR",   val: `${parseFloat(k.ctr).toFixed(2)}%`,    warn: parseFloat(k.ctr) < 0.5, tr: cTr },
               k.frequency && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}×`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
               k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
@@ -1040,19 +1058,23 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {alerts.some(a => a.t === "warn") && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#fb7185" }} />
-                <span style={{ fontSize: 12, color: "rgba(251,113,133,0.8)", fontWeight: 400 }}>{alerts.filter(a => a.t === "warn").length} alerta{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}</span>
+                <span style={{ fontSize: 12, color: "rgba(251,113,133,0.8)", fontWeight: 400 }}>
+                  {alerts.filter(a => a.t === "warn").length} {lang==="pt"?"alerta":"alert"}{alerts.filter(a => a.t === "warn").length > 1 ? "s" : ""}
+                </span>
               </div>
             )}
             {(data.winners || []).length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#34d399" }} />
-                <span style={{ fontSize: 12, color: "rgba(52,211,153,0.8)", fontWeight: 400 }}>{(data.winners || []).length} pra escalar</span>
+                <span style={{ fontSize: 12, color: "rgba(52,211,153,0.8)", fontWeight: 400 }}>
+                  {lang==="pt" ? `${(data.winners||[]).length} pra escalar` : lang==="es" ? `${(data.winners||[]).length} para escalar` : `${(data.winners||[]).length} to scale`}
+                </span>
               </div>
             )}
           </div>
         )}
-        {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", flex: 1, paddingLeft: 8 }}>carregando...</span>}
-        {fail && !busy && <span style={{ fontSize: 12, color: "#fb7185", flex: 1, paddingLeft: 8 }}>erro · clique para ver</span>}
+        {busy && <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", flex: 1, paddingLeft: 8 }}>{lang==="pt"?"carregando...":lang==="es"?"cargando...":"loading..."}</span>}
+        {fail && !busy && <span style={{ fontSize: 12, color: "#fb7185", flex: 1, paddingLeft: 8 }}>{lang==="pt"?"erro · clique para ver":lang==="es"?"error · clic para ver":"error · click to see"}</span>}
 
         <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.45)", flexShrink: 0, marginLeft: "auto" }} />
       </div>
@@ -1097,7 +1119,11 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               : <span style={{ width: 5, height: 5, borderRadius: "50%", background: fail ? "#fb7185" : "#34d399", boxShadow: !fail ? "0 0 5px rgba(52,211,153,0.5)" : "none", animation: !fail ? "lp-glow 2.5s ease-in-out infinite" : "none" }} />
             }
             <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-              {busy ? "atualizando..." : ts ? ts.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "ao vivo"}
+              {busy
+                ? (lang==="pt"?"atualizando...":lang==="es"?"actualizando...":"updating...")
+                : ts
+                  ? ts.toLocaleTimeString(lang==="pt"?"pt-BR":lang==="es"?"es-MX":"en-US", { hour: "2-digit", minute: "2-digit" })
+                  : (lang==="pt"?"ao vivo":lang==="es"?"en vivo":"live")}
             </span>
           </div>
           <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-btn"
@@ -1138,7 +1164,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(251,113,133,0.04)", border: "1px solid rgba(251,113,133,0.1)" }}>
             <span style={{ ...I, fontSize: 12, color: "#f87171" }}>{fail}</span>
             <button onClick={load} style={{ ...I, fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 7, background: "rgba(251,113,133,0.08)", border: "1px solid rgba(251,113,133,0.15)", color: "#f87171", cursor: "pointer" }}>
-              Tentar novamente
+              {lang==="pt"?"Tentar novamente":lang==="es"?"Reintentar":"Retry"}
             </button>
           </div>
         )}
@@ -1146,12 +1172,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {/* Special errors */}
         {data?.error === "token_expired" && (
           <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(251,146,60,0.04)", border: "1px solid rgba(251,146,60,0.12)" }}>
-            <span style={{ ...I, fontSize: 12, color: "#fb923c" }}>Token expirado — <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 500 }}>reconecte em Contas →</a></span>
+            <span style={{ ...I, fontSize: 12, color: "#fb923c" }}>
+              {lang==="pt"?"Token expirado":lang==="es"?"Token expirado":"Token expired"} — <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 500 }}>{lang==="pt"?"reconecte em Contas →":lang==="es"?"reconecta en Cuentas →":"reconnect in Accounts →"}</a>
+            </span>
           </div>
         )}
         {data?.error === "no_account_selected" && (
           <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ ...I, fontSize: 12, color: "#475569" }}>Nenhuma conta selecionada — <a href="/dashboard/accounts" style={{ color: "#6366f1" }}>configure em Contas →</a></span>
+            <span style={{ ...I, fontSize: 12, color: "#475569" }}>
+              {lang==="pt"?"Nenhuma conta selecionada":lang==="es"?"Ninguna cuenta seleccionada":"No account selected"} — <a href="/dashboard/accounts" style={{ color: "#6366f1" }}>{lang==="pt"?"configure em Contas →":lang==="es"?"configura en Cuentas →":"configure in Accounts →"}</a>
+            </span>
           </div>
         )}
 
@@ -1170,19 +1200,19 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
               {tab === "meta" ? (
                 <>
-                  <Kpi label="Spend 14 dias" value={`R$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? "crescendo" : sTr === "down" ? "caindo" : "estável"} />
-                  <Kpi label="CTR médio" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color={parseFloat(k.ctr || 0) > 1.5 ? "#34d399" : "#fb7185"} sub={cTr === "up" ? "subindo" : cTr === "down" ? "caindo" : "estável"} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
-                  <Kpi label="CPM" value={`R$${parseFloat(k.cpm || 0).toFixed(1)}`} color="#8b5cf6" sub="por mil impr." />
-                  <Kpi label="Frequência" value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} sub={parseFloat(k.frequency || 0) > 3.5 ? "fadiga próxima" : parseFloat(k.frequency || 0) > 2.5 ? "monitorar" : "saudável"} />
-                  <Kpi label="Conversões" value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ads ativos`} />
+                  <Kpi label={lang==="pt"?"Spend 14 dias":lang==="es"?"Gasto 14 días":"Spend 14 days"} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
+                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color={parseFloat(k.ctr || 0) > 1.5 ? "#34d399" : "#fb7185"} sub={cTr === "up" ? (lang==="pt"?"subindo":lang==="es"?"subiendo":"rising") : cTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"bajando":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
+                  <Kpi label="CPM" value={`${data.currency_symbol||"R$"}${parseFloat(k.cpm || 0).toFixed(1)}`} color="#8b5cf6" sub={lang==="pt"?"por mil impr.":lang==="es"?"por mil impr.":"per 1k impr."} />
+                  <Kpi label={lang==="pt"?"Frequência":lang==="es"?"Frecuencia":"Frequency"} value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} sub={parseFloat(k.frequency || 0) > 3.5 ? (lang==="pt"?"fadiga próxima":lang==="es"?"fatiga próxima":"fatigue close") : parseFloat(k.frequency || 0) > 2.5 ? (lang==="pt"?"monitorar":lang==="es"?"monitorear":"monitor") : (lang==="pt"?"saudável":lang==="es"?"saludable":"healthy")} />
+                  <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ${lang==="pt"?"ads ativos":lang==="es"?"ads activos":"active ads"}`} />
                 </>
               ) : (
                 <>
-                  <Kpi label="Spend 14 dias" value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? "crescendo" : "caindo"} />
-                  <Kpi label="CTR médio" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} spark={cS} color="#34d399" />
-                  <Kpi label="CPC médio" value={`$${parseFloat(k.cpc || 0).toFixed(2)}`} color="#f59e0b" />
-                  <Kpi label="Conversões" value={k.conversions || "0"} color="#34d399" />
-                  <Kpi label="Campanhas" value={k.active_campaigns || "0"} color="#6366f1" sub="ativas" />
+                  <Kpi label={lang==="pt"?"Spend 14 dias":lang==="es"?"Gasto 14 días":"Spend 14 days"} value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling")} />
+                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} spark={cS} color="#34d399" />
+                  <Kpi label="CPC" value={`$${parseFloat(k.cpc || 0).toFixed(2)}`} color="#f59e0b" />
+                  <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" />
+                  <Kpi label={lang==="pt"?"Campanhas":lang==="es"?"Campañas":"Campaigns"} value={k.active_campaigns || "0"} color="#6366f1" sub={lang==="pt"?"ativas":lang==="es"?"activas":"active"} />
                 </>
               )}
             </div>
@@ -1213,7 +1243,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {tab === "meta" && (data.winners || []).length > 0 && (
                       <div>
-                        <Sec c="#34d399">▲ Escalar agora</Sec>
+                        <Sec c="#34d399">{lang==="pt"?"▲ Escalar agora":lang==="es"?"▲ Escalar ahora":"▲ Scale now"}</Sec>
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                           {(data.winners || []).slice(0, 4).map((a: any, i: number) => <AdRow key={i} a={a} kind="winner" ask={onSend} />)}
                         </div>
@@ -1221,7 +1251,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                     )}
                     {tab === "meta" && (data.at_risk || []).length > 0 && (
                       <div>
-                        <Sec c="#fb7185">▼ Risco de fadiga</Sec>
+                        <Sec c="#fb7185">{lang==="pt"?"▼ Risco de fadiga":lang==="es"?"▼ Riesgo de fatiga":"▼ Fatigue risk"}</Sec>
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                           {(data.at_risk || []).slice(0, 4).map((a: any, i: number) => <AdRow key={i} a={a} kind="risk" ask={onSend} />)}
                         </div>
@@ -1229,7 +1259,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                     )}
                     {(tab === "google" || (!(data.winners?.length) && !(data.at_risk?.length))) && (data.top_ads || []).length > 0 && (
                       <div>
-                        <Sec c="#475569">Top anúncios</Sec>
+                        <Sec c="#475569">{lang==="pt"?"Top anúncios":lang==="es"?"Top anuncios":"Top ads"}</Sec>
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                           {(data.top_ads || []).slice(0, 5).map((a: any, i: number) => <AdRow key={i} a={{ ...a, freq: undefined }} kind="normal" ask={onSend} />)}
                         </div>
@@ -1240,7 +1270,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                   {/* Campanhas */}
                   {(data.campaigns || []).length > 0 && (
                     <div>
-                      <Sec c="#475569">Campanhas</Sec>
+                      <Sec c="#475569">{lang==="pt"?"Campanhas":lang==="es"?"Campañas":"Campaigns"}</Sec>
                       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                         {(data.campaigns || []).slice(0, 7).map((c: any, i: number) => <CampRow key={i} c={c} />)}
                       </div>
@@ -1253,13 +1283,25 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {/* Quick actions */}
             <Div />
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {[
+              {(lang === "pt" ? [
                 { l: "Resumo da semana",  q: "Qual o resumo da minha conta essa semana?" },
                 { l: "O que escalar?",    q: "O que posso escalar agora com segurança?" },
                 { l: "O que pausar?",     q: "O que devo pausar hoje e por quê?" },
                 { l: "Próximo criativo",  q: "Com base nos meus winners, o que criar agora?" },
                 { l: "Por que caiu?",     q: "Por que meu ROAS caiu? Qual a causa raiz?" },
-              ].map(({ l, q }) => (
+              ] : lang === "es" ? [
+                { l: "Resumen semana",    q: "¿Cuál es el resumen de mi cuenta esta semana?" },
+                { l: "¿Qué escalar?",     q: "¿Qué puedo escalar ahora con seguridad?" },
+                { l: "¿Qué pausar?",      q: "¿Qué debo pausar hoy y por qué?" },
+                { l: "Próximo creativo",  q: "Basado en mis winners, ¿qué crear ahora?" },
+                { l: "¿Por qué bajó?",    q: "¿Por qué bajó mi ROAS? ¿Cuál es la causa raíz?" },
+              ] : [
+                { l: "Week summary",      q: "What's my account summary this week?" },
+                { l: "What to scale?",    q: "What can I safely scale right now?" },
+                { l: "What to pause?",    q: "What should I pause today and why?" },
+                { l: "Next creative",     q: "Based on my winners, what should I create now?" },
+                { l: "Why did it drop?",  q: "Why did my ROAS drop? What's the root cause?" },
+              ]).map(({ l, q }) => (
                 <button key={q} className="lp-chip" onClick={() => onSend(q)} style={{
                   ...I, fontSize: 12, fontWeight: 400, padding: "5px 12px", borderRadius: 20,
                   background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
@@ -1309,7 +1351,6 @@ export default function AdBriefAI() {
   const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
-  const [msgCounter,setMsgCounter]=useState(0);
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
   const [proactiveLoading,setProactiveLoading]=useState(false);
@@ -1363,19 +1404,18 @@ export default function AdBriefAI() {
     if(!user?.id) return;
     // Wait a tick to let connections settle
     const timer = setTimeout(()=>{
-      const today = new Date().toISOString().split("T")[0];
       const pid = selectedPersona?.id || null;
-      (supabase as any).from("daily_snapshots")
-        .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false })
-        .limit(10) // fetch a few, then filter by persona_id client-side
-        .then((r:any)=>{
-          const all = (r.data || []) as any[];
-          // Prefer persona-scoped snapshot, fall back to any
-          const snap = pid
-            ? (all.find((s:any) => s.persona_id === pid) || all.find((s:any) => !s.persona_id) || all[0])
-            : all[0];
+      // Server-side filter by persona_id — prevents cross-account snapshot leakage
+      const buildSnapQuery = () => {
+        const q = (supabase as any).from("daily_snapshots")
+          .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+          .limit(5);
+        return pid ? q.eq("persona_id", pid) : q.is("persona_id", null);
+      };
+      buildSnapQuery().then((r:any)=>{
+          const snap = (r.data || [])[0] || null;
           const hasMetaConn = connections.includes("meta");
           const hasGoogleConn = connections.includes("google");
           const hasAnyConn = hasMetaConn || hasGoogleConn;
@@ -1384,12 +1424,8 @@ export default function AdBriefAI() {
             // Both Meta and Google now supported by daily-intelligence
             supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
               .then(()=>{
-                (supabase as any).from("daily_snapshots")
-                  .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
-                  .eq("user_id",user.id).order("date",{ascending:false}).limit(10)
-                  .then((r2:any)=>{
-                    const all2 = (r2.data || []) as any[];
-                    const snap2 = pid ? (all2.find((s:any)=>s.persona_id===pid) || all2[0]) : all2[0];
+                buildSnapQuery().then((r2:any)=>{
+                    const snap2 = (r2.data || [])[0] || null;
                     if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
                   })
                   .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
@@ -1420,11 +1456,11 @@ export default function AdBriefAI() {
           ? supabase.from("personas").select("name,result").eq("user_id",user.id).eq("id",pid).maybeSingle()
           : supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle()
         ),
-        // creative_entries: filter server-side by persona_id
+        // creative_entries: top 20 by CTR only — full 500 rows bloats the context desnecessariamente
         (pid
           ? (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).eq("persona_id",pid)
           : (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).is("persona_id",null)
-        ).order("ctr",{ascending:false}).limit(500),
+        ).order("ctr",{ascending:false}).limit(20),
         // daily_snapshots: filter server-side by persona_id
         (pid
           ? (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).eq("persona_id",pid)
@@ -1462,7 +1498,60 @@ export default function AdBriefAI() {
       }));
       localStorage.setItem(SK,JSON.stringify(toSave));
     }catch{}
+
+    // ── Supabase persistence for paid users (Maker/Pro/Studio) ──────────────
+    // Runs debounced — saves last message only when messages array settles
+    const isPaid = profile?.plan && profile.plan !== "free";
+    if(!isPaid || !user?.id || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if(!last || (last as any)._synced) return; // already saved
+    const pid = selectedPersona?.id || null;
+    const payload = {
+      user_id: user.id,
+      persona_id: pid,
+      role: last.role,
+      content: last.role === "user"
+        ? { userText: last.userText || "" }
+        : { blocks: (last.blocks||[]).map(b => { const {_pendingTool,_toolParams,_autoExec,...rest}=b as any; return rest; }) },
+      ts: last.ts,
+    };
+    // fire-and-forget — non-blocking
+    (supabase as any).from("chat_messages").insert(payload).then(() => {}).catch(() => {});
   },[messages]);
+
+  // ── Load Supabase history for paid users when account changes ─────────────
+  useEffect(()=>{
+    const isPaid = profile?.plan && profile.plan !== "free";
+    if(!isPaid || !user?.id) return;
+    const pid = selectedPersona?.id || null;
+    const localHasData = (() => { try { return JSON.parse(localStorage.getItem(SK)||"[]").length > 0; } catch { return false; } })();
+    if(localHasData) return; // local data takes priority — already loaded
+    (async()=>{
+      try {
+        const q = (supabase as any).from("chat_messages")
+          .select("id,role,content,ts")
+          .eq("user_id", user.id)
+          .order("ts", { ascending: true })
+          .limit(60);
+        const { data } = await (pid ? q.eq("persona_id", pid) : q.is("persona_id", null));
+        if(!data?.length) return;
+        const restored: AIMessage[] = (data as any[]).map((r:any) => ({
+          id: r.ts,
+          ts: r.ts,
+          role: r.role as "user"|"assistant",
+          userText: r.content?.userText,
+          blocks: (r.content?.blocks||[]).filter((b:any) => b.type !== "trend_chart"),
+          _synced: true,
+        }));
+        // Only restore if still no local data (avoid race with proactive greeting)
+        const stillEmpty = (() => { try { return JSON.parse(localStorage.getItem(SK)||"[]").length === 0; } catch { return true; } })();
+        if(stillEmpty && restored.length > 0) {
+          setMessages(restored);
+          try { localStorage.setItem(SK, JSON.stringify(restored.slice(-30))); } catch {}
+        }
+      } catch {}
+    })();
+  },[user?.id, selectedPersona?.id, profile?.plan]);
 
   // Execute pending tool_calls — runs once per message that has pending tools
   const executedTools=useRef<Set<string>>(new Set());
@@ -1556,27 +1645,8 @@ export default function AdBriefAI() {
     try {
       const accountName = selectedPersona?.name || null;
       const greetingTitle = accountName
-        ? (lang === "es" ? `${accountName} está lista.` : `${accountName} está pronta.`)
-        : (lang === "es" ? "Tu cuenta está lista." : "Sua conta está pronta.");
-
-      // Returning user with real conversation history — show a brief switch notice
-      const existing = (() => { try { return JSON.parse(localStorage.getItem(SK) || "[]"); } catch { return []; } })();
-      const hasRealHistory = existing.some((m: any) => m.role === "user");
-      if (hasRealHistory) {
-        // Just show a minimal "switched to X" toast-like message
-        const switchMsg = lang === "pt"
-          ? `Trocou para ${accountName || "esta conta"}. Histórico da conversa carregado.`
-          : lang === "es"
-          ? `Cambiado a ${accountName || "esta cuenta"}. Historial cargado.`
-          : `Switched to ${accountName || "this account"}. Conversation history loaded.`;
-        const aid = Date.now() + 1;
-        setMessages(prev => [...prev, {
-          role: "assistant", ts: aid, id: aid,
-          blocks: [{ type: "insight" as const, title: greetingTitle, content: switchMsg }]
-        }]);
-        setProactiveLoading(false);
-        return;
-      }
+        ? (lang === "es" ? `${accountName} está lista.` : lang === "en" ? `${accountName} is ready.` : `${accountName} está pronta.`)
+        : (lang === "es" ? "Tu cuenta está lista." : lang === "en" ? "Your account is ready." : "Sua conta está pronta.");
 
       // Build platform context string
       const platforms: string[] = [];
@@ -1818,7 +1888,15 @@ export default function AdBriefAI() {
 
   const send=async(text?:string)=>{
     let msg=(text??input).trim();
-    if(!msg||loading||!contextReady)return;
+    if(!msg||loading)return;
+    // Context ainda carregando — mostra feedback visual em vez de silêncio
+    if(!contextReady){
+      const uid=Date.now();
+      const hint=lang==="pt"?"Carregando contexto da conta, aguarde um instante...":lang==="es"?"Cargando contexto de la cuenta, espera un momento...":"Loading account context, just a moment...";
+      setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid},{role:"assistant",ts:uid+1,id:uid+1,blocks:[{type:"insight" as const,title:"",content:hint}]}]);
+      setInput("");
+      return;
+    }
 
     // ── Intercept Telegram intent — check status first, respond accurately ──
     if (/telegram/i.test(msg) && user?.id) {
@@ -1900,7 +1978,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     if(textareaRef.current)textareaRef.current.style.height="auto";
     setActiveTool(null);
     const uid=Date.now();
-    setMsgCounter(c=>c+1);
     setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid}]);
     // Scroll imediato ao enviar — não espera a resposta
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
@@ -2394,7 +2471,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     {copiedId===msg.id?<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>:<Copy size={9}/>}
                     {copiedId===msg.id?"Copiado!":lang==="es"?"Copiar":"Copiar"}
                   </button>
-                  <button onClick={()=>send(messages[messages.indexOf(msg)-1]?.userText||"")}
+                  <button onClick={()=>{
+                    // Find the user message that immediately precedes this assistant message
+                    const idx = messages.indexOf(msg);
+                    const prevUser = [...messages].slice(0, idx).reverse().find(m => m.role === "user");
+                    send(prevUser?.userText || "");
+                  }}
                     style={{display:"flex",alignItems:"center",gap:3,height:26,padding:"0 8px",borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:12,...m,transition:"all 0.12s"}}
                     onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
                     onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.07)"}}>
@@ -2521,7 +2603,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               />
               <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,paddingBottom:1}}>
                 {messages.length>0&&(
-                  <button onClick={()=>{setMessages([]);localStorage.removeItem(SK);proactiveFired.current=false;setGreetingKey(k=>k+1);}}
+                  <button onClick={()=>{
+                    const confirmed = window.confirm(
+                      lang==="pt" ? "Limpar toda a conversa? Isso não pode ser desfeito." :
+                      lang==="es" ? "¿Limpiar toda la conversación? Esto no se puede deshacer." :
+                      "Clear the entire conversation? This cannot be undone."
+                    );
+                    if(!confirmed) return;
+                    setMessages([]);
+                    localStorage.removeItem(SK);
+                    executedTools.current.clear();
+                    proactiveFired.current=false;
+                    setGreetingKey(k=>k+1);
+                  }}
                     title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
                     style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
                     onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.18)";el.style.color="rgba(255,255,255,0.55)";}}
