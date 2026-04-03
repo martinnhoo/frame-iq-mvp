@@ -1,4 +1,4 @@
-// adbrief-ai-chat v20 — tom livre, fix toneMap removido
+// adbrief-ai-chat v20.1 — tom livre, fix toneMap removido
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 

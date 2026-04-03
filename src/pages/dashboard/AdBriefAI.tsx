@@ -2419,20 +2419,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {messages.map((msg)=>(
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 20px",padding:"0 32px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
-              /* ── Bolha do usuário — direita, azul ── */
+              /* ── Bolha do usuário — direita, azul sólido ── */
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
-                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:6,maxWidth:"72%"}}>
+                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"72%"}}>
                   <div style={{
-                    padding:"11px 16px",
+                    padding:"10px 16px",
                     borderRadius:"18px 18px 4px 18px",
-                    background:"rgba(14,165,233,0.18)",
-                    border:"1px solid rgba(14,165,233,0.32)",
-                    fontSize:14,fontWeight:500,
-                    color:"#e8f4fd",
+                    background:"#0ea5e9",
+                    fontSize:14,fontWeight:400,
+                    color:"#fff",
                     lineHeight:1.65,
                     ...m,
-                    backdropFilter:"blur(4px)",
-                    boxShadow:"0 2px 12px rgba(14,165,233,0.12)",
                   }}>
                     {msg.userText}
                   </div>
@@ -2464,14 +2461,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
-                {/* Blocks — envolvidos em card sutil da IA */}
+                {/* Blocks — card da IA */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") ? (
                   <div style={{
-                    background:"rgba(255,255,255,0.035)",
-                    border:"1px solid rgba(255,255,255,0.07)",
+                    background:"rgba(255,255,255,0.06)",
+                    border:"1px solid rgba(255,255,255,0.10)",
                     borderRadius:"4px 18px 18px 18px",
                     padding:"14px 18px",
-                    boxShadow:"0 1px 8px rgba(0,0,0,0.2)",
                   }}>
                     {msg.blocks?.map((b,bi)=>
                       b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
