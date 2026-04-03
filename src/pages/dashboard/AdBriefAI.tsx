@@ -112,14 +112,14 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
       title: { en: "Generate Hooks", pt: "Gerar Hooks", es: "Generar Hooks" },
       placeholder: { en: "Describe product, angle, or paste context…", pt: "Descreva o produto, ângulo, ou cole o contexto…", es: "Describe el producto, ángulo, o pega el contexto…" },
       cta: { en: "Generate 5 hooks →", pt: "Gerar 5 hooks →", es: "Generar 5 hooks →" },
-      buildMsg: (v: string, p: string, t: string) => `Generate 5 high-converting ${t} ad hooks for ${p} on ${accountCtx?.platform||p}. Product/niche: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Context from this account: "${v}". Format: [N]. [Hook text]. Include hook type label. Use real account data patterns if available.`,
+      buildMsg: (v: string, p: string, t: string) => `[HOOKS] Generate 5 high-converting ${t} ad hooks. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Platform: ${accountCtx?.platform||p}. Tone: ${t}. Context: "${v}". Format: [N]. [Hook]. Label hook type. Use account patterns if available.`,
     },
     script: {
       icon: "✍️", color: "#34d399",
       title: { en: "Write Script", pt: "Escrever Roteiro", es: "Escribir Guión" },
       placeholder: { en: "What's the ad about? Paste brief or context…", pt: "Sobre o que é o anúncio? Cole o brief ou contexto…", es: "¿De qué trata el anuncio? Pega el brief o contexto…" },
       cta: { en: "Write script →", pt: "Escrever roteiro →", es: "Escribir guión →" },
-      buildMsg: (v: string, p: string, t: string) => `Write a complete ${t} video ad script for ${accountCtx?.platform||p}. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Context: "${v}". Format per scene: VO | ON-SCREEN | VISUAL. Strong hook in first 3s. Use account patterns if available.`,
+      buildMsg: (v: string, p: string, t: string) => `[SCRIPT] Write a complete ${t} video ad script. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Platform: ${accountCtx?.platform||p}. Context: "${v}". Format: VO | ON-SCREEN | VISUAL. Hook in first 3s.`,
     },
     competitor: {
       icon: "🔍", color: "#a78bfa",
@@ -277,7 +277,7 @@ function DashboardBlock({block}:{block:Block}) {
               {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#4ade80")}
             </svg>
             <div style={{display:"flex",gap:12,marginTop:6}}>
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0ea5e9",display:"inline-block",borderRadius:1}}/> CTR</span>
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0284c7",display:"inline-block",borderRadius:1}}/> CTR</span>
               {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
               <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
             </div>
@@ -1626,8 +1626,11 @@ export default function AdBriefAI() {
             }
             return{...m,blocks:nb};
           }));
+          // Fechar panel da tool após resultado chegar
+          setActiveTool(null);
         }catch(e){
           executedTools.current.delete(execKey);
+          setActiveTool(null);
           setMessages(prev=>prev.map(m=>{
             if(m.id!==msg.id)return m;
             const nb=[...(m.blocks||[])];
@@ -2489,7 +2492,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </div>
                 )}
                 {/* Blocks — card da IA */}
-                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") ? (
+                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && !msg.blocks?.every((b:any)=>b._pendingTool) ? (
                   <div style={{
                     background:"rgba(255,255,255,0.06)",
                     border:"1px solid rgba(255,255,255,0.10)",
@@ -2567,17 +2570,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 40px",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
           <ThinkingIndicator lang={lang} variant="chat" label={(() => {
-              const lastMsg = (messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||"").toLowerCase();
-              if(lastMsg.includes("hook")||lastMsg.includes("gancho")) return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
-              if(lastMsg.includes("roteiro")||lastMsg.includes("script")||lastMsg.includes("guión")) return lang==="pt"?"Escrevendo roteiro...":lang==="es"?"Escribiendo guión...":"Writing script...";
-              if(lastMsg.includes("pausa")||lastMsg.includes("pause")||lastMsg.includes("escal")) return lang==="pt"?"Verificando dados ao vivo...":lang==="es"?"Verificando datos...":"Checking live data...";
-              if(lastMsg.includes("roas")||lastMsg.includes("ctr")||lastMsg.includes("cpm")||lastMsg.includes("perform")) return lang==="pt"?"Analisando performance...":lang==="es"?"Analizando rendimiento...":"Analyzing performance...";
-              if(lastMsg.includes("camp")||lastMsg.includes("anunc")) return lang==="pt"?"Lendo campanhas...":lang==="es"?"Leyendo campañas...":"Reading campaigns...";
+              const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
+              if(pendingFn==="generate-hooks") return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
+              if(pendingFn==="generate-script") return lang==="pt"?"Escrevendo roteiro...":lang==="es"?"Escribiendo guión...":"Writing script...";
+              if(pendingFn==="generate-brief") return lang==="pt"?"Criando brief...":lang==="es"?"Creando brief...":"Creating brief...";
               return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
             })()}/>
         )}
         {/* Inline tool panel — only show when not loading */}
-        {activeTool&&activeTool!=="dashboard"&&!loading&&(
+        {activeTool&&activeTool!=="dashboard"&&!loading&&!messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
           <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
