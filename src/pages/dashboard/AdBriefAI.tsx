@@ -422,7 +422,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
     nodes.push(
-      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>
         {listBuffer.map((item, i) => (
           <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.8)", flexShrink: 0, marginTop: 8 }} />
@@ -461,12 +461,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
     const trimmed = line.trim();
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px" }}>{trimmed.replace(/^###\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>{trimmed.replace(/^###\s/, "")}</p>);
       return;
     }
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px" }}>{trimmed.replace(/^##\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>{trimmed.replace(/^##\s/, "")}</p>);
       return;
     }
     if (/^[-*•]\s/.test(trimmed)) {
@@ -483,7 +483,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
     }
     flushList(`fl-${i}`);
     nodes.push(
-      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em" }}>
+      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>
         {inlineFormat(trimmed)}
       </p>
     );
@@ -536,7 +536,7 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
         const copied = copiedIdx===i;
         return(
           <div key={i}
-            style={{display:"flex",alignItems:"flex-start",gap:0,borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.12s"}}
+            style={{display:"flex",alignItems:"flex-start",gap:0,borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.12s",animation:"fadeUp 0.18s ease-out both",animationDelay:`${i*0.06}s`}}
             className="hook-item"
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent"}}>
@@ -2429,6 +2429,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     fontSize:14,fontWeight:400,
                     color:"#fff",
                     lineHeight:1.65,
+                    animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
                     ...m,
                   }}>
                     {msg.userText}
@@ -2454,7 +2455,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div>
                 {/* Avatar + label */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
                     <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
                       <ABAvatar size={26}/>
                     </div>
@@ -2468,6 +2469,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     border:"1px solid rgba(255,255,255,0.10)",
                     borderRadius:"4px 18px 18px 18px",
                     padding:"14px 18px",
+                    animation:"cardIn 0.22s ease-out",
                   }}>
                     {msg.blocks?.map((b,bi)=>
                       b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
@@ -2497,7 +2499,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:0,opacity:0.6,transition:"opacity 0.15s"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:0,opacity:0.6,transition:"opacity 0.15s",animation:"fadeUp 0.25s ease-out"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
                     style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
                     onMouseEnter={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
@@ -2727,6 +2729,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes lp-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+        @keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
         @keyframes lp-sk{0%,100%{opacity:0.2}50%{opacity:0.5}}
