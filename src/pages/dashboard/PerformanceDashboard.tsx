@@ -307,7 +307,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
           </div>
           <span style={{fontFamily:F,fontSize: 12,fontWeight:700,color:MT,textTransform:"uppercase",letterSpacing:"0.08em"}}>{def.labelPt}</span>
         </div>
-        {sparkData&&<Sparkline data={sparkData} color={def.accent}/>}
+        {sparkData&&<div style={{overflow:"visible",flexShrink:0}}><Sparkline data={sparkData} color={def.accent}/></div>}
       </div>
       <div>
         <div style={{fontSize:28,fontWeight:800,color:TX,letterSpacing:"-0.03em",lineHeight:1}}>{formatted}</div>
@@ -647,7 +647,7 @@ export default function PerformanceDashboard() {
       {/* Metric cards — drag & drop */}
       {activeTab==="metrics"&&!loading&&d&&(
         <>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(195px,1fr))",gap:14,marginBottom:20}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(195px,1fr))",gap:14,marginBottom:20,overflow:"visible"}}>
             {validMetrics.map((key,i)=>{
               const def=METRICS.find(m=>m.key===key);
               if(!def) return null;
