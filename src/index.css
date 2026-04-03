@@ -42,23 +42,27 @@
     --accent-emerald: #34d399;
     --accent-glow: rgba(14, 165, 233, 0.18);
 
-    /* Surface tokens */
-    --bg-main:     #0e1118;
-    --bg-surface:  #131720;
-    --bg-card:     #181e2d;
-    --bg-elevated: #1d2438;
-    --bg-input:    #1a2032;
+    /* Surface tokens — deeper base for more contrast */
+    --bg-main:     #06080f;
+    --bg-surface:  #0d1117;
+    --bg-card:     #111620;
+    --bg-elevated: #161c2a;
+    --bg-input:    #0f1420;
 
-    /* Border tokens */
-    --border-subtle: rgba(255,255,255,0.08);
-    --border-default: rgba(255,255,255,0.10);
-    --border-strong: rgba(255,255,255,0.16);
-    --border-accent: rgba(14,165,233,0.35);
+    /* Border tokens — blue tint instead of dead grey */
+    --border-subtle:  rgba(148,163,184,0.06);
+    --border-default: rgba(148,163,184,0.10);
+    --border-strong:  rgba(148,163,184,0.18);
+    --border-accent:  rgba(14,165,233,0.40);
 
-    /* Text tokens */
-    --text-primary:   #eef0f6;
-    --text-secondary: rgba(238,240,246,0.55);
-    --text-muted:     rgba(238,240,246,0.30);
+    /* Text tokens — slightly warmer white */
+    --text-primary:   #f0f4ff;
+    --text-secondary: rgba(200,210,240,0.60);
+    --text-muted:     rgba(200,210,240,0.35);
+
+    /* Glow tokens */
+    --glow-blue:   rgba(14,165,233,0.12);
+    --glow-purple: rgba(139,92,246,0.08);
 
     /* Radius tokens */
     --r-sm: 8px;
@@ -80,6 +84,7 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   font-size: 14px;
   line-height: 1.6;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -92,6 +97,65 @@ h1, h2, h3, h4, h5, h6 {
 .font-logo {
   font-family: 'Syne', system-ui, sans-serif;
   font-weight: 800;
+}
+
+/* ── Global Card System ──────────────────────────────────────────────────────── */
+
+.ab-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ab-card:hover {
+  border-color: var(--border-default);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+.ab-card-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ── Micro-animations ────────────────────────────────────────────────────────── */
+
+@keyframes fadeUpCard {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.anim-up   { animation: fadeUpCard 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-up-1 { animation: fadeUpCard 0.3s 0.05s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-up-2 { animation: fadeUpCard 0.3s 0.10s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-up-3 { animation: fadeUpCard 0.3s 0.15s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-up-4 { animation: fadeUpCard 0.3s 0.20s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-scale { animation: scaleIn 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.28); }
+
+/* ── Focus ring ──────────────────────────────────────────────────────────────── */
+
+*:focus-visible {
+  outline: 2px solid rgba(14,165,233,0.6);
+  outline-offset: 2px;
 }
 
 .font-mono,

@@ -205,7 +205,7 @@ export function DashboardSidebar({
 
       <aside style={{
         width: 224, height: "100%",
-        background: "linear-gradient(180deg,#0d1117 0%,#080b14 100%)",
+        background: "linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-main) 100%)",
         borderRight: "1px solid rgba(255,255,255,0.07)",
         display: "flex", flexDirection: "column", flexShrink: 0,
         fontFamily: F, position: "relative",

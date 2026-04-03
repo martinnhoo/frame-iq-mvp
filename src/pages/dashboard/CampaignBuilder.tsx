@@ -53,8 +53,8 @@ const STEPS = [
   {label:"Revisar",   Icon:Check},
 ];
 
-const F="#0e1118",S1="#141824",S2="#1a2135";
-const BD="rgba(255,255,255,0.08)",TX="#eef0f6",MT="rgba(255,255,255,0.42)";
+const F="var(--bg-main)",S1="var(--bg-card)",S2="var(--bg-elevated)";
+const BD="var(--border-subtle)",TX="var(--text-primary)",MT="var(--text-secondary)";
 const BLUE="#0ea5e9",GREEN="#22c55e",AMBER="#f59e0b",GBLUE="#4285F4";
 const pColor=(p:Platform)=>p==="google"?GBLUE:BLUE;
 
@@ -236,7 +236,7 @@ export default function CampaignBuilder() {
     );
   }
 
-  const BG="#0e1118";
+  const BG="var(--bg-main)";
   return(
     <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#060a12 0%,#04060a 100%)",fontFamily:"'DM Sans',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
       <style>{`

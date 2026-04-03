@@ -290,7 +290,7 @@ export default function DashboardLayout() {
   if (loading) {
     return (
       <div style={{
-        minHeight: "100dvh", background: "#0c0f1a", position: "fixed", inset: 0, zIndex: 9999,
+        minHeight: "100dvh", background: "var(--bg-main)", position: "fixed", inset: 0, zIndex: 9999,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
@@ -411,7 +411,7 @@ export default function DashboardLayout() {
         .dashboard-main h1 { font-size: clamp(16px, 5.5vw, 22px) !important; }
       }
     `}</style>
-    <div className="dashboard-root" style={{ height: "100dvh", background: "#0c0f1a", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+    <div className="dashboard-root" style={{ height: "100dvh", background: "var(--bg-main)", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       <div style={{
         width: sidebarOpen ? 224 : 0,
         minWidth: sidebarOpen ? 224 : 0,
@@ -593,7 +593,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 80% 35% at 50% 0%, rgba(14,165,233,0.07) 0%, transparent 55%), radial-gradient(ellipse 60% 30% at 80% 10%, rgba(139,92,246,0.04) 0%, transparent 50%), #0c0f1a", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 80% 40% at 50% -5%, rgba(14,165,233,0.09) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 85% 15%, rgba(139,92,246,0.06) 0%, transparent 55%), var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

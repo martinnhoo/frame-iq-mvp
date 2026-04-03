@@ -14,8 +14,8 @@ import AdDiary from "./AdDiary";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
-const BG = "#090c14", S1 = "rgba(255,255,255,0.05)", S2 = "rgba(255,255,255,0.03)", BD = "rgba(255,255,255,0.09)";
-const TX = "#eef0f6", MT = "rgba(255,255,255,0.38)", ACCENT = "#0ea5e9";
+const BG = "var(--bg-main)", S1 = "var(--bg-card)", S2 = "var(--bg-surface)", BD = "var(--border-subtle)";
+const TX = "var(--text-primary)", MT = "var(--text-muted)", ACCENT = "#0ea5e9";
 const GREEN = "#22c55e", RED = "#ef4444", AMBER = "#f59e0b", GBLUE = "#4285F4";
 
 // ── All available metrics ─────────────────────────────────────────────────────
@@ -290,9 +290,9 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
   const formatted = value>0?def.format(value, lang):"—";
   return (
     <div style={{
-      background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",
-      border:`1px solid ${isDragging?def.accent+"60":"rgba(255,255,255,0.10)"}`,
-      boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:"0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35)",
+      background:`linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%)`,
+      border:`1px solid ${isDragging?def.accent+"60":"var(--border-subtle)"}`,
+      boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:`0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
       backdropFilter:"blur(12px)",
       borderRadius:14,padding:"16px",display:"flex",flexDirection:"column",gap:10,
       transition:"border-color 0.2s,box-shadow 0.2s",opacity:isDragging?0.9:1,

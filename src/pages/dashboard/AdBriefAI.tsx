@@ -2522,7 +2522,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"#0c0f1a",position:"relative" as const}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
       {/* Background orbs — same as Login */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
         <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(ellipse at center,hsla(199,83%,58%,0.07) 0%,transparent 70%)",filter:"blur(80px)",top:"-20%",left:"10%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
