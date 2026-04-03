@@ -354,7 +354,8 @@ Deno.serve(async (req) => {
     ) : null;
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
-    const rememberTriggers = /(lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse))/i;
+    // Tolerante a typos: lemnre, lembr, lemb etc.
+    const rememberTriggers = /(lemb?[rn]?e?(-se)?( de)?|quero que (voc[êe]|vc) (lembre|saiba|guarde)|n[ãa]o (esque[çc]a?|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|j[aá] te (falei|disse)|eu (j[aá] )?te (falei|disse))/i;
     if (rememberTriggers.test(message)) {
       // Extract what to remember — take the message minus trigger words
       const noteText = message
