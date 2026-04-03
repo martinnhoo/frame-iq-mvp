@@ -1,4 +1,4 @@
-// adbrief-ai-chat v19 — force redeploy + formatação como regra #1 no system prompt
+// adbrief-ai-chat v20 — tom livre, fix toneMap removido
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/plans.ts";
 
@@ -1590,13 +1590,8 @@ PROIBIDO:
 - Listas com traço (- item) — use **negrito** + \\n\\n
 - Headers com ## — apenas **negrito**`
 
-    const toneMap: Record<string, string> = {
-      "direto":   "Respostas curtas, diretas e acionáveis. Sem explicações longas.",
-      "didático": "Explique o raciocínio por trás de cada recomendação. Mostre o porquê.",
-      "técnico":  "Use terminologia técnica de mídia paga. Inclua métricas e dados sempre que possível.",
-    };
-    const toneInstruction = user_prefs?.tone && toneMap[user_prefs.tone]
-      ? `\n\nTOM PREFERIDO DO USUÁRIO: ${toneMap[user_prefs.tone]}`
+    const toneInstruction = user_prefs?.tone
+      ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}`
       : "";
 
     const prefStr = (user_prefs?.liked?.length || user_prefs?.disliked?.length)

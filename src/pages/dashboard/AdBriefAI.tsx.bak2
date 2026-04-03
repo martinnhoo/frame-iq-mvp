@@ -1277,22 +1277,6 @@ export default function AdBriefAI() {
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
   const [input,setInput]=useState("");
-
-  // Session goal — persists 7 days, resets automatically
-  const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
-  const [sessionGoal, setSessionGoal] = useState<string>(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(GOAL_KEY) || "null");
-      if (saved?.text && saved?.ts && Date.now() - saved.ts < 7 * 24 * 60 * 60 * 1000) return saved.text;
-    } catch {}
-    return "";
-  });
-  const [showGoalInput, setShowGoalInput] = useState(false);
-  const saveGoal = (text: string) => {
-    setSessionGoal(text);
-    try { localStorage.setItem(GOAL_KEY, JSON.stringify({ text, ts: Date.now() })); } catch {}
-    setShowGoalInput(false);
-  };
   const [loading,setLoading]=useState(false);
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
@@ -1321,16 +1305,6 @@ export default function AdBriefAI() {
           blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
         })));
       } catch { setMessages([]); }
-      // Reload session goal for this account
-      const goalKey = `adbrief_goal_${newId||"default"}`;
-      try {
-        const saved = JSON.parse(localStorage.getItem(goalKey) || "null");
-        if (saved?.text && saved?.ts && Date.now() - saved.ts < 7 * 24 * 60 * 60 * 1000) {
-          setSessionGoal(saved.text);
-        } else {
-          setSessionGoal("");
-        }
-      } catch { setSessionGoal(""); }
       // Reset context so greeting fires for this account
       proactiveFired.current = false;
       setContextReady(false);
@@ -1440,64 +1414,10 @@ export default function AdBriefAI() {
       const perfSummary=lastSnap?`R$${lastSnap.total_spend?.toFixed(0)} spent last period, ${(lastSnap.avg_ctr*100)?.toFixed(2)}% CTR, ${lastSnap.active_ads} active ads, ${lastSnap.winners_count} winners, ${lastSnap.losers_count} underperformers. AI insight: ${lastSnap.ai_insight||"n/a"}`:"No performance data yet";
       // Active account info
       const accountInfo=selectedPersona?`Account: ${selectedPersona.name}${selectedPersona.website?` | Website: ${selectedPersona.website}`:""}${(selectedPersona as any).description?` | Description: ${(selectedPersona as any).description}`:""}`:pid?"Account ID: "+pid:"No account selected";
-      // Pre-compute trends so AI gets insight, not raw numbers to crunch
-      const ctrTrend = (() => {
-        if (snaps.length < 3) return "";
-        const vals = snaps.slice(0, 3).map((s: any) => (s.avg_ctr * 100).toFixed(2));
-        const oldest = parseFloat(vals[vals.length - 1]);
-        const newest = parseFloat(vals[0]);
-        const pct = oldest > 0 ? ((newest - oldest) / oldest * 100).toFixed(1) : "0";
-        const dir = newest > oldest ? "↑ subindo" : newest < oldest ? "↓ caindo" : "→ estável";
-        return `CTR trend 3d: ${vals.reverse().join("→")}% (${dir} ${Math.abs(parseFloat(pct))}%)`;
-      })();
-      const spendTrend = (() => {
-        if (snaps.length < 3) return "";
-        const vals = snaps.slice(0, 3).map((s: any) => parseFloat(s.total_spend || 0).toFixed(0));
-        return `Spend trend 3d: R$${vals.reverse().join("→R$")}`;
-      })();
-      const patternNote = (patternsRes.data || []).length === 0
-        ? "Sem padrões suficientes ainda — use snapshots e análises como base."
-        : null;
-      const connStatus = connections.length
-        ? `Plataformas conectadas: ${connections.join(", ")}`
-        : "Nenhuma plataforma conectada";
-      const alertsNote = accountAlerts.length
-        ? `Alertas ativos: ${accountAlerts.map((a: any) => a.detail).join(" | ")}`
-        : "";
-      const goalNote = sessionGoal.trim()
-        ? `Objetivo desta semana: ${sessionGoal.trim()}`
-        : "";
-      setContext([
-        `=== ACTIVE ACCOUNT ===`,
-        accountInfo,
-        connStatus,
-        goalNote,
-        alertsNote,
-        ``,
-        `=== RECENT PERFORMANCE ===`,
-        perfSummary,
-        ctrTrend,
-        spendTrend,
-        ``,
-        `=== PERFORMANCE HISTORY (14 days) ===`,
-        snapSummary,
-        ``,
-        `=== AUDIENCE PERSONA ===`,
-        persona,
-        ``,
-        `=== ANALYSES (${(analysesRes.data || []).length} total) ===`,
-        analyses || "None",
-        ``,
-        `=== LEARNED PATTERNS ===`,
-        patternNote || patterns || "None",
-        ``,
-        `=== EDITORS PERFORMANCE ===`,
-        edSummary || "None",
-      ].filter(s => s !== undefined).join("\n").replace(/\n{3,}/g, "\n\n").trim());
+      setContext(`=== ACTIVE ACCOUNT ===\n${accountInfo}\n\n=== RECENT PERFORMANCE ===\n${perfSummary}\n\n=== PERFORMANCE HISTORY (last 7 days) ===\n${snapSummary}\n\n=== AUDIENCE PERSONA ===\n${persona}\n\n=== ANALYSES (${(analysesRes.data||[]).length} total) ===\n${analyses||"None"}\n\n=== LEARNED PATTERNS ===\n${patterns||"None"}\n\n=== EDITORS PERFORMANCE ===\n${edSummary||"None"}`);
       setContextReady(true);
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[user?.id, selectedPersona?.id, sessionGoal, accountAlerts.length, connections.join(",")]);
+  },[user?.id,selectedPersona?.id]);
 
   useEffect(()=>{
     try{
@@ -1995,22 +1915,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);
     try{
-      // Compress history: user = plain text; assistant = readable summary (no raw JSON blocks)
-      const history = messages.slice(-12).map(m => {
-        if (m.role === "user") return { role: "user" as const, content: m.userText || "" };
-        const text = (m.blocks || []).map((b: any) => {
-          const parts = [
-            b.title?.trim(),
-            b.content?.slice(0, 180),
-            (b.items || []).slice(0, 3).join(" | "),
-          ].filter(Boolean);
-          return parts.join(": ");
-        }).filter(Boolean).join(" | ").slice(0, 400);
-        return { role: "assistant" as const, content: text || "(response)" };
-      });
-      // Tone: free-text from localStorage (replaces hardcoded 3 options)
-      const aiTonePref = (() => { try { return localStorage.getItem("adbrief_ai_tone") || ""; } catch { return ""; } })();
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}}});
+      const history=messages.slice(-12).map(m=>m.role==="user"?{role:"user" as const,content:m.userText||""}:{role:"assistant" as const,content:JSON.stringify(m.blocks||[])});
+      const aiTonePref = (() => { try { return localStorage.getItem("adbrief_ai_tone") || "direto"; } catch { return "direto"; } })();
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref}}});
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
       if(error) {
@@ -2584,36 +2491,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {/* Main input surface */}
         <div style={{background:"#0a0d16",padding:"8px 0 18px"}}>
           <div style={{maxWidth:720,margin:"0 auto",padding:"0 24px",boxSizing:"border-box" as const}}>
-
-            {/* Session goal — one line, persists 7 days */}
-            {showGoalInput ? (
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                <input
-                  autoFocus
-                  placeholder={lang==="pt"?"Objetivo desta semana (ex: escalar winners, cortar CPA)…":lang==="es"?"Objetivo esta semana (ej: escalar ganadores, cortar CPA)…":"Goal this week (e.g. scale winners, cut CPA)…"}
-                  defaultValue={sessionGoal}
-                  onKeyDown={e=>{
-                    if(e.key==="Enter") saveGoal((e.target as HTMLInputElement).value.trim());
-                    if(e.key==="Escape"){setShowGoalInput(false);}
-                  }}
-                  onBlur={e=>saveGoal(e.target.value.trim())}
-                  style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(14,165,233,0.35)",borderRadius:8,padding:"5px 12px",color:"#f0f2f8",fontSize:12,outline:"none",fontFamily:"'Inter',sans-serif",caretColor:"#0ea5e9"}}
-                />
-                <button onClick={()=>setShowGoalInput(false)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:16,lineHeight:1,padding:"0 4px"}}>×</button>
-              </div>
-            ) : (
-              <button
-                onClick={()=>setShowGoalInput(true)}
-                style={{display:"flex",alignItems:"center",gap:5,marginBottom:8,background:"none",border:"none",cursor:"pointer",padding:0,maxWidth:"100%"}}
-              >
-                <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Inter',sans-serif",letterSpacing:"0.04em",textTransform:"uppercase" as const}}>
-                  {lang==="pt"?"objetivo":lang==="es"?"objetivo":"goal"}
-                </span>
-                <span style={{fontSize:12,color:sessionGoal?"rgba(14,165,233,0.7)":"rgba(255,255,255,0.22)",fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const,maxWidth:400}}>
-                  {sessionGoal || (lang==="pt"?"definir foco desta semana →":lang==="es"?"definir foco esta semana →":"set this week's focus →")}
-                </span>
-              </button>
-            )}
 
             {/* Tool pills */}
             <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10} as any}>
