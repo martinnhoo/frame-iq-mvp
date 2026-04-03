@@ -2289,7 +2289,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
 
   const LABEL: Record<string,Record<string,string>>={
-    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte algo...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte sobre sua conta...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
     es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta algo...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
     en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
@@ -2700,7 +2700,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"0",color:"#f0f2f8",fontSize:14.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:24,maxHeight:140,caretColor:"#0ea5e9"}}
+                style={{flex:1,background:"transparent",border:"none",padding:"0",color:"#f0f2f8",fontSize:15.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:26,maxHeight:140,caretColor:"#0ea5e9"}}
                 className="chat-textarea"
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}}
               />
@@ -2772,7 +2772,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
-        .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
+        .chat-textarea::placeholder{color:rgba(255,255,255,0.32)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .user-msg-row>div{box-shadow:none!important;}
         .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
