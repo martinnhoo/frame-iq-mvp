@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       const platforms: string[] = body.platforms || [];
       const result: Record<string, any> = {};
       const today = body.date_to || body.date_to || new Date().toISOString().split("T")[0];
-      const since = body.date_from || new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+      const since = body.date_from || new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
 
       // Meta Ads
       if (platforms.includes("meta")) {
