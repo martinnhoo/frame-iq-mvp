@@ -2688,15 +2688,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               );
             })()}
 
-            {/* Input card — Login glass style */}
+            {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
               display:"flex",alignItems:"center",gap:10,
-              background:"linear-gradient(160deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.04) 100%)",
-              border:"1px solid rgba(255,255,255,0.12)",
-              borderRadius:18,
-              padding:"14px 14px 14px 20px",
-              boxShadow:"0 0 0 1px rgba(255,255,255,0.04) inset,0 8px 32px rgba(0,0,0,0.4)",
-              transition:"border-color 0.2s,box-shadow 0.2s",
+              background:"rgba(255,255,255,0.05)",
+              border:"1px solid rgba(255,255,255,0.09)",
+              borderRadius:14,
+              padding:"12px 12px 12px 18px",
+              transition:"border-color 0.2s",
             }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
@@ -2729,12 +2728,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
                   style={{
-                    width:38,height:38,borderRadius:12,border:"none",
-                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.07)",
+                    width:34,height:34,borderRadius:10,border:"none",
+                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.06)",
                     cursor:input.trim()&&contextReady?"pointer":"not-allowed",
                     display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
-                    transition:"all 0.2s",
-                    boxShadow:input.trim()&&!loading&&contextReady?"0 4px 20px rgba(14,165,233,0.5)":"none",
+                    transition:"background 0.15s",
                   }}>
                   {loading
                     ?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>
@@ -2772,7 +2770,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .lp-tab:hover{color:rgba(255,255,255,0.6)!important;}
         .lp-bar:hover{background:rgba(255,255,255,0.025)!important;}
         .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
-        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
+        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
