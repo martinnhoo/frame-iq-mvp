@@ -325,7 +325,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
 // ── Ad Row ────────────────────────────────────────────────────────────────────
 // ── Ads list with compact/expand ─────────────────────────────────────────────
 function AdsCompact({ ads }: { ads: any[] }) {
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = useState(false);
   const LIMIT = 5;
   const visible = expanded ? ads : ads.slice(0, LIMIT);
   const extra = ads.length - LIMIT;
