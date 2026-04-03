@@ -254,7 +254,10 @@ Deno.serve(async (req) => {
       }, { onConflict: "user_id" }).then(() => {}).catch(() => {});
     }
 
-    const isDashboardRequest = /dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|resumo|summary|métricas|metricas|metrics|como está minha conta|how is my account|como vai/i.test(message);
+    // Only trigger dashboard offer for explicit data/analytics requests
+    // NOT for "resumo" or "como vai" — too broad, creates friction unnecessarily
+    const isDashboardRequest = /\b(dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|métricas|metricas|metrics|como está minha conta|how is my account)\b/i.test(message)
+      && !message.includes("[DASHBOARD]"); // pill-triggered already handled
     
     // Dashboard limits per plan (monthly)
     const DASHBOARD_LIMITS: Record<string, number> = { free: 0, maker: 10, pro: 30, studio: -1 };
@@ -567,8 +570,12 @@ Deno.serve(async (req) => {
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
 
-    // chat_memory: persistent facts extracted from previous conversations
-    const persistentMemories = (chatMemories || []) as any[];
+    // chat_memory: filter strictly by persona_id — no cross-account leakage
+    // .is.null memories are "global" and can leak from other accounts — exclude them
+    const persistentMemories = ((chatMemories || []) as any[]).filter((m: any) => {
+      if (persona_id) return m.persona_id === persona_id; // strict: only this account's memories
+      return !m.persona_id; // no persona: only global memories
+    });
 
     // few-shot examples: liked responses used as style/format guide
     const fewShotExamples = (chatExamples || []) as any[];

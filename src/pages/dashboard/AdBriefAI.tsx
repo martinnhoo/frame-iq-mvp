@@ -701,9 +701,15 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
 
   const handleConfirm = () => {
     setLoading(true);
-    // Use silent confirm if available — avoids showing [DASHBOARD_CONFIRMED] in UI
     const internalMsg = `[DASHBOARD_CONFIRMED] ${block.original_message || "gerar dashboard"}`;
-    if (onSilentConfirm) { onSilentConfirm(internalMsg); } else { onConfirm(internalMsg); }
+    if (onSilentConfirm) {
+      // Promise-based so we can reset loading on completion
+      Promise.resolve(onSilentConfirm(internalMsg))
+        .finally(() => setLoading(false));
+    } else {
+      onConfirm(internalMsg);
+      setLoading(false);
+    }
   };
 
   const labels: Record<string, Record<string, string>> = {
@@ -2229,10 +2235,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         if(c.type==="hooks" && (!c.items || c.items.length === 0)){
           const countMatch=msg.match(/(\d+)\s+hooks?/i);
           const params={
-            product:"iGaming", niche:"iGaming",
+            product:(profile as any)?.product || selectedPersona?.name || "produto",
+            niche:(profile as any)?.industry || (profile as any)?.niche || "geral",
             market:lang.toUpperCase()||"BR",
-            platform:"Meta Feed",
-            tone:"Aggressive / Urgent",
+            platform:connections.includes("meta")?"Meta Feed":connections.includes("google")?"Google":"Meta Feed",
+            tone:"human, direct",
             count:countMatch?parseInt(countMatch[1]):5,
             context:msg,
             user_id:user.id,
@@ -2286,7 +2293,34 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     }
   };
 
-  const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
+  const handleDashboardSilentConfirm = async (msg: string) => {
+    if (!msg || loading || !contextReady) return;
+    setLoading(true);
+    try {
+      const { data } = await supabase.functions.invoke("adbrief-ai-chat", {
+        body: {
+          message: msg,
+          user_id: user.id,
+          persona_id: selectedPersona?.id || null,
+          user_language: lang,
+          history: [...messages].slice(-10).map(m => ({
+            role: m.role,
+            content: (m.blocks || []).map((b: any) => b.content || "").join(" ").slice(0, 300)
+          })).filter(m => m.content),
+        }
+      });
+      if (data?.blocks?.length) {
+        const aid = Date.now() + 1;
+        setMessages(prev => [...prev, { role: "assistant", blocks: data.blocks, ts: aid, id: aid }]);
+      }
+    } catch (e) {
+      console.error("dashboard silent error", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
 
   const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
@@ -2503,7 +2537,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     {msg.blocks?.map((b,bi)=>
                       b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                       b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
-                      b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={async(msg)=>{if(!msg||loading||!contextReady)return;setLoading(true);try{const{data}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history:[...messages].slice(-10).map(m=>({role:m.role,content:(m.blocks||[]).map((b:any)=>b.content||"").join(" ").slice(0,300)})).filter(m=>m.content)}});if(data?.blocks?.length){const aid=Date.now()+1;setMessages(prev=>[...prev,{role:"assistant",blocks:data.blocks,ts:aid,id:aid}]);}}catch(e){console.error("dashboard silent error",e);}finally{setLoading(false);}}}/>:
+                      b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={handleDashboardSilentConfirm}/>:
                       (b.type as string)==="limit_warning"?(
                         <div key={bi} style={{marginTop:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
                           <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
