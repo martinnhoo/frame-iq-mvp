@@ -2679,36 +2679,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
-        .msg-body p{margin-bottom:10px!important;}
-        .msg-body p:last-child{margin-bottom:0!important;}
-        .msg-body strong{font-weight:700;color:#f0f2f8;}
-        @media(max-width:640px){
-          /* Hide footer hint */
-          .chat-footer-hint{display:none!important}
-          /* iOS textarea zoom prevention */
-          .chat-textarea{font-size:16px!important;}
-          .chat-textarea::placeholder{font-size:14px!important;opacity:0.25!important}
-          /* Message padding tighter on mobile */
-          .msg-wrap-inner{padding:0 20px!important}
-          /* KPI cards: 2 per row */
-          .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
-          /* Chips */
-          .lp-chip{font-size:12px!important;padding:5px 10px!important}
-          /* Ad/camp rows */
-          .ad-row{padding:8px 10px!important}
-          /* Section title */
-          .sec-title{font-size:12px!important}
-          /* Input wrap */
-          .chat-input-wrap{padding:0 16px!important}
-          /* Pill scrolling */
-          .tool-pills-row{-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important}
-          /* AI message body */
-          .msg-body p{font-size:13.5px!important;line-height:1.7!important}
-          /* User bubble max width */
-          .user-bubble-wrap{max-width:88%!important}
-          /* Live Panel KPIs row */
-          .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
-        }
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
         .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);}
@@ -2718,13 +2688,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
         .user-msg-row .user-msg-actions button:hover{color:rgba(255,255,255,0.6)!important;}
         @media(max-width:640px){
+          .chat-footer-hint{display:none!important}
           .chat-textarea{font-size:16px!important;}
+          .chat-textarea::placeholder{font-size:14px!important;opacity:0.25!important}
           .msg-wrap-inner{padding:0 16px!important}
           .user-bubble-wrap{max-width:88%!important}
           .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
+          .lp-chip{font-size:12px!important;padding:5px 10px!important}
           .tool-pills-row{-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important}
+          .msg-body p{font-size:13.5px!important;line-height:1.7!important}
           .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
-        }</style>
+        }
+      `}</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
       {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}
