@@ -1621,7 +1621,7 @@ export default function AdBriefAI() {
               if(b.compliance_notes) lines.push(`\n**Compliance:** ${b.compliance_notes}`);
               nb[bi]={type:"insight",title:"Brief",content:lines.join("\n")};
             }else{
-              nb[bi]={type:"warning",title:"Sem resultado",content:lang==="pt"?"Tente novamente com mais contexto.":lang==="pt"?"Tente novamente com mais contexto.":lang==="es"?"Intenta de nuevo con más contexto.":lang==="pt"?"Tente novamente com mais contexto.":lang==="es"?"Intenta de nuevo.":"Try again."};
+              nb[bi]={type:"warning",title:"Sem resultado",content:lang==="pt"?"Tente novamente com mais contexto.":lang==="es"?"Intenta de nuevo con más contexto.":"Try again with more context."};
             }
             return{...m,blocks:nb};
           }));
