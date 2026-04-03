@@ -97,7 +97,7 @@ interface AIMessage {
 }
 
 
-// ── InlineToolPanel (from LoopV2) ──────────────────────────────────────────────
+// ── InlineToolPanel ──────────────────────────────────────────────────────────────
 function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   action: string; onClose: () => void; onSend: (msg: string) => void; lang: string;
   accountCtx?: { product?: string; niche?: string; market?: string; platform?: string; angle?: string };
