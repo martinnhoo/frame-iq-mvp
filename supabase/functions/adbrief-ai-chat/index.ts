@@ -52,14 +52,18 @@ Deno.serve(async (req) => {
       const sbPanel = sbAuth;
       const platforms: string[] = body.platforms || [];
       const result: Record<string, any> = {};
-      const today = new Date().toISOString().split("T")[0];
-      const since = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+      const today = body.date_to || new Date().toISOString().split("T")[0];
+      const since = body.date_from || new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
 
       // Meta Ads
       if (platforms.includes("meta")) {
-        const { data: mc } = await sbPanel.from("platform_connections" as any)
-          .select("access_token, ad_accounts, selected_account_id")
-          .eq("user_id", user_id).eq("persona_id", persona_id).eq("platform", "meta").eq("status", "active").maybeSingle();
+        const { data: mcAll } = await sbPanel.from("platform_connections" as any)
+          .select("access_token, ad_accounts, selected_account_id, persona_id")
+          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
+        const mcList = (mcAll as any[]) || [];
+        const mc = persona_id
+          ? (mcList.find((c:any) => c.persona_id === persona_id) || mcList.find((c:any) => !c.persona_id) || mcList[0] || null)
+          : (mcList[0] || null);
         if (mc?.access_token) {
           const token = mc.access_token;
           const acc = (mc.ad_accounts||[]).find((a:any)=>a.id===mc.selected_account_id)||(mc.ad_accounts||[])[0];
