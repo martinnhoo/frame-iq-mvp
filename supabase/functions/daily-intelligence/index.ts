@@ -309,8 +309,16 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   if (persona_id) {
     const { data } = await sb.from('platform_connections' as any)
       .select('access_token, ad_accounts, selected_account_id')
-      .eq('user_id', user_id).eq('platform', 'meta').eq('persona_id', persona_id).maybeSingle();
+      .eq('user_id', user_id).eq('platform', 'meta').eq('status', 'active').eq('persona_id', persona_id).maybeSingle();
     conn = data;
+  }
+  // Fallback: try connection without persona_id (legacy or global connections)
+  if (!conn?.access_token) {
+    const { data: fallback } = await sb.from('platform_connections' as any)
+      .select('access_token, ad_accounts, selected_account_id')
+      .eq('user_id', user_id).eq('platform', 'meta').eq('status', 'active')
+      .order('connected_at', { ascending: false }).limit(1).maybeSingle();
+    if (fallback?.access_token) conn = fallback;
   }
   if (!conn?.access_token) return { skipped: 'No Meta connection' };
 
