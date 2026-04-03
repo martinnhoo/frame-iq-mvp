@@ -1,21 +1,18 @@
-// AdBrief AI — v20 clean rewrite
-// Removed: dead imports (Sparkles, Brain, Radio, Wifi etc), unused vars (PLATFORMS, BS, SUGGS, metaConn),
-//          duplicate LP_CSS injection, LP_CSS as separate string
-// Fixed: DashboardLimitPopup missing plan prop, LABEL.en.placeholder bug,
-//        single CSS block (no more split/duplicate style tags)
+// AdBrief AI — unified v4 — LivePanel + React import fix
+// Design: LoopV2 clean + AdBriefAI power (meta actions, dashboards, tool_call)
 import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
-  Send, Loader2, RotateCcw,
+  Send, Loader2, Sparkles, RotateCcw, Brain,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, LayoutDashboard, X,
-  TrendingUp, TrendingDown, BarChart2, BarChart3,
-  ChevronDown, ChevronUp,
+  TrendingUp, TrendingDown, AlertTriangle, BarChart2,
+  Upload, FileText, BarChart3,
+  Activity, ChevronDown, ChevronUp, ExternalLink,
+  DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 } from "lucide-react";
-// v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
-//      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -2234,15 +2231,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     }
   };
 
+  const SUGGS=SUGG[lang]||SUGG.en;
   const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
+  const metaConn=connections.includes("meta");
 
   const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
 
   const LABEL: Record<string,Record<string,string>>={
     pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte algo...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
     es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta algo...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:lang==="es"?"Pregunta algo...":"Pergunte algo...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -2703,7 +2702,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       `}</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
-      {showDashboardLimit&&<DashboardLimitPopup lang={lang} plan={profile?.plan} onClose={()=>setShowDashboardLimit(false)}/>}
+      {showDashboardLimit&&<DashboardLimitPopup lang={lang} onClose={()=>setShowDashboardLimit(false)}/>}
     </div>
   );
 }
