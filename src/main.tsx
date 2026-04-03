@@ -3,4 +3,4 @@ import App from "./App.tsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
-// sync 3fd1209
+// sync 240bda9
