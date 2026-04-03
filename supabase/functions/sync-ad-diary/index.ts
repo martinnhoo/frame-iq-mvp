@@ -60,8 +60,10 @@ Deno.serve(async (req) => {
         const adsRes = await fetch(
           `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=200&access_token=${token}`
         );
-        if (!adsRes.ok) continue;
+        if (!adsRes.ok) { return ok({ ok: false, synced: 0, error: `Meta HTTP ${adsRes.status}` }); }
         const adsData = await adsRes.json();
+        if (adsData.error) { return ok({ ok: false, synced: 0, error: `Meta API: ${adsData.error.message} (${adsData.error.code})` }); }
+        if (!adsData.data?.length) { return ok({ ok: false, synced: 0, error: `Meta: 0 ads retornados`, account: acc.id, since, today }); }
         const ads = (adsData.data || []).map((ins: any) => ({
           id: ins.ad_id, name: ins.ad_name,
           campaign: { name: ins.campaign_name },
@@ -189,7 +191,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return ok({ ok: true, synced: totalSynced });
+    return ok({ ok: true, synced: totalSynced, v: 5 });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
   }
