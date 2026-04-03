@@ -28,18 +28,18 @@ interface MetricDef {
 }
 
 const METRICS: MetricDef[] = [
-  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v)=>`$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,    higherIsBetter:false, platforms:["both"]   },
+  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v,lang)=>{ const s=v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0); return (lang==="pt"?"R$":"$")+s; },    higherIsBetter:false, platforms:["both"]   },
   { key:"ctr",         label:"CTR",         labelPt:"CTR",          labelEs:"CTR",          icon:MousePointer,accent:GREEN,     format:(v)=>`${(v*100).toFixed(2)}%`,                                higherIsBetter:true,  platforms:["both"]   },
   { key:"clicks",      label:"Clicks",      labelPt:"Cliques",      labelEs:"Clics",        icon:Target,      accent:"#a78bfa", format:(v)=>v>=1000?(v/1000).toFixed(1)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
   { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         accent:"#f97316", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
   { key:"conversions", label:"Conversions", labelPt:"Conversões",   labelEs:"Conversiones", icon:TrendingUp,  accent:AMBER,     format:(v)=>String(Math.round(v)),                                   higherIsBetter:true,  platforms:["both"]   },
   { key:"roas",        label:"ROAS",        labelPt:"ROAS",         labelEs:"ROAS",         icon:BarChart3,   accent:GREEN,     format:(v)=>`${v.toFixed(2)}×`,                                      higherIsBetter:true,  platforms:["both"]   },
-  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v)=>`$${v.toFixed(0)}`,                                      higherIsBetter:false, platforms:["both"]   },
+  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v,lang)=>{ return (lang==="pt"?"R$":"$")+v.toFixed(0); },                                      higherIsBetter:false, platforms:["both"]   },
   { key:"cpm",         label:"CPM",         labelPt:"CPM",          labelEs:"CPM",          icon:Users,       accent:"#06b6d4", format:(v)=>`$${v.toFixed(2)}`,                                      higherIsBetter:false, platforms:["meta"]   },
   { key:"cpc",         label:"CPC",         labelPt:"CPC",          labelEs:"CPC",          icon:Repeat,      accent:"#8b5cf6", format:(v)=>`$${v.toFixed(2)}`,                                      higherIsBetter:false, platforms:["both"]   },
   { key:"reach",       label:"Reach",       labelPt:"Alcance",      labelEs:"Alcance",      icon:Users,       accent:"#14b8a6", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["meta"]   },
   { key:"frequency",   label:"Frequency",   labelPt:"Frequência",   labelEs:"Frecuencia",   icon:Repeat,      accent:AMBER,     format:(v)=>v.toFixed(2),                                            higherIsBetter:false, platforms:["meta"]   },
-  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v)=>`$${v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}`,    higherIsBetter:true,  platforms:["both"]   },
+  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v,lang)=>{ const s=v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0); return (lang==="pt"?"R$":"$")+s; },    higherIsBetter:true,  platforms:["both"]   },
 ];
 
 const DEFAULT_METRICS: MetricKey[] = ["spend","ctr","clicks","roas","conversions","cpa"];
@@ -94,7 +94,7 @@ function AreaChart({ daily, metricKey }: { daily: any[]; metricKey: MetricKey })
   const pts=vals.map((v,i)=>[PAD.left+(i/(vals.length-1||1))*iW, PAD.top+iH-(v/maxV)*iH]);
   const path=pts.map((p,i)=>`${i===0?"M":"L"} ${p[0]} ${p[1]}`).join(" ");
   const area=`${path} L ${pts[pts.length-1][0]} ${PAD.top+iH} L ${PAD.left} ${PAD.top+iH} Z`;
-  const ticks=[0,maxV/2,maxV].map(v=>({y:PAD.top+iH-(v/maxV)*iH,label:def.format(v)}));
+  const ticks=[0,maxV/2,maxV].map(v=>({y:PAD.top+iH-(v/maxV)*iH,label:def.format(v,"pt")}));
   const labelIdx=[0,Math.floor(daily.length/2),daily.length-1].filter((v,i,a)=>a.indexOf(v)===i);
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{overflow:"visible"}}>
@@ -280,8 +280,8 @@ function Delta({ value, higherIsBetter }: { value:number|null; higherIsBetter:bo
 }
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
-function MetricCard({ def, value, delta, sparkData, isDragging }: { def:MetricDef; value:number; delta?:number|null; sparkData?:number[]; isDragging?:boolean }) {
-  const formatted = value>0?def.format(value):"—";
+function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:MetricDef; value:number; delta?:number|null; sparkData?:number[]; isDragging?:boolean; lang?:string }) {
+  const formatted = value>0?def.format(value, lang):"—";
   return (
     <div style={{
       background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",
@@ -624,7 +624,7 @@ export default function PerformanceDashboard() {
                   onDragEnd={()=>{setDragging(null);setDragOver(null);}}
                   className={`perf-card${dragOver===i&&dragging!==i?" drag-over":""}`}
                   style={{animationDelay:`${i*0.04}s`}}>
-                  <MetricCard def={def} value={value} delta={delta} sparkData={spark} isDragging={dragging===i}/>
+                  <MetricCard def={def} value={value} delta={delta} sparkData={spark} isDragging={dragging===i} lang={lang}/>
                 </div>
               );
             })}
