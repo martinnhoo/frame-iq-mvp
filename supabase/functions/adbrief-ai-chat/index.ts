@@ -440,9 +440,12 @@ Deno.serve(async (req) => {
           const all = (r.data || []) as any[];
           if (persona_id) {
             const scoped = all.filter((c: any) => c.persona_id === persona_id);
-            return { data: scoped };
+            // Fallback: if no connection for this persona, try connections without persona_id
+            if (scoped.length > 0) return { data: scoped };
+            const global = all.filter((c: any) => !c.persona_id);
+            return { data: global.length > 0 ? global : all.slice(0,1) };
           }
-          return { data: [] };
+          return { data: all.filter((c: any) => !c.persona_id) };
         }),
       // 5. Ads data imports
       (supabase as any).from("ads_data_imports")
@@ -809,10 +812,10 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
           .select("access_token, ad_accounts, selected_account_id, persona_id")
           .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
         const allC = (allConns as any[]) || [];
-        // STRICT: only use connection scoped to this persona — no global fallback
+        // Find connection: first try exact persona match, then fallback to any active connection
         const tokenRow = persona_id
-          ? allC.find((c: any) => c.persona_id === persona_id) || null
-          : null;
+          ? (allC.find((c: any) => c.persona_id === persona_id) || allC.find((c: any) => !c.persona_id) || allC[0] || null)
+          : (allC[0] || null);
 
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
