@@ -69,14 +69,18 @@ Deno.serve(async (req) => {
           const acc = (mc.ad_accounts||[]).find((a:any)=>a.id===mc.selected_account_id)||(mc.ad_accounts||[])[0];
           if (acc) {
             const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
-            const [r1,r2,r3] = await Promise.allSettled([
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=30&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=20&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=14&access_token=${token}`),
+            const [r1,r2,r3,r4] = await Promise.allSettled([
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=60&access_token=${token}`),
+              fetch(`https://graph.facebook.com/v21.0/${acc.id}?fields=currency,timezone_name&access_token=${token}`),
             ]);
-            const ads   = r1.status==="fulfilled"?await r1.value.json():null;
-            const camps = r2.status==="fulfilled"?await r2.value.json():null;
-            const ts    = r3.status==="fulfilled"?await r3.value.json():null;
+            const ads    = r1.status==="fulfilled"?await r1.value.json():null;
+            const camps  = r2.status==="fulfilled"?await r2.value.json():null;
+            const ts     = r3.status==="fulfilled"?await r3.value.json():null;
+            const accInfo = r4.status==="fulfilled"?await r4.value.json():null;
+            const currency = accInfo?.currency || "BRL";
+            const currSymbol = currency === "BRL" ? "R$" : currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "MXN" ? "$" : currency;
             if (ads?.error?.code===190||camps?.error?.code===190) {
               result.meta = { error: "token_expired", account_name: acc.name||acc.id };
             } else {
@@ -101,13 +105,14 @@ Deno.serve(async (req) => {
               }).sort((a:any,b:any)=>b.spend-a.spend);
               result.meta = {
                 account_name: acc.name||acc.id, period: `${since} → ${today}`,
+                currency, currency_symbol: currSymbol,
                 kpis: { spend:totalSpend.toFixed(2), ctr:avgCTR.toFixed(2), cpm:avgCPM.toFixed(2), frequency:avgFreq.toFixed(1), conversions:totalConv.toFixed(0), active_ads:adsData.length },
                 winners: enriched.filter((a:any)=>a.isWinner).slice(0,5),
                 at_risk:  enriched.filter((a:any)=>a.isRisk).slice(0,5),
                 top_ads:  enriched.slice(0,10),
                 campaigns: (camps?.data||[]).slice(0,10).map((c:any)=>({
                   name:c.name, status:c.effective_status||c.status,
-                  budget:c.daily_budget?`R$${(parseInt(c.daily_budget)/100).toFixed(0)}/dia`:c.lifetime_budget?`R$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total`:"—",
+                  budget:c.daily_budget?`${currSymbol}${(parseInt(c.daily_budget)/100).toFixed(0)}/dia`:c.lifetime_budget?`${currSymbol}${(parseInt(c.lifetime_budget)/100).toFixed(0)} total`:"—",
                   objective:c.objective
                 })),
                 time_series: (ts?.data||[]).filter((d:any)=>parseFloat(d.spend||0)>0).map((d:any)=>({
