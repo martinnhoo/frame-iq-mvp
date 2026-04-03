@@ -63,7 +63,9 @@ Deno.serve(async (req) => {
 
           console.log("[sync-ad-diary] Meta account:", acc.id);
           const fields = "id,name,status,adset{name},campaign{name},created_time,updated_time,insights.date_preset(last_90_days){spend,impressions,clicks,ctr,cpc,actions,action_values,frequency}";
-          const res = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${encodeURIComponent(fields)}&limit=200&access_token=${conn.access_token}`);
+          // effective_status includes PAUSED/ARCHIVED — default only returns ACTIVE
+          const statusFilter = encodeURIComponent(JSON.stringify(["ACTIVE","PAUSED","ARCHIVED"]));
+          const res = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${encodeURIComponent(fields)}&effective_status=${statusFilter}&limit=200&access_token=${conn.access_token}`);
           if (!res.ok) { errors.push(`Meta HTTP ${res.status}`); continue; }
 
           const j = await res.json();
