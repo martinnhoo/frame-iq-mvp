@@ -250,7 +250,7 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
     else onChange([...active,key]);
   };
   return (
-    <div ref={ref} style={{position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,background:"#111827",border:`1px solid ${BD}`,borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,0.6)",padding:20,width:300}}>
+    <div ref={ref} style={{position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,background:"var(--bg-elevated)",border:"1px solid var(--border-default)",borderRadius:16,boxShadow:"0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",padding:20,width:300}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
         <span style={{fontFamily:F,fontSize:14,fontWeight:700,color:TX}}>Personalizar métricas</span>
         <button onClick={onClose} style={{background:"none",border:"none",color:MT,cursor:"pointer",display:"flex"}}><X size={14}/></button>
@@ -502,7 +502,7 @@ export default function PerformanceDashboard() {
           </div>
           {activeTab==="metrics"&&lastUpdated&&<p style={{margin:0,fontSize: 12,color:MT}}>Atualizado {lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
           {/* Tabs */}
-          <div style={{display:"flex",gap:2,marginTop:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:10,padding:3,width:"fit-content"}}>
+          <div style={{display:"flex",gap:2,marginTop:12,background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,padding:3,width:"fit-content"}}>
             {([["metrics",language==="pt"?"Métricas":language==="es"?"Métricas":"Metrics"],["ads",language==="pt"?"Ads":"Ads"]] as const).map(([tab,label])=>(
               <button key={tab} onClick={()=>setActiveTab(tab)}
                 style={{padding:"6px 18px",borderRadius:7,cursor:"pointer",
@@ -520,7 +520,7 @@ export default function PerformanceDashboard() {
 
         {activeTab === "metrics" && <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
           {/* Platform tabs */}
-          <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:10,padding:3}}>
+          <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"var(--bg-surface)",border:`1px solid var(--border-subtle)`,borderRadius:10,padding:3}}>
             {([["meta","Meta Ads",ACCENT],["google","Google Ads",GBLUE]] as const).map(([plt,label,color])=>{
               const active=activePlatform===plt,hasData=plt==="meta"?hasMeta:hasGoogle;
               return (
@@ -586,7 +586,7 @@ export default function PerformanceDashboard() {
               {label:"ROAS",value:"2.5–4×",sub:lang==="pt"?"e-commerce BR":"e-commerce"},
               {label:lang==="pt"?"Freq. limite":lang==="es"?"Frec. límite":"Freq. limit",value:"2.5/sem",sub:lang==="pt"?"cold audience":"cold audience"},
             ].map(b=>(
-              <div key={b.label} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"12px"}}>
+              <div key={b.label} style={{background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,padding:"12px"}}>
                 <div style={{fontSize:18,fontWeight:700,color:TX,fontFamily:F,letterSpacing:"-0.02em",lineHeight:1,marginBottom:4}}>{b.value}</div>
                 <div style={{fontSize: 12,color:MT,fontFamily:F,fontWeight:500}}>{b.label}</div>
                 <div style={{fontSize: 12,color:"rgba(255,255,255,0.2)",fontFamily:F,marginTop:2}}>{b.sub}</div>
@@ -628,10 +628,10 @@ export default function PerformanceDashboard() {
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14,marginBottom:14}}>
             {[...Array(6)].map((_,i)=>(
-              <div key={i} style={{height:110,background:"rgba(255,255,255,0.04)",borderRadius:16,border:`1px solid ${BD}`,opacity:1-i*0.08,animation:"fadeIn 0.4s ease both",animationDelay:`${i*0.05}s`}}/>
+              <div key={i} style={{height:110,background:"var(--bg-card)",borderRadius:16,border:"1px solid var(--border-subtle)",opacity:1-i*0.08,animation:"fadeIn 0.4s ease both",animationDelay:`${i*0.05}s`}}/>
             ))}
           </div>
-          <div style={{height:220,background:"rgba(255,255,255,0.04)",borderRadius:16,border:`1px solid ${BD}`}}/>
+          <div style={{height:220,background:"var(--bg-card)",borderRadius:16,border:"1px solid var(--border-subtle)"}}/>
         </div>
       )}
 
@@ -669,7 +669,7 @@ export default function PerformanceDashboard() {
 
           {/* Chart */}
           {(d.daily||[]).length>1&&(
-            <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:16,padding:24,marginBottom:20}}>
+            <div style={{background:"var(--bg-card)",border:"1px solid var(--border-subtle)",borderRadius:16,padding:24,marginBottom:20,boxShadow:"0 1px 3px rgba(0,0,0,0.3)"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap" as const,gap:12}}>
                 <div>
                   <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Tendência</p>

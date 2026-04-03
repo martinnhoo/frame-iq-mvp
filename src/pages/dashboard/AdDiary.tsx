@@ -434,7 +434,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
             const isSyncing = syncing === acc.id;
             return (
               <button key={acc.id} onClick={() => toggleAccount(acc.id)}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${isSel ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.08)"}`, background: isSel ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.4)", fontSize: 12.5, fontWeight: isSel ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${isSel ? "rgba(14,165,233,0.35)" : "var(--border-subtle)"}`, background: isSel ? "rgba(14,165,233,0.1)" : "var(--bg-surface)", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.4)", fontSize: 12.5, fontWeight: isSel ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
                 {isSyncing
                   ? <div style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
                   : isSel && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9" }} />
@@ -449,7 +449,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       {/* Summary */}
       {entries.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
-          <div style={{ gridColumn: "span 2", padding: "18px 20px", borderRadius: 14, background: stats.winRate >= 40 ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.07)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ gridColumn: "span 2", padding: "18px 20px", borderRadius: 14, background: stats.winRate >= 40 ? "rgba(34,197,94,0.07)" : "var(--bg-card)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.15)" : "var(--border-subtle)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div>
               <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
               <p style={{ margin: "5px 0 3px", fontSize: 38, fontWeight: 900, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
@@ -465,7 +465,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
               ))}
             </div>
           </div>
-          <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ padding: "14px 16px", borderRadius: 12, background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.invested}</p>
             <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend)}</p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{t.last90}</p>
@@ -490,7 +490,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
             const color = tab.key !== "all" ? V_STYLE[tab.key].bar : undefined;
             return (
               <button key={tab.key} onClick={() => setFilter(tab.key)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12.5, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "rgba(255,255,255,0.08)" : "transparent", borderColor: isActive ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)", color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.38)" }}>
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12.5, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "var(--bg-card)" : "transparent", borderColor: isActive ? "var(--border-default)" : "var(--border-subtle)", color: isActive ? "var(--text-primary)" : "var(--text-muted)" }}>
                 {color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />}
                 {tab.label}
                 <span style={{ fontSize: 11, fontFamily: M, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.2)" }}>{tab.count}</span>
@@ -505,7 +505,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
         <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
           {platforms.length > 1 && (
             <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "#111827", color: platformFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none" }}>
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)", color: platformFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none" }}>
               <option value="all">Todas as plataformas</option>
               {platforms.map(p => <option key={p} value={p}>{p === "meta" ? "Meta Ads" : "Google Ads"}</option>)}
             </select>
@@ -519,7 +519,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           )}
           {(campaignFilter !== "all" || platformFilter !== "all") && (
             <button onClick={() => { setCampaignFilter("all"); setPlatformFilter("all"); }}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: F, cursor: "pointer" }}>
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: F, cursor: "pointer" }}>
               ✕ Limpar filtros
             </button>
           )}

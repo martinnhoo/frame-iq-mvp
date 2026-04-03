@@ -223,7 +223,7 @@ export default function CampaignBuilder() {
           <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(34,197,94,0.15)",border:"2px solid rgba(34,197,94,0.35)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",fontSize:28}}>✓</div>
           <h2 style={{fontSize:24,fontWeight:800,color:TX,margin:"0 0 8px"}}>Campanha criada!</h2>
           <p style={{color:MT,fontSize:14,margin:"0 0 28px"}}>Criada como <strong style={{color:"#fcd34d"}}>PAUSADA</strong> — revise no {result.platform==="google"?"Google Ads":"Meta Ads Manager"} antes de ativar.</p>
-          <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:12,padding:18,textAlign:"left",marginBottom:20}}>
+          <div style={{background:"var(--bg-card)",border:"1px solid var(--border-subtle)",borderRadius:12,padding:18,textAlign:"left",marginBottom:20}}>
             <p style={{margin:"0 0 2px",fontSize: 12,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Campaign ID</p>
             <p style={{color:TX,fontSize:13,fontFamily:"monospace",margin:0}}>{result.campaign_id}</p>
           </div>
@@ -325,7 +325,7 @@ export default function CampaignBuilder() {
                 </div>
                 <span style={{fontSize:12,fontWeight:active?600:400,color:active?TX:MT,whiteSpace:"nowrap"}}>{label}</span>
               </div>
-              {i<STEPS.length-1&&<div style={{flex:1,height:1,background:i<step?"rgba(34,197,94,0.2)":BD,margin:"0 10px",minWidth:16}}/>}
+              {i<STEPS.length-1&&<div style={{flex:1,height:1,background:i<step?"rgba(34,197,94,0.2)":"var(--border-subtle)",margin:"0 10px",minWidth:16}}/>}
             </React.Fragment>
           );
         })}
@@ -583,8 +583,8 @@ export default function CampaignBuilder() {
         </div>
 
         {/* AI Panel */}
-        <div className="campaign-ai-panel" style={{width:290,borderLeft:"1px solid rgba(255,255,255,0.06)",background:"linear-gradient(180deg,rgba(14,165,233,0.04) 0%,rgba(255,255,255,0.02) 100%)",display:"flex",flexDirection:"column",flexShrink:0,boxShadow:"inset 4px 0 16px rgba(0,0,0,0.3)"}}>
-          <div style={{padding:"14px 18px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",gap:8}}>
+        <div className="campaign-ai-panel" style={{width:290,borderLeft:"1px solid rgba(255,255,255,0.06)",background:"var(--bg-surface)",display:"flex",flexDirection:"column",flexShrink:0,boxShadow:"inset 4px 0 16px rgba(0,0,0,0.3)"}}>
+          <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border-subtle)",display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:7,height:7,borderRadius:"50%",background:aiLoading?pc:GREEN,animation:aiLoading?"pulse 1s infinite":"none"}}/>
             <p style={{margin:0,fontSize:13,fontWeight:600,color:TX}}>Co-piloto IA</p>
             <span style={{marginLeft:"auto",fontSize: 12,color:MT}}>Dados reais</span>
