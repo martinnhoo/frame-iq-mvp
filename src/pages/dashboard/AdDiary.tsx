@@ -250,6 +250,8 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Verdict | "all">("all");
+  const [campaignFilter, setCampaignFilter] = useState<string>("all");
+  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   // Load accounts
@@ -355,7 +357,21 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     return map;
   }, [entries]);
 
-  const filteredEntries = filter === "all" ? entries : entries.filter(e => e.verdict === filter);
+  const campaigns = useMemo(() => {
+    const seen = new Set<string>();
+    return entries.map(e => e.campaign_name).filter(c => c && !seen.has(c!) && seen.add(c!)) as string[];
+  }, [entries]);
+
+  const platforms = useMemo(() => {
+    const seen = new Set<string>();
+    return entries.map(e => e.platform).filter(p => p && !seen.has(p) && seen.add(p));
+  }, [entries]);
+
+  const filteredEntries = entries.filter(e =>
+    (filter === "all" || e.verdict === filter) &&
+    (campaignFilter === "all" || e.campaign_name === campaignFilter) &&
+    (platformFilter === "all" || e.platform === platformFilter)
+  );
 
   const stats = useMemo(() => {
     const winners = entries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length;
@@ -481,6 +497,32 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Campaign + Platform filters */}
+      {entries.length > 0 && (campaigns.length > 1 || platforms.length > 1) && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          {platforms.length > 1 && (
+            <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)}
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "#111827", color: platformFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none" }}>
+              <option value="all">Todas as plataformas</option>
+              {platforms.map(p => <option key={p} value={p}>{p === "meta" ? "Meta Ads" : "Google Ads"}</option>)}
+            </select>
+          )}
+          {campaigns.length > 1 && (
+            <select value={campaignFilter} onChange={e => setCampaignFilter(e.target.value)}
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "#111827", color: campaignFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>
+              <option value="all">Todas as campanhas ({campaigns.length})</option>
+              {campaigns.map(c => <option key={c} value={c}>{c.length > 40 ? c.slice(0, 38) + "…" : c}</option>)}
+            </select>
+          )}
+          {(campaignFilter !== "all" || platformFilter !== "all") && (
+            <button onClick={() => { setCampaignFilter("all"); setPlatformFilter("all"); }}
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 12, fontFamily: F, cursor: "pointer" }}>
+              ✕ Limpar filtros
+            </button>
+          )}
         </div>
       )}
 
