@@ -339,7 +339,7 @@ function AdRow({ ad, rank }: { ad:any; rank:number }) {
             {isMeta?"Meta":"Google"}
           </span>
         </div>
-        <p style={{margin:0,fontSize: 12,color:MT}}>{ad.campaign||""}</p>
+        {ad.campaign && ad.campaign !== ad.name && <p style={{margin:0,fontSize: 12,color:MT,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.campaign}</p>}
       </div>
       <div style={{display:"flex",gap:20,flexShrink:0,alignItems:"center"}}>
         <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:13,fontWeight:700,color:TX}}>R${(ad.spend||0).toFixed(0)}</p><p style={{margin:0,fontSize: 12,color:MT}}>Spend</p></div>
@@ -680,7 +680,7 @@ export default function PerformanceDashboard() {
                   {["Spend","CTR","ROAS","Status"].map(h=><span key={h} style={{fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",width:h==="Status"?80:60,textAlign:"right"}}>{h}</span>)}
                 </div>
               </div>
-              {(d.top_ads||[]).slice(0,10).map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}
+              <div style={{paddingBottom:8}}>{(d.top_ads||[]).slice(0,10).map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}</div>
             </div>
           )}
         </>
