@@ -408,6 +408,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
 
 // ── Block card ────────────────────────────────────────────────────────────────
 // ── Markdown renderer — bold, italic, headers, lists, inline code ─────────────
+// BUNDLE_TEST_MARKER_XK9Z
 function renderMarkdown(text: string): React.ReactNode[] {
   if (!text || typeof text !== "string") return [];
   // Normalizar: \n\n real ou literal "\\n\\n" → separador de parágrafo
@@ -2775,6 +2776,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.2)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
+        .user-msg-row>div{box-shadow:none!important;}
         .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
         .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);}
         .msg-body p{margin:0 0 10px;}
