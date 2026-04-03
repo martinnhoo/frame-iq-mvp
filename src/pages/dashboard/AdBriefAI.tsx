@@ -46,35 +46,8 @@ const j = { fontFamily: F } as const;
 const m = { fontFamily: M } as const;
 
 // ── Platforms ──────────────────────────────────────────────────────────────────
-const PLATFORMS = [
-  { id: "meta",   label: "Meta Ads",   fn: "meta-oauth",   color: "#1877F2",
-    Icon: ({ active }: { active: boolean }) => (
-      <svg width="20" height="10" viewBox="0 0 56 27" opacity={active ? 1 : 0.35} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="metaAIGrad" x1="0" y1="0" x2="56" y2="0" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#0082FB"/>
-            <stop offset="1" stopColor="#0064E0"/>
-          </linearGradient>
-        </defs>
-        <path d="M13.5 0C8.49 0 4.7 2.62 2.22 6.25.79 8.37 0 10.94 0 13.74c0 4.87 2.28 8.44 5.9 10.26 1.59.81 3.32 1.14 5.03 1.14 3.23 0 6.15-1.21 8.74-3.84L28 13.74l8.33 7.56C38.92 23.93 41.84 25.14 45.07 25.14c1.71 0 3.44-.33 5.03-1.14C53.72 22.18 56 18.61 56 13.74c0-2.8-.79-5.37-2.22-7.49C51.3 2.62 47.51 0 42.5 0c-3.8 0-7.18 1.72-10.29 5.12L28 9.77 23.79 5.12C20.68 1.72 17.3 0 13.5 0zm0 5.15c2.58 0 4.97 1.31 7.45 4.09l3.28 3.71-3.28 3.71c-2.48 2.78-4.87 4.09-7.45 4.09-1.86 0-3.65-.59-5.06-1.78C6.62 17.46 5.5 15.73 5.5 13.5c0-2.23 1.12-3.96 2.94-5.37C9.85 6.94 11.64 5.15 13.5 5.15zm29 0c1.86 0 3.65.59 5.06 1.78 1.82 1.41 2.94 3.14 2.94 5.37 0 2.23-1.12 3.96-2.94 5.37-1.41 1.19-3.2 1.78-5.06 1.78-2.58 0-4.97-1.31-7.45-4.09l-3.28-3.71 3.28-3.71c2.48-2.78 4.87-4.09 7.45-4.09z" fill="url(#metaAIGrad)"/>
-      </svg>
-    )},
-  { id: "tiktok", label: "TikTok Ads", fn: "tiktok-oauth", color: "#06b6d4", soon: true,
-    Icon: ({ active }: { active: boolean }) => (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill={active ? "#06b6d4" : "rgba(255,255,255,0.3)"}>
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.72a4.85 4.85 0 0 1-1.01-.03z"/>
-      </svg>
-    )},
-  { id: "google", label: "Google Ads", fn: "google-oauth", color: "#4285F4", soon: true,
-    Icon: ({ active }: { active: boolean }) => (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill={active ? "#4285F4" : "rgba(255,255,255,0.3)"}/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill={active ? "#34A853" : "rgba(255,255,255,0.2)"}/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill={active ? "#FBBC05" : "rgba(255,255,255,0.2)"}/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill={active ? "#EA4335" : "rgba(255,255,255,0.2)"}/>
-      </svg>
-    )},
-];
+
+// Inline icons
 
 // Inline icons for use in JSX buttons
 const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
@@ -101,12 +74,6 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
   ],
 };
 
-const SUGG: Record<string, string[]> = {
-  pt: ["O que está matando meu ROAS agora?", "Qual anúncio devo pausar hoje?", "Escreva 3 hooks dos meus top criativos", "O que produzir semana que vem?"],
-  es: ["¿Qué está matando mi ROAS ahora?", "¿Qué anuncio pausar hoy?", "Escribe 3 hooks de mis mejores creativos", "¿Qué producir la próxima semana?"],
-  en: ["What's killing my ROAS right now?", "Which ad should I pause today?", "Write 3 hooks from my best creatives", "What should I produce next week?"],
-};
-
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
   type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart"|"limit_warning";
@@ -129,18 +96,6 @@ interface AIMessage {
   id: number;
 }
 
-const BS: Record<string,{color:string;bg:string;border:string}> = {
-  action:      {color:"#60a5fa",bg:"rgba(96,165,250,0.06)",  border:"rgba(96,165,250,0.16)"},
-  pattern:     {color:"#a78bfa",bg:"rgba(167,139,250,0.06)", border:"rgba(167,139,250,0.16)"},
-  hooks:       {color:"#06b6d4",bg:"rgba(6,182,212,0.06)",   border:"rgba(6,182,212,0.16)"},
-  warning:     {color:"#fbbf24",bg:"rgba(251,191,36,0.06)",  border:"rgba(251,191,36,0.16)"},
-  insight:     {color:"#34d399",bg:"rgba(52,211,153,0.06)",  border:"rgba(52,211,153,0.16)"},
-  off_topic:   {color:"rgba(255,255,255,0.25)",bg:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.10)"},
-  navigate:    {color:"#60a5fa",bg:"rgba(96,165,250,0.04)",  border:"rgba(96,165,250,0.18)"},
-  tool_call:   {color:"#a78bfa",bg:"rgba(167,139,250,0.06)", border:"rgba(167,139,250,0.18)"},
-  dashboard:   {color:"#0ea5e9",bg:"rgba(14,165,233,0.04)",  border:"rgba(14,165,233,0.15)"},
-  meta_action: {color:"#fb923c",bg:"rgba(251,146,60,0.06)",  border:"rgba(251,146,60,0.2)"},
-};
 
 // ── InlineToolPanel (from LoopV2) ──────────────────────────────────────────────
 function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
@@ -811,24 +766,6 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
 // ─── Live Panel v5 — build bump v2 ────────────────────────────────────────────────────────────
 // Design: editorial dark refinado — Inter, cards com proporção correta
 
-const LP_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-  .lp * { box-sizing: border-box; }
-  .lp-kpi { transition: border-color 0.15s, background 0.15s; }
-  .lp-kpi:hover { border-color: rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.04) !important; }
-  .lp-row { transition: background 0.12s; }
-  .lp-row:hover { background: rgba(255,255,255,0.04) !important; }
-  .lp-chip:hover { background: rgba(99,102,241,0.1) !important; border-color: rgba(99,102,241,0.25) !important; color: #a5b4fc !important; }
-  .lp-alert { transition: opacity 0.12s; }
-  .lp-alert:hover { opacity: 0.75; }
-  .lp-btn:hover { color: rgba(255,255,255,0.7) !important; }
-  .lp-tab:hover { color: rgba(255,255,255,0.6) !important; }
-  .lp-bar:hover { background: rgba(255,255,255,0.025) !important; }
-  @keyframes lp-in   { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes lp-glow { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.75)} }
-  @keyframes lp-spin { to{transform:rotate(360deg)} }
-  @keyframes lp-sk   { 0%,100%{opacity:0.2} 50%{opacity:0.5} }
-`;
 
 const I = { fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" };
 const MONO = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
@@ -1033,8 +970,6 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         background: "#0a0d18",
         borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s",
       }}>
-        <style>{LP_CSS}</style>
-
         {/* Live dot */}
         <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.5)" : "none", marginRight: 10, flexShrink: 0 }} />
 
@@ -1085,8 +1020,6 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <div className="lp" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(9,12,20,0.8)", backdropFilter: "blur(20px)", animation: "lp-in 0.18s ease" }}>
-      <style>{LP_CSS}</style>
-
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -1348,7 +1281,6 @@ export default function AdBriefAI() {
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
   const [connections,setConnections]=useState<string[]>([]);
-  const [connectingId,setConnectingId]=useState<string|null>(null);
   const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
@@ -1800,9 +1732,8 @@ export default function AdBriefAI() {
       setMessages(prev=>[...prev,{role:"assistant",id:uid,ts:uid,blocks:[{type:"navigate",title:lang==="pt"?"Criar conta primeiro":"Create account first",content:msg,route:"/dashboard/accounts",cta:lang==="pt"?"Ir para Contas →":lang==="es"?"Ir a Cuentas →":"Go to Accounts →"}]}]);
       return;
     }
-    setConnectingId(id);
     try{const{data}=await supabase.functions.invoke(fn,{body:{action:"get_auth_url",user_id:user.id,persona_id:selectedPersona.id}});if(data?.url)window.location.href=data.url;}
-    catch{setConnectingId(null);}
+    catch{}
   };
 
   const executeMetaAction=async(block:Block)=>{
@@ -2676,6 +2607,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes orbFloat1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(8%,12%) scale(1.08)}}
         @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes lp-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
+        @keyframes lp-spin{to{transform:rotate(360deg)}}
+        @keyframes lp-sk{0%,100%{opacity:0.2}50%{opacity:0.5}}
+        .lp *{box-sizing:border-box;}
+        .lp-kpi{transition:border-color 0.15s,background 0.15s;}
+        .lp-kpi:hover{border-color:rgba(255,255,255,0.1)!important;background:rgba(255,255,255,0.04)!important;}
+        .lp-row{transition:background 0.12s;}
+        .lp-row:hover{background:rgba(255,255,255,0.04)!important;}
+        .lp-chip:hover{background:rgba(99,102,241,0.1)!important;border-color:rgba(99,102,241,0.25)!important;color:#a5b4fc!important;}
+        .lp-alert{transition:opacity 0.12s;}
+        .lp-alert:hover{opacity:0.75;}
+        .lp-btn:hover{color:rgba(255,255,255,0.7)!important;background:rgba(255,255,255,0.07)!important;}
+        .lp-tab:hover{color:rgba(255,255,255,0.6)!important;}
+        .lp-bar:hover{background:rgba(255,255,255,0.025)!important;}
         .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.55)!important;box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset, 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.25), 0 0 32px rgba(14,165,233,0.12)!important;background:linear-gradient(160deg,rgba(14,165,233,0.06) 0%,rgba(255,255,255,0.04) 100%)!important;}
         .chat-textarea{caret-color:#0ea5e9;}
