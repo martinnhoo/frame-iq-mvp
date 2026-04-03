@@ -2299,7 +2299,7 @@ PROIBIDO:
       }
     })().catch(() => {});
 
-    return new Response(JSON.stringify({ blocks: finalBlocks, _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: richCtxStr && richCtxStr.trim().length > 50 ? "rich" : "frontend" } }), {
+    return new Response(JSON.stringify({ blocks: finalBlocks, _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: (Array.isArray(richContext) ? richContext.filter(Boolean).join(" ") : String(richContext||"")).trim().length > 50 ? "rich" : "frontend" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
