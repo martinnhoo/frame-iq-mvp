@@ -286,12 +286,45 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     setSyncing(personaId);
     setSyncError(null);
     try {
-      const { data: res, error } = await supabase.functions.invoke("sync-ad-diary", { body: { user_id: user.id, persona_id: personaId } });
-      console.log("[AdDiary sync]", { res, error });
-      if (error) { setSyncError(`Erro: ${error.message || JSON.stringify(error)}`); }
-      else if (res?.error) { setSyncError(`API: ${res.error}`); }
-      else if (res?.errors?.length) { setSyncError(`Sync: ${res.errors[0]}`); }
-      else if (res?.synced === 0) { setSyncError(res.message || "0 anúncios encontrados — verifique conexão Meta"); }
+      // Use live-metrics (same as Performance Dashboard) — works reliably for paused ads
+      const { data: res, error } = await supabase.functions.invoke("live-metrics", {
+        body: { user_id: user.id, persona_id: personaId, period: "90d" }
+      });
+      if (error) { setSyncError(`Erro: ${error.message}`); setSyncing(null); return; }
+
+      const metaAds: any[] = res?.meta?.top_ads || [];
+      if (!metaAds.length) { setSyncError("0 anúncios encontrados nos últimos 90 dias"); setSyncing(null); return; }
+
+      // Map live-metrics top_ads to Entry format and upsert to ad_diary
+      const calcVerdict = (a: any) => {
+        const ctr = (a.ctr || 0) * 100;
+        const spend = a.spend || 0;
+        if (a.freq > 3.5) return { verdict: "loser" as const, reason: `Freq ${a.freq?.toFixed(1)}× — fadiga` };
+        if (ctr >= 2.5 && spend > 5) return { verdict: "winner" as const, reason: `CTR ${ctr.toFixed(2)}% — forte` };
+        if (ctr >= 1.5 && spend > 20) return { verdict: "scaled" as const, reason: `CTR ${ctr.toFixed(2)}% com volume` };
+        if (spend < 10) return { verdict: "testing" as const, reason: "Em aprendizado" };
+        if (ctr < 0.5 && spend > 20) return { verdict: "loser" as const, reason: `CTR ${ctr.toFixed(2)}% baixo` };
+        return { verdict: "testing" as const, reason: "Aguardando mais dados" };
+      };
+
+      const rows = metaAds.map((a: any) => {
+        const verd = calcVerdict(a);
+        const ctr = a.ctr || 0;
+        return {
+          user_id: user.id, persona_id: personaId, platform: "meta",
+          ad_id: a.name || String(Math.random()), ad_name: a.name || "Sem nome",
+          campaign_name: a.campaign || null, adset_name: null,
+          status: a.isWinner ? "active" : "paused",
+          launched_at: null, paused_at: null, days_running: 0,
+          spend: a.spend || 0, impressions: 0, clicks: 0,
+          ctr, cpc: 0, conversions: a.conv || 0, conv_value: 0,
+          roas: null, frequency: a.freq || null,
+          verdict: verd.verdict, verdict_reason: verd.reason,
+          peak_ctr: ctr, synced_at: new Date().toISOString(),
+        };
+      });
+
+      await (supabase as any).from("ad_diary").upsert(rows, { onConflict: "user_id,persona_id,platform,ad_id" });
       await load();
       setLastSync(new Date());
     } catch (e: any) { setSyncError(`Falha: ${String(e?.message || e)}`); }
