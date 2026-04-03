@@ -1928,7 +1928,7 @@ REGRAS QUE NUNCA QUEBRAM
 
 ZERO ALUCINAÇÃO DE MÉTRICAS
 Nunca escreva CTR, ROAS, CPM, CPC, conversões ou qualquer número que não esteja explicitamente nos dados do contexto.
-Se a conta tem spend $0 ou sem campanhas: não existe histórico. Não invente padrões, não cite médias do setor como se fossem dados da conta.
+Se a conta tem spend $0: significa sem gasto recente — mas campanhas pausadas NO CONTEXTO são dados reais, mencione-as. "Não há histórico" só se CAMPAIGNS também estiver vazio. Não invente padrões, não cite médias do setor como se fossem dados da conta.
 Dado real do contexto > qualquer generalização.
 
 ZERO CLAIMS INVERIFICÁVEIS
