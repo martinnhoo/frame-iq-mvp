@@ -297,7 +297,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
       backdropFilter:"blur(12px)",
       borderRadius:14,padding:"16px",display:"flex",flexDirection:"column",gap:10,
       transition:"border-color 0.2s,box-shadow 0.2s",opacity:isDragging?0.9:1,
-      cursor:"grab",height:"100%",boxSizing:"border-box" as const,overflow:"hidden",
+      cursor:"grab",height:"100%",boxSizing:"border-box" as const,overflow:"visible",
     }}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -478,7 +478,7 @@ export default function PerformanceDashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         .perf-card{animation:fadeIn 0.3s ease both}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
         @media(max-width:640px){
