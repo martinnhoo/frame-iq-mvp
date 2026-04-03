@@ -277,7 +277,7 @@ function DashboardBlock({block}:{block:Block}) {
               {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#4ade80")}
             </svg>
             <div style={{display:"flex",gap:12,marginTop:6}}>
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0284c7",display:"inline-block",borderRadius:1}}/> CTR</span>
+              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0369a1",display:"inline-block",borderRadius:1}}/> CTR</span>
               {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
               <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
             </div>
@@ -2569,6 +2569,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 40px",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
+          <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
           <ThinkingIndicator lang={lang} variant="chat" label={(() => {
               const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
               if(pendingFn==="generate-hooks") return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
@@ -2576,6 +2577,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               if(pendingFn==="generate-brief") return lang==="pt"?"Criando brief...":lang==="es"?"Creando brief...":"Creating brief...";
               return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
             })()}/>
+          </div>
         )}
         {/* Inline tool panel — only show when not loading */}
         {activeTool&&activeTool!=="dashboard"&&!loading&&!messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(

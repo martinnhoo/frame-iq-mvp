@@ -81,11 +81,9 @@ export function ThinkingIndicator({ lang = "pt", variant = "chat", label }: Prop
   // chat variant — appears in message stream
   return (
     <div style={{ maxWidth: 680, margin: "0 auto 14px", display: "flex", gap: 10, alignItems: "center" }}>
-      {/* AI avatar */}
-      <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, rgba(14,165,233,0.25), rgba(99,102,241,0.15))", border: "1px solid rgba(14,165,233,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#0ea5e9" opacity="0.9"/>
-        </svg>
+      {/* AI avatar — logo real do AdBrief */}
+      <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.22)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+        <img src="/ab-avatar.png" alt="AdBrief AI" width={28} height={28} style={{ objectFit: "cover", borderRadius: 7 }} />
       </div>
       {/* Thinking text + animated dots */}
       <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "8px 14px", borderRadius: 20, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
