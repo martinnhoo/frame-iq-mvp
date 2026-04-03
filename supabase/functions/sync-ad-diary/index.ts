@@ -64,10 +64,10 @@ Deno.serve(async (req) => {
           console.log("[sync-ad-diary] Meta account:", acc.id);
           // Use /insights?level=ad — same as live-metrics, works for paused ads too
           const insFields = "ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values,frequency";
-          const timeRange = encodeURIComponent(JSON.stringify({ since, until: today }));
-          const insRes = await fetch(
-            `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range=${timeRange}&sort=spend_descending&limit=200&access_token=${conn.access_token}`
-          );
+          // Use same format as live-metrics (unencoded time_range — Meta API parses it correctly)
+          const insUrl = `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=200&access_token=${conn.access_token}`;
+          console.log("[sync-ad-diary] Meta URL:", insUrl.replace(conn.access_token, "TOKEN"));
+          const insRes = await fetch(insUrl);
           if (!insRes.ok) { errors.push(`Meta HTTP ${insRes.status}`); continue; }
 
           const j = await insRes.json();
