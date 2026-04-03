@@ -82,30 +82,61 @@ serve(async (req) => {
 
     const platformName = platform === "google" ? "Google Ads" : "Meta Ads";
 
-    const prompt = `Você é o co-piloto de campanhas do AdBrief — um media buyer sênior que comenta em tempo real enquanto o gestor configura uma campanha.
+    // Fetch live Meta data — same approach as adbrief-ai-chat
+    let liveMetaCtx = "";
+    try {
+      const { data: metaConns } = await sb.from("platform_connections" as any)
+        .select("access_token, ad_accounts, selected_account_id")
+        .eq("user_id", user_id).eq("persona_id", persona_id).eq("platform", "meta").eq("status", "active");
+      const mc = (metaConns as any[])?.[0];
+      if (mc?.access_token) {
+        const accs = mc.ad_accounts || [];
+        const acc = (mc.selected_account_id && accs.find((a: any) => a.id === mc.selected_account_id)) || accs[0];
+        if (acc?.id) {
+          const since = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
+          const today = new Date().toISOString().split("T")[0];
+          const fields = "campaign_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,frequency";
+          const r = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=20&access_token=${mc.access_token}`);
+          const j = await r.json();
+          if (j.data?.length) {
+            const ads = j.data.slice(0, 10).map((a: any) => {
+              const ctr = (parseFloat(a.ctr || "0")).toFixed(2);
+              const spend = parseFloat(a.spend || "0").toFixed(0);
+              const freq = parseFloat(a.frequency || "0").toFixed(1);
+              return `  ${a.ad_name}: R$${spend} spend, CTR ${ctr}%, freq ${freq}x`;
+            }).join("\n");
+            liveMetaCtx = `ANÚNCIOS ATIVOS (últimos 90 dias):\n${ads}`;
+          }
+        }
+      }
+    } catch (_) {}
+
+    const isChat = trigger === "chat";
+    const userQuestion = form_ctx?.user_question || "";
+
+    const prompt = `Você é o co-piloto de campanhas do AdBrief — media buyer sênior com acesso aos dados reais da conta.
 
 PLATAFORMA: ${platformName}
 CONTA: ${persona_name}
 
 DADOS DA CONTA:
 ${acct}
-
-${patsText ? `PADRÕES APRENDIDOS:\n${patsText}` : ""}
+${liveMetaCtx ? `\n${liveMetaCtx}` : ""}
+${patsText ? `\nPADRÕES APRENDIDOS:\n${patsText}` : ""}
 ${goalText ? `\n${goalText}` : ""}
-${memText ? `\nO QUE O USUÁRIO DISSE NO CHAT:\n${memText}` : ""}
+${memText ? `\nCONTEXTO DO USUÁRIO:\n${memText}` : ""}
 
-ETAPA ATUAL: ${trigger}
+${isChat ? `PERGUNTA DO USUÁRIO: "${userQuestion}"
+
+Responda diretamente à pergunta. Use os dados reais da conta acima. Seja direto e específico. Máx 3 linhas.` : `ETAPA ATUAL: ${trigger}
 FORMULÁRIO: ${JSON.stringify(form_ctx)}
 
-INSTRUÇÕES:
-- Gere 1 a 3 comentários CURTOS e DIRETOS (máx 2 linhas cada)
-- Seja ESPECÍFICO: use os números reais da conta
-- Se o usuário mencionou metas (ex: "10 agendamentos/mês") e temos CPA histórico, calcule o orçamento necessário
-- Se não há histórico, use benchmarks do mercado brasileiro (ex: CPA médio de leads no Meta BR: R$15-80 dependendo do nicho)
-- Nunca invente dados que não existem
-- tipos: "tip" (sugestão), "warn" (alerta), "insight" (dado relevante), "ok" (confirmação positiva)
+Gere 1-2 comentários curtos e diretos sobre o que foi preenchido. Use dados reais da conta.`}
 
-Responda APENAS com JSON válido, sem texto antes ou depois:
+NUNCA invente números. Se não há dados, use benchmarks BR (CPA leads Meta BR: R$15-80).
+tipos: "tip" (sugestão), "warn" (alerta), "insight" (dado), "ok" (positivo)
+
+Responda APENAS com JSON válido:
 [{"type":"tip"|"warn"|"insight"|"ok","text":"..."}]`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {

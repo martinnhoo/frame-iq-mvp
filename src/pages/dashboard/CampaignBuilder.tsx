@@ -10,7 +10,7 @@ import {
 
 type Platform = "meta" | "google";
 interface Persona { id: string; name: string; result?: any; }
-interface AiMsg  { id: string; text: string; type: "tip"|"warn"|"insight"|"ok"; }
+interface AiMsg  { id: string; text: string; type: "tip"|"warn"|"insight"|"ok"; fromUser?: boolean; }
 interface Form {
   name: string;
   objective: string; optimization_goal: string; cbo: boolean;
@@ -592,15 +592,19 @@ export default function CampaignBuilder() {
           <div ref={aiRef} style={{flex:1,overflowY:"auto",padding:14}}>
             {aiMsgs.length===0&&!aiLoading&&(
               <div style={{textAlign:"center",padding:"32px 14px"}}>
-                <div style={{fontSize:28,marginBottom:10}}>🧠</div>
+
                 <p style={{color:MT,fontSize:13,margin:0,lineHeight:1.7}}>Preencha os campos e o co-piloto vai comentar com base nos dados da sua conta.</p>
               </div>
             )}
             {aiMsgs.map(msg=>(
-              <div key={msg.id} style={{...msgSt(msg.type),animation:"fadeUp 0.25s ease"}}>
-                <span style={{flexShrink:0}}>{msgIc(msg.type)}</span>
-                <span>{msg.text}</span>
-              </div>
+              msg.fromUser
+                ? <div key={msg.id} style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+                    <span style={{fontSize:12,padding:"7px 11px",background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.25)",borderRadius:"10px 10px 3px 10px",color:"#7dd3fc",maxWidth:"85%"}}>{msg.text}</span>
+                  </div>
+                : <div key={msg.id} style={{...msgSt(msg.type),animation:"fadeUp 0.25s ease"}}>
+                    <span style={{flexShrink:0}}>{msgIc(msg.type)}</span>
+                    <span>{msg.text}</span>
+                  </div>
             ))}
             {aiLoading&&(
               <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:`${pc}08`,border:`1px solid ${pc}18`,borderRadius:10}}>
@@ -610,9 +614,19 @@ export default function CampaignBuilder() {
             )}
           </div>
           <div style={{padding:"10px 14px",borderTop:`1px solid ${BD}`}}>
-            <div style={{display:"flex",gap:5,alignItems:"center"}}>
-              <TrendingUp size={11} color={MT}/>
-              <p style={{margin:0,fontSize: 12,color:MT}}>{persona?persona.name:"Selecione uma conta"}</p>
+            <div style={{display:"flex",gap:6}}>
+              <input
+                placeholder="Pergunte sobre sua campanha..."
+                onKeyDown={async(e)=>{
+                  if(e.key==="Enter"&&e.currentTarget.value.trim()){
+                    const q=e.currentTarget.value.trim();
+                    e.currentTarget.value="";
+                    setAiMsgs(prev=>[...prev,{id:Math.random().toString(36).slice(2),type:"tip",text:q,fromUser:true}]);
+                    await askAI("chat",{...form,user_question:q});
+                  }
+                }}
+                style={{flex:1,padding:"7px 10px",background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:8,color:TX,fontSize:12,fontFamily:"'DM Sans',system-ui,sans-serif",outline:"none"}}
+              />
             </div>
           </div>
         </div>
