@@ -62,35 +62,39 @@ Deno.serve(async (req) => {
           if (!acc?.id) { errors.push("Meta: conta de anúncios não configurada"); continue; }
 
           console.log("[sync-ad-diary] Meta account:", acc.id);
-          const fields = "id,name,status,adset{name},campaign{name},created_time,updated_time,insights.date_preset(last_90_days){spend,impressions,clicks,ctr,cpc,actions,action_values,frequency}";
-          // effective_status: Meta only returns ACTIVE by default — must explicitly include PAUSED/ARCHIVED
-          const res = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${encodeURIComponent(fields)}&effective_status=[%22ACTIVE%22,%22PAUSED%22,%22ARCHIVED%22]&limit=200&access_token=${conn.access_token}`);
-          if (!res.ok) { errors.push(`Meta HTTP ${res.status}`); continue; }
+          // Use /insights?level=ad — same as live-metrics, works for paused ads too
+          const insFields = "ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values,frequency";
+          const timeRange = encodeURIComponent(JSON.stringify({ since, until: today }));
+          const insRes = await fetch(
+            `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range=${timeRange}&sort=spend_descending&limit=200&access_token=${conn.access_token}`
+          );
+          if (!insRes.ok) { errors.push(`Meta HTTP ${insRes.status}`); continue; }
 
-          const j = await res.json();
-          console.log("[sync-ad-diary] Meta raw ads:", j.data?.length ?? 0, j.error?.message || "ok");
+          const j = await insRes.json();
+          console.log("[sync-ad-diary] Meta insights ads:", j.data?.length ?? 0, j.error?.message || "ok");
           if (j.error) { errors.push(`Meta API: ${j.error.message} (code ${j.error.code})`); continue; }
-          if (!j.data?.length) { errors.push(`Meta: API retornou 0 ads (conta: ${acc.id})`); continue; }
+          if (!j.data?.length) { errors.push(`Meta: 0 ads com spend nos últimos 90 dias (conta: ${acc.id})`); continue; }
 
-          const rows = (j.data || []).map((ad: any) => {
-            const ins = ad.insights?.data?.[0] || {};
+          const rows = (j.data || []).map((ins: any) => {
             const spend = parseFloat(ins.spend || "0");
             const rawCtr = parseFloat(ins.ctr || "0");
-            const ctr = rawCtr > 1 ? rawCtr / 100 : rawCtr; // Meta returns % sometimes
+            const ctr = rawCtr > 1 ? rawCtr / 100 : rawCtr;
             const cpc = parseFloat(ins.cpc || "0");
             const freq = parseFloat(ins.frequency || "0");
             const conv = parseFloat((ins.actions || []).find((a: any) => a.action_type === "purchase")?.value || "0");
             const convVal = parseFloat((ins.action_values || []).find((a: any) => a.action_type === "purchase")?.value || "0");
             const roas = spend > 0 && convVal > 0 ? convVal / spend : null;
-            const status = ad.status?.toLowerCase() || "unknown";
-            const launched = ad.created_time?.split("T")[0] || null;
-            const paused = (status === "paused" || status === "archived") ? ad.updated_time?.split("T")[0] : null;
-            const days = launched ? Math.round((Date.now() - new Date(launched).getTime()) / 86400000) : 0;
-            const verd = calcVerdict({ ctr, spend, roas, frequency: freq, status: ad.status });
-            return { user_id, persona_id, platform: "meta", ad_id: ad.id, ad_name: ad.name || "Sem nome",
-              campaign_name: ad.campaign?.name || null, adset_name: ad.adset?.name || null,
-              status, launched_at: launched, paused_at: paused, days_running: days,
-              spend, impressions: parseInt(ins.impressions || "0"), clicks: parseInt(ins.clicks || "0"),
+            // Infer status from spend: ads with 0 recent spend are likely paused
+            const status = spend > 0 ? "active" : "paused";
+            const verd = calcVerdict({ ctr, spend, roas, frequency: freq, status });
+            return { user_id, persona_id, platform: "meta",
+              ad_id: ins.ad_id || ins.ad_name || String(Math.random()),
+              ad_name: ins.ad_name || "Sem nome",
+              campaign_name: ins.campaign_name || null,
+              adset_name: ins.adset_name || null,
+              status, launched_at: null, paused_at: null, days_running: 0,
+              spend, impressions: parseInt(ins.impressions || "0"),
+              clicks: parseInt(ins.clicks || "0"),
               ctr, cpc, conversions: conv, conv_value: convVal, roas, frequency: freq,
               verdict: verd.verdict, verdict_reason: verd.reason,
               peak_ctr: ctr, synced_at: new Date().toISOString() };
