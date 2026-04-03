@@ -149,9 +149,11 @@ export function DashboardSidebar({
     if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
     // First check if any platform is actually connected for this account
     (supabase as any).from("platform_connections")
-      .select("platform", { count: "exact", head: true })
+      .select("platform")
       .eq("user_id", user.id).eq("persona_id", selectedPersona.id).eq("status", "active")
-      .then(({ count }: any) => {
+      .limit(1)
+      .then(({ data }: any) => {
+        const count = data?.length || 0;
         if (!count || count === 0) { setKpi(null); return; }
         // Platform is connected — show connected state even without snapshots yet
         setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
