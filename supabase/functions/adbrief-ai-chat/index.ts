@@ -2088,10 +2088,12 @@ DASHBOARD quando pedir performance: bloco "dashboard" com dados reais. Sem dados
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${(() => {
-  // richContext has live Meta/Google API data (liveMetaData) — always prefer it.
-  // frontend `context` is a DB-only snapshot that does NOT include Meta API data.
-  // Only fall back to frontend context if richContext is empty (e.g. no connections yet).
-  const ctx = richContext && richContext.trim().length > 50 ? richContext : (typeof context === "string" ? context : "");
+  // richContext is an array — join to string before any .trim() calls.
+  // Always prefer richContext (has live Meta API data) over frontend context (DB-only, no Meta data).
+  const richCtxStr = Array.isArray(richContext)
+    ? (richContext as string[]).filter(Boolean).join("\n\n")
+    : String(richContext || "");
+  const ctx = richCtxStr.trim().length > 50 ? richCtxStr : (typeof context === "string" ? context : "");
   if (ctx && ctx.trim().length > 50) return ctx;
   return `**SEM DADOS DE CONTA AINDA.**
 Você ainda não tem histórico desta conta. Diga isso uma vez e convide a conectar ou usar uma ferramenta.
@@ -2297,7 +2299,7 @@ PROIBIDO:
       }
     })().catch(() => {});
 
-    return new Response(JSON.stringify({ blocks: finalBlocks, _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: richContext && richContext.trim().length > 50 ? "rich" : "frontend" } }), {
+    return new Response(JSON.stringify({ blocks: finalBlocks, _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: richCtxStr && richCtxStr.trim().length > 50 ? "rich" : "frontend" } }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
