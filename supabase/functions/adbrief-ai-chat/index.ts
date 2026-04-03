@@ -15,20 +15,25 @@ Deno.serve(async (req) => {
     const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
 
     // ── Auth check — runs first for ALL modes including panel_data ────────────
-    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")??"", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")??"");
+    const sbAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
     const authHeaderEarly = req.headers.get("Authorization");
     if (authHeaderEarly?.startsWith("Bearer ")) {
       const earlyToken = authHeaderEarly.slice(7);
-      const { data: { user: earlyUser }, error: earlyAuthError } = await sbAuth.auth.getUser(earlyToken);
+      const {
+        data: { user: earlyUser },
+        error: earlyAuthError,
+      } = await sbAuth.auth.getUser(earlyToken);
       if (earlyAuthError || !earlyUser || earlyUser.id !== user_id) {
         return new Response(JSON.stringify({ error: "unauthorized" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     } else if (user_id) {
       // No auth header at all — reject
       return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -42,7 +47,8 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!personaCheck) {
         return new Response(JSON.stringify({ error: "unauthorized" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
@@ -52,126 +58,274 @@ Deno.serve(async (req) => {
       const sbPanel = sbAuth;
       const platforms: string[] = body.platforms || [];
       const result: Record<string, any> = {};
-      const today = body.date_to || new Date().toISOString().split("T")[0];
+      const today = body.date_to || body.date_to || new Date().toISOString().split("T")[0];
       const since = body.date_from || new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
 
       // Meta Ads
       if (platforms.includes("meta")) {
-        const { data: mcAll } = await sbPanel.from("platform_connections" as any)
+        const { data: mcAll } = await sbPanel
+          .from("platform_connections" as any)
           .select("access_token, ad_accounts, selected_account_id, persona_id")
-          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
+          .eq("user_id", user_id)
+          .eq("platform", "meta")
+          .eq("status", "active");
         const mcList = (mcAll as any[]) || [];
         const mc = persona_id
-          ? (mcList.find((c:any) => c.persona_id === persona_id) || mcList.find((c:any) => !c.persona_id) || mcList[0] || null)
-          : (mcList[0] || null);
+          ? mcList.find((c: any) => c.persona_id === persona_id) ||
+            mcList.find((c: any) => !c.persona_id) ||
+            mcList[0] ||
+            null
+          : mcList[0] || null;
         if (mc?.access_token) {
           const token = mc.access_token;
-          const acc = (mc.ad_accounts||[]).find((a:any)=>a.id===mc.selected_account_id)||(mc.ad_accounts||[])[0];
+          const acc =
+            (mc.ad_accounts || []).find((a: any) => a.id === mc.selected_account_id) || (mc.ad_accounts || [])[0];
           if (acc) {
-            const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
-            const [r1,r2,r3,r4] = await Promise.allSettled([
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`),
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=60&access_token=${token}`),
+            const fields =
+              "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+            const [r1, r2, r3, r4] = await Promise.allSettled([
+              fetch(
+                `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`,
+              ),
+              fetch(
+                `https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`,
+              ),
+              fetch(
+                `https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=60&access_token=${token}`,
+              ),
               fetch(`https://graph.facebook.com/v21.0/${acc.id}?fields=currency,timezone_name&access_token=${token}`),
             ]);
-            const ads    = r1.status==="fulfilled"?await r1.value.json():null;
-            const camps  = r2.status==="fulfilled"?await r2.value.json():null;
-            const ts     = r3.status==="fulfilled"?await r3.value.json():null;
-            const accInfo = r4.status==="fulfilled"?await r4.value.json():null;
+            const ads = r1.status === "fulfilled" ? await r1.value.json() : null;
+            const camps = r2.status === "fulfilled" ? await r2.value.json() : null;
+            const ts = r3.status === "fulfilled" ? await r3.value.json() : null;
+            const accInfo = r4.status === "fulfilled" ? await r4.value.json() : null;
             const currency = accInfo?.currency || "BRL";
-            const currSymbol = currency === "BRL" ? "R$" : currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "MXN" ? "$" : currency;
-            if (ads?.error?.code===190||camps?.error?.code===190) {
-              result.meta = { error: "token_expired", account_name: acc.name||acc.id };
+            const currSymbol =
+              currency === "BRL"
+                ? "R$"
+                : currency === "USD"
+                  ? "$"
+                  : currency === "EUR"
+                    ? "€"
+                    : currency === "MXN"
+                      ? "$"
+                      : currency;
+            if (ads?.error?.code === 190 || camps?.error?.code === 190) {
+              result.meta = { error: "token_expired", account_name: acc.name || acc.id };
             } else {
-              const adsData: any[] = ads?.data||[];
-              const totalSpend = adsData.reduce((s:number,a:any)=>s+parseFloat(a.spend||0),0);
-              const totalImpr  = adsData.reduce((s:number,a:any)=>s+parseInt(a.impressions||0),0);
-              const totalClicks= adsData.reduce((s:number,a:any)=>s+parseInt(a.clicks||0),0);
-              const avgCTR = totalImpr>0?(totalClicks/totalImpr*100):0;
-              const avgCPM = totalImpr>0?(totalSpend/totalImpr*1000):0;
-              const avgFreq= adsData.length>0?adsData.reduce((s:number,a:any)=>s+parseFloat(a.frequency||0),0)/adsData.length:0;
-              const totalConv = adsData.reduce((s:number,a:any)=>{
-                const p=parseFloat(a.actions?.find((x:any)=>x.action_type==="purchase")?.value||0);
-                const l=parseFloat(a.actions?.find((x:any)=>x.action_type==="lead")?.value||0);
-                return s+p+l;
-              },0);
-              const enriched = adsData.map((a:any)=>{
-                const spend=parseFloat(a.spend||0),ctr=parseFloat(a.ctr||0)*100,freq=parseFloat(a.frequency||0);
-                const hookRate=()=>{const plays=a.video_play_actions?.find((x:any)=>x.action_type==="video_play")?.value;const impr=parseInt(a.impressions||0);return plays&&impr?parseFloat(plays)/impr*100:null;};
-                return {name:a.ad_name,campaign:a.campaign_name,spend,ctr,cpm:parseFloat(a.cpm||0),freq,hookRate:hookRate(),
-                  conv:parseFloat(a.actions?.find((x:any)=>x.action_type==="purchase")?.value||a.actions?.find((x:any)=>x.action_type==="lead")?.value||0),
-                  isRisk:freq>3.5||(ctr<0.5&&spend>20),isWinner:ctr>1.5&&freq<3&&spend>5};
-              }).sort((a:any,b:any)=>b.spend-a.spend);
+              const adsData: any[] = ads?.data || [];
+              const totalSpend = adsData.reduce((s: number, a: any) => s + parseFloat(a.spend || 0), 0);
+              const totalImpr = adsData.reduce((s: number, a: any) => s + parseInt(a.impressions || 0), 0);
+              const totalClicks = adsData.reduce((s: number, a: any) => s + parseInt(a.clicks || 0), 0);
+              const avgCTR = totalImpr > 0 ? (totalClicks / totalImpr) * 100 : 0;
+              const avgCPM = totalImpr > 0 ? (totalSpend / totalImpr) * 1000 : 0;
+              const avgFreq =
+                adsData.length > 0
+                  ? adsData.reduce((s: number, a: any) => s + parseFloat(a.frequency || 0), 0) / adsData.length
+                  : 0;
+              const totalConv = adsData.reduce((s: number, a: any) => {
+                const p = parseFloat(a.actions?.find((x: any) => x.action_type === "purchase")?.value || 0);
+                const l = parseFloat(a.actions?.find((x: any) => x.action_type === "lead")?.value || 0);
+                return s + p + l;
+              }, 0);
+              const enriched = adsData
+                .map((a: any) => {
+                  const spend = parseFloat(a.spend || 0),
+                    ctr = parseFloat(a.ctr || 0) * 100,
+                    freq = parseFloat(a.frequency || 0);
+                  const hookRate = () => {
+                    const plays = a.video_play_actions?.find((x: any) => x.action_type === "video_play")?.value;
+                    const impr = parseInt(a.impressions || 0);
+                    return plays && impr ? (parseFloat(plays) / impr) * 100 : null;
+                  };
+                  return {
+                    name: a.ad_name,
+                    campaign: a.campaign_name,
+                    spend,
+                    ctr,
+                    cpm: parseFloat(a.cpm || 0),
+                    freq,
+                    hookRate: hookRate(),
+                    conv: parseFloat(
+                      a.actions?.find((x: any) => x.action_type === "purchase")?.value ||
+                        a.actions?.find((x: any) => x.action_type === "lead")?.value ||
+                        0,
+                    ),
+                    isRisk: freq > 3.5 || (ctr < 0.5 && spend > 20),
+                    isWinner: ctr > 1.5 && freq < 3 && spend > 5,
+                  };
+                })
+                .sort((a: any, b: any) => b.spend - a.spend);
               result.meta = {
-                account_name: acc.name||acc.id, period: `${since} → ${today}`,
-                currency, currency_symbol: currSymbol,
-                kpis: { spend:totalSpend.toFixed(2), ctr:avgCTR.toFixed(2), cpm:avgCPM.toFixed(2), frequency:avgFreq.toFixed(1), conversions:totalConv.toFixed(0), active_ads:adsData.length },
-                winners: enriched.filter((a:any)=>a.isWinner).slice(0,5),
-                at_risk:  enriched.filter((a:any)=>a.isRisk).slice(0,5),
-                top_ads:  enriched.slice(0,10),
-                campaigns: (camps?.data||[]).slice(0,10).map((c:any)=>({
-                  name:c.name, status:c.effective_status||c.status,
-                  budget:c.daily_budget?`${currSymbol}${(parseInt(c.daily_budget)/100).toFixed(0)}/dia`:c.lifetime_budget?`${currSymbol}${(parseInt(c.lifetime_budget)/100).toFixed(0)} total`:"—",
-                  objective:c.objective
+                account_name: acc.name || acc.id,
+                period: `${since} → ${today}`,
+                currency,
+                currency_symbol: currSymbol,
+                kpis: {
+                  spend: totalSpend.toFixed(2),
+                  ctr: avgCTR.toFixed(2),
+                  cpm: avgCPM.toFixed(2),
+                  frequency: avgFreq.toFixed(1),
+                  conversions: totalConv.toFixed(0),
+                  active_ads: adsData.length,
+                },
+                winners: enriched.filter((a: any) => a.isWinner).slice(0, 5),
+                at_risk: enriched.filter((a: any) => a.isRisk).slice(0, 5),
+                top_ads: enriched.slice(0, 10),
+                campaigns: (camps?.data || []).slice(0, 10).map((c: any) => ({
+                  name: c.name,
+                  status: c.effective_status || c.status,
+                  budget: c.daily_budget
+                    ? `${currSymbol}${(parseInt(c.daily_budget) / 100).toFixed(0)}/dia`
+                    : c.lifetime_budget
+                      ? `${currSymbol}${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total`
+                      : "—",
+                  objective: c.objective,
                 })),
-                time_series: (ts?.data||[]).filter((d:any)=>parseFloat(d.spend||0)>0).map((d:any)=>({
-                  date:d.date_start, spend:parseFloat(d.spend||0), ctr:parseFloat(d.ctr||0)*100, cpm:parseFloat(d.cpm||0)
-                })),
+                time_series: (ts?.data || [])
+                  .filter((d: any) => parseFloat(d.spend || 0) > 0)
+                  .map((d: any) => ({
+                    date: d.date_start,
+                    spend: parseFloat(d.spend || 0),
+                    ctr: parseFloat(d.ctr || 0) * 100,
+                    cpm: parseFloat(d.cpm || 0),
+                  })),
               };
             }
-          } else { result.meta = { error: "no_account_selected" }; }
-        } else { result.meta = { error: "not_connected" }; }
+          } else {
+            result.meta = { error: "no_account_selected" };
+          }
+        } else {
+          result.meta = { error: "not_connected" };
+        }
       }
 
       // Google Ads
       if (platforms.includes("google")) {
-        const { data: gc } = await sbPanel.from("platform_connections" as any)
+        const { data: gc } = await sbPanel
+          .from("platform_connections" as any)
           .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id")
-          .eq("user_id", user_id).eq("persona_id", persona_id).eq("platform", "google").eq("status", "active").maybeSingle();
+          .eq("user_id", user_id)
+          .eq("persona_id", persona_id)
+          .eq("platform", "google")
+          .eq("status", "active")
+          .maybeSingle();
         if (gc?.access_token) {
           let token = gc.access_token;
-          if (gc.expires_at && new Date(gc.expires_at)<new Date()) {
-            const rr = await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:Deno.env.get("GOOGLE_CLIENT_ID")??"",client_secret:Deno.env.get("GOOGLE_CLIENT_SECRET")??"",refresh_token:gc.refresh_token??"",grant_type:"refresh_token"})});
+          if (gc.expires_at && new Date(gc.expires_at) < new Date()) {
+            const rr = await fetch("https://oauth2.googleapis.com/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
+                client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "",
+                refresh_token: gc.refresh_token ?? "",
+                grant_type: "refresh_token",
+              }),
+            });
             const rd = await rr.json();
-            if (rd.access_token) { token = rd.access_token; await sbPanel.from("platform_connections" as any).update({access_token:token,expires_at:new Date(Date.now()+(rd.expires_in||3600)*1000).toISOString()}).eq("user_id",user_id).eq("persona_id",persona_id).eq("platform","google"); }
+            if (rd.access_token) {
+              token = rd.access_token;
+              await sbPanel
+                .from("platform_connections" as any)
+                .update({
+                  access_token: token,
+                  expires_at: new Date(Date.now() + (rd.expires_in || 3600) * 1000).toISOString(),
+                })
+                .eq("user_id", user_id)
+                .eq("persona_id", persona_id)
+                .eq("platform", "google");
+            }
           }
-          const acc = (gc.ad_accounts||[]).find((a:any)=>a.id===gc.selected_account_id)||(gc.ad_accounts||[])[0];
+          const acc =
+            (gc.ad_accounts || []).find((a: any) => a.id === gc.selected_account_id) || (gc.ad_accounts || [])[0];
           if (acc) {
-            const custId = acc.id.replace(/-/g,"");
-            const hdr = {"Authorization":`Bearer ${token}`,"Content-Type":"application/json","developer-token":Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")??""}; // login-customer-id removed
-            const gq = (q:string)=>fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`,{method:"POST",headers:hdr,body:JSON.stringify({query:q})}).then(r=>r.json());
-            const [cr,ar,tr] = await Promise.allSettled([
-              gq(`SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
-              gq(`SELECT ad_group_ad.ad.name,ad_group_ad.ad.type,campaign.name,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`),
-              gq(`SELECT segments.date,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC LIMIT 14`),
+            const custId = acc.id.replace(/-/g, "");
+            const hdr = {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "developer-token": Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN") ?? "",
+            }; // login-customer-id removed
+            const gq = (q: string) =>
+              fetch(`https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`, {
+                method: "POST",
+                headers: hdr,
+                body: JSON.stringify({ query: q }),
+              }).then((r) => r.json());
+            const [cr, ar, tr] = await Promise.allSettled([
+              gq(
+                `SELECT campaign.name,campaign.status,campaign.advertising_channel_type,metrics.impressions,metrics.clicks,metrics.ctr,metrics.average_cpc,metrics.cost_micros,metrics.conversions FROM campaign WHERE segments.date BETWEEN '${since}' AND '${today}' AND campaign.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`,
+              ),
+              gq(
+                `SELECT ad_group_ad.ad.name,ad_group_ad.ad.type,campaign.name,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${today}' AND ad_group_ad.status!='REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 20`,
+              ),
+              gq(
+                `SELECT segments.date,metrics.impressions,metrics.clicks,metrics.ctr,metrics.cost_micros,metrics.conversions FROM customer WHERE segments.date BETWEEN '${since}' AND '${today}' ORDER BY segments.date ASC LIMIT 14`,
+              ),
             ]);
-            const parse=(r:any)=>r.status==="fulfilled"?(r.value?.results||[]):[];
-            const gcs=parse(cr),gas=parse(ar),gts=parse(tr);
-            const totSpend=gcs.reduce((s:number,r:any)=>s+((r.metrics?.costMicros||0)/1e6),0);
-            const totConv=gcs.reduce((s:number,r:any)=>s+(r.metrics?.conversions||0),0);
-            const totClk=gcs.reduce((s:number,r:any)=>s+(r.metrics?.clicks||0),0);
-            const totImpr=gcs.reduce((s:number,r:any)=>s+(r.metrics?.impressions||0),0);
+            const parse = (r: any) => (r.status === "fulfilled" ? r.value?.results || [] : []);
+            const gcs = parse(cr),
+              gas = parse(ar),
+              gts = parse(tr);
+            const totSpend = gcs.reduce((s: number, r: any) => s + (r.metrics?.costMicros || 0) / 1e6, 0);
+            const totConv = gcs.reduce((s: number, r: any) => s + (r.metrics?.conversions || 0), 0);
+            const totClk = gcs.reduce((s: number, r: any) => s + (r.metrics?.clicks || 0), 0);
+            const totImpr = gcs.reduce((s: number, r: any) => s + (r.metrics?.impressions || 0), 0);
             result.google = {
-              account_name:acc.name||custId, period:`${since} → ${today}`,
-              kpis:{spend:totSpend.toFixed(2),ctr:totImpr>0?(totClk/totImpr*100).toFixed(2):"0",cpc:totClk>0?(totSpend/totClk).toFixed(2):"0",conversions:totConv.toFixed(0),impressions:totImpr.toLocaleString(),active_campaigns:gcs.length},
-              campaigns:gcs.slice(0,10).map((r:any)=>({name:r.campaign?.name||"—",status:r.campaign?.status||"—",spend:((r.metrics?.costMicros||0)/1e6).toFixed(2),ctr:((r.metrics?.ctr||0)*100).toFixed(2),conversions:(r.metrics?.conversions||0).toFixed(1)})),
-              top_ads:gas.slice(0,10).map((r:any)=>({name:r.adGroupAd?.ad?.name||"Ad",campaign:r.campaign?.name||"—",spend:((r.metrics?.costMicros||0)/1e6).toFixed(2),ctr:((r.metrics?.ctr||0)*100).toFixed(2),conversions:(r.metrics?.conversions||0).toFixed(1)})),
-              time_series:gts.map((r:any)=>({date:r.segments?.date,spend:(r.metrics?.costMicros||0)/1e6,ctr:(r.metrics?.ctr||0)*100})).filter((d:any)=>d.spend>0),
+              account_name: acc.name || custId,
+              period: `${since} → ${today}`,
+              kpis: {
+                spend: totSpend.toFixed(2),
+                ctr: totImpr > 0 ? ((totClk / totImpr) * 100).toFixed(2) : "0",
+                cpc: totClk > 0 ? (totSpend / totClk).toFixed(2) : "0",
+                conversions: totConv.toFixed(0),
+                impressions: totImpr.toLocaleString(),
+                active_campaigns: gcs.length,
+              },
+              campaigns: gcs
+                .slice(0, 10)
+                .map((r: any) => ({
+                  name: r.campaign?.name || "—",
+                  status: r.campaign?.status || "—",
+                  spend: ((r.metrics?.costMicros || 0) / 1e6).toFixed(2),
+                  ctr: ((r.metrics?.ctr || 0) * 100).toFixed(2),
+                  conversions: (r.metrics?.conversions || 0).toFixed(1),
+                })),
+              top_ads: gas
+                .slice(0, 10)
+                .map((r: any) => ({
+                  name: r.adGroupAd?.ad?.name || "Ad",
+                  campaign: r.campaign?.name || "—",
+                  spend: ((r.metrics?.costMicros || 0) / 1e6).toFixed(2),
+                  ctr: ((r.metrics?.ctr || 0) * 100).toFixed(2),
+                  conversions: (r.metrics?.conversions || 0).toFixed(1),
+                })),
+              time_series: gts
+                .map((r: any) => ({
+                  date: r.segments?.date,
+                  spend: (r.metrics?.costMicros || 0) / 1e6,
+                  ctr: (r.metrics?.ctr || 0) * 100,
+                }))
+                .filter((d: any) => d.spend > 0),
             };
-          } else { result.google = { error: "no_account_selected" }; }
-        } else { result.google = { error: "not_connected" }; }
+          } else {
+            result.google = { error: "no_account_selected" };
+          }
+        } else {
+          result.google = { error: "not_connected" };
+        }
       }
 
       return new Response(JSON.stringify({ success: true, data: result }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     // ── End panel_data mode ──────────────────────────────────────────────────
 
     if (!message || !user_id) {
       return new Response(JSON.stringify({ error: "missing_params" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -180,11 +334,15 @@ Deno.serve(async (req) => {
 
     // ── 2. Plan check + atomic rate limiting ─────────────────────────────────
     const { data: profileRow } = await supabase
-      .from("profiles").select("plan, email, dashboard_count").eq("id", user_id).maybeSingle();
+      .from("profiles")
+      .select("plan, email, dashboard_count")
+      .eq("id", user_id)
+      .maybeSingle();
     const plan = getEffectivePlan(profileRow?.plan, (profileRow as any)?.email);
-    const planKey = (["free","maker","pro","studio"].includes(plan)
-      ? plan
-      : ({ creator:"maker", starter:"pro", scale:"studio" } as any)[plan]) || "free";
+    const planKey =
+      (["free", "maker", "pro", "studio"].includes(plan)
+        ? plan
+        : ({ creator: "maker", starter: "pro", scale: "studio" } as any)[plan]) || "free";
 
     const todayDate = new Date().toISOString().slice(0, 10);
     const monthKey = todayDate.slice(0, 7); // YYYY-MM
@@ -193,34 +351,37 @@ Deno.serve(async (req) => {
     const COST_PER_MSG = 0.0236;
 
     // ── Plan revenue & thresholds
-    const PLAN_REVENUE:    Record<string, number> = { free: 0,   maker: 19,  pro: 49,  studio: 149 };
-    const DAILY_CAPS:      Record<string, number> = { free: 3,   maker: 50,  pro: 200, studio: 500 };
-    const COOLDOWN_MSGS:   Record<string, number> = { free: 3,   maker: 564, pro: 1456, studio: 4428 };
-    const SOFTCAP_MSGS:    Record<string, number> = { free: 3,   maker: 726, pro: 1872, studio: 5694 };
+    const PLAN_REVENUE: Record<string, number> = { free: 0, maker: 19, pro: 49, studio: 149 };
+    const DAILY_CAPS: Record<string, number> = { free: 3, maker: 50, pro: 200, studio: 500 };
+    const COOLDOWN_MSGS: Record<string, number> = { free: 3, maker: 564, pro: 1456, studio: 4428 };
+    const SOFTCAP_MSGS: Record<string, number> = { free: 3, maker: 726, pro: 1872, studio: 5694 };
 
-    const revenue  = PLAN_REVENUE[planKey] ?? 0;
-    const cap      = DAILY_CAPS[planKey]   ?? 3;
+    const revenue = PLAN_REVENUE[planKey] ?? 0;
+    const cap = DAILY_CAPS[planKey] ?? 3;
     const cooldown = COOLDOWN_MSGS[planKey] ?? 3;
-    const softcap  = SOFTCAP_MSGS[planKey]  ?? 3;
-    const uiLang   = (user_language as string) || "pt";
+    const softcap = SOFTCAP_MSGS[planKey] ?? 3;
+    const uiLang = (user_language as string) || "pt";
 
     // ── Read current usage for soft-cap / cooldown checks (non-atomic read is fine here —
     //    these are advisory checks, not hard limits enforced by race-sensitive code)
     const { data: usageRow } = await (supabase as any)
       .from("free_usage")
       .select("chat_count, last_reset, monthly_msg_count, monthly_reset")
-      .eq("user_id", user_id).maybeSingle();
+      .eq("user_id", user_id)
+      .maybeSingle();
 
     const lastReset = usageRow?.last_reset?.slice(0, 10);
-    const dailyCount = lastReset === todayDate ? (usageRow?.chat_count || 0) : 0;
+    const dailyCount = lastReset === todayDate ? usageRow?.chat_count || 0 : 0;
     const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
-    const monthlyCount = lastMonthReset === monthKey ? (usageRow?.monthly_msg_count || 0) : 0;
+    const monthlyCount = lastMonthReset === monthKey ? usageRow?.monthly_msg_count || 0 : 0;
     const estimatedMonthlyCost = monthlyCount * COST_PER_MSG;
 
     // ── Pre-flight daily cap check (fast path before hitting the RPC)
     if (dailyCount >= cap) {
-      return new Response(JSON.stringify({ error: "daily_limit" }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "daily_limit" }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ── Progressive warning — computed after RPC call below, using accurate finalDailyCount
@@ -233,11 +394,21 @@ Deno.serve(async (req) => {
         es: `Usaste ${monthlyCount} mensajes este mes. Considera actualizar a ${nextPlan}.`,
         en: `You've used ${monthlyCount} messages this month. Consider upgrading to ${nextPlan} to continue without limits.`,
       };
-      return new Response(JSON.stringify({ error: "monthly_softcap", blocks: [{ type: "warning",
-        title: uiLang === "pt" ? "Limite mensal se aproximando" : "Monthly limit approaching",
-        content: m[uiLang] || m.en,
-        cta_label: uiLang === "pt" ? `Fazer upgrade para ${nextPlan}` : `Upgrade to ${nextPlan}`,
-        cta_route: "/pricing" }] }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(
+        JSON.stringify({
+          error: "monthly_softcap",
+          blocks: [
+            {
+              type: "warning",
+              title: uiLang === "pt" ? "Limite mensal se aproximando" : "Monthly limit approaching",
+              content: m[uiLang] || m.en,
+              cta_label: uiLang === "pt" ? `Fazer upgrade para ${nextPlan}` : `Upgrade to ${nextPlan}`,
+              cta_route: "/pricing",
+            },
+          ],
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // ── Smart cooldown: monthly cost crossed 70% of plan revenue
@@ -251,23 +422,32 @@ Deno.serve(async (req) => {
 
     // ── Log cost alert if user crossed 70% threshold (fire-and-forget)
     if (monthlyCount >= cooldown && monthlyCount % 10 === 0) {
-      (supabase as any).from("cost_alerts").upsert({
-        user_id,
-        plan: planKey,
-        monthly_msgs: monthlyCount,
-        estimated_cost: estimatedMonthlyCost,
-        plan_revenue: revenue,
-        cost_pct: revenue > 0 ? Math.round((estimatedMonthlyCost / revenue) * 100) : 999,
-        alert_date: todayDate,
-        last_updated: new Date().toISOString(),
-      }, { onConflict: "user_id" }).then(() => {}).catch(() => {});
+      (supabase as any)
+        .from("cost_alerts")
+        .upsert(
+          {
+            user_id,
+            plan: planKey,
+            monthly_msgs: monthlyCount,
+            estimated_cost: estimatedMonthlyCost,
+            plan_revenue: revenue,
+            cost_pct: revenue > 0 ? Math.round((estimatedMonthlyCost / revenue) * 100) : 999,
+            alert_date: todayDate,
+            last_updated: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        )
+        .then(() => {})
+        .catch(() => {});
     }
 
     // Only trigger dashboard offer for explicit data/analytics requests
     // NOT for "resumo" or "como vai" — too broad, creates friction unnecessarily
-    const isDashboardRequest = /\b(dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|métricas|metricas|metrics|como está minha conta|how is my account)\b/i.test(message)
-      && !message.includes("[DASHBOARD]"); // pill-triggered already handled
-    
+    const isDashboardRequest =
+      /\b(dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|métricas|metricas|metrics|como está minha conta|how is my account)\b/i.test(
+        message,
+      ) && !message.includes("[DASHBOARD]"); // pill-triggered already handled
+
     // Dashboard limits per plan (monthly)
     const DASHBOARD_LIMITS: Record<string, number> = { free: 0, maker: 10, pro: 30, studio: -1 };
     const dashLimit = DASHBOARD_LIMITS[planKey] ?? 0;
@@ -276,101 +456,140 @@ Deno.serve(async (req) => {
     if (isDashboardRequest && !message.includes("[DASHBOARD_CONFIRMED]")) {
       const dashUsed = (profileRow as any)?.dashboard_count || 0;
       const dashRemaining = dashLimit === -1 ? 999 : Math.max(0, dashLimit - dashUsed);
-      
+
       if (dashLimit === 0 || (dashLimit !== -1 && dashUsed >= dashLimit)) {
         // No dashboards left — return upgrade wall
-        const uLang = uiLang || 'pt';
-        const title = uLang === 'pt' ? 'Limite de dashboards atingido' : uLang === 'es' ? 'Límite de dashboards alcanzado' : 'Dashboard limit reached';
-        const content = uLang === 'pt' 
-          ? `Seu plano ${planKey} inclui ${dashLimit === 0 ? 'acesso a dashboards apenas no plano Maker ou superior' : dashLimit + ' dashboards/mês'}. Você usou ${dashUsed}.`
-          : `Your ${planKey} plan includes ${dashLimit === 0 ? 'dashboards on Maker plan or higher' : dashLimit + ' dashboards/month'}. You've used ${dashUsed}.`;
-        return new Response(JSON.stringify({ 
-          error: "dashboard_limit",
-          blocks: [{ type: "warning", title, content }]
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const uLang = uiLang || "pt";
+        const title =
+          uLang === "pt"
+            ? "Limite de dashboards atingido"
+            : uLang === "es"
+              ? "Límite de dashboards alcanzado"
+              : "Dashboard limit reached";
+        const content =
+          uLang === "pt"
+            ? `Seu plano ${planKey} inclui ${dashLimit === 0 ? "acesso a dashboards apenas no plano Maker ou superior" : dashLimit + " dashboards/mês"}. Você usou ${dashUsed}.`
+            : `Your ${planKey} plan includes ${dashLimit === 0 ? "dashboards on Maker plan or higher" : dashLimit + " dashboards/month"}. You've used ${dashUsed}.`;
+        return new Response(
+          JSON.stringify({
+            error: "dashboard_limit",
+            blocks: [{ type: "warning", title, content }],
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
-      
+
       // Offer to generate dashboard — don't auto-generate
-      const uLang = uiLang || 'pt';
-      const offerTitle = uLang === 'pt' ? 'Gerar dashboard de performance?' : uLang === 'es' ? '¿Generar dashboard de rendimiento?' : 'Generate performance dashboard?';
+      const uLang = uiLang || "pt";
+      const offerTitle =
+        uLang === "pt"
+          ? "Gerar dashboard de performance?"
+          : uLang === "es"
+            ? "¿Generar dashboard de rendimiento?"
+            : "Generate performance dashboard?";
       // Detect which platform is connected for accurate offer text
       const connectedPlatformNames: string[] = [];
-      const platformLabel = connectedPlatformNames.length > 0
-        ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + ' Ads').join(' + ')
-        : (uLang === 'pt' ? 'sua conta de anúncios' : uLang === 'es' ? 'tu cuenta de anuncios' : 'your ad account');
-      const offerContent = uLang === 'pt'
-        ? `Posso gerar um dashboard com os dados reais de ${platformLabel} — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mês.`
-        : uLang === 'es'
-        ? `Puedo generar un dashboard con los datos reales de ${platformLabel} — spend, CTR, anuncios para escalar y pausar. Usa 1 de tus ${dashRemaining} dashboard${dashRemaining !== 1 ? 's' : ''} restantes este mes.`
-        : `I can generate a dashboard with your real ${platformLabel} data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? 's' : ''} this month.`;
-      
-      return new Response(JSON.stringify({
-        blocks: [{ 
-          type: "dashboard_offer",
-          title: offerTitle,
-          content: offerContent,
-          remaining: dashRemaining,
-          original_message: message,
-        }]
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const platformLabel =
+        connectedPlatformNames.length > 0
+          ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + " Ads").join(" + ")
+          : uLang === "pt"
+            ? "sua conta de anúncios"
+            : uLang === "es"
+              ? "tu cuenta de anuncios"
+              : "your ad account";
+      const offerContent =
+        uLang === "pt"
+          ? `Posso gerar um dashboard com os dados reais de ${platformLabel} — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? "s" : ""} restantes este mês.`
+          : uLang === "es"
+            ? `Puedo generar un dashboard con los datos reales de ${platformLabel} — spend, CTR, anuncios para escalar y pausar. Usa 1 de tus ${dashRemaining} dashboard${dashRemaining !== 1 ? "s" : ""} restantes este mes.`
+            : `I can generate a dashboard with your real ${platformLabel} data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? "s" : ""} this month.`;
+
+      return new Response(
+        JSON.stringify({
+          blocks: [
+            {
+              type: "dashboard_offer",
+              title: offerTitle,
+              content: offerContent,
+              remaining: dashRemaining,
+              original_message: message,
+            },
+          ],
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
-    
+
     // If confirmed dashboard — increment counter
     if (message.includes("[DASHBOARD_CONFIRMED]")) {
       const dashUsed = (profileRow as any)?.dashboard_count || 0;
       if (dashLimit !== -1) {
-        await supabase.from("profiles").update({ dashboard_count: dashUsed + 1 } as any).eq("id", user_id);
+        await supabase
+          .from("profiles")
+          .update({ dashboard_count: dashUsed + 1 } as any)
+          .eq("id", user_id);
       }
     }
 
     // Apply smart cooldown if active (only for abusive usage)
     if (cooldownDelay > 0) {
-      await new Promise(r => setTimeout(r, cooldownDelay));
+      await new Promise((r) => setTimeout(r, cooldownDelay));
     }
 
     // ── Atomic increment via RPC — prevents race condition where two concurrent
     //    requests both read dailyCount=N, both pass the cap check, both write N+1
     const { data: rpcResult } = await (supabase as any).rpc("increment_chat_usage", {
-      p_user_id:   user_id,
+      p_user_id: user_id,
       p_daily_cap: cap,
-      p_today:     todayDate,
+      p_today: todayDate,
       p_month_key: monthKey,
     });
 
     // RPC returns null if function doesn't exist yet (migration pending) — fall back gracefully
     if (rpcResult && rpcResult.allowed === false) {
-      return new Response(JSON.stringify({ error: "daily_limit" }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "daily_limit" }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Use RPC counts if available, otherwise fall back to pre-read values
-    const finalDailyCount   = rpcResult?.daily_count   ?? (dailyCount + 1);
-    const finalMonthlyCount = rpcResult?.monthly_count ?? (monthlyCount + 1);
+    const finalDailyCount = rpcResult?.daily_count ?? dailyCount + 1;
+    const finalMonthlyCount = rpcResult?.monthly_count ?? monthlyCount + 1;
 
     // ── Progressive warning — uses accurate post-RPC count
     const willHitLimit = finalDailyCount >= cap;
     const oneRemaining = finalDailyCount === cap - 1;
-    const limitWarning = planKey === "free" ? (
-      willHitLimit ? {
-        pt: `— Esta foi sua última mensagem gratuita.`,
-        es: `— Este fue tu último mensaje gratuito.`,
-        en: `— This was your last free message.`,
-      } : oneRemaining ? {
-        pt: `— Você tem apenas 1 mensagem gratuita restante.`,
-        es: `— Solo tienes 1 mensaje gratuito restante.`,
-        en: `— You have 1 free message left.`,
-      } : null
-    ) : null;
+    const limitWarning =
+      planKey === "free"
+        ? willHitLimit
+          ? {
+              pt: `— Esta foi sua última mensagem gratuita.`,
+              es: `— Este fue tu último mensaje gratuito.`,
+              en: `— This was your last free message.`,
+            }
+          : oneRemaining
+            ? {
+                pt: `— Você tem apenas 1 mensagem gratuita restante.`,
+                es: `— Solo tienes 1 mensaje gratuito restante.`,
+                en: `— You have 1 free message left.`,
+              }
+            : null
+        : null;
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
     // Tolerante a typos: lemnre, lembr, lemb etc.
-    const rememberTriggers = /(lemb?[rn]?e?(-se)?( de)?|quero que (voc[êe]|vc) (lembre|saiba|guarde)|n[ãa]o (esque[çc]a?|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|j[aá] te (falei|disse)|eu (j[aá] )?te (falei|disse))/i;
+    const rememberTriggers =
+      /(lemb?[rn]?e?(-se)?( de)?|quero que (voc[êe]|vc) (lembre|saiba|guarde)|n[ãa]o (esque[çc]a?|esquece)|sempre que|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|j[aá] te (falei|disse)|eu (j[aá] )?te (falei|disse))/i;
     if (rememberTriggers.test(message)) {
       // Extract what to remember — take the message minus trigger words
       const noteText = message
-        .replace(/^(ei[,!]?\s*)?/i, '')
-        .replace(/lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse)/gi, '')
-        .replace(/[,:\s]+$/, '')
+        .replace(/^(ei[,!]?\s*)?/i, "")
+        .replace(
+          /lembre(-se)?( de)?|quero que (você|vc) (lembre|saiba|guarde)|não (esqueça|esquece)|remember( that| this)?|keep in mind|note that|anota( que)?|guarda( que)?|já te (falei|disse)|eu (já )?te (falei|disse)/gi,
+          "",
+        )
+        .replace(/[,:\s]+$/, "")
         .trim()
         .slice(0, 300);
 
@@ -378,23 +597,23 @@ Deno.serve(async (req) => {
         // Save to user_ai_profile.pain_point (reusing existing column for user notes)
         // Get current notes first
         const { data: existingProfile } = await (supabase as any)
-          .from('user_ai_profile')
-          .select('pain_point')
-          .eq('user_id', user_id)
+          .from("user_ai_profile")
+          .select("pain_point")
+          .eq("user_id", user_id)
           .maybeSingle();
 
-        const existing = (existingProfile?.pain_point as string) || '';
+        const existing = (existingProfile?.pain_point as string) || "";
         const timestamp = new Date().toISOString().slice(0, 10);
         const newNote = `[${timestamp}] ${noteText}`;
         // Keep last 5 notes, separated by | — avoids unbounded growth
         const allNotes = existing
-          ? [newNote, ...existing.split('|||').filter(Boolean)].slice(0, 5).join('|||')
+          ? [newNote, ...existing.split("|||").filter(Boolean)].slice(0, 5).join("|||")
           : newNote;
 
-        await (supabase as any).from('user_ai_profile').upsert(
-          { user_id, pain_point: allNotes, last_updated: new Date().toISOString() },
-          { onConflict: 'user_id' }
-        ).catch(() => {});
+        await (supabase as any)
+          .from("user_ai_profile")
+          .upsert({ user_id, pain_point: allNotes, last_updated: new Date().toISOString() }, { onConflict: "user_id" })
+          .catch(() => {});
       }
     }
 
@@ -420,27 +639,33 @@ Deno.serve(async (req) => {
       { data: trendBaseline },
     ] = await Promise.all([
       // 1. Recent analyses — scoped to this persona/account
-      (persona_id
+      persona_id
         ? (supabase.from("analyses" as any) as any)
             .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
-            .eq("user_id", user_id).eq("persona_id", persona_id).eq("status", "completed")
-            .order("created_at", { ascending: false }).limit(15)
+            .eq("user_id", user_id)
+            .eq("persona_id", persona_id)
+            .eq("status", "completed")
+            .order("created_at", { ascending: false })
+            .limit(15)
         : (supabase.from("analyses" as any) as any)
             .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
-            .eq("user_id", user_id).eq("status", "completed")
+            .eq("user_id", user_id)
+            .eq("status", "completed")
             .is("persona_id", null)
-            .order("created_at", { ascending: false }).limit(15)
-      ),
+            .order("created_at", { ascending: false })
+            .limit(15),
       // 2. AI profile
-      (supabase as any).from("user_ai_profile")
-        .select("*").eq("user_id", user_id).maybeSingle(),
+      (supabase as any).from("user_ai_profile").select("*").eq("user_id", user_id).maybeSingle(),
       // 3. Creative memory
-      (supabase as any).from("creative_memory")
+      (supabase as any)
+        .from("creative_memory")
         .select("hook_type, hook_score, platform, notes, created_at")
         .eq("user_id", user_id)
-        .order("created_at", { ascending: false }).limit(20),
+        .order("created_at", { ascending: false })
+        .limit(20),
       // 4. Platform connections — STRICT persona scope
-      supabase.from("platform_connections" as any)
+      supabase
+        .from("platform_connections" as any)
         .select("platform, status, ad_accounts, selected_account_id, connected_at, persona_id")
         .eq("user_id", user_id)
         .eq("status", "active")
@@ -452,105 +677,127 @@ Deno.serve(async (req) => {
             // Fallback: if no connection for this persona, try connections without persona_id
             if (scoped.length > 0) return { data: scoped };
             const global = all.filter((c: any) => !c.persona_id);
-            return { data: global.length > 0 ? global : all.slice(0,1) };
+            return { data: global.length > 0 ? global : all.slice(0, 1) };
           }
           return { data: all.filter((c: any) => !c.persona_id) };
         }),
       // 5. Ads data imports
-      (supabase as any).from("ads_data_imports")
+      (supabase as any)
+        .from("ads_data_imports")
         .select("platform, result, created_at")
         .eq("user_id", user_id)
-        .order("created_at", { ascending: false }).limit(3),
+        .order("created_at", { ascending: false })
+        .limit(3),
       // 6. Persona row
       persona_id
         ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
       // 7. Learned patterns
-      (supabase as any).from("learned_patterns")
+      (supabase as any)
+        .from("learned_patterns")
         .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables, persona_id")
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
         .limit(60),
       // 7b. Global benchmarks — anonymous aggregate patterns from all accounts (user_id=null)
       // These are what the AI uses as market benchmarks — never reveals source accounts
-      (supabase as any).from("learned_patterns")
+      (supabase as any)
+        .from("learned_patterns")
         .select("pattern_key, avg_ctr, avg_roas, is_winner, confidence, insight_text, variables")
         .is("user_id", null)
         .like("pattern_key", "global_benchmark::%")
         .gte("confidence", 0.3)
         .order("avg_ctr", { ascending: false })
         .limit(20)
-        .then((r: any) => r.error ? { data: [] } : r),
+        .then((r: any) => (r.error ? { data: [] } : r)),
       // 7c. Global market summary — synthesized narrative from aggregate-intelligence
-      (supabase as any).from("learned_patterns")
+      (supabase as any)
+        .from("learned_patterns")
         .select("insight_text, variables")
         .is("user_id", null)
         .eq("pattern_key", "global_market_summary")
         .maybeSingle()
-        .then((r: any) => r.error ? { data: null } : r),
+        .then((r: any) => (r.error ? { data: null } : r)),
       // 8. Daily snapshots
       // 8. Daily snapshots — filter at DB level
       persona_id
-        ? (supabase as any).from("daily_snapshots")
-            .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
+        ? (supabase as any)
+            .from("daily_snapshots")
+            .select(
+              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period",
+            )
             .eq("user_id", user_id)
             .eq("persona_id", persona_id)
             .order("date", { ascending: false })
             .limit(7)
-        : (supabase as any).from("daily_snapshots")
-            .select("date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period")
+        : (supabase as any)
+            .from("daily_snapshots")
+            .select(
+              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period",
+            )
             .eq("user_id", user_id)
             .order("date", { ascending: false })
             .limit(7),
       // 9. Preflight history
-      (supabase as any).from("preflight_results")
+      (supabase as any)
+        .from("preflight_results")
         .select("created_at, score, verdict, platform, market, format")
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
         .limit(10)
-        .then((r: any) => r.error ? { data: [] } : r),
+        .then((r: any) => (r.error ? { data: [] } : r)),
       // 10. Active account alerts
-      (supabase as any).from("account_alerts")
+      (supabase as any)
+        .from("account_alerts")
         .select("type, urgency, ad_name, campaign_name, detail, kpi_label, kpi_value, action_suggestion, created_at")
         .eq("user_id", user_id)
         .is("dismissed_at", null)
         .order("created_at", { ascending: false })
         .limit(5)
-        .then((r: any) => r.error ? { data: [] } : r),
+        .then((r: any) => (r.error ? { data: [] } : r)),
       // 11. Telegram connection status
-      (supabase as any).from("telegram_connections")
+      (supabase as any)
+        .from("telegram_connections")
         .select("chat_id, telegram_username, connected_at")
         .eq("user_id", user_id)
         .eq("active", true)
         .maybeSingle()
-        .then((r: any) => r.error ? { data: null } : r),
+        .then((r: any) => (r.error ? { data: null } : r)),
       // 11b. Cross-account winners — high confidence patterns from other personas
-      (supabase as any).from("learned_patterns")
+      (supabase as any)
+        .from("learned_patterns")
         .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
         .eq("user_id", user_id)
         .eq("is_winner", true)
         .gte("confidence", 0.7)
         .order("avg_ctr", { ascending: false })
         .limit(5)
-        .then((r: any) => r.error ? { data: [] } : {
-          data: (r.data || []).filter((p: any) => p.persona_id !== persona_id)
-        }),
+        .then((r: any) =>
+          r.error
+            ? { data: [] }
+            : {
+                data: (r.data || []).filter((p: any) => p.persona_id !== persona_id),
+              },
+        ),
       // 12. Chat memory — filter at DB level, not in JS
       persona_id
-        ? (supabase as any).from("chat_memory")
+        ? (supabase as any)
+            .from("chat_memory")
             .select("memory_text, memory_type, importance, created_at")
             .eq("user_id", user_id)
             .or(`persona_id.eq.${persona_id},persona_id.is.null`)
             .order("importance", { ascending: false })
             .limit(30)
-        : (supabase as any).from("chat_memory")
+        : (supabase as any)
+            .from("chat_memory")
             .select("memory_text, memory_type, importance, created_at")
             .eq("user_id", user_id)
             .is("persona_id", null)
             .order("importance", { ascending: false })
             .limit(30),
       // 13. Few-shot examples
-      (supabase as any).from("chat_examples")
+      (supabase as any)
+        .from("chat_examples")
         .select("user_message, assistant_blocks, quality_score, created_at")
         .eq("user_id", user_id)
         .then((r: any) => {
@@ -562,17 +809,24 @@ Deno.serve(async (req) => {
           return { data: scoped.sort((a: any, b: any) => (b.quality_score || 0) - (a.quality_score || 0)).slice(0, 3) };
         }),
       // 15. Active trends — direct DB read, no invoke needed
-      (supabase as any).from("trend_intelligence")
+      (supabase as any)
+        .from("trend_intelligence")
         .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,peak_volume")
-        .eq("is_active", true).eq("is_blocked", false).lt("risk_score", 7)
-        .order("last_volume", { ascending: false }).limit(10)
-        .then((r: any) => r.error ? { data: [] } : r),
+        .eq("is_active", true)
+        .eq("is_blocked", false)
+        .lt("risk_score", 7)
+        .order("last_volume", { ascending: false })
+        .limit(10)
+        .then((r: any) => (r.error ? { data: [] } : r)),
       // 16. Trend baseline
-      (supabase as any).from("trend_platform_baseline")
-        .select("p75_volume,p90_volume").eq("geo", "BR")
-        .order("week_start", { ascending: false }).limit(1)
+      (supabase as any)
+        .from("trend_platform_baseline")
+        .select("p75_volume,p90_volume")
+        .eq("geo", "BR")
+        .order("week_start", { ascending: false })
+        .limit(1)
         .maybeSingle()
-        .then((r: any) => r.error ? { data: null } : r),
+        .then((r: any) => (r.error ? { data: null } : r)),
     ]);
 
     // ── 4. Build context ──────────────────────────────────────────────────────
@@ -593,13 +847,17 @@ Deno.serve(async (req) => {
     // few-shot examples: liked responses used as style/format guide
     const fewShotExamples = (chatExamples || []) as any[];
     const fewShotBlock = fewShotExamples.length
-      ? fewShotExamples.map((ex: any, i: number) => {
-          const blocks = Array.isArray(ex.assistant_blocks) ? ex.assistant_blocks : [];
-          const responseText = blocks
-            .map((b: any) => `${b.title ? `[${b.title}] ` : ""}${b.content || ""}`.trim())
-            .filter(Boolean).join(" / ").slice(0, 300);
-          return `Exemplo ${i + 1}:\n  Pergunta: "${String(ex.user_message || "").slice(0, 150)}"\n  Resposta aprovada: "${responseText}"`;
-        }).join("\n\n")
+      ? fewShotExamples
+          .map((ex: any, i: number) => {
+            const blocks = Array.isArray(ex.assistant_blocks) ? ex.assistant_blocks : [];
+            const responseText = blocks
+              .map((b: any) => `${b.title ? `[${b.title}] ` : ""}${b.content || ""}`.trim())
+              .filter(Boolean)
+              .join(" / ")
+              .slice(0, 300);
+            return `Exemplo ${i + 1}:\n  Pergunta: "${String(ex.user_message || "").slice(0, 150)}"\n  Resposta aprovada: "${responseText}"`;
+          })
+          .join("\n\n")
       : null;
     const memorySummary = persistentMemories.length
       ? persistentMemories
@@ -620,28 +878,33 @@ Deno.serve(async (req) => {
       hookTypes[m.hook_type].total += m.hook_score || 0;
     });
     const topHooks = Object.entries(hookTypes)
-      .sort((a, b) => (b[1].total / b[1].count) - (a[1].total / a[1].count))
+      .sort((a, b) => b[1].total / b[1].count - a[1].total / a[1].count)
       .slice(0, 3)
       .map(([type, d]) => `${type} (avg ${(d.total / d.count).toFixed(1)}, ${d.count} uses)`);
 
-    const recentSummary = analyses.slice(0, 5).map((a: any) => {
-      const r = a.result as any;
-      return [
-        `  - "${a.title || r?.market_guess || "untitled"}"`,
-        `score:${r?.hook_score ?? "—"}`,
-        `hook_type:${r?.hook_type || a.hook_strength || "—"}`,
-        `format:${r?.format || "—"}`,
-        `market:${r?.market_guess || "—"}`,
-        r?.summary ? `summary:"${String(r.summary).slice(0, 80)}"` : "",
-        `date:${a.created_at?.split("T")[0]}`,
-      ].filter(Boolean).join(" | ");
-    }).join("\n");
+    const recentSummary = analyses
+      .slice(0, 5)
+      .map((a: any) => {
+        const r = a.result as any;
+        return [
+          `  - "${a.title || r?.market_guess || "untitled"}"`,
+          `score:${r?.hook_score ?? "—"}`,
+          `hook_type:${r?.hook_type || a.hook_strength || "—"}`,
+          `format:${r?.format || "—"}`,
+          `market:${r?.market_guess || "—"}`,
+          r?.summary ? `summary:"${String(r.summary).slice(0, 80)}"` : "",
+          `date:${a.created_at?.split("T")[0]}`,
+        ]
+          .filter(Boolean)
+          .join(" | ");
+      })
+      .join("\n");
 
     const connectedPlatforms = connections.map((c: any) => {
       const accounts = (c.ad_accounts as any[]) || [];
       const selectedId = c.selected_account_id || accounts[0]?.id;
       const selectedAcc = accounts.find((a: any) => a.id === selectedId) || accounts[0];
-      const accLabel = selectedAcc ? `active:${selectedAcc.name||selectedAcc.id}` : `${accounts.length} accounts`;
+      const accLabel = selectedAcc ? `active:${selectedAcc.name || selectedAcc.id}` : `${accounts.length} accounts`;
       return `${c.platform}(${accLabel})`;
     });
 
@@ -650,16 +913,21 @@ Deno.serve(async (req) => {
 
     const persona = personaRow as any;
     const personaName = (persona?.result as any)?.name || "";
-    const personaCtx = persona?.result ? `ACTIVE WORKSPACE: ${personaName} | ${(persona.result as any)?.headline || ""}
+    const personaCtx = persona?.result
+      ? `ACTIVE WORKSPACE: ${personaName} | ${(persona.result as any)?.headline || ""}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
 Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
-Language style: ${(persona.result as any)?.language_style || "—"}` : "";
+Language style: ${(persona.result as any)?.language_style || "—"}`
+      : "";
 
-    const importInsights = imports.map((i: any) => {
-      const r = i.result as any;
-      if (!r?.summary) return "";
-      return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
-    }).filter(Boolean).join("\n");
+    const importInsights = imports
+      .map((i: any) => {
+        const r = i.result as any;
+        if (!r?.summary) return "";
+        return `${i.platform}: ${r.summary} | best format: ${r.patterns?.best_format || "?"} | best hook: ${r.patterns?.best_hook_style || "?"}`;
+      })
+      .filter(Boolean)
+      .join("\n");
 
     // Learned patterns — what the product knows about this user
     // Scope patterns to this persona — prefer persona-specific, include global (null persona_id), exclude other personas
@@ -667,19 +935,19 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
     const patterns = persona_id
       ? allRawPatterns.filter((p: any) => p.persona_id === persona_id || p.persona_id === null).slice(0, 30)
       : allRawPatterns.filter((p: any) => p.persona_id === null).slice(0, 30);
-    const winners = patterns.filter(p => p.is_winner && p.confidence > 0.2);
+    const winners = patterns.filter((p) => p.is_winner && p.confidence > 0.2);
     // Business profile — permanent account intelligence (who this company really is)
-    const businessProfile = patterns.find(p => p.pattern_key.startsWith('business_profile_'));
-    const competitors = patterns.filter(p => p.pattern_key.startsWith('competitor_'));
-    const perfPatterns = patterns.filter(p => p.pattern_key.startsWith('perf_'));
-    const preflightPatterns = patterns.filter(p => p.pattern_key.startsWith('preflight_'));
-    const actionPatterns = patterns.filter(p => p.pattern_key.startsWith('action_'));
+    const businessProfile = patterns.find((p) => p.pattern_key.startsWith("business_profile_"));
+    const competitors = patterns.filter((p) => p.pattern_key.startsWith("competitor_"));
+    const perfPatterns = patterns.filter((p) => p.pattern_key.startsWith("perf_"));
+    const preflightPatterns = patterns.filter((p) => p.pattern_key.startsWith("preflight_"));
+    const actionPatterns = patterns.filter((p) => p.pattern_key.startsWith("action_"));
     // Market intelligence patterns — from Google Trends + Meta Ads Library
-    const marketPatterns = patterns.filter(p =>
-      p.pattern_key.startsWith('market_intel_') || p.pattern_key.startsWith('market_competitor_')
-    ).sort((a: any, b: any) => new Date(b.last_updated||0).getTime() - new Date(a.last_updated||0).getTime());
-    const latestMarket = marketPatterns.find(p => p.pattern_key.startsWith('market_intel_'));
-    const competitorSignals = marketPatterns.filter(p => p.pattern_key.startsWith('market_competitor_')).slice(0, 5);
+    const marketPatterns = patterns
+      .filter((p) => p.pattern_key.startsWith("market_intel_") || p.pattern_key.startsWith("market_competitor_"))
+      .sort((a: any, b: any) => new Date(b.last_updated || 0).getTime() - new Date(a.last_updated || 0).getTime());
+    const latestMarket = marketPatterns.find((p) => p.pattern_key.startsWith("market_intel_"));
+    const competitorSignals = marketPatterns.filter((p) => p.pattern_key.startsWith("market_competitor_")).slice(0, 5);
 
     // ── Trend intelligence — já carregado no Promise.all acima ──────────────
     let trendContext = "";
@@ -690,44 +958,77 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         // Matches the scoring in trend-watcher/index.ts
         const p75 = (trendBaseline as any)?.p75_volume || 55;
         const p90 = (trendBaseline as any)?.p90_volume || 65;
-        const scored = trendsData.map((t: any) => {
-          let score = 0;
-          // Volume score — calibrated for Brave Search output
-          if (t.last_volume >= p90) score += 40;
-          else if (t.last_volume >= p75) score += 28;
-          else if (t.last_volume >= 45) score += 15;
-          else score += 5;
-          // Longevity — most valuable signal
-          if (t.days_active >= 5) score += 30;
-          else if (t.days_active >= 3) score += 22;
-          else if (t.days_active >= 2) score += 14;
-          else score += 6; // day 1 still counts
-          // Return appearances — trend durability
-          if (t.appearances >= 4) score += 20;
-          else if (t.appearances >= 2) score += 14;
-          else score += 4;
-          // Peak bonus
-          if (t.peak_volume >= p90) score += 8;
-          return { ...t, relevance_score: Math.min(score, 100) };
-        }).sort((a: any, b: any) => b.relevance_score - a.relevance_score);
-        trendContext = `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
+        const scored = trendsData
+          .map((t: any) => {
+            let score = 0;
+            // Volume score — calibrated for Brave Search output
+            if (t.last_volume >= p90) score += 40;
+            else if (t.last_volume >= p75) score += 28;
+            else if (t.last_volume >= 45) score += 15;
+            else score += 5;
+            // Longevity — most valuable signal
+            if (t.days_active >= 5) score += 30;
+            else if (t.days_active >= 3) score += 22;
+            else if (t.days_active >= 2) score += 14;
+            else score += 6; // day 1 still counts
+            // Return appearances — trend durability
+            if (t.appearances >= 4) score += 20;
+            else if (t.appearances >= 2) score += 14;
+            else score += 4;
+            // Peak bonus
+            if (t.peak_volume >= p90) score += 8;
+            return { ...t, relevance_score: Math.min(score, 100) };
+          })
+          .sort((a: any, b: any) => b.relevance_score - a.relevance_score);
+        trendContext =
+          `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
           `(Baseline: normal=${p75}, viral>=${p90})\n` +
-          scored.map((t: any) =>
-            `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
-            (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
-            (t.days_active > 1 ? ` | ${t.days_active} dias ativa` : "") +
-            `\n  → Ângulo criativo: ${t.ad_angle}` +
-            (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "")
-          ).join("\n");
+          scored
+            .map(
+              (t: any) =>
+                `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
+                (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
+                (t.days_active > 1 ? ` | ${t.days_active} dias ativa` : "") +
+                `\n  → Ângulo criativo: ${t.ad_angle}` +
+                (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : ""),
+            )
+            .join("\n");
       }
-    } catch (trendErr) { console.error("[trend-ctx error]", String(trendErr)); }
+    } catch (trendErr) {
+      console.error("[trend-ctx error]", String(trendErr));
+    }
 
     const learnedCtx = [
-      winners.length ? `PADRÕES VENCEDORES:\n${winners.slice(0,5).map(p => `  - ${p.insight_text} (confiança: ${(p.confidence*100).toFixed(0)}%)`).join("\n")}` : "",
-      perfPatterns.length ? `PERFORMANCE HISTÓRICA:\n${perfPatterns.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
-      competitors.length ? `CONCORRENTES ANALISADOS:\n${competitors.slice(0,5).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
-      preflightPatterns.length ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
-      actionPatterns.length ? `AÇÕES EXECUTADAS:\n${actionPatterns.slice(0,3).map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      winners.length
+        ? `PADRÕES VENCEDORES:\n${winners
+            .slice(0, 5)
+            .map((p) => `  - ${p.insight_text} (confiança: ${(p.confidence * 100).toFixed(0)}%)`)
+            .join("\n")}`
+        : "",
+      perfPatterns.length
+        ? `PERFORMANCE HISTÓRICA:\n${perfPatterns
+            .slice(0, 5)
+            .map((p) => `  - ${p.insight_text}`)
+            .join("\n")}`
+        : "",
+      competitors.length
+        ? `CONCORRENTES ANALISADOS:\n${competitors
+            .slice(0, 5)
+            .map((p) => `  - ${p.insight_text}`)
+            .join("\n")}`
+        : "",
+      preflightPatterns.length
+        ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns
+            .slice(0, 3)
+            .map((p) => `  - ${p.insight_text}`)
+            .join("\n")}`
+        : "",
+      actionPatterns.length
+        ? `AÇÕES EXECUTADAS:\n${actionPatterns
+            .slice(0, 3)
+            .map((p) => `  - ${p.insight_text}`)
+            .join("\n")}`
+        : "",
       // Global benchmarks — anonymous aggregates from all accounts across the platform
       // Use as market benchmarks. NEVER mention "other clients" — phrase as "dados do setor" or "mercado"
       (() => {
@@ -738,38 +1039,47 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         const market = (persona?.result as any)?.preferred_market || "BR";
         // Prioritize benchmarks matching this account's niche/market
         const relevant = globals
-          .filter(g => {
+          .filter((g) => {
             const vars = (g.variables as any) || {};
-            return (vars.niche === "all" || vars.niche === niche) &&
-                   (vars.market === "all" || vars.market === market);
+            return (vars.niche === "all" || vars.niche === niche) && (vars.market === "all" || vars.market === market);
           })
           .slice(0, 8);
         if (!relevant.length) return "";
         const summary = (marketSummaryRow as any)?.insight_text || "";
-        const lines = relevant.map(g => `  - ${g.insight_text}${g.avg_ctr ? ` (benchmark: CTR ${(g.avg_ctr*100).toFixed(2)}%)` : ""}`).join("\n");
+        const lines = relevant
+          .map((g) => `  - ${g.insight_text}${g.avg_ctr ? ` (benchmark: CTR ${(g.avg_ctr * 100).toFixed(2)}%)` : ""}`)
+          .join("\n");
         return `=== BENCHMARKS DO SETOR (dados agregados, anônimos) ===\n${summary ? `${summary}\n` : ""}${lines}\n(Use como referência de mercado. Fraseie como "dados do setor" ou "em campanhas similares". Nunca revele que são dados de outras contas.)`;
       })(),
       // Business profile — who this company really is, compliance rules
-      businessProfile ? `=== PERFIL DO NEGÓCIO (pesquisado) ===\n` +
-        `Indústria: ${(businessProfile.variables as any)?.industry}\n` +
-        `Licença: ${(businessProfile.variables as any)?.license_status}\n` +
-        `Compliance obrigatório:\n${((businessProfile.variables as any)?.compliance_rules || []).map((r: string) => `  - ${r}`).join('\n')}\n` +
-        `Frases proibidas: ${((businessProfile.variables as any)?.forbidden_phrases || []).join(', ')}\n` +
-        `Tom da marca: ${(businessProfile.variables as any)?.brand_tone}\n` +
-        `Oportunidades de marketing: ${((businessProfile.variables as any)?.marketing_opportunities || []).slice(0,2).join(' | ')}` : "",
+      businessProfile
+        ? `=== PERFIL DO NEGÓCIO (pesquisado) ===\n` +
+          `Indústria: ${(businessProfile.variables as any)?.industry}\n` +
+          `Licença: ${(businessProfile.variables as any)?.license_status}\n` +
+          `Compliance obrigatório:\n${((businessProfile.variables as any)?.compliance_rules || []).map((r: string) => `  - ${r}`).join("\n")}\n` +
+          `Frases proibidas: ${((businessProfile.variables as any)?.forbidden_phrases || []).join(", ")}\n` +
+          `Tom da marca: ${(businessProfile.variables as any)?.brand_tone}\n` +
+          `Oportunidades de marketing: ${((businessProfile.variables as any)?.marketing_opportunities || []).slice(0, 2).join(" | ")}`
+        : "",
       // Real-time market context — Google Trends + Meta Ads Library
-      latestMarket ? `=== CONTEXTO DE MERCADO (${(latestMarket.variables as any)?.fetched_at?.slice(0,10) || 'hoje'}) ===\n` +
-        `${latestMarket.insight_text}\n` +
-        `Ação recomendada: ${(latestMarket.variables as any)?.action || ''}\n` +
-        `Concorrentes ativos: ${(latestMarket.variables as any)?.competitor_count || 0} | Formatos dominantes: ${((latestMarket.variables as any)?.top_competitor_formats || []).join(', ')}` : "",
-      competitorSignals.length ? `CONCORRENTES NO AR AGORA (Meta Ads Library):\n${competitorSignals.map(p => `  - ${p.insight_text}`).join("\n")}` : "",
+      latestMarket
+        ? `=== CONTEXTO DE MERCADO (${(latestMarket.variables as any)?.fetched_at?.slice(0, 10) || "hoje"}) ===\n` +
+          `${latestMarket.insight_text}\n` +
+          `Ação recomendada: ${(latestMarket.variables as any)?.action || ""}\n` +
+          `Concorrentes ativos: ${(latestMarket.variables as any)?.competitor_count || 0} | Formatos dominantes: ${((latestMarket.variables as any)?.top_competitor_formats || []).join(", ")}`
+        : "",
+      competitorSignals.length
+        ? `CONCORRENTES NO AR AGORA (Meta Ads Library):\n${competitorSignals.map((p) => `  - ${p.insight_text}`).join("\n")}`
+        : "",
       trendContext || "",
-    ].filter(Boolean).join("\n\n");
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     // ── 4b. Fetch live Meta Ads data (with historical date detection) ──────────
     // Detect if user is asking about a specific historical period
     const historicalMatch = message.match(
-      /(?:em|in|de|desde|from|between|entre|no mês de|no dia|week of|semana de)?\s*(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s*(?:de\s*)?(?:20\d{2})?|(?:\d{1,2})[\/\-](?:\d{1,2})(?:[\/\-](?:20)?\d{2,4})?|(?:last|últim[ao]s?|past)\s+(?:\d+)\s+(?:days?|dias?|weeks?|semanas?|months?|meses?)/i
+      /(?:em|in|de|desde|from|between|entre|no mês de|no dia|week of|semana de)?\s*(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s*(?:de\s*)?(?:20\d{2})?|(?:\d{1,2})[\/\-](?:\d{1,2})(?:[\/\-](?:20)?\d{2,4})?|(?:last|últim[ao]s?|past)\s+(?:\d+)\s+(?:days?|dias?|weeks?|semanas?|months?|meses?)/i,
     );
     let historicalSince: string | null = null;
     let historicalUntil: string | null = null;
@@ -779,13 +1089,35 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         const matched = historicalMatch[0].toLowerCase();
         const now = new Date();
         const MONTHS_PT: Record<string, number> = {
-          janeiro:0, fevereiro:1, março:2, abril:3, maio:4, junho:5,
-          julho:6, agosto:7, setembro:8, outubro:9, novembro:10, dezembro:11,
-          january:0, february:1, march:2, april:3, may:4, june:5,
-          july:6, august:7, september:8, october:9, november:10, december:11
+          janeiro: 0,
+          fevereiro: 1,
+          março: 2,
+          abril: 3,
+          maio: 4,
+          junho: 5,
+          julho: 6,
+          agosto: 7,
+          setembro: 8,
+          outubro: 9,
+          novembro: 10,
+          dezembro: 11,
+          january: 0,
+          february: 1,
+          march: 2,
+          april: 3,
+          may: 4,
+          june: 5,
+          july: 6,
+          august: 7,
+          september: 8,
+          october: 9,
+          november: 10,
+          december: 11,
         };
         // Month name match (e.g. "janeiro", "março de 2024")
-        const monthMatch = matched.match(/(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)/);
+        const monthMatch = matched.match(
+          /(janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)/,
+        );
         if (monthMatch) {
           const yearMatch = matched.match(/20(\d{2})/);
           const year = yearMatch ? parseInt("20" + yearMatch[1]) : now.getFullYear();
@@ -798,18 +1130,27 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         if (relMatch) {
           const n = parseInt(relMatch[1]);
           const unit = relMatch[2];
-          const ms = unit.startsWith("day") || unit.startsWith("dia") ? n * 86400000
-                    : unit.startsWith("week") || unit.startsWith("seman") ? n * 7 * 86400000
-                    : n * 30 * 86400000;
+          const ms =
+            unit.startsWith("day") || unit.startsWith("dia")
+              ? n * 86400000
+              : unit.startsWith("week") || unit.startsWith("seman")
+                ? n * 7 * 86400000
+                : n * 30 * 86400000;
           historicalSince = new Date(Date.now() - ms).toISOString().split("T")[0];
           historicalUntil = new Date().toISOString().split("T")[0];
         }
         // Only use historical if it's actually outside our default 30-day window
         if (historicalSince) {
           const daysDiff = (Date.now() - new Date(historicalSince).getTime()) / 86400000;
-          if (daysDiff <= 32) { historicalSince = null; historicalUntil = null; } // within default window
+          if (daysDiff <= 32) {
+            historicalSince = null;
+            historicalUntil = null;
+          } // within default window
         }
-      } catch (_) { historicalSince = null; historicalUntil = null; }
+      } catch (_) {
+        historicalSince = null;
+        historicalUntil = null;
+      }
     }
 
     let liveMetaData = "";
@@ -819,12 +1160,17 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         const { data: allConns } = await supabase
           .from("platform_connections" as any)
           .select("access_token, ad_accounts, selected_account_id, persona_id")
-          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
+          .eq("user_id", user_id)
+          .eq("platform", "meta")
+          .eq("status", "active");
         const allC = (allConns as any[]) || [];
         // Find connection: first try exact persona match, then fallback to any active connection
         const tokenRow = persona_id
-          ? (allC.find((c: any) => c.persona_id === persona_id) || allC.find((c: any) => !c.persona_id) || allC[0] || null)
-          : (allC[0] || null);
+          ? allC.find((c: any) => c.persona_id === persona_id) ||
+            allC.find((c: any) => !c.persona_id) ||
+            allC[0] ||
+            null
+          : allC[0] || null;
 
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
@@ -845,37 +1191,53 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
             if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
             const cached = (globalThis as any).__metaCache[cacheKey];
-            let adsRaw: any = null, campsRaw: any = null, adsetsRaw: any = null,
-                timeSeriesRaw: any = null, placementRaw: any = null;
+            let adsRaw: any = null,
+              campsRaw: any = null,
+              adsetsRaw: any = null,
+              timeSeriesRaw: any = null,
+              placementRaw: any = null;
 
-            if (cached && (now_ts - cached.ts) < CACHE_TTL) {
-              adsRaw       = cached.adsRaw;
-              campsRaw     = cached.campsRaw;
-              adsetsRaw    = cached.adsetsRaw;
+            if (cached && now_ts - cached.ts < CACHE_TTL) {
+              adsRaw = cached.adsRaw;
+              campsRaw = cached.campsRaw;
+              adsetsRaw = cached.adsetsRaw;
               timeSeriesRaw = cached.timeSeriesRaw;
-              placementRaw  = cached.placementRaw;
+              placementRaw = cached.placementRaw;
             } else {
               // Comprehensive Meta Ads data fetch: 90 days + lifetime top performers
-              const fields = "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+              const fields =
+                "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
               const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
                 // 90-day ad insights sorted by spend
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`,
+                ),
                 // All campaigns including paused/ended — full history
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status,created_time,start_time,stop_time&limit=100&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status,created_time,start_time,stop_time&limit=100&access_token=${token}`,
+                ),
                 // Adsets with targeting + budget + status
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=100&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=100&access_token=${token}`,
+                ),
                 // Monthly time series — last 90 days daily
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=12&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=12&access_token=${token}`,
+                ),
                 // Placement breakdown 90 days
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`,
+                ),
                 // Lifetime top ads — all-time best performers (3 years)
-                fetch(`https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`),
+                fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`,
+                ),
               ]);
-              adsRaw        = r1.status === "fulfilled" ? await r1.value.json() : null;
-              campsRaw      = r2.status === "fulfilled" ? await r2.value.json() : null;
-              adsetsRaw     = r3.status === "fulfilled" ? await r3.value.json() : null;
+              adsRaw = r1.status === "fulfilled" ? await r1.value.json() : null;
+              campsRaw = r2.status === "fulfilled" ? await r2.value.json() : null;
+              adsetsRaw = r3.status === "fulfilled" ? await r3.value.json() : null;
               timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
-              placementRaw  = r5.status === "fulfilled" ? await r5.value.json() : null;
+              placementRaw = r5.status === "fulfilled" ? await r5.value.json() : null;
               const lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
 
               // Cache results — evict stale entries first to prevent unbounded growth
@@ -890,14 +1252,19 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
 
             // Campaigns
             if (campsRaw?.error) {
-              const isExpired = campsRaw.error.code === 190 || String(campsRaw.error.type||"").includes("OAuthException");
+              const isExpired =
+                campsRaw.error.code === 190 || String(campsRaw.error.type || "").includes("OAuthException");
               liveMetaData += isExpired
                 ? `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`
                 : `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
             } else if (campsRaw?.data?.length) {
-              const lines = campsRaw.data.slice(0, 30).map((c: any) =>
-                `  ${c.name}: ${c.effective_status||c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget)/100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget)/100).toFixed(0)} total` : "no budget"} | ${c.objective}`
-              ).join("\n");
+              const lines = campsRaw.data
+                .slice(0, 30)
+                .map(
+                  (c: any) =>
+                    `  ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
+                )
+                .join("\n");
               liveMetaData += `CAMPAIGNS (${campsRaw.data.length}):\n${lines}\n`;
             } else {
               liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada.\n`;
@@ -905,32 +1272,55 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
 
             // FIX 4: Adsets with targeting intel
             if (adsetsRaw?.data?.length) {
-              const adsetLines = adsetsRaw.data.slice(0, 20).map((s: any) => {
-                const age = s.targeting?.age_min && s.targeting?.age_max ? `${s.targeting.age_min}-${s.targeting.age_max}` : null;
-                const interests = (s.targeting?.flexible_spec?.[0]?.interests || []).slice(0,3).map((i:any)=>i.name).join(", ");
-                const geos = (s.targeting?.geo_locations?.countries || []).join(",");
-                const budget = s.daily_budget ? `$${(parseInt(s.daily_budget)/100).toFixed(0)}/day` : s.lifetime_budget ? `$${(parseInt(s.lifetime_budget)/100).toFixed(0)} total` : "no budget";
-                return `  ${s.name}: ${s.effective_status||s.status} | ${budget} | ${s.optimization_goal||""}${age?` | age ${age}`:""}${geos?` | geo:${geos}`:""}${interests?` | interests:${interests}`:""}`;
-              }).join("\n");
+              const adsetLines = adsetsRaw.data
+                .slice(0, 20)
+                .map((s: any) => {
+                  const age =
+                    s.targeting?.age_min && s.targeting?.age_max
+                      ? `${s.targeting.age_min}-${s.targeting.age_max}`
+                      : null;
+                  const interests = (s.targeting?.flexible_spec?.[0]?.interests || [])
+                    .slice(0, 3)
+                    .map((i: any) => i.name)
+                    .join(", ");
+                  const geos = (s.targeting?.geo_locations?.countries || []).join(",");
+                  const budget = s.daily_budget
+                    ? `$${(parseInt(s.daily_budget) / 100).toFixed(0)}/day`
+                    : s.lifetime_budget
+                      ? `$${(parseInt(s.lifetime_budget) / 100).toFixed(0)} total`
+                      : "no budget";
+                  return `  ${s.name}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}${age ? ` | age ${age}` : ""}${geos ? ` | geo:${geos}` : ""}${interests ? ` | interests:${interests}` : ""}`;
+                })
+                .join("\n");
               liveMetaData += `ADSETS (${adsetsRaw.data.length}):\n${adsetLines}\n`;
             }
 
             // Ads performance
             if (adsRaw?.error) {
-              const isExpired = adsRaw.error.code === 190 || String(adsRaw.error.message||"").toLowerCase().includes("token") || String(adsRaw.error.type||"").includes("OAuthException");
+              const isExpired =
+                adsRaw.error.code === 190 ||
+                String(adsRaw.error.message || "")
+                  .toLowerCase()
+                  .includes("token") ||
+                String(adsRaw.error.type || "").includes("OAuthException");
               liveMetaData += isExpired
                 ? `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`
                 : `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
             } else if (adsRaw?.data?.length) {
               // FIX 1: Show all 50 with smarter truncation
-              const adLines = adsRaw.data.slice(0, 50).map((ad: any) => {
-                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
-                const leads = ad.actions?.find((a: any) => a.action_type === "lead")?.value || "";
-                const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
-                const hr = hookRate ? ` hook=${((parseInt(hookRate)/Math.max(parseInt(ad.impressions||1),1))*100).toFixed(1)}%` : "";
-                const conv = leads ? ` leads=${leads}` : purchases !== "0" ? ` purch=${purchases}` : "";
-                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm||0).toFixed(1)} freq=${ad.frequency||"?"}${hr}${conv}`;
-              }).join("\n");
+              const adLines = adsRaw.data
+                .slice(0, 50)
+                .map((ad: any) => {
+                  const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
+                  const leads = ad.actions?.find((a: any) => a.action_type === "lead")?.value || "";
+                  const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
+                  const hr = hookRate
+                    ? ` hook=${((parseInt(hookRate) / Math.max(parseInt(ad.impressions || 1), 1)) * 100).toFixed(1)}%`
+                    : "";
+                  const conv = leads ? ` leads=${leads}` : purchases !== "0" ? ` purch=${purchases}` : "";
+                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm || 0).toFixed(1)} freq=${ad.frequency || "?"}${hr}${conv}`;
+                })
+                .join("\n");
               liveMetaData += `ADS (${adsRaw.data.length} found, top by spend):\n${adLines}\n`;
             } else {
               liveMetaData += `ADS: Nenhum gasto de anúncio no período.\n`;
@@ -938,43 +1328,53 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
 
             // ALL-TIME TOP PERFORMERS (3 years lifetime)
             if (lifetimeAdsRaw?.data?.length) {
-              const lifetimeLines = lifetimeAdsRaw.data.slice(0, 20).map((ad: any) => {
-                const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
-                const conv = purchases !== "0" ? ` purch=${purchases}` : "";
-                return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend||0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions||0).toLocaleString()}${conv} | ${ad.campaign_name}`;
-              }).join("\n");
+              const lifetimeLines = lifetimeAdsRaw.data
+                .slice(0, 20)
+                .map((ad: any) => {
+                  const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
+                  const conv = purchases !== "0" ? ` purch=${purchases}` : "";
+                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions || 0).toLocaleString()}${conv} | ${ad.campaign_name}`;
+                })
+                .join("\n");
               liveMetaData += `\nALL-TIME TOP ADS (últimos 3 anos):\n${lifetimeLines}\n`;
             }
 
             // Monthly breakdown — macro trends
             if (timeSeriesRaw?.data?.length) {
               const monthlyLines = timeSeriesRaw.data
-                .filter((d: any) => parseFloat(d.spend||0) > 0)
+                .filter((d: any) => parseFloat(d.spend || 0) > 0)
                 .map((d: any) => {
-                  const purch = d.actions?.find((a:any)=>a.action_type==="purchase")?.value || "";
-                  return `  ${d.date_start?.slice(0,7)}: spend=$${parseFloat(d.spend||0).toFixed(0)} ctr=${parseFloat(d.ctr||0).toFixed(2)}% cpm=$${parseFloat(d.cpm||0).toFixed(1)}${purch?` purch=${purch}`:""}`;
-                }).join("\n");
+                  const purch = d.actions?.find((a: any) => a.action_type === "purchase")?.value || "";
+                  return `  ${d.date_start?.slice(0, 7)}: spend=$${parseFloat(d.spend || 0).toFixed(0)} ctr=${parseFloat(d.ctr || 0).toFixed(2)}% cpm=$${parseFloat(d.cpm || 0).toFixed(1)}${purch ? ` purch=${purch}` : ""}`;
+                })
+                .join("\n");
               if (monthlyLines) liveMetaData += `MONTHLY BREAKDOWN:\n${monthlyLines}\n`;
             }
 
             // Daily trend
             if (false && timeSeriesRaw?.data?.length) {
               const series = timeSeriesRaw.data
-                .filter((d: any) => parseFloat(d.spend||0) > 0)
+                .filter((d: any) => parseFloat(d.spend || 0) > 0)
                 .slice(-14)
                 .map((d: any) => {
-                  const purch = d.actions?.find((a:any)=>a.action_type==="purchase")?.value || "";
-                  return `  ${d.date_start}: spend=$${parseFloat(d.spend||0).toFixed(0)} ctr=${parseFloat(d.ctr||0).toFixed(2)}% cpm=$${parseFloat(d.cpm||0).toFixed(1)}${purch?` purch=${purch}`:""}`;
-                }).join("\n");
+                  const purch = d.actions?.find((a: any) => a.action_type === "purchase")?.value || "";
+                  return `  ${d.date_start}: spend=$${parseFloat(d.spend || 0).toFixed(0)} ctr=${parseFloat(d.ctr || 0).toFixed(2)}% cpm=$${parseFloat(d.cpm || 0).toFixed(1)}${purch ? ` purch=${purch}` : ""}`;
+                })
+                .join("\n");
               if (series) {
                 // Compute trend
-                const days = timeSeriesRaw.data.filter((d:any)=>parseFloat(d.spend||0)>0);
-                const half = Math.floor(days.length/2);
-                const firstHalf = days.slice(0,half);
+                const days = timeSeriesRaw.data.filter((d: any) => parseFloat(d.spend || 0) > 0);
+                const half = Math.floor(days.length / 2);
+                const firstHalf = days.slice(0, half);
                 const secondHalf = days.slice(half);
-                const avgCtr1 = firstHalf.reduce((s:number,d:any)=>s+parseFloat(d.ctr||0),0)/Math.max(firstHalf.length,1);
-                const avgCtr2 = secondHalf.reduce((s:number,d:any)=>s+parseFloat(d.ctr||0),0)/Math.max(secondHalf.length,1);
-                const trend = avgCtr2 > avgCtr1*1.05 ? "↑ melhorando" : avgCtr2 < avgCtr1*0.95 ? "↓ piorando" : "→ estável";
+                const avgCtr1 =
+                  firstHalf.reduce((s: number, d: any) => s + parseFloat(d.ctr || 0), 0) /
+                  Math.max(firstHalf.length, 1);
+                const avgCtr2 =
+                  secondHalf.reduce((s: number, d: any) => s + parseFloat(d.ctr || 0), 0) /
+                  Math.max(secondHalf.length, 1);
+                const trend =
+                  avgCtr2 > avgCtr1 * 1.05 ? "↑ melhorando" : avgCtr2 < avgCtr1 * 0.95 ? "↓ piorando" : "→ estável";
                 liveMetaData += `TENDÊNCIA DIÁRIA (${trend} CTR):\n${series}\n`;
               }
             }
@@ -982,13 +1382,15 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             // FIX 2: Placement breakdown
             if (placementRaw?.data?.length) {
               const placements = placementRaw.data
-                .filter((p:any) => parseFloat(p.spend||0) > 0)
+                .filter((p: any) => parseFloat(p.spend || 0) > 0)
                 .slice(0, 10)
-                .map((p:any) => `  ${p.publisher_platform||""}/${p.platform_position||""}: spend=$${parseFloat(p.spend||0).toFixed(0)} ctr=${parseFloat(p.ctr||0).toFixed(2)}% cpm=$${parseFloat(p.cpm||0).toFixed(1)}`)
+                .map(
+                  (p: any) =>
+                    `  ${p.publisher_platform || ""}/${p.platform_position || ""}: spend=$${parseFloat(p.spend || 0).toFixed(0)} ctr=${parseFloat(p.ctr || 0).toFixed(2)}% cpm=$${parseFloat(p.cpm || 0).toFixed(1)}`,
+                )
                 .join("\n");
               if (placements) liveMetaData += `PLACEMENT BREAKDOWN:\n${placements}\n`;
             }
-
           } else {
             liveMetaData = `META CONNECTED — no ad account selected. Tell user to go to Contas and select an ad account.`;
           }
@@ -1008,12 +1410,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
         const { data: gConns } = await supabase
           .from("platform_connections" as any)
           .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id, persona_id")
-          .eq("user_id", user_id).eq("platform", "google").eq("status", "active");
+          .eq("user_id", user_id)
+          .eq("platform", "google")
+          .eq("status", "active");
         const gC = (gConns as any[]) || [];
         // Fix: if no persona_id, fall back to first active connection (not null)
-        const gRow = persona_id
-          ? gC.find((c: any) => c.persona_id === persona_id) || gC[0] || null
-          : gC[0] || null;
+        const gRow = persona_id ? gC.find((c: any) => c.persona_id === persona_id) || gC[0] || null : gC[0] || null;
 
         if (gRow?.access_token) {
           let token = gRow.access_token;
@@ -1035,10 +1437,15 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               const refreshData = await refreshRes.json();
               if (refreshData.access_token) {
                 token = refreshData.access_token;
-                await supabase.from("platform_connections" as any).update({
-                  access_token: token,
-                  expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
-                }).eq("user_id", user_id).eq("platform", "google").eq("persona_id", persona_id);
+                await supabase
+                  .from("platform_connections" as any)
+                  .update({
+                    access_token: token,
+                    expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
+                  })
+                  .eq("user_id", user_id)
+                  .eq("platform", "google")
+                  .eq("persona_id", persona_id);
               }
             } catch {}
           }
@@ -1058,13 +1465,16 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
             if (!(globalThis as any).__googleCache) (globalThis as any).__googleCache = {};
             const gCached = (globalThis as any).__googleCache[gCacheKey];
 
-            let gCampaigns: any[] = [], gAds: any[] = [], gKeywords: any[] = [], gTimeSeries: any[] = [];
+            let gCampaigns: any[] = [],
+              gAds: any[] = [],
+              gKeywords: any[] = [],
+              gTimeSeries: any[] = [];
 
-            if (gCached && (Date.now() - gCached.ts) < 15 * 60 * 1000) {
-              gCampaigns   = gCached.campaigns;
-              gAds         = gCached.ads;
-              gKeywords    = gCached.keywords;
-              gTimeSeries  = gCached.timeSeries;
+            if (gCached && Date.now() - gCached.ts < 15 * 60 * 1000) {
+              gCampaigns = gCached.campaigns;
+              gAds = gCached.ads;
+              gKeywords = gCached.keywords;
+              gTimeSeries = gCached.timeSeries;
             } else {
               const makeGHdr = (withLoginId: boolean) => ({
                 Authorization: `Bearer ${token}`,
@@ -1086,19 +1496,27 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
 
               const [cRes, aRes, kRes, tRes] = await Promise.allSettled([
                 // Campaigns
-                gQuery(`SELECT campaign.name, campaign.status, campaign.advertising_channel_type, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.roas FROM campaign WHERE segments.date BETWEEN '${since}' AND '${until}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`),
+                gQuery(
+                  `SELECT campaign.name, campaign.status, campaign.advertising_channel_type, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.roas FROM campaign WHERE segments.date BETWEEN '${since}' AND '${until}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`,
+                ),
                 // Ads
-                gQuery(`SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group.name, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${until}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`),
+                gQuery(
+                  `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group.name, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${until}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`,
+                ),
                 // Keywords
-                gQuery(`SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM keyword_view WHERE segments.date BETWEEN '${since}' AND '${until}' ORDER BY metrics.cost_micros DESC LIMIT 20`),
+                gQuery(
+                  `SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM keyword_view WHERE segments.date BETWEEN '${since}' AND '${until}' ORDER BY metrics.cost_micros DESC LIMIT 20`,
+                ),
                 // Time series — last 14 days
-                gQuery(`SELECT segments.date, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${new Date(Date.now()-14*86400000).toISOString().split("T")[0]}' AND '${until}' ORDER BY segments.date ASC LIMIT 14`),
+                gQuery(
+                  `SELECT segments.date, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0]}' AND '${until}' ORDER BY segments.date ASC LIMIT 14`,
+                ),
               ]);
 
-              const parse = (r: any) => r.status === "fulfilled" ? (r.value?.results || []) : [];
-              gCampaigns  = parse(cRes);
-              gAds        = parse(aRes);
-              gKeywords   = parse(kRes);
+              const parse = (r: any) => (r.status === "fulfilled" ? r.value?.results || [] : []);
+              gCampaigns = parse(cRes);
+              gAds = parse(aRes);
+              gKeywords = parse(kRes);
               gTimeSeries = parse(tRes);
 
               // Evict stale entries before writing to prevent unbounded growth
@@ -1107,58 +1525,75 @@ Language style: ${(persona.result as any)?.language_style || "—"}` : "";
               for (const k of Object.keys(googleCache)) {
                 if (gNow - googleCache[k].ts >= 15 * 60 * 1000) delete googleCache[k];
               }
-              googleCache[gCacheKey] = { ts: gNow, campaigns: gCampaigns, ads: gAds, keywords: gKeywords, timeSeries: gTimeSeries };
+              googleCache[gCacheKey] = {
+                ts: gNow,
+                campaigns: gCampaigns,
+                ads: gAds,
+                keywords: gKeywords,
+                timeSeries: gTimeSeries,
+              };
             }
 
             liveGoogleData = `LIVE GOOGLE ADS — Account: ${activeAcc.name || custId} (${since} to ${until})\n`;
 
             if (gCampaigns.length) {
-              const lines = gCampaigns.slice(0, 20).map((r: any) => {
-                const c = r.campaign || {};
-                const m = r.metrics || {};
-                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                const cpc = ((m.averageCpc || 0) / 1e6).toFixed(2);
-                const conv = m.conversions?.toFixed(1) || "0";
-                const roas = m.roas?.toFixed(2) || "—";
-                return `  ${c.name}: ${c.status} | spend=$${spend} ctr=${ctr}% cpc=$${cpc} conv=${conv} roas=${roas} type=${c.advertisingChannelType || "?"}`;
-              }).join("\n");
+              const lines = gCampaigns
+                .slice(0, 20)
+                .map((r: any) => {
+                  const c = r.campaign || {};
+                  const m = r.metrics || {};
+                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                  const cpc = ((m.averageCpc || 0) / 1e6).toFixed(2);
+                  const conv = m.conversions?.toFixed(1) || "0";
+                  const roas = m.roas?.toFixed(2) || "—";
+                  return `  ${c.name}: ${c.status} | spend=$${spend} ctr=${ctr}% cpc=$${cpc} conv=${conv} roas=${roas} type=${c.advertisingChannelType || "?"}`;
+                })
+                .join("\n");
               liveGoogleData += `CAMPAIGNS (${gCampaigns.length}):\n${lines}\n`;
             }
 
             if (gAds.length) {
-              const lines = gAds.slice(0, 20).map((r: any) => {
-                const a = r.adGroupAd?.ad || {};
-                const m = r.metrics || {};
-                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                return `  ${a.name || "Ad"} (${a.type || "?"}): spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
-              }).join("\n");
+              const lines = gAds
+                .slice(0, 20)
+                .map((r: any) => {
+                  const a = r.adGroupAd?.ad || {};
+                  const m = r.metrics || {};
+                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                  return `  ${a.name || "Ad"} (${a.type || "?"}): spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
+                })
+                .join("\n");
               liveGoogleData += `ADS (${gAds.length}):\n${lines}\n`;
             }
 
             if (gKeywords.length) {
-              const lines = gKeywords.slice(0, 15).map((r: any) => {
-                const k = r.adGroupCriterion?.keyword || {};
-                const m = r.metrics || {};
-                const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                return `  "${k.text}" [${k.matchType}]: spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
-              }).join("\n");
+              const lines = gKeywords
+                .slice(0, 15)
+                .map((r: any) => {
+                  const k = r.adGroupCriterion?.keyword || {};
+                  const m = r.metrics || {};
+                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
+                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
+                  return `  "${k.text}" [${k.matchType}]: spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
+                })
+                .join("\n");
               liveGoogleData += `TOP KEYWORDS:\n${lines}\n`;
             }
 
             if (gTimeSeries.length) {
-              const lines = gTimeSeries.map((r: any) => {
-                const m = r.metrics || {};
-                const s = r.segments || {};
-                return `  ${s.date}: spend=$${((m.costMicros||0)/1e6).toFixed(0)} ctr=${((m.ctr||0)*100).toFixed(2)}% conv=${m.conversions?.toFixed(1)||"0"}`;
-              }).join("\n");
+              const lines = gTimeSeries
+                .map((r: any) => {
+                  const m = r.metrics || {};
+                  const s = r.segments || {};
+                  return `  ${s.date}: spend=$${((m.costMicros || 0) / 1e6).toFixed(0)} ctr=${((m.ctr || 0) * 100).toFixed(2)}% conv=${m.conversions?.toFixed(1) || "0"}`;
+                })
+                .join("\n");
               liveGoogleData += `DAILY TREND:\n${lines}\n`;
             }
-
           } else {
-            liveGoogleData = "GOOGLE ADS CONNECTED — no account selected. Tell user to go to Contas and select a Google Ads account.";
+            liveGoogleData =
+              "GOOGLE ADS CONNECTED — no account selected. Tell user to go to Contas and select a Google Ads account.";
           }
         } else {
           liveGoogleData = "GOOGLE ADS CONNECTED — token missing. Tell user to reconnect Google Ads in Contas.";
@@ -1196,17 +1631,30 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
     const pfCtx = (() => {
       if (!pfHistory.length) return "";
       const avgScore = (pfHistory.reduce((s: number, r: any) => s + (r.score || 0), 0) / pfHistory.length).toFixed(0);
-      const verdicts = pfHistory.reduce((acc: any, r: any) => { acc[r.verdict] = (acc[r.verdict]||0)+1; return acc; }, {});
+      const verdicts = pfHistory.reduce((acc: any, r: any) => {
+        acc[r.verdict] = (acc[r.verdict] || 0) + 1;
+        return acc;
+      }, {});
       const lastRun = pfHistory[0];
-      const trend = pfHistory.length >= 3
-        ? pfHistory.slice(0,3).map((r: any) => r.score).join(" → ")
-        : null;
+      const trend =
+        pfHistory.length >= 3
+          ? pfHistory
+              .slice(0, 3)
+              .map((r: any) => r.score)
+              .join(" → ")
+          : null;
       return [
         `PRE-FLIGHT HISTORY (${pfHistory.length} runs):`,
-        `  Avg score: ${avgScore}/100 | Verdicts: ${Object.entries(verdicts).map(([v,c]) => `${v}:${c}`).join(", ")}`,
-        lastRun ? `  Last run: score ${lastRun.score} | ${lastRun.verdict} | ${lastRun.platform} / ${lastRun.market} / ${lastRun.format}` : "",
+        `  Avg score: ${avgScore}/100 | Verdicts: ${Object.entries(verdicts)
+          .map(([v, c]) => `${v}:${c}`)
+          .join(", ")}`,
+        lastRun
+          ? `  Last run: score ${lastRun.score} | ${lastRun.verdict} | ${lastRun.platform} / ${lastRun.market} / ${lastRun.format}`
+          : "",
         trend ? `  Score trend (last 3): ${trend}` : "",
-      ].filter(Boolean).join("\n");
+      ]
+        .filter(Boolean)
+        .join("\n");
     })();
 
     const richContext = [
@@ -1219,33 +1667,70 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
       importInsights ? `IMPORTED DATA:\n${importInsights}` : "",
-      learnedCtx ? `=== APRENDIZADO DA CONTA ===\n${learnedCtx}\n(Use esses padrões para personalizar hooks, scripts e recomendações)` : "",
+      learnedCtx
+        ? `=== APRENDIZADO DA CONTA ===\n${learnedCtx}\n(Use esses padrões para personalizar hooks, scripts e recomendações)`
+        : "",
       (() => {
         const snaps = (dailySnapshots || []) as any[];
         if (!snaps.length) return "";
         const latest = snaps[0];
         const prev = snaps[1];
-        const ctrDelta = prev ? ((latest.avg_ctr - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001) * 100).toFixed(1) : null;
-        const spendDelta = prev && prev.total_spend > 0 ? ((latest.total_spend - prev.total_spend) / prev.total_spend * 100).toFixed(1) : null;
+        const ctrDelta = prev
+          ? (((latest.avg_ctr - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001)) * 100).toFixed(1)
+          : null;
+        const spendDelta =
+          prev && prev.total_spend > 0
+            ? (((latest.total_spend - prev.total_spend) / prev.total_spend) * 100).toFixed(1)
+            : null;
         const topAds = (latest.top_ads as any[]) || [];
         const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 3);
         const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 3);
         const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 3);
         const aiActions = ((latest.raw_period as any)?.actions || []) as any[];
         return [
-          `=== INTELLIGENCE DIÁRIA — ${latest.date} (${latest.account_name || 'conta'}) ===`,
-          `Spend 7d: R$${(latest.total_spend||0).toFixed(0)} | CTR médio: ${((latest.avg_ctr||0)*100).toFixed(2)}% | ${latest.active_ads||0} ads ativos`,
-          ctrDelta ? `Vs semana anterior: CTR ${parseFloat(ctrDelta)>0?'+':''}${ctrDelta}% | Spend ${parseFloat(spendDelta||'0')>0?'+':''}${spendDelta||'0'}%` : '',
-          latest.yesterday_spend > 0 ? `Ontem: R$${(latest.yesterday_spend||0).toFixed(0)} spend | CTR ${((latest.yesterday_ctr||0)*100).toFixed(2)}%` : '',
-          toScale.length ? `ESCALAR AGORA (alta performance): ${toScale.map((a:any)=>`"${a.name?.slice(0,35)}" CTR ${(a.ctr*100)?.toFixed(2)}%`).join(' | ')}` : '',
-          toPause.length ? `PAUSAR (gastando sem retorno): ${toPause.map((a:any)=>`"${a.name?.slice(0,35)}" CTR ${(a.ctr*100)?.toFixed(2)}% R$${a.spend?.toFixed(0)}`).join(' | ')}` : '',
-          fatigued.length ? `FADIGA CRIATIVA (freq alta): ${fatigued.map((a:any)=>`"${a.name?.slice(0,30)}" freq ${a.frequency?.toFixed(1)}`).join(' | ')}` : '',
-          topAds.slice(0,5).length ? `TOP ADS:
-${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | CTR ${(a.ctr*100)?.toFixed(2)}% | R$${a.spend?.toFixed(0)} spend${a.conversions>0?` | ${a.conversions} conv`:''}${a.deltaCtr?` | ${parseFloat(a.deltaCtr?.toFixed(1))>0?'+':''}${a.deltaCtr?.toFixed(1)}% vs sem. ant`:''}`).join('\n')}` : '',
-          aiActions.length ? `AÇÕES RECOMENDADAS:\n${aiActions.map((a:any)=>`  [${a.urgencia?.toUpperCase()}] ${a.tipo?.toUpperCase()}: "${a.anuncio?.slice(0,35)}" — ${a.motivo}`).join('\n')}` : '',
-          latest.ai_insight ? `\nINSIGHT DO DIA: ${latest.ai_insight}` : '',
-          snaps.length > 1 ? `\nHISTÓRICO:\n${snaps.slice(0,7).map((s:any)=>`  ${s.date}: CTR ${((s.avg_ctr||0)*100).toFixed(2)}% / R$${(s.total_spend||0).toFixed(0)} / ${s.active_ads||0} ads`).join('\n')}` : '',
-        ].filter(Boolean).join('\n');
+          `=== INTELLIGENCE DIÁRIA — ${latest.date} (${latest.account_name || "conta"}) ===`,
+          `Spend 7d: R$${(latest.total_spend || 0).toFixed(0)} | CTR médio: ${((latest.avg_ctr || 0) * 100).toFixed(2)}% | ${latest.active_ads || 0} ads ativos`,
+          ctrDelta
+            ? `Vs semana anterior: CTR ${parseFloat(ctrDelta) > 0 ? "+" : ""}${ctrDelta}% | Spend ${parseFloat(spendDelta || "0") > 0 ? "+" : ""}${spendDelta || "0"}%`
+            : "",
+          latest.yesterday_spend > 0
+            ? `Ontem: R$${(latest.yesterday_spend || 0).toFixed(0)} spend | CTR ${((latest.yesterday_ctr || 0) * 100).toFixed(2)}%`
+            : "",
+          toScale.length
+            ? `ESCALAR AGORA (alta performance): ${toScale.map((a: any) => `"${a.name?.slice(0, 35)}" CTR ${(a.ctr * 100)?.toFixed(2)}%`).join(" | ")}`
+            : "",
+          toPause.length
+            ? `PAUSAR (gastando sem retorno): ${toPause.map((a: any) => `"${a.name?.slice(0, 35)}" CTR ${(a.ctr * 100)?.toFixed(2)}% R$${a.spend?.toFixed(0)}`).join(" | ")}`
+            : "",
+          fatigued.length
+            ? `FADIGA CRIATIVA (freq alta): ${fatigued.map((a: any) => `"${a.name?.slice(0, 30)}" freq ${a.frequency?.toFixed(1)}`).join(" | ")}`
+            : "",
+          topAds.slice(0, 5).length
+            ? `TOP ADS:
+${topAds
+  .slice(0, 5)
+  .map(
+    (a: any, i: number) =>
+      `  ${i + 1}. "${a.name?.slice(0, 40)}" | CTR ${(a.ctr * 100)?.toFixed(2)}% | R$${a.spend?.toFixed(0)} spend${a.conversions > 0 ? ` | ${a.conversions} conv` : ""}${a.deltaCtr ? ` | ${parseFloat(a.deltaCtr?.toFixed(1)) > 0 ? "+" : ""}${a.deltaCtr?.toFixed(1)}% vs sem. ant` : ""}`,
+  )
+  .join("\n")}`
+            : "",
+          aiActions.length
+            ? `AÇÕES RECOMENDADAS:\n${aiActions.map((a: any) => `  [${a.urgencia?.toUpperCase()}] ${a.tipo?.toUpperCase()}: "${a.anuncio?.slice(0, 35)}" — ${a.motivo}`).join("\n")}`
+            : "",
+          latest.ai_insight ? `\nINSIGHT DO DIA: ${latest.ai_insight}` : "",
+          snaps.length > 1
+            ? `\nHISTÓRICO:\n${snaps
+                .slice(0, 7)
+                .map(
+                  (s: any) =>
+                    `  ${s.date}: CTR ${((s.avg_ctr || 0) * 100).toFixed(2)}% / R$${(s.total_spend || 0).toFixed(0)} / ${s.active_ads || 0} ads`,
+                )
+                .join("\n")}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
       })(),
       pfCtx || "",
       (() => {
@@ -1254,11 +1739,18 @@ ${topAds.slice(0,5).map((a:any,i:number)=>`  ${i+1}. "${a.name?.slice(0,40)}" | 
         const directive = profile?.ai_recommendations?.weekly_directive;
         const lines = [
           // Business goal — highest priority context
-          businessGoal ? `=== OBJETIVO DE NEGÓCIO ===\nMeta: ${businessGoal.goal}\nBudget: ${businessGoal.budget || '?'}\nCPA alvo: ${businessGoal.target_cpa || '?'}\nProgresso: ${businessGoal.progress || 'sem dados'}` : "",
+          businessGoal
+            ? `=== OBJETIVO DE NEGÓCIO ===\nMeta: ${businessGoal.goal}\nBudget: ${businessGoal.budget || "?"}\nCPA alvo: ${businessGoal.target_cpa || "?"}\nProgresso: ${businessGoal.progress || "sem dados"}`
+            : "",
           profile.ai_summary ? `PERFIL DO USUÁRIO: ${profile.ai_summary}` : "",
           directive?.proximo_teste ? `DIRETIVA SEMANAL (Creative Director): ${directive.proximo_teste}` : "",
           directive?.resumo && directive.resumo !== profile.ai_summary ? `SITUAÇÃO DA CONTA: ${directive.resumo}` : "",
-          directive?.criar_esta_semana?.length ? `HOOKS PROPOSTOS PARA TESTAR: ${directive.criar_esta_semana.slice(0,2).map((h: any) => h.hook?.slice(0,80)).join(' | ')}` : "",
+          directive?.criar_esta_semana?.length
+            ? `HOOKS PROPOSTOS PARA TESTAR: ${directive.criar_esta_semana
+                .slice(0, 2)
+                .map((h: any) => h.hook?.slice(0, 80))
+                .join(" | ")}`
+            : "",
         ];
         return lines.filter(Boolean).join("\n");
       })(),
@@ -1278,46 +1770,78 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       (() => {
         const alerts = (accountAlerts || []) as any[];
         if (!alerts.length) return "";
-        const lines = alerts.map((a: any) => {
-          const when = a.created_at ? new Date(a.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
-          const ad = a.ad_name ? `"${a.ad_name}"` : "";
-          const camp = a.campaign_name ? ` (${a.campaign_name})` : "";
-          return `  [${a.urgency?.toUpperCase() || "HIGH"}] ${a.detail}${ad ? ` — Ad: ${ad}${camp}` : ""}${a.action_suggestion ? ` → Ação: ${a.action_suggestion}` : ""}${when ? ` (${when})` : ""}`;
-        }).join("\n");
+        const lines = alerts
+          .map((a: any) => {
+            const when = a.created_at
+              ? new Date(a.created_at).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "";
+            const ad = a.ad_name ? `"${a.ad_name}"` : "";
+            const camp = a.campaign_name ? ` (${a.campaign_name})` : "";
+            return `  [${a.urgency?.toUpperCase() || "HIGH"}] ${a.detail}${ad ? ` — Ad: ${ad}${camp}` : ""}${a.action_suggestion ? ` → Ação: ${a.action_suggestion}` : ""}${when ? ` (${when})` : ""}`;
+          })
+          .join("\n");
         return `=== ALERTAS ATIVOS DA CONTA (não dispensados pelo usuário) ===\n${lines}\nEsses alertas foram gerados automaticamente. Se o usuário perguntar sobre performance ou problemas, referencie esses alertas diretamente.`;
       })(),
       (() => {
         const notes = (aiProfile as any)?.pain_point as string | null;
         if (!notes) return "";
-        const items = notes.split("|||")
+        const items = notes
+          .split("|||")
           .filter(Boolean)
-          .filter(n => !n.trim().startsWith("Usuário:") && !n.trim().startsWith("Nicho:"))
+          .filter((n) => !n.trim().startsWith("Usuário:") && !n.trim().startsWith("Nicho:"))
           .slice(0, 5);
         if (!items.length) return "";
-        return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map(n => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
+        return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map((n) => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
       })(),
       // Persistent chat memory — facts extracted from previous conversations
-      memorySummary ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)` : "",
+      memorySummary
+        ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)`
+        : "",
       // Cross-account intelligence — winners from other accounts of this user
       (() => {
         const cross = (crossAccountPatterns || []) as any[];
         if (!cross.length) return "";
-        const lines = cross.slice(0, 5).map((p: any) =>
-          `  ✓ ${p.pattern_key?.replace(/_/g, ' ')}: CTR ${(p.avg_ctr * 100).toFixed(2)}% | conf ${(p.confidence * 100).toFixed(0)}% — ${p.insight_text?.slice(0, 80) || ''}`
-        ).join("\n");
+        const lines = cross
+          .slice(0, 5)
+          .map(
+            (p: any) =>
+              `  ✓ ${p.pattern_key?.replace(/_/g, " ")}: CTR ${(p.avg_ctr * 100).toFixed(2)}% | conf ${(p.confidence * 100).toFixed(0)}% — ${p.insight_text?.slice(0, 80) || ""}`,
+          )
+          .join("\n");
         return `=== PADRÕES VENCEDORES DE OUTRAS CONTAS (mesmo usuário) ===\n${lines}\n(Esses padrões funcionaram em outras contas deste usuário. Quando relevante, sugira adaptação.)`;
       })(),
       // Few-shot: examples of responses this user approved — imitate this style/specificity/format
-      fewShotBlock ? `=== EXEMPLOS DE RESPOSTAS QUE ESTE USUÁRIO APROVOU ===\nImite o nível de especificidade, o tom e o formato dessas respostas. Nunca seja mais genérico do que elas.\n\n${fewShotBlock}` : "",
-    ].filter(Boolean).join("\n");
+      fewShotBlock
+        ? `=== EXEMPLOS DE RESPOSTAS QUE ESTE USUÁRIO APROVOU ===\nImite o nível de especificidade, o tom e o formato dessas respostas. Nunca seja mais genérico do que elas.\n\n${fewShotBlock}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     // ── 5. Language ───────────────────────────────────────────────────────────
     const LANG_NAMES: Record<string, string> = {
-      en: "English", pt: "Portuguese (Brazilian)", es: "Spanish", fr: "French", de: "German",
+      en: "English",
+      pt: "Portuguese (Brazilian)",
+      es: "Spanish",
+      fr: "French",
+      de: "German",
     };
     const MARKET_LANG_MAP: Record<string, string> = {
-      BR: "pt", MX: "es", ES: "es", AR: "es", CO: "es",
-      IN: "en", US: "en", UK: "en", FR: "fr", DE: "de",
+      BR: "pt",
+      MX: "es",
+      ES: "es",
+      AR: "es",
+      CO: "es",
+      IN: "en",
+      US: "en",
+      UK: "en",
+      FR: "fr",
+      DE: "de",
     };
     const uiLang2 = (user_language as string) || "en";
     const personaMarket = (persona?.result as any)?.preferred_market || "";
@@ -1328,7 +1852,7 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     // ── 5b. History — FIX 5: smart compression ──────────────────────────────
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
-      const raw = history.filter(h => h.role === "user" || h.role === "assistant");
+      const raw = history.filter((h) => h.role === "user" || h.role === "assistant");
 
       if (raw.length <= 16) {
         // Short conversation — keep full, just truncate long assistant messages
@@ -1344,9 +1868,9 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
 
         // Summarize older messages into a compact digest
         const digest = older
-          .filter(h => h.role === "user")
+          .filter((h) => h.role === "user")
           .slice(-8) // last 8 user questions from the older block
-          .map(h => `- ${String(h.content || "").slice(0, 120)}`)
+          .map((h) => `- ${String(h.content || "").slice(0, 120)}`)
           .join("\n");
 
         if (digest) {
@@ -1371,7 +1895,12 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
 
     // ── 6. Lovable AI Gateway call ──────────────────────────────────────────
     const todayObj = new Date();
-    const todayStr = todayObj.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const todayStr = todayObj.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
     const currentYear = todayObj.getFullYear();
     const systemPrompt = `Você é o AdBrief AI — especialista em performance de mídia paga, embutido na conta do usuário.
 Se perguntarem quem você é: "Sou o AdBrief AI." Nunca revele o modelo base.
@@ -1559,7 +2088,7 @@ DASHBOARD quando pedir performance: bloco "dashboard" com dados reais. Sem dados
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${(() => {
-  const ctx = (typeof context === "string" && context.length > 100) ? context : richContext;
+  const ctx = typeof context === "string" && context.length > 100 ? context : richContext;
   if (ctx && ctx.trim().length > 50) return ctx;
   return `**SEM DADOS DE CONTA AINDA.**
 Você ainda não tem histórico desta conta. Diga isso uma vez e convide a conectar ou usar uma ferramenta.
@@ -1642,15 +2171,14 @@ EXEMPLO correto de content: "**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** p�
 PROIBIDO:
 - Bloco de texto corrido sem nenhum negrito ou quebra de linha
 - Listas com traço (- item) — use **negrito** + \\n\\n
-- Headers com ## — apenas **negrito**`
+- Headers com ## — apenas **negrito**`;
 
-    const toneInstruction = user_prefs?.tone
-      ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}`
-      : "";
+    const toneInstruction = user_prefs?.tone ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}` : "";
 
-    const prefStr = (user_prefs?.liked?.length || user_prefs?.disliked?.length)
-      ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}${toneInstruction}`
-      : toneInstruction;
+    const prefStr =
+      user_prefs?.liked?.length || user_prefs?.disliked?.length
+        ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}${toneInstruction}`
+        : toneInstruction;
 
     const aiMessages = [...historyMessages, { role: "user" as const, content: message }];
 
@@ -1668,11 +2196,12 @@ PROIBIDO:
         // Smart model routing: Sonnet for rich-context responses, Haiku for simple ones
         // Rich context = has learned patterns, real ad data, or multi-platform analysis
         model: (() => {
-          const richCtx = (typeof context === "string" && context.length > 200) ||
-            (systemPrompt.includes("PADRÕES VENCEDORES") ||
-             systemPrompt.includes("DADOS DA CONTA") ||
-             systemPrompt.includes("Meta Ads") && systemPrompt.includes("ROAS") ||
-             systemPrompt.includes("TRENDS ATIVAS"));
+          const richCtx =
+            (typeof context === "string" && context.length > 200) ||
+            systemPrompt.includes("PADRÕES VENCEDORES") ||
+            systemPrompt.includes("DADOS DA CONTA") ||
+            (systemPrompt.includes("Meta Ads") && systemPrompt.includes("ROAS")) ||
+            systemPrompt.includes("TRENDS ATIVAS");
           return richCtx ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001";
         })(),
         max_tokens: 3000,
@@ -1709,7 +2238,9 @@ PROIBIDO:
           try {
             const arr = JSON.parse(m[0]);
             if (Array.isArray(arr)) merged.push(...arr);
-          } catch { /* skip invalid */ }
+          } catch {
+            /* skip invalid */
+          }
         }
         if (merged.length > 0) {
           blocks = merged;
@@ -1725,13 +2256,16 @@ PROIBIDO:
     let finalBlocks = blocks;
     if (limitWarning) {
       const warnMsg = (limitWarning as any)[uiLang] || (limitWarning as any).en;
-      finalBlocks = [...blocks, {
-        type: "limit_warning",
-        title: "",
-        content: warnMsg,
-        is_limit_warning: true,
-        will_hit_limit: willHitLimit,
-      }];
+      finalBlocks = [
+        ...blocks,
+        {
+          type: "limit_warning",
+          title: "",
+          content: warnMsg,
+          is_limit_warning: true,
+          will_hit_limit: willHitLimit,
+        },
+      ];
     }
 
     // ── Fire-and-forget: extract memorable facts from this exchange ──────────
@@ -1741,28 +2275,33 @@ PROIBIDO:
         const assistantText = finalBlocks
           .filter((b: any) => b.type === "insight" || b.type === "action" || b.type === "warning")
           .map((b: any) => `${b.title ? b.title + ": " : ""}${b.content || ""}`)
-          .join(" ").slice(0, 600);
+          .join(" ")
+          .slice(0, 600);
         if (assistantText && message && user_id) {
-          await supabase.functions.invoke("extract-chat-memory", {
-            body: {
-              user_id,
-              persona_id: persona_id || null,
-              user_message: message.slice(0, 400),
-              assistant_response: assistantText,
-            }
-          }).catch(() => {});
+          await supabase.functions
+            .invoke("extract-chat-memory", {
+              body: {
+                user_id,
+                persona_id: persona_id || null,
+                user_message: message.slice(0, 400),
+                assistant_response: assistantText,
+              },
+            })
+            .catch(() => {});
         }
-      } catch (_) { /* silent — never break the main flow */ }
+      } catch (_) {
+        /* silent — never break the main flow */
+      }
     })().catch(() => {});
 
     return new Response(JSON.stringify({ blocks: finalBlocks }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (e) {
     console.error("adbrief-ai-chat error:", String(e));
     return new Response(JSON.stringify({ error: String(e) || "internal_error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
