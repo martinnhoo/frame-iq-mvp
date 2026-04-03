@@ -971,9 +971,11 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       else throw new Error(r?.error || "Resposta inválida");
     } catch (e: any) { setFail(e.message || "Falha"); }
     finally { setBusy(false); }
-  }, [user?.id, selectedPersona?.id, connections.join(",")]);
+  }, [user?.id, selectedPersona?.id, connections.join(","), dateRange.from.getTime(), dateRange.to.getTime()]);
 
   React.useEffect(() => { load(); }, [load]);
+  // Recarregar automaticamente quando período muda
+  React.useEffect(() => { load(); }, [dateRange.from.getTime(), dateRange.to.getTime()]);
 
   const data = pd?.[tab];
   const k = data?.kpis || {};
