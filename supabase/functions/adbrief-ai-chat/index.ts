@@ -2088,7 +2088,10 @@ DASHBOARD quando pedir performance: bloco "dashboard" com dados reais. Sem dados
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${(() => {
-  const ctx = typeof context === "string" && context.length > 100 ? context : richContext;
+  // richContext has live Meta/Google API data (liveMetaData) — always prefer it.
+  // frontend `context` is a DB-only snapshot that does NOT include Meta API data.
+  // Only fall back to frontend context if richContext is empty (e.g. no connections yet).
+  const ctx = richContext && richContext.trim().length > 50 ? richContext : (typeof context === "string" ? context : "");
   if (ctx && ctx.trim().length > 50) return ctx;
   return `**SEM DADOS DE CONTA AINDA.**
 Você ainda não tem histórico desta conta. Diga isso uma vez e convide a conectar ou usar uma ferramenta.
