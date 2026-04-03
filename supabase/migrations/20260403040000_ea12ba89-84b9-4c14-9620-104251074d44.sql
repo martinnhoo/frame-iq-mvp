@@ -1,0 +1,1 @@
+alter function public.prune_chat_messages() set search_path = public;

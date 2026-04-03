@@ -346,6 +346,44 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          persona_id: string | null
+          role: string
+          ts: number
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          persona_id?: string | null
+          role: string
+          ts: number
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          persona_id?: string | null
+          role?: string
+          ts?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string | null
