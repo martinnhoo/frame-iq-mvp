@@ -2481,7 +2481,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             ):(
               /* ── Bolha da IA — esquerda, card escuro ── */
-              <div>
+              /* Se todos blocks são _pendingTool, suprimir tudo — ThinkingIndicator cobre */
+              <div key={msg.blocks?.every((b:any)=>b._pendingTool) ? "pending" : "resolved"}>
                 {/* Avatar + label — só mostra se há blocks reais */}
                 {!!(msg.blocks?.length) && !(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
