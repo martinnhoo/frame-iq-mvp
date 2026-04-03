@@ -71,18 +71,19 @@ function getMetricValue(d: any, key: MetricKey): number {
 // ── Sparkline ─────────────────────────────────────────────────────────────────
 function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data||data.length<2) return null;
-  const w=80,h=28,pad=3;
+  const w=80,h=28,pad=2;
   const min=Math.min(...data),max=Math.max(...data),range=max-min;
   // Se todos os valores são iguais (inclui todos zero) — desenha linha reta no meio
   const pts=data.map((v,i)=>{
-    const x=(i/(data.length-1))*w;
-    const y=range===0 ? h/2 : h-pad-((v-min)/range)*(h-pad*2);
+    // pad on all 4 sides so stroke (1.5px) never clips at any edge
+    const x=pad+(i/(data.length-1))*(w-pad*2);
+    const y=range===0 ? h/2 : pad+((1-(v-min)/range))*(h-pad*2);
     return `${x},${y}`;
   });
   const path=`M ${pts.join(" L ")}`;
-  const area=`M 0,${h} L ${path.slice(2)} L ${w},${h} Z`;
+  const area=`M ${pad},${h} L ${path.slice(2)} L ${w-pad},${h} Z`;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"visible",display:"block"}}>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"hidden",display:"block"}}>
       <path d={area} fill={`${color}18`}/>
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
     </svg>
