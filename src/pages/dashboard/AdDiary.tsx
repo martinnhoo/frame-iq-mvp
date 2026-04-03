@@ -308,17 +308,22 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       };
 
       const rows = metaAds.map((a: any) => {
-        const verd = calcVerdict(a);
-        const ctr = a.ctr || 0;
+        const ctr = a.ctr || 0; // already 0-1 from live-metrics
+        const spend = a.spend || 0;
+        const roas = a.roas || null;
+        const conv = a.conversions || 0;
+        const verd = calcVerdict({ ...a, ctr: ctr * 100, spend, roas }); // calcVerdict expects ctr as %
         return {
           user_id: user.id, persona_id: personaId, platform: "meta",
-          ad_id: a.name || String(Math.random()), ad_name: a.name || "Sem nome",
-          campaign_name: a.campaign || null, adset_name: null,
-          status: a.isWinner ? "active" : "paused",
+          ad_id: a.id || a.name || String(Math.random()),
+          ad_name: a.name || "Sem nome",
+          campaign_name: a.campaign || null,
+          adset_name: a.adset || null,
+          status: "active",
           launched_at: null, paused_at: null, days_running: 0,
-          spend: a.spend || 0, impressions: 0, clicks: 0,
-          ctr, cpc: 0, conversions: a.conv || 0, conv_value: 0,
-          roas: null, frequency: a.freq || null,
+          spend, impressions: a.impressions || 0, clicks: 0,
+          ctr, cpc: a.cpc || 0, conversions: conv, conv_value: 0,
+          roas, frequency: null,
           verdict: verd.verdict, verdict_reason: verd.reason,
           peak_ctr: ctr, synced_at: new Date().toISOString(),
         };
