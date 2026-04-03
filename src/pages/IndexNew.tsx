@@ -43,13 +43,13 @@ function CTAButton({
   };
 
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: "linear-gradient(135deg, #0ea5e9, #6366f1)", color: "#fff", boxShadow: "0 0 32px rgba(14,165,233,0.25)" },
+    primary: { background: "#0ea5e9", color: "#fff", boxShadow: "0 0 32px rgba(14,165,233,0.25)" },
     ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
     white:   { background: "#fff", color: "#000" },
   };
 
   const hoverStyle = {
-    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(14,165,233,0.4)" },
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 40px rgba(14,165,233,0.45)" },
     ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
     white:   { opacity: "0.88" },
   };
@@ -172,6 +172,7 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Try free for 3 days", final_fine: "Any plan · 3-day free trial · Cancel before day 4, pay nothing",
     trust_1: "No credit card until day 4", trust_2: "Cancel anytime", trust_3: "Setup in 2 minutes",
     tiktok_soon: "SOON",
+    google_soon: "SOON",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "The AI that knows your ad account. Stop guessing, start scaling.",
     footer_product: "Product",
@@ -248,6 +249,7 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
     trust_1: "Sem cartão até o 4º dia", trust_2: "Cancele quando quiser", trust_3: "Configure em 2 minutos",
     tiktok_soon: "EM BREVE",
+    google_soon: "EM BREVE",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "A IA que conhece sua conta de anúncios. Pare de adivinhar, comece a escalar.",
     footer_product: "Produto",
@@ -324,6 +326,7 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Probar gratis 3 días", final_fine: "Cualquier plan · 3 días gratis · Cancela antes del día 4",
     trust_1: "Sin tarjeta hasta el día 4", trust_2: "Cancela cuando quieras", trust_3: "Configura en 2 minutos",
     tiktok_soon: "PRONTO",
+    google_soon: "PRONTO",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "La IA que conoce tu cuenta de anuncios. Para de adivinar, empieza a escalar.",
     footer_product: "Producto",
@@ -2133,7 +2136,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
+          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Google Ads <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>{t.google_soon}</span></span>
         </div>
         <div style={{ padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
           TikTok <span style={{ fontSize: 8.5, letterSpacing: '0.05em' }}>{t.tiktok_soon}</span>
