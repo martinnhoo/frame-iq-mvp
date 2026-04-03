@@ -12,7 +12,7 @@ import {
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, LayoutDashboard, X,
   TrendingUp, TrendingDown, BarChart2, BarChart3,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
 // v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
@@ -936,6 +936,24 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const [open, setOpen] = React.useState(true);
   const [tab,  setTab]  = React.useState<"meta" | "google">(connections.includes("meta") ? "meta" : "google");
   const [ts,   setTs]   = React.useState<Date | null>(null);
+  const today = React.useMemo(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; },[]);
+  const addDaysAI = (d: Date, n: number) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+  const fmtAI = (d: Date) => d.toISOString().split("T")[0];
+  const fmtLabelAI = (d: Date) => d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
+  const PRESETS_AI = [{label:"7D",days:7},{label:"14D",days:14},{label:"30D",days:30},{label:"60D",days:60},{label:"90D",days:90}];
+  const [dateRange, setDateRange] = React.useState({ from: addDaysAI(today,-13), to: today });
+  const [showCal, setShowCal] = React.useState(false);
+  const [calDraft, setCalDraft] = React.useState<{from:Date|null;to:Date|null}>({from:null,to:null});
+  const [calView, setCalView] = React.useState(new Date(today.getFullYear(),today.getMonth(),1));
+  const [calSel, setCalSel] = React.useState<"from"|"to">("from");
+  const [calHover, setCalHover] = React.useState<Date|null>(null);
+  const calRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(()=>{
+    if(!showCal) return;
+    const handler=(e:MouseEvent)=>{ if(calRef.current&&!calRef.current.contains(e.target as Node)) setShowCal(false); };
+    setTimeout(()=>document.addEventListener("mousedown",handler),0);
+    return ()=>document.removeEventListener("mousedown",handler);
+  },[showCal]);
 
   const hasMeta   = connections.includes("meta");
   const hasGoogle = connections.includes("google");
@@ -945,7 +963,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     setBusy(true); setFail(null);
     try {
       const { data: r, error: e } = await (supabase.functions.invoke as any)("adbrief-ai-chat", {
-        body: { panel_data: true, user_id: user.id, persona_id: selectedPersona.id, platforms: connections }
+        body: { panel_data: true, user_id: user.id, persona_id: selectedPersona.id, platforms: connections,
+          date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to) }
       });
       if (e) throw new Error(e.message || "Erro");
       if (r?.success) { setPd(r.data); setTs(new Date()); }
@@ -1070,6 +1089,109 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                   : (lang==="pt"?"ao vivo":lang==="es"?"en vivo":"live")}
             </span>
           </div>
+          {/* Date range picker */}
+          <div style={{ position: "relative" }}>
+            <button onClick={() => { setShowCal(s=>!s); setCalDraft({from:dateRange.from,to:dateRange.to}); setCalSel("from"); }}
+              style={{ ...I, display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:8,
+                border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)",
+                color:"rgba(255,255,255,0.6)", fontSize:12, cursor:"pointer", transition:"all 0.15s" }}
+              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)"}
+              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)"}>
+              <Calendar size={11}/>
+              {(() => {
+                const diff = Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1;
+                const preset = PRESETS_AI.find(p=>p.days===diff && fmtAI(dateRange.to)===fmtAI(today));
+                return preset ? `Últimos ${preset.label}` : `${fmtLabelAI(dateRange.from)} → ${fmtLabelAI(dateRange.to)}`;
+              })()}
+            </button>
+            {showCal && (
+              <div ref={calRef} style={{
+                position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:999,
+                background:"#111827", border:"1px solid rgba(255,255,255,0.1)", borderRadius:16,
+                boxShadow:"0 20px 60px rgba(0,0,0,0.7)", padding:20, width:540,
+                display:"flex", flexDirection:"column", gap:16,
+              }}>
+                {/* Presets */}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {PRESETS_AI.map(p=>{
+                    const from = addDaysAI(today,-p.days+1);
+                    const active = fmtAI(dateRange.from)===fmtAI(from) && fmtAI(dateRange.to)===fmtAI(today);
+                    return (
+                      <button key={p.days} onClick={()=>{ setDateRange({from,to:today}); setShowCal(false); }}
+                        style={{...I,fontSize:12,fontWeight:600,padding:"5px 12px",borderRadius:8,
+                          border:`1px solid ${active?"#0ea5e9":"rgba(255,255,255,0.1)"}`,
+                          background:active?"rgba(14,165,233,0.12)":"transparent",
+                          color:active?"#0ea5e9":"rgba(255,255,255,0.4)",cursor:"pointer",transition:"all 0.15s"}}>
+                        Últimos {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Calendar — 2 months */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
+                  {[calView, new Date(calView.getFullYear(),calView.getMonth()+1,1)].map((base,mi)=>{
+                    const y=base.getFullYear(),m=base.getMonth();
+                    const dim=new Date(y,m+1,0).getDate(),fd=new Date(y,m,1).getDay();
+                    const cells:Array<Date|null>=[];
+                    for(let i=0;i<fd;i++) cells.push(null);
+                    for(let d=1;d<=dim;d++) cells.push(new Date(y,m,d));
+                    const inR=(d:Date)=>{
+                      const f=calDraft.from,t=calDraft.to||calHover;
+                      if(!f||!t) return false;
+                      const lo=f<t?f:t,hi=f<t?t:f;
+                      return d>lo&&d<hi;
+                    };
+                    const isE=(d:Date)=>(calDraft.from&&fmtAI(d)===fmtAI(calDraft.from))||(calDraft.to&&fmtAI(d)===fmtAI(calDraft.to));
+                    return (
+                      <div key={mi}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                          {mi===0?<button onClick={()=>setCalView(new Date(y,m-1,1))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",display:"flex"}}><ChevronLeft size={16}/></button>:<div/>}
+                          <span style={{...I,fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{base.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</span>
+                          {mi===1?<button onClick={()=>setCalView(new Date(y,m-1,1))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",display:"flex"}}><ChevronRight size={16}/></button>:<div/>}
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
+                          {["D","S","T","Q","Q","S","S"].map((d,i)=>(
+                            <div key={i} style={{textAlign:"center",fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",padding:"4px 0",fontFamily:"inherit"}}>{d}</div>
+                          ))}
+                          {cells.map((d,i)=>{
+                            if(!d) return <div key={i}/>;
+                            const isFuture=d>today,inRange=inR(d),isEnd=isE(d);
+                            return (
+                              <div key={i}
+                                onClick={()=>{
+                                  if(isFuture) return;
+                                  if(calSel==="from"||(calDraft.from&&d<calDraft.from)){
+                                    setCalDraft({from:d,to:null}); setCalSel("to");
+                                  } else {
+                                    const r={from:calDraft.from!,to:d};
+                                    setCalDraft(r); setDateRange(r); setShowCal(false);
+                                  }
+                                }}
+                                onMouseEnter={()=>!isFuture&&setCalHover(d)}
+                                onMouseLeave={()=>setCalHover(null)}
+                                style={{textAlign:"center",padding:"6px 0",borderRadius:8,
+                                  cursor:isFuture?"default":"pointer",fontSize:12,fontFamily:"inherit",
+                                  fontWeight:isEnd?700:400,
+                                  background:isEnd?"#0ea5e9":inRange?"rgba(14,165,233,0.15)":"transparent",
+                                  color:isEnd?"#fff":isFuture?"rgba(255,255,255,0.12)":inRange?"#0ea5e9":"#e2e8f0",
+                                  transition:"all 0.1s"}}>
+                                {d.getDate()}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <span style={{...I,fontSize:12,color:"rgba(255,255,255,0.3)"}}>{calSel==="from"?"Selecione a data inicial":"Selecione a data final"}</span>
+                  {calDraft.from&&<span style={{...I,fontSize:12,color:"#e2e8f0",fontWeight:600}}>{fmtLabelAI(calDraft.from)} {calDraft.to?`→ ${fmtLabelAI(calDraft.to)}`:""}</span>}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-btn"
             style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, transition: "all 0.15s" }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
@@ -1144,7 +1266,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
               {tab === "meta" ? (
                 <>
-                  <Kpi label={lang==="pt"?"Spend 14 dias":lang==="es"?"Gasto 14 días":"Spend 14 days"} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
+                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
                   <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color={parseFloat(k.ctr || 0) > 1.5 ? "#34d399" : "#fb7185"} sub={cTr === "up" ? (lang==="pt"?"subindo":lang==="es"?"subiendo":"rising") : cTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"bajando":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
                   <Kpi label="CPM" value={`${data.currency_symbol||"R$"}${parseFloat(k.cpm || 0).toFixed(1)}`} color="#8b5cf6" sub={lang==="pt"?"por mil impr.":lang==="es"?"por mil impr.":"per 1k impr."} />
                   <Kpi label={lang==="pt"?"Frequência":lang==="es"?"Frecuencia":"Frequency"} value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} sub={parseFloat(k.frequency || 0) > 3.5 ? (lang==="pt"?"fadiga próxima":lang==="es"?"fatiga próxima":"fatigue close") : parseFloat(k.frequency || 0) > 2.5 ? (lang==="pt"?"monitorar":lang==="es"?"monitorear":"monitor") : (lang==="pt"?"saudável":lang==="es"?"saludable":"healthy")} />
@@ -1152,7 +1274,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 </>
               ) : (
                 <>
-                  <Kpi label={lang==="pt"?"Spend 14 dias":lang==="es"?"Gasto 14 días":"Spend 14 days"} value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling")} />
+                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling")} />
                   <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} spark={cS} color="#34d399" />
                   <Kpi label="CPC" value={`$${parseFloat(k.cpc || 0).toFixed(2)}`} color="#f59e0b" />
                   <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" />
