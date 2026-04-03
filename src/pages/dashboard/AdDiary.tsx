@@ -202,7 +202,7 @@ function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expand
         <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "13px 18px 15px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 7, marginBottom: 12 }}>
             {[
-              { l: t.metrics.spend,       v: money(entry.spend, lang) },
+              { l: t.metrics.spend,       v: money(entry.spend, language) },
               { l: t.metrics.impressions, v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
               { l: t.metrics.clicks,      v: String(entry.clicks) },
               { l: t.metrics.ctr,         v: `${(entry.ctr*100).toFixed(2)}%` },

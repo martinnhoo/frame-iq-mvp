@@ -23,7 +23,7 @@ type MetricKey = "spend"|"ctr"|"clicks"|"impressions"|"conversions"|"roas"|"cpa"
 
 interface MetricDef {
   key: MetricKey; label: string; labelPt: string; labelEs: string;
-  icon: any; accent: string; format: (v: number) => string;
+  icon: any; accent: string; format: (v: number, lang?: string) => string;
   higherIsBetter: boolean; platforms: ("meta"|"google"|"both")[];
 }
 
