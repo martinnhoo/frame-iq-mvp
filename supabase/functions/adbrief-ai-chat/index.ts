@@ -2312,3 +2312,5 @@ PROIBIDO:
 
 // force-sync 2026-03-24T23:23:48Z
 // force-redeploy 2026-03-27T14:52:19Z
+
+// force-redeploy 2026-04-03T17:30:00Z — fix richContext priority + 90d + daily-intelligence fallback
