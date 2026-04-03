@@ -144,12 +144,13 @@ interface Entry {
 const PLAT_COLOR: Record<string, string> = { meta: "#1877F2", google: "#4285F4" };
 const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
 
-function money(n: number) {
-  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
-  return `$${n.toFixed(0)}`;
+function money(n: number, lang?: string) {
+  const sym = lang === "pt" ? "R$" : "$";
+  if (n >= 1000) return `${sym}${(n / 1000).toFixed(1)}k`;
+  return `${sym}${n.toFixed(0)}`;
 }
 
-function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt }) {
+function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string }) {
   const cfg = V_STYLE[entry.verdict] || V_STYLE.testing;
   const verdictLabel = t.verdict[entry.verdict as keyof typeof t.verdict] || entry.verdict;
   const ctr = (entry.ctr * 100).toFixed(2);
@@ -183,7 +184,7 @@ function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: bo
               </>
             ) : (
               <>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend)}</p>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend, lang)}</p>
                 <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
               </>
             )}
@@ -201,11 +202,11 @@ function DiaryRow({ entry, expanded, onToggle, t }: { entry: Entry; expanded: bo
         <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "13px 18px 15px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 7, marginBottom: 12 }}>
             {[
-              { l: t.metrics.spend,       v: money(entry.spend) },
+              { l: t.metrics.spend,       v: money(entry.spend, lang) },
               { l: t.metrics.impressions, v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
               { l: t.metrics.clicks,      v: String(entry.clicks) },
               { l: t.metrics.ctr,         v: `${(entry.ctr*100).toFixed(2)}%` },
-              { l: t.metrics.cpc,         v: `$${entry.cpc.toFixed(2)}` },
+              { l: t.metrics.cpc,         v: `${language === "pt" ? "R$" : "$"}${entry.cpc.toFixed(2)}` },
               ...(entry.conversions > 0   ? [{ l: t.metrics.conversions, v: entry.conversions.toFixed(0) }] : []),
               ...(entry.roas              ? [{ l: t.metrics.roas,        v: `${entry.roas.toFixed(2)}×`   }] : []),
               ...(entry.frequency         ? [{ l: t.metrics.frequency,   v: `${entry.frequency.toFixed(1)}×` }] : []),
@@ -477,7 +478,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       {!loading && filteredEntries.length > 0 && (viewMode === "combined" || selectedIds.length <= 1) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {filteredEntries.map(entry => (
-            <DiaryRow key={entry.id} entry={entry} t={t}
+            <DiaryRow key={entry.id} entry={entry} t={t} lang={language}
               expanded={expanded === entry.id}
               onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
             />
@@ -512,7 +513,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                   {accEntries.map(entry => (
-                    <DiaryRow key={entry.id} entry={entry} t={t}
+                    <DiaryRow key={entry.id} entry={entry} t={t} lang={language}
                       expanded={expanded === entry.id}
                       onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
                     />
