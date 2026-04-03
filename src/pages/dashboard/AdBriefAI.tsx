@@ -99,7 +99,7 @@ interface AIMessage {
 
 // ── InlineToolPanel ──────────────────────────────────────────────────────────────
 function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
-  action: string; onClose: () => void; onSend: (msg: string) => void; lang: string;
+  action: string; onClose: () => void; onSend: (msg: string, displayText?: string) => void; lang: string;
   accountCtx?: { product?: string; niche?: string; market?: string; platform?: string; angle?: string };
 }) {
   const [val, setVal] = useState(accountCtx?.angle || "");
@@ -139,7 +139,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
     urgent:{en:"Urgent",pt:"Urgente",es:"Urgente"},
     educational:{en:"Educational",pt:"Educativo",es:"Educativo"},
   };
-  const submit = () => { if(val.trim()){onSend(cfg.buildMsg(val.trim(),platform,tone));onClose();}};
+  const submit = () => { if(val.trim()){onSend(cfg.buildMsg(val.trim(),platform,tone), val.trim());onClose();}};
 
   return (
     <div style={{borderRadius:16,overflow:"hidden",border:`1px solid rgba(255,255,255,0.10)`,background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",boxShadow:`0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35), 0 0 40px ${cfg.color}08`,backdropFilter:"blur(16px)",margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
@@ -202,7 +202,7 @@ function DashboardBlock({block}:{block:Block}) {
   return (
     <div style={{borderRadius:16,border:"1px solid rgba(14,165,233,0.15)",background:"linear-gradient(135deg,rgba(14,165,233,0.04) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:10,boxShadow:"0 4px 24px rgba(0,0,0,0.25)"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:9}}>
-        <div style={{width:26,height:26,borderRadius:8,background:"#0ea5e9",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <div style={{width:26,height:26,borderRadius:8,background:"#0369a1",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           <BarChart2 size={12} color="#000"/>
         </div>
         <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
@@ -1923,14 +1923,15 @@ export default function AdBriefAI() {
     }
   };
 
-  const send=async(text?:string)=>{
+  const send=async(text?:string, displayText?:string)=>{
     let msg=(text??input).trim();
     if(!msg||loading)return;
+    const userText = displayText ?? msg;
     // Context ainda carregando — mostra feedback visual em vez de silêncio
     if(!contextReady){
       const uid=Date.now();
       const hint=lang==="pt"?"Carregando contexto da conta, aguarde um instante...":lang==="es"?"Cargando contexto de la cuenta, espera un momento...":"Loading account context, just a moment...";
-      setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid},{role:"assistant",ts:uid+1,id:uid+1,blocks:[{type:"insight" as const,title:"",content:hint}]}]);
+      setMessages(prev=>[...prev,{role:"user",userText:userText,ts:uid,id:uid},{role:"assistant",ts:uid+1,id:uid+1,blocks:[{type:"insight" as const,title:"",content:hint}]}]);
       setInput("");
       return;
     }
@@ -1938,7 +1939,7 @@ export default function AdBriefAI() {
     // ── Intercept Telegram intent — check status first, respond accurately ──
     if (/telegram/i.test(msg) && user?.id) {
       const uid = Date.now();
-      setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:msg}]);
+      setMessages(prev=>[...prev,{role:"user",id:uid,ts:uid,userText:userText}]);
       setInput("");
       requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
       setLoading(true);
@@ -2015,7 +2016,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     if(textareaRef.current)textareaRef.current.style.height="auto";
     setActiveTool(null);
     const uid=Date.now();
-    setMessages(prev=>[...prev,{role:"user",userText:msg,ts:uid,id:uid}]);
+    setMessages(prev=>[...prev,{role:"user",userText:userText,ts:uid,id:uid}]);
     // Scroll imediato ao enviar — não espera a resposta
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);
@@ -2478,8 +2479,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             ):(
               /* ── Bolha da IA — esquerda, card escuro ── */
               <div>
-                {/* Avatar + label */}
-                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
+                {/* Avatar + label — só mostra se há blocks reais */}
+                {!!(msg.blocks?.length) && !(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
                     <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
                       <ABAvatar size={26}/>
@@ -2575,8 +2576,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
             })()}/>
         )}
-        {/* Inline tool panel — always at bottom of chat, after messages */}
-        {activeTool&&activeTool!=="dashboard"&&(
+        {/* Inline tool panel — only show when not loading */}
+        {activeTool&&activeTool!=="dashboard"&&!loading&&(
           <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
