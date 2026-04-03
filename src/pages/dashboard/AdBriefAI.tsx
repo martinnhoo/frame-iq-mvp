@@ -2211,17 +2211,24 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);
     try{
-      // Compress history: user = plain text; assistant = readable summary (no raw JSON blocks)
+      // Compress history: user = plain text; assistant = readable summary including table data
       const history = messages.slice(-12).map(m => {
         if (m.role === "user") return { role: "user" as const, content: m.userText || "" };
         const text = (m.blocks || []).map((b: any) => {
+          // Dashboard/table blocks: serialize rows so AI remembers campaign data
+          if (b.type === "dashboard" && b.table) {
+            const rows = (b.table.rows || []).slice(0, 5).map((r: any[]) =>
+              (b.table.headers || []).map((h: string, i: number) => `${h}:${r[i]||"—"}`).join(" ")
+            ).join(" | ");
+            return `${b.title||"Dados"}: ${rows}`.slice(0, 300);
+          }
           const parts = [
             b.title?.trim(),
             b.content?.slice(0, 180),
             (b.items || []).slice(0, 3).join(" | "),
           ].filter(Boolean);
           return parts.join(": ");
-        }).filter(Boolean).join(" | ").slice(0, 400);
+        }).filter(Boolean).join(" | ").slice(0, 500);
         return { role: "assistant" as const, content: text || "(response)" };
       });
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
