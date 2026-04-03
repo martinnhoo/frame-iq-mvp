@@ -56,13 +56,20 @@ Deno.serve(async (req) => {
         const acc = (conn.selected_account_id && accs.find((a: any) => a.id === conn.selected_account_id)) || accs[0];
         if (!acc?.id) continue;
 
-        const fields = "id,name,adset_id,adset{name},campaign_id,campaign{name},status,created_time,updated_time,insights.date_preset(last_90_days){spend,impressions,clicks,ctr,cpc,actions,action_values,frequency,reach}";
+        const insFields = "ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values,frequency";
         const adsRes = await fetch(
-          `https://graph.facebook.com/v21.0/${acc.id}/ads?fields=${fields}&effective_status=["ACTIVE","PAUSED","ARCHIVED"]&limit=200&access_token=${token}`
+          `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=200&access_token=${token}`
         );
         if (!adsRes.ok) continue;
         const adsData = await adsRes.json();
-        const ads = adsData.data || [];
+        const ads = (adsData.data || []).map((ins: any) => ({
+          id: ins.ad_id, name: ins.ad_name,
+          campaign: { name: ins.campaign_name },
+          adset: { name: ins.adset_name },
+          status: "paused",
+          created_time: null, updated_time: null,
+          insights: { data: [ins] }
+        }));
 
         const rows = ads.map((ad: any) => {
           const ins = ad.insights?.data?.[0] || {};
