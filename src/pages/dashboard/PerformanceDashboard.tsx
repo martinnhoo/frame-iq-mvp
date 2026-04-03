@@ -71,12 +71,18 @@ function getMetricValue(d: any, key: MetricKey): number {
 // ── Sparkline ─────────────────────────────────────────────────────────────────
 function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data||data.length<2) return null;
-  const w=80,h=28,min=Math.min(...data),max=Math.max(...data),range=max-min||1;
-  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/range)*(h-4)-2}`);
+  const w=80,h=28;
+  const min=Math.min(...data),max=Math.max(...data),range=max-min;
+  // Se todos os valores são iguais (inclui todos zero) — desenha linha reta no meio
+  const pts=data.map((v,i)=>{
+    const x=(i/(data.length-1))*w;
+    const y=range===0 ? h/2 : h-((v-min)/range)*(h-6)-3;
+    return `${x},${y}`;
+  });
   const path=`M ${pts.join(" L ")}`;
   const area=`M 0,${h} L ${path.slice(2)} L ${w},${h} Z`;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"visible"}}>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"hidden",display:"block"}}>
       <path d={area} fill={`${color}18`}/>
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
     </svg>
@@ -290,7 +296,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
       backdropFilter:"blur(12px)",
       borderRadius:14,padding:"16px",display:"flex",flexDirection:"column",gap:10,
       transition:"border-color 0.2s,box-shadow 0.2s",opacity:isDragging?0.9:1,
-      cursor:"grab",height:"100%",boxSizing:"border-box" as const,
+      cursor:"grab",height:"100%",boxSizing:"border-box" as const,overflow:"hidden",
     }}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
