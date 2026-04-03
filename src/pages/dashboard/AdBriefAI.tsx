@@ -1765,7 +1765,7 @@ export default function AdBriefAI() {
           } else if (platforms.length > 0) {
             proactiveMsg = `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "essa conta"}. Sem dados de campanha ainda — quer gerar hooks, escrever um roteiro ou fazer preflight de um criativo?`;
           } else {
-            proactiveMsg = `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads ou Google Ads.`;
+            proactiveMsg = `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads.`;
           }
         } else if (lang === "es") {
           if (histSpend) {
@@ -1786,7 +1786,7 @@ export default function AdBriefAI() {
               : `${platformStr} connected for ${accountName || "this account"}. No campaign data yet — want to generate hooks, write a script, or preflight a creative?`;
           } else {
             proactiveMsg = (lang as string) === "pt"
-              ? `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads ou Google Ads.`
+              ? `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads.`
               : (lang as string) === "es"
               ? `${accountName ? `${accountName} cargada.` : "Cuenta cargada."} Sin plataformas conectadas — ve a Cuentas para conectar Meta Ads o Google Ads.`
               : `${accountName ? `${accountName} loaded.` : "Account loaded."} No ad platforms connected yet — go to Accounts to connect Meta Ads or Google Ads.`;
@@ -1804,7 +1804,7 @@ export default function AdBriefAI() {
           : "";
 
         const intro = lang === "pt"
-          ? `Posso te ajudar com hooks, roteiros, análise de concorrentes e estratégia criativa — mesmo sem dados conectados.${nicheHint} Para análises específicas da sua conta (CTR, ROAS, o que pausar), conecte o Meta Ads ou Google Ads em Contas. Ou me diz o que você está trabalhando agora.`
+          ? `Posso te ajudar com hooks, roteiros, análise de concorrentes e estratégia criativa — mesmo sem dados conectados.${nicheHint} Para análises específicas da sua conta (CTR, ROAS, o que pausar), conecte o Meta Ads em Contas. Ou me diz o que você está trabalhando agora.`
           : lang === "es"
           ? `Puedo ayudarte con hooks, guiones, análisis de competidores y estrategia creativa — incluso sin datos conectados.${nicheHint} Para análisis específicos de tu cuenta (CTR, ROAS, qué pausar), conecta Meta Ads o Google Ads en Cuentas. O dime en qué estás trabajando ahora.`
           : `I can help with hooks, scripts, competitor analysis and creative strategy — even without connected data.${nicheHint} For specific account analysis (CTR, ROAS, what to pause), connect Meta Ads or Google Ads in Accounts. Or just tell me what you're working on.`;
@@ -1815,7 +1815,7 @@ export default function AdBriefAI() {
           role: "assistant",
           blocks: [
             { type: "insight" as any, title: greetingTitle, content: intro },
-            { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads ou Google Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads or Google Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
+            { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
           ],
           ts: aid, id: aid
         }]);

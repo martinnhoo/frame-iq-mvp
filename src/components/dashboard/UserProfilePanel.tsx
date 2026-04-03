@@ -75,7 +75,7 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
-  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte Meta Ads ou Google Ads",        price: "$0" },
+  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte Meta Ads",        price: "$0" },
   maker:   { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
   pro:     { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
   studio:  { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
@@ -748,7 +748,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                     ) : (
                       <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.09)" }}>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.38)", lineHeight: 1.6, margin: 0 }}>
-                          {language === "pt" ? "Conecte Meta Ads ou Google Ads para ver performance real — CTR, spend, o que escalar e o que pausar." : "Connect Meta Ads or Google Ads to see real performance."}
+                          {language === "pt" ? "Conecte Meta Ads para ver performance real — CTR, spend, o que escalar e o que pausar." : "Connect Meta Ads to see real performance."}
                         </p>
                       </div>
                     )}
@@ -885,7 +885,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           {language === "pt" ? "Sem dados para esta conta ainda" : language === "es" ? "Sin datos para esta cuenta aún" : "No data for this account yet"}
                         </p>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.55 }}>
-                          {language === "pt" ? "Conecte Meta Ads ou Google Ads — o sistema aprende com os resultados reais desta conta." : language === "es" ? "Conecta Meta Ads o Google Ads — el sistema aprende con los resultados reales de esta cuenta." : "Connect Meta Ads or Google Ads — the system learns from this account's real results."}
+                          {language === "pt" ? "Conecte Meta Ads — o sistema aprende com os resultados reais desta conta." : language === "es" ? "Conecta Meta Ads o Google Ads — el sistema aprende con los resultados reales de esta cuenta." : "Connect Meta Ads — the system learns from this account's real results."}
                         </p>
                       </div>
                     )}

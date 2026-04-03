@@ -153,6 +153,8 @@ export function DashboardSidebar({
       .eq("user_id", user.id).eq("persona_id", selectedPersona.id).eq("status", "active")
       .then(({ count }: any) => {
         if (!count || count === 0) { setKpi(null); return; }
+        // Platform is connected — show connected state even without snapshots yet
+        setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
         // Only fetch KPI if at least one platform is connected
         return (supabase as any).from("daily_snapshots")
           .select("total_spend, avg_ctr, active_ads, yesterday_ctr")
@@ -269,25 +271,31 @@ export function DashboardSidebar({
                 </p>
                 {kpi != null ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                    {kpi.ads > 0 && (
-                      <span style={{ fontSize: 11, color: "#22c55e", fontFamily: F }}>
-                        ● {kpi.ads} {pt ? "ativos" : "active"}
-                      </span>
-                    )}
-                    {kpi.ads > 0 && kpi.ctr > 0 && (
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>·</span>
-                    )}
-                    {kpi.ctr > 0 && (
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: F }}>
-                        {kpi.ctr.toFixed(2)}%
-                        {kpi.trend === "up" && <span style={{ color: "#22c55e", marginLeft: 2 }}>↑</span>}
-                        {kpi.trend === "down" && <span style={{ color: "#f87171", marginLeft: 2 }}>↓</span>}
-                      </span>
+                    {kpi.ads === 0 && kpi.ctr === 0 ? (
+                      <span style={{ fontSize: 11, color: "#22c55e", fontFamily: F }}>● {pt ? "Meta Ads conectado" : es ? "Meta Ads conectado" : "Meta Ads connected"}</span>
+                    ) : (
+                      <>
+                        {kpi.ads > 0 && (
+                          <span style={{ fontSize: 11, color: "#22c55e", fontFamily: F }}>
+                            ● {kpi.ads} {pt ? "ativos" : "active"}
+                          </span>
+                        )}
+                        {kpi.ads > 0 && kpi.ctr > 0 && (
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>·</span>
+                        )}
+                        {kpi.ctr > 0 && (
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: F }}>
+                            {kpi.ctr.toFixed(2)}%
+                            {kpi.trend === "up" && <span style={{ color: "#22c55e", marginLeft: 2 }}>↑</span>}
+                            {kpi.trend === "down" && <span style={{ color: "#f87171", marginLeft: 2 }}>↓</span>}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 ) : selectedPersona ? (
                   <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F }}>
-                    {pt ? "conectar Meta ou Google Ads" : es ? "conectar Meta o Google Ads" : "connect Meta or Google Ads"}
+                    {pt ? "conectar Meta Ads" : es ? "conectar Meta Ads" : "connect Meta Ads"}
                   </p>
                 ) : null}
               </div>
