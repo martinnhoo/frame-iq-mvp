@@ -342,7 +342,7 @@ Deno.serve(async (req) => {
     const planKey =
       (["free", "maker", "pro", "studio"].includes(plan)
         ? plan
-        : ({ creator: "maker", starter: "pro", scale: "studio" } as any)[plan]) || "free";
+        : ({ creator: "maker", starter: "pro", scale: "studio", lifetime: "studio", appsumo: "studio", ltd: "studio" } as any)[plan]) || "free";
 
     const todayDate = new Date().toISOString().slice(0, 10);
     const monthKey = todayDate.slice(0, 7); // YYYY-MM
