@@ -505,6 +505,7 @@ export type Database = {
           import_batch_id: string | null
           impressions: number | null
           market: string | null
+          persona_id: string | null
           platform: string | null
           roas: number | null
           source: string | null
@@ -536,6 +537,7 @@ export type Database = {
           import_batch_id?: string | null
           impressions?: number | null
           market?: string | null
+          persona_id?: string | null
           platform?: string | null
           roas?: number | null
           source?: string | null
@@ -567,6 +569,7 @@ export type Database = {
           import_batch_id?: string | null
           impressions?: number | null
           market?: string | null
+          persona_id?: string | null
           platform?: string | null
           roas?: number | null
           source?: string | null
@@ -642,6 +645,7 @@ export type Database = {
           active_ads: number | null
           ai_insight: string | null
           avg_ctr: number | null
+          avg_roas: number | null
           created_at: string | null
           date: string
           id: string
@@ -662,6 +666,7 @@ export type Database = {
           active_ads?: number | null
           ai_insight?: string | null
           avg_ctr?: number | null
+          avg_roas?: number | null
           created_at?: string | null
           date: string
           id?: string
@@ -682,6 +687,7 @@ export type Database = {
           active_ads?: number | null
           ai_insight?: string | null
           avg_ctr?: number | null
+          avg_roas?: number | null
           created_at?: string | null
           date?: string
           id?: string
