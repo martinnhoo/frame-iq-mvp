@@ -287,12 +287,14 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     setSyncError(null);
     try {
       const { data: res, error } = await supabase.functions.invoke("sync-ad-diary", { body: { user_id: user.id, persona_id: personaId } });
-      if (error) { setSyncError(error.message || "Erro ao sincronizar"); }
-      else if (res?.error) { setSyncError(res.error); }
-      else if (res?.synced === 0) { setSyncError(res.message || "Nenhum anúncio encontrado"); }
+      console.log("[AdDiary sync]", { res, error });
+      if (error) { setSyncError(`Erro: ${error.message || JSON.stringify(error)}`); }
+      else if (res?.error) { setSyncError(`API: ${res.error}`); }
+      else if (res?.errors?.length) { setSyncError(`Sync: ${res.errors[0]}`); }
+      else if (res?.synced === 0) { setSyncError(res.message || "0 anúncios encontrados — verifique conexão Meta"); }
       await load();
       setLastSync(new Date());
-    } catch (e: any) { setSyncError(String(e?.message || e)); }
+    } catch (e: any) { setSyncError(`Falha: ${String(e?.message || e)}`); }
     setSyncing(null);
   };
 
