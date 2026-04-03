@@ -247,6 +247,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Verdict | "all">("all");
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -283,11 +284,15 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
   const syncAccount = async (personaId: string) => {
     if (!user?.id) return;
     setSyncing(personaId);
+    setSyncError(null);
     try {
-      await supabase.functions.invoke("sync-ad-diary", { body: { user_id: user.id, persona_id: personaId } });
+      const { data: res, error } = await supabase.functions.invoke("sync-ad-diary", { body: { user_id: user.id, persona_id: personaId } });
+      if (error) { setSyncError(error.message || "Erro ao sincronizar"); }
+      else if (res?.error) { setSyncError(res.error); }
+      else if (res?.synced === 0) { setSyncError(res.message || "Nenhum anúncio encontrado"); }
       await load();
       setLastSync(new Date());
-    } catch (e) { console.error("[AdBrief]", e); }
+    } catch (e: any) { setSyncError(String(e?.message || e)); }
     setSyncing(null);
   };
 
@@ -440,6 +445,13 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       )}
 
       {/* Loading */}
+      {syncError && (
+        <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:12 }}>
+          <span style={{ fontSize:12, color:"#f87171", flex:1 }}>⚠ {syncError}</span>
+          <button onClick={()=>setSyncError(null)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer", fontSize:14, padding:0 }}>✕</button>
+        </div>
+      )}
+
       {loading && (
         <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.15)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
