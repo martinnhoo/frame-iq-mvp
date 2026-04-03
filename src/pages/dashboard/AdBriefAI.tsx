@@ -2573,9 +2573,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
           <ThinkingIndicator lang={lang} variant="chat" label={(() => {
               const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
-              if(pendingFn==="generate-hooks") return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
+              if(pendingFn==="generate-hooks")  return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
               if(pendingFn==="generate-script") return lang==="pt"?"Escrevendo roteiro...":lang==="es"?"Escribiendo guión...":"Writing script...";
-              if(pendingFn==="generate-brief") return lang==="pt"?"Criando brief...":lang==="es"?"Creando brief...":"Creating brief...";
+              if(pendingFn==="generate-brief")  return lang==="pt"?"Criando brief...":lang==="es"?"Creando brief...":"Creating brief...";
+              // Usar a última mensagem do usuário para label contextual
+              const last = (messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||"").toLowerCase().trim();
+              const isGreeting = /^(oi|olá|ola|hey|hi|hello|e aí|e ai|bom dia|boa tarde|boa noite|tudo bem|td bem|salve)[\s!?.,]*$/.test(last);
+              if(isGreeting)                     return lang==="pt"?"Respondendo...":lang==="es"?"Respondiendo...":"Thinking...";
+              if(/hook|gancho|copy|abertura/.test(last))   return lang==="pt"?"Analisando hooks...":lang==="es"?"Analizando hooks...":"Analyzing hooks...";
+              if(/roteiro|script|vídeo|video|ugc/.test(last)) return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building script...";
+              if(/brief|editor|direção/.test(last))        return lang==="pt"?"Montando brief...":"Building brief...";
+              if(/pausa|pause|escal|budget/.test(last))    return lang==="pt"?"Verificando conta...":"Checking account...";
+              if(/roas|ctr|cpm|cpc|perform/.test(last))    return lang==="pt"?"Analisando performance...":"Analyzing performance...";
+              if(/concorr|competitor|rival/.test(last))    return lang==="pt"?"Analisando concorrente...":"Analyzing competitor...";
+              if(last.length < 20)                         return lang==="pt"?"Respondendo...":lang==="es"?"Respondiendo...":"Thinking...";
               return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
             })()}/>
           </div>

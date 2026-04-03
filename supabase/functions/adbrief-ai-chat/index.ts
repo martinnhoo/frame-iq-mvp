@@ -1504,7 +1504,7 @@ META ACTIONS → tool_call tool:"meta_action": pause, enable, update_budget, dup
 NUNCA gere hooks se o usuário não pediu explicitamente.
 NUNCA use tool_call para leitura (listar, mostrar dados) — os dados já estão no contexto.
 
-tool_params: sempre use dados reais da conta (produto, nicho, mercado, plataforma). Nunca genérico.
+tool_params: use dados da conta (produto, nicho, mercado, plataforma) quando disponíveis. Se não houver, use o que o usuário informou na mensagem. NUNCA recuse por falta de dados — ferramentas criativas sempre funcionam.
 
 DASHBOARD quando pedir performance: bloco "dashboard" com dados reais. Sem dados: "Conecte seu Meta Ads para ver o dashboard em tempo real."
 
@@ -1521,7 +1521,9 @@ O que você pode fazer imediatamente:
 - Gerar hooks para o mercado e produto desta conta
 - Criar roteiro baseado no nicho
 - Analisar concorrentes
-Seja específico sobre o que é possível agora, não genérico.`;
+Seja específico sobre o que é possível agora, não genérico.
+
+IMPORTANTE: ferramentas criativas (hooks, roteiro, brief, concorrente) NUNCA precisam de dados da conta para funcionar. Execute sempre que pedido. Dados da conta são para análise de performance — não para criação de conteúdo.`;
 })()}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
