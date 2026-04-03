@@ -1050,8 +1050,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
         ...I, display: "flex", alignItems: "center", gap: 0, height: 38,
         padding: "0 20px", cursor: "pointer", userSelect: "none",
-        background: "#0a0d18",
-        borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s",
+        background: "var(--bg-main)",
+        borderBottom: "1px solid var(--border-subtle)", transition: "background 0.15s",
       }}>
         {/* Live dot */}
         <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.2)" : fail ? "#fb7185" : "#34d399", boxShadow: (!busy && !fail) ? "0 0 5px rgba(52,211,153,0.5)" : "none", marginRight: 10, flexShrink: 0 }} />
@@ -1102,9 +1102,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
-    <div className="lp" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(9,12,20,0.8)", backdropFilter: "blur(20px)", animation: "lp-in 0.18s ease" }}>
+    <div className="lp" style={{ borderBottom: "1px solid var(--border-subtle)", background: "rgba(6,8,15,0.95)", backdropFilter: "blur(24px)", animation: "lp-in 0.18s ease" }}>
       {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {/* Platform tabs */}
           {[hasMeta && "meta", hasGoogle && "google"].filter(Boolean).map((p: any) => {
@@ -2668,7 +2668,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         {messages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
         {messages.map((msg)=>(
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 20px",padding:"0 32px",boxSizing:"border-box" as const}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 24px",padding:"0 28px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
@@ -2676,7 +2676,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   <div style={{
                     padding:"10px 16px",
                     borderRadius:"18px 18px 4px 18px",
-                    background:"#0ea5e9",
+                    background:"linear-gradient(135deg,#0ea5e9,#0891b2)",
+                    boxShadow:"0 2px 12px rgba(14,165,233,0.25)",
                     fontSize:14,fontWeight:400,
                     color:"#fff",
                     lineHeight:1.65,
@@ -2717,10 +2718,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* Blocks — card da IA */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && !msg.blocks?.every((b:any)=>b._pendingTool) ? (
                   <div style={{
-                    background:"rgba(255,255,255,0.06)",
-                    border:"1px solid rgba(255,255,255,0.10)",
+                    background:"var(--bg-card)",
+                    border:"1px solid var(--border-subtle)",
                     borderRadius:"4px 18px 18px 18px",
-                    padding:"14px 18px",
+                    padding:"16px 20px",
+                    boxShadow:"0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
                     animation:"cardIn 0.22s ease-out",
                   }}>
                     {msg.blocks?.map((b,bi)=>
@@ -2895,9 +2897,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     style={{
                       display:"flex",alignItems:"center",gap:5,
                       padding:"5px 12px",borderRadius:99,flexShrink:0,
-                      background: isOn ? tool.color : "rgba(255,255,255,0.07)",
-                      border:`1px solid ${isOn ? "transparent" : "rgba(255,255,255,0.11)"}`,
-                      color: isOn ? "#000" : "rgba(255,255,255,0.6)",
+                      background: isOn ? tool.color : "var(--bg-surface)",
+                      border:`1px solid ${isOn ? "transparent" : "var(--border-default)"}`,
+                      color: isOn ? "#000" : "rgba(255,255,255,0.65)",
                       fontSize:12,fontWeight:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans',sans-serif",
                       letterSpacing:"-0.01em",
@@ -2929,11 +2931,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
               display:"flex",alignItems:"center",gap:10,
-              background:"rgba(255,255,255,0.05)",
-              border:"1px solid rgba(255,255,255,0.09)",
-              borderRadius:14,
+              background:"var(--bg-surface)",
+              border:"1px solid var(--border-subtle)",
+              borderRadius:16,
               padding:"12px 12px 12px 18px",
-              transition:"border-color 0.2s",
+              boxShadow:"0 0 0 0 transparent",
+              transition:"border-color 0.2s, box-shadow 0.2s",
             }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
@@ -3000,7 +3003,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .lp-kpi{transition:border-color 0.15s,background 0.15s;}
         .lp-kpi:hover{border-color:rgba(255,255,255,0.1)!important;background:rgba(255,255,255,0.04)!important;}
         .lp-row{transition:background 0.12s;}
-        .lp-row:hover{background:rgba(255,255,255,0.04)!important;}
+        .lp-row:hover{background:rgba(148,163,184,0.05)!important;}
+        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;box-shadow:0 0 0 3px rgba(14,165,233,0.08)!important;}
         .lp-chip:hover{background:rgba(99,102,241,0.1)!important;border-color:rgba(99,102,241,0.25)!important;color:#a5b4fc!important;}
         .lp-alert{transition:opacity 0.12s;}
         .lp-alert:hover{opacity:0.75;}
