@@ -71,18 +71,18 @@ function getMetricValue(d: any, key: MetricKey): number {
 // ── Sparkline ─────────────────────────────────────────────────────────────────
 function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data||data.length<2) return null;
-  const w=80,h=28;
+  const w=80,h=28,pad=3;
   const min=Math.min(...data),max=Math.max(...data),range=max-min;
   // Se todos os valores são iguais (inclui todos zero) — desenha linha reta no meio
   const pts=data.map((v,i)=>{
     const x=(i/(data.length-1))*w;
-    const y=range===0 ? h/2 : h-((v-min)/range)*(h-6)-3;
+    const y=range===0 ? h/2 : h-pad-((v-min)/range)*(h-pad*2);
     return `${x},${y}`;
   });
   const path=`M ${pts.join(" L ")}`;
   const area=`M 0,${h} L ${path.slice(2)} L ${w},${h} Z`;
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"hidden",display:"block"}}>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:"visible",display:"block"}}>
       <path d={area} fill={`${color}18`}/>
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
     </svg>
