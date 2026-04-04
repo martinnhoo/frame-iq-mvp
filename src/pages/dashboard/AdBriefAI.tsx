@@ -854,7 +854,7 @@ const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winne
       </div>
     </div>
   );
-}
+});
 
 // ── Campaign row ──────────────────────────────────────────────────────────────
 function CampRow({ c }: { c: any }) {
@@ -1487,7 +1487,7 @@ export default function AdBriefAI() {
   const [showGoalInput, setShowGoalInput] = useState(false);
   const saveGoal = (text: string) => {
     setSessionGoal(text);
-    try { storage.setJSON(GOAL_KEY, { text, ts: Date.now() })); } catch {}
+    try { storage.setJSON(GOAL_KEY, { text, ts: Date.now() }); } catch {}
     setShowGoalInput(false);
   };
   const [loading,setLoading]=useState(false);
@@ -1734,7 +1734,7 @@ export default function AdBriefAI() {
     const isPaid = profile?.plan && profile.plan !== "free";
     if(!isPaid || !user?.id) return;
     const pid = selectedPersona?.id || null;
-    const localHasData = (() => { try { return storage.getJSON(SK,||"[]").length > 0; } catch { return false; } })();
+    const localHasData = (() => { try { return storage.getJSON(SK, []).length > 0; } catch { return false; } })();
     if(localHasData) return; // local data takes priority — already loaded
     (async()=>{
       try {
@@ -1754,7 +1754,7 @@ export default function AdBriefAI() {
           _synced: true,
         }));
         // Only restore if still no local data (avoid race with proactive greeting)
-        const stillEmpty = (() => { try { return storage.getJSON(SK,||"[]").length === 0; } catch { return true; } })();
+        const stillEmpty = (() => { try { return storage.getJSON(SK, []).length === 0; } catch { return true; } })();
         if(stillEmpty && restored.length > 0) {
           setMessages(restored);
           try { localStorage.setItem(SK, JSON.stringify(restored.slice(-30))); } catch {}
@@ -1870,7 +1870,7 @@ export default function AdBriefAI() {
     proactiveFired.current = true;
 
     // Returning user with real conversation history — don't interrupt
-    const existing = (() => { try { return storage.getJSON(SK, || "[]"); } catch { return []; } })();
+    const existing = (() => { try { return storage.getJSON(SK, []); } catch { return []; } })();
     const hasRealHistory = existing.some((m: any) => m.role === "user");
     if (hasRealHistory) return;
 
