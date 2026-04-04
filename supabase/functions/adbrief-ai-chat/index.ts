@@ -862,8 +862,11 @@ Deno.serve(async (req) => {
     const memorySummary = persistentMemories.length
       ? persistentMemories
           .sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0))
-          .slice(0, 20)
-          .map((m: any) => `[${m.memory_type || "context"}] ${m.memory_text}`)
+          .slice(0, 30)
+          .map((m: any) => {
+            const imp = m.importance >= 5 ? "🔴" : m.importance >= 4 ? "🟡" : "⚪";
+            return `${imp} [${m.memory_type || "context"}] ${m.memory_text}`;
+          })
           .join("\n")
       : null;
 
@@ -1800,7 +1803,7 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       })(),
       // Persistent chat memory — facts extracted from previous conversations
       memorySummary
-        ? `=== MEMÓRIA PERSISTENTE (conversas anteriores) ===\n${memorySummary}\n(Esses fatos foram extraídos de conversas passadas. Use-os para personalizar respostas sem pedir de novo.)`
+        ? `=== MEMÓRIA PERSISTENTE — FATOS CONFIRMADOS ===\n${memorySummary}\n🔴=crítico(importância 5) 🟡=importante(4) ⚪=contexto(1-3)\nESSES FATOS SÃO VERDADEIROS. Use-os diretamente. NUNCA peça confirmação de algo que já está aqui.`
         : "",
       // Cross-account intelligence — winners from other accounts of this user
       (() => {
@@ -2058,7 +2061,10 @@ Se perguntarem "o que está viral": liste tudo, independente do score.
 MEMÓRIA
 ═══════════════════════════════════
 
-Você tem memória persistente (no contexto como "=== MEMÓRIA PERSISTENTE ==="). Use naturalmente.
+Você tem memória persistente (no contexto como "=== MEMÓRIA PERSISTENTE — FATOS CONFIRMADOS ===").
+REGRA DE MEMÓRIA: Os fatos marcados como 🔴 e 🟡 são alta confiança — use-os SEMPRE sem pedir confirmação.
+Exemplo: se a memória diz "budget R$500/dia", não pergunte qual é o budget — já sabe.
+Se o usuário contradiz uma memória, atualize seu raciocínio imediatamente.
 Se perguntarem "você lembra de X?" → confirme e use o que sabe.
 "Lembre que X" → "Anotado." e aplique imediatamente.
 A cada 4-6 trocas, se houver lacunas importantes no negócio do usuário, faça 1 pergunta estratégica — só após finalizar a tarefa principal.
@@ -2285,10 +2291,17 @@ PROIBIDO:
     (async () => {
       try {
         const assistantText = finalBlocks
-          .filter((b: any) => b.type === "insight" || b.type === "action" || b.type === "warning")
-          .map((b: any) => `${b.title ? b.title + ": " : ""}${b.content || ""}`)
+          .filter((b: any) => !["limit_warning","dashboard_offer","meta_action","navigate"].includes(b.type))
+          .map((b: any) => {
+            const parts = [];
+            if (b.title) parts.push(b.title);
+            if (b.content) parts.push(b.content.slice(0, 300));
+            if (b.items?.length) parts.push(b.items.slice(0, 3).join(" | "));
+            return parts.join(": ");
+          })
+          .filter(Boolean)
           .join(" ")
-          .slice(0, 600);
+          .slice(0, 800);
         if (assistantText && message && user_id) {
           await supabase.functions
             .invoke("extract-chat-memory", {

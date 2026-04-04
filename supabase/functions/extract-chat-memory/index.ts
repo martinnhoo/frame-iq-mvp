@@ -14,7 +14,14 @@ const MAX_MEMORIES_PER_SCOPE = 50;
 // Filtro rápido: ignora trocas puramente operacionais sem valor de memória.
 // Cobre PT, EN, ES — muito mais abrangente que v2.
 const hasMemoryValue = (text: string): boolean => {
-  return /lembr|remember|recuerd|prefer|always|nunca|never|siempre|jamás|budget|orçamento|presupuesto|pausei|pausar|escalar|escalei|scale|pause|decidiu|decided|decidí|decidi|regra|rule|regla|meu produto|my product|mi producto|minha marca|my brand|mi marca|meu público|my audience|mi audiencia|trabalho com|i work with|trabajo con|foco em|focus on|enfoque en|meu cliente|my client|mi cliente|objetivo|goal|campanh|campaign|ticket médio|concorrente|competitor|churn|cancelamento/i.test(text);
+  // Broad filter — only skip purely operational/trivial exchanges
+  const trivial = /^(ok|certo|entendi|sim|não|yes|no|sure|thanks|obrigad|valeu|bacana|show|legal|ótimo|perfeito|exato|claro|combinado|tá|ta|ok ok|👍|✅|\.\.\.)[\s!?.]*$/i.test(text.trim());
+  if (trivial) return false;
+  // Skip pure greetings with no context
+  const greeting = /^(oi|olá|ola|hey|hi|hello|bom dia|boa tarde|boa noite|tudo bem|td bem)[\s!?.,]*$/i.test(text.trim());
+  if (greeting) return false;
+  // Everything else has potential memory value
+  return text.length > 20;
 };
 
 // Explicit "remember this" triggers — these are handled by the pain_point system in adbrief-ai-chat.
@@ -58,13 +65,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Skip explicit "remember" commands — pain_point system in adbrief-ai-chat handles these
-    // to avoid storing the same fact twice in two different memory systems
-    if (isExplicitRemember(user_message)) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "explicit_remember_handled_by_pain_point" }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
+    // Explicit "remember" commands get higher importance (5) — don't skip them
 
     // Buscar memórias existentes para dedup e para o cap
     const scopeFilter = persona_id
@@ -80,12 +81,17 @@ Deno.serve(async (req) => {
     const existingTexts = existingList.map((m: any) => m.memory_text);
 
     // Extração via Haiku — instrui dedup explícito
+    const isExplicitSave = isExplicitRemember(user_message);
+
     const prompt = `You are a memory extraction system for an ad account AI assistant.
 
-Extract ONLY concrete, durable facts from this conversation that would be useful in future sessions.
+Extract concrete, durable facts from this conversation that would be useful in future sessions.
 Write ALL memory_text values in the SAME LANGUAGE the user is writing in (Portuguese, English, or Spanish).
-Focus on: business context, account preferences, decisions made, rules the user wants enforced, product/market info, client info, budget signals.
-IGNORE: questions, greetings, one-off temporary states.
+
+${isExplicitSave ? "⚠ USER EXPLICITLY ASKED TO REMEMBER THIS — extract with importance 5, do not skip." : ""}
+
+Focus on: business context, account preferences, decisions made, rules to enforce, product/market info, client info, budget signals, creative insights, campaign results.
+IGNORE: pure questions with no context given, one-word responses, temporary states.
 
 EXISTING MEMORIES — do NOT extract anything semantically similar to these:
 ${existingTexts.length ? existingTexts.map((t: string) => `- ${t}`).join("\n") : "none"}
