@@ -2951,7 +2951,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 placeholder={L.placeholder} rows={1}
                 style={{flex:1,background:"transparent",border:"none",padding:"0",color:"#f0f2f8",fontSize:15.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:26,maxHeight:140,caretColor:"#0ea5e9"}}
                 className="chat-textarea"
-                onInput={e=>{const t=e.target as HTMLTextAreaElement;t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";}}
+                onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
               />
               <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,paddingBottom:1}}>
                 {messages.length>0&&(
