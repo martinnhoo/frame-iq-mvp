@@ -2073,8 +2073,10 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         margin: '0 0 28px', color: '#fff',
         fontSize: 'clamp(42px, 4.8vw, 68px)',
       }}>
-        {line1}<br />
-        {line2}<br />
+        {line1}
+        <br />
+        {line2}
+        <br />
         <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>{line3prefix}</span>
         <span style={{
           background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 60%, #7dd3fc 100%)',
