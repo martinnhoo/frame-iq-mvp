@@ -1,3 +1,4 @@
+import { storage } from "@/lib/storage";
 // PerformanceDashboard v3 — calendar date picker, all metrics, drag & drop customization
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -397,7 +398,7 @@ export default function PerformanceDashboard() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
   const [activeTab, setActiveTab] = useState<"metrics"|"ads">("metrics");
-  const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(()=>{ try{const s=localStorage.getItem("adbrief_perf_metrics"); return s?JSON.parse(s):DEFAULT_METRICS;}catch{return DEFAULT_METRICS;} });
+  const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(()=>storage.getJSON("adbrief_perf_metrics", DEFAULT_METRICS));
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [chartMetric, setChartMetric] = useState<MetricKey>("spend");
   const [dragging, setDragging] = useState<number|null>(null);
@@ -408,7 +409,7 @@ export default function PerformanceDashboard() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
 
-  useEffect(()=>{ try{localStorage.setItem("adbrief_perf_metrics",JSON.stringify(activeMetrics));}catch{} },[activeMetrics]);
+  useEffect(()=>{ storage.setJSON("adbrief_perf_metrics", activeMetrics); },[activeMetrics]);
 
   const load = useCallback(async(showSpinner=false)=>{
     if(!user||!selectedPersona) { setLoading(false); return; }

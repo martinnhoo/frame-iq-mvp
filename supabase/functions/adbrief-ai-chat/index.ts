@@ -2322,7 +2322,7 @@ PROIBIDO:
     (async () => {
       try {
         const assistantText = finalBlocks
-          .filter((b: any) => !["limit_warning","dashboard_offer","meta_action","navigate"].includes(b.type))
+          .filter((b: any) => !["limit_warning","dashboard_offer","meta_action","navigate","dashboard","proactive"].includes(b.type))
           .map((b: any) => {
             const parts = [];
             if (b.title) parts.push(b.title);

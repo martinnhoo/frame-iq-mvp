@@ -12,20 +12,22 @@ const cors = {
 
 Deno.serve(async (req) => {
 
-  // ── Active user guard: skip if no user logged in or messaged in last 2h ──
+  // ── Active user guard: skip if no connected account in last 7 days ──
+  // Uses platform_connections (reliable) not chat_memory (can be empty for new users)
   // Prevents burning API credits when nobody is using the app
   try {
     const sb_guard = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { count } = await sb_guard
-      .from("chat_memory")
+      .from("platform_connections")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", twoHoursAgo);
+      .eq("status", "active")
+      .gte("updated_at", sevenDaysAgo);
     if (!count || count === 0) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_users" }), {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_connections" }), {
         headers: { "Content-Type": "application/json" },
       });
     }
