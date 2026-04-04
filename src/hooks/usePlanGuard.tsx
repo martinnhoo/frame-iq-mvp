@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { storage } from "@/lib/storage";
 import PlanWall from "@/components/PlanWall";
 
 // Simulates plan check — replace with real check from user profile/subscription
@@ -10,7 +11,7 @@ export function usePlanGuard() {
   const checkPlan = useCallback((feature?: string): boolean => {
     // Check if user has an active plan
     // This will be replaced with real Supabase subscription check
-    const hasPlan = localStorage.getItem("adbrief_plan");
+    const hasPlan = storage.get("adbrief_plan");
     if (!hasPlan) {
       setWallFeature(feature);
       setWallOpen(true);

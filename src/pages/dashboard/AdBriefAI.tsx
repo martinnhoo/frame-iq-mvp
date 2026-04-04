@@ -1464,6 +1464,13 @@ export default function AdBriefAI() {
     } catch { return []; }
   });
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
+  // Virtual scroll: render only last N messages for performance
+  // User can load older messages with "Ver mais"
+  const MSG_PAGE = 30;
+  const [visibleCount, setVisibleCount] = useState(MSG_PAGE);
+  // Reset visible count when conversation clears
+  const visibleMessages = messages.slice(-visibleCount);
+  const hasOlderMessages = messages.length > visibleCount;
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
   const [input,setInput]=useState("");
@@ -2672,8 +2679,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {messages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
-        {messages.map((msg)=>(
+        {/* Load more — shown when there are older messages not rendered */}
+        {hasOlderMessages && (
+          <div style={{maxWidth:720,width:"100%",margin:"0 auto 8px",padding:"0 28px",boxSizing:"border-box" as const}}>
+            <button onClick={()=>setVisibleCount(c=>c+MSG_PAGE)}
+              style={{width:"100%",padding:"8px 0",background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,color:"var(--text-muted)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",transition:"all 0.15s"}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-default)"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-subtle)"}}>
+              ↑ Ver {Math.min(MSG_PAGE, messages.length - visibleCount)} mensagens anteriores
+            </button>
+          </div>
+        )}
+        {visibleMessages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
+        {visibleMessages.map((msg)=>(
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 24px",padding:"0 28px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
@@ -2966,6 +2984,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     storage.remove(SK);
                     executedTools.current.clear();
                     proactiveFired.current=false;
+                    setVisibleCount(MSG_PAGE);
                     setGreetingKey(k=>k+1);
                   }}
                     title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}

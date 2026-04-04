@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { storage } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,7 +8,7 @@ const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("adbrief-cookie-consent");
+    const consent = storage.get("adbrief-cookie-consent");
     if (!consent) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
@@ -15,12 +16,12 @@ const CookieConsent = () => {
   }, []);
 
   const accept = () => {
-    localStorage.setItem("adbrief-cookie-consent", "accepted");
+    storage.set("adbrief-cookie-consent", "accepted");
     setVisible(false);
   };
 
   const decline = () => {
-    localStorage.setItem("adbrief-cookie-consent", "declined");
+    storage.set("adbrief-cookie-consent", "declined");
   };
 
 

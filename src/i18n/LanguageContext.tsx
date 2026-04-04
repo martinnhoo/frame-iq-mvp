@@ -1,6 +1,7 @@
 // Language context — single source of truth for UI language
 // Priority: 1. localStorage 2. user profile (loaded after login) 3. browser/geo
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { storage } from "@/lib/storage";
 import { Language, translations } from "./translations";
 
 type LanguageContextType = {
@@ -42,7 +43,7 @@ function detectLanguage(): Language {
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     try {
-      const saved = localStorage.getItem("adbrief_language");
+      const saved = storage.get("adbrief_language");
       if (saved && ["en","pt","es","zh","fr","de","ar"].includes(saved)) return saved as Language;
     } catch {}
     return detectLanguage();
@@ -53,7 +54,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const setLanguage = useCallback((lang: Language, persist = true) => {
     setLanguageState(lang);
     if (persist) {
-      try { localStorage.setItem("adbrief_language", lang); } catch {}
+      try { storage.set("adbrief_language", lang); } catch {}
     }
   }, []);
 

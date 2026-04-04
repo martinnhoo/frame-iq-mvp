@@ -12,7 +12,7 @@ const T = {
 
 function getLang(): "pt" | "en" | "es" {
   try {
-    const stored = localStorage.getItem("adbrief_language") || localStorage.getItem("language") || "";
+    let stored = ""; try { stored = localStorage.getItem("adbrief_language") || localStorage.getItem("language") || ""; } catch {}
     if (stored.startsWith("pt")) return "pt";
     if (stored.startsWith("es")) return "es";
     const browser = navigator.language || "";

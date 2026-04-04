@@ -1,5 +1,6 @@
 // DashboardLayout v2 — build 2026-03-20
 import { useEffect, useState } from "react";
+import { storage } from "@/lib/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -95,7 +96,7 @@ export default function DashboardLayout() {
   const [telegramLinkLoading, setTelegramLinkLoading] = useState(false);
   const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
     try {
-      const s = localStorage.getItem("frameiq_active_persona");
+      const s = storage.get("frameiq_active_persona");
       if (!s) return null;
       const parsed = JSON.parse(s);
       // Validate essential fields exist
@@ -114,8 +115,8 @@ export default function DashboardLayout() {
   const setSelectedPersona = (p: ActivePersona | null) => {
     setSelectedPersonaState(p);
     try {
-      if (p) localStorage.setItem("frameiq_active_persona", JSON.stringify(p));
-      else localStorage.removeItem("frameiq_active_persona");
+      if (p) storage.setJSON("frameiq_active_persona", p);
+      else storage.remove("frameiq_active_persona");
     } catch {
       // localStorage unavailable (private browsing, storage full, etc.)
     }
@@ -176,7 +177,7 @@ export default function DashboardLayout() {
 
         // Sync user's preferred language from profile (without overriding explicit localStorage choice)
         if (profileData.preferred_language) {
-          const localLang = localStorage.getItem("adbrief_language");
+          const localLang = storage.get("adbrief_language");
           // Only apply profile lang if user hasn't explicitly set a different one
           if (!localLang || localLang === profileData.preferred_language) {
             setLanguage(profileData.preferred_language as any, false);
@@ -225,7 +226,7 @@ export default function DashboardLayout() {
       setSelectedPersonaState(prev => {
         if (!prev) return null;
         if (!loadedPersonas.some(p => p.id === prev.id)) {
-          try { localStorage.removeItem("frameiq_active_persona"); } catch (e) { console.error("[AdBrief]", e); }
+          try { storage.remove("frameiq_active_persona"); } catch (e) { console.error("[AdBrief]", e); }
           return null;
         }
         return prev;
@@ -249,10 +250,10 @@ export default function DashboardLayout() {
         },
       };
       const popup = session.user.email ? WELCOME_POPUPS[session.user.email] : null;
-      if (popup && !localStorage.getItem(popup.key)) {
+      if (popup && !storage.get(popup.key)) {
         setWelcomeMsg({ title: popup.title, body: popup.body });
         setVikaPopup(true);
-        localStorage.setItem(popup.key, "1");
+        storage.set(popup.key, "1");
       }
       // Checkout success — show toast once and clean the URL param
       const checkoutResult = new URLSearchParams(window.location.search).get("checkout");
@@ -260,7 +261,7 @@ export default function DashboardLayout() {
         const planName = profileData?.plan
           ? (profileData.plan || "").charAt(0).toUpperCase() + (profileData.plan || "").slice(1)
           : "";
-        const lang = profileData?.preferred_language || localStorage.getItem("adbrief_language") || "pt";
+        const lang = profileData?.preferred_language || storage.get("adbrief_language") || "pt";
         const msg = lang === "es"
           ? `¡Plan ${planName} activado! 3 días gratis — sin cargo hasta el día 4.`
           : lang === "en"

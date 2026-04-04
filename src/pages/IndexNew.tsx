@@ -1,5 +1,6 @@
 // v8.5 — footer i18n + CTA smooth loading 2026-03-25
 import { useNavigate } from "react-router-dom";
+import { storage } from "@/lib/storage";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -417,7 +418,7 @@ const DEMO_ANSWERS: Record<Lang, string[][]> = {
 
 // IP-based language detection
 async function detectLang(): Promise<Lang> {
-  const stored = localStorage.getItem("adbrief_language") as Lang | null;
+  const stored = storage.get("adbrief_language") as Lang | null;
   if (stored && ["en", "pt", "es"].includes(stored)) return stored;
   try {
     const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
@@ -478,7 +479,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
 function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
   const [open, setOpen] = useState(false);
   const flags: Record<Lang, string> = { en: "🇺🇸", pt: "🇧🇷", es: "🇲🇽" };
-  const pick = (l: Lang) => { setLang(l); localStorage.setItem("adbrief_language", l); setOpen(false); };
+  const pick = (l: Lang) => { setLang(l); storage.set("adbrief_language", l); setOpen(false); };
   return (
     <div style={{ position: "relative" }}>
       <button onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)", cursor: "pointer", fontFamily: F }}>
