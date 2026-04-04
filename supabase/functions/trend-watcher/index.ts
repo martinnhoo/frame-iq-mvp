@@ -301,6 +301,25 @@ function computeRelevanceScore(trend: Record<string, any>, baseline: Record<stri
 }
 
 Deno.serve(async (req) => {
+
+  // ── Active user guard: skip if no user logged in or messaged in last 2h ──
+  // Prevents burning API credits when nobody is using the app
+  try {
+    const sb_guard = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { count } = await sb_guard
+      .from("chat_memory")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", twoHoursAgo);
+    if (!count || count === 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_users" }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  } catch (_) { /* guard failed — continue anyway */ }
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   try {

@@ -2203,16 +2203,37 @@ PROIBIDO:
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
 
+    // ── Prompt caching: split system prompt into static (cached) + dynamic (account data) ──
+    // Static part = rules, formatting, tools — identical every call → cached at 10% price
+    // Dynamic part = account data, memories, trends — changes per user → not cached
+    const CACHE_SPLIT_MARKER = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n**DADOS DESTA CONTA**";
+    const splitIdx = (systemPrompt + prefStr).indexOf(CACHE_SPLIT_MARKER);
+    const systemBlocks = splitIdx > 100
+      ? [
+          // Static block — cached after first call (save 90% on subsequent calls)
+          {
+            type: "text" as const,
+            text: (systemPrompt + prefStr).slice(0, splitIdx),
+            cache_control: { type: "ephemeral" as const },
+          },
+          // Dynamic block — account data, memories, live metrics (not cached, changes per user)
+          {
+            type: "text" as const,
+            text: (systemPrompt + prefStr).slice(splitIdx),
+          },
+        ]
+      : [{ type: "text" as const, text: systemPrompt + prefStr }];
+
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
         // Smart model routing: Sonnet for rich-context responses, Haiku for simple ones
-        // Rich context = has learned patterns, real ad data, or multi-platform analysis
         model: (() => {
           const richCtx =
             (typeof context === "string" && context.length > 200) ||
@@ -2222,8 +2243,18 @@ PROIBIDO:
             systemPrompt.includes("TRENDS ATIVAS");
           return richCtx ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001";
         })(),
-        max_tokens: 3000,
-        system: systemPrompt + prefStr,
+        max_tokens: (() => {
+          const msg = message.toLowerCase().trim();
+          // Simple queries: greetings, short questions
+          if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 800;
+          // Tool requests need full output
+          if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 3000;
+          // Dashboard/analysis needs space
+          if (/dashboard|analisa|performance|relatório|resumo/.test(msg)) return 2000;
+          // Default: medium
+          return 1500;
+        })(),
+        system: systemBlocks,
         messages: aiMessages,
       }),
     });

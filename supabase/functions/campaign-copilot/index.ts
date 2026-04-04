@@ -145,10 +145,12 @@ Responda APENAS com JSON válido:
         "Content-Type": "application/json",
         "x-api-key": ANTHROPIC,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 500,
+        system: [{ type: "text", text: "You are the AdBrief campaign co-pilot — a senior media buyer that gives short, data-driven commentary during campaign setup. Respond ONLY with a valid JSON array of message objects.", cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: prompt }],
       }),
     });
