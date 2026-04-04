@@ -512,7 +512,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           )}
           {campaigns.length > 1 && (
             <select value={campaignFilter} onChange={e => setCampaignFilter(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,0.1)", background: "#111827", color: campaignFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>
+              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)", color: campaignFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>
               <option value="all">Todas as campanhas ({campaigns.length})</option>
               {campaigns.map(c => <option key={c} value={c}>{c.length > 40 ? c.slice(0, 38) + "…" : c}</option>)}
             </select>

@@ -150,7 +150,7 @@ const AnalysisDetail = () => {
   const isProcessing = analysis.status === "pending" || analysis.status === "processing";
 
   return (
-    <div className="min-h-screen" style={{ background: "#080810" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-main)" }}>
       {/* ── TOPBAR ── */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3"
         style={{ background: "rgba(8,8,16,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" }}>

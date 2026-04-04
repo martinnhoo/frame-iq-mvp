@@ -1161,7 +1161,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {showCal && (
               <div ref={calRef} style={{
                 position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:999,
-                background:"#111827", border:"1px solid rgba(255,255,255,0.1)", borderRadius:16,
+                background:"var(--bg-elevated)", border:"1px solid var(--border-default)", borderRadius:16,
                 boxShadow:"0 20px 60px rgba(0,0,0,0.7)", padding:20, width:540,
                 display:"flex", flexDirection:"column", gap:16,
               }}>

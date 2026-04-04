@@ -460,7 +460,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   {initials}
                 </div>
               )}
-              <label style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, borderRadius: "50%", background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <label style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, borderRadius: "50%", background: "var(--bg-elevated)", border: "1px solid var(--border-default)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                 {uploadingAvatar ? <Loader2 className="h-2.5 w-2.5 text-white/40 animate-spin" /> : <Camera className="h-2.5 w-2.5" style={{ color: "rgba(255,255,255,0.5)" }} />}
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
               </label>

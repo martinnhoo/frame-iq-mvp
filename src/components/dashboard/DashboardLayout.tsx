@@ -500,7 +500,7 @@ export default function DashboardLayout() {
               <div style={{
                 position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200,
                 width: 260, maxWidth: "calc(100vw - 24px)",
-                background: "#1d2438", border: "1px solid rgba(255,255,255,0.12)",
+                background: "var(--bg-elevated)", border: "1px solid var(--border-default)",
                 borderRadius: 12, overflow: "hidden",
                 boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
               }}>

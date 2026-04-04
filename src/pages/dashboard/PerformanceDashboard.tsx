@@ -208,7 +208,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
   return (
     <div ref={ref} style={{
       position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,
-      background:"#111827",border:`1px solid ${BD}`,borderRadius:16,
+      background:"var(--bg-elevated)",border:"1px solid var(--border-default)",borderRadius:16,
       boxShadow:"0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04)",
       padding:20,width:560,display:"flex",flexDirection:"column",gap:16,
     }}>
