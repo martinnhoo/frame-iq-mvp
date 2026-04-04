@@ -1,38 +1,31 @@
-// CampaignBuilder v3 — tabs Meta/Google no topo, 5 steps limpos, co-piloto AI
+// CampaignBuilder v4 — single column flow, live preview, minimal
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ChevronRight, ChevronLeft, Check, ExternalLink,
-  Target, DollarSign, Users, Megaphone, AlertCircle,
-  Loader2, Rocket, Info, AlertTriangle, TrendingUp,
-} from "lucide-react";
+import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { Loader2, Rocket, Check, AlertCircle, Send, Zap, Users, ShoppingCart, Heart, Eye, Search, Monitor, Play, Globe } from "lucide-react";
 
 type Platform = "meta" | "google";
 interface Persona { id: string; name: string; result?: any; }
 interface AiMsg  { id: string; text: string; type: "tip"|"warn"|"insight"|"ok"; fromUser?: boolean; }
 interface Form {
-  name: string;
-  objective: string; optimization_goal: string; cbo: boolean;
-  channel_type: string; cpc_bid: string;
-  daily_budget: string; country: string;
-  age_min: number; age_max: number;
-  group_name: string;
-  destination_url: string; primary_text: string; headline: string;
+  name: string; objective: string; optimization_goal: string; cbo: boolean;
+  channel_type: string; cpc_bid: string; daily_budget: string; country: string;
+  age_min: number; age_max: number; destination_url: string; primary_text: string; headline: string;
 }
 
 const META_OBJ = [
-  { id:"OUTCOME_TRAFFIC",    label:"Tráfego",       desc:"Cliques no link",        icon:"Traffic" },
-  { id:"OUTCOME_LEADS",      label:"Leads",          desc:"Formulário / mensagem",  icon:"Leads" },
-  { id:"OUTCOME_SALES",      label:"Vendas",         desc:"Compras e conversões",   icon:"Sales" },
-  { id:"OUTCOME_ENGAGEMENT", label:"Engajamento",    desc:"Curtidas e comentários", icon:"Engagement" },
-  { id:"OUTCOME_AWARENESS",  label:"Reconhecimento", desc:"Alcance e memória",      icon:"Awareness" },
+  { id:"OUTCOME_TRAFFIC",    label:"Tráfego",       desc:"Cliques no link",        Icon: Zap },
+  { id:"OUTCOME_LEADS",      label:"Leads",          desc:"Formulário / mensagem",  Icon: Users },
+  { id:"OUTCOME_SALES",      label:"Vendas",         desc:"Compras e conversões",   Icon: ShoppingCart },
+  { id:"OUTCOME_ENGAGEMENT", label:"Engajamento",    desc:"Curtidas e comentários", Icon: Heart },
+  { id:"OUTCOME_AWARENESS",  label:"Reconhecimento", desc:"Alcance e memória",      Icon: Eye },
 ];
 const GOOGLE_CH = [
-  { id:"SEARCH",          label:"Search",    desc:"Resultados de busca",         icon:"🔍" },
-  { id:"DISPLAY",         label:"Display",   desc:"Banners em sites parceiros",  icon:"🖼️" },
-  { id:"VIDEO",           label:"YouTube",   desc:"Anúncios em vídeos",          icon:"▶️" },
-  { id:"PERFORMANCE_MAX", label:"Perf. Max", desc:"Todas as redes (automático)", icon:"⚡" },
+  { id:"SEARCH",          label:"Search",    desc:"Resultados de busca",         Icon: Search },
+  { id:"DISPLAY",         label:"Display",   desc:"Banners em sites parceiros",  Icon: Monitor },
+  { id:"VIDEO",           label:"YouTube",   desc:"Anúncios em vídeos",          Icon: Play },
+  { id:"PERFORMANCE_MAX", label:"Perf. Max", desc:"Todas as redes automático",   Icon: Globe },
 ];
 const META_OPT: Record<string,{id:string;label:string}[]> = {
   OUTCOME_TRAFFIC:    [{id:"LINK_CLICKS",label:"Cliques no link"},{id:"LANDING_PAGE_VIEWS",label:"Visualizações de página"}],
@@ -45,592 +38,394 @@ const COUNTRIES = [
   {id:"BR",label:"Brasil 🇧🇷"},{id:"MX",label:"México 🇲🇽"},{id:"US",label:"EUA 🇺🇸"},
   {id:"AR",label:"Argentina 🇦🇷"},{id:"CO",label:"Colômbia 🇨🇴"},{id:"IN",label:"Índia 🇮🇳"},
 ];
-const STEPS = [
-  {label:"Objetivo",  Icon:Target},
-  {label:"Orçamento", Icon:DollarSign},
-  {label:"Público",   Icon:Users},
-  {label:"Criativo",  Icon:Megaphone},
-  {label:"Revisar",   Icon:Check},
-];
+const DFLT: Form = {
+  name:"", objective:"", optimization_goal:"", cbo:false,
+  channel_type:"", cpc_bid:"1.50", daily_budget:"", country:"BR",
+  age_min:18, age_max:65, destination_url:"", primary_text:"", headline:"",
+};
+const accent = "#0ea5e9";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
+const MONO = "'DM Mono', monospace";
+const inputStyle: React.CSSProperties = {
+  width:"100%", padding:"11px 14px", background:"var(--bg-surface)",
+  border:"1px solid var(--border-subtle)", borderRadius:10,
+  color:"var(--text-primary)", fontSize:14, fontFamily:F, outline:"none",
+  boxSizing:"border-box", transition:"border-color 0.2s",
+};
+const labelStyle: React.CSSProperties = {
+  display:"block", fontSize:11, fontWeight:700, color:"var(--text-muted)",
+  letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:8, fontFamily:F,
+};
 
-const F="var(--bg-main)",S1="var(--bg-card)",S2="var(--bg-elevated)";
-const BD="var(--border-subtle)",TX="var(--text-primary)",MT="var(--text-secondary)";
-const BLUE="#0ea5e9",GREEN="#22c55e",AMBER="#f59e0b",GBLUE="#4285F4";
-const pColor=(p:Platform)=>p==="google"?GBLUE:BLUE;
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div style={{marginBottom:20}}><label style={labelStyle}>{label}</label>{children}</div>;
+}
 
-const Label=({children}:{children:React.ReactNode})=>(
-  <span style={{fontSize: 12,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.07em",display:"block",marginBottom:8}}>{children}</span>
-);
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{marginBottom:36}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+        <div style={{height:1,flex:1,background:"var(--border-subtle)"}}/>
+        <span style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.18)",letterSpacing:"0.14em",textTransform:"uppercase",fontFamily:F,flexShrink:0}}>{title}</span>
+        <div style={{height:1,flex:1,background:"var(--border-subtle)"}}/>
+      </div>
+      {children}
+    </div>
+  );
+}
 
-const Toggle=({on,onChange}:{on:boolean;onChange:()=>void})=>(
-  <button onClick={onChange} style={{width:42,height:22,borderRadius:11,background:on?BLUE:BD,border:"none",cursor:"pointer",position:"relative",transition:"background 0.2s",flexShrink:0}}>
-    <div style={{position:"absolute",top:3,left:on?22:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s"}}/>
-  </button>
-);
+function ObjCard({ obj, selected, onClick }: { obj: typeof META_OBJ[0]; selected: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{
+      display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:12,cursor:"pointer",
+      background: selected ? "rgba(14,165,233,0.08)" : "var(--bg-surface)",
+      border:`1px solid ${selected ? "rgba(14,165,233,0.35)" : "var(--border-subtle)"}`,
+      textAlign:"left",width:"100%",fontFamily:F,transition:"all 0.15s",
+      boxShadow: selected ? "0 0 0 1px rgba(14,165,233,0.12), 0 4px 20px rgba(14,165,233,0.1)" : "none",
+    }}>
+      <div style={{
+        width:40,height:40,borderRadius:10,flexShrink:0,
+        background: selected ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.04)",
+        border:`1px solid ${selected ? "rgba(14,165,233,0.25)" : "rgba(255,255,255,0.06)"}`,
+        display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s",
+      }}>
+        <obj.Icon size={17} color={selected ? accent : "rgba(255,255,255,0.35)"} />
+      </div>
+      <div style={{flex:1}}>
+        <p style={{margin:0,fontSize:14,fontWeight:600,color: selected ? "var(--text-primary)" : "var(--text-secondary)"}}>{obj.label}</p>
+        <p style={{margin:"2px 0 0",fontSize:12,color:"var(--text-muted)"}}>{obj.desc}</p>
+      </div>
+      {selected && <div style={{width:20,height:20,borderRadius:"50%",background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Check size={11} color={accent}/></div>}
+    </button>
+  );
+}
+
+function CopilotPanel({ userId, personaId, personaName, platform, form, askKey }: {
+  userId:string;personaId:string;personaName:string;platform:Platform;form:Form;askKey:string;
+}) {
+  const [msgs, setMsgs] = useState<AiMsg[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const lastKey = useRef("");
+
+  const ask = useCallback(async (trigger: string, ctx: any) => {
+    const key = trigger + JSON.stringify(ctx);
+    if (key === lastKey.current) return;
+    lastKey.current = key;
+    setLoading(true);
+    try {
+      const res = await supabase.functions.invoke("campaign-copilot", {
+        body: { user_id:userId, persona_id:personaId, persona_name:personaName, platform, trigger, form_ctx:ctx },
+      });
+      const m: AiMsg[] = (res.data?.messages||[]).map((m:any)=>({...m,id:Math.random().toString(36).slice(2)}));
+      if (m.length) setMsgs(prev=>[...prev.slice(-8),...m]);
+    } catch {}
+    setLoading(false);
+  }, [userId, personaId, personaName, platform]);
+
+  useEffect(()=>{ if(askKey) ask("form_update",form); },[askKey]);
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs,loading]);
+
+  const send = async () => {
+    const q = input.trim(); if(!q) return; setInput("");
+    setMsgs(prev=>[...prev,{id:Math.random().toString(36).slice(2),type:"tip",text:q,fromUser:true}]);
+    await ask("chat",{...form,user_question:q});
+  };
+
+  const tc: Record<string,string> = {tip:"#38bdf8",warn:"#fbbf24",insight:"#a78bfa",ok:"#34d399"};
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"var(--bg-surface)",borderLeft:"1px solid var(--border-subtle)"}}>
+      <div style={{padding:"16px 18px",borderBottom:"1px solid var(--border-subtle)",display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:7,height:7,borderRadius:"50%",background:loading?accent:"#34d399",flexShrink:0}}/>
+        <p style={{margin:0,fontSize:13,fontWeight:600,color:"var(--text-primary)",fontFamily:F}}>Co-piloto</p>
+        <span style={{marginLeft:"auto",fontSize:11,color:"var(--text-muted)",fontFamily:F}}>dados reais</span>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:14,display:"flex",flexDirection:"column",gap:10}}>
+        {msgs.length===0&&!loading&&(
+          <div style={{padding:"32px 8px",textAlign:"center"}}>
+            <p style={{margin:0,fontSize:13,color:"var(--text-muted)",lineHeight:1.7,fontFamily:F}}>Preencha os campos e o co-piloto analisa com base nos dados da sua conta.</p>
+          </div>
+        )}
+        {msgs.map(msg=>msg.fromUser
+          ? <div key={msg.id} style={{display:"flex",justifyContent:"flex-end"}}><span style={{fontSize:12,padding:"8px 12px",maxWidth:"85%",background:"rgba(14,165,233,0.1)",border:"1px solid rgba(14,165,233,0.2)",borderRadius:"12px 12px 3px 12px",color:"#7dd3fc",fontFamily:F,lineHeight:1.5}}>{msg.text}</span></div>
+          : <div key={msg.id} style={{padding:"10px 12px",borderRadius:10,background:"var(--bg-card)",border:`1px solid ${tc[msg.type]||accent}20`,borderLeft:`3px solid ${tc[msg.type]||accent}`,animation:"fadeUp 0.2s ease"}}>
+              <span style={{fontSize:12,color:"var(--text-primary)",lineHeight:1.6,fontFamily:F}}>{msg.text}</span>
+            </div>
+        )}
+        {loading&&<div style={{display:"flex",gap:5,padding:"10px 12px",background:"var(--bg-card)",borderRadius:10,alignItems:"center"}}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:accent,animation:`pulse 1.2s ${i*0.2}s infinite`}}/>)}</div>}
+        <div ref={bottomRef}/>
+      </div>
+      <div style={{padding:"10px 12px",borderTop:"1px solid var(--border-subtle)",display:"flex",gap:8}}>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}
+          placeholder="Pergunte sobre a campanha..."
+          style={{...inputStyle,fontSize:12,padding:"8px 12px",flex:1,borderRadius:8}}/>
+        <button onClick={send} style={{width:32,height:32,borderRadius:8,border:"none",flexShrink:0,background:input.trim()?accent:"var(--bg-card)",cursor:input.trim()?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s"}}>
+          <Send size={13} color={input.trim()?"#fff":"rgba(255,255,255,0.2)"}/>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CampaignBuilder() {
-  const navigate=useNavigate();
-  const [step,setStep]=useState(0);
-  const [platform,setPlatform]=useState<Platform>("meta");
-  const [personas,setPersonas]=useState<Persona[]>([]);
-  const [persona,setPersona]=useState<Persona|null>(null);
-  const [userId,setUserId]=useState("");
-  const [conns,setConns]=useState<any[]>([]);
-  const [connsReady,setConnsReady]=useState(false);
-  const [form,setForm]=useState<Form>({
-    name:"",objective:"",optimization_goal:"",cbo:false,
-    channel_type:"SEARCH",cpc_bid:"1.50",
-    daily_budget:"50",country:"BR",age_min:18,age_max:55,
-    group_name:"",destination_url:"",primary_text:"",headline:"",
-  });
-  const [aiMsgs,setAiMsgs]=useState<AiMsg[]>([]);
-  const [aiLoading,setAiLoading]=useState(false);
-  const [launching,setLaunching]=useState(false);
-  const [result,setResult]=useState<any>(null);
-  const [error,setError]=useState("");
-  const aiRef=useRef<HTMLDivElement>(null);
-  const debRef=useRef<ReturnType<typeof setTimeout>>();
-  const lastKey=useRef("");
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const userId = user?.id || "";
+  const persona = selectedPersona as Persona | null;
+  const [platform, setPlatform] = useState<Platform>("meta");
+  const [form, setForm] = useState<Form>(DFLT);
+  const [conns, setConns] = useState<any[]>([]);
+  const [connsReady, setConnsReady] = useState(false);
+  const [launching, setLaunching] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [askKey, setAskKey] = useState("");
+  const debRef = useRef<any>(null);
+  const pc = platform === "google" ? "#34A853" : accent;
 
-  useEffect(()=>{
-    const init = async () => {
-      let { data } = await supabase.auth.getSession();
-      // Try refresh if session expired
-      if (!data.session) {
-        const { data: refreshed } = await supabase.auth.refreshSession();
-        data = refreshed as any;
-      }
-      if(!data.session){navigate("/login");return;}
-      const uid=data.session.user.id;
-      setUserId(uid);
-      const{data:ps}=await supabase.from("personas").select("id,name,result").eq("user_id",uid).order("created_at",{ascending:false});
-      setPersonas(ps||[]);
-      if(ps?.length)setPersona(ps[0]);
-    };
-    init();
-  },[navigate]);
-
-  useEffect(()=>{
-    if(!userId||!persona)return;
-    setConnsReady(false);
-    (supabase as any).from("platform_connections" as any)
-      .select("platform,status,ad_accounts,selected_account_id")
-      .eq("user_id",userId).eq("persona_id",persona.id).eq("status","active")
-      .then(({data}:any)=>{setConns(data||[]);setConnsReady(true);});
-  },[userId,persona]);
-
-  useEffect(()=>{if(aiRef.current)aiRef.current.scrollTop=aiRef.current.scrollHeight;},[aiMsgs]);
-
-  const isConnected=(p:Platform)=>conns.some(c=>c.platform===p&&(c.ad_accounts?.length??0)>0);
-  const pc=pColor(platform);
-
-  const askAI=useCallback(async(trigger:string,ctx:any)=>{
-    if(!userId||!persona)return;
-    const key=trigger+JSON.stringify(ctx);
-    if(key===lastKey.current)return;
-    lastKey.current=key;
-    setAiLoading(true);
-    try{
-      // Call server-side edge function — Anthropic API cannot be called from the browser (CORS)
-      const res=await supabase.functions.invoke("campaign-copilot",{
-        body:{
-          user_id:userId,
-          persona_id:persona.id,
-          persona_name:persona.name,
-          platform,
-          trigger,
-          form_ctx:ctx,
-        },
-      });
-      const msgs:AiMsg[]=((res.data?.messages)||[])
-        .map((m:any)=>({...m,id:Math.random().toString(36).slice(2)}));
-      if(msgs.length>0)setAiMsgs(prev=>[...prev.slice(-6),...msgs]);
-    }catch{}finally{setAiLoading(false);}
-  },[userId,persona,platform]);
-
-  const triggerAI=useCallback((trigger:string,ctx:any)=>{
+  const set = (k: keyof Form, v: any) => {
+    setForm(f=>({...f,[k]:v}));
     clearTimeout(debRef.current);
-    debRef.current=setTimeout(()=>askAI(trigger,ctx),800);
-  },[askAI]);
-
-  const set=(k:keyof Form,v:any)=>{setForm(f=>({...f,[k]:v}));};
-
-  const canNext=()=>{
-    if(step===0)return!!(platform==="meta"?form.objective:form.channel_type)&&!!form.name.trim();
-    if(step===1)return!!form.daily_budget&&parseFloat(form.daily_budget)>0;
-    if(step===2)return!!form.country;
-    return true;
+    debRef.current = setTimeout(()=>setAskKey(k+Date.now()),1200);
   };
 
-  // billing_event must match optimization_goal
-  const billingEvent=(opt:string)=>{
-    if(["VALUE","OFFSITE_CONVERSIONS"].includes(opt)) return "IMPRESSIONS";
-    if(opt==="LINK_CLICKS") return "LINK_CLICKS";
-    return "IMPRESSIONS";
-  };
+  useEffect(()=>{
+    if(!userId||!persona?.id) return;
+    supabase.from("platform_connections" as any)
+      .select("platform,status,ad_accounts,selected_account_id")
+      .eq("user_id",userId).eq("status","active")
+      .then(({data})=>{setConns((data||[]) as any[]);setConnsReady(true);});
+  },[userId,persona?.id]);
 
-  const launch=async()=>{
-    if(!persona||!userId)return;
+  const isConnected = (p:Platform) => conns.some(c=>c.platform===p&&(c.ad_accounts?.length??0)>0);
+
+  const launch = async () => {
+    if(!userId||!persona?.id) return;
     setLaunching(true);setError("");
-    try{
-      const fn=platform==="google"?"create-campaign-google":"create-campaign";
-      const optGoal=form.optimization_goal||META_OPT[form.objective]?.[0]?.id||"LINK_CLICKS";
-      const body=platform==="meta"
-        ?{user_id:userId,persona_id:persona.id,campaign:{
-            name:form.name,objective:form.objective,cbo:form.cbo,
-            daily_budget:form.daily_budget,
-            optimization_goal:optGoal,
-            billing_event:billingEvent(optGoal),
-            countries:[form.country],age_min:form.age_min,age_max:form.age_max,
-            adset_name:form.group_name||`${form.name} — Público 1`,
-          }}
-        :{user_id:userId,persona_id:persona.id,campaign:{
-            name:form.name,channel_type:form.channel_type,
-            daily_budget:form.daily_budget,cpc_bid:form.cpc_bid,
-            adgroup_name:form.group_name||`${form.name} — Grupo 1`,
-          }};
-      const res=await supabase.functions.invoke(fn,{body});
-      // Handle auth error clearly
-      if(res.error?.message?.includes("401")||res.data?.error==="unauthorized"){
-        setError("Sessão expirada — recarregue a página e tente novamente.");return;
-      }
-      if(res.error||res.data?.error){
-        setError(res.data?.error||res.error?.message||"Erro ao criar campanha");return;
-      }
-      setResult({...res.data,platform});
-    }catch(e){setError(String(e));}finally{setLaunching(false);}
+    try {
+      const fn = platform==="meta"?"create-campaign":"create-campaign-google";
+      const conn = conns.find(c=>c.platform===platform);
+      const acc = conn?.ad_accounts?.find((a:any)=>a.id===conn.selected_account_id)||conn?.ad_accounts?.[0];
+      const body = platform==="meta" ? {
+        user_id:userId,persona_id:persona.id,account_id:acc?.id,
+        name:form.name||"Nova campanha",objective:form.objective,
+        optimization_goal:form.optimization_goal||META_OPT[form.objective]?.[0]?.id,
+        daily_budget:Math.round(parseFloat(form.daily_budget||"10")*100),
+        country:form.country,age_min:form.age_min,age_max:form.age_max,cbo:form.cbo,
+        destination_url:form.destination_url||undefined,
+        primary_text:form.primary_text||undefined,
+        headline:form.headline||undefined,
+      } : {
+        user_id:userId,persona_id:persona.id,customer_id:acc?.id,
+        name:form.name||"Nova campanha",channel_type:form.channel_type,
+        daily_budget:Math.round(parseFloat(form.daily_budget||"10")*1_000_000),
+        country:form.country,cpc_bid:form.cpc_bid,
+      };
+      const res = await supabase.functions.invoke(fn,{body});
+      if(res.error?.message?.includes("401")||res.data?.error==="unauthorized"){setError("Sessão expirada — recarregue a página.");return;}
+      if(res.error||res.data?.error){setError(res.data?.error||res.error?.message||"Erro ao criar campanha");return;}
+      setSuccess(true);
+    } catch(e){setError(String(e));}
+    finally{setLaunching(false);}
   };
 
-  const msgSt=(type:string):React.CSSProperties=>{
-    const b:React.CSSProperties={padding:"10px 14px",borderRadius:10,fontSize:13,lineHeight:1.55,marginBottom:8,display:"flex",gap:8,alignItems:"flex-start"};
-    if(type==="warn")return{...b,background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.2)",color:"#fcd34d"};
-    if(type==="insight")return{...b,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.18)",color:"#7dd3fc"};
-    if(type==="ok")return{...b,background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.18)",color:"#86efac"};
-    return{...b,background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,color:TX};
-  };
-  const msgIc=(t:string)=>t==="warn"?"⚠️":t==="insight"?"📊":t==="ok"?"✓":"💡";
+  const canLaunch = connsReady&&isConnected(platform)&&form.daily_budget&&parseFloat(form.daily_budget)>0&&
+    (platform==="meta"?!!form.objective:!!form.channel_type);
 
-  const resetForm=()=>{
-    setResult(null);setStep(0);setError("");setAiMsgs([]);
-    setForm({name:"",objective:"",optimization_goal:"",cbo:false,channel_type:"SEARCH",cpc_bid:"1.50",daily_budget:"50",country:"BR",age_min:18,age_max:55,group_name:"",destination_url:"",primary_text:"",headline:""});
-  };
-
-  if(result){
-    const url=result.platform==="google"?result.google_ads_url:result.ads_manager_url;
-    return(
-      <div style={{minHeight:"100vh",background:F,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif",padding:24}}>
-        <div style={{maxWidth:480,width:"100%",textAlign:"center"}}>
-          <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(34,197,94,0.15)",border:"2px solid rgba(34,197,94,0.35)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",fontSize:28}}>✓</div>
-          <h2 style={{fontSize:24,fontWeight:800,color:TX,margin:"0 0 8px"}}>Campanha criada!</h2>
-          <p style={{color:MT,fontSize:14,margin:"0 0 28px"}}>Criada como <strong style={{color:"#fcd34d"}}>PAUSADA</strong> — revise no {result.platform==="google"?"Google Ads":"Meta Ads Manager"} antes de ativar.</p>
-          <div style={{background:"var(--bg-card)",border:"1px solid var(--border-subtle)",borderRadius:12,padding:18,textAlign:"left",marginBottom:20}}>
-            <p style={{margin:"0 0 2px",fontSize: 12,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Campaign ID</p>
-            <p style={{color:TX,fontSize:13,fontFamily:"monospace",margin:0}}>{result.campaign_id}</p>
-          </div>
-          <div style={{display:"flex",gap:12}}>
-            {url&&<a href={url} target="_blank" rel="noreferrer" style={{flex:1,padding:"12px 0",background:result.platform==="google"?"linear-gradient(135deg,#4285F4,#34A853)":"linear-gradient(135deg,#0ea5e9,#0891b2)",color:"#fff",borderRadius:10,fontWeight:700,fontSize:14,textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><ExternalLink size={14}/>Abrir no {result.platform==="google"?"Google Ads":"Meta Ads"}</a>}
-            <button onClick={resetForm} style={{flex:1,padding:"12px 0",background:S2,color:TX,border:`1px solid ${BD}`,borderRadius:10,fontWeight:600,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',system-ui,sans-serif"}}>Nova campanha</button>
-          </div>
-        </div>
+  if(success) return(
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100%",padding:40}}>
+      <div style={{textAlign:"center",maxWidth:360}}>
+        <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(52,211,153,0.1)",border:"1px solid rgba(52,211,153,0.25)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px"}}><Check size={28} color="#34d399"/></div>
+        <h2 style={{margin:"0 0 10px",fontSize:22,fontWeight:800,color:"var(--text-primary)",fontFamily:F}}>Campanha criada</h2>
+        <p style={{margin:"0 0 28px",color:"var(--text-muted)",fontSize:14,fontFamily:F,lineHeight:1.6}}>Criada no modo <strong style={{color:"#fcd34d"}}>pausada</strong>. Revise na plataforma antes de ativar.</p>
+        <button onClick={()=>{setSuccess(false);setForm(DFLT);setError("");}}
+          style={{padding:"11px 28px",borderRadius:10,background:accent,color:"#fff",border:"none",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F}}>Nova campanha</button>
       </div>
-    );
-  }
+    </div>
+  );
 
-  const BG="var(--bg-main)";
   return(
-    <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#060a12 0%,#04060a 100%)",fontFamily:"'DM Sans',system-ui,sans-serif",display:"flex",flexDirection:"column"}}>
+    <div style={{display:"flex",height:"100%",overflow:"hidden",fontFamily:F}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .cbi{background:${S2};border:1px solid ${BD};border-radius:10px;color:${TX};font-family:'DM Sans',system-ui,sans-serif;font-size:14px;padding:11px 14px;width:100%;box-sizing:border-box;outline:none;transition:border-color 0.15s;}
-        .cbi:focus{border-color:${BLUE};}
-        .cbi::placeholder{color:${MT};}
-        .obj-card{background:${S1};border:1.5px solid ${BD};border-radius:12px;padding:16px 18px;cursor:pointer;transition:all 0.15s;}
-        .obj-card:hover{border-color:rgba(255,255,255,0.18);}
-        .pill{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:1.5px solid ${BD};background:${S2};color:${TX};cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all 0.15s;}
+        @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        input[type=range]::-webkit-slider-thumb{background:${accent};}
+        input[type=range]::-webkit-slider-runnable-track{background:var(--border-default);height:4px;border-radius:2px;}
+        .cb-input:focus{border-color:${accent}!important;}
+        select{appearance:auto;}
       `}</style>
 
-      {/* Header */}
-      <div style={{padding:"14px 24px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={()=>navigate("/dashboard/performance")} style={{background:"none",border:"none",color:MT,cursor:"pointer",display:"flex",padding:4}}><ChevronLeft size={20}/></button>
-        <div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,${pc},${platform==="google"?"#34A853":"#06b6d4"})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Rocket size={14} color="#fff"/></div>
-        <div style={{flex:1}}>
-          <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Criar campanha</p>
-          <p style={{margin:0,fontSize:12,color:MT}}>Co-piloto AI ativo — {platform==="meta"?"Meta Ads":"Google Ads"}</p>
+      {/* Form */}
+      <div style={{flex:1,overflowY:"auto",padding:"32px 40px",maxWidth:660}}>
+        <div style={{marginBottom:28}}>
+          <h1 style={{margin:"0 0 4px",fontSize:20,fontWeight:800,color:"var(--text-primary)",letterSpacing:"-0.03em"}}>Nova campanha</h1>
+          <p style={{margin:0,fontSize:13,color:"var(--text-muted)"}}>{persona?.name||"Selecione uma conta"}</p>
         </div>
-        {personas.length>1&&(
-          <select value={persona?.id||""} onChange={e=>setPersona(personas.find(p=>p.id===e.target.value)||null)}
-            className="cbi" style={{width:"auto",fontSize:13,padding:"7px 12px"}}>
-            {personas.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+
+        {/* Platform */}
+        <div style={{display:"flex",gap:4,marginBottom:32,background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:12,padding:4}}>
+          {(["meta","google"] as Platform[]).map(p=>{
+            const a=platform===p;const c=p==="google"?"#34A853":accent;
+            return<button key={p} onClick={()=>{setPlatform(p);setForm(DFLT);setError("");}}
+              style={{flex:1,padding:"9px 0",borderRadius:9,border:"none",cursor:"pointer",
+                background:a?`${c}12`:"transparent",color:a?"var(--text-primary)":"var(--text-muted)",
+                fontSize:13,fontWeight:a?700:400,fontFamily:F,
+                boxShadow:a?`inset 0 0 0 1px ${c}30`:"none",transition:"all 0.15s"}}>
+              {p==="meta"?"Meta Ads":"Google Ads"}
+            </button>;
+          })}
+        </div>
+
+        {connsReady&&!isConnected(platform)&&(
+          <div style={{display:"flex",gap:10,padding:"12px 16px",background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.18)",borderRadius:10,marginBottom:28}}>
+            <AlertCircle size={15} color="#fbbf24" style={{flexShrink:0,marginTop:1}}/>
+            <p style={{margin:0,fontSize:13,color:"#fbbf24",fontFamily:F}}>{platform==="meta"?"Meta Ads":"Google Ads"} não conectado — <a href="/dashboard/accounts" style={{color:"#fbbf24",textDecoration:"underline"}}>conectar em Contas</a></p>
+          </div>
         )}
-        {personas.length===1&&persona&&<span style={{fontSize:13,color:MT}}>{persona.name}</span>}
+
+        <Section title="Objetivo">
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {(platform==="meta"?META_OBJ:GOOGLE_CH).map(obj=>(
+              <ObjCard key={obj.id} obj={obj}
+                selected={platform==="meta"?form.objective===obj.id:form.channel_type===obj.id}
+                onClick={()=>platform==="meta"?set("objective",obj.id):set("channel_type",obj.id)}/>
+            ))}
+          </div>
+        </Section>
+
+        {platform==="meta"&&form.objective&&META_OPT[form.objective]&&(
+          <Section title="Otimização">
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {META_OPT[form.objective].map(opt=>{
+                const a=form.optimization_goal===opt.id;
+                return<button key={opt.id} onClick={()=>set("optimization_goal",opt.id)}
+                  style={{padding:"8px 16px",borderRadius:8,border:`1px solid ${a?`${accent}40`:"var(--border-subtle)"}`,
+                    background:a?`${accent}10`:"var(--bg-surface)",color:a?accent:"var(--text-muted)",
+                    fontSize:13,fontWeight:a?600:400,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>{opt.label}</button>;
+              })}
+            </div>
+          </Section>
+        )}
+
+        <Section title="Identificação">
+          <Field label="Nome da campanha">
+            <input className="cb-input" style={inputStyle} placeholder={`Ex: ${platform==="meta"?"Leads BR — Fev 2026":"Search — Marca BR"}`}
+              value={form.name} onChange={e=>set("name",e.target.value)}/>
+          </Field>
+        </Section>
+
+        <Section title="Orçamento">
+          <div style={{display:"flex",gap:12}}>
+            <div style={{flex:1}}>
+              <Field label="Orçamento diário (R$)">
+                <div style={{position:"relative"}}>
+                  <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"var(--text-muted)",fontSize:13,fontFamily:MONO,pointerEvents:"none"}}>R$</span>
+                  <input className="cb-input" style={{...inputStyle,paddingLeft:40}} type="number" min="1" placeholder="100"
+                    value={form.daily_budget} onChange={e=>set("daily_budget",e.target.value)}/>
+                </div>
+              </Field>
+            </div>
+            {platform==="google"&&(
+              <div style={{flex:1}}>
+                <Field label="CPC máximo (R$)">
+                  <input className="cb-input" style={inputStyle} type="number" min="0.01" step="0.10"
+                    value={form.cpc_bid} onChange={e=>set("cpc_bid",e.target.value)}/>
+                </Field>
+              </div>
+            )}
+          </div>
+          {platform==="meta"&&(
+            <label style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",userSelect:"none"}}>
+              <div onClick={()=>set("cbo",!form.cbo)} style={{width:40,height:22,borderRadius:11,position:"relative",flexShrink:0,
+                background:form.cbo?accent:"var(--bg-elevated)",border:`1px solid ${form.cbo?accent:"var(--border-default)"}`,
+                transition:"all 0.2s",cursor:"pointer"}}>
+                <div style={{position:"absolute",width:16,height:16,borderRadius:"50%",background:"#fff",
+                  top:2,left:form.cbo?20:2,transition:"left 0.2s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
+              </div>
+              <div>
+                <span style={{fontSize:13,fontWeight:600,color:"var(--text-secondary)",fontFamily:F}}>CBO</span>
+                <span style={{fontSize:12,color:"var(--text-muted)",fontFamily:F,display:"block"}}>Meta distribui o budget automaticamente entre conjuntos</span>
+              </div>
+            </label>
+          )}
+        </Section>
+
+        <Section title="Público">
+          <Field label="País">
+            <select className="cb-input" style={{...inputStyle,cursor:"pointer"}} value={form.country} onChange={e=>set("country",e.target.value)}>
+              {COUNTRIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+          </Field>
+          {platform==="meta"&&(
+            <Field label={`Faixa etária — ${form.age_min} a ${form.age_max} anos`}>
+              <div style={{display:"flex",gap:20}}>
+                <div style={{flex:1}}>
+                  <p style={{...labelStyle,marginBottom:6,fontSize:10}}>Mínimo: {form.age_min}</p>
+                  <input type="range" min={18} max={64} value={form.age_min}
+                    onChange={e=>{const v=parseInt(e.target.value);if(v<form.age_max)set("age_min",v);}}
+                    style={{width:"100%",accentColor:accent,height:4}}/>
+                </div>
+                <div style={{flex:1}}>
+                  <p style={{...labelStyle,marginBottom:6,fontSize:10}}>Máximo: {form.age_max}</p>
+                  <input type="range" min={19} max={65} value={form.age_max}
+                    onChange={e=>{const v=parseInt(e.target.value);if(v>form.age_min)set("age_max",v);}}
+                    style={{width:"100%",accentColor:accent,height:4}}/>
+                </div>
+              </div>
+            </Field>
+          )}
+        </Section>
+
+        {platform==="meta"&&(
+          <Section title="Criativo (opcional)">
+            <Field label="URL de destino">
+              <input className="cb-input" style={inputStyle} placeholder="https://..." type="url"
+                value={form.destination_url} onChange={e=>set("destination_url",e.target.value)}/>
+            </Field>
+            <Field label="Texto principal">
+              <textarea className="cb-input" style={{...inputStyle,resize:"none",minHeight:80,lineHeight:1.6}}
+                placeholder="Texto do anúncio..."
+                value={form.primary_text} onChange={e=>set("primary_text",e.target.value)}/>
+            </Field>
+            <Field label="Headline">
+              <input className="cb-input" style={inputStyle} placeholder="Título (máx 40 chars)" maxLength={40}
+                value={form.headline} onChange={e=>set("headline",e.target.value)}/>
+              {form.headline.length>30&&<p style={{margin:"4px 0 0",fontSize:11,color:form.headline.length>38?"#f87171":"#fbbf24",fontFamily:MONO,textAlign:"right"}}>{form.headline.length}/40</p>}
+            </Field>
+          </Section>
+        )}
+
+        {error&&(
+          <div style={{display:"flex",gap:10,padding:"12px 16px",background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.18)",borderRadius:10,marginBottom:16}}>
+            <AlertCircle size={15} color="#f87171" style={{flexShrink:0,marginTop:1}}/>
+            <p style={{margin:0,fontSize:13,color:"#f87171",fontFamily:F}}>{error}</p>
+          </div>
+        )}
+
+        <button onClick={launch} disabled={!canLaunch||launching} style={{
+          width:"100%",padding:"14px 0",borderRadius:12,border:"none",
+          background:canLaunch&&!launching?`linear-gradient(135deg,${pc},${platform==="google"?"#1a8f3c":"#0891b2"})`:"var(--bg-elevated)",
+          color:canLaunch?"#fff":"var(--text-muted)",fontSize:15,fontWeight:700,fontFamily:F,
+          cursor:canLaunch?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+          transition:"all 0.15s",boxShadow:canLaunch?`0 4px 20px ${pc}25`:"none",
+        }}>
+          {launching?<><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Criando...</>
+          :!connsReady?<><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Verificando...</>
+          :!isConnected(platform)?"Conecte sua conta para continuar"
+          :<><Rocket size={17}/>Criar campanha pausada</>}
+        </button>
+        <p style={{textAlign:"center",fontSize:12,color:"var(--text-muted)",margin:"10px 0 40px",fontFamily:F}}>Criada pausada — você ativa quando quiser na plataforma</p>
       </div>
 
-      {/* Platform tabs */}
-      <div style={{padding:"0 24px",borderBottom:`1px solid ${BD}`,display:"flex",gap:0}}>
-        {([
-          {id:"meta" as Platform,label:"Meta Ads",  glyph:"meta",grad:"linear-gradient(135deg,#0ea5e9,#06b6d4)",color:BLUE},
-          {id:"google" as Platform,label:"Google Ads",glyph:"google",grad:"linear-gradient(135deg,#4285F4,#34A853)",color:GBLUE},
-        ]).map(plt=>{
-          const active=platform===plt.id;
-          const connected=connsReady&&isConnected(plt.id);
-          return(
-            <button key={plt.id} onClick={()=>{
-                setPlatform(plt.id);
-                setStep(0);
-                setAiMsgs([]);
-                setError("");
-                setForm(f=>({...f, objective:"", optimization_goal:"", channel_type:"SEARCH"}));
-              }}
-              style={{display:"flex",alignItems:"center",gap:9,padding:"13px 20px",border:"none",borderBottom:`2px solid ${active?plt.color:"transparent"}`,background:"transparent",cursor:"pointer",fontFamily:"'DM Sans',system-ui,sans-serif",color:active?plt.color:MT,fontWeight:active?700:500,fontSize:14,transition:"all 0.15s"}}>
-              {plt.glyph === "meta" ? (
-                <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s"}}>
-                  <svg width="12" height="7" viewBox="0 0 36 18" fill="none"><path d="M8.5 0C5.5 0 3.2 1.6 1.6 3.8.6 5.2 0 7 0 9c0 2 .6 3.8 1.6 5.2C3.2 16.4 5.5 18 8.5 18c2.2 0 4-.9 5.5-2.4L18 12l4 3.6C23.5 17.1 25.3 18 27.5 18c3 0 5.3-1.6 6.9-3.8 1-1.4 1.6-3.2 1.6-5.2 0-2-.6-3.8-1.6-5.2C32.8 1.6 30.5 0 27.5 0c-2.2 0-4 .9-5.5 2.4L18 6l-4-3.6C12.5.9 10.7 0 8.5 0zm0 4c1.2 0 2.2.5 3.2 1.4L15 8.9 11.7 12.6C10.7 13.5 9.7 14 8.5 14c-1.6 0-2.9-.8-3.8-2C4 11 3.6 10 3.6 9s.4-2 1.1-3C5.6 4.8 6.9 4 8.5 4zm19 0c1.6 0 2.9.8 3.8 2 .7 1 1.1 2 1.1 3s-.4 2-1.1 3c-.9 1.2-2.2 2-3.8 2-1.2 0-2.2-.5-3.2-1.4L21 9.1l3.3-3.7C25.3 4.5 26.3 4 27.5 4z" fill="#fff"/></svg>
-                </div>
-              ) : (
-                <div style={{width:20,height:20,borderRadius:5,background:active?plt.grad:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",transition:"background 0.15s"}}>
-                  <svg width="12" height="12" viewBox="0 0 48 48"><path fill="#fff" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/></svg>
-                </div>
-              )}
-              {plt.label}
-              <div style={{width:6,height:6,borderRadius:"50%",background:!connsReady?MT:connected?GREEN:AMBER,flexShrink:0}} title={!connsReady?"Verificando...":connected?"Conectado":"Não conectado"}/>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Not connected warning */}
-      {connsReady&&!isConnected(platform)&&(
-        <div style={{padding:"10px 24px",background:"rgba(245,158,11,0.06)",borderBottom:"1px solid rgba(245,158,11,0.14)",display:"flex",alignItems:"center",gap:8}}>
-          <AlertTriangle size={13} color={AMBER} style={{flexShrink:0}}/>
-          <p style={{margin:0,fontSize:13,color:AMBER}}>
-            {platform==="meta"?"Meta Ads":"Google Ads"} não conectado.{" "}
-            <button onClick={()=>navigate("/dashboard/accounts")} style={{background:"none",border:"none",color:AMBER,cursor:"pointer",fontWeight:700,fontSize:13,padding:0,fontFamily:"'DM Sans',system-ui,sans-serif",textDecoration:"underline"}}>Conectar</button>
-          </p>
+      {/* Copilot */}
+      {persona?.id&&(
+        <div style={{width:290,flexShrink:0}}>
+          <CopilotPanel userId={userId} personaId={persona.id} personaName={persona.name||""}
+            platform={platform} form={form} askKey={askKey}/>
         </div>
       )}
-
-      {/* Steps */}
-      <div style={{padding:"12px 24px",borderBottom:`1px solid ${BD}`,display:"flex",alignItems:"center",overflowX:"auto"}}>
-        {STEPS.map(({label,Icon},i)=>{
-          const active=i===step,done=i<step;
-          return(
-            <React.Fragment key={label}>
-              <div onClick={()=>done&&setStep(i)} style={{display:"flex",alignItems:"center",gap:7,cursor:done?"pointer":"default",opacity:active||done?1:0.35,flexShrink:0}}>
-                <div style={{width:24,height:24,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:done?"rgba(34,197,94,0.15)":active?`${pc}18`:S2,border:`1.5px solid ${done?"rgba(34,197,94,0.4)":active?pc:BD}`,transition:"all 0.2s"}}>
-                  {done?<Check size={11} color="#86efac"/>:<Icon size={11} color={active?pc:MT}/>}
-                </div>
-                <span style={{fontSize:12,fontWeight:active?600:400,color:active?TX:MT,whiteSpace:"nowrap"}}>{label}</span>
-              </div>
-              {i<STEPS.length-1&&<div style={{flex:1,height:1,background:i<step?"rgba(34,197,94,0.2)":"var(--border-subtle)",margin:"0 10px",minWidth:16}}/>}
-            </React.Fragment>
-          );
-        })}
-      </div>
-
-      {/* Body */}
-      <div className="campaign-body" style={{flex:1,display:"flex",overflow:"hidden"}}>
-
-        {/* Form */}
-        <div style={{flex:1,padding:"28px 32px",overflowY:"auto",animation:"fadeUp 0.2s ease",minWidth:0,background:"transparent"}} key={`${platform}-${step}`}>
-
-          {/* STEP 0: Objetivo */}
-          {step===0&&(
-            <div>
-              <h2 style={{fontSize:20,fontWeight:800,color:TX,margin:"0 0 4px"}}>{platform==="meta"?"Objetivo da campanha":"Tipo de campanha"}</h2>
-              <p style={{color:MT,fontSize:14,margin:"0 0 22px"}}>{platform==="meta"?"O que você quer alcançar?":"Qual rede você quer usar?"}</p>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:10,marginBottom:22}}>
-                {(platform==="meta"?META_OBJ:GOOGLE_CH).map(obj=>{
-                  const sel=platform==="meta"?form.objective===obj.id:form.channel_type===obj.id;
-                  return(
-                    <div key={obj.id} className="obj-card"
-                      style={{borderColor:sel?pc:BD,background:sel?`${pc}10`:S1}}
-                      onClick={()=>{
-                        if(platform==="meta"){set("objective",obj.id);set("optimization_goal",META_OPT[obj.id]?.[0]?.id||"");}
-                        else set("channel_type",obj.id);
-                        triggerAI("objetivo",{objective:obj.id,channel_type:obj.id,platform});
-                      }}>
-                      {obj.icon === "Traffic" ? (
-                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
-                      ) : obj.icon === "Leads" ? (
-                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                      ) : obj.icon === "Sales" ? (
-                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
-                      ) : obj.icon === "Engagement" ? (
-                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
-                      ) : (
-                        <div style={{marginBottom:8,display:"flex",justifyContent:"center"}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-                      )}
-                      <p style={{margin:"0 0 3px",fontSize:13,fontWeight:700,color:TX}}>{obj.label}</p>
-                      <p style={{margin:0,fontSize:12,color:MT}}>{obj.desc}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              {platform==="meta"&&META_OPT[form.objective]&&(
-                <div style={{marginBottom:20}}>
-                  <Label>Meta de otimização</Label>
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    {META_OPT[form.objective].map(g=>(
-                      <button key={g.id} className="pill"
-                        style={{borderColor:form.optimization_goal===g.id?pc:BD,background:form.optimization_goal===g.id?`${pc}12`:S2,color:form.optimization_goal===g.id?pc:TX}}
-                        onClick={()=>set("optimization_goal",g.id)}>{g.label}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <Label>Nome da campanha *</Label>
-                <input className="cbi" placeholder="ex: Leads Q2 — Público Frio" value={form.name}
-                  onChange={e=>{set("name",e.target.value);triggerAI("nome",{name:e.target.value,platform});}}/>
-                {(platform==="meta"?form.objective:form.channel_type)&&!form.name.trim()&&(
-                  <p style={{fontSize:12,color:AMBER,margin:"6px 0 0"}}>⚠ Preencha o nome para continuar</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 1: Orçamento */}
-          {step===1&&(
-            <div>
-              <h2 style={{fontSize:20,fontWeight:800,color:TX,margin:"0 0 4px"}}>Orçamento diário</h2>
-              <p style={{color:MT,fontSize:14,margin:"0 0 22px"}}>{platform==="meta"?"Mín. R$50/dia para sair da fase de aprendizado em ~7 dias.":"Recomendado: pelo menos 10× o CPC médio esperado."}</p>
-              <div style={{marginBottom:20}}>
-                <Label>Valor diário (R$) *</Label>
-                <div style={{position:"relative"}}>
-                  <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:MT,fontSize:14,pointerEvents:"none"}}>R$</span>
-                  <input className="cbi" style={{paddingLeft:36}} type="number" min="5" step="5" value={form.daily_budget}
-                    onChange={e=>{set("daily_budget",e.target.value);triggerAI("orcamento",{daily_budget:e.target.value,platform});}}/>
-                </div>
-              </div>
-              {platform==="meta"&&(
-                <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:12,padding:"16px 20px",marginBottom:20}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <div>
-                      <p style={{margin:"0 0 3px",fontSize:14,fontWeight:600,color:TX}}>CBO — Otimização de orçamento</p>
-                      <p style={{margin:0,fontSize:12,color:MT}}>Meta distribui automaticamente entre os conjuntos.</p>
-                    </div>
-                    <Toggle on={form.cbo} onChange={()=>{const n=!form.cbo;set("cbo",n);triggerAI("cbo",{cbo:n});}}/>
-                  </div>
-                </div>
-              )}
-              {platform==="google"&&(
-                <div style={{marginBottom:20}}>
-                  <Label>CPC máximo (R$)</Label>
-                  <div style={{position:"relative"}}>
-                    <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:MT,fontSize:14,pointerEvents:"none"}}>R$</span>
-                    <input className="cbi" style={{paddingLeft:36}} type="number" min="0.10" step="0.10" value={form.cpc_bid}
-                      onChange={e=>{set("cpc_bid",e.target.value);triggerAI("cpc",{cpc_bid:e.target.value});}}/>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: Público */}
-          {step===2&&(
-            <div>
-              <h2 style={{fontSize:20,fontWeight:800,color:TX,margin:"0 0 4px"}}>{platform==="meta"?"Público":"Segmentação"}</h2>
-              <p style={{color:MT,fontSize:14,margin:"0 0 22px"}}>{platform==="meta"?"Defina quem vai ver seus anúncios.":"Segmentação detalhada é feita no Google Ads após a criação."}</p>
-              <div style={{marginBottom:20}}>
-                <Label>País</Label>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                  {COUNTRIES.map(c=>(
-                    <button key={c.id} className="pill"
-                      style={{borderColor:form.country===c.id?pc:BD,background:form.country===c.id?`${pc}12`:S2,color:form.country===c.id?pc:TX}}
-                      onClick={()=>{set("country",c.id);triggerAI("pais",{country:c.id,platform});}}>{c.label}</button>
-                  ))}
-                </div>
-              </div>
-              {platform==="meta"&&(
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-                  <div>
-                    <Label>Idade mínima</Label>
-                    <input className="cbi" type="number" min={18} max={65} value={form.age_min}
-                      onChange={e=>{set("age_min",parseInt(e.target.value));triggerAI("idade",{age_min:parseInt(e.target.value),age_max:form.age_max});}}/>
-                  </div>
-                  <div>
-                    <Label>Idade máxima</Label>
-                    <input className="cbi" type="number" min={18} max={65} value={form.age_max}
-                      onChange={e=>{set("age_max",parseInt(e.target.value));triggerAI("idade",{age_min:form.age_min,age_max:parseInt(e.target.value)});}}/>
-                  </div>
-                </div>
-              )}
-              <div>
-                <Label>{platform==="meta"?"Nome do conjunto de anúncios":"Nome do grupo de anúncios"}</Label>
-                <input className="cbi" placeholder={`${form.name||"Campanha"} — ${platform==="meta"?"Público 1":"Grupo 1"}`}
-                  value={form.group_name} onChange={e=>set("group_name",e.target.value)}/>
-                <p style={{fontSize:12,color:MT,margin:"6px 0 0"}}>Opcional — deixe em branco para usar o nome padrão.</p>
-              </div>
-              {platform==="google"&&(
-                <div style={{marginTop:18,display:"flex",gap:10,padding:"12px 16px",background:"rgba(66,133,244,0.07)",border:"1px solid rgba(66,133,244,0.18)",borderRadius:10}}>
-                  <Info size={14} color={GBLUE} style={{flexShrink:0,marginTop:1}}/>
-                  <p style={{margin:0,fontSize:13,color:"#93c5fd"}}>Palavras-chave, interesses e audiências são configurados no Google Ads após a criação.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 3: Criativo */}
-          {step===3&&(
-            <div>
-              <h2 style={{fontSize:20,fontWeight:800,color:TX,margin:"0 0 4px"}}>Criativo</h2>
-              <div style={{display:"flex",gap:10,padding:"10px 14px",background:"rgba(245,158,11,0.07)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:10,marginBottom:20}}>
-                <Info size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/>
-                <p style={{margin:0,fontSize:13,color:AMBER}}>Campanha criada <strong>pausada</strong>. Adicione o criativo {platform==="meta"?"no Meta Ads Manager":"no Google Ads"} antes de ativar.</p>
-              </div>
-              <div style={{marginBottom:18}}>
-                <Label>Texto principal</Label>
-                <textarea className="cbi" rows={4} style={{resize:"vertical"}}
-                  placeholder={platform==="meta"?"Copy do anúncio — o primeiro parágrafo é o mais importante":"Descrição do anúncio"}
-                  value={form.primary_text}
-                  onChange={e=>{set("primary_text",e.target.value);if(e.target.value.length>20)triggerAI("copy",{primary_text:e.target.value,platform});}}/>
-              </div>
-              <div style={{marginBottom:18}}>
-                <Label>Headline</Label>
-                <input className="cbi" placeholder={platform==="meta"?"Título (máx 40 chars)":"Título (máx 30 chars)"}
-                  value={form.headline} maxLength={platform==="meta"?40:30}
-                  onChange={e=>{set("headline",e.target.value);triggerAI("headline",{headline:e.target.value,platform});}}/>
-                <p style={{fontSize:12,color:form.headline.length>(platform==="meta"?35:25)?AMBER:MT,margin:"4px 0 0",textAlign:"right"}}>{form.headline.length}/{platform==="meta"?40:30}</p>
-              </div>
-              <div>
-                <Label>URL de destino</Label>
-                <input className="cbi" placeholder="https://..." value={form.destination_url}
-                  onChange={e=>{set("destination_url",e.target.value);if(e.target.value.startsWith("http"))triggerAI("url",{destination_url:e.target.value,platform});}}/>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: Revisar */}
-          {step===4&&(
-            <div>
-              <h2 style={{fontSize:20,fontWeight:800,color:TX,margin:"0 0 4px"}}>Revisar e criar</h2>
-              <p style={{color:MT,fontSize:14,margin:"0 0 22px"}}>Campanha criada <strong style={{color:"#fcd34d"}}>pausada</strong>. Ative após revisar na plataforma.</p>
-              {error&&(
-                <div style={{display:"flex",gap:10,padding:"12px 16px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:10,marginBottom:20}}>
-                  <AlertCircle size={15} color="#f87171" style={{flexShrink:0,marginTop:1}}/>
-                  <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
-                </div>
-              )}
-              <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"5px 14px",background:`${pc}10`,border:`1px solid ${pc}28`,borderRadius:20,marginBottom:20}}>
-                <span style={{fontSize:12,fontWeight:700,color:pc}}>{platform==="google"?"Google Ads":"Meta Ads"}</span>
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24}}>
-                {[
-                  {label:"Nome",value:form.name},
-                  {label:platform==="meta"?"Objetivo":"Tipo",value:platform==="meta"?META_OBJ.find(o=>o.id===form.objective)?.label:GOOGLE_CH.find(c=>c.id===form.channel_type)?.label},
-                  {label:"Orçamento diário",value:`R$ ${form.daily_budget}${platform==="meta"&&form.cbo?" (CBO)":""}`},
-                  {label:"País",value:COUNTRIES.find(c=>c.id===form.country)?.label},
-                  ...(platform==="meta"?[{label:"Faixa etária",value:`${form.age_min}–${form.age_max} anos`}]:[]),
-                  ...(platform==="google"?[{label:"CPC máximo",value:`R$ ${form.cpc_bid}`}]:[]),
-                ].map(row=>(
-                  <div key={row.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:S1,border:`1px solid ${BD}`,borderRadius:10}}>
-                    <span style={{fontSize:13,color:MT}}>{row.label}</span>
-                    <span style={{fontSize:13,fontWeight:600,color:TX}}>{row.value||"—"}</span>
-                  </div>
-                ))}
-              </div>
-              <button 
-                onClick={launch} 
-                disabled={launching || !connsReady || !isConnected(platform)}
-                style={{
-                  width:"100%", padding:"14px 0",
-                  background: (!connsReady || !isConnected(platform) || launching)
-                    ? S2
-                    : platform==="google"
-                      ? "linear-gradient(135deg,#4285F4,#34A853)"
-                      : "linear-gradient(135deg,#0ea5e9,#0891b2)",
-                  color: (!connsReady || !isConnected(platform)) ? MT : "#fff",
-                  borderRadius:12, fontWeight:700, fontSize:15, border:"none",
-                  cursor: (connsReady && isConnected(platform) && !launching) ? "pointer" : "not-allowed",
-                  display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                  fontFamily:"'DM Sans',system-ui,sans-serif", transition:"all 0.15s",
-                }}>
-                {launching
-                  ? <><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Criando...</>
-                  : !connsReady
-                    ? <><Loader2 size={17} style={{animation:"spin 1s linear infinite"}}/>Verificando conexão...</>
-                    : <><Rocket size={17}/>Criar campanha pausada</>
-                }
-              </button>
-              {connsReady&&!isConnected(platform)&&(
-                <p style={{textAlign:"center",color:AMBER,fontSize:13,margin:"12px 0 0"}}>
-                  Conecte o {platform==="meta"?"Meta Ads":"Google Ads"} em{" "}
-                  <button onClick={()=>navigate("/dashboard/accounts")} style={{background:"none",border:"none",color:AMBER,cursor:"pointer",fontWeight:700,fontSize:13,padding:0,fontFamily:"'DM Sans',system-ui,sans-serif",textDecoration:"underline"}}>Accounts</button>{" "}para criar campanhas.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Nav buttons */}
-          {step<4&&(
-            <div style={{display:"flex",gap:12,marginTop:32}}>
-              {step>0&&(
-                <button onClick={()=>setStep(s=>s-1)}
-                  style={{padding:"11px 20px",background:S2,color:TX,border:`1px solid ${BD}`,borderRadius:10,fontWeight:600,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"'DM Sans',system-ui,sans-serif"}}>
-                  <ChevronLeft size={15}/>Voltar
-                </button>
-              )}
-              <button onClick={()=>setStep(s=>s+1)} disabled={!canNext()}
-                style={{flex:1,padding:"11px 0",background:canNext()?pc:S2,color:canNext()?"#fff":MT,borderRadius:10,fontWeight:700,fontSize:14,border:"none",cursor:canNext()?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
-                Continuar<ChevronRight size={15}/>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* AI Panel */}
-        <div className="campaign-ai-panel" style={{width:290,borderLeft:"1px solid rgba(255,255,255,0.06)",background:"var(--bg-surface)",display:"flex",flexDirection:"column",flexShrink:0,boxShadow:"inset 4px 0 16px rgba(0,0,0,0.3)"}}>
-          <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border-subtle)",display:"flex",alignItems:"center",gap:8}}>
-            <div style={{width:7,height:7,borderRadius:"50%",background:aiLoading?pc:GREEN,animation:aiLoading?"pulse 1s infinite":"none"}}/>
-            <p style={{margin:0,fontSize:13,fontWeight:600,color:TX}}>Co-piloto IA</p>
-            <span style={{marginLeft:"auto",fontSize: 12,color:MT}}>Dados reais</span>
-          </div>
-          <div ref={aiRef} style={{flex:1,overflowY:"auto",padding:14}}>
-            {aiMsgs.length===0&&!aiLoading&&(
-              <div style={{textAlign:"center",padding:"32px 14px"}}>
-
-                <p style={{color:MT,fontSize:13,margin:0,lineHeight:1.7}}>Preencha os campos e o co-piloto vai comentar com base nos dados da sua conta.</p>
-              </div>
-            )}
-            {aiMsgs.map(msg=>(
-              msg.fromUser
-                ? <div key={msg.id} style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
-                    <span style={{fontSize:12,padding:"7px 11px",background:"rgba(14,165,233,0.15)",border:"1px solid rgba(14,165,233,0.25)",borderRadius:"10px 10px 3px 10px",color:"#7dd3fc",maxWidth:"85%"}}>{msg.text}</span>
-                  </div>
-                : <div key={msg.id} style={{...msgSt(msg.type),animation:"fadeUp 0.25s ease"}}>
-                    <span style={{flexShrink:0}}>{msgIc(msg.type)}</span>
-                    <span>{msg.text}</span>
-                  </div>
-            ))}
-            {aiLoading&&(
-              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:`${pc}08`,border:`1px solid ${pc}18`,borderRadius:10}}>
-                {[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:"50%",background:pc,animation:`pulse 1.2s ${i*0.2}s infinite`}}/>)}
-                <span style={{fontSize:12,color:MT,marginLeft:4}}>Analisando...</span>
-              </div>
-            )}
-          </div>
-          <div style={{padding:"10px 14px",borderTop:`1px solid ${BD}`}}>
-            <div style={{display:"flex",gap:6}}>
-              <input
-                placeholder="Pergunte sobre sua campanha..."
-                onKeyDown={async(e)=>{
-                  if(e.key==="Enter"&&e.currentTarget.value.trim()){
-                    const q=e.currentTarget.value.trim();
-                    e.currentTarget.value="";
-                    setAiMsgs(prev=>[...prev,{id:Math.random().toString(36).slice(2),type:"tip",text:q,fromUser:true}]);
-                    await askAI("chat",{...form,user_question:q});
-                  }
-                }}
-                style={{flex:1,padding:"7px 10px",background:"rgba(255,255,255,0.04)",border:`1px solid ${BD}`,borderRadius:8,color:TX,fontSize:12,fontFamily:"'DM Sans',system-ui,sans-serif",outline:"none"}}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

@@ -933,7 +933,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const [pd,   setPd]   = React.useState<any>(null);
   const [busy, setBusy] = React.useState(false);
   const [fail, setFail] = React.useState<string | null>(null);
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   const [tab,  setTab]  = React.useState<"meta" | "google">(connections.includes("meta") ? "meta" : "google");
   const [ts,   setTs]   = React.useState<Date | null>(null);
   const today = React.useMemo(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; },[]);
@@ -2544,7 +2544,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const}}>
+      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:16}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
