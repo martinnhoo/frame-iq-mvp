@@ -452,7 +452,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           <div style={{ gridColumn: "span 2", padding: "18px 20px", borderRadius: 14, background: stats.winRate >= 40 ? "rgba(34,197,94,0.07)" : "var(--bg-card)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.15)" : "var(--border-subtle)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div>
               <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
-              <p style={{ margin: "5px 0 3px", fontSize: 38, fontWeight: 900, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
+              <p style={{ margin: "5px 0 3px", fontSize: 36, fontWeight: 700, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
               <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{t.winners_of(stats.winners, entries.length)}</p>
             </div>
             <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 40 }}>
@@ -467,12 +467,12 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           </div>
           <div style={{ padding: "14px 16px", borderRadius: 12, background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.invested}</p>
-            <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend)}</p>
+            <p style={{ margin: "5px 0 2px", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend)}</p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{t.last90}</p>
           </div>
           <div style={{ padding: "14px 16px", borderRadius: 12, background: stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.07)"}` }}>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? t.roas_label : t.return_label}</p>
-            <p style={{ margin: "5px 0 2px", fontSize: 24, fontWeight: 800, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.4)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <p style={{ margin: "5px 0 2px", fontSize: 22, fontWeight: 700, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.4)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
               {stats.overallRoas ? `${stats.overallRoas.toFixed(2)}×` : stats.totalReturn > 0 ? money(stats.totalReturn) : "—"}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>

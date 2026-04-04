@@ -93,6 +93,32 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
 }
 
+/* ── Type scale ──────────────────────────────────────────────────────────────── */
+
+/* Hero numbers use DM Mono for tabular figures */
+.num-hero {
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Labels — uppercase small */
+.label-xs {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Body text — optimized for readability */
+.body-sm {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
 /* Syne ONLY for logo mark */
 .font-logo {
   font-family: 'Syne', system-ui, sans-serif;

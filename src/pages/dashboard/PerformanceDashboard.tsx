@@ -28,18 +28,18 @@ interface MetricDef {
 }
 
 const METRICS: MetricDef[] = [
-  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v,lang)=>{ const s=v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0); return (lang==="pt"?"R$":"$")+s; },    higherIsBetter:false, platforms:["both"]   },
+  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  accent:ACCENT,    format:(v,lang)=>{ const sym=lang==="pt"?"R$":"$"; if(v>=1000000)return sym+(v/1000000).toFixed(1)+"M"; if(v>=1000)return sym+(v/1000).toFixed(1)+"k"; return sym+v.toFixed(0); },    higherIsBetter:false, platforms:["both"]   },
   { key:"ctr",         label:"CTR",         labelPt:"CTR",          labelEs:"CTR",          icon:MousePointer,accent:GREEN,     format:(v)=>`${(v*100).toFixed(2)}%`,                                higherIsBetter:true,  platforms:["both"]   },
   { key:"clicks",      label:"Clicks",      labelPt:"Cliques",      labelEs:"Clics",        icon:Target,      accent:"#a78bfa", format:(v)=>v>=1000?(v/1000).toFixed(1)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
-  { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         accent:"#f97316", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
+  { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         accent:"#f97316", format:(v)=>{ if(v>=1000000)return (v/1000000).toFixed(1)+"M"; if(v>=1000)return (v/1000).toFixed(0)+"k"; return String(Math.round(v)); }, higherIsBetter:true,  platforms:["both"]   },
   { key:"conversions", label:"Conversions", labelPt:"Conversões",   labelEs:"Conversiones", icon:TrendingUp,  accent:AMBER,     format:(v)=>String(Math.round(v)),                                   higherIsBetter:true,  platforms:["both"]   },
   { key:"roas",        label:"ROAS",        labelPt:"ROAS",         labelEs:"ROAS",         icon:BarChart3,   accent:GREEN,     format:(v)=>`${v.toFixed(2)}×`,                                      higherIsBetter:true,  platforms:["both"]   },
-  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v,lang)=>{ return (lang==="pt"?"R$":"$")+v.toFixed(0); },                                      higherIsBetter:false, platforms:["both"]   },
+  { key:"cpa",         label:"CPA",         labelPt:"CPA",          labelEs:"CPA",          icon:Activity,    accent:"#f43f5e", format:(v,lang)=>{ const sym=lang==="pt"?"R$":"$"; if(v>=1000)return sym+(v/1000).toFixed(1)+"k"; return sym+v.toFixed(0); },                                      higherIsBetter:false, platforms:["both"]   },
   { key:"cpm",         label:"CPM",         labelPt:"CPM",          labelEs:"CPM",          icon:Users,       accent:"#06b6d4", format:(v,lang)=>(lang==="pt"?"R$":"$")+v.toFixed(2),                                      higherIsBetter:false, platforms:["meta"]   },
   { key:"cpc",         label:"CPC",         labelPt:"CPC",          labelEs:"CPC",          icon:Repeat,      accent:"#8b5cf6", format:(v,lang)=>(lang==="pt"?"R$":"$")+v.toFixed(2),                                      higherIsBetter:false, platforms:["both"]   },
-  { key:"reach",       label:"Reach",       labelPt:"Alcance",      labelEs:"Alcance",      icon:Users,       accent:"#14b8a6", format:(v)=>v>=1000?(v/1000).toFixed(0)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["meta"]   },
+  { key:"reach",       label:"Reach",       labelPt:"Alcance",      labelEs:"Alcance",      icon:Users,       accent:"#14b8a6", format:(v)=>{ if(v>=1000000)return (v/1000000).toFixed(1)+"M"; if(v>=1000)return (v/1000).toFixed(0)+"k"; return String(Math.round(v)); }, higherIsBetter:true,  platforms:["meta"]   },
   { key:"frequency",   label:"Frequency",   labelPt:"Frequência",   labelEs:"Frecuencia",   icon:Repeat,      accent:AMBER,     format:(v)=>v.toFixed(2),                                            higherIsBetter:false, platforms:["meta"]   },
-  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v,lang)=>{ const s=v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0); return (lang==="pt"?"R$":"$")+s; },    higherIsBetter:true,  platforms:["both"]   },
+  { key:"conv_value",  label:"Conv. Value", labelPt:"Valor Conv.",  labelEs:"Valor Conv.",  icon:DollarSign,  accent:GREEN,     format:(v,lang)=>{ const sym=lang==="pt"?"R$":"$"; if(v>=1000000)return sym+(v/1000000).toFixed(1)+"M"; if(v>=1000)return sym+(v/1000).toFixed(1)+"k"; return sym+v.toFixed(0); },    higherIsBetter:true,  platforms:["both"]   },
 ];
 
 const DEFAULT_METRICS: MetricKey[] = ["spend","ctr","clicks","roas","conversions","cpa"];
@@ -310,7 +310,7 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
         {sparkData&&<div style={{overflow:"visible",flexShrink:0}}><Sparkline data={sparkData} color={def.accent}/></div>}
       </div>
       <div>
-        <div style={{fontSize:28,fontWeight:800,color:TX,letterSpacing:"-0.03em",lineHeight:1}}>{formatted}</div>
+        <div style={{fontSize:formatted.length>7?22:28,fontWeight:700,color:TX,letterSpacing:"-0.03em",lineHeight:1,fontFamily:"'DM Mono', monospace",transition:"font-size 0.15s"}}>{formatted}</div>
         {delta!==undefined&&delta!==null&&(
           <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6}}>
             <Delta value={delta} higherIsBetter={def.higherIsBetter}/>
@@ -495,7 +495,7 @@ export default function PerformanceDashboard() {
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:14}}>
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-            <h1 style={{margin:0,fontSize:22,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
+            <h1 style={{margin:0,fontSize:22,fontWeight:700,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
             {activeTab==="metrics"&&(hasMeta||hasGoogle)&&!loading&&(
               <span style={{display:"flex",alignItems:"center",gap:5,fontSize: 12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
                 <span style={{width:5,height:5,borderRadius:"50%",background:GREEN,boxShadow:"0 0 6px #22c55e"}}/>LIVE
