@@ -496,7 +496,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
   return nodes;
 }
 
-function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
+const BlockCard = React.memo(function BlockCard({block,lang,onNavigate}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans',sans-serif";
   const M="'Inter',sans-serif";
@@ -605,12 +605,12 @@ function BlockCard({block,lang,onNavigate}:{block:Block;lang:string;onNavigate:(
       )}
     </div>
   );
-}
+});
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
-function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
+const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
 
@@ -694,7 +694,7 @@ function ProactiveBlock({ block, lang, onSend, connections, personaName }: { blo
       </div>
     </div>
   );
-}
+});
 
 // ── Dashboard Offer Block ─────────────────────────────────────────────────────
 function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void; onSilentConfirm?: (msg: string) => void }) {

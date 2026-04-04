@@ -71,7 +71,7 @@ function getMetricValue(d: any, key: MetricKey): number {
 }
 
 // ── Sparkline ─────────────────────────────────────────────────────────────────
-function Sparkline({ data, color }: { data: number[]; color: string }) {
+const Sparkline = React.memo(function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data||data.length<2) return null;
   // viewBox has 2px padding on all sides so stroke never clips
   const w=80,h=28,pad=3,vx=-pad,vy=-pad,vw=w+pad*2,vh=h+pad*2;
@@ -89,7 +89,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
     </svg>
   );
-}
+});
 
 // ── Area Chart ────────────────────────────────────────────────────────────────
 function AreaChart({ daily, metricKey }: { daily: any[]; metricKey: MetricKey }) {
@@ -280,15 +280,15 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
 }
 
 // ── Delta ─────────────────────────────────────────────────────────────────────
-function Delta({ value, higherIsBetter }: { value:number|null; higherIsBetter:boolean }) {
+const Delta = React.memo(function Delta({ value, higherIsBetter }: { value:number|null; higherIsBetter:boolean }) {
   if(value===null||isNaN(value)) return <span style={{color:MT,fontSize: 12}}>—</span>;
   const positive=higherIsBetter?value>=0:value<=0;
   const Icon=value>=0?TrendingUp:TrendingDown;
   return <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize: 12,fontWeight:600,color:positive?GREEN:RED}}><Icon size={11}/>{Math.abs(value).toFixed(1)}%</span>;
-}
+});
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
-function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:MetricDef; value:number; delta?:number|null; sparkData?:number[]; isDragging?:boolean; lang?:string }) {
+const MetricCard = React.memo(function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:MetricDef; value:number; delta?:number|null; sparkData?:number[]; isDragging?:boolean; lang?:string }) {
   const formatted = value>0?def.format(value, lang):"—";
   return (
     <div style={{
@@ -322,11 +322,11 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
       </div>
     </div>
   );
-}
+});
 
 // ── Ad Row ────────────────────────────────────────────────────────────────────
 // ── Ads list with compact/expand ─────────────────────────────────────────────
-function AdsCompact({ ads }: { ads: any[] }) {
+const AdsCompact = React.memo(function AdsCompact({ ads }: { ads: any[] }) {
   const [expanded, setExpanded] = useState(false);
   const LIMIT = 5;
   const visible = expanded ? ads : ads.slice(0, LIMIT);
@@ -343,12 +343,12 @@ function AdsCompact({ ads }: { ads: any[] }) {
       )}
     </div>
   );
-}
+});
 
 // Column widths — must match header exactly
 const COL={spend:70,ctr:70,roas:70,status:90};
 
-function AdRow({ ad, rank }: { ad:any; rank:number }) {
+const AdRow = React.memo(function AdRow({ ad, rank }: { ad:any; rank:number }) {
   const ctr=(ad.ctr||0)*100;
   const isWinner=ctr>2||(ad.roas&&ad.roas>2);
   const isPauser=ctr<0.3&&ad.spend>20;
@@ -382,7 +382,7 @@ function AdRow({ ad, rank }: { ad:any; rank:number }) {
       </div>
     </div>
   );
-}
+});
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function PerformanceDashboard() {

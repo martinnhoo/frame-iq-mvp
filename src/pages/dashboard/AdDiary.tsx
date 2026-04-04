@@ -151,7 +151,7 @@ function money(n: number, lang?: string) {
   return `${sym}${n.toFixed(0)}`;
 }
 
-function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string }) {
+const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string }) {
   const cfg = V_STYLE[entry.verdict] || V_STYLE.testing;
   const verdictLabel = t.verdict[entry.verdict as keyof typeof t.verdict] || entry.verdict;
   const ctr = (entry.ctr * 100).toFixed(2);
@@ -232,7 +232,7 @@ function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expand
       )}
     </div>
   );
-}
+});
 
 export default function AdDiary({ propUser, propPersona, propLang, embedded }: { propUser?: any; propPersona?: any; propLang?: string; embedded?: boolean } = {}) {
   usePageTitle("Diário de Anúncios");
