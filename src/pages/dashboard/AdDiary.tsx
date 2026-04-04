@@ -158,7 +158,7 @@ function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expand
   const platColor = PLAT_COLOR[entry.platform] || "#666";
 
   return (
-    <div style={{ borderRadius: 12, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden" }}>
+    <div style={{ borderRadius: 12, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden", transition:"transform 0.15s, box-shadow 0.15s" }} className="ab-diary-row">
       <button onClick={onToggle} style={{ width: "100%", display: "flex", alignItems: "center", padding: 0, background: "none", border: "none", cursor: "pointer" }}>
         <div style={{ width: 3, alignSelf: "stretch", background: cfg.bar, flexShrink: 0, opacity: 0.75 }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "13px 15px" }}>

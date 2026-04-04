@@ -2722,7 +2722,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     border:"1px solid var(--border-subtle)",
                     borderRadius:"4px 18px 18px 18px",
                     padding:"16px 20px",
-                    boxShadow:"0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
+                    boxShadow:"0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    backdropFilter:"blur(8px)",
                     animation:"cardIn 0.22s ease-out",
                   }}>
                     {msg.blocks?.map((b,bi)=>
@@ -2931,11 +2932,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
               display:"flex",alignItems:"center",gap:10,
-              background:"var(--bg-surface)",
+              background:"rgba(255,255,255,0.04)",
+              backdropFilter:"blur(20px) saturate(180%)",
               border:"1px solid var(--border-subtle)",
               borderRadius:16,
               padding:"12px 12px 12px 18px",
-              boxShadow:"0 0 0 0 transparent",
+              boxShadow:"0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
               transition:"border-color 0.2s, box-shadow 0.2s",
             }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}

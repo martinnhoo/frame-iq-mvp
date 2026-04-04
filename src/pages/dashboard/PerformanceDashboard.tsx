@@ -292,10 +292,11 @@ function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:Me
     <div style={{
       background:`linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%)`,
       border:`1px solid ${isDragging?def.accent+"60":"var(--border-subtle)"}`,
-      boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:`0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
-      backdropFilter:"blur(12px)",
+      boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:`0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)`,
+      backdropFilter:"blur(16px) saturate(160%)",
       borderRadius:14,padding:"16px",display:"flex",flexDirection:"column",gap:10,
-      transition:"border-color 0.2s,box-shadow 0.2s",opacity:isDragging?0.9:1,
+      transition:"border-color 0.2s, box-shadow 0.2s, transform 0.15s",
+      opacity:isDragging?0.9:1,
       cursor:"grab",height:"100%",boxSizing:"border-box" as const,overflow:"visible",
     }}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -478,7 +479,8 @@ export default function PerformanceDashboard() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        .perf-card{animation:fadeIn 0.3s ease both}
+        .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s}
+        .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)!important;}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
         @media(max-width:640px){
           .perf-page{padding:16px 16px 100px!important}

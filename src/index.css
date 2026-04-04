@@ -144,12 +144,87 @@ h1, h2, h3, h4, h5, h6 {
 .anim-up-4 { animation: fadeUpCard 0.3s 0.20s cubic-bezier(0.16,1,0.3,1) both; }
 .anim-scale { animation: scaleIn 0.25s cubic-bezier(0.16,1,0.3,1) both; }
 
+/* ── Glassmorphism ───────────────────────────────────────────────────────────── */
+
+.ab-glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ── Grain texture overlay ───────────────────────────────────────────────────── */
+
+.ab-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+}
+
+/* ── Number hero (big metric displays) ──────────────────────────────────────── */
+
+.ab-metric {
+  font-family: 'DM Mono', monospace;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.ab-metric-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ── Hover glow on interactive cards ────────────────────────────────────────── */
+
+.ab-card-interactive {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
+}
+
+.ab-card-interactive:hover {
+  border-color: rgba(14,165,233,0.25) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(14,165,233,0.1) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────────────────── */
+
+.ab-skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+  border-radius: var(--r-sm);
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.28); }
+
+/* ── Component-specific hover effects ───────────────────────────────────────── */
+
+.ab-diary-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+}
 
 /* ── Focus ring ──────────────────────────────────────────────────────────────── */
 
