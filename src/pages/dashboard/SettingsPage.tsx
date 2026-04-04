@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { storage } from "@/lib/storage";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,7 +22,7 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [aiTone, setAiTone] = useState<"direto" | "didático" | "técnico">(() => {
-    try { return (localStorage.getItem("adbrief_ai_tone") as any) || "direto"; } catch { return "direto"; }
+    return storage.get("adbrief_ai_tone", "direto") as any
   });
 
   const lang = language as "pt" | "en" | "es";
@@ -82,7 +83,7 @@ const SettingsPage = () => {
         .eq("id", user.id);
       if (error) throw error;
       // Save AI tone preference to localStorage
-      try { localStorage.setItem("adbrief_ai_tone", aiTone); } catch {}
+      storage.set("adbrief_ai_tone", aiTone)
       toast.success(t("save") + " ✓");
     } catch {
       toast.error("Falha ao atualizar perfil");

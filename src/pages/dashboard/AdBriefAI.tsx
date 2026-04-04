@@ -1757,7 +1757,7 @@ export default function AdBriefAI() {
         const stillEmpty = (() => { try { return storage.getJSON(SK, []).length === 0; } catch { return true; } })();
         if(stillEmpty && restored.length > 0) {
           setMessages(restored);
-          try { localStorage.setItem(SK, JSON.stringify(restored.slice(-30))); } catch {}
+          storage.setJSON(SK, restored.slice(-30))
         }
       } catch {}
     })();
@@ -2243,7 +2243,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         return { role: "assistant" as const, content: text || "(response)" };
       });
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
-      const aiTonePref = (() => { try { return localStorage.getItem("adbrief_ai_tone") || ""; } catch { return ""; } })();
+      const aiTonePref = (() => { return storage.get("adbrief_ai_tone", "") })();
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}}});
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
