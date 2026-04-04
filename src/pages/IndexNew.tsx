@@ -667,7 +667,7 @@ const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: strin
   fitness:  { pt:{name:"FitCore Brasil", meta:"Meta · 22 campanhas"}, es:{name:"FitMex",        meta:"Meta · 17 campañas"},    en:{name:"FitCore US",   meta:"Meta · 22 campaigns"} } as any,
   finance:  { pt:{name:"WealthBR",       meta:"Meta · 14 campanhas"}, es:{name:"FinMex Pro",    meta:"Meta · 11 campañas"},    en:{name:"WealthApp",    meta:"Meta · 19 campaigns"} } as any,
   saas:     { pt:{name:"StartupAI",      meta:"Meta · 9 campanhas"},  es:{name:"TechStart MX",  meta:"Meta · 8 campañas"},     en:{name:"SaaSBoost",    meta:"Meta · 12 campaigns"} } as any,
-  clinica:  { pt:{name:"Clínica Estética BH", meta:"Google Ads · 3 campanhas"}, es:{name:"Clínica Estética MX", meta:"Google Ads · 4 campañas"}, en:{name:"Beauty Clinic", meta:"Google Ads · 3 campaigns"} } as any,
+  clinica:  { pt:{name:"Clínica Estética BH", meta:"Meta Ads · 3 campanhas"}, es:{name:"Clínica Estética MX", meta:"Meta Ads · 4 campañas"}, en:{name:"Beauty Clinic", meta:"Meta Ads · 3 campaigns"} } as any,
 };
 
 const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines: string[] }>>> = {
@@ -2051,10 +2051,10 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const line2 = lang === 'pt' ? 'seus anúncios.' : lang === 'es' ? 'tus anuncios.' : 'your ads.';
   const line3prefix = lang === 'pt' ? 'A IA ' : lang === 'es' ? 'La IA ' : 'The AI ';
   const sub = lang === 'pt'
-    ? 'Conecta em Meta Ads ou Google Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha.'
+    ? 'Conecta no Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.'
     : lang === 'es'
-    ? 'Conecta Meta Ads o Google Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña.'
-    : 'Connects to Meta Ads or Google Ads. Reads your real data. Responds like an analyst who knows every campaign.';
+    ? 'Conecta Meta Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña, creativo y métrica.'
+    : 'Connects to Meta Ads. Reads your real data. Responds like an analyst who knows every campaign, creative, and metric.';
   const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
@@ -2624,9 +2624,9 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const results: Record<Lang, string[]> = {
-    pt: ["Conta criada em menos de 1 minuto", "Meta ou Google Ads conectados via OAuth", "Respostas com dados reais da sua conta"],
-    es: ["Cuenta creada en menos de 1 minuto", "Meta o Google Ads conectados vía OAuth", "Respuestas con datos reales de tu cuenta"],
-    en: ["Account created in under 1 minute", "Meta or Google Ads connected via OAuth", "Answers using real data from your account"],
+    pt: ["Conta criada em menos de 1 minuto", "Meta Ads conectado via OAuth em segundos", "Respostas com dados reais da sua conta"],
+    es: ["Cuenta creada en menos de 1 minuto", "Meta Ads conectado vía OAuth en segundos", "Respuestas con datos reales de tu cuenta"],
+    en: ["Account created in under 1 minute", "Meta Ads connected via OAuth in seconds", "Answers using real data from your account"],
   };
   const steps = [
     { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
@@ -3207,7 +3207,7 @@ function Footer({ t }: { t: Record<string, string> }) {
               {t.footer_tagline}
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              {["Meta Ads", "Google Ads"].map(p => (
+              {["Meta Ads"].map(p => (
                 <span key={p} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
               ))}
             </div>

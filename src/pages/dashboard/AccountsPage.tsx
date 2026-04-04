@@ -108,8 +108,7 @@ type TStrings = typeof T[Lang];
 // ── Platform config ───────────────────────────────────────────────────────────
 const PLATFORMS = [
   { id:"meta",   label:"Meta Ads",   color:"#1877F2", fn:"meta-oauth",   soon:false },
-  { id:"google", label:"Google Ads", color:"#4285F4", fn:"google-oauth", soon:true },
-  { id:"tiktok", label:"TikTok Ads", color:"#ffffff", fn:"tiktok-oauth", soon:true  },
+  // Google Ads and TikTok coming after Meta scale
 ];
 
 
