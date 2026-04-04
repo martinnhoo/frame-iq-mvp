@@ -285,13 +285,13 @@ export default function CompetitorDecoder() {
               value={brandQuery}
               onChange={e => setBrandQuery(e.target.value)}
               placeholder={t.brand_placeholder}
-              onKeyDown={e => { if (e.key === "Enter" && brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+              onKeyDown={e => { if (e.key === "Enter" && brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank", "noopener,noreferrer"); }}
               style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 9, padding: "10px 14px", color: "#eef0f6", ...M, fontSize: 13, outline: "none", transition: "border-color 0.15s" }}
               onFocus={e => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.40)"; }}
               onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
             />
             <button
-              onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+              onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank", "noopener,noreferrer"); }}
               disabled={!brandQuery.trim()}
               style={{ padding: "10px 18px", borderRadius: 9, border: "none", cursor: brandQuery.trim() ? "pointer" : "not-allowed", background: brandQuery.trim() ? "rgba(139,92,246,0.20)" : "rgba(255,255,255,0.04)", color: brandQuery.trim() ? "#c4b5fd" : "rgba(255,255,255,0.2)", ...M, fontSize: 12, fontWeight: 600, transition: "all 0.15s", whiteSpace: "nowrap" as const }}>
               {t.brand_btn}
@@ -301,7 +301,7 @@ export default function CompetitorDecoder() {
           <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
             {[{ code: "BR", flag: "🇧🇷", label: "Brasil" }, { code: "MX", flag: "🇲🇽", label: "México" }, { code: "IN", flag: "🇮🇳", label: "India" }, { code: "US", flag: "🇺🇸", label: "US" }, { code: "ALL", flag: "🌍", label: "Global" }].map(c => (
               <button key={c.code}
-                onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${c.code === "ALL" ? "ALL" : c.code}&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank"); }}
+                onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${c.code === "ALL" ? "ALL" : c.code}&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank", "noopener,noreferrer"); }}
                 disabled={!brandQuery.trim()}
                 style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: brandQuery.trim() ? "pointer" : "default", ...M, fontSize: 12, color: brandQuery.trim() ? "rgba(238,240,246,0.6)" : "rgba(255,255,255,0.2)", transition: "all 0.15s" }}
                 onMouseEnter={e => { if (brandQuery.trim()) { e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)"; e.currentTarget.style.color = "#eef0f6"; }}}

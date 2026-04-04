@@ -1,5 +1,7 @@
 // PerformanceDashboard v3 — calendar date picker, all metrics, drag & drop customization
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { SectionBoundary } from "@/components/SectionBoundary";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -384,6 +386,7 @@ function AdRow({ ad, rank }: { ad:any; rank:number }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function PerformanceDashboard() {
+  usePageTitle("Performance");
   const {user,selectedPersona} = useOutletContext<DashboardContext>();
   const {language} = useLanguage();
   const navigate = useNavigate();
@@ -670,6 +673,7 @@ export default function PerformanceDashboard() {
           </div>
 
           {/* Chart */}
+          <SectionBoundary label="Gráfico" inline>
           {(d.daily||[]).length>1&&(
             <div style={{background:"var(--bg-card)",border:"1px solid var(--border-subtle)",borderRadius:16,padding:24,marginBottom:20,boxShadow:"0 1px 3px rgba(0,0,0,0.3)"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap" as const,gap:12}}>
@@ -695,6 +699,7 @@ export default function PerformanceDashboard() {
           )}
 
           {/* Top ads */}
+          </SectionBoundary>
           {(d.top_ads||[]).length>0&&(
             <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>

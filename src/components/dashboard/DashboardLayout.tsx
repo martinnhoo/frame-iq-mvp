@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SectionBoundary } from "@/components/SectionBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";

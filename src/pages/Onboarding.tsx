@@ -473,9 +473,9 @@ export default function Onboarding() {
                   </div>
                   <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
                     {t.s1_terms}{" "}
-                    <a href="/terms" target="_blank" onClick={e => e.stopPropagation()} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline", textUnderlineOffset: 3 }}>{t.s1_terms_link}</a>
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline", textUnderlineOffset: 3 }}>{t.s1_terms_link}</a>
                     {" "}{t.s1_terms_and}{" "}
-                    <a href="/privacy" target="_blank" onClick={e => e.stopPropagation()} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline", textUnderlineOffset: 3 }}>{t.s1_privacy_link}</a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline", textUnderlineOffset: 3 }}>{t.s1_privacy_link}</a>
                   </span>
                 </label>
 

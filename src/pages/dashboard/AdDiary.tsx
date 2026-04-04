@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -234,6 +235,7 @@ function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expand
 }
 
 export default function AdDiary({ propUser, propPersona, propLang, embedded }: { propUser?: any; propPersona?: any; propLang?: string; embedded?: boolean } = {}) {
+  usePageTitle("Diário de Anúncios");
   const { user: ctxUser, selectedPersona: ctxPersona } = useOutletContext<DashboardContext>();
   const user = propUser ?? ctxUser;
   const selectedPersona = propPersona ?? ctxPersona;

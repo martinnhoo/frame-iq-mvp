@@ -4,6 +4,9 @@
 // Fixed: DashboardLimitPopup missing plan prop, LABEL.en.placeholder bug,
 //        single CSS block (no more split/duplicate style tags)
 import React, { useState, useEffect, useRef } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { storage } from "@/lib/storage";
+import { SectionBoundary } from "@/components/SectionBoundary";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
@@ -1442,6 +1445,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
 
 export default function AdBriefAI() {
+  usePageTitle("IA Chat");
   const {user,profile,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
@@ -1451,7 +1455,7 @@ export default function AdBriefAI() {
 
   const [messages,setMessages]=useState<AIMessage[]>(()=>{
     try {
-      const saved = JSON.parse(localStorage.getItem(SK)||"[]");
+      const saved = storage.getJSON(SK, []);
       // Sanitize — strip trend_chart blocks (can't serialize SVG state properly)
       return saved.map((m: any) => ({
         ...m,
@@ -1468,7 +1472,7 @@ export default function AdBriefAI() {
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
   const [sessionGoal, setSessionGoal] = useState<string>(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(GOAL_KEY) || "null");
+      const saved = storage.getJSON(GOAL_KEY, null);
       if (saved?.text && saved?.ts && Date.now() - saved.ts < 7 * 24 * 60 * 60 * 1000) return saved.text;
     } catch {}
     return "";
@@ -1501,7 +1505,7 @@ export default function AdBriefAI() {
       // Load this account's saved history from localStorage
       const newSK = `adbrief_chat_v1_${newId||"default"}`;
       try {
-        const saved = JSON.parse(localStorage.getItem(newSK)||"[]");
+        const saved = storage.getJSON(newSK, []);
         setMessages(saved.map((m: any) => ({
           ...m,
           blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
@@ -1510,7 +1514,7 @@ export default function AdBriefAI() {
       // Reload session goal for this account
       const goalKey = `adbrief_goal_${newId||"default"}`;
       try {
-        const saved = JSON.parse(localStorage.getItem(goalKey) || "null");
+        const saved = storage.getJSON(goalKey, null);
         if (saved?.text && saved?.ts && Date.now() - saved.ts < 7 * 24 * 60 * 60 * 1000) {
           setSessionGoal(saved.text);
         } else {
@@ -1695,7 +1699,7 @@ export default function AdBriefAI() {
           : b
         )
       }));
-      localStorage.setItem(SK,JSON.stringify(toSave));
+      storage.setJSON(SK, toSave);
     }catch{}
 
     // ── Supabase persistence for paid users (Maker/Pro/Studio) ──────────────
@@ -2532,6 +2536,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
       {contextReady&&hasData&&(
+        <SectionBoundary label="LivePanel" inline>
         <LivePanel
           user={user}
           selectedPersona={selectedPersona}
@@ -2539,6 +2544,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           lang={lang}
           onSend={send}
         />
+        </SectionBoundary>
       )}
 
       
@@ -2957,7 +2963,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     );
                     if(!confirmed) return;
                     setMessages([]);
-                    localStorage.removeItem(SK);
+                    storage.remove(SK);
                     executedTools.current.clear();
                     proactiveFired.current=false;
                     setGreetingKey(k=>k+1);

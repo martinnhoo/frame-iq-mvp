@@ -1,5 +1,6 @@
 // CampaignBuilder v4 — single column flow, live preview, minimal
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -170,6 +171,7 @@ function CopilotPanel({ userId, personaId, personaName, platform, form, askKey }
 }
 
 export default function CampaignBuilder() {
+  usePageTitle("Nova Campanha");
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
   const userId = user?.id || "";
   const persona = selectedPersona as Persona | null;
