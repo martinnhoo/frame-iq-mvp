@@ -2691,18 +2691,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
-      {/* Background atmosphere */}
+      {/* Background — blueprint grid técnico */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        {/* Orb azul — canto superior direito */}
-        <div style={{position:"absolute",width:640,height:640,borderRadius:"50%",background:"radial-gradient(ellipse at center,rgba(14,165,233,0.13) 0%,transparent 65%)",filter:"blur(60px)",top:"-15%",right:"-5%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
-        {/* Orb violeta — canto inferior esquerdo */}
-        <div style={{position:"absolute",width:480,height:480,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,0.09) 0%,transparent 65%)",filter:"blur(70px)",bottom:"5%",left:"-5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
-        {/* Orb ciano suave — centro */}
-        <div style={{position:"absolute",width:800,height:300,borderRadius:"50%",background:"radial-gradient(ellipse at center,rgba(6,182,212,0.05) 0%,transparent 70%)",filter:"blur(50px)",top:"40%",left:"50%",transform:"translateX(-50%)"}}/>
-        {/* Dot grid */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0)",backgroundSize:"28px 28px",opacity:0.65}}/>
-        {/* Vignette bottom */}
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:180,background:"linear-gradient(to top,rgba(7,13,26,0.6),transparent)",pointerEvents:"none"}}/>
+        {/* Blueprint grid — linhas horizontais */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.045) 1px, transparent 1px)",backgroundSize:"100% 44px",maskImage:"linear-gradient(to bottom,transparent 0%,black 8%,black 85%,transparent 100%)"}}/>
+        {/* Blueprint grid — linhas verticais */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px)",backgroundSize:"44px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 8%,black 85%,transparent 100%)"}}/>
+        {/* Bloom topo-direita — azul estático */}
+        <div style={{position:"absolute",width:700,height:500,borderRadius:"50%",background:"radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.09) 0%,transparent 60%)",top:0,right:0,filter:"blur(40px)"}}/>
+        {/* Bloom baixo-esquerda — indigo estático */}
+        <div style={{position:"absolute",width:500,height:400,borderRadius:"50%",background:"radial-gradient(ellipse at 20% 90%,rgba(99,102,241,0.07) 0%,transparent 60%)",bottom:0,left:0,filter:"blur(40px)"}}/>
+        {/* Fade top */}
+        <div style={{position:"absolute",top:0,left:0,right:0,height:60,background:"linear-gradient(to bottom,var(--bg-main),transparent)"}}/>
+        {/* Fade bottom */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:100,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
@@ -2721,7 +2723,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:16}}>
+      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -2854,7 +2856,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             </button>
           </div>
         )}
-        {visibleMessages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
+        {visibleMessages.length > 0 && <div style={{height:8,flexShrink:0}}/>}
         {visibleMessages.map((msg, mi)=>{
           const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
           return (
