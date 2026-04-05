@@ -3335,11 +3335,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   {/* upgrade — mesmo estilo do botão da landing */}
                   {isLocked&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,
-                      padding:"5px 14px",borderRadius:12,border:"none",
+                      fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,
+                      padding:"6px 16px",borderRadius:12,border:"none",
                       background:"#0ea5e9",color:"#fff",cursor:"pointer",
-                      boxShadow:"rgba(14,165,233,0.35) 0px 0px 20px 0px",
-                      whiteSpace:"nowrap",letterSpacing:"-0.01em",
+                      boxShadow:"0 0 32px rgba(14,165,233,0.25)",
+                      whiteSpace:"nowrap",letterSpacing:"-0.025em",
                     }}>Upgrade</button>
                   )}
                 </div>
