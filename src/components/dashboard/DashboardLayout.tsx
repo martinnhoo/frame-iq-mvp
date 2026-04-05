@@ -454,6 +454,28 @@ export default function DashboardLayout() {
         
         /* Botões de ação: touch target mínimo */
         .tool-action-btn { min-height: 44px !important; }
+
+        /* Mobile sidebar: posição fixa — não empurra o conteúdo principal */
+        .sidebar-layout-slot {
+          position: fixed !important;
+          top: 0 !important; left: 0 !important; height: 100% !important;
+          z-index: 50 !important;
+        }
+      }
+      
+      /* Desktop: sidebar no fluxo normal */
+      @media (min-width: 768px) {
+        .sidebar-layout-slot { position: relative !important; }
+      }
+      
+      /* Dropdowns e calendários: sempre visíveis, nunca cortados pelo overflow */
+      .dashboard-main { overflow-x: hidden !important; overflow-y: auto !important; }
+      /* Elementos absolutos dentro do dashboard não devem ser cortados */
+      .lp [style*="position: absolute"],
+      .lp [style*="position:absolute"],
+      .perf-page [style*="position: absolute"],
+      .perf-page [style*="position:absolute"] {
+        z-index: 300 !important;
       }
 
       @media (max-width: 480px) {
@@ -462,13 +484,10 @@ export default function DashboardLayout() {
         .lp-kpi { min-width: calc(50% - 4px) !important; }
         .dashboard-main h1 { font-size: clamp(18px, 5.5vw, 22px) !important; }
         .dash-topbar { padding-left: 10px !important; padding-right: 10px !important; }
-        
-        /* Chat input: ocupa mais espaço */
         .chat-input-wrap { padding: 8px 12px 8px !important; }
       }
       
       @media (max-width: 390px) {
-        /* iPhone 14/15 e menores — tudo mínimo */
         .tool-page-wrap { padding: 10px !important; }
       }
     `}</style>
@@ -482,8 +501,9 @@ export default function DashboardLayout() {
         />
       )}
       <div style={{
-        width: sidebarOpen ? 224 : 0,
-        minWidth: sidebarOpen ? 224 : 0,
+        // Desktop: ocupa espaço no fluxo. Mobile: position:fixed via CSS (não empurra conteúdo)
+        width: sidebarOpen ? 216 : 0,
+        minWidth: sidebarOpen ? 216 : 0,
         height: "100%",
         flexShrink: 0,
         transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
@@ -491,7 +511,7 @@ export default function DashboardLayout() {
         position: "relative",
         zIndex: 50,
       }}
-      className="max-lg:fixed max-lg:top-0 max-lg:left-0 max-lg:h-full max-lg:z-50">
+      className="sidebar-layout-slot">
         <DashboardSidebar
           user={user}
           profile={profile}
@@ -505,7 +525,7 @@ export default function DashboardLayout() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ overflow: "hidden", maxWidth: "100%", minHeight: 0 }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ overflowX: "hidden", overflowY: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
         {/* ── Topbar: mobile-first, clean ── */}
         <header className="dash-topbar" style={{

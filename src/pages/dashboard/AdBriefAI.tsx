@@ -1362,10 +1362,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             </button>
             {showCal && (
               <div ref={calRef} style={{
-                position:"absolute", top:"calc(100% + 8px)", right:0, zIndex:999,
+                position:"fixed", top:"auto", right:"auto", zIndex:9999,
                 background:"var(--bg-elevated)", border:"1px solid var(--border-default)", borderRadius:16,
-                boxShadow:"0 20px 60px rgba(0,0,0,0.7)", padding:20, width:540,
+                boxShadow:"0 20px 60px rgba(0,0,0,0.7)",
+                padding:"clamp(12px,3vw,20px)",
+                width:"min(540px, calc(100vw - 24px))",
+                maxWidth:"calc(100vw - 24px)",
                 display:"flex", flexDirection:"column", gap:16,
+                left:"50%", transform:"translateX(-50%)",
+                marginTop:8,
               }}>
                 {/* Presets */}
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1384,7 +1389,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                   })}
                 </div>
                 {/* Calendar — 2 months */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
                   {[calView, new Date(calView.getFullYear(),calView.getMonth()+1,1)].map((base,mi)=>{
                     const y=base.getFullYear(),m=base.getMonth();
                     const dim=new Date(y,m+1,0).getDate(),fd=new Date(y,m,1).getDay();

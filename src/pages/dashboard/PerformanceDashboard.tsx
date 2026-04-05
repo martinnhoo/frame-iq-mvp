@@ -213,7 +213,10 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
       position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,
       background:"var(--bg-elevated)",border:"1px solid var(--border-default)",borderRadius:16,
       boxShadow:"0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04)",
-      padding:20,width:560,display:"flex",flexDirection:"column",gap:16,
+      padding:"clamp(12px,3vw,20px)",
+      width:"min(560px, calc(100vw - 24px))",
+      maxWidth:"calc(100vw - 24px)",
+      display:"flex",flexDirection:"column",gap:16,
     }}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap" as const}}>
         {PRESETS.map(p=>{
@@ -227,7 +230,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
           );
         })}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
         {renderMonth(viewMonth)}
         {renderMonth(new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1))}
       </div>
@@ -537,7 +540,7 @@ export default function PerformanceDashboard() {
           </div>
         </div>
 
-        {activeTab === "metrics" && <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
+        {activeTab === "metrics" && <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const,position:"relative"}} className="perf-header-actions">
           {/* Platform tabs */}
           <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"var(--bg-surface)",border:`1px solid var(--border-subtle)`,borderRadius:10,padding:3}}>
             {([["meta","Meta Ads",ACCENT]] as const).map(([plt,label,color])=>{
