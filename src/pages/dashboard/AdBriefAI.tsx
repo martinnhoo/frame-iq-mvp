@@ -1703,7 +1703,7 @@ export default function AdBriefAI() {
   const [activeToolParams,setActiveToolParams]=useState<Record<string,string>>({});
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
-  const [usageStats,setUsageStats]=useState<{daily_count:number;daily_cap:number;plan:string}|null>(null);
+  // usageStats — computed from freeUsage + profile (no backend dependency)
   const [freeUsage,setFreeUsage]=useState<{count:number,lastReset:string|null}|null>(null);
   const [countdown,setCountdown]=useState("");
   const [proactiveLoading,setProactiveLoading]=useState(false);
@@ -2573,7 +2573,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       if(!data?.blocks)throw new Error("No response");
 
       // Update usage counter from response
-      if(data?.usage) setUsageStats(data.usage);
+      // Update freeUsage count after send
+      if(data?.usage) setFreeUsage(prev => prev ? {...prev, count: data.usage.daily_count} : {count: data.usage.daily_count, lastReset: new Date().toISOString().slice(0,10)});
 
       // Show upgrade popup on daily limit (in case returned with 200)
       if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
@@ -3355,46 +3356,40 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               );
             })()}
 
-            {/* Contador de mensagens diárias */}
-            {usageStats && usageStats.daily_cap > 0 && usageStats.daily_cap !== 500 && (
-              <div style={{
-                display:"flex", alignItems:"center", justifyContent:"space-between",
-                padding:"6px 4px 4px", marginBottom:2,
-              }}>
-                <div style={{display:"flex",alignItems:"center",gap:7}}>
-                  {/* Progress bar */}
-                  <div style={{width:80,height:3,borderRadius:99,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
-                    <div style={{
-                      height:"100%",borderRadius:99,
-                      width:`${Math.min(100,(usageStats.daily_count/usageStats.daily_cap)*100)}%`,
-                      background: usageStats.daily_count >= usageStats.daily_cap
-                        ? "#ef4444"
-                        : usageStats.daily_count >= usageStats.daily_cap * 0.8
-                        ? "#f59e0b"
-                        : "#0ea5e9",
-                      transition:"width 0.4s ease",
-                    }}/>
+            {/* Contador de mensagens diárias — computed from freeUsage + profile */}
+            {(() => {
+              const planKey = profile?.plan || "free";
+              const CAPS: Record<string,number> = { free:3, maker:50, pro:200, studio:500 };
+              const dailyCap = CAPS[planKey] ?? 3;
+              const dailyCount = freeUsage?.count ?? 0;
+              if (dailyCap >= 500 || !freeUsage) return null; // studio = unlimited, hide
+              return (
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 4px 4px",marginBottom:2}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}>
+                    <div style={{width:80,height:3,borderRadius:99,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
+                      <div style={{
+                        height:"100%",borderRadius:99,
+                        width:`${Math.min(100,(dailyCount/dailyCap)*100)}%`,
+                        background: dailyCount >= dailyCap ? "#ef4444" : dailyCount >= dailyCap*0.8 ? "#f59e0b" : "#0ea5e9",
+                        transition:"width 0.4s ease",
+                      }}/>
+                    </div>
+                    <span style={{fontSize:11,color:"rgba(255,255,255,0.28)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                      <span style={{color:"rgba(255,255,255,0.5)",fontWeight:600}}>{dailyCount}</span>
+                      /{dailyCap}
+                      {" "}{lang==="pt"?"msgs hoje":lang==="es"?"msgs hoy":"msgs today"}
+                    </span>
                   </div>
-                  <span style={{fontSize:11,color:"rgba(255,255,255,0.28)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                    <span style={{color:"rgba(255,255,255,0.5)",fontWeight:600}}>{usageStats.daily_count}</span>
-                    /{usageStats.daily_cap}
-                    {" "}{lang==="pt"?"msgs hoje":lang==="es"?"msgs hoy":"msgs today"}
-                    {usageStats.is_trialing && (
-                      <span style={{marginLeft:6,fontSize:10,color:"#f59e0b",fontWeight:600,letterSpacing:"0.05em"}}>TRIAL</span>
-                    )}
-                  </span>
+                  {dailyCount >= dailyCap*0.8 && planKey !== "studio" && (
+                    <button onClick={()=>setShowUpgradeWall(true)} style={{
+                      fontSize:10,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
+                      padding:"3px 8px",borderRadius:6,border:"1px solid rgba(14,165,233,0.3)",
+                      background:"rgba(14,165,233,0.07)",color:"#38bdf8",cursor:"pointer",whiteSpace:"nowrap",
+                    }}>Upgrade</button>
+                  )}
                 </div>
-                {usageStats.daily_count >= usageStats.daily_cap * 0.8 && usageStats.plan !== "studio" && (
-                  <button onClick={()=>setShowUpgradeWall(true)} style={{
-                    fontSize:10,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
-                    padding:"3px 8px",borderRadius:6,border:"1px solid rgba(14,165,233,0.3)",
-                    background:"rgba(14,165,233,0.07)",color:"#38bdf8",cursor:"pointer",whiteSpace:"nowrap",
-                  }}>
-                    {lang==="pt"?"Upgrade":lang==="es"?"Upgrade":"Upgrade"}
-                  </button>
-                )}
-              </div>
-            )}
+              );
+            })()}
 
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
