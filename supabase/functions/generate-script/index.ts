@@ -123,6 +123,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    const visualLang = ["BR", "MX"].includes(market)
+      ? market === "BR" ? "Portuguese (Brazil)" : "Spanish (Mexico)"
+      : VO_LANG[market] || "English";
+
     const systemPrompt = `════════════════════════════════════════════════════════════
 ADBRIEF AI CONSTITUTION — APLICA A TODO OUTPUT DESTA IA
 ════════════════════════════════════════════════════════════
@@ -171,14 +175,14 @@ Antes de finalizar qualquer output, verifique:
 
 Script output format:
 - VO (voiceover): written in the target language — natural spoken rhythm, not written prose
-- ON-SCREEN: short text overlays, punchy, 1–5 words max each
-- VISUAL: production notes in English — what the editor should show, transitions, pacing cues
+- ON-SCREEN: short text overlays in the target language, punchy, 1–5 words max each
+- VISUAL: production notes in ${visualLang} — what the editor should show, transitions, pacing cues
 
 Rules you never break:
 - VO must sound like a real human speaking, not reading
 - No buzzwords: "unlock", "elevate", "transform", "game-changer", "delve", "innovative"
 - Respect the format guide exactly
-- Visual notes always in English regardless of market
+- ALL fields (VO, ON-SCREEN, VISUAL, notes) MUST be written in ${visualLang} — zero English if market is not US/GLOBAL
 - Each of the 3 scripts must have a completely different hook angle and rhythm
 - Compliance: if market is BR and product is iGaming, use "autorizado" not "legalizado", CTA "Jogue agora"`;
 
@@ -189,10 +193,12 @@ ${offer ? `Offer/CTA: ${offer}` : ""}
 ${audience ? `Target audience: ${audience}` : ""}
 Format: ${format} — ${FORMAT_GUIDE[format] || format}
 Duration: ${duration}
-Market: ${market} (VO language: ${VO_LANG[market] || "English"})
+Market: ${market} (ALL text — VO, ON-SCREEN, VISUAL notes, director notes — must be in ${visualLang})
 Creative angle: ${angle}
 ${extra_context ? `Extra context: ${extra_context}` : ""}
 ${loopContext}
+
+CRITICAL: Every single word in the output must be in ${visualLang}. Zero English words unless market is US/GLOBAL.
 
 Return ONLY a JSON object — no markdown, no explanation:
 {
