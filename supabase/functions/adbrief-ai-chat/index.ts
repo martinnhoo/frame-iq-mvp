@@ -1405,213 +1405,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
       }
     }
 
-    // ── Google Ads live data ──────────────────────────────────────────────────
-    let liveGoogleData = "";
-    const googleConn = (connections as any[]).find((c: any) => c.platform === "google");
-    if (googleConn) {
-      try {
-        const { data: gConns } = await supabase
-          .from("platform_connections" as any)
-          .select("access_token, refresh_token, expires_at, ad_accounts, selected_account_id, persona_id")
-          .eq("user_id", user_id)
-          .eq("platform", "google")
-          .eq("status", "active");
-        const gC = (gConns as any[]) || [];
-        // Fix: if no persona_id, fall back to first active connection (not null)
-        const gRow = persona_id ? gC.find((c: any) => c.persona_id === persona_id) || gC[0] || null : gC[0] || null;
+    // Google Ads live data — disabled (see GOOGLE_ADS_BACKUP.md)
+    const liveGoogleData = "";
 
-        if (gRow?.access_token) {
-          let token = gRow.access_token;
-
-          // Auto-refresh if expired
-          const expiresAt = gRow.expires_at ? new Date(gRow.expires_at).getTime() : 0;
-          if (expiresAt && expiresAt - Date.now() < 5 * 60 * 1000 && gRow.refresh_token) {
-            try {
-              const refreshRes = await fetch("https://oauth2.googleapis.com/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
-                  refresh_token: gRow.refresh_token,
-                  client_id: Deno.env.get("GOOGLE_CLIENT_ID") || "",
-                  client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") || "",
-                  grant_type: "refresh_token",
-                }),
-              });
-              const refreshData = await refreshRes.json();
-              if (refreshData.access_token) {
-                token = refreshData.access_token;
-                await supabase
-                  .from("platform_connections" as any)
-                  .update({
-                    access_token: token,
-                    expires_at: new Date(Date.now() + refreshData.expires_in * 1000).toISOString(),
-                  })
-                  .eq("user_id", user_id)
-                  .eq("platform", "google")
-                  .eq("persona_id", persona_id);
-              }
-            } catch {}
-          }
-
-          const accs = (gRow.ad_accounts as any[]) || [];
-          const selId = gRow.selected_account_id;
-          const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
-
-          if (activeAcc?.id) {
-            const custId = activeAcc.id.replace(/-/g, "");
-            const devToken = Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN") || "";
-            const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600000).toISOString().split("T")[0];
-            const until = historicalUntil || new Date().toISOString().split("T")[0];
-
-            // Cache for Google too
-            const gCacheKey = `${custId}:${since}:${until}`;
-            if (!(globalThis as any).__googleCache) (globalThis as any).__googleCache = {};
-            const gCached = (globalThis as any).__googleCache[gCacheKey];
-
-            let gCampaigns: any[] = [],
-              gAds: any[] = [],
-              gKeywords: any[] = [],
-              gTimeSeries: any[] = [];
-
-            if (gCached && Date.now() - gCached.ts < 15 * 60 * 1000) {
-              gCampaigns = gCached.campaigns;
-              gAds = gCached.ads;
-              gKeywords = gCached.keywords;
-              gTimeSeries = gCached.timeSeries;
-            } else {
-              const makeGHdr = (withLoginId: boolean) => ({
-                Authorization: `Bearer ${token}`,
-                "developer-token": devToken,
-                "Content-Type": "application/json",
-                ...(withLoginId ? { "login-customer-id": custId } : {}),
-              });
-              const safeGQuery = async (query: string): Promise<any> => {
-                const url = `https://googleads.googleapis.com/v23/customers/${custId}/googleAds:search`;
-                const body = JSON.stringify({ query });
-                const r1 = await fetch(url, { method: "POST", headers: makeGHdr(false), body });
-                const t1 = await r1.text();
-                if (!t1.trim().startsWith("<")) return JSON.parse(t1);
-                const r2 = await fetch(url, { method: "POST", headers: makeGHdr(true), body });
-                const t2 = await r2.text();
-                return t2.trim().startsWith("<") ? { results: [] } : JSON.parse(t2);
-              };
-              const gQuery = safeGQuery;
-
-              const [cRes, aRes, kRes, tRes] = await Promise.allSettled([
-                // Campaigns
-                gQuery(
-                  `SELECT campaign.name, campaign.status, campaign.advertising_channel_type, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.roas FROM campaign WHERE segments.date BETWEEN '${since}' AND '${until}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`,
-                ),
-                // Ads
-                gQuery(
-                  `SELECT ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group.name, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM ad_group_ad WHERE segments.date BETWEEN '${since}' AND '${until}' AND ad_group_ad.status != 'REMOVED' ORDER BY metrics.cost_micros DESC LIMIT 30`,
-                ),
-                // Keywords
-                gQuery(
-                  `SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, campaign.name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions FROM keyword_view WHERE segments.date BETWEEN '${since}' AND '${until}' ORDER BY metrics.cost_micros DESC LIMIT 20`,
-                ),
-                // Time series — last 14 days
-                gQuery(
-                  `SELECT segments.date, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions FROM customer WHERE segments.date BETWEEN '${new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0]}' AND '${until}' ORDER BY segments.date ASC LIMIT 14`,
-                ),
-              ]);
-
-              const parse = (r: any) => (r.status === "fulfilled" ? r.value?.results || [] : []);
-              gCampaigns = parse(cRes);
-              gAds = parse(aRes);
-              gKeywords = parse(kRes);
-              gTimeSeries = parse(tRes);
-
-              // Evict stale entries before writing to prevent unbounded growth
-              const googleCache = (globalThis as any).__googleCache;
-              const gNow = Date.now();
-              for (const k of Object.keys(googleCache)) {
-                if (gNow - googleCache[k].ts >= 15 * 60 * 1000) delete googleCache[k];
-              }
-              googleCache[gCacheKey] = {
-                ts: gNow,
-                campaigns: gCampaigns,
-                ads: gAds,
-                keywords: gKeywords,
-                timeSeries: gTimeSeries,
-              };
-            }
-
-            liveGoogleData = `LIVE GOOGLE ADS — Account: ${activeAcc.name || custId} (${since} to ${until})\n`;
-
-            if (gCampaigns.length) {
-              const lines = gCampaigns
-                .slice(0, 20)
-                .map((r: any) => {
-                  const c = r.campaign || {};
-                  const m = r.metrics || {};
-                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                  const cpc = ((m.averageCpc || 0) / 1e6).toFixed(2);
-                  const conv = m.conversions?.toFixed(1) || "0";
-                  const roas = m.roas?.toFixed(2) || "—";
-                  return `  ${c.name}: ${c.status} | spend=$${spend} ctr=${ctr}% cpc=$${cpc} conv=${conv} roas=${roas} type=${c.advertisingChannelType || "?"}`;
-                })
-                .join("\n");
-              liveGoogleData += `CAMPAIGNS (${gCampaigns.length}):\n${lines}\n`;
-            }
-
-            if (gAds.length) {
-              const lines = gAds
-                .slice(0, 20)
-                .map((r: any) => {
-                  const a = r.adGroupAd?.ad || {};
-                  const m = r.metrics || {};
-                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                  return `  ${a.name || "Ad"} (${a.type || "?"}): spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
-                })
-                .join("\n");
-              liveGoogleData += `ADS (${gAds.length}):\n${lines}\n`;
-            }
-
-            if (gKeywords.length) {
-              const lines = gKeywords
-                .slice(0, 15)
-                .map((r: any) => {
-                  const k = r.adGroupCriterion?.keyword || {};
-                  const m = r.metrics || {};
-                  const spend = ((m.costMicros || 0) / 1e6).toFixed(0);
-                  const ctr = ((m.ctr || 0) * 100).toFixed(2);
-                  return `  "${k.text}" [${k.matchType}]: spend=$${spend} ctr=${ctr}% conv=${m.conversions?.toFixed(1) || "0"}`;
-                })
-                .join("\n");
-              liveGoogleData += `TOP KEYWORDS:\n${lines}\n`;
-            }
-
-            if (gTimeSeries.length) {
-              const lines = gTimeSeries
-                .map((r: any) => {
-                  const m = r.metrics || {};
-                  const s = r.segments || {};
-                  return `  ${s.date}: spend=$${((m.costMicros || 0) / 1e6).toFixed(0)} ctr=${((m.ctr || 0) * 100).toFixed(2)}% conv=${m.conversions?.toFixed(1) || "0"}`;
-                })
-                .join("\n");
-              liveGoogleData += `DAILY TREND:\n${lines}\n`;
-            }
-          } else {
-            liveGoogleData =
-              "GOOGLE ADS CONNECTED — no account selected. Tell user to go to Contas and select a Google Ads account.";
-          }
-        } else {
-          liveGoogleData = "GOOGLE ADS CONNECTED — token missing. Tell user to reconnect Google Ads in Contas.";
-        }
-      } catch (_e) {
-        liveGoogleData = `GOOGLE ADS CONNECTED — data fetch error: ${(_e as any)?.message || "unknown"}.`;
-      }
-    }
-
-    // ── Cross-platform synthesis ──────────────────────────────────────────────
-    // When BOTH Meta and Google are connected for the same persona, build a
-    // synthesis block that the AI can use for cross-platform reasoning.
-    // No hard-coded rules — just structured data. The AI figures out the insights.
-    let crossPlatformCtx = "";
-    if (liveMetaData && liveGoogleData && !liveMetaData.includes("token") && !liveGoogleData.includes("token")) {
+        // Cross-platform synthesis — disabled (see GOOGLE_ADS_BACKUP.md)
+    const crossPlatformCtx = "";
+    if (false) {
       crossPlatformCtx = `
 === CROSS-PLATFORM INTELLIGENCE — MESMA CONTA ===
 Esta persona tem Meta Ads E Google Ads conectados ao mesmo tempo.
@@ -1664,8 +1463,8 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
       liveMetaData || "",
-      liveGoogleData || "",
-      crossPlatformCtx || "",
+      // liveGoogleData — disabled
+      // crossPlatformCtx — disabled
       // Analyses count removed — internal data, not actionable for user
       topHooks.length ? `TOP HOOK TYPES: ${topHooks.join(", ")}` : "",
       recentSummary ? `RECENT 5 ANALYSES:\n${recentSummary}` : "",
@@ -2143,7 +1942,7 @@ Intenção clara → use tool_call imediatamente. Não explique. Faça.
 - product: nome real do produto/conta (não "iGaming" genérico)
 - niche: nicho real da conta (do businessProfile ou persona)
 - market: mercado real (BR, MX, IN — do persona ou histórico)
-- platform: plataforma da conta conectada (Meta, Google — do contexto)
+- platform: plataforma da conta conectada (Meta Ads)
 - angle: insight específico da conversa atual
 - context: dados reais mencionados na conversa (CPM, ROAS, hook rate, nome do criativo)
 

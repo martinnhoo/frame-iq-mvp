@@ -229,9 +229,9 @@ export default function IntelligencePage() {
                      : isES ? "Conversa con la IA sobre esta cuenta y dale 👍 a las respuestas que te gusten."
                      : "Chat with the AI about this account and 👍 responses you like.",
     open_chat:   isPT ? "Abrir IA Chat" : isES ? "Abrir IA Chat" : "Open AI Chat",
-    no_patterns: isPT ? "Nenhum padrão ainda — conecte Meta Ads ou Google Ads"
-                     : isES ? "Sin patrones aún — conecta Meta Ads o Google Ads"
-                     : "No patterns yet — connect Meta Ads or Google Ads",
+    no_patterns: isPT ? "Nenhum padrão ainda — conecte Meta Ads"
+                     : isES ? "Sin patrones aún — conecta Meta Ads"
+                     : "No patterns yet — connect Meta Ads",
     no_examples: isPT ? "Nenhum exemplo — curta 👍 respostas no chat"
                      : isES ? "Sin ejemplos — da 👍 a respuestas en el chat"
                      : "No examples — 👍 responses in chat",

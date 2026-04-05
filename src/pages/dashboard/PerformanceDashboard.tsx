@@ -27,7 +27,7 @@ type MetricKey = "spend"|"ctr"|"clicks"|"impressions"|"conversions"|"roas"|"cpa"
 interface MetricDef {
   key: MetricKey; label: string; labelPt: string; labelEs: string;
   icon: any; accent: string; format: (v: number, lang?: string) => string;
-  higherIsBetter: boolean; platforms: ("meta"|"google"|"both")[];
+  higherIsBetter: boolean; platforms: ("meta"|"both")[];
 }
 
 const METRICS: MetricDef[] = [
@@ -240,7 +240,7 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
 }
 
 // ── Metric Customizer ─────────────────────────────────────────────────────────
-function MetricCustomizer({ active, platform, onChange, onClose }: { active: MetricKey[]; platform:"meta"|"google"; onChange:(k:MetricKey[])=>void; onClose:()=>void }) {
+function MetricCustomizer({ active, platform, onChange, onClose }: { active: MetricKey[]; platform:"meta"; onChange:(k:MetricKey[])=>void; onClose:()=>void }) {
   const ref = useRef<HTMLDivElement>(null);
   const available = METRICS.filter(m=>m.platforms.includes("both")||m.platforms.includes(platform));
   useEffect(()=>{
@@ -396,7 +396,7 @@ export default function PerformanceDashboard() {
   const today = useMemo(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; },[]);
   const [dateRange, setDateRange] = useState<DateRange>({from:addDays(today,-6),to:today});
   const [showCalendar, setShowCalendar] = useState(false);
-  const [activePlatform, setActivePlatform] = useState<"meta"|"google">("meta");
+  const [activePlatform, setActivePlatform] = useState<"meta">("meta");
   const [activeTab, setActiveTab] = useState<"metrics"|"ads">("metrics");
   const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(()=>storage.getJSON("adbrief_perf_metrics", DEFAULT_METRICS));
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -430,9 +430,9 @@ export default function PerformanceDashboard() {
   useEffect(()=>{ load(); },[load]);
 
   const hasMeta=data?.meta&&!data.meta.error;
-  const hasGoogle=data?.google&&!data.google.error;
+  const hasGoogle=false; // disabled
 
-  useEffect(()=>{ if(data){ if(hasMeta) setActivePlatform("meta"); else if(hasGoogle) setActivePlatform("google"); } },[data,hasMeta,hasGoogle]);
+  useEffect(()=>{ if(data){ if(hasMeta) setActivePlatform("meta"); } },[data,hasMeta]);
 
   // Filter active metrics to only those valid for current platform
   const validMetrics = useMemo(()=>{
@@ -445,7 +445,7 @@ export default function PerformanceDashboard() {
     return filtered;
   },[activeMetrics, activePlatform]);
 
-  const d = activePlatform==="google"?data?.google:data?.meta;
+  const d = data?.meta; // google disabled
 
   const sparkData = useMemo(()=>{
     const daily=d?.daily||[];
@@ -500,7 +500,7 @@ export default function PerformanceDashboard() {
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
             <h1 style={{margin:0,fontSize:22,fontWeight:700,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
-            {activeTab==="metrics"&&(hasMeta||hasGoogle)&&!loading&&(
+            {activeTab==="metrics"&&hasMeta&&!loading&&(
               <span style={{display:"flex",alignItems:"center",gap:5,fontSize: 12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",border:"1px solid rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
                 <span style={{width:5,height:5,borderRadius:"50%",background:GREEN,boxShadow:"0 0 6px #22c55e"}}/>LIVE
               </span>
@@ -527,8 +527,8 @@ export default function PerformanceDashboard() {
         {activeTab === "metrics" && <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" as const}} className="perf-header-actions">
           {/* Platform tabs */}
           <div className="perf-platform-tabs" style={{display:"flex",gap:2,background:"var(--bg-surface)",border:`1px solid var(--border-subtle)`,borderRadius:10,padding:3}}>
-            {([["meta","Meta Ads",ACCENT],["google","Google Ads",GBLUE]] as const).map(([plt,label,color])=>{
-              const active=activePlatform===plt,hasData=plt==="meta"?hasMeta:hasGoogle;
+            {([["meta","Meta Ads",ACCENT]] as const).map(([plt,label,color])=>{
+              const active=activePlatform===plt,hasData=hasMeta;
               return (
                 <button key={plt} onClick={()=>hasData&&setActivePlatform(plt)}
                   style={{padding:"6px 14px",borderRadius:8,border:"none",cursor:hasData?"pointer":"default",fontFamily:F,fontSize:13,fontWeight:active?700:500,background:active&&hasData?S1:"transparent",color:active&&hasData?color:hasData?MT:"rgba(255,255,255,0.2)",transition:"all 0.15s",opacity:hasData?1:0.4}}>
@@ -578,7 +578,7 @@ export default function PerformanceDashboard() {
             {lang==="pt"?"Selecione uma conta para ver o painel":lang==="es"?"Selecciona una cuenta para ver el panel":"Select an account to view the dashboard"}
           </h3>
           <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.65,fontFamily:F}}>
-            {lang==="pt"?"Conecte Meta Ads ou Google Ads e veja CTR, spend, ROAS e fadiga criativa em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads y ve CTR, spend, ROAS y fatiga creativa en tiempo real.":"Connect Meta Ads or Google Ads and see CTR, spend, ROAS and creative fatigue in real time."}
+            {lang==="pt"?"Conecte Meta Ads e veja CTR, spend, ROAS e fadiga criativa em tempo real.":lang==="es"?"Conecta Meta Ads y ve CTR, spend, ROAS y fatiga creativa en tiempo real.":"Connect Meta Ads and see CTR, spend, ROAS and creative fatigue in real time."}
           </p>
           <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F,transition:"opacity 0.15s"}}
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.85"}}
@@ -613,7 +613,7 @@ export default function PerformanceDashboard() {
             {lang==="pt"?"Sem conexão com a conta":lang==="es"?"Sin conexión con la cuenta":"No account connection"}
           </h3>
           <p style={{color:MT,fontSize:13,margin:"0 0 24px",lineHeight:1.65,maxWidth:360,marginInline:"auto",fontFamily:F}}>
-            {lang==="pt"?"Conecte Meta Ads ou Google Ads para ver seus dados em tempo real.":lang==="es"?"Conecta Meta Ads o Google Ads para ver tus datos en tiempo real.":"Connect Meta Ads or Google Ads to see your data in real time."}
+            {lang==="pt"?"Conecte Meta Ads para ver seus dados em tempo real.":lang==="es"?"Conecta Meta Ads para ver tus datos en tiempo real.":"Connect Meta Ads to see your data in real time."}
           </p>
           <button onClick={()=>navigate("/dashboard/accounts")} style={{padding:"10px 22px",background:ACCENT,color:"#fff",border:"none",borderRadius:10,fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:F,transition:"opacity 0.15s"}}
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="0.85"}}
@@ -645,7 +645,7 @@ export default function PerformanceDashboard() {
       {activeTab==="metrics"&&!loading&&data&&(
         <>
           {data?.meta?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Meta Ads</strong> — {data.meta.error}</p></div>}
-          {data?.google?.error&&<div style={{display:"flex",gap:8,padding:"8px 12px",background:"rgba(245,158,11,0.08)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,marginBottom:16}}><AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/><p style={{margin:0,fontSize:13,color:AMBER}}><strong style={{fontWeight:600}}>Google Ads</strong> — {data.google.error}</p></div>}
+          {/* Google error banner — disabled */}
         </>
       )}
 
@@ -680,7 +680,7 @@ export default function PerformanceDashboard() {
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap" as const,gap:12}}>
                 <div>
                   <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Tendência</p>
-                  <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>{dateLabel} · {activePlatform==="meta"?"Meta Ads":"Google Ads"}</p>
+                  <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>{dateLabel} · Meta Ads</p>
                 </div>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap" as const}}>
                   {validMetrics.slice(0,6).map(key=>{

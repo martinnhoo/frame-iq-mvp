@@ -486,7 +486,7 @@ export const SEO_COMPARISONS = [
     metaTitle: "AdBrief vs Supermetrics — Comparação Completa 2026 | AdBrief",
     metaDescription: "AdBrief vs Supermetrics: qual a diferença entre uma IA conversacional para anúncios e um conector de dados para planilhas? Descubra qual é certo para você.",
     keywords: ["adbrief vs supermetrics", "supermetrics alternative", "supermetrics alternativa", "alternativa supermetrics brasil", "ferramenta relatorio meta ads"],
-    summary: "Supermetrics é um conector de dados — puxa métricas do Meta Ads, Google Ads, e dezenas de outras fontes para Google Sheets, Looker Studio ou BigQuery. Você ainda precisa analisar os dados você mesmo, criar fórmulas, montar gráficos. AdBrief faz o trabalho de análise por você: conecta ao Meta Ads, lê os dados, e responde em linguagem natural. Não precisa de planilha, fórmula ou dashboard. É a diferença entre ter os dados e ter as respostas.",
+    summary: "Supermetrics é um conector de dados — puxa métricas do Meta Ads, e dezenas de outras fontes para Google Sheets, Looker Studio ou BigQuery. Você ainda precisa analisar os dados você mesmo, criar fórmulas, montar gráficos. AdBrief faz o trabalho de análise por você: conecta ao Meta Ads, lê os dados, e responde em linguagem natural. Não precisa de planilha, fórmula ou dashboard. É a diferença entre ter os dados e ter as respostas.",
     verdict: "AdBrief ganha para times que querem respostas imediatas. Supermetrics ganha para analistas que querem construir seus próprios dashboards.",
     adbriefPros: [
       "Respostas em segundos, sem montar dashboard",

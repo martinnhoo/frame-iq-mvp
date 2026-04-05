@@ -106,7 +106,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   accountCtx?: { product?: string; niche?: string; market?: string; platform?: string; angle?: string };
 }) {
   const [val, setVal] = useState(accountCtx?.angle || "");
-  const [platform, setPlatform] = useState(accountCtx?.platform?.toLowerCase().includes("google") ? "google" : "meta");
+  const [platform, setPlatform] = useState("meta"); // google disabled
   const [tone, setTone] = useState("direct");
 
   const config: Record<string, any> = {
@@ -163,7 +163,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
         {action!=="competitor"&&(
           <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
             <div style={{display:"flex",gap:4}}>
-              {["meta","tiktok","google"].map(p=>(
+              {["meta","tiktok"].map(p=>(
                 <button key={p} onClick={()=>setPlatform(p)}
                   style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.05)",color:platform===p?"#000":"rgba(255,255,255,0.4)",transition:"all 0.1s"}}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
@@ -615,8 +615,8 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const M = "'Inter', sans-serif";
 
   const hasMeta = connections?.includes("meta");
-  const hasGoogle = connections?.includes("google");
-  const hasData = hasMeta || hasGoogle;
+  const hasGoogle = false; // disabled
+  const hasData = hasMeta;
   const quickActions: Record<string, string[]> = {
     pt: hasData
       ? ["O que pausar agora?", "Gerar hooks vencedores", "Escrever roteiro", "O que escalar?"]
@@ -937,7 +937,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const [busy, setBusy] = React.useState(false);
   const [fail, setFail] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(false);
-  const [tab,  setTab]  = React.useState<"meta" | "google">(connections.includes("meta") ? "meta" : "google");
+  const [tab,  setTab]  = React.useState<"meta" | "google">("meta"); // google disabled
   const [ts,   setTs]   = React.useState<Date | null>(null);
   const today = React.useMemo(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; },[]);
   const addDaysAI = (d: Date, n: number) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
@@ -959,7 +959,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   },[showCal]);
 
   const hasMeta   = connections.includes("meta");
-  const hasGoogle = connections.includes("google");
+  // hasGoogle — disabled (see GOOGLE_ADS_BACKUP.md)
 
   const load = React.useCallback(async () => {
     if (!user?.id || !selectedPersona?.id) return;
@@ -1006,22 +1006,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           adapted.meta.winners = adapted.meta.top_ads.filter((a: any) => a.isWinner).slice(0, 5);
           adapted.meta.at_risk = adapted.meta.top_ads.filter((a: any) => a.isRisk).slice(0, 5);
         }
-        if (r.google && !r.google.error) {
-          const g = r.google;
-          adapted.google = {
-            account_name: g.account_name,
-            currency_symbol: "$",
-            period: `${fmtAI(dateRange.from)} → ${fmtAI(dateRange.to)}`,
-            kpis: {
-              spend: g.spend?.toFixed(2) || "0.00",
-              ctr: ((g.ctr || 0) * 100).toFixed(2),
-              cpm: "0.00", frequency: "0.0",
-              conversions: (g.conversions || 0).toFixed(0),
-              active_ads: g.top_ads?.length || 0,
-            },
-            top_ads: g.top_ads || [], winners: [], at_risk: [], campaigns: [], time_series: [],
-          };
-        }
+        // google result handling — disabled (see GOOGLE_ADS_BACKUP.md)
         setPd(adapted); setTs(new Date());
       } else throw new Error(r?.error || "Resposta inválida");
     } catch (e: any) { setFail(e.message || "Falha"); }
@@ -1044,7 +1029,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   const tcfg: Record<string, { label: string; c: string }> = {
     meta:   { label: "Meta Ads",   c: "#3b82f6" },
-    google: { label: "Google Ads", c: "#4285f4" },
+    // google: disabled
   };
 
   // ── Collapsed bar ──────────────────────────────────────────────────────────
@@ -1110,7 +1095,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {/* Platform tabs */}
-          {[hasMeta && "meta", hasGoogle && "google"].filter(Boolean).map((p: any) => {
+          {[hasMeta && "meta"].filter(Boolean).map((p: any) => {
             const active = tab === p;
             const cfg = tcfg[p];
             const hasErr = pd?.[p]?.error;
@@ -1380,7 +1365,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                         </div>
                       </div>
                     )}
-                    {(tab === "google" || (!(data.winners?.length) && !(data.at_risk?.length))) && (data.top_ads || []).length > 0 && (
+                    {(!(data.winners?.length) && !(data.at_risk?.length)) && (data.top_ads || []).length > 0 && (
                       <div>
                         <Sec c="#475569">{lang==="pt"?"Top anúncios":lang==="es"?"Top anuncios":"Top ads"}</Sec>
                         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -1573,7 +1558,7 @@ export default function AdBriefAI() {
       buildSnapQuery().then((r:any)=>{
           const snap = (r.data || [])[0] || null;
           const hasMetaConn = connections.includes("meta");
-          const hasGoogleConn = connections.includes("google");
+          const hasGoogleConn = false /* google disabled */;
           const hasAnyConn = hasMetaConn || hasGoogleConn;
 
           if(!snap && hasAnyConn){
@@ -1590,7 +1575,7 @@ export default function AdBriefAI() {
           } else {
             if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn);
           }
-        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta"), connections.includes("google")); });
+        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta"), false /* google disabled */); });
     }, 300); // 300ms — let connections settle
     return () => clearTimeout(timer);
   },[contextReady, connections.length, user?.id, greetingKey]);
@@ -1884,7 +1869,7 @@ export default function AdBriefAI() {
       // Build platform context string
       const platforms: string[] = [];
       if (hasMetaConn) platforms.push("Meta Ads");
-      if (hasGoogleConn) platforms.push("Google Ads");
+      // if (hasGoogleConn) platforms.push("Google Ads"); — disabled
       const platformStr = platforms.join(" + ") || "";
 
       let proactiveMsg = "";
@@ -2438,7 +2423,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             product:(profile as any)?.product || selectedPersona?.name || "produto",
             niche:(profile as any)?.industry || (profile as any)?.niche || "geral",
             market:lang.toUpperCase()||"BR",
-            platform:connections.includes("meta")?"Meta Feed":connections.includes("google")?"Google":"Meta Feed",
+            platform:connections.includes("meta")?"Meta Feed":false /* google disabled */?"Google":"Meta Feed",
             tone:"human, direct",
             count:countMatch?parseInt(countMatch[1]):5,
             context:msg,
@@ -2852,7 +2837,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 product: (profile as any)?.product || selectedPersona?.name || undefined,
                 niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
                 market: (profile as any)?.market || lang.toUpperCase(),
-                platform: connections.includes("meta") ? "Meta" : connections.includes("google") ? "Google" : undefined,
+                platform: connections.includes("meta") ? "Meta" : false /* google disabled */ ? "Google" : undefined,
                 angle: undefined,
               }}
             />

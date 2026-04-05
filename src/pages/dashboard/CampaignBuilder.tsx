@@ -4,14 +4,14 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { Loader2, Rocket, Check, AlertCircle, Send, Zap, Users, ShoppingCart, Heart, Eye, Search, Monitor, Play, Globe } from "lucide-react";
+import { Loader2, Rocket, Check, AlertCircle, Send, Zap, Users, ShoppingCart, Heart, Eye, Globe } from "lucide-react";
 
-type Platform = "meta" | "google";
+type Platform = "meta"; // google disabled (see GOOGLE_ADS_BACKUP.md)
 interface Persona { id: string; name: string; result?: any; }
 interface AiMsg  { id: string; text: string; type: "tip"|"warn"|"insight"|"ok"; fromUser?: boolean; }
 interface Form {
   name: string; objective: string; optimization_goal: string; cbo: boolean;
-  channel_type: string; cpc_bid: string; daily_budget: string; country: string;
+  channel_type?: string; cpc_bid?: string; // google fields — disabled daily_budget: string; country: string;
   age_min: number; age_max: number; destination_url: string; primary_text: string; headline: string;
 }
 
@@ -22,12 +22,7 @@ const META_OBJ = [
   { id:"OUTCOME_ENGAGEMENT", label:"Engajamento",    desc:"Curtidas e comentários", Icon: Heart },
   { id:"OUTCOME_AWARENESS",  label:"Reconhecimento", desc:"Alcance e memória",      Icon: Eye },
 ];
-const GOOGLE_CH = [
-  { id:"SEARCH",          label:"Search",    desc:"Resultados de busca",         Icon: Search },
-  { id:"DISPLAY",         label:"Display",   desc:"Banners em sites parceiros",  Icon: Monitor },
-  { id:"VIDEO",           label:"YouTube",   desc:"Anúncios em vídeos",          Icon: Play },
-  { id:"PERFORMANCE_MAX", label:"Perf. Max", desc:"Todas as redes automático",   Icon: Globe },
-];
+// GOOGLE_CH — disabled (see GOOGLE_ADS_BACKUP.md)
 const META_OPT: Record<string,{id:string;label:string}[]> = {
   OUTCOME_TRAFFIC:    [{id:"LINK_CLICKS",label:"Cliques no link"},{id:"LANDING_PAGE_VIEWS",label:"Visualizações de página"}],
   OUTCOME_LEADS:      [{id:"LEAD_GENERATION",label:"Geração de leads"},{id:"CONVERSIONS",label:"Conversões"}],
@@ -184,7 +179,7 @@ export default function CampaignBuilder() {
   const [success, setSuccess] = useState(false);
   const [askKey, setAskKey] = useState("");
   const debRef = useRef<any>(null);
-  const pc = platform === "google" ? "#34A853" : accent;
+  const pc = accent; // google color removed
 
   const set = (k: keyof Form, v: any) => {
     setForm(f=>({...f,[k]:v}));
@@ -206,10 +201,10 @@ export default function CampaignBuilder() {
     if(!userId||!persona?.id) return;
     setLaunching(true);setError("");
     try {
-      const fn = platform==="meta"?"create-campaign":"create-campaign-google";
+      const fn = "create-campaign";
       const conn = conns.find(c=>c.platform===platform);
       const acc = conn?.ad_accounts?.find((a:any)=>a.id===conn.selected_account_id)||conn?.ad_accounts?.[0];
-      const body = platform==="meta" ? {
+      const body = {
         user_id:userId,persona_id:persona.id,account_id:acc?.id,
         name:form.name||"Nova campanha",objective:form.objective,
         optimization_goal:form.optimization_goal||META_OPT[form.objective]?.[0]?.id,
@@ -218,11 +213,6 @@ export default function CampaignBuilder() {
         destination_url:form.destination_url||undefined,
         primary_text:form.primary_text||undefined,
         headline:form.headline||undefined,
-      } : {
-        user_id:userId,persona_id:persona.id,customer_id:acc?.id,
-        name:form.name||"Nova campanha",channel_type:form.channel_type,
-        daily_budget:Math.round(parseFloat(form.daily_budget||"10")*1_000_000),
-        country:form.country,cpc_bid:form.cpc_bid,
       };
       const res = await supabase.functions.invoke(fn,{body});
       if(res.error?.message?.includes("401")||res.data?.error==="unauthorized"){setError("Sessão expirada — recarregue a página.");return;}
@@ -233,7 +223,7 @@ export default function CampaignBuilder() {
   };
 
   const canLaunch = connsReady&&isConnected(platform)&&form.daily_budget&&parseFloat(form.daily_budget)>0&&
-    (platform==="meta"?!!form.objective:!!form.channel_type);
+    !!form.objective;
 
   if(success) return(
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100%",padding:40}}>
@@ -268,14 +258,14 @@ export default function CampaignBuilder() {
 
         {/* Platform */}
         <div style={{display:"flex",gap:4,marginBottom:32,background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:12,padding:4}}>
-          {(["meta","google"] as Platform[]).map(p=>{
-            const a=platform===p;const c=p==="google"?"#34A853":accent;
+          {(["meta"] as Platform[]).map(p=>{
+            const a=platform===p;const c=accent;
             return<button key={p} onClick={()=>{setPlatform(p);setForm(DFLT);setError("");}}
               style={{flex:1,padding:"9px 0",borderRadius:9,border:"none",cursor:"pointer",
                 background:a?`${c}12`:"transparent",color:a?"var(--text-primary)":"var(--text-muted)",
                 fontSize:13,fontWeight:a?700:400,fontFamily:F,
                 boxShadow:a?`inset 0 0 0 1px ${c}30`:"none",transition:"all 0.15s"}}>
-              {p==="meta"?"Meta Ads":"Google Ads"}
+              Meta Ads
             </button>;
           })}
         </div>
@@ -289,10 +279,10 @@ export default function CampaignBuilder() {
 
         <Section title="Objetivo">
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {(platform==="meta"?META_OBJ:GOOGLE_CH).map(obj=>(
+            {META_OBJ.map(obj=>(
               <ObjCard key={obj.id} obj={obj}
-                selected={platform==="meta"?form.objective===obj.id:form.channel_type===obj.id}
-                onClick={()=>platform==="meta"?set("objective",obj.id):set("channel_type",obj.id)}/>
+                selected={form.objective===obj.id}
+                onClick={()=>set("objective",obj.id)}/>
             ))}
           </div>
         </Section>
@@ -329,14 +319,7 @@ export default function CampaignBuilder() {
                 </div>
               </Field>
             </div>
-            {platform==="google"&&(
-              <div style={{flex:1}}>
-                <Field label="CPC máximo (R$)">
-                  <input className="cb-input" style={inputStyle} type="number" min="0.01" step="0.10"
-                    value={form.cpc_bid} onChange={e=>set("cpc_bid",e.target.value)}/>
-                </Field>
-              </div>
-            )}
+            {/* Google CPC field — disabled */}
           </div>
           {platform==="meta"&&(
             <label style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",userSelect:"none"}}>

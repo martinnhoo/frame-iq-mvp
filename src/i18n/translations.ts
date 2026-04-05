@@ -1804,7 +1804,7 @@ export const translations: Record<Language, TranslationKeys> = {
     auth_login_title: "Bem-vindo de volta",
     auth_login_subtitle: "Entre na sua conta AdBrief",
     auth_signup_title: "Criar conta",
-    auth_signup_subtitle: "Conecte Meta Ads ou Google Ads. Pergunte qualquer coisa. Respostas em segundos.",
+    auth_signup_subtitle: "Conecte Meta Ads. Pergunte qualquer coisa. Respostas em segundos.",
     auth_email: "Email",
     auth_password: "Senha",
     auth_name: "Nome completo",

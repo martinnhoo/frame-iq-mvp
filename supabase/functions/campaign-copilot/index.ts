@@ -80,7 +80,7 @@ serve(async (req) => {
       ? `Meta de negócio: ${bizGoal.goal}${bizGoal.target_cpa ? ` | CPA alvo: R$${bizGoal.target_cpa}` : ""}${bizGoal.budget ? ` | Budget mensal: R$${bizGoal.budget}` : ""}`
       : null;
 
-    const platformName = platform === "google" ? "Google Ads" : "Meta Ads";
+    const platformName = false /* google disabled */ ? "Google Ads" : "Meta Ads";
 
     // Fetch live Meta data — same approach as adbrief-ai-chat
     let liveMetaCtx = "";

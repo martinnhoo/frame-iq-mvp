@@ -36,7 +36,7 @@ const T = {
     select_account: "Selecione uma conta",
     select_sub: "Escolha acima qual conta quer analisar",
     no_ads: "Nenhum anúncio ainda",
-    no_ads_sub: "Conecte Meta Ads ou Google Ads e clique em Sincronizar",
+    no_ads_sub: "Conecte Meta Ads e clique em Sincronizar",
     sync_now: "Sincronizar agora",
     importing: "Importando anúncios...",
     importing_sub: "Isso pode levar alguns segundos",
@@ -73,7 +73,7 @@ const T = {
     select_account: "Selecciona una cuenta",
     select_sub: "Elige arriba qué cuenta quieres analizar",
     no_ads: "Sin anuncios aún",
-    no_ads_sub: "Conecta Meta Ads o Google Ads y haz clic en Sincronizar",
+    no_ads_sub: "Conecta Meta Ads y haz clic en Sincronizar",
     sync_now: "Sincronizar ahora",
     importing: "Importando anuncios...",
     importing_sub: "Esto puede tardar unos segundos",
@@ -110,7 +110,7 @@ const T = {
     select_account: "Select an account",
     select_sub: "Choose which account to analyze above",
     no_ads: "No ads yet",
-    no_ads_sub: "Connect Meta Ads or Google Ads and click Sync",
+    no_ads_sub: "Connect Meta Ads and click Sync",
     sync_now: "Sync now",
     importing: "Importing ads...",
     importing_sub: "This may take a few seconds",
@@ -142,8 +142,8 @@ interface Entry {
   peak_ctr: number; synced_at: string; persona_id: string;
 }
 
-const PLAT_COLOR: Record<string, string> = { meta: "#1877F2", google: "#4285F4" };
-const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
+const PLAT_COLOR: Record<string, string> = { meta: "#1877F2" }; // google disabled
+const PLAT_LABEL: Record<string, string> = { meta: "Meta" }; // google disabled
 
 function money(n: number, lang?: string) {
   const sym = lang === "pt" ? "R$" : "$";
@@ -509,7 +509,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
             <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)}
               style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)", color: platformFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none" }}>
               <option value="all">Todas as plataformas</option>
-              {platforms.map(p => <option key={p} value={p}>{p === "meta" ? "Meta Ads" : "Google Ads"}</option>)}
+              {platforms.filter(p => p === "meta").map(p => <option key={p} value={p}>Meta Ads</option>)}
             </select>
           )}
           {campaigns.length > 1 && (

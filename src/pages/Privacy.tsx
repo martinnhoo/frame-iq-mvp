@@ -55,8 +55,8 @@ const Privacy = () => (
         <h2 className="text-lg font-semibold text-foreground">4. AI Processing</h2>
         <p>Content you upload is processed by AI models to provide analyses, translations, and creative outputs. We use Anthropic Claude for AI-powered chat and analysis. Uploaded content is processed in real-time and is not used to train third-party AI models. Anonymized, aggregated usage patterns may be used to improve our service.</p>
 
-        <h2 className="text-lg font-semibold text-foreground">5. Meta Ads & Google Ads API Integration</h2>
-        <p>AdBrief integrates with the Meta Ads API and Google Ads API to allow users to connect their ad accounts and view campaign performance data within the platform.</p>
+        <h2 className="text-lg font-semibold text-foreground">5. Meta Ads & Meta Ads API Integration</h2>
+        <p>AdBrief integrates with the Meta Ads API and Meta Ads API to allow users to connect their ad accounts and view campaign performance data within the platform.</p>
         <p><strong>When you connect your Meta Ads or Google Ads account:</strong></p>
         <ul className="list-disc pl-6 space-y-1">
           <li>We access campaign data, ad performance metrics, creatives, and time series data solely to display insights within your AdBrief dashboard</li>

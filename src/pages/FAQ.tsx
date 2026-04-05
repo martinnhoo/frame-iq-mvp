@@ -34,7 +34,7 @@ const T = {
       },
       {
         q: "Quais plataformas são suportadas?",
-        a: "Meta Ads — totalmente integrado e lendo seus dados em tempo real. Google Ads e TikTok Ads em breve.",
+        a: "Meta Ads — totalmente integrado e lendo seus dados em tempo real.",
       },
       {
         q: "Que tipo de perguntas posso fazer?",
