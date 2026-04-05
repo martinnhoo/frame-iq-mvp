@@ -6,7 +6,6 @@ import { Logo } from "@/components/Logo";
 import { ArrowRight, Check, Loader2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { motion, AnimatePresence } from "framer-motion";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
@@ -350,11 +349,7 @@ export default function Onboarding() {
     outline: "none", transition: "border-color 0.15s, background 0.15s",
   };
 
-  const stepVariants = {
-    enter: { opacity: 0, y: 20 },
-    center: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -12 },
-  };
+
 
   return (
     <div style={{ minHeight: "100vh", background: "#07080f", fontFamily: F, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
@@ -390,17 +385,12 @@ export default function Onboarding() {
 
       {/* Progress bar */}
       <div style={{ position: "relative", zIndex: 10, height: 2, background: "rgba(255,255,255,0.06)", margin: "0 32px", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}>
-        <motion.div style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${BLUE}, ${CYAN})` }}
-          animate={{ width: `${((step - 1) / 2) * 100}%` }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }} />
+        <div style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${BLUE}, ${CYAN})`, width: `${((step - 1) / 2) * 100}%`, transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
 
       {/* ── Content ── */}
       <div className="onboarding-content" style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "32px 20px 40px", overflowY: "auto" as const }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={step} variants={stepVariants} initial="enter" animate="center" exit="exit"
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            style={{ width: "100%", maxWidth: 520 }}>
+        <div key={step} style={{ width: "100%", maxWidth: 520, animation: "stepIn 0.25s cubic-bezier(0.4,0,0.2,1)" }}>
 
             {/* ── STEP 1 ── */}
             {step === 1 && (
@@ -476,12 +466,10 @@ export default function Onboarding() {
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
                     {t.back}
                   </button>
-                  <motion.button onClick={() => setStep(2)} disabled={!canStep1}
-                    whileHover={canStep1 ? { scale: 1.01 } : {}}
-                    whileTap={canStep1 ? { scale: 0.99 } : {}}
+                  <button onClick={() => setStep(2)} disabled={!canStep1}
                     style={{ flex: 1, padding: "16px 0", borderRadius: 16, background: canStep1 ? "#fff" : "rgba(255,255,255,0.08)", border: "none", cursor: canStep1 ? "pointer" : "not-allowed", color: canStep1 ? "#000" : "rgba(255,255,255,0.2)", fontSize: 15, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 0.2s" }}>
                     {t.continue}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             )}
@@ -505,16 +493,14 @@ export default function Onboarding() {
                     <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
                     <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0, fontStyle: "italic" as const }}>{t.s2_generic}</p>
                   </div>
-                  <motion.div style={{ padding: "16px", borderRadius: 16, border: "2px solid" }}
-                    animate={{ background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)" }}
-                    transition={{ duration: 0.5 }}>
+                  <div style={{ padding: "16px", borderRadius: 16, border: "2px solid", background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)", transition: "background 0.5s, border-color 0.5s" }}>
                     <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const, color: revealed ? BLUE : "rgba(255,255,255,0.25)", transition: "color 0.3s" }}>
                       {t.s2_adbrief_label}
                     </p>
                     <p style={{ fontFamily: M, fontSize: 12, lineHeight: 1.6, margin: 0, color: revealed ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.15)", transition: "color 0.5s" }}>
                       {revealed ? t.s2_adbrief : "..."}
                     </p>
-                  </motion.div>
+                  </div>
                 </div>
 
                 {/* O que a IA lê */}
@@ -522,24 +508,20 @@ export default function Onboarding() {
                   <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_reads_label}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                     {t.s2_items.map((item: any, i: number) => (
-                      <motion.div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}
-                        animate={{ opacity: revealed ? 1 : i === 0 ? 0.4 : 0.15 }}
-                        transition={{ duration: 0.4, delay: i * 0.08 }}>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, opacity: revealed ? 1 : i === 0 ? 0.4 : 0.15, transition: `opacity 0.4s ${i * 0.08}s` }}>
                         <span style={{ fontSize: 16, width: 24, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
                         <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.88)" }}>{item.text}</span>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 14 }}>
                     <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 10px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_extras_label}</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                       {t.s2_extras.map((extra: string, i: number) => (
-                        <motion.div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}
-                          animate={{ opacity: revealed ? 1 : 0.15 }}
-                          transition={{ duration: 0.4, delay: (i + 4) * 0.08 }}>
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: revealed ? 1 : 0.15, transition: `opacity 0.4s ${(i + 4) * 0.08}s` }}>
                           <div style={{ width: 5, height: 5, borderRadius: "50%", background: CYAN, flexShrink: 0 }} />
                           <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{extra}</span>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -555,10 +537,10 @@ export default function Onboarding() {
                   <button onClick={() => setStep(1)} style={{ padding: "14px 22px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "2px solid rgba(255,255,255,0.12)", cursor: "pointer", color: "rgba(255,255,255,0.55)", fontSize: 14, fontFamily: F, fontWeight: 600 }}>
                     {t.back}
                   </button>
-                  <motion.button onClick={() => setStep(3)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                  <button onClick={() => setStep(3)}
                     style={{ flex: 1, padding: "14px 0", borderRadius: 14, background: "#fff", border: "none", cursor: "pointer", color: "#000", fontSize: 15, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                     {t.continue}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             )}
@@ -610,14 +592,12 @@ export default function Onboarding() {
                   </div>
 
                   {/* Meta */}
-                  <motion.button onClick={() => handleConnect("meta")} disabled={!canStep3 || connecting !== null}
-                    whileHover={canStep3 && !connecting ? { scale: 1.01, boxShadow: "0 0 40px rgba(14,165,233,0.25)" } : {}}
-                    whileTap={canStep3 && !connecting ? { scale: 0.99 } : {}}
+                  <button onClick={() => handleConnect("meta")} disabled={!canStep3 || connecting !== null}
                     style={{ width: "100%", padding: "14px 0", borderRadius: 14, marginBottom: 8, border: "none", cursor: !canStep3 || connecting ? "not-allowed" : "pointer", fontSize: 14, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s",
                       background: !canStep3 || connecting ? "rgba(255,255,255,0.07)" : `linear-gradient(135deg, ${BLUE}, ${CYAN})`,
                       color: !canStep3 || connecting ? "rgba(255,255,255,0.25)" : "#000" }}>
                     {connecting === "meta" ? <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />{t.s3_connecting_meta}</> : <><TrendingUp size={16} />{t.s3_meta}</>}
-                  </motion.button>
+                  </button>
 
                   {/* Google connect button — disabled (see GOOGLE_ADS_BACKUP.md) */}
                 </div>
@@ -635,8 +615,7 @@ export default function Onboarding() {
               </div>
             )}
 
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
 
       <style>{`
@@ -650,6 +629,7 @@ export default function Onboarding() {
           .niche-grid { grid-template-columns: repeat(3, 1fr) !important; }
           /* Padding geral menor */
           .onboarding-content { padding: 16px 16px 28px !important; }
+        @keyframes stepIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
           /* Header compacto */
           .onboarding-header { padding: 14px 16px !important; }
           /* Botões mais fáceis de toque */
