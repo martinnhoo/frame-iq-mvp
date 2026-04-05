@@ -1484,12 +1484,49 @@ export default function AdBriefAI() {
   const [activeTool,setActiveTool]=useState<string|null>(null);
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
+  const [freeUsage,setFreeUsage]=useState<{count:number,lastReset:string|null}|null>(null);
+  const [countdown,setCountdown]=useState("");
   const [proactiveLoading,setProactiveLoading]=useState(false);
   const proactiveFired=useRef(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
   const prevPersonaId=useRef<string|null>(null);
 
+  // ── Load free_usage from DB (source of truth — not affected by clearing chat) ──
+  useEffect(()=>{
+    if(!user?.id||(profile?.plan&&profile.plan!=="free")) return;
+    const load = async () => {
+      const { data } = await (supabase as any).from("free_usage").select("chat_count,last_reset").eq("user_id",user.id).maybeSingle();
+      const today = new Date().toISOString().slice(0,10);
+      if(data){
+        const sameDay = data.last_reset?.slice(0,10)===today;
+        setFreeUsage({ count: sameDay ? (data.chat_count||0) : 0, lastReset: data.last_reset });
+      } else {
+        setFreeUsage({ count:0, lastReset:null });
+      }
+    };
+    load();
+  },[user?.id, profile?.plan]);
+
+  // ── Countdown timer: time until midnight (daily reset) ──
+  useEffect(()=>{
+    if(!freeUsage||freeUsage.count<3) return;
+    const tick=()=>{
+      const now=new Date();
+      const midnight=new Date(now);
+      midnight.setHours(24,0,0,0);
+      const diff=midnight.getTime()-now.getTime();
+      const h=Math.floor(diff/3600000);
+      const m=Math.floor((diff%3600000)/60000);
+      const s=Math.floor((diff%60000)/1000);
+      setCountdown(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
+    };
+    tick();
+    const id=setInterval(tick,1000);
+    return ()=>clearInterval(id);
+  },[freeUsage]);
+
+  // Update freeUsage count after each successful send
   // ── Load correct chat history when account changes (no reset — each account has its own history) ──
   useEffect(()=>{
     const newId = selectedPersona?.id || null;
@@ -2469,6 +2506,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       const aid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
+      // Increment free usage count locally after successful send
+      if(profile?.plan==="free"||!profile?.plan){
+        setFreeUsage(prev=>prev?{...prev,count:Math.min(3,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
+      }
     }catch(e:any){
       const eid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",ts:eid,id:eid,blocks:[{type:"warning",title:lang==="pt"?"Erro de conexão":"Connection error",content:e?.message||"Network error."}]}]);
@@ -2924,24 +2965,52 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               })}
             </div>
 
-            {/* Free plan counter */}
+            {/* Free plan counter — reads from DB, not affected by clearing chat */}
             {(profile?.plan==="free"||!profile?.plan)&&(()=>{
-              const used=messages.filter(m=>m.role==="user").length;
-              const cap=3,remaining=Math.max(0,cap-used);
-              const col=remaining===0?"#ef4444":remaining===1?"#f59e0b":"rgba(255,255,255,0.18)";
+              const used = freeUsage?.count ?? 0;
+              const cap=3, remaining=Math.max(0,cap-used);
+              const isLocked = remaining===0;
+              const col = isLocked?"#ef4444":remaining===1?"#f59e0b":"rgba(255,255,255,0.3)";
               return(
-                <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginBottom:6}}>
-                  <span style={{fontSize:11.5,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:remaining===0?600:400}}>
-                    {remaining===0?(lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached"):`${remaining}/${cap} ${lang==="pt"?"mensagens":"messages"}`}
-                  </span>
-                  {remaining===0&&(
-                    <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:11.5,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
-                      padding:"2px 10px",borderRadius:6,border:"1px solid rgba(14,165,233,0.4)",
-                      background:"rgba(14,165,233,0.1)",color:"#38bdf8",cursor:"pointer"
-                    }}>
-                      {lang==="pt"?"Ver planos":lang==="es"?"Ver planes":"See plans"}
-                    </button>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,marginBottom:8}}>
+                  {/* Dot indicators */}
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    {[0,1,2].map(i=>(
+                      <div key={i} style={{
+                        width:6,height:6,borderRadius:"50%",transition:"all 0.3s",
+                        background: i<used ? (isLocked?"#ef4444":"#0ea5e9") : "rgba(255,255,255,0.12)",
+                        boxShadow: i<used && !isLocked ? "0 0 6px rgba(14,165,233,0.6)" : i<used && isLocked ? "0 0 6px rgba(239,68,68,0.5)" : "none"
+                      }}/>
+                    ))}
+                    <span style={{fontSize:11,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:isLocked?600:400,marginLeft:4}}>
+                      {isLocked
+                        ? (lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached")
+                        : `${remaining} ${lang==="pt"?"restante"+(remaining!==1?"s":""):"remaining"}`
+                      }
+                    </span>
+                  </div>
+                  {/* Countdown when locked */}
+                  {isLocked&&countdown&&(
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{
+                        display:"flex",alignItems:"center",gap:6,
+                        padding:"4px 10px",borderRadius:8,
+                        background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)"
+                      }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#ef4444",fontWeight:500,letterSpacing:"0.05em"}}>{countdown}</span>
+                        <span style={{fontSize:10.5,color:"rgba(239,68,68,0.6)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                          {lang==="pt"?"para liberar":lang==="es"?"para liberar":"until reset"}
+                        </span>
+                      </div>
+                      <button onClick={()=>setShowUpgradeWall(true)} style={{
+                        fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
+                        padding:"4px 10px",borderRadius:7,border:"1px solid rgba(14,165,233,0.35)",
+                        background:"rgba(14,165,233,0.08)",color:"#38bdf8",cursor:"pointer",whiteSpace:"nowrap"
+                      }}>
+                        {lang==="pt"?"Desbloquear":lang==="es"?"Desbloquear":"Unlock"}
+                      </button>
+                    </div>
                   )}
                 </div>
               );
@@ -2990,7 +3059,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 <button onClick={()=>{
                   const isFree=(profile?.plan==="free"||!profile?.plan);
-                  const used=messages.filter(m=>m.role==="user").length;
+                  const used=freeUsage?.count??0;
                   if(isFree&&used>=3){setShowUpgradeWall(true);return;}
                   send();
                 }} disabled={!input.trim()||loading||!contextReady}
