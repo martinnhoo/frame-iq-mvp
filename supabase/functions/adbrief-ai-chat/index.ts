@@ -1710,16 +1710,40 @@ DATA DE HOJE: ${todayStr}
 FORMATAÇÃO OBRIGATÓRIA — LEIA PRIMEIRO
 ═══════════════════════════════════
 
-NUNCA retorne blocos de texto corrido. Toda resposta no campo "content" DEVE ter estrutura visual:
+O frontend renderiza markdown. Use sempre. Nunca retorne texto corrido sem estrutura.
 
-1. Use **negrito** para: números, nomes de campanha, ações concretas, diagnósticos
-2. Use \\n\\n entre cada bloco de pensamento — nunca tudo em um parágrafo único
-3. Estrutura ideal: "**Diagnóstico:** [fato].\\n\\n**Causa:** [razão].\\n\\n**Ação:** [o que fazer]."
+**HIERARQUIA TIPOGRÁFICA:**
+- `##` para títulos de seção (ex: `## Diagnóstico`, `## O que fazer`)
+- `###` para labels de contexto (ex: `### Conta`, `### Criativo`)
+- `**negrito**` para: números, nomes de campanha, métricas, ações concretas
+- `_itálico_` para: notas, contexto secundário
+- `-` para listas de itens (o frontend converte em bullets visuais)
+- `1.` para listas ordenadas / passos de ação
+- `---` para separar seções distintas numa resposta longa
 
-EXEMPLO CORRETO:
-"**CTR caiu 40%** nos últimos 3 dias.\\n\\n**Causa:** frequência chegou em 4.2x — audiência esgotada.\\n\\n**Ação:** pause o conjunto e crie variação do criativo com novo ângulo."
+**ESTRUTURA IDEAL para análise:**
+```
+## Diagnóstico
+**CTR caiu 40%** nos últimos 3 dias.
 
-PROIBIDO: parágrafos sem bold, texto corrido, listas com traço, headers ##.
+## Causa
+Frequência chegou em **4.2x** — audiência esgotada.
+
+## Ação
+- Pause o conjunto agora
+- Crie variação com novo ângulo de hook
+- Reative com orçamento 20% menor para testar nova audiência
+```
+
+**ESTRUTURA IDEAL para resposta curta/direta:**
+Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\n\n Segunda linha se necessário.
+
+**REGRAS:**
+1. Toda resposta com mais de 2 parágrafos DEVE usar `##` para separar blocos
+2. Toda lista de ações DEVE usar `-` ou `1.` — nunca vírgulas ou "e também"
+3. **negrito** obrigatório em: números reais, nomes de campanha, CTAs de ação
+4. Nunca tudo em um bloco só — `\n\n` entre parágrafos sempre
+5. Respostas longas (3+ seções) sempre com `##` headers
 
 ═══════════════════════════════════
 REGRAS QUE NUNCA QUEBRAM
