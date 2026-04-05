@@ -779,20 +779,19 @@ Deno.serve(async (req) => {
                 data: (r.data || []).filter((p: any) => p.persona_id !== persona_id),
               },
         ),
-      // 12. Chat memory — filter at DB level, not in JS
+      // 12. Chat memory — fetch all user memories, scoped by persona when available
       persona_id
         ? (supabase as any)
             .from("chat_memory")
-            .select("memory_text, memory_type, importance, created_at")
+            .select("memory_text, memory_type, importance, created_at, persona_id")
             .eq("user_id", user_id)
             .or(`persona_id.eq.${persona_id},persona_id.is.null`)
             .order("importance", { ascending: false })
             .limit(30)
         : (supabase as any)
             .from("chat_memory")
-            .select("memory_text, memory_type, importance, created_at")
+            .select("memory_text, memory_type, importance, created_at, persona_id")
             .eq("user_id", user_id)
-            .is("persona_id", null)
             .order("importance", { ascending: false })
             .limit(30),
       // 13. Few-shot examples
@@ -837,12 +836,10 @@ Deno.serve(async (req) => {
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
 
-    // chat_memory: filter strictly by persona_id — no cross-account leakage
-    // .is.null memories are "global" and can leak from other accounts — exclude them
-    const persistentMemories = ((chatMemories || []) as any[]).filter((m: any) => {
-      if (persona_id) return m.persona_id === persona_id; // strict: only this account's memories
-      return !m.persona_id; // no persona: only global memories
-    });
+    // chat_memory: DB query already handles scoping via OR clause
+    // persona_id present → returns persona-specific + global (null) memories
+    // no persona_id → returns all user memories (global fallback)
+    const persistentMemories = (chatMemories || []) as any[];
 
     // few-shot examples: liked responses used as style/format guide
     const fewShotExamples = (chatExamples || []) as any[];

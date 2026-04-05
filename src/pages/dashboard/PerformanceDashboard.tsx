@@ -1,6 +1,6 @@
 import { storage } from "@/lib/storage";
 // PerformanceDashboard v3 — calendar date picker, all metrics, drag & drop customization
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { SectionBoundary } from "@/components/SectionBoundary";
 import { useOutletContext, useNavigate } from "react-router-dom";
