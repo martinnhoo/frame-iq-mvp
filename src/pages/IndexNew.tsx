@@ -454,9 +454,9 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
     default: "#07090f",
-    subtle:  "#070a10",
+    subtle:  "#07090f",
     dark:    "#07090f",
-    accent:  "#070a12",
+    accent:  "#07090f",
   };
   return (
     <section
@@ -2313,7 +2313,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
   };
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.06) 0%, transparent 60%), #07090f' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 60% 40% at 55% 30%, rgba(14,165,233,0.05) 0%, transparent 55%), #07090f' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
