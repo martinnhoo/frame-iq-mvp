@@ -1,4 +1,4 @@
-// send-activation-email v3 — redesign bold, sem Google Ads — fires 24h after signup if Meta not connected
+// send-activation-email v3 — redesign bold, sem — fires 24h after signup if Meta not connected
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -165,4 +165,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
-// redeploy 202603270100
+// redeploy 202604052100

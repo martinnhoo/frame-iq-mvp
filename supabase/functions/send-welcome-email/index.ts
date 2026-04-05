@@ -1,4 +1,4 @@
-// send-welcome-email v5 — design renovado, sem Google Ads, mais cor
+// send-welcome-email v5 — design renovado, sem, mais cor
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -294,3 +294,4 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
+// redeploy 202604052100
