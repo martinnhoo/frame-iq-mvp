@@ -1,7 +1,7 @@
 // DashboardLayout v2 — build 2026-03-20
 import { useEffect, useState } from "react";
 import { storage } from "@/lib/storage";
-import { AnimatePresence, motion } from "framer-motion"; // kept for type compat — components removed
+// framer-motion removed — using CSS transitions
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
