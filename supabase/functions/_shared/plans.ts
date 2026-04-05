@@ -53,6 +53,22 @@ export const PLAN_LIMITS = {
   preflights:        { free: 3,   maker: 50,  pro: 200,  studio: -1 },
 } as const;
 
+/**
+ * Trial limits = 40% of paid plan limits.
+ * Applied when subscription_status = "trialing".
+ * Prevents full 3-day trial abuse while still delivering real value.
+ */
+export const TRIAL_LIMITS = {
+  daily_messages:    { free: 3,   maker: 20,  pro: 80,   studio: -1 },
+  translations:      { free: 10,  maker: 40,  pro: 200,  studio: -1 },
+  hooks:             { free: 5,   maker: 40,  pro: 200,  studio: -1 },
+  scripts:           { free: 3,   maker: 20,  pro: 80,   studio: -1 },
+  boards:            { free: 3,   maker: 20,  pro: 80,   studio: -1 },
+  analyses:          { free: 5,   maker: 20,  pro: 80,   studio: -1 },
+  personas:          { free: 1,   maker: 4,   pro: 20,   studio: -1 },
+  preflights:        { free: 3,   maker: 20,  pro: 80,   studio: -1 },
+} as const;
+
 export type PlanKey = "free" | "maker" | "pro" | "studio";
 export type LimitKey = keyof typeof PLAN_LIMITS;
 
@@ -67,4 +83,19 @@ export function isWithinLimit(action: LimitKey, plan: string, currentUsage: numb
   const limit = getLimit(action, plan);
   if (limit === -1) return true; // unlimited
   return currentUsage < limit;
+}
+
+/**
+ * Returns the effective limit for an action, applying trial caps when trialing.
+ * Pass subscriptionStatus from profiles.subscription_status.
+ */
+export function getEffectiveLimit(
+  action: LimitKey,
+  plan: string,
+  subscriptionStatus?: string | null
+): number {
+  const isTrialing = subscriptionStatus === "trialing";
+  const p = (["free","maker","pro","studio"].includes(plan) ? plan : "free") as PlanKey;
+  if (isTrialing) return TRIAL_LIMITS[action][p];
+  return PLAN_LIMITS[action][p];
 }

@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
     // ── 2. Plan check + atomic rate limiting ─────────────────────────────────
     const { data: profileRow } = await supabase
       .from("profiles")
-      .select("plan, email, dashboard_count")
+      .select("plan, email, dashboard_count, subscription_status, trial_end")
       .eq("id", user_id)
       .maybeSingle();
     const plan = getEffectivePlan(profileRow?.plan, (profileRow as any)?.email);
@@ -343,6 +343,13 @@ Deno.serve(async (req) => {
       (["free", "maker", "pro", "studio"].includes(plan)
         ? plan
         : ({ creator: "maker", starter: "pro", scale: "studio", lifetime: "studio", appsumo: "studio", ltd: "studio" } as any)[plan]) || "free";
+
+    // ── Trial detection ────────────────────────────────────────────────────────
+    const isTrialing = (profileRow as any)?.subscription_status === "trialing";
+    const trialEndDate = (profileRow as any)?.trial_end ? new Date((profileRow as any).trial_end) : null;
+    const trialExpired = trialEndDate ? trialEndDate < new Date() : false;
+    // If trial expired and not updated yet — treat as free
+    const effectivePlanKey = (isTrialing && trialExpired) ? "free" : planKey;
 
     const todayDate = new Date().toISOString().slice(0, 10);
     const monthKey = todayDate.slice(0, 7); // YYYY-MM
@@ -352,14 +359,19 @@ Deno.serve(async (req) => {
 
     // ── Plan revenue & thresholds
     const PLAN_REVENUE: Record<string, number> = { free: 0, maker: 19, pro: 49, studio: 149 };
+    // Trial caps = 50% of paid plan caps (prevents full trial abuse while still being useful)
+    const DAILY_CAPS_TRIAL: Record<string, number> = { free: 3, maker: 20, pro: 80, studio: 150 };
     const DAILY_CAPS: Record<string, number> = { free: 3, maker: 50, pro: 200, studio: 500 };
     const COOLDOWN_MSGS: Record<string, number> = { free: 3, maker: 564, pro: 1456, studio: 4428 };
     const SOFTCAP_MSGS: Record<string, number> = { free: 3, maker: 726, pro: 1872, studio: 5694 };
 
-    const revenue = PLAN_REVENUE[planKey] ?? 0;
-    const cap = DAILY_CAPS[planKey] ?? 3;
-    const cooldown = COOLDOWN_MSGS[planKey] ?? 3;
-    const softcap = SOFTCAP_MSGS[planKey] ?? 3;
+    const revenue = PLAN_REVENUE[effectivePlanKey] ?? 0;
+    // Apply reduced trial cap if user is in trial period
+    const cap = isTrialing
+      ? (DAILY_CAPS_TRIAL[effectivePlanKey] ?? 3)
+      : (DAILY_CAPS[effectivePlanKey] ?? 3);
+    const cooldown = COOLDOWN_MSGS[effectivePlanKey] ?? 3;
+    const softcap = SOFTCAP_MSGS[effectivePlanKey] ?? 3;
     const uiLang = (user_language as string) || "pt";
 
     // ── Read current usage for soft-cap / cooldown checks (non-atomic read is fine here —

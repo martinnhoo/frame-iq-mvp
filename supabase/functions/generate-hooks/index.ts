@@ -60,10 +60,13 @@ Deno.serve(async (req) => {
     // ── Cap hook count by plan ─────────────────────────────────────────────
     let effectiveCount = count;
     {
-      const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
+      const { data: prof } = await supabase.from('profiles').select('plan, email, subscription_status').eq('id', user_id).maybeSingle();
       const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
+      const isTrialing = (prof as any)?.subscription_status === 'trialing';
+      // Trial gets 3 hooks max regardless of plan — enough to evaluate, not enough to abuse
       const hookCaps: Record<string, number> = { free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10 };
-      const cap = plan === 'studio' ? 10 : (hookCaps[plan] ?? 3);
+      const trialHookCap = 3;
+      const cap = isTrialing ? trialHookCap : (plan === 'studio' ? 10 : (hookCaps[plan] ?? 3));
       effectiveCount = Math.min(count, cap);
     }
 

@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
     {
-      const { data: prof } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
+      const { data: prof } = await supabase.from('profiles').select('plan, email, subscription_status').eq('id', user_id).maybeSingle();
       const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
       const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
       if (!allowed) {

@@ -78,6 +78,9 @@ Deno.serve(async (req) => {
         const productId = sub.items.data[0]?.price?.product as string;
         const plan = PRODUCT_TO_PLAN[productId] || "free";
         const isActive = sub.status === "active" || sub.status === "trialing";
+        const isTrialing = sub.status === "trialing";
+        const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
+        const periodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
 
         const { data: profiles } = await supabase
           .from("profiles")
@@ -88,8 +91,12 @@ Deno.serve(async (req) => {
         if (profiles && profiles.length > 0) {
           await supabase.from("profiles").update({
             plan: isActive ? plan : "free",
-          }).eq("id", profiles[0].id);
-          logStep("Subscription updated", { userId: profiles[0].id, plan: isActive ? plan : "free" });
+            subscription_status: sub.status,           // trialing | active | canceled | past_due | unpaid
+            trial_end: isTrialing ? trialEnd : null,   // null when not trialing
+            current_period_end: periodEnd,             // when the paid period ends
+            stripe_subscription_id: sub.id,
+          } as any).eq("id", profiles[0].id);
+          logStep("Subscription updated", { userId: profiles[0].id, plan: isActive ? plan : "free", status: sub.status, isTrialing });
         }
         break;
       }
@@ -105,7 +112,12 @@ Deno.serve(async (req) => {
           .limit(1);
 
         if (profiles && profiles.length > 0) {
-          await supabase.from("profiles").update({ plan: "free" }).eq("id", profiles[0].id);
+          await supabase.from("profiles").update({
+            plan: "free",
+            subscription_status: "canceled",
+            trial_end: null,
+            current_period_end: null,
+          } as any).eq("id", profiles[0].id);
           logStep("Subscription deleted, downgraded to free", { userId: profiles[0].id });
         }
         break;
