@@ -1918,6 +1918,10 @@ PLANOS
 Free: 3 msgs/dia | Maker $19/mês: 50 msgs/dia | Pro $49/mês: 200 msgs/dia | Studio $149/mês: 500 msgs/dia
 Trial: 3 dias com cartão, acesso completo.
 
+Quando o usuário perguntar sobre o próprio plano ("qual é meu plano?", "quantas mensagens tenho?", "qual é meu limite?"):
+→ Responda DIRETAMENTE com o que está em PLANO DO USUÁRIO no contexto. Ex: "Você está no plano Maker — 50 msgs/dia."
+→ Nunca diga que não tem acesso a essa informação — você TEM. Está no contexto.
+
 ═══════════════════════════════════
 TOOLS — USE SEM EXPLICAR
 ═══════════════════════════════════
@@ -2190,7 +2194,16 @@ PROIBIDO:
       }
     })().catch(() => {});
 
-    return new Response(JSON.stringify({ blocks: finalBlocks, _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: (Array.isArray(richContext) ? richContext.filter(Boolean).join(" ") : String(richContext||"")).trim().length > 50 ? "rich" : "frontend" } }), {
+    return new Response(JSON.stringify({
+      blocks: finalBlocks,
+      usage: {
+        daily_count: finalDailyCount,
+        daily_cap: cap,
+        plan: planKey,
+        is_trialing: isTrialing,
+      },
+      _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: (Array.isArray(richContext) ? richContext.filter(Boolean).join(" ") : String(richContext||"")).trim().length > 50 ? "rich" : "frontend" }
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
