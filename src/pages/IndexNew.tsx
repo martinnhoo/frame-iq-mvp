@@ -10,7 +10,7 @@ import { Helmet } from "react-helmet-async";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
-const BG = "#0d1117";
+const BG = "#070d1a";
 const CARD_BG = "rgba(255,255,255,0.12)";
 const CARD_BORDER = "rgba(255,255,255,0.1)";
 const TEXT_MUTED = "rgba(255,255,255,0.62)";
