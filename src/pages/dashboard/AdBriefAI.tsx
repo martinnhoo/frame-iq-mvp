@@ -3372,17 +3372,41 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .msg-body strong{font-weight:600;color:rgba(255,255,255,0.95);letter-spacing:-0.01em;}
         .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
         .user-msg-row .user-msg-actions button:hover{color:rgba(255,255,255,0.6)!important;}
-        @media(max-width:640px){
-          .chat-footer-hint{display:none!important}
-          .chat-textarea{font-size:16px!important;}
-          .chat-textarea::placeholder{font-size:14px!important;opacity:0.25!important}
-          .msg-wrap-inner{padding:0 16px!important}
-          .user-bubble-wrap{max-width:88%!important}
-          .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
-          .lp-chip{font-size:12px!important;padding:5px 10px!important}
-          .tool-pills-row{-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important}
+        @media(max-width:768px){
+          /* Chat: mensagens ocupam largura total */
+          .msg-wrap-inner{padding:0 12px!important;margin-bottom:12px!important}
+          .user-bubble-wrap{max-width:86%!important}
+          /* Card da IA: padding menor */
+          .msg-wrap-inner [style*="border-radius: 4px"],[style*="borderRadius: \\"4px\\""]{ padding:14px 16px!important }
+          /* Actions row: menor */
+          .msg-actions-row{gap:3px!important}
+          /* Body text: levemente menor */
           .msg-body p{font-size:13.5px!important;line-height:1.7!important}
-          .lp-kpis-row{gap:12px!important;flex-wrap:wrap!important}
+          /* Input: sem hint desktop, font 16px anti-zoom */
+          .chat-footer-hint{display:none!important}
+          .chat-textarea{font-size:16px!important}
+          .chat-textarea::placeholder{font-size:14px!important;opacity:0.25!important}
+          /* LivePanel: KPIs 2 por linha */
+          .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important}
+          .lp-kpis-row{gap:6px!important;flex-wrap:wrap!important}
+          .lp-chip{font-size:11px!important;padding:4px 9px!important}
+          /* Tool pills: scroll horizontal */
+          .tool-pills-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:4px!important;flex-wrap:nowrap!important;scrollbar-width:none}
+          .tool-pills-row::-webkit-scrollbar{display:none}
+          /* Proactive block: padding menor */
+          .proactive-wrap{padding:32px 20px 24px!important}
+          /* Input wrap: padding menor */
+          .chat-input-wrap{padding:8px 12px 12px!important}
+          /* Suggestions: scroll horizontal */
+          .suggestions-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
+          .suggestions-bar::-webkit-scrollbar{display:none}
+        }
+        @media(max-width:480px){
+          .msg-wrap-inner{padding:0 10px!important;margin-bottom:10px!important}
+          .user-bubble-wrap{max-width:90%!important}
+          .lp-bar{height:38px!important;padding:0 10px!important}
+          /* Metric chips na bar: menores */
+          .lp-bar [style*="padding: 3px"]{padding:2px 7px!important}
         }
       `}</style>
 

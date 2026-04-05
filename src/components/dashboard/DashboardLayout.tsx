@@ -87,7 +87,7 @@ export default function DashboardLayout() {
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" ? window.innerWidth >= 768 : true);
   const [profileOpen, setProfileOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [aiProfile, setAiProfile] = useState<{ industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null>(null);
@@ -350,70 +350,121 @@ export default function DashboardLayout() {
     <>
     <style>{`
       /* ── Dashboard Mobile — iPhone 13 (390px) ── */
+      /* ─── Mobile-first — iPhone SE (375) → iPhone 16 Pro Max (430) → tablet (768) ─── */
+      
+      /* Safe area para notch/Dynamic Island */
+      .dashboard-root {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      
       @media (max-width: 768px) {
-        /* Prevent any horizontal overflow */
+        /* Base: sem overflow horizontal */
         .dashboard-root, .dashboard-root * { box-sizing: border-box; }
         .dashboard-root { overflow-x: hidden !important; }
-        .dashboard-main { overflow-x: hidden !important; }
-
-        /* All pages: constrain padding */
+        .dashboard-main { overflow-x: hidden !important; min-height: 0; }
         .dashboard-main > * { max-width: 100vw !important; overflow-x: hidden !important; }
 
-        /* Topbar: tighten on mobile */
-        .dash-topbar { padding-left: 10px !important; padding-right: 10px !important; gap: 6px !important; }
-
-        /* Buttons: cap height and font on mobile */
-        .dashboard-main button:not(.icon-btn):not([class*="h-8"]):not([class*="h-6"]):not([class*="w-8"]):not([class*="w-6"]) {
-          font-size: clamp(12px, 3vw, 14px) !important;
+        /* Topbar: compacto e limpo */
+        .dash-topbar {
+          padding-left: 12px !important;
+          padding-right: 12px !important;
+          gap: 8px !important;
+          height: 52px !important;
+          /* Glassmorphism mais forte no mobile */
+          background: rgba(9,13,24,0.95) !important;
+          backdrop-filter: blur(20px) !important;
         }
 
-        /* Tool pages: constrain content width */
-        .tool-page-wrap { padding: 16px 14px !important; max-width: 100% !important; overflow-x: hidden !important; }
+        /* Tool pages */
+        .tool-page-wrap {
+          padding: 16px 16px !important;
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+        }
 
-        /* KPI cards: 2 per row minimum */
+        /* KPI cards: 2 por linha */
         .lp-kpi { min-width: calc(50% - 6px) !important; flex: 1 1 calc(50% - 6px) !important; }
+        .lp-kpis-row { flex-wrap: wrap !important; gap: 6px !important; }
 
-        /* Grids: force single column on very small */
+        /* LivePanel bar: chips menores */
+        .lp-bar { padding: 0 12px !important; height: 40px !important; }
+        .lp-chip { font-size: 11px !important; padding: 4px 8px !important; }
+
+        /* Grids: coluna única */
         .dash-grid-2, .dash-grid-3, .dash-grid-4 { grid-template-columns: 1fr !important; }
 
-        /* Text sizes: scale down on mobile */
-        .dashboard-main h1 { font-size: clamp(18px, 5vw, 28px) !important; }
-        .dashboard-main h2 { font-size: clamp(16px, 4.5vw, 24px) !important; }
-        .dashboard-main h3 { font-size: clamp(14px, 4vw, 20px) !important; }
+        /* Tipografia responsiva */
+        .dashboard-main h1 { font-size: clamp(20px, 5.5vw, 28px) !important; }
+        .dashboard-main h2 { font-size: clamp(17px, 4.5vw, 22px) !important; }
+        .dashboard-main h3 { font-size: clamp(15px, 4vw, 18px) !important; }
 
-        /* Tables: allow horizontal scroll in container */
+        /* Tables: scroll horizontal */
         .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
 
-        /* Modal: full width on mobile */
-        .dash-modal { width: calc(100vw - 32px) !important; max-width: calc(100vw - 32px) !important; padding: 20px 16px !important; }
-
-        /* Chips/pills: smaller on mobile — floor at 12px */
-        .lp-chip { font-size: 12px !important; padding: 5px 10px !important; }
-
-        /* Input/textarea: prevent zoom on iOS (font-size >= 16px) */
-        .dashboard-main input, .dashboard-main textarea, .dashboard-main select {
-          font-size: 16px !important;
+        /* Modal: full width */
+        .dash-modal {
+          width: calc(100vw - 24px) !important;
+          max-width: calc(100vw - 24px) !important;
+          padding: 20px 16px !important;
+          border-radius: 20px !important;
         }
-        /* Default focus style for inputs that don't have custom onFocus handlers */
-        .dashboard-main input:not([class]):focus, .dashboard-main select:focus {
-          border-color: rgba(14,165,233,0.55) !important;
-          outline: none !important;
-        }
+
+        /* iOS: evitar zoom no input (font >= 16px) */
+        .dashboard-main input,
+        .dashboard-main textarea,
+        .dashboard-main select,
         .chat-textarea { font-size: 16px !important; }
 
-        /* Suggestion pills row: horizontal scroll */
-        .suggestions-bar { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+        /* Scrollbar oculta no mobile */
+        .suggestions-bar {
+          overflow-x: auto !important;
+          flex-wrap: nowrap !important;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 4px;
+          scrollbar-width: none;
+        }
         .suggestions-bar::-webkit-scrollbar { display: none; }
+
+        /* Chat: mensagens mais largas */
+        .msg-wrap-inner { padding: 0 16px !important; }
+        
+        /* Hook items: padding menor */
+        .hook-item { padding: 10px 0 !important; }
+
+        /* Botões: tap target mínimo 44px (Apple HIG) */
+        .dashboard-main button { min-height: 36px; }
+        
+        /* Scrollbar global oculta */
+        .dashboard-main { scrollbar-width: none; }
+        .dashboard-main::-webkit-scrollbar { display: none; }
       }
 
       @media (max-width: 480px) {
-        /* Extra small: tighter still */
-        .tool-page-wrap { padding: 12px !important; }
+        /* iPhone SE e menores */
+        .tool-page-wrap { padding: 12px 12px !important; }
         .lp-kpi { min-width: calc(50% - 4px) !important; }
-        .dashboard-main h1 { font-size: clamp(16px, 5.5vw, 22px) !important; }
+        .dashboard-main h1 { font-size: clamp(18px, 5.5vw, 22px) !important; }
+        .dash-topbar { padding-left: 10px !important; padding-right: 10px !important; }
+        
+        /* Chat input: ocupa mais espaço */
+        .chat-input-wrap { padding: 8px 12px 8px !important; }
+      }
+      
+      @media (max-width: 390px) {
+        /* iPhone 14/15 e menores — tudo mínimo */
+        .tool-page-wrap { padding: 10px !important; }
       }
     `}</style>
     <div className="dashboard-root" style={{ height: "100dvh", background: "var(--bg-main)", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
+      {/* Mobile overlay — tap to close */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)" }}
+        />
+      )}
       <div style={{
         width: sidebarOpen ? 224 : 0,
         minWidth: sidebarOpen ? 224 : 0,
@@ -423,7 +474,8 @@ export default function DashboardLayout() {
         overflow: "hidden",
         position: "relative",
         zIndex: 50,
-      }}>
+      }}
+      className="max-lg:fixed max-lg:top-0 max-lg:left-0 max-lg:h-full max-lg:z-50">
         <DashboardSidebar
           user={user}
           profile={profile}
