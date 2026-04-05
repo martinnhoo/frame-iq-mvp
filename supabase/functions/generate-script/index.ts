@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     if (!authUser) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const verified_user_id = authUser.id;
     // ─────────────────────────────────────────────────────────────────────────
-    const { product, offer, audience, format, duration, market, angle, extra_context, user_id } = await req.json();
+    const { product, offer, audience, format, duration, market, angle, extra_context, user_id, ui_language } = await req.json();
     const effectiveUserId = verified_user_id;
 
     // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
@@ -123,8 +123,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const visualLang = ["BR", "MX"].includes(market)
-      ? market === "BR" ? "Portuguese (Brazil)" : "Spanish (Mexico)"
+    // Language: ui_language (user's app language) is the PRIMARY source of truth.
+    // Market is only a fallback. Never hardcode English for VISUAL/notes.
+    const UI_LANG_MAP: Record<string, string> = {
+      pt: "Portuguese (Brazil)",
+      es: "Spanish",
+      en: "English",
+    };
+    const visualLang = ui_language && UI_LANG_MAP[ui_language]
+      ? UI_LANG_MAP[ui_language]
       : VO_LANG[market] || "English";
 
     const systemPrompt = `════════════════════════════════════════════════════════════

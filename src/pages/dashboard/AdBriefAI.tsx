@@ -2776,6 +2776,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             market: p.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "US"),
             angle: p.angle || p.tone || "",
             extra_context: p.context || p.extra_context || "",
+            ui_language: lang, // user's app language — primary for output language
           } : {
             ...p,
             user_id: user.id,
