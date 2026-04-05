@@ -2800,8 +2800,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   const p = profiles[active];
   return (
     <Section id="for" bg="default">
-      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "60%", background: "radial-gradient(ellipse at 90% 10%, rgba(99,102,241,0.07) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, left: "10%", width: "35%", height: "40%", background: "radial-gradient(ellipse at 10% 90%, rgba(14,165,233,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "55%", background: "radial-gradient(ellipse at 90% 0%, rgba(99,102,241,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
@@ -2916,7 +2915,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", margin: 0 }}>bot</p>
               </div>
             </div>
-            {/* Messages */}
+            {/* Messages — multilingual */}
             <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Bot alert */}
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
@@ -2924,17 +2923,25 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
                 </div>
                 <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
-                  <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>⚠️ Alerta AdBrief</p>
+                  <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>
+                    {lang === "pt" ? "⚠️ Alerta AdBrief" : lang === "es" ? "⚠️ Alerta AdBrief" : "⚠️ AdBrief Alert"}
+                  </p>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.55 }}>
-                    <strong style={{ color: "#fff" }}>Creative_042</strong> com frequência 4.8x. CTR caiu de 2.1% → 0.4% nas últimas 6h.<br/>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>FitCore Brasil · agora</span>
+                    <strong style={{ color: "#fff" }}>Creative_042</strong>{" "}
+                    {lang === "pt"
+                      ? <>com frequência 4.8x. CTR caiu de 2.1% → 0.4% nas últimas 6h.<br/><span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>FitCore Brasil · agora</span></>
+                      : lang === "es"
+                      ? <>con frecuencia 4.8x. CTR cayó de 2.1% → 0.4% en las últimas 6h.<br/><span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>FitCore MX · ahora</span></>
+                      : <>at 4.8x frequency. CTR dropped from 2.1% → 0.4% in the last 6h.<br/><span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>FitCore US · just now</span></>}
                   </p>
                 </div>
               </div>
               {/* User message */}
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <div style={{ maxWidth: "68%", padding: "9px 13px", borderRadius: "14px 14px 2px 14px", background: "#1a3d6b" }}>
-                  <p style={{ fontFamily: F, fontSize: 12.5, color: "#fff", margin: 0 }}>/pausar Creative_042</p>
+                  <p style={{ fontFamily: F, fontSize: 12.5, color: "#fff", margin: 0 }}>
+                    {lang === "pt" ? "/pausar Creative_042" : lang === "es" ? "/pausar Creative_042" : "/pause Creative_042"}
+                  </p>
                 </div>
               </div>
               {/* Bot confirmation */}
@@ -2944,9 +2951,11 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 </div>
                 <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.9)", margin: 0, lineHeight: 1.55 }}>
-                    ✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>
-                    Registrado no AdBrief às 14:32.<br/>
-                    <span style={{ color: "#34d399", fontSize: 13 }}>Economia estimada: R$180/dia</span>
+                    {lang === "pt"
+                      ? <>✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>Registrado no AdBrief às 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Economia estimada: R$180/dia</span></>
+                      : lang === "es"
+                      ? <>✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> vía Meta API.<br/>Registrado en AdBrief a las 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Ahorro estimado: $180/día</span></>
+                      : <>✅ <strong style={{ color: "#fff" }}>Creative_042 paused</strong> via Meta API.<br/>Logged in AdBrief at 2:32 PM.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Estimated savings: $180/day</span></>}
                   </p>
                 </div>
               </div>

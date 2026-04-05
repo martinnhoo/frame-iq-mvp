@@ -33,11 +33,18 @@ Deno.serve(async (req) => {
   const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
   const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
 
-  // Validate Telegram webhook secret (set via setWebhook API)
-  // If secret is configured, reject requests that don't have it
-  if (WEBHOOK_SECRET) {
+  // Guard: sem token não há como responder
+  if (!TELEGRAM_TOKEN) {
+    console.error("TELEGRAM_BOT_TOKEN not set in Supabase secrets");
+    return new Response("ok", { headers: cors }); // responde 200 pro Telegram não retentar
+  }
+
+  // Valida webhook secret SOMENTE se configurado E request vier do Telegram
+  // (não bloquear calls internas sem o header)
+  if (WEBHOOK_SECRET && req.headers.get("user-agent")?.includes("TelegramBot")) {
     const incomingSecret = req.headers.get("X-Telegram-Bot-Api-Secret-Token") ?? "";
     if (incomingSecret !== WEBHOOK_SECRET) {
+      console.error("Webhook secret mismatch");
       return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
     }
   }
