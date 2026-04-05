@@ -2194,15 +2194,11 @@ PROIBIDO:
       }
     })().catch(() => {});
 
+    const usagePayload = { daily_count: finalDailyCount, daily_cap: cap, plan: planKey, is_trialing: isTrialing };
     return new Response(JSON.stringify({
       blocks: finalBlocks,
-      usage: {
-        daily_count: finalDailyCount,
-        daily_cap: cap,
-        plan: planKey,
-        is_trialing: isTrialing,
-      },
-      _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0, ctx_used: (Array.isArray(richContext) ? richContext.filter(Boolean).join(" ") : String(richContext||"")).trim().length > 50 ? "rich" : "frontend" }
+      usage: usagePayload,
+      _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0 }
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
