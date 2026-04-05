@@ -7,7 +7,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
-import { motion, useInView, AnimatePresence } from "framer-motion";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
 const BG = "#070d1a";
@@ -435,17 +434,15 @@ async function detectLang(): Promise<Lang> {
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = true;
   return (
     <div ref={ref} style={{ textAlign: "center" }}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+      <div
         animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <span style={{ fontFamily: F, fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", background: "linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</span>
         <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 6, letterSpacing: "0.02em" }}>{label}</p>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -2445,10 +2442,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
           </div>
 
           {/* Right — chat preview */}
-          <AnimatePresence mode="wait">
-            <motion.div key={active}
-              initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            <div key={active}
               style={{
                 borderRadius: 18,
                 border: `1px solid ${tool.color}18`,
@@ -2484,9 +2478,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
               <div style={{ padding: "16px 18px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
 
                 {/* User bubble */}
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.04, duration: 0.22 }}
+                <div
                   style={{ display: "flex", justifyContent: "flex-end" }}
                 >
                   <div style={{
@@ -2497,13 +2489,11 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                   }}>
                     <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{tool.input[lang]}</span>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* AI response */}
                 <div>
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    transition={{ delay: 0.18, duration: 0.2 }}
+                  <div
                     style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, paddingLeft: 2 }}
                   >
                     <div style={{
@@ -2516,7 +2506,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                       </svg>
                     </div>
                     <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: tool.color, letterSpacing: "0.09em", textTransform: "uppercase" as const, opacity: 0.78 }}>AdBrief AI</span>
-                  </motion.div>
+                  </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                     {tool.output[lang].map((line, i) => (
                       <ToolLine key={`${active}-${animKey}-${i}`} text={line} color={tool.color} delay={200 + i * 150} />
@@ -2524,8 +2514,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </AnimatePresence>
+            </div>
         </div>
       </div>
     </Section>
@@ -2817,8 +2806,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
             </button>
           ))}
         </div>
-        <AnimatePresence mode="wait">
-          <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}
+          <div key={active}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
             <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}07 0%, rgba(255,255,255,0.02) 100%)`, border: `1px solid ${p.color}18` }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}>{p.emoji}</div>
@@ -2836,8 +2824,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
                 </div>
               ))}
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
     </Section>
   );
@@ -3102,15 +3089,13 @@ function FAQ({ t }: { t: Record<string, string> }) {
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.8)", lineHeight: 1.4 }}>{item.q}</span>
                 <ChevronDown size={14} color={open === i ? "#fff" : "rgba(255,255,255,0.2)"} style={{ flexShrink: 0, transform: open === i ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
               </button>
-              <AnimatePresence>
                 {open === i && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                  <div>
                     <div style={{ padding: "0 22px 18px" }}>
                       <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75 }}>{item.a}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
             </div>
           ))}
         </div>

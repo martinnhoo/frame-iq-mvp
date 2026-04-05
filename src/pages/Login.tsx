@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
 const Login = () => {
@@ -62,22 +61,19 @@ const Login = () => {
   const isFormDisabled = loading || emailLoading;
 
   return (
-    <motion.div
+    <div
       className="min-h-screen bg-background flex items-center justify-center px-4 py-8 sm:py-4 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
     >
       {/* Animated orbs */}
-      <motion.div 
+      <div 
         className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)', willChange: 'transform' }}
       />
-      <motion.div 
+      <div 
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }}
       />
-      <motion.div 
+      <div 
         className="absolute w-[300px] h-[300px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, hsla(200, 80%, 60%, 0.06) 0%, transparent 60%)', filter: 'blur(60px)' }}
       />
@@ -90,7 +86,7 @@ const Login = () => {
 
       {/* Floating particles */}
       {[...Array(6)].map((_, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute w-1 h-1 rounded-full pointer-events-none"
           style={{ background: i % 2 === 0 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)', left: `${15 + i * 14}%`, top: `${20 + (i % 3) * 25}%` }}
@@ -102,13 +98,13 @@ const Login = () => {
       </div>
       
       <div className="w-full max-w-md space-y-6 relative z-10">
-        <motion.div className="text-center" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div className="text-center">
           <Link to="/" className="inline-block">
             <Logo size="lg" />
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, delay: 0.15 }}>
+        <div>
           <div style={{
             width: '100%',
             borderRadius: 20,
@@ -125,7 +121,7 @@ const Login = () => {
             </div>
 
             {/* Google button */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20 }}>
               <button
                 onClick={handleGoogleLogin}
                 disabled={isFormDisabled}
@@ -148,7 +144,7 @@ const Login = () => {
                 )}
                 {t("auth_google")}
               </button>
-            </motion.div>
+            </div>
 
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -208,7 +204,7 @@ const Login = () => {
               </div>
 
               {/* Submit */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <div>
                 <button
                   type="submit"
                   disabled={isFormDisabled}
@@ -224,7 +220,7 @@ const Login = () => {
                   {emailLoading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
                   {t("auth_signin")}
                 </button>
-              </motion.div>
+              </div>
             </form>
 
             {/* Sign up link */}
@@ -237,9 +233,9 @@ const Login = () => {
               </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

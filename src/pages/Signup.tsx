@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
 const Signup = () => {
@@ -95,11 +94,8 @@ const Signup = () => {
   const isFormDisabled = loading || emailLoading;
 
   return (
-    <motion.div
+    <div
       className="min-h-screen bg-background flex items-center justify-center px-4 py-8 sm:py-4 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
     >
       {/* Animated orbs */}
       <div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} />
@@ -119,13 +115,13 @@ const Signup = () => {
       </div>
       
       <div className="w-full max-w-md space-y-6 relative z-10">
-        <motion.div className="text-center" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div className="text-center">
           <Link to="/" className="inline-block">
             <Logo size="lg" />
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, delay: 0.15 }}>
+        <div>
           {/* Card — glass with bright border and light inner background */}
           <div style={{
             width: '100%',
@@ -148,7 +144,7 @@ const Signup = () => {
             </div>
 
             {/* Google button */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20 }}>
               <button
                 onClick={handleGoogleSignup}
                 disabled={isFormDisabled}
@@ -171,7 +167,7 @@ const Signup = () => {
                 )}
                 {t("auth_google")}
               </button>
-            </motion.div>
+            </div>
 
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -262,7 +258,7 @@ const Signup = () => {
               </div>
 
               {/* Submit */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <div>
                 <button
                   type="submit"
                   disabled={isFormDisabled || password.length < 8}
@@ -280,7 +276,7 @@ const Signup = () => {
                   {emailLoading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
                   {t("auth_create")}
                 </button>
-              </motion.div>
+              </div>
 
               {/* Trust bar */}
               <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0, lineHeight: 1.6 }}>
@@ -302,9 +298,9 @@ const Signup = () => {
               <Link to="/login" style={{ color: '#38bdf8', fontWeight: 600, textDecoration: 'none' }}>{t("auth_signin")}</Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

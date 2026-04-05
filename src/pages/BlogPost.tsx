@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, ArrowLeft, Clock, Calendar, User, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -1964,7 +1963,7 @@ const BlogPost = () => {
 
       <article className="pt-32 pb-24 px-6">
         <div className="container mx-auto max-w-3xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             {/* Back */}
             <Button variant="ghost" className="text-secondary mb-8 -ml-4" onClick={() => navigate("/blog")}>
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to blog
@@ -2031,7 +2030,7 @@ const BlogPost = () => {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </article>
     </div>

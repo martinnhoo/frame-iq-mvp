@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
@@ -132,9 +131,7 @@ const BookDemo = () => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <div
           className="text-center max-w-lg"
         >
           <div
@@ -156,7 +153,7 @@ const BookDemo = () => {
           >
             Back to home
           </Button>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -173,23 +170,17 @@ const BookDemo = () => {
       </nav>
 
       <div className="fixed top-[65px] left-0 right-0 z-50 h-1 bg-border/30">
-        <motion.div
+        <div
           className="h-full"
           style={{ background: 'linear-gradient(90deg, #8b5cf6, #ec4899)' }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.3 }}
         />
       </div>
 
       <section className="pt-32 pb-16 px-6 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-xl">
-          <AnimatePresence mode="wait">
-            <motion.div
+            <div
               key={step}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.3 }}
             >
               <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold mb-3">{currentQuestion.title}</h1>
@@ -278,8 +269,7 @@ const BookDemo = () => {
                   {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               </div>
-            </motion.div>
-          </AnimatePresence>
+            </div>
         </div>
       </section>
     </div>

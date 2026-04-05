@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { motion } from "framer-motion";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,7 +164,7 @@ const Pricing = () => {
       {/* Hero */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-5xl text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Simple, transparent pricing
             </h1>
@@ -194,7 +193,7 @@ const Pricing = () => {
                 </span>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -203,11 +202,8 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan, i) => (
-              <motion.div
+              <div
                 key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
               >
                 <Card
                   className={`relative h-full flex flex-col transition-all duration-300 ${
@@ -267,7 +263,7 @@ const Pricing = () => {
                     </Button>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

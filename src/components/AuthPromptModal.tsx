@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,26 +55,21 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
     onClose?.();
   };
 
+  if (!show) return null;
+
   return (
-    <AnimatePresence>
-      {show && (
-        <>
+    <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm"
+            style={{ animation: "fadeIn 0.2s ease" }}
             onClick={dismiss}
           />
 
           {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
+          <div
             className="fixed inset-0 z-[501] flex items-center justify-center p-4"
+            style={{ animation: "modalIn 0.25s ease" }}
           >
             <div
               className="relative w-full max-w-md rounded-2xl p-8 text-center"
@@ -136,11 +130,15 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
                 Stay logged out
               </button>
             </div>
-          </motion.div>
+          </div>
         </>
-      )}
-    </AnimatePresence>
   );
 };
+
+// CSS injected at mount
+const _style = document.createElement ? (() => {
+  const s = typeof document !== "undefined" && document.createElement("style");
+  if (s) { s.textContent = "@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes modalIn{from{opacity:0;transform:scale(0.93) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}"; document.head?.appendChild(s); }
+})() : null;
 
 export default AuthPromptModal;

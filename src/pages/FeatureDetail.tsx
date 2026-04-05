@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Video, FileText, Globe, Brain, Sparkles, Zap, ArrowLeft, ArrowRight, Menu, Play, Check } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/Logo";
 
@@ -555,7 +554,7 @@ const FeatureDetail = () => {
 
       <section className="pt-32 pb-24 px-6">
         <div className="container mx-auto max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <Button variant="ghost" className="text-secondary mb-8 -ml-4" onClick={() => navigate("/#features")}>
               <ArrowLeft className="w-4 h-4 mr-2" /> All features
             </Button>
@@ -608,7 +607,7 @@ const FeatureDetail = () => {
                 Try {feature.title} for free <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>

@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { X, Target, Sparkles, BarChart3, LayoutGrid, Zap } from "lucide-react";
 
@@ -60,25 +59,19 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
   const copy = INTENT_COPY[intent] || INTENT_COPY.generic;
 
   return (
-    <AnimatePresence>
-      {open && (
+    <>
+    {open && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={onClose}
             className="fixed inset-0 z-[500]"
-            style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+            style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", animation: "fadeIn 0.2s ease" }}
           />
 
           {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 24 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          <div
+            style={{ animation: "modalIn 0.25s ease" }}
             className="fixed z-[501] left-0 right-0 top-1/2 -translate-y-1/2 mx-auto w-[calc(100%-2rem)] max-w-[480px]"
           >
             <div className="relative rounded-3xl overflow-hidden"
@@ -118,9 +111,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                 {/* Benefits grid */}
                 <div className="grid grid-cols-2 gap-2.5">
                   {BENEFITS.map((b, i) => (
-                    <motion.div key={i}
-                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 + i * 0.05 }}
+                    <div key={i}
                       className="rounded-2xl p-3.5 space-y-1.5"
                       style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                       <div className="flex items-center gap-2">
@@ -131,7 +122,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                         <p className="text-xs font-bold text-white leading-tight">{b.title}</p>
                       </div>
                       <p className="text-[11px] text-white/35 leading-snug pl-0">{b.desc}</p>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
@@ -161,9 +152,9 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

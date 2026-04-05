@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Clock, DollarSign, Users, Briefcase, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { Logo } from "@/components/Logo";
 
 const openPositions = [
@@ -68,10 +67,7 @@ const Careers = () => {
       {/* Hero */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+          <div
           >
             <Badge variant="outline" className="mb-6 border-border text-muted-foreground">
               We're Hiring
@@ -83,7 +79,7 @@ const Careers = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               AdBrief is a fast-growing AI startup reimagining how performance marketing teams create, analyze, and scale ad creative. Join us and help shape the next generation of creative tools.
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -130,11 +126,8 @@ const Careers = () => {
           </p>
 
           {openPositions.map((job) => (
-            <motion.div
+            <div
               key={job.id}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
             >
               <Card className="border-border bg-card mb-6">
                 <CardHeader>
@@ -213,7 +206,7 @@ const Careers = () => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>

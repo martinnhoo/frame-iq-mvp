@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, ArrowRight, Clock } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -158,21 +157,18 @@ const Blog = () => {
 
       <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6">
         <div className="container mx-auto max-w-6xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12 sm:mb-16">
+          <div className="text-center mb-12 sm:mb-16">
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">Blog</span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-4">Insights for Creative Teams</h1>
             <p className="text-secondary text-base sm:text-lg mt-4 max-w-2xl mx-auto">
               Strategy, performance marketing, and AI — everything your growth team needs to ship better creative, faster.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {posts.map((post, index) => (
-              <motion.article
+              <article
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
                 className="group cursor-pointer"
                 onClick={() => navigate(`/blog/${post.slug}`)}
                 itemScope
@@ -200,7 +196,7 @@ const Blog = () => {
                     </span>
                   </div>
                 </div>
-              </motion.article>
+              </article>
             ))}
           </div>
         </div>

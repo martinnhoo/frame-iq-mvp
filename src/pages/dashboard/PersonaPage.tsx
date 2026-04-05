@@ -4,7 +4,6 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, ArrowRight, ArrowLeft, Check, Copy, Loader2, Sparkles, RefreshCw, Plus, Trash2, ChevronLeft, Save, Edit3, Link2, CheckCircle2, ChevronDown, Building2, Globe, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 import Persona3DAvatar from "@/components/dashboard/Persona3DAvatar";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
@@ -349,7 +348,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
   if (suggestions.length === 0) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+    <div
       className="rounded-2xl p-5 space-y-4"
       style={{ background: "rgba(234,179,8,0.04)", border: "1px solid rgba(234,179,8,0.15)" }}>
       <div>
@@ -394,7 +393,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -553,7 +552,7 @@ function PersonaDetailEditable({
       </div>
 
       {/* Identity card */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      <div
         className="rounded-2xl border border-white/[0.1] bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/10 p-6">
         <div className="flex items-start gap-5">
           <div className="shrink-0">
@@ -570,7 +569,7 @@ function PersonaDetailEditable({
             <EditableTextField field="bio" value={draft.bio} rows={3} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-white/50 text-sm leading-relaxed block mt-3"} />
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Grid */}
       <div className="grid sm:grid-cols-2 gap-4">
@@ -580,17 +579,16 @@ function PersonaDetailEditable({
           { title: `🚧 ${dt("pe_objections")}`, items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
           { title: `⚡ ${dt("pe_triggers")}`, items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
         ].map(({ title, items, color, field }, idx) => (
-          <motion.div key={title} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + idx * 0.05 }}
+          <div key={title}
             className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
             <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${color}`}>{title}</h3>
             <EditableListField field={field} items={items} color={color} editing={editing} onChange={handleListChange} />
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Ad strategy */}
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+      <div
         className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5 space-y-5">
         <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">{dt("pe_ad_strategy")} {draft.name}</h3>
 
@@ -623,19 +621,19 @@ function PersonaDetailEditable({
             <EditableTextField field="cta_style" value={draft.cta_style} editing={editing} onChange={handleFieldChange} className={editing ? "" : "text-sm text-white/60"} />
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Media habits */}
       {(draft.media_habits?.length > 0 || editing) && (
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+        <div
           className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
           <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
           <EditableListField field="media_habits" items={draft.media_habits} color="text-cyan-400" editing={editing} onChange={handleListChange} />
-        </motion.div>
+        </div>
       )}
 
       {/* ── BRAND KIT ─────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+      <div
         className="rounded-2xl p-5 space-y-4"
         style={{ background: "rgba(139,92,246,0.04)", border: "1px solid rgba(139,92,246,0.18)" }}>
 
@@ -724,7 +722,7 @@ function PersonaDetailEditable({
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* ── SUGGESTED TEMPLATES ─────────────────────────────── */}
       <SuggestedTemplates persona={draft} dt={dt} language={language} navigate={navigate} />
@@ -1094,9 +1092,7 @@ CTA: ${persona.cta_style}`;
             <Loader2 className="h-5 w-5 animate-spin text-white/40" />
           </div>
         ) : saved.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
             className="flex flex-col items-center justify-center py-20 text-center"
           >
             <div className="w-20 h-20 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">
@@ -1112,17 +1108,12 @@ CTA: ${persona.cta_style}`;
             >
               <Sparkles className="h-4 w-4" /> {dt("pe_create_first_btn")}
             </button>
-          </motion.div>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            <AnimatePresence>
               {saved.map((p, i) => (
-                <motion.div
+                <div
                   key={p.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ delay: i * 0.05 }}
                   onClick={() => openPersona(p)}
                   className="group relative flex flex-col items-center p-5 rounded-2xl border border-white/[0.15] bg-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.15] transition-all cursor-pointer"
                 >
@@ -1167,9 +1158,8 @@ CTA: ${persona.cta_style}`;
                       {dt("pe_use")}
                     </button>
                   )}
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
           </div>
         )}
       </div>

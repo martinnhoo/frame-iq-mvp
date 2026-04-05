@@ -5,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Menu, ArrowRight, Send, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
@@ -83,7 +82,7 @@ const Contact = () => {
       {/* Content */}
       <section className="pt-32 pb-24 px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <span className="text-sm font-semibold tracking-wider uppercase gradient-text">Contact</span>
             <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6">
               Get in touch
@@ -176,7 +175,7 @@ const Contact = () => {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>

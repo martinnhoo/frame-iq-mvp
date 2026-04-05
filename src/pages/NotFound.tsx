@@ -1,7 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -51,8 +50,7 @@ const NotFound = () => {
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none"
             style={{ background: "radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.1) 0%, transparent 60%)", filter: "blur(60px)" }}
           />
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+          <div
             className="relative text-center max-w-lg mx-auto"
           >
             <div className="text-[120px] md:text-[160px] font-black leading-none gradient-text mb-4">404</div>
@@ -66,7 +64,7 @@ const NotFound = () => {
                 <a href="mailto:hello@adbrief.pro">{t.support}</a>
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
