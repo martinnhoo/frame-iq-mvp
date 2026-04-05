@@ -1,7 +1,7 @@
 // DashboardLayout v2 — build 2026-03-20
 import { useEffect, useState } from "react";
 import { storage } from "@/lib/storage";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion"; // kept for type compat — components removed
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -684,15 +684,10 @@ export default function DashboardLayout() {
         )}
 
         <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
-            >
+          <div
+            key={location.pathname}
+            style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, animation: "pageIn 0.18s ease" }}
+          >
               <ErrorBoundary>
               {profile ? (
                 <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
@@ -702,8 +697,7 @@ export default function DashboardLayout() {
                 </div>
               )}
               </ErrorBoundary>
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </main>
       </div>
 
