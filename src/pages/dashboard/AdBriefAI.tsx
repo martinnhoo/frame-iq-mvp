@@ -1049,7 +1049,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const fmtAI = (d: Date) => d.toISOString().split("T")[0];
   const fmtLabelAI = (d: Date) => d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
   const PRESETS_AI = [{label:"7D",days:7},{label:"14D",days:14},{label:"30D",days:30},{label:"60D",days:60},{label:"90D",days:90}];
-  const [dateRange, setDateRange] = React.useState({ from: addDaysAI(today,-13), to: today });
+  const [dateRange, setDateRange] = React.useState({ from: addDaysAI(today,-59), to: today });
   const [showCal, setShowCal] = React.useState(false);
   const [calDraft, setCalDraft] = React.useState<{from:Date|null;to:Date|null}>({from:null,to:null});
   const [calView, setCalView] = React.useState(new Date(today.getFullYear(),today.getMonth(),1));
@@ -1529,7 +1529,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {isEmpty && (
               <div style={{ padding: "24px 16px", textAlign: "center" }}>
                 <p style={{ ...I, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
-                  {lang==="pt"?"Nenhuma campanha ativa nos últimos 14 dias":lang==="es"?"Sin campañas activas en los últimos 14 días":"No active campaigns in the last 14 days"}
+                  {lang==="pt"?"Nenhuma campanha ativa nos últimos 60 dias":lang==="es"?"Sin campañas activas en los últimos 60 días":"No active campaigns in the last 60 days"}
                 </p>
                 {accName && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.22)", margin: "0 0 16px" }}>{accName}</p>}
                 <button onClick={() => onSend(lang==="pt"?"O que devo fazer para reativar minhas campanhas?":lang==="es"?"¿Qué debo hacer para reactivar mis campañas?":"What should I do to reactivate my campaigns?")}
