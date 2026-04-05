@@ -3538,7 +3538,7 @@ export default function IndexNew() {
             .for-who-card{padding:20px 18px!important}
 
             /* Pricing */
-            .pricing-grid{grid-template-columns:1fr!important;gap:12px!important}
+            .pricing-grid{grid-template-columns:1fr!important;gap:12px!important;max-width:420px!important;margin-left:auto!important;margin-right:auto!important}
 
             /* Tools */
             .tools-bento{grid-template-columns:1fr!important}
@@ -3548,6 +3548,9 @@ export default function IndexNew() {
             /* Telegram */
             .telegram-grid{grid-template-columns:1fr!important;gap:12px!important}
 
+            /* FAQ: texto menor */
+            .faq-item{padding:16px 0!important}
+
             /* Footer */
             .footer-inner{flex-direction:column!important;gap:32px!important}
             .footer-links{gap:32px!important}
@@ -3556,8 +3559,21 @@ export default function IndexNew() {
             /* FinalCTA */
             .trust-badges{flex-direction:column!important;align-items:center!important;gap:12px!important}
 
+            /* SocialProof: 2 cols */
+            .social-proof-strip{flex-wrap:wrap!important;gap:20px 0!important}
+            .social-proof-strip>div{flex:0 0 50%!important;border-left:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important}
+
             /* Sections: reduce padding */
             section{padding-left:20px!important;padding-right:20px!important}
+            
+            /* Nav CTA: menor */
+            nav button[class*="cta"],nav a[class*="cta"]{padding:8px 14px!important;font-size:12px!important}
+          }
+          
+          @media(max-width:390px){
+            /* iPhone SE / Mini */
+            section{padding-left:16px!important;padding-right:16px!important}
+            .hero-main-section{padding:72px 16px 20px!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({

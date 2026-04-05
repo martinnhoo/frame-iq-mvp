@@ -376,11 +376,21 @@ export default function DashboardLayout() {
           backdrop-filter: blur(20px) !important;
         }
 
-        /* Tool pages */
+        /* Tool pages — padding responsivo com clamp */
         .tool-page-wrap {
-          padding: 16px 16px !important;
+          padding: clamp(14px, 4vw, 20px) clamp(14px, 4vw, 20px) 80px !important;
           max-width: 100% !important;
           overflow-x: hidden !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Todos elementos com min-width grande: auto */
+        .dashboard-main * { min-width: 0; }
+
+        /* Cards: sem overflow */
+        .dashboard-main [class*="card"], .dashboard-main [class*="Card"] {
+          overflow: hidden;
+          word-break: break-word;
         }
 
         /* KPI cards: 2 por linha */

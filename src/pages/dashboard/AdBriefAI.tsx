@@ -716,7 +716,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const ctr   = ctrMatch?.[1];
 
   return (
-    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"48px 40px 32px", display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
+    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(28px,6vw,48px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
       {/* Greeting header — ABAvatar + title */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
         <ABAvatar size={40} />
@@ -2940,7 +2940,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         {/* Load more — shown when there are older messages not rendered */}
         {hasOlderMessages && (
-          <div style={{maxWidth:720,width:"100%",margin:"0 auto 8px",padding:"0 28px",boxSizing:"border-box" as const}}>
+          <div style={{maxWidth:720,width:"100%",margin:"0 auto 8px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
             <button onClick={()=>setVisibleCount(c=>c+MSG_PAGE)}
               style={{width:"100%",padding:"8px 0",background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,color:"var(--text-muted)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",transition:"all 0.15s"}}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-default)"}}
@@ -2953,11 +2953,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {visibleMessages.map((msg, mi)=>{
           const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
           return (
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 28px",boxSizing:"border-box" as const}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
-                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"72%"}}>
+                <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"min(72%,calc(100vw - 80px))"}}>
                   <div style={{
                     padding:"10px 16px",
                     borderRadius:"18px 18px 4px 18px",
@@ -3091,7 +3091,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           );
         })}
 
-        <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 40px",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
+        <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 clamp(12px,4vw,40px)",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
           <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
           <ThinkingIndicator lang={lang} variant="chat" label={(() => {
