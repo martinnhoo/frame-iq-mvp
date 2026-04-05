@@ -447,7 +447,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       const codeMatch = remaining.match(/^(.*?)`([^`]+)`(.*$)/s);
       if (boldMatch && (!codeMatch || boldMatch[1].length <= (codeMatch[1]?.length ?? Infinity))) {
         if (boldMatch[1]) parts.push(<span key={idx++}>{boldMatch[1]}</span>);
-        parts.push(<strong key={idx++} style={{ fontWeight: 700, color: "#ffffff", background: "rgba(14,165,233,0.10)", borderRadius: 3, padding: "0 2px" }}>{boldMatch[2]}</strong>);
+        parts.push(<strong key={idx++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.01em" }}>{boldMatch[2]}</strong>);
         remaining = boldMatch[3];
       } else if (codeMatch) {
         if (codeMatch[1]) parts.push(<span key={idx++}>{codeMatch[1]}</span>);
@@ -1049,7 +1049,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
         ...I, display: "flex", alignItems: "center", gap: 0, height: 36,
         padding: "0 16px", cursor: "pointer", userSelect: "none" as const,
-        background: "rgba(7,9,18,0.98)",
+        background: "var(--bg-main)",
         borderBottom: "1px solid rgba(255,255,255,0.055)",
         transition: "background 0.15s",
       }}>
@@ -2691,11 +2691,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
-      {/* Background orbs — same as Login */}
+      {/* Background atmosphere */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        <div style={{position:"absolute",width:600,height:600,borderRadius:"50%",background:"radial-gradient(ellipse at center,hsla(199,83%,58%,0.07) 0%,transparent 70%)",filter:"blur(80px)",top:"-20%",left:"10%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
-        <div style={{position:"absolute",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,hsla(260,60%,55%,0.05) 0%,transparent 70%)",filter:"blur(80px)",bottom:"10%",right:"5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
-        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0)",backgroundSize:"32px 32px",opacity:0.4}}/>
+        {/* Orb azul — canto superior direito */}
+        <div style={{position:"absolute",width:640,height:640,borderRadius:"50%",background:"radial-gradient(ellipse at center,rgba(14,165,233,0.13) 0%,transparent 65%)",filter:"blur(60px)",top:"-15%",right:"-5%",animation:"orbFloat1 22s ease-in-out infinite alternate"}}/>
+        {/* Orb violeta — canto inferior esquerdo */}
+        <div style={{position:"absolute",width:480,height:480,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,0.09) 0%,transparent 65%)",filter:"blur(70px)",bottom:"5%",left:"-5%",animation:"orbFloat2 18s ease-in-out infinite alternate"}}/>
+        {/* Orb ciano suave — centro */}
+        <div style={{position:"absolute",width:800,height:300,borderRadius:"50%",background:"radial-gradient(ellipse at center,rgba(6,182,212,0.05) 0%,transparent 70%)",filter:"blur(50px)",top:"40%",left:"50%",transform:"translateX(-50%)"}}/>
+        {/* Dot grid */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0)",backgroundSize:"28px 28px",opacity:0.65}}/>
+        {/* Vignette bottom */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:180,background:"linear-gradient(to top,rgba(7,13,26,0.6),transparent)",pointerEvents:"none"}}/>
       </div>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
@@ -3266,7 +3273,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);}
         .msg-body p{margin:0 0 10px;}
         .msg-body p:last-child{margin-bottom:0;}
-        .msg-body strong{font-weight:700;color:#ffffff;background:rgba(14,165,233,0.10);border-radius:3px;padding:0 2px;}
+        .msg-body strong{font-weight:600;color:rgba(255,255,255,0.95);letter-spacing:-0.01em;}
         .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
         .user-msg-row .user-msg-actions button:hover{color:rgba(255,255,255,0.6)!important;}
         @media(max-width:640px){

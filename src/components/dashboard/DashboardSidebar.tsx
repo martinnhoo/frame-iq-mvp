@@ -194,8 +194,8 @@ export function DashboardSidebar({
 
       <aside style={{
         width: 216, height: "100%",
-        background: "#090d18",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--bg-main)",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
         display: "flex", flexDirection: "column", flexShrink: 0,
         fontFamily: F, overflow: "hidden",
       }}>

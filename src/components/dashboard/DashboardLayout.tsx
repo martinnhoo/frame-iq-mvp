@@ -595,7 +595,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        <main className="flex-1 dashboard-main" style={{ background: "radial-gradient(ellipse 80% 40% at 50% -5%, rgba(14,165,233,0.09) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 85% 15%, rgba(139,92,246,0.06) 0%, transparent 55%), var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
