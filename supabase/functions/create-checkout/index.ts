@@ -1,5 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
+// create-checkout v2 — returns 401 for auth errors, not 500
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
