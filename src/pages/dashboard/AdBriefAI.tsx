@@ -409,11 +409,9 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   );
 }
 
-// ── Block card ────────────────────────────────────────────────────────────────
-// ── Markdown renderer — bold, italic, headers, lists, inline code ─────────────
-function renderMarkdown(text: string): React.ReactNode[] {
+// ── Typewriter: revela linha por linha com stagger dramático ──────────────────
+function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   if (!text || typeof text !== "string") return [];
-  // Normalizar: \n\n real ou literal "\\n\\n" → separador de parágrafo
   const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
   const lines = normalized.split("\n");
   const nodes: React.ReactNode[] = [];
@@ -421,11 +419,14 @@ function renderMarkdown(text: string): React.ReactNode[] {
   const F = "'Plus Jakarta Sans',sans-serif";
   const M = "'Inter',sans-serif";
   const MONO = "'DM Mono',monospace";
+  // Stream: stagger mais dramático simula typing
+  const stagger = stream ? 0.12 : 0.055;
+  const dur = stream ? "0.3s" : "0.18s";
 
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
     nodes.push(
-      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>
+      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>
         {listBuffer.map((item, i) => (
           <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.8)", flexShrink: 0, marginTop: 8 }} />
@@ -464,12 +465,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
     const trimmed = line.trim();
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>{trimmed.replace(/^###\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>{trimmed.replace(/^###\s/, "")}</p>);
       return;
     }
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>{trimmed.replace(/^##\s/, "")}</p>);
+      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>{trimmed.replace(/^##\s/, "")}</p>);
       return;
     }
     if (/^[-*•]\s/.test(trimmed)) {
@@ -486,17 +487,17 @@ function renderMarkdown(text: string): React.ReactNode[] {
     }
     flushList(`fl-${i}`);
     nodes.push(
-      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", animation: "fadeUp 0.18s ease-out both", animationDelay: `${nodes.length * 0.055}s` }}>
+      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>
         {inlineFormat(trimmed)}
       </p>
     );
   });
   flushList("final");
-  // Remove margem do último parágrafo
   return nodes;
 }
 
-const BlockCard = React.memo(function BlockCard({block,lang,onNavigate}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void}) {
+// ── Block card ────────────────────────────────────────────────────────────────
+const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans',sans-serif";
   const M="'Inter',sans-serif";
@@ -529,7 +530,7 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate}: {block:
     <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"12px 14px 12px 16px",borderRadius:8,background:"rgba(251,191,36,0.05)",borderLeft:"3px solid rgba(251,191,36,0.4)"}}>
       <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}>⚠</span>
       <div className="msg-body" style={{fontSize:13.5,lineHeight:1.65,margin:0,flex:1}}>
-        {renderMarkdown(block.content||block.title||"")}
+        {renderMarkdown(block.content||block.title||"", stream)}
       </div>
     </div>
   );
@@ -580,7 +581,7 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate}: {block:
   // ── ACTION — inline, sem caixa verde ──
   if(block.type==="action") return(
     <div className="msg-body" style={{fontSize:14,lineHeight:1.75,margin:"0 0 6px"}}>
-      {renderMarkdown(block.content||block.title||"")}
+      {renderMarkdown(block.content||block.title||"", stream)}
     </div>
   );
 
@@ -590,7 +591,7 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate}: {block:
     <div style={{marginBottom:hasItems?10:4}} className="msg-body">
       {block.content&&(
         <div style={{margin:hasItems?"0 0 14px":"0"}}>
-          {renderMarkdown(block.content)}
+          {renderMarkdown(block.content, stream)}
         </div>
       )}
       {hasItems&&(
@@ -2717,7 +2718,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
         {visibleMessages.length > 0 && <div style={{height:20,flexShrink:0}}/>}
-        {visibleMessages.map((msg)=>(
+        {visibleMessages.map((msg, mi)=>{
+          const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
+          return (
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 24px",padding:"0 28px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
@@ -2774,7 +2777,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     padding:"16px 20px",
                     boxShadow:"0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
                     backdropFilter:"blur(8px)",
-                    animation:"cardIn 0.22s ease-out",
+                    animation:isLatest?"cardIn 0.28s cubic-bezier(0.16,1,0.3,1)":"cardIn 0.22s ease-out",
                   }}>
                     {msg.blocks?.map((b,bi)=>
                       b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
@@ -2792,14 +2795,26 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                         </div>
                       ):
                       (b as any)._pendingTool?null:
-                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
+                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} stream={isLatest}/>
+                    )}
+                    {/* Cursor piscando — só na última mensagem, desaparece após 3s */}
+                    {isLatest && (
+                      <span style={{
+                        display:"inline-block", width:2, height:14,
+                        background:"rgba(14,165,233,0.7)", borderRadius:1,
+                        marginLeft:2, verticalAlign:"middle",
+                        animation:"cursorBlink 0.9s step-end infinite, fadeUp 0.1s ease-out both",
+                        animationDelay:"0s, 0s",
+                        // Auto-hide after 3s via opacity transition
+                        opacity:1,
+                      }} className="stream-cursor"/>
                     )}
                   </div>
                 ) : (
                   /* Proactive — sem card, renderiza direto */
                   msg.blocks?.map((b,bi)=>
                     (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
-                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate}/>
+                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} stream={isLatest}/>
                   )
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
@@ -2841,7 +2856,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
 
         <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 40px",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
@@ -3091,6 +3107,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95)}to{opacity:1;transform:translateX(0) scale(1)}}
         @keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes cursorBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+        @keyframes cursorFade{0%,85%{opacity:1}100%{opacity:0}}
+        .stream-cursor{animation:cursorBlink 0.7s step-end 4, cursorFade 3s linear 1 forwards!important;}
+        /* Cursor pisca 4x em 2.8s depois faz fade */
         @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
         @keyframes lp-sk{0%,100%{opacity:0.2}50%{opacity:0.5}}
