@@ -1972,7 +1972,7 @@ export default function AdBriefAI() {
       ts: last.ts,
     };
     // fire-and-forget — non-blocking
-    (supabase as any).from("chat_messages").insert(payload).then(() => {}).catch(() => {});
+    try { await (supabase as any).from("chat_messages").insert(payload); } catch(_e) {}
   },[messages]);
 
   // ── Load Supabase history for paid users when account changes ─────────────
