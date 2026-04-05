@@ -2401,7 +2401,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
   return (
     <Section id="tools" bg="subtle">
-      <div style={{ position: "absolute", top: "20%", right: "-10%", width: "55%", height: "80%", background: "radial-gradient(ellipse at 85% 40%, rgba(14,165,233,0.05) 0%, transparent 55%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", background: "radial-gradient(ellipse at 100% 50%, rgba(14,165,233,0.04) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.08), transparent)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
 
@@ -2868,7 +2868,6 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
   return (
     <Section bg="dark">
-      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "70%", height: "60%", background: "radial-gradient(ellipse at 50% 20%, rgba(39,175,225,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
