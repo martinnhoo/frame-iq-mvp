@@ -1,6 +1,6 @@
 // adbrief-ai-chat v20.1 — tom livre, fix toneMap removido
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan } from "../_shared/plans.ts";
+import { getEffectivePlan, LIFETIME_ACCOUNTS } from "../_shared/plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1457,6 +1457,19 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
     })();
 
     const richContext = [
+      // ── Identidade do usuário — SEMPRE primeiro ───────────────────────────
+      (() => {
+        const isLifetime = !!(profileRow as any)?.email && !!LIFETIME_ACCOUNTS[(profileRow as any)?.email];
+        const planLabel = isLifetime
+          ? "Studio Lifetime (acesso ilimitado, sem restrições)"
+          : planKey === "studio" ? "Studio ($149/mês — ilimitado)"
+          : planKey === "pro"    ? "Pro ($49/mês — 200 msgs/dia)"
+          : planKey === "maker"  ? "Maker ($19/mês — 50 msgs/dia)"
+          : "Free (3 msgs/dia)";
+        return `PLANO DO USUÁRIO: ${planLabel}
+IDIOMA DO USUÁRIO: ${uiLang === "pt" ? "Português — responda SEMPRE em português" : uiLang === "es" ? "Español — responde SIEMPRE en español" : "English — always respond in English"}
+REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre planos. NUNCA invente limitações de features baseado no plano.`;
+      })(),
       personaCtx,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
       liveMetaData || "",
