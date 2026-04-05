@@ -2105,40 +2105,25 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       {/* Fine print */}
       <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', margin: '0 0 20px' }}>{finePrint}</p>
 
-      {/* Social proof — gestores ativos */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <div style={{ display: 'flex' }}>
-          {['#0ea5e9','#34d399','#a78bfa','#f59e0b','#f43f5e'].map((c,i) => (
-            <div key={i} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: '2px solid #06080f', marginLeft: i > 0 ? -9 : 0, flexShrink: 0, boxShadow: `0 0 8px ${c}60` }} />
-          ))}
-        </div>
-        <p style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-          {lang === 'pt' ? '+200 gestores ativos' : lang === 'es' ? '+200 gestores activos' : '+200 media buyers active'}
-        </p>
-      </div>
-
-      {/* Platform badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
+      {/* Platform badge — Meta Ads only, clean and prominent */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-          <svg width="11" height="6" viewBox="0 0 56 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="metaOff11" x1="0" y1="14" x2="56" y2="14" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#0082FB"/>
-          <stop offset="1" stopColor="#0064E0"/>
-        </linearGradient>
-      </defs>
-      <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3 0.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6 0.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-0.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-0.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0zm0 5c2.6 0 5 1.3 7.5 4.1l3.3 3.7-3.3 3.7c-2.5 2.8-4.9 4.1-7.5 4.1-1.9 0-3.7-0.6-5.1-1.8C6.6 17.4 5.5 15.7 5.5 13.5c0-2.2 1.1-3.9 2.9-5.3C9.8 7.4 11.6 5 13.5 5zm29 0c1.9 0 3.7 0.6 5.1 1.8 1.8 1.4 2.9 3.1 2.9 5.3 0 2.2-1.1 3.9-2.9 5.3C45.7 18.6 43.9 19 42 19c-2.6 0-5-1.3-7.5-4.1L31.2 11.2 34.5 7.5C37 4.7 39.4 5 42.5 5z" fill="url(#metaOff11)"/>
-    </svg>
-          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Meta Ads</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 18px', borderRadius: 10, background: 'rgba(0,130,251,0.08)', border: '1px solid rgba(0,130,251,0.22)', boxShadow: '0 0 20px rgba(0,130,251,0.07)' }}>
+          {/* Meta ∞ mark — official shape */}
+          <svg width="24" height="14" viewBox="0 0 56 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="metaHeroGrad" x1="0" y1="14" x2="56" y2="14" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#0082FB"/>
+                <stop offset="1" stopColor="#0064E0"/>
+              </linearGradient>
+            </defs>
+            <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3 0.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6 0.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-0.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-0.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0zm0 5c2.6 0 5 1.3 7.5 4.1l3.3 3.7-3.3 3.7c-2.5 2.8-4.9 4.1-7.5 4.1-1.9 0-3.7-0.6-5.1-1.8C6.6 17.4 5.5 15.7 5.5 13.5c0-2.2 1.1-3.9 2.9-5.3C9.8 7.4 11.6 5 13.5 5zm29 0c1.9 0 3.7 0.6 5.1 1.8 1.8 1.4 2.9 3.1 2.9 5.3 0 2.2-1.1 3.9-2.9 5.3C45.7 18.6 43.9 19 42 19c-2.6 0-5-1.3-7.5-4.1L31.2 11.2 34.5 7.5C37 4.7 39.4 5 42.5 5z" fill="url(#metaHeroGrad)"/>
+          </svg>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: '#0082FB', letterSpacing: '-0.02em' }}>Meta</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '-0.01em' }}>Ads</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-          {/* Google Ads badge removed */}
-        </div>
-
       </div>
     </div>
   );
