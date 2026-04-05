@@ -452,19 +452,20 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
-  const bgMap: Record<string, string> = {
-    default: "#07090f",
-    subtle:  "#07090f",
-    dark:    "#07090f",
-    accent:  "#07090f",
+  // Todos com a mesma base #07090f — variação vem de border-top sutil
+  const borderMap: Record<string, string> = {
+    default: "1px solid rgba(255,255,255,0.04)",
+    subtle:  "1px solid rgba(255,255,255,0.04)",
+    dark:    "1px solid rgba(255,255,255,0.04)",
+    accent:  "1px solid rgba(14,165,233,0.08)",
   };
   return (
     <section
       id={id}
       className={className}
       style={noPadding
-        ? { background: bgMap[bg] || "transparent" }
-        : { padding: "clamp(48px,5vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg] || "transparent" }
+        ? { background: "#07090f", borderTop: borderMap[bg] }
+        : { padding: "clamp(48px,5vw,80px) clamp(20px,4vw,40px)", background: "#07090f", borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
       }
     >
       {children}
@@ -2394,7 +2395,8 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
   return (
     <Section id="tools" bg="subtle">
-      <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+      <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.08), transparent)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
 
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
@@ -2639,13 +2641,13 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       position: "relative",
       padding: "96px 24px",
       overflow: "hidden",
-      background: "linear-gradient(180deg, #080c14 0%, #0b1120 40%, #080c14 100%)",
+      background: "#07090f",
+      borderTop: "1px solid rgba(255,255,255,0.04)",
     }}>
-      {/* Background radial glows */}
+      {/* Overlay sutil apenas — sem mudar cor de fundo */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: "10%", left: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", top: "10%", right: "15%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(14,165,233,0.04) 0%, transparent 70%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.10), transparent)" }} />
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.03) 0%, transparent 60%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)" }} />
       </div>
 
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
@@ -2789,7 +2791,8 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   const p = profiles[active];
   return (
     <Section id="for" bg="default">
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+      <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: 400, background: "radial-gradient(ellipse at 100% 0%, rgba(99,102,241,0.04) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
@@ -2979,7 +2982,9 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
 
   return (
     <Section id="pricing" bg="accent">
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+      {/* Glow no topo do pricing — overlay interno */}
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 280, background: "radial-gradient(ellipse 60% 100% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,2.8vw,38px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 10px", color: "#fff" }}>{t.pricing_h2}</h2>
@@ -3066,7 +3071,8 @@ function FAQ({ t }: { t: Record<string, string> }) {
   const items = [0,1,2,3,4,5,6,7].map(i => ({ q: t[`faq_q${i}`], a: t[`faq_a${i}`] })).filter(item => item.q);
   return (
     <Section bg="dark">
-      <div style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
@@ -3269,11 +3275,11 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
   return (
     <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "#07090f" }}>
       {/* Grid pattern overlay */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
       {/* Top glow */}
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.3), transparent)" }} />
       {/* Center radial */}
-      <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 500, background: "radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
