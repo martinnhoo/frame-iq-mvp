@@ -203,11 +203,11 @@ const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, la
         <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "13px 18px 15px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 7, marginBottom: 12 }}>
             {[
-              { l: t.metrics.spend,       v: money(entry.spend, language) },
+              { l: t.metrics.spend,       v: money(entry.spend, lang) },
               { l: t.metrics.impressions, v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
               { l: t.metrics.clicks,      v: String(entry.clicks) },
               { l: t.metrics.ctr,         v: `${(entry.ctr*100).toFixed(2)}%` },
-              { l: t.metrics.cpc,         v: `${language === "pt" ? "R$" : "$"}${entry.cpc.toFixed(2)}` },
+              { l: t.metrics.cpc,         v: `${lang === "pt" ? "R$" : "$"}${entry.cpc.toFixed(2)}` },
               ...(entry.conversions > 0   ? [{ l: t.metrics.conversions, v: entry.conversions.toFixed(0) }] : []),
               ...(entry.roas              ? [{ l: t.metrics.roas,        v: `${entry.roas.toFixed(2)}×`   }] : []),
               ...(entry.frequency         ? [{ l: t.metrics.frequency,   v: `${entry.frequency.toFixed(1)}×` }] : []),

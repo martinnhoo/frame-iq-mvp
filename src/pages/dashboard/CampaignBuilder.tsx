@@ -11,7 +11,8 @@ interface Persona { id: string; name: string; result?: any; }
 interface AiMsg  { id: string; text: string; type: "tip"|"warn"|"insight"|"ok"; fromUser?: boolean; }
 interface Form {
   name: string; objective: string; optimization_goal: string; cbo: boolean;
-  channel_type?: string; cpc_bid?: string; // google fields — disabled daily_budget: string; country: string;
+  channel_type?: string; cpc_bid?: string; // google fields — disabled
+  daily_budget: string; country: string;
   age_min: number; age_max: number; destination_url: string; primary_text: string; headline: string;
 }
 
@@ -391,7 +392,7 @@ export default function CampaignBuilder() {
 
         <button onClick={launch} disabled={!canLaunch||launching} style={{
           width:"100%",padding:"14px 0",borderRadius:12,border:"none",
-          background:canLaunch&&!launching?`linear-gradient(135deg,${pc},${platform==="google"?"#1a8f3c":"#0891b2"})`:"var(--bg-elevated)",
+          background:canLaunch&&!launching?`linear-gradient(135deg,${pc},#0891b2)`:"var(--bg-elevated)",
           color:canLaunch?"#fff":"var(--text-muted)",fontSize:15,fontWeight:700,fontFamily:F,
           cursor:canLaunch?"pointer":"not-allowed",display:"flex",alignItems:"center",justifyContent:"center",gap:8,
           transition:"all 0.15s",boxShadow:canLaunch?`0 4px 20px ${pc}25`:"none",
