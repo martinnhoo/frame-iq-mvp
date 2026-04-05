@@ -197,7 +197,7 @@ export default function Onboarding() {
   const t = T[lang];
 
   const [step, setStep]             = useState<1|2|3>(1);
-  const [connecting, setConnecting] = useState<"meta"|"meta" // google disabled|null>(null);
+  const [connecting, setConnecting] = useState<"meta"|null>(null);
   const [name, setName]             = useState("");
   const [niche, setNiche]           = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
