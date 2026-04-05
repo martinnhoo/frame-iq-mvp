@@ -454,16 +454,16 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   // Neutro: #06080e · Conversão (pricing): #070d1a
   const bgMap: Record<string, string> = {
-    default: "#06080e",
-    subtle:  "#06080e",
-    dark:    "#06080e",
+    default: "#070d1a",
+    subtle:  "#070d1a",
+    dark:    "#070d1a",
     accent:  "#070d1a",
   };
   const borderMap: Record<string, string> = {
     default: "1px solid rgba(255,255,255,0.04)",
     subtle:  "1px solid rgba(255,255,255,0.04)",
     dark:    "1px solid rgba(255,255,255,0.04)",
-    accent:  "1px solid rgba(14,165,233,0.10)",
+    accent:  "1px solid rgba(14,165,233,0.08)",
   };
   return (
     <section
@@ -2320,7 +2320,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
   };
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.07) 0%, transparent 60%), #06080e' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
@@ -2401,6 +2401,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
   return (
     <Section id="tools" bg="subtle">
+      <div style={{ position: "absolute", top: "20%", right: "-10%", width: "55%", height: "80%", background: "radial-gradient(ellipse at 85% 40%, rgba(14,165,233,0.05) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.08), transparent)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
 
@@ -2647,7 +2648,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       position: "relative",
       padding: "96px 24px",
       overflow: "hidden",
-      background: "#06080e",
+      background: "#070d1a",
       borderTop: "1px solid rgba(255,255,255,0.04)",
     }}>
       {/* Overlay sutil apenas — sem mudar cor de fundo */}
@@ -2760,7 +2761,9 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   ];
   return (
     <Section id="how" bg="dark">
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+      <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(14,165,233,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(52,211,153,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
@@ -2797,7 +2800,8 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   const p = profiles[active];
   return (
     <Section id="for" bg="default">
-      <div style={{ position: "absolute", top: 0, right: 0, width: 400, height: 400, background: "radial-gradient(ellipse at 100% 0%, rgba(99,102,241,0.04) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "60%", background: "radial-gradient(ellipse at 90% 10%, rgba(99,102,241,0.07) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: "10%", width: "35%", height: "40%", background: "radial-gradient(ellipse at 10% 90%, rgba(14,165,233,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
@@ -2865,6 +2869,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
   return (
     <Section bg="dark">
+      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "70%", height: "60%", background: "radial-gradient(ellipse at 50% 20%, rgba(39,175,225,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -3077,7 +3082,8 @@ function FAQ({ t }: { t: Record<string, string> }) {
   const items = [0,1,2,3,4,5,6,7].map(i => ({ q: t[`faq_q${i}`], a: t[`faq_a${i}`] })).filter(item => item.q);
   return (
     <Section bg="dark">
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "60%", height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(14,165,233,0.03) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
