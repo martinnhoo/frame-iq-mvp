@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       .from("telegram_connections")
       .select("user_id")
       .eq("chat_id", chat_id.toString())
-      .eq("active", true)
+      .neq("active", false)  // aceita true OU null
       .maybeSingle();
 
     if (!conn?.user_id) {
