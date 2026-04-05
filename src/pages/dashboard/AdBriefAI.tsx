@@ -3322,7 +3322,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                         boxShadow: i<used && !isLocked ? "0 0 6px rgba(14,165,233,0.6)" : i<used && isLocked ? "0 0 6px rgba(239,68,68,0.5)" : "none"
                       }}/>
                     ))}
-                    <span style={{fontSize:11,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:isLocked?600:400,marginLeft:4}}>
+                    <span style={{fontSize:11,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:isLocked?400:400,marginLeft:4}}>
                       {isLocked
                         ? (lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached")
                         : `${remaining} ${lang==="pt"?"restante"+(remaining!==1?"s":""):"remaining"}`
@@ -3334,12 +3334,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <div style={{
                         display:"flex",alignItems:"center",gap:6,
-                        padding:"4px 10px",borderRadius:8,
-                        background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)"
+                        padding:"4px 10px",borderRadius:7,
+                        background:"rgba(14,165,233,0.06)",
+                        border:"1px solid rgba(14,165,233,0.2)",
                       }}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:"#ef4444",fontWeight:500,letterSpacing:"0.05em"}}>{countdown}</span>
-                        <span style={{fontSize:10.5,color:"rgba(239,68,68,0.6)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,color:"#38bdf8",fontWeight:500,letterSpacing:"0.01em"}}>{countdown}</span>
+                        <span style={{fontSize:10.5,color:"rgba(56,189,248,0.55)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                           {lang==="pt"?"para liberar":lang==="es"?"para liberar":"until reset"}
                         </span>
                       </div>
