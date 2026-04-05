@@ -32,11 +32,12 @@ Deno.serve(async (req) => {
   }
 
   const schedules = [
-    { name: 'adbrief-daily-intelligence',  cron: '0 11 * * *',   fn: 'daily-intelligence',  body: '{}' },
-    { name: 'adbrief-market-intelligence', cron: '30 11 * * *',  fn: 'market-intelligence', body: '{}' },
-    { name: 'adbrief-creative-director',   cron: '0 11 * * 1',   fn: 'creative-director',   body: '{}' },
-    { name: 'adbrief-weekly-report',       cron: '0 12 * * 0',   fn: 'weekly-report',       body: '{}' },
-    { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',       body: '{"mode":"auto","geo":"BR"}' },
+    { name: 'adbrief-daily-intelligence',  cron: '0 11 * * *',   fn: 'daily-intelligence',      body: '{}' },
+    { name: 'adbrief-market-intelligence', cron: '30 11 * * *',  fn: 'market-intelligence',     body: '{}' },
+    { name: 'adbrief-creative-director',   cron: '0 11 * * 1',   fn: 'creative-director',       body: '{}' },
+    { name: 'adbrief-weekly-report',       cron: '0 12 * * 0',   fn: 'weekly-report',           body: '{}' },
+    { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',           body: '{"mode":"auto","geo":"BR"}' },
+    { name: 'adbrief-critical-alerts',     cron: '0 */6 * * *',  fn: 'check-critical-alerts',   body: '{}' },
   ];
 
   const results: any[] = [];
@@ -90,7 +91,7 @@ Deno.serve(async (req) => {
       results,
       active_jobs: jobs,
       message: allOk
-        ? '✅ Todos os 5 schedules criados com sucesso'
+        ? '✅ Todos os 6 schedules criados com sucesso'
         : '⚠️ Verifique results para detalhes',
     }), { headers: { ...cors, 'Content-Type': 'application/json' } });
 
