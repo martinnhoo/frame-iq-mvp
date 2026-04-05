@@ -509,7 +509,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
     setUp(true);
     try {
       const ext = file.name.split(".").pop();
-      const path = `logos/${userId}/${Date.now()}.${ext}`;
+      const path = `${userId}/logos/${Date.now()}.${ext}`; // userId first = matches RLS foldername[1] check
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert:true });
       if (error) throw error;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
