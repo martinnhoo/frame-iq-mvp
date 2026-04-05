@@ -516,85 +516,178 @@ const TOOLS_DATA: ToolDef[] = [
   {
     id: "hooks", color: "#0ea5e9", accent: "rgba(14,165,233,0.10)",
     icon: <Zap size={20} />,
-    name:    { pt: "Gerador de Hooks",      es: "Generador de Hooks",      en: "Hook Generator"       },
-    tagline: { pt: "Dos seus criativos que converteram", es: "De tus creativos que convirtieron", en: "From creatives that already converted" },
-    desc:    { pt: "Cola qualquer anúncio seu ou concorrente e receba hooks prontos — calibrados pelo padrão de engajamento dos seus melhores criativos.", es: "Pega cualquier anuncio tuyo o de la competencia y recibe hooks listos — calibrados por el patrón de engagement de tus mejores creativos.", en: "Paste any ad — yours or a competitor's — and get hooks ready to use, calibrated by your best-performing creative patterns." },
-    input:   { pt: "Contexto da sua conta + produto", es: "Contexto de tu cuenta + producto", en: "Your account context + product" },
-    badge:   { pt: "Output instantâneo", es: "Output instantáneo", en: "Instant output" },
+    name:    { pt: "Gerador de Hooks", es: "Generador de Hooks", en: "Hook Generator" },
+    tagline: { pt: "Prontos para gravar agora", es: "Listos para grabar ahora", en: "Ready to record now" },
+    desc:    { pt: "Diga o produto e o público. A IA lê o padrão dos seus criativos que já converteram e gera hooks no mesmo estilo — sem você ter que pensar do zero.", es: "Di el producto y el público. La IA lee el patrón de tus creativos que ya convirtieron y genera hooks en el mismo estilo.", en: "Tell it the product and audience. The AI reads your winning creative patterns and generates hooks in the same style." },
+    input:   { pt: "Cria 3 hooks para academia feminina, público 28-40 anos", es: "Crea 3 hooks para gimnasio femenino, público 28-40 años", en: "Create 3 hooks for women's gym, audience 28-40 years old" },
+    badge:   { pt: "3 hooks gerados", es: "3 hooks generados", en: "3 hooks generated" },
     output:  {
-      pt: ['"Creative_019 converteu 2.4x mais essa semana. Veja o padrão."', '"Hook rate 38% — seu melhor criativo prende atenção nos primeiros 3s."', '"Escale R$120 → R$400/dia. Frequência 1.3x — tem muito espaço ainda."'],
-      es: ['"Creative_019 convirtió 2.4x más esta semana. Mira el patrón."', '"Hook rate 38% — tu mejor creativo retiene atención en los primeros 3s."', '"Escala $120 → $400/día. Frecuencia 1.3x — hay mucho espacio todavía."'],
-      en: ['"You\'ve been training 3 months and the scale won\'t move — your ads already know why."', '"3 out of 4 transformations shown here came in under $18 CAC."', '"Your competitor is running the same angle as your best UGC — the one you paused 9 days ago."'],
+      pt: [
+        '1. "Você treina há 6 meses e o espelho ainda não mudou. O problema não é esforço."',
+        '2. "Em 30 dias, 847 mulheres no BR reduziram o abdômen sem cortar carboidrato."',
+        '3. "Por que sua academia cobra R$99/mês mas você não consegue ir mais de 3 vezes?"',
+      ],
+      es: [
+        '1. "Llevas 6 meses entrenando y el espejo no cambia. El problema no es el esfuerzo."',
+        '2. "En 30 días, 847 mujeres redujeron el abdomen sin eliminar los carbohidratos."',
+        '3. "¿Por qué pagas $99/mes en el gym pero no puedes ir más de 3 veces?"',
+      ],
+      en: [
+        "1. \"You've been training 6 months and the mirror hasn't changed. It's not effort.\"",
+        "2. \"In 30 days, 847 women reduced belly fat without cutting carbs.\"",
+        "3. \"Why does your gym charge $99/month but you can only make it 3 times?\"",
+      ],
     },
   },
   {
     id: "script", color: "#a78bfa", accent: "rgba(167,139,250,0.10)",
     icon: <Play size={20} />,
-    name:    { pt: "Script de Vídeo",  es: "Script de Video",  en: "Video Script"   },
+    name:    { pt: "Script de Vídeo", es: "Script de Video", en: "Video Script" },
     tagline: { pt: "UGC e DR prontos para gravar", es: "UGC y DR listos para grabar", en: "UGC & DR ready to record" },
-    desc:    { pt: "Gera scripts completos de UGC ou direct-response com gancho, desenvolvimento e CTA — já adaptados ao nicho, mercado e tom da sua conta.", es: "Genera scripts completos de UGC o direct-response con gancho, desarrollo y CTA — ya adaptados al nicho, mercado y tono de tu cuenta.", en: "Generates complete UGC or direct-response scripts with hook, body, and CTA — already adapted to your account's niche, market, and tone." },
-    input:   { pt: "Produto + plataforma + tom da marca", es: "Producto + plataforma + tono de marca", en: "Product + platform + brand tone" },
-    badge:   { pt: "Script completo", es: "Script completo", en: "Full script" },
+    desc:    { pt: "Descreva o produto e o público. A IA gera um script completo com gancho, desenvolvimento e CTA — calibrado pelo tom dos seus criativos que já funcionaram.", es: "Describe el producto y el público. La IA genera un script completo calibrado por el tono de tus creativos que ya funcionaron.", en: "Describe the product and audience. The AI generates a full script calibrated by the tone of your creatives that already worked." },
+    input:   { pt: "Script UGC 30s para suplemento de emagrecimento, tom direto", es: "Script UGC 30s para suplemento para adelgazar, tono directo", en: "30s UGC script for weight loss supplement, direct tone" },
+    badge:   { pt: "Script 30s completo", es: "Script 30s completo", en: "Full 30s script" },
     output:  {
-      pt: ["[GANCHO] Creative_019 converteu 2.4x mais essa semana. Veja o padrão.", "[DESENVOLVIMENTO] Gestores que escalam rápido têm uma coisa em comum — sabem exatamente qual criativo funciona.", "[CTA] Conecte sua conta agora. 30 segundos. Sem CSV."],
-      es: ["[GANCHO] Creative_019 convirtió 2.4x más esta semana. Mira el patrón.", "[DESARROLLO] Los gestores que escalan rápido tienen algo en común — saben exactamente qué creativo funciona.", "[CTA] Conecta tu cuenta ahora. 30 segundos. Sin CSV."],
-      en: ["[HOOK] Creative_019 converted 2.4x more this week. Here's the pattern.", "[BODY] Media buyers who scale fast all have one thing in common — they know exactly which creative is working.", "[CTA] Connect your account now. 30 seconds. No CSV."],
+      pt: [
+        'GANCHO [0–3s]   "Eu perdi 8kg em 6 semanas. Mas não foi academia."',
+        'CORPO  [4–22s]  "Esse suplemento controla a fome nas primeiras 2h — quando a maioria quebra a dieta. Sem cortar carboidrato."',
+        'CTA    [23–30s] "Arrasta o dedo. Só até domingo tem frete grátis."',
+      ],
+      es: [
+        'GANCHO [0–3s]   "Perdí 8kg en 6 semanas. Pero no fue el gym."',
+        'CUERPO [4–22s]  "Este suplemento controla el hambre en las primeras 2h — cuando la mayoría rompe la dieta."',
+        'CTA    [23–30s] "Desliza. Solo hasta el domingo hay envío gratis."',
+      ],
+      en: [
+        'HOOK   [0–3s]   "I lost 18lbs in 6 weeks. But it wasn\'t the gym."',
+        'BODY   [4–22s]  "This supplement controls hunger in the first 2h — when most people break their diet. No cutting, no counting."',
+        'CTA    [23–30s] "Swipe up. Free shipping only until Sunday."',
+      ],
     },
   },
   {
     id: "brief", color: "#34d399", accent: "rgba(52,211,153,0.10)",
     icon: <Layers size={20} />,
-    name:    { pt: "Brief Criativo",  es: "Brief Creativo",  en: "Creative Brief"   },
-    tagline: { pt: "Diz ao time o que produzir e por quê", es: "Dice al equipo qué producir y por qué", en: "Tells your team what to make and why" },
-    desc:    { pt: "Gera briefs completos baseados nos seus dados reais — formato que funciona, ângulo, referência de gancho e instrução para o editor. Elimina o vai-e-vem de revisão.", es: "Genera briefs completos basados en tus datos reales — formato que funciona, ángulo, referencia de gancho e instrucción para el editor. Elimina el ida y vuelta.", en: "Generates complete briefs based on your real data — winning format, angle, hook reference, and editor instruction. Eliminates revision back-and-forth." },
-    input:   { pt: "Conta ativa + campanha de referência", es: "Cuenta activa + campaña de referencia", en: "Active account + reference campaign" },
+    name:    { pt: "Brief Criativo", es: "Brief Creativo", en: "Creative Brief" },
+    tagline: { pt: "Manda pro editor, sem revisão", es: "Envíalo al editor, sin revisión", en: "Send to editor, no revision needed" },
+    desc:    { pt: "A IA lê o seu criativo com melhor ROAS e gera um brief completo para o próximo vídeo — formato, ângulo, gancho de referência e direção de cena para o editor.", es: "La IA lee tu creativo con mejor ROAS y genera un brief completo para el próximo video.", en: "The AI reads your top ROAS creative and generates a complete brief for the next video — format, angle, reference hook, and scene direction." },
+    input:   { pt: "Gera o brief do próximo criativo baseado no meu melhor anúncio", es: "Genera el brief del próximo creativo basado en mi mejor anuncio", en: "Generate brief for the next creative based on my best ad" },
     badge:   { pt: "Pronto para enviar", es: "Listo para enviar", en: "Ready to send" },
     output:  {
-      pt: ["Formato: Vídeo UGC 9:16 · 30-45s", "Ângulo: Problema → Diagnóstico → Solução", "Referência: Creative_019 (ROAS 3.2x, hook rate 34%)", "Instrução: abrir com dado real, sem música no início"],
-      es: ["Formato: Video UGC 9:16 · 30-45s", "Ángulo: Problema → Diagnóstico → Solución", "Referencia: Creative_019 (ROAS 3.2x, hook rate 34%)", "Instrucción: abrir con dato real, sin música al inicio"],
-      en: ["Format: UGC Video 9:16 · 30-45s", "Angle: Problem → Diagnosis → Solution", "Reference: Creative_019 (ROAS 3.2x, hook rate 34%)", "Direction: open with real stat, no music at start"],
+      pt: [
+        "FORMATO   Vídeo UGC vertical 9:16 · 30–45 segundos",
+        "ÂNGULO    Problema real → resultado concreto com dado",
+        "REFERÊNCIA  Creative_019 · hook rate 38% · ROAS 3.8x",
+        "GANCHO    Abrir com pergunta direta. Sem música nos 3s iniciais.",
+        "CENA 1    Close no rosto. Tom confessional. Sem câmera estática."
+      ],
+      es: [
+        "FORMATO   Video UGC vertical 9:16 · 30–45 segundos",
+        "ÁNGULO    Problema real → resultado concreto con dato",
+        "REFERENCIA  Creative_019 · hook rate 38% · ROAS 3.8x",
+        "GANCHO    Abrir con pregunta directa. Sin música en los 3s iniciales.",
+        "ESCENA 1  Primer plano en el rostro. Tono confesional. Sin cámara estática."
+      ],
+      en: [
+        "FORMAT    Vertical UGC 9:16 · 30–45 seconds",
+        "ANGLE     Real problem → concrete result with data",
+        "REFERENCE   Creative_019 · hook rate 38% · ROAS 3.8x",
+        "HOOK      Open with direct question. No music in first 3s.",
+        "SCENE 1   Close on face. Confessional tone. No static camera."
+      ],
     },
   },
   {
     id: "competitor", color: "#f97316", accent: "rgba(249,115,22,0.10)",
     icon: <Target size={20} />,
-    name:    { pt: "Decodificador",       es: "Decodificador",          en: "Competitor Decode"    },
-    tagline: { pt: "Desmonta qualquer anúncio concorrente", es: "Desmonta cualquier anuncio rival", en: "Reverse-engineer any competitor ad" },
-    desc:    { pt: "Cole a URL ou descreva um anúncio concorrente. A IA identifica o gancho, ângulo, formato, CTA e o que está funcionando — para você replicar com sua conta.", es: "Pega la URL o describe un anuncio rival. La IA identifica el gancho, ángulo, formato, CTA y lo que funciona — para que lo repliques con tu cuenta.", en: "Paste the URL or describe a competitor ad. The AI identifies the hook, angle, format, CTA, and what's working — so you can replicate with your account." },
-    input:   { pt: "URL ou descrição do anúncio", es: "URL o descripción del anuncio", en: "Ad URL or description" },
-    badge:   { pt: "Análise estrutural", es: "Análisis estructural", en: "Structural analysis" },
+    name:    { pt: "Decodificador", es: "Decodificador", en: "Competitor Decode" },
+    tagline: { pt: "Entende o que está funcionando", es: "Entiende qué está funcionando", en: "Understand what's working" },
+    desc:    { pt: "Descreva ou cole o link de um anúncio concorrente. A IA desmonta a estrutura — gancho, ângulo, CTA — e explica por que está convertendo, para você replicar.", es: "Describe o pega el link de un anuncio rival. La IA desmonta la estructura y explica por qué está convirtiendo.", en: "Describe or paste a competitor ad link. The AI breaks down the structure and explains why it's converting." },
+    input:   { pt: "Analisa esse anúncio de suplemento que está com muito like", es: "Analiza este anuncio de suplemento que tiene muchos likes", en: "Analyze this supplement ad that's getting a lot of engagement" },
+    badge:   { pt: "Análise completa", es: "Análisis completo", en: "Full analysis" },
     output:  {
-      pt: ["Gancho: dado numérico + problema específico", "Ângulo: medo de perda (FOMO financeiro)", "Formato: talking head com texto onscreen", "CTA: urgência implícita — sem prazo explícito"],
-      es: ["Gancho: dato numérico + problema específico", "Ángulo: miedo a perder (FOMO financiero)", "Formato: talking head con texto en pantalla", "CTA: urgencia implícita — sin plazo explícito"],
-      en: ["Hook: numeric stat + specific problem", "Angle: loss aversion (financial FOMO)", "Format: talking head with on-screen text", "CTA: implied urgency — no explicit deadline"],
+      pt: [
+        'GANCHO    Estatística de impacto + problema imediato · "97% das pessoas não sabem que..."',
+        "ÂNGULO    Autoridade + medo de perder (FOMO de resultado)",
+        "FORMATO   Talking head com legenda no topo · sem corte nos 5s iniciais",
+        "CTA       Urgência de estoque implícita · sem prazo explícito",
+        "POR QUÊ FUNCIONA  Prova social + FOMO combinados — padrão de alta conversão"
+      ],
+      es: [
+        'GANCHO    Estadística de impacto + problema inmediato · "El 97% no sabe que..."',
+        "ÁNGULO    Autoridad + miedo a perder (FOMO de resultado)",
+        "FORMATO   Talking head con subtítulo arriba · sin corte en los 5s iniciales",
+        "CTA       Urgencia de stock implícita · sin fecha explícita",
+        "POR QUÉ FUNCIONA  Prueba social + FOMO combinados — patrón de alta conversión"
+      ],
+      en: [
+        'HOOK      Impact stat + immediate problem · "97% of people don\'t know that..."',
+        "ANGLE     Authority + fear of missing out (result FOMO)",
+        "FORMAT    Talking head with top caption · no cut in first 5s",
+        "CTA       Implied stock urgency · no explicit deadline",
+        "WHY IT WORKS  Social proof + FOMO combined — high-conversion pattern"
+      ],
     },
   },
   {
     id: "translate", color: "#ec4899", accent: "rgba(236,72,153,0.10)",
     icon: <Globe size={20} />,
-    name:    { pt: "Tradutor de Anúncios",  es: "Traductor de Anuncios",  en: "Ad Translator"        },
-    tagline: { pt: "Tom e plataforma adaptados por mercado", es: "Tono y plataforma por mercado", en: "Tone and platform adapted per market" },
-    desc:    { pt: "Traduz anúncios entre mercados mantendo o tom, a gíria local e o poder de conversão. Não é só tradução — é adaptação cultural com contexto da sua conta.", es: "Traduce anuncios entre mercados manteniendo el tono, la jerga local y el poder de conversión. No es solo traducción — es adaptación cultural con contexto de tu cuenta.", en: "Translates ads across markets while keeping tone, local slang, and conversion power. Not just translation — cultural adaptation with your account context." },
-    input:   { pt: "Anúncio original + mercado de destino", es: "Anuncio original + mercado destino", en: "Original ad + target market" },
-    badge:   { pt: "PT · ES · EN · +4", es: "PT · ES · EN · +4", en: "PT · ES · EN · +4" },
+    name:    { pt: "Tradutor de Anúncios", es: "Traductor de Anuncios", en: "Ad Translator" },
+    tagline: { pt: "Adapta sem perder conversão", es: "Adapta sin perder conversión", en: "Adapt without losing conversion" },
+    desc:    { pt: "Cole o anúncio e escolha o mercado. A IA adapta o tom, a gíria local e o CTA — não é tradução literal, é adaptação cultural para converter no novo mercado.", es: "Pega el anuncio y elige el mercado. La IA adapta el tono, la jerga local y el CTA.", en: "Paste the ad and choose the market. The AI adapts tone, local slang, and CTA — not literal translation, cultural adaptation." },
+    input:   { pt: "Adapta esse anúncio de academia do BR para o México", es: "Adapta este anuncio de gym del BR para México", en: "Adapt this gym ad from Brazil to Mexico" },
+    badge:   { pt: "BR → MX adaptado", es: "BR → MX adaptado", en: "BR → MX adapted" },
     output:  {
-      pt: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "Adaptação de CTA: \"Jogue agora\" → \"Pruébalo gratis\"", "Gíria local preservada: \"gestor de tráfego\" → \"media buyer\"", "Tom: mantido direto e urgente nos dois mercados"],
-      es: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "Adaptación de CTA: \"Jogue agora\" → \"Pruébalo gratis\"", "Jerga local preservada: \"gestor de tráfego\" → \"media buyer\"", "Tono: directo y urgente en ambos mercados"],
-      en: ["BR → MX: \"queimar verba\" → \"quemar presupuesto\"", "CTA adapted: \"Jogue agora\" → \"Pruébalo gratis\"", "Local slang preserved across markets", "Tone: kept direct and urgent in both markets"],
+      pt: [
+        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
+        '🇲🇽 ADAPTADO  "Deja de tirar tu presupuesto en Meta sin ver resultados."',
+        'CTA  "Teste grátis" → "Pruébalo gratis" · urgência mantida',
+        'GÍRIA  "gestor de tráfego" → "media buyer" · tom direto preservado',
+        'NOTA  Evitado "dinero" isolado — soa formal no MX informal'
+      ],
+      es: [
+        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
+        '🇲🇽 ADAPTADO  "Deja de tirar tu presupuesto en Meta sin ver resultados."',
+        'CTA  "Teste grátis" → "Pruébalo gratis" · urgencia mantenida',
+        'JERGA  "gestor de tráfego" → "media buyer" · tono directo preservado',
+        'NOTA  Evitado "dinero" aislado — suena formal en el MX informal'
+      ],
+      en: [
+        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
+        '🇲🇽 ADAPTED   "Deja de tirar tu presupuesto en Meta sin ver resultados."',
+        'CTA  "Teste grátis" → "Pruébalo gratis" · urgency preserved',
+        'SLANG  "gestor de tráfego" → "media buyer" · direct tone kept',
+        'NOTE  Avoided formal "dinero" alone — too stiff for informal MX tone'
+      ],
     },
   },
   {
     id: "analysis", color: "#60a5fa", accent: "rgba(96,165,250,0.10)",
     icon: <BarChart3 size={20} />,
-    name:    { pt: "Análise de Campanha",  es: "Análisis de Campaña",  en: "Campaign Analysis"    },
-    tagline: { pt: "Diagnóstico em segundos, não em planilhas", es: "Diagnóstico en segundos, no en hojas de cálculo", en: "Diagnosis in seconds, not spreadsheets" },
-    desc:    { pt: "Pergunte qualquer coisa sobre seus dados do Meta Ads. A IA lê suas campanhas em tempo real e responde com diagnóstico específico — sem exportar CSV, sem fórmulas.", es: "Pregunta lo que quieras sobre tus datos de Meta Ads. La IA lee tus campañas en tiempo real y responde con diagnóstico específico — sin exportar CSV, sin fórmulas.", en: "Ask anything about your Meta Ads data. The AI reads your campaigns in real time and responds with a specific diagnosis — no CSV export, no formulas." },
-    input:   { pt: "Qualquer pergunta sobre sua conta", es: "Cualquier pregunta sobre tu cuenta", en: "Any question about your account" },
+    name:    { pt: "Análise de Campanha", es: "Análisis de Campaña", en: "Campaign Analysis" },
+    tagline: { pt: "Diagnóstico em segundos", es: "Diagnóstico en segundos", en: "Diagnosis in seconds" },
+    desc:    { pt: "Pergunte qualquer coisa sobre seus dados. A IA lê suas campanhas em tempo real e responde com diagnóstico específico — sem planilha, sem exportar nada.", es: "Pregunta lo que quieras. La IA lee tus campañas en tiempo real y responde con diagnóstico específico.", en: "Ask anything. The AI reads your campaigns in real time and responds with a specific diagnosis — no spreadsheet, no export." },
+    input:   { pt: "O que está acontecendo com a minha conta essa semana?", es: "¿Qué está pasando con mi cuenta esta semana?", en: "What's happening with my account this week?" },
     badge:   { pt: "Dados em tempo real", es: "Datos en tiempo real", en: "Real-time data" },
     output:  {
-      pt: ["CPM médio: R$38 (+22% vs semana passada)", "3 campanhas com frequência acima de 4x → risco de fadiga", "Creative_019: melhor ROAS da conta (3.2x) — orçamento subutilizado", "Recomendação: pausar 2, escalar 1, renovar criativos em BR-F-25-34"],
-      es: ["CPM promedio: $38 (+22% vs semana pasada)", "3 campañas con frecuencia sobre 4x → riesgo de fatiga", "Creative_019: mejor ROAS de la cuenta (3.2x) — presupuesto subutilizado", "Recomendación: pausar 2, escalar 1, renovar creativos en MX-F-25-34"],
-      en: ["Avg CPM: $18 (+22% vs last week)", "3 campaigns with frequency above 4x → fatigue risk", "Creative_019: best ROAS in account (3.2x) — budget underused", "Recommendation: pause 2, scale 1, refresh creatives in US-F-25-34"],
+      pt: [
+        "⚠️  CPM subiu 34% — público BR-F-25-34 saturando. Troque a segmentação.",
+        "✅  Creative_021 com CTR 4.2% — melhor da semana. Suba de R$80 → R$280/dia.",
+        "🔴  3 campanhas com frequência acima de 4x. Pause hoje antes de queimar mais.",
+        "💡  Mova R$200/dia de retargeting para prospecting — ROAS histórico 2.8x lá."
+      ],
+      es: [
+        "⚠️  CPM subió 34% — público MX-F-25-34 saturando. Cambia la segmentación.",
+        "✅  Creative_021 con CTR 4.2% — el mejor de la semana. Sube de $80 → $280/día.",
+        "🔴  3 campañas con frecuencia por encima de 4x. Pausa hoy antes de quemar más.",
+        "💡  Mueve $200/día de retargeting a prospecting — ROAS histórico 2.8x allá."
+      ],
+      en: [
+        "⚠️  CPM up 34% — US-F-25-34 audience saturating. Switch targeting now.",
+        "✅  Creative_021 at 4.2% CTR — best of the week. Scale from $80 → $280/day.",
+        "🔴  3 campaigns with frequency above 4x. Pause today before burning more.",
+        "💡  Move $200/day from retargeting to prospecting — historical ROAS 2.8x there."
+      ],
     },
   },
 ];
@@ -2243,98 +2336,183 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 }
 
 // ─── Tools ─────────────────────────────────────────────────────────────────────
+function ToolLine({ text, color, delay }: { text: string; color: string; delay: number }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  const hasLabel = /^[A-ZÁÉÍÓÚÑ\/_]{2,}(\s{2,})/.test(text);
+  let prefix = "";
+  let body = text;
+  if (hasLabel) {
+    const match = text.match(/^([A-ZÁÉÍÓÚÑ\/_]+)\s{2,}([\s\S]*)/);
+    if (match) { prefix = match[1]; body = match[2]; }
+  }
+
+  return (
+    <div style={{
+      display: "flex", gap: 10, alignItems: "flex-start",
+      padding: "8px 12px", borderRadius: 9,
+      background: "rgba(255,255,255,0.025)",
+      border: "1px solid rgba(255,255,255,0.05)",
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(8px)",
+      transition: "opacity 0.3s ease, transform 0.3s ease",
+    }}>
+      {prefix ? (
+        <span style={{
+          fontFamily: "'DM Mono', 'Fira Mono', monospace",
+          fontSize: 10, fontWeight: 700,
+          color: color, opacity: 0.8,
+          letterSpacing: "0.05em",
+          flexShrink: 0, paddingTop: 2,
+          minWidth: 56, whiteSpace: "nowrap" as const,
+        }}>{prefix}</span>
+      ) : null}
+      <span style={{
+        fontFamily: F, fontSize: 12.5,
+        color: "rgba(255,255,255,0.82)",
+        lineHeight: 1.6, flex: 1,
+        fontStyle: body.trim().startsWith('"') ? "italic" : "normal",
+      }}>{prefix ? body : text}</span>
+    </div>
+  );
+}
+
 function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const [active, setActive] = useState("hooks");
+  const [animKey, setAnimKey] = useState(0);
   const tool = TOOLS_DATA.find(d => d.id === active)!;
 
-  const inputLabel: Record<Lang, string> = { pt: "Input", es: "Input", en: "Input" };
-  const outputLabel: Record<Lang, string> = { pt: "Output gerado", es: "Output generado", en: "Generated output" };
+  const handleSelect = (id: string) => {
+    if (id === active) return;
+    setActive(id);
+    setAnimKey(k => k + 1);
+  };
 
   return (
     <Section id="tools" bg="subtle">
-      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1060, margin: "0 auto" }}>
 
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>{t.tools_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 14.5, color: "rgba(255,255,255,0.42)", maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
 
-        {/* Bento layout: pill nav left + preview right */}
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 12, alignItems: "start" }} className="tools-bento">
+        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16, alignItems: "start" }} className="tools-bento">
 
-          {/* Left — pill nav list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {/* Left nav */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {TOOLS_DATA.map(d => {
               const isAct = d.id === active;
               return (
-                <button key={d.id} onClick={() => setActive(d.id)}
+                <button key={d.id} onClick={() => handleSelect(d.id)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "14px 16px",
-                    borderRadius: 14, border: `1px solid ${isAct ? d.color + "40" : "rgba(255,255,255,0.07)"}`,
-                    background: isAct ? d.accent : "rgba(255,255,255,0.03)",
-                    cursor: "pointer", textAlign: "left" as const, transition: "all 0.18s", width: "100%",
+                    display: "flex", alignItems: "center", gap: 11, padding: "12px 14px",
+                    borderRadius: 12,
+                    border: `1px solid ${isAct ? d.color + "35" : "rgba(255,255,255,0.06)"}`,
+                    background: isAct ? `linear-gradient(135deg, ${d.color}12 0%, rgba(255,255,255,0.03) 100%)` : "transparent",
+                    cursor: "pointer", textAlign: "left" as const, transition: "all 0.16s", width: "100%",
                   }}
-                  onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
-                  onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+                  onMouseEnter={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { if (!isAct) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: isAct ? d.color + "20" : "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: isAct ? d.color : "rgba(255,255,255,0.4)", flexShrink: 0, transition: "all 0.18s" }}>
-                    {d.icon}
-                  </div>
+                  <div style={{
+                    width: 30, height: 30, borderRadius: 8,
+                    background: isAct ? d.color + "1a" : "rgba(255,255,255,0.06)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: isAct ? d.color : "rgba(255,255,255,0.35)",
+                    flexShrink: 0, transition: "all 0.16s",
+                  }}>{d.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: isAct ? "#fff" : "rgba(255,255,255,0.55)", margin: 0, transition: "color 0.18s" }}>{d.name[lang]}</p>
-                    <p style={{ fontFamily: F, fontSize: 12, color: isAct ? d.color : "rgba(255,255,255,0.25)", margin: "2px 0 0", lineHeight: 1.3, transition: "color 0.18s", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{d.tagline[lang]}</p>
+                    <p style={{ fontFamily: F, fontSize: 12.5, fontWeight: 600, color: isAct ? "#fff" : "rgba(255,255,255,0.5)", margin: 0 }}>{d.name[lang]}</p>
+                    <p style={{ fontFamily: F, fontSize: 11, color: isAct ? d.color : "rgba(255,255,255,0.2)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{d.tagline[lang]}</p>
                   </div>
-                  {isAct && (
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: tool.color, flexShrink: 0 }} />
-                  )}
+                  {isAct && <div style={{ width: 5, height: 5, borderRadius: "50%", background: d.color, flexShrink: 0, boxShadow: `0 0 8px ${d.color}80` }} />}
                 </button>
               );
             })}
           </div>
 
-          {/* Right — tool preview como resposta real da IA */}
+          {/* Right — chat preview */}
           <AnimatePresence mode="wait">
             <motion.div key={active}
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", overflow: "hidden" }}
+              initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                borderRadius: 18,
+                border: `1px solid ${tool.color}18`,
+                background: "rgba(255,255,255,0.02)",
+                overflow: "hidden",
+              }}
             >
-              {/* Topbar mockado */}
-              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, background: tool.color + "18", border: `1px solid ${tool.color}25`, display: "flex", alignItems: "center", justifyContent: "center", color: tool.color, flexShrink: 0 }}>
-                  {tool.icon}
-                </div>
+              {/* Topbar */}
+              <div style={{
+                padding: "12px 18px",
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+                display: "flex", alignItems: "center", gap: 10,
+                background: `linear-gradient(90deg, ${tool.color}0a 0%, transparent 60%)`,
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: tool.color + "18", border: `1px solid ${tool.color}22`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: tool.color, flexShrink: 0,
+                }}>{tool.icon}</div>
                 <div style={{ flex: 1 }}>
                   <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#fff" }}>{tool.name[lang]}</span>
-                  <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 8 }}>·</span>
-                  <span style={{ fontFamily: F, fontSize: 12, color: tool.color, marginLeft: 8, opacity: 0.8 }}>{tool.badge[lang]}</span>
+                  <span style={{ fontFamily: F, fontSize: 11.5, color: "rgba(255,255,255,0.2)", marginLeft: 7 }}>·</span>
+                  <span style={{ fontFamily: F, fontSize: 11.5, color: tool.color, marginLeft: 7, opacity: 0.72 }}>{tool.badge[lang]}</span>
+                </div>
+                <div style={{ display: "flex", gap: 5 }}>
+                  {[0.18, 0.1, 0.06].map((o, i) => (
+                    <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: `rgba(255,255,255,${o})` }} />
+                  ))}
                 </div>
               </div>
 
-              {/* User message */}
-              <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "flex-end" }}>
-                <div style={{ maxWidth: "75%", padding: "10px 14px", borderRadius: "14px 14px 4px 14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}>
-                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{tool.input[lang]}</span>
-                </div>
-              </div>
+              <div style={{ padding: "16px 18px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
 
-              {/* AI response */}
-              <div style={{ padding: "8px 20px 20px" }}>
-                <div style={{ padding: "14px 16px", borderRadius: "4px 14px 14px 14px", background: tool.color + "0c", border: `1px solid ${tool.color}20` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                    <div style={{ width: 16, height: 16, borderRadius: 5, background: tool.color + "25", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={tool.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
-                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: tool.color, letterSpacing: "0.06em", textTransform: "uppercase" as const, opacity: 0.85 }}>AdBrief AI</span>
+                {/* User bubble */}
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.04, duration: 0.22 }}
+                  style={{ display: "flex", justifyContent: "flex-end" }}
+                >
+                  <div style={{
+                    maxWidth: "78%", padding: "9px 13px",
+                    borderRadius: "13px 13px 3px 13px",
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                  }}>
+                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{tool.input[lang]}</span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                </motion.div>
+
+                {/* AI response */}
+                <div>
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    transition={{ delay: 0.18, duration: 0.2 }}
+                    style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, paddingLeft: 2 }}
+                  >
+                    <div style={{
+                      width: 14, height: 14, borderRadius: 4,
+                      background: tool.color + "22",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke={tool.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: tool.color, letterSpacing: "0.09em", textTransform: "uppercase" as const, opacity: 0.78 }}>AdBrief AI</span>
+                  </motion.div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                     {tool.output[lang].map((line, i) => (
-                      <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 6 }} />
-                        <span style={{ fontFamily: F, fontSize: 13, color: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>{line}</span>
-                      </div>
+                      <ToolLine key={`${active}-${animKey}-${i}`} text={line} color={tool.color} delay={200 + i * 150} />
                     ))}
                   </div>
                 </div>
@@ -2342,7 +2520,6 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
             </motion.div>
           </AnimatePresence>
         </div>
-
       </div>
     </Section>
   );
