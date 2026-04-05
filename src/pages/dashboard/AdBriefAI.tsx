@@ -3305,73 +3305,51 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               })}
             </div>
 
-            {/* Usage row — single compact line before input */}
-            {freeUsage !== null && (()=>{
-              const planKey = profile?.plan || "free";
-              const CAPS: Record<string,number> = { free:3, maker:50, pro:200, studio:500 };
-              const dailyCap = CAPS[planKey] ?? 3;
-              const dailyCount = freeUsage?.count ?? 0;
-              const remaining = Math.max(0, dailyCap - dailyCount);
-              const isLocked = remaining === 0;
-              const isFree = planKey === "free";
-              if (dailyCap >= 500) return null; // studio — unlimited, hide
-
-              return (
-                <div style={{
-                  display:"flex", alignItems:"center", justifyContent:"space-between",
-                  padding:"0 2px 8px", gap:8,
-                }}>
-                  {/* Left: dots + count */}
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    {/* 3 dots — only for free plan */}
-                    {isFree && (
-                      <div style={{display:"flex",gap:4}}>
-                        {[0,1,2].map(i=>(
-                          <div key={i} style={{
-                            width:5,height:5,borderRadius:"50%",transition:"background 0.3s",
-                            background: i<dailyCount
-                              ? (isLocked ? "#ef4444" : "#0ea5e9")
-                              : "rgba(255,255,255,0.1)",
-                          }}/>
-                        ))}
-                      </div>
-                    )}
-                    {/* Progress bar — paid plans */}
-                    {!isFree && (
-                      <div style={{width:52,height:2,borderRadius:99,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
-                        <div style={{
-                          height:"100%",borderRadius:99,transition:"width 0.4s",
-                          width:`${Math.min(100,(dailyCount/dailyCap)*100)}%`,
-                          background: isLocked ? "#ef4444" : dailyCount>=dailyCap*0.8 ? "#f59e0b" : "#0ea5e9",
-                        }}/>
-                      </div>
-                    )}
-                    <span style={{fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",color:"rgba(255,255,255,0.25)"}}>
-                      <span style={{color: isLocked?"rgba(239,68,68,0.7)":dailyCount>=dailyCap*0.8?"rgba(245,158,11,0.7)":"rgba(255,255,255,0.4)",fontWeight:500}}>{dailyCount}</span>
-                      /{dailyCap}
+            {/* Free plan counter */}
+            {(profile?.plan==="free"||!profile?.plan)&&(()=>{
+              const used = freeUsage?.count ?? 0;
+              const cap=3, remaining=Math.max(0,cap-used);
+              const isLocked = remaining===0;
+              const col = isLocked?"#ef4444":remaining===1?"#f59e0b":"rgba(255,255,255,0.3)";
+              return(
+                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    {[0,1,2].map(i=>(
+                      <div key={i} style={{
+                        width:6,height:6,borderRadius:"50%",transition:"all 0.3s",
+                        background: i<used ? (isLocked?"#ef4444":"#0ea5e9") : "rgba(255,255,255,0.12)",
+                        boxShadow: i<used && !isLocked ? "0 0 6px rgba(14,165,233,0.6)" : i<used && isLocked ? "0 0 6px rgba(239,68,68,0.5)" : "none"
+                      }}/>
+                    ))}
+                    <span style={{fontSize:11,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:400,marginLeft:4}}>
+                      {isLocked
+                        ? (lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached")
+                        : `${remaining} ${lang==="pt"?"restante"+(remaining!==1?"s":""):"remaining"}`
+                      }
                     </span>
                   </div>
-
-                  {/* Right: timer OR upgrade */}
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    {isLocked && countdown && (
-                      <span style={{fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",color:"rgba(255,255,255,0.25)",letterSpacing:"0.01em"}}>
-                        {countdown}
-                      </span>
-                    )}
-                    {(isLocked || dailyCount >= dailyCap*0.8) && (
+                  {isLocked&&countdown&&(
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{
+                        display:"flex",alignItems:"center",gap:6,
+                        padding:"4px 10px",borderRadius:8,
+                        background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.18)"
+                      }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <span style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,color:"#38bdf8",fontWeight:500}}>{countdown}</span>
+                        <span style={{fontSize:10.5,color:"rgba(56,189,248,0.5)",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                          {lang==="pt"?"para liberar":lang==="es"?"para liberar":"until reset"}
+                        </span>
+                      </div>
                       <button onClick={()=>setShowUpgradeWall(true)} style={{
                         fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
-                        padding:"3px 10px",borderRadius:6,border:"1px solid rgba(14,165,233,0.25)",
-                        background:"rgba(14,165,233,0.07)",color:"#38bdf8",cursor:"pointer",
-                        lineHeight:"16px",
+                        padding:"4px 10px",borderRadius:7,border:"1px solid rgba(14,165,233,0.35)",
+                        background:"rgba(14,165,233,0.08)",color:"#38bdf8",cursor:"pointer",whiteSpace:"nowrap"
                       }}>
-                        {isLocked
-                          ? (lang==="pt"?"Desbloquear":lang==="es"?"Desbloquear":"Unlock")
-                          : "Upgrade"}
+                        {lang==="pt"?"Desbloquear":lang==="es"?"Desbloquear":"Unlock"}
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
