@@ -1812,8 +1812,27 @@ export default function AdBriefAI() {
                   data:{ hooks:data.hooks, product:params.product, niche:params.niche, market:params.market, platform:params.platform, tone:params.tone, context:params.context }
                 }}).catch(()=>{});
               }
-            }else if(fn==="generate-script"&&(data?.script||data?.content)){
-              nb[bi]={type:"insight",title:lang==="es"?"Guión":"Roteiro",content:data.script||data.content};
+            }else if(fn==="generate-script"&&(data?.scripts?.length||data?.script||data?.content)){
+              // generate-script returns { scripts: [{ title, lines, notes, hook_score }] }
+              const scripts = data.scripts || [];
+              let content = "";
+              if(scripts.length > 0){
+                content = scripts.map((s: any, si: number) => {
+                  const lines: string[] = [];
+                  if(scripts.length > 1) lines.push(`## ${s.title || `Variação ${si+1}`}${s.hook_score ? ` · Hook Score: ${s.hook_score}/100` : ""}`);
+                  if(s.lines?.length){
+                    s.lines.forEach((l: any) => {
+                      const prefix = l.type === "vo" ? "**VO**" : l.type === "onscreen" ? "**ON-SCREEN**" : "**VISUAL**";
+                      lines.push(`${prefix}  ${l.text}`);
+                    });
+                  }
+                  if(s.notes) lines.push(`\n*${s.notes}*`);
+                  return lines.join("\n");
+                }).join("\n\n---\n\n");
+              } else {
+                content = data.script || data.content || "";
+              }
+              nb[bi]={type:"insight",title:lang==="es"?"Guión":lang==="pt"?"Roteiro":"Script",content};
             }else if(fn==="generate-brief"&&data?.brief){
               // brief is a structured JSON object — convert to readable markdown
               const b=data.brief as any;
@@ -2490,15 +2509,31 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         if(c.type==="tool_call"&&["hooks","script","brief"].includes(c.tool||"")){
           const p=c.tool_params||{};
           const fn=c.tool==="hooks"?"generate-hooks":c.tool==="script"?"generate-script":"generate-brief";
-          const params={...p,user_id:user.id,persona_id:selectedPersona?.id||null,
-            product:p.product||p.niche||"iGaming",
-            niche:p.niche||p.product||"iGaming",
-            market:p.market||lang.toUpperCase()||"BR",
-            platform:p.platform||"Meta Feed",
-            tone:p.tone||"human, credible, specific",
-            count:p.count||5,
-            context:p.context||p.angle||"",
-            angle:p.angle||"",
+          // generate-script expects: product, offer, audience, format, duration, market, angle, extra_context
+          // generate-hooks expects: product, niche, market, platform, tone, count, context
+          const params = fn === "generate-script" ? {
+            user_id: user.id,
+            persona_id: selectedPersona?.id || null,
+            product: p.product || p.niche || "produto",
+            offer: p.cta || "",
+            audience: p.audience || p.target || "",
+            format: p.format || "ugc",
+            duration: p.duration || "30s",
+            market: p.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "US"),
+            angle: p.angle || p.tone || "",
+            extra_context: p.context || p.extra_context || "",
+          } : {
+            ...p,
+            user_id: user.id,
+            persona_id: selectedPersona?.id || null,
+            product: p.product || p.niche || "produto",
+            niche: p.niche || p.product || "produto",
+            market: p.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "US"),
+            platform: p.platform || "Meta Feed",
+            tone: p.tone || "human, credible, specific",
+            count: p.count || 5,
+            context: p.context || p.angle || "",
+            angle: p.angle || "",
           };
           return{...c,type:"tool_call" as const,_pendingTool:fn,_toolParams:params};
         }
