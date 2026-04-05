@@ -785,43 +785,63 @@ const I = { fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" };
 const MONO = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
 
 // ── Tiny sparkline ────────────────────────────────────────────────────────────
-function Spark({ d, c = "#6366f1", w = 52, h = 26 }: { d: number[]; c?: string; w?: number; h?: number }) {
+function Spark({ d, c = "#0ea5e9", w = 56, h = 28 }: { d: number[]; c?: string; w?: number; h?: number }) {
   if (!d || d.length < 2) return null;
   const mn = Math.min(...d), mx = Math.max(...d), r = mx - mn || 1;
-  const pts = d.map((v, i) => `${(i / (d.length - 1)) * w},${h - 2 - ((v - mn) / r) * (h - 4)}`).join(" ");
-  const lx = w, ly = h - 2 - ((d[d.length - 1] - mn) / r) * (h - 4);
+  const pts = d.map((v, i) => [
+    (i / (d.length - 1)) * w,
+    h - 3 - ((v - mn) / r) * (h - 6)
+  ]);
+  const linePts = pts.map(([x, y]) => `${x},${y}`).join(" ");
+  // Area fill path: line + down to bottom + back
+  const areaPath = `M${pts[0][0]},${pts[0][1]} ` +
+    pts.slice(1).map(([x,y]) => `L${x},${y}`).join(" ") +
+    ` L${pts[pts.length-1][0]},${h} L${pts[0][0]},${h} Z`;
+  const lx = pts[pts.length-1][0], ly = pts[pts.length-1][1];
   const up = d[d.length - 1] >= d[d.length - 2];
+  const dotC = up ? "#22d3ee" : "#fb7185";
+  const id = `sg${Math.random().toString(36).slice(2,7)}`;
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block", overflow: "visible", flexShrink: 0 }}>
-      <polyline points={pts} fill="none" stroke={c} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity="0.7" />
-      <circle cx={lx} cy={ly} r="2.5" fill={up ? "#34d399" : "#fb7185"} opacity="0.9" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={c} stopOpacity="0.25"/>
+          <stop offset="100%" stopColor={c} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill={`url(#${id})`}/>
+      <polyline points={linePts} fill="none" stroke={c} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+      <circle cx={lx} cy={ly} r="2" fill={dotC}/>
     </svg>
   );
 }
 
 // ── KPI card ─────────────────────────────────────────────────────────────────
-function Kpi({ label, value, sub, trend, spark, color = "#6366f1", warn = false }: {
+function Kpi({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false }: {
   label: string; value: string; sub?: string; trend?: "up" | "down" | "flat";
   spark?: number[]; color?: string; warn?: boolean;
 }) {
-  const vc = warn ? "#fb7185" : "#f1f5f9";
-  const sc = warn ? "#fb7185" : trend === "up" ? "#34d399" : trend === "down" ? "#fb7185" : "#475569";
+  const vc = warn ? "#fb7185" : "rgba(255,255,255,0.92)";
+  const sc = warn ? "rgba(248,113,133,0.7)" : trend === "up" ? "rgba(34,211,238,0.8)" : trend === "down" ? "rgba(248,113,133,0.7)" : "rgba(255,255,255,0.28)";
   return (
     <div className="lp-kpi kpi-card" style={{
-      flex: 1, minWidth: 0, padding: "14px 16px 14px",
-      background: warn ? "rgba(251,113,133,0.03)" : "rgba(255,255,255,0.02)",
-      border: `1px solid ${warn ? "rgba(251,113,133,0.12)" : "rgba(255,255,255,0.06)"}`,
-      borderRadius: 12, display: "flex", flexDirection: "column", justifyContent: "space-between",
+      flex: 1, minWidth: 0, padding: "12px 14px",
+      background: warn ? "rgba(251,113,133,0.04)" : "rgba(255,255,255,0.03)",
+      border: `1px solid ${warn ? "rgba(251,113,133,0.14)" : "rgba(255,255,255,0.07)"}`,
+      borderRadius: 10, display: "flex", flexDirection: "column", gap: 8,
       cursor: "default",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ ...I, fontSize: 12, fontWeight: 500, color: "#475569", letterSpacing: "0.04em" }}>{label}</span>
+        <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 10, fontWeight: 600,
+          color: "rgba(255,255,255,0.32)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{label}</span>
         {spark && spark.length >= 2 && <Spark d={spark} c={warn ? "#fb7185" : color} />}
       </div>
       <div>
-        <div style={{ ...I, fontSize: 24, fontWeight: 600, color: vc, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 4 }}>{value}</div>
+        <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 700,
+          color: vc, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 3 }}>{value}</div>
         {sub && (
-          <div style={{ ...I, fontSize: 12, fontWeight: 400, color: sc, display: "flex", alignItems: "center", gap: 3 }}>
+          <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 500,
+            color: sc, display: "flex", alignItems: "center", gap: 3 }}>
             {trend === "up" && "↑"}{trend === "down" && "↓"}{sub}
           </div>
         )}
@@ -849,9 +869,9 @@ const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winne
         {a.campaign && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
       <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-        <span style={{ ...MONO, fontSize: 12, color: parseFloat(ctr) > 1.5 ? "#34d399" : parseFloat(ctr) < 0.5 ? "#fb7185" : "#475569" }}>{ctr}%</span>
+        <span style={{ ...MONO, fontSize: 12, color: parseFloat(ctr) > 1.5 ? "rgba(34,211,238,0.85)" : parseFloat(ctr) < 0.5 ? "#fb7185" : "rgba(255,255,255,0.45)" }}>{ctr}%</span>
         {fr && <span style={{ ...MONO, fontSize: 12, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.3)" }}>f{fr}</span>}
-        <span style={{ ...MONO, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>R${sp}</span>
+        <span style={{ ...MONO, fontSize: 12, color: "rgba(255,255,255,0.42)" }}>R${sp}</span>
       </div>
     </div>
   );
@@ -884,7 +904,7 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
     }}>
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}60`, flexShrink: 0 }} />
       <span style={{ ...I, fontSize: 12, fontWeight: 600, color: c.title, whiteSpace: "nowrap" }}>{a.title}</span>
-      <span style={{ ...I, fontSize: 12, color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.detail}</span>
+      <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.45)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.detail}</span>
       <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
     </div>
   );
@@ -1186,7 +1206,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
-    <div className="lp" style={{ borderBottom: "1px solid var(--border-subtle)", background: "rgba(6,8,15,0.95)", backdropFilter: "blur(24px)", animation: "lp-in 0.18s ease" }}>
+    <div className="lp" style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-main)", backdropFilter: "blur(0px)", animation: "lp-in 0.18s ease" }}>
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -1404,9 +1424,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
               {tab === "meta" ? (
                 <>
-                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#6366f1" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
-                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color={parseFloat(k.ctr || 0) > 1.5 ? "#34d399" : "#fb7185"} sub={cTr === "up" ? (lang==="pt"?"subindo":lang==="es"?"subiendo":"rising") : cTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"bajando":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
-                  <Kpi label="CPM" value={`${data.currency_symbol||"R$"}${parseFloat(k.cpm || 0).toFixed(1)}`} color="#8b5cf6" sub={lang==="pt"?"por mil impr.":lang==="es"?"por mil impr.":"per 1k impr."} />
+                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#0ea5e9" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
+                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color="#0ea5e9" sub={cTr === "up" ? (lang==="pt"?"subindo":lang==="es"?"subiendo":"rising") : cTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"bajando":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
+                  <Kpi label="CPM" value={`${data.currency_symbol||"R$"}${parseFloat(k.cpm || 0).toFixed(1)}`} color="#0ea5e9" sub={lang==="pt"?"por mil impr.":lang==="es"?"por mil impr.":"per 1k impr."} />
                   <Kpi label={lang==="pt"?"Frequência":lang==="es"?"Frecuencia":"Frequency"} value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} sub={parseFloat(k.frequency || 0) > 3.5 ? (lang==="pt"?"fadiga próxima":lang==="es"?"fatiga próxima":"fatigue close") : parseFloat(k.frequency || 0) > 2.5 ? (lang==="pt"?"monitorar":lang==="es"?"monitorear":"monitor") : (lang==="pt"?"saudável":lang==="es"?"saludable":"healthy")} />
                   <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ${lang==="pt"?"ads ativos":lang==="es"?"ads activos":"active ads"}`} />
                 </>
