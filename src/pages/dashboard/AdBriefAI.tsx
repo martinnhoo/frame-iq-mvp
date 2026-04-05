@@ -1669,6 +1669,7 @@ export default function AdBriefAI() {
   const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
+  const [activeToolParams,setActiveToolParams]=useState<Record<string,string>>({});
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
   const [freeUsage,setFreeUsage]=useState<{count:number,lastReset:string|null}|null>(null);
@@ -1809,6 +1810,7 @@ export default function AdBriefAI() {
     if(!user?.id)return;
     const pid=selectedPersona?.id||null;
     (async()=>{
+      try{
       const[analysesRes,patternsRes,personaRes,entriesRes,snapRes]=await Promise.all([
         (pid ? (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id",pid) : (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id",null)).order("created_at",{ascending:false}).limit(50),
         // learned_patterns: filter server-side by persona_id to prevent cross-account leakage
@@ -1901,6 +1903,10 @@ export default function AdBriefAI() {
         edSummary || "None",
       ].filter(s => s !== undefined).join("\n").replace(/\n{3,}/g, "\n\n").trim());
       setContextReady(true);
+      }catch(ctxErr){
+        console.error("[AdBriefAI] context init failed:", ctxErr);
+        setContextReady(true); // unblock chat even if context fetch fails
+      }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[user?.id, selectedPersona?.id, sessionGoal, accountAlerts.length, connections.join(",")]);
@@ -1989,7 +1995,13 @@ export default function AdBriefAI() {
           setMessages(prev=>prev.map(m=>{
             if(m.id!==msg.id)return m;
             const nb=[...(m.blocks||[])];
-            if(fn==="generate-hooks"&&data?.hooks?.length){
+            if(fn==="decode-competitor"&&(data?.analysis||data?.content||data?.result)){
+              const analysis=data.analysis||data.content||data.result||"";
+              nb[bi]={type:"insight",title:lang==="pt"?"Análise do Concorrente":lang==="es"?"Análisis del Competidor":"Competitor Analysis",content:analysis};
+            }else if(fn==="translate-text"&&(data?.translation||data?.translated_text||data?.result)){
+              const translated=data.translation||data.translated_text||data.result||"";
+              nb[bi]={type:"insight",title:lang==="pt"?"Tradução":lang==="es"?"Traducción":"Translation",content:translated};
+            }else if(fn==="generate-hooks"&&data?.hooks?.length){
               nb[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:data.hooks.map((h:any)=>typeof h==="string"?h:h.hook||h.text||JSON.stringify(h))};
               // Capture learning — fire and forget
               if(user?.id){
@@ -1999,6 +2011,13 @@ export default function AdBriefAI() {
                 }}).catch(()=>{});
               }
             }else if(fn==="generate-script"&&(data?.scripts?.length||data?.script||data?.content)){
+              // Capture learning for scripts
+              if(user?.id&&data?.scripts?.length){
+                supabase.functions.invoke("capture-learning",{body:{
+                  user_id:user.id,event_type:"script_generated",
+                  data:{ scripts:data.scripts.slice(0,1), product:params.product, market:params.market, format:params.format, angle:params.angle }
+                }}).catch(()=>{});
+              }
               // generate-script returns { scripts: [{ title, lines, notes, hook_score }] }
               const scripts = data.scripts || [];
               let content = "";
@@ -2020,6 +2039,13 @@ export default function AdBriefAI() {
               }
               nb[bi]={type:"insight",title:lang==="es"?"Guión":lang==="pt"?"Roteiro":"Script",content};
             }else if(fn==="generate-brief"&&data?.brief){
+              // Capture learning for briefs
+              if(user?.id){
+                supabase.functions.invoke("capture-learning",{body:{
+                  user_id:user.id,event_type:"brief_generated",
+                  data:{ brief_summary:(data.brief as any)?.objective||(data.brief as any)?.core_message||"", product:params.product, market:params.market }
+                }}).catch(()=>{});
+              }
               // brief is a structured JSON object — convert to readable markdown
               const b=data.brief as any;
               const lines:string[]=[];
@@ -2688,8 +2714,37 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         }
         // When AI emits a tool_call for content tools, open the panel with prefilled context
         if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!(c as any)._pendingTool){
-          // Auto-open panel with AI-populated context
-          setTimeout(()=>setActiveTool(c.tool||null),100);
+          // Auto-open panel with AI-populated context + prefill from tool_params
+          const p=c.tool_params||{};
+          const prefill: Record<string,string>={};
+          if(p.competitor_url||p.url||p.brand||p.ad_text) prefill.val=p.competitor_url||p.url||p.brand||p.ad_text||"";
+          if(p.source_text||p.text) prefill.val=p.source_text||p.text||"";
+          if(p.angle) prefill.val=p.angle;
+          setTimeout(()=>{setActiveTool(c.tool||null);setActiveToolParams(prefill);},100);
+        }
+        // Execute competitor tool_calls inline — invoke decode-competitor
+        if(c.type==="tool_call"&&c.tool==="competitor"){
+          const p=c.tool_params||{};
+          const params={
+            ad_text: p.competitor_url||p.url||p.brand||p.ad_text||p.context||"",
+            observation: p.angle||p.context||"",
+            ui_language: lang,
+            user_id: user.id,
+          };
+          return{...c,type:"tool_call" as const,_pendingTool:"decode-competitor",_toolParams:params};
+        }
+        // Execute translate tool_calls inline — invoke translate-text
+        if(c.type==="tool_call"&&c.tool==="translate"){
+          const p=c.tool_params||{};
+          const params={
+            source_text: p.source_text||p.text||p.content||"",
+            to_language: p.target_language||p.to_language||"en",
+            to_language_name: p.target_language_name||p.to_language_name||"English",
+            tone: p.tone||"Persuasive",
+            context: p.context||p.angle||"",
+            user_id: user.id,
+          };
+          return{...c,type:"tool_call" as const,_pendingTool:"translate-text",_toolParams:params};
         }
         // Execute hooks/script/brief tool_calls inline — fire and replace
         if(c.type==="tool_call"&&["hooks","script","brief"].includes(c.tool||"")){

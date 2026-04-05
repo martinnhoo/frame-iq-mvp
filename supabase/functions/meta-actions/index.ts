@@ -69,9 +69,12 @@ Deno.serve(async (req) => {
     if (action === "update_budget") {
       if (!value) return err("value required");
       const cents = Math.round(parseFloat(String(value)) * 100);
-      const d = await post(target_id, { daily_budget: cents });
+      // Use lifetime_budget field if target_type hints at it, otherwise daily_budget
+      const budgetField = (body.budget_type === "lifetime") ? "lifetime_budget" : "daily_budget";
+      const d = await post(target_id, { [budgetField]: cents });
       if (d.error) return err(d.error.message);
-      return ok({ success: true, target_id, new_budget: value, message: `Orçamento atualizado para $${value}/dia.` });
+      const label = budgetField === "lifetime_budget" ? "vitalício" : "/dia";
+      return ok({ success: true, target_id, new_budget: value, message: `Orçamento atualizado para R$${value}${label}.` });
     }
 
     if (action === "publish") {
@@ -81,9 +84,13 @@ Deno.serve(async (req) => {
     }
 
     if (action === "duplicate") {
-      const d = await post(`${target_id}/copies`, { deep_copy: true, status_option: "PAUSED" });
+      // Meta API: /copies works for adsets and ads, not campaigns
+      // For campaigns, use /copies with campaign_id; for ads use ad copies endpoint
+      const copyEndpoint = target_type === "ad" ? `${target_id}/copies` : `${target_id}/copies`;
+      const d = await post(copyEndpoint, { deep_copy: true, status_option: "PAUSED" });
       if (d.error) return err(d.error.message);
-      return ok({ success: true, new_id: d.copied_adset_id || d.id, message: `Duplicado (pausado). Novo ID: ${d.copied_adset_id || d.id}` });
+      const newId = d.copied_adset_id || d.copied_ad_id || d.id;
+      return ok({ success: true, new_id: newId, message: `Duplicado e pausado. Novo ID: ${newId}` });
     }
 
     if (action === "list_campaigns") {

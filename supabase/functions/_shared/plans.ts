@@ -12,10 +12,25 @@ export const LIFETIME_ACCOUNTS: Record<string, string> = {
   "denis@adbrief.pro": "studio",
 };
 
+// Legacy plan name normalization — maps old/alternate plan names to current canonical names
+const PLAN_ALIASES: Record<string, string> = {
+  "creator":  "maker",
+  "starter":  "pro",
+  "scale":    "studio",
+  "lifetime": "studio",
+  "appsumo":  "studio",
+  "ltd":      "studio",
+  "annual_maker":  "maker",
+  "annual_pro":    "pro",
+  "annual_studio": "studio",
+};
+
 /** Returns the effective plan, overriding DB value for lifetime accounts */
 export function getEffectivePlan(dbPlan: string | null | undefined, email: string | null | undefined): string {
   if (email && LIFETIME_ACCOUNTS[email]) return LIFETIME_ACCOUNTS[email];
-  return dbPlan || "free";
+  const raw = dbPlan || "free";
+  // Normalize legacy/alias plan names to canonical
+  return PLAN_ALIASES[raw] || raw;
 }
 
 /** Per-plan limits. -1 = unlimited */
