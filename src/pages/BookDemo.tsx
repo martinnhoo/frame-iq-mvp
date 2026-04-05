@@ -172,8 +172,7 @@ const BookDemo = () => {
       <div className="fixed top-[65px] left-0 right-0 z-50 h-1 bg-border/30">
         <div
           className="h-full"
-          style={{ background: 'linear-gradient(90deg, #8b5cf6, #ec4899)' }}
-          animate={{ width: `${progress}%` }}
+          style={{ background: 'linear-gradient(90deg, #8b5cf6, #ec4899)', width: `${progress}%`, transition: 'width 0.3s ease' }}
         />
       </div>
 

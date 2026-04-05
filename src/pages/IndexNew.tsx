@@ -438,7 +438,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
   return (
     <div ref={ref} style={{ textAlign: "center" }}>
       <div
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        style={{ opacity: 1 }}
       >
         <span style={{ fontFamily: F, fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", background: "linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</span>
         <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 6, letterSpacing: "0.02em" }}>{label}</p>
