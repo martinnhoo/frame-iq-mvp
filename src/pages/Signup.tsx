@@ -102,16 +102,16 @@ const Signup = () => {
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
       {/* Animated orbs */}
-      <motion.div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['20%', '-30%', '10%'], y: ['-20%', '20%', '-10%'] }} transition={{ duration: 16, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
-      <motion.div className="absolute w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }} animate={{ x: ['-20%', '30%', '-10%'], y: ['30%', '-20%', '10%'] }} transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
-      <motion.div className="absolute w-[350px] h-[350px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(180, 70%, 50%, 0.05) 0%, transparent 60%)', filter: 'blur(60px)' }} animate={{ x: ['-10%', '25%', '-20%'], y: ['15%', '-25%', '20%'] }} transition={{ duration: 14, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
+      <div className="absolute w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+      <div className="absolute w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }}   />
+      <div className="absolute w-[350px] h-[350px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, hsla(180, 70%, 50%, 0.05) 0%, transparent 60%)', filter: 'blur(60px)' }}   />
 
       {/* Animated grid */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
       {/* Floating particles */}
       {[...Array(6)].map((_, i) => (
-        <motion.div key={i} className="absolute w-1 h-1 rounded-full pointer-events-none" style={{ background: i % 2 === 0 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)', left: `${20 + i * 12}%`, top: `${15 + (i % 3) * 30}%` }} animate={{ y: [0, -25, 0], opacity: [0.2, 0.7, 0.2], scale: [1, 1.8, 1] }} transition={{ duration: 3.5 + i * 0.4, repeat: Infinity, delay: i * 0.3, ease: 'easeInOut' }} />
+        <div key={i} className="absolute w-1 h-1 rounded-full pointer-events-none" style={{ background: i % 2 === 0 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)', left: `${20 + i * 12}%`, top: `${15 + (i % 3) * 30}%`, opacity: 0.4 }} />
       ))}
 
       <div className="absolute top-4 right-4 z-10">

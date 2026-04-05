@@ -72,20 +72,14 @@ const Login = () => {
       <motion.div 
         className="absolute w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, hsla(199, 83%, 58%, 0.12) 0%, transparent 60%)', filter: 'blur(80px)', willChange: 'transform' }}
-        animate={{ x: ['-20%', '15%', '-10%'], y: ['-15%', '20%', '-15%'] }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
       />
       <motion.div 
         className="absolute w-[500px] h-[500px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, hsla(320, 80%, 60%, 0.1) 0%, transparent 60%)', filter: 'blur(80px)' }}
-        animate={{ x: ['30%', '-20%', '10%'], y: ['20%', '-30%', '20%'] }}
-        transition={{ duration: 18, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
       />
       <motion.div 
         className="absolute w-[300px] h-[300px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, hsla(200, 80%, 60%, 0.06) 0%, transparent 60%)', filter: 'blur(60px)' }}
-        animate={{ x: ['10%', '-30%', '20%'], y: ['-10%', '20%', '-30%'] }}
-        transition={{ duration: 12, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
       />
 
       {/* Animated grid */}
@@ -100,8 +94,6 @@ const Login = () => {
           key={i}
           className="absolute w-1 h-1 rounded-full pointer-events-none"
           style={{ background: i % 2 === 0 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)', left: `${15 + i * 14}%`, top: `${20 + (i % 3) * 25}%` }}
-          animate={{ y: [0, -30, 0], opacity: [0.2, 0.8, 0.2], scale: [1, 1.5, 1] }}
-          transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.4, ease: 'easeInOut' }}
         />
       ))}
 
