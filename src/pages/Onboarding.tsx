@@ -360,25 +360,15 @@ export default function Onboarding() {
     <div style={{ minHeight: "100vh", background: "#07080f", fontFamily: F, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
 
       {/* ── Animated background orbs (same as signup) ── */}
-      <motion.div style={{ position: "fixed", width: 700, height: 700, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(ellipse at center, hsla(199,83%,58%,0.13) 0%, transparent 60%)", filter: "blur(80px)", top: "10%", left: "20%" }}
-        animate={{ x: ["0%","30%","-20%","0%"], y: ["0%","-30%","20%","0%"] }}
-        transition={{ duration: 18, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }} />
-      <motion.div style={{ position: "fixed", width: 500, height: 500, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(circle, hsla(280,80%,60%,0.10) 0%, transparent 60%)", filter: "blur(80px)", top: "50%", right: "10%" }}
-        animate={{ x: ["0%","-25%","20%","0%"], y: ["0%","25%","-20%","0%"] }}
-        transition={{ duration: 22, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }} />
-      <motion.div style={{ position: "fixed", width: 400, height: 400, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(circle, hsla(180,70%,50%,0.07) 0%, transparent 60%)", filter: "blur(60px)", bottom: "10%", left: "10%" }}
-        animate={{ x: ["0%","20%","-15%","0%"], y: ["0%","-20%","15%","0%"] }}
-        transition={{ duration: 16, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }} />
+      <div style={{ position: "fixed", width: 700, height: 700, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(ellipse at center, hsla(199,83%,58%,0.13) 0%, transparent 60%)", filter: "blur(80px)", top: "10%", left: "20%" }} />
+      <div style={{ position: "fixed", width: 500, height: 500, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(circle, hsla(280,80%,60%,0.10) 0%, transparent 60%)", filter: "blur(80px)", top: "50%", right: "10%" }} />
+      <div style={{ position: "fixed", width: 400, height: 400, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: "radial-gradient(circle, hsla(180,70%,50%,0.07) 0%, transparent 60%)", filter: "blur(60px)", bottom: "10%", left: "10%" }} />
 
       {/* Grid pattern */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, opacity: 0.035, backgroundImage: "linear-gradient(rgba(14,165,233,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.6) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
       {/* Floating particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div key={i} style={{ position: "fixed", width: 3, height: 3, borderRadius: "50%", pointerEvents: "none", zIndex: 0, background: i % 3 === 0 ? "rgba(14,165,233,0.5)" : i % 3 === 1 ? "rgba(6,182,212,0.4)" : "rgba(139,92,246,0.4)", left: `${10 + i * 11}%`, top: `${10 + (i % 4) * 22}%` }}
-          animate={{ y: [0, -30, 0], opacity: [0.2, 0.8, 0.2], scale: [1, 2, 1] }}
-          transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.4, ease: "easeInOut" }} />
-      ))}
+      {/* particles removed - framer-motion v12 array keyframe issue */}
 
       {/* ── Header ── */}
       <div className="onboarding-header" style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 32px", flexShrink: 0 }}>
