@@ -2111,21 +2111,17 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 18px', borderRadius: 10, background: 'rgba(0,130,251,0.08)', border: '1px solid rgba(0,130,251,0.22)', boxShadow: '0 0 20px rgba(0,130,251,0.07)' }}>
-          {/* Meta ∞ — logo oficial */}
-          <svg width="28" height="18" viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Meta ∞ — logo oficial com anel e gradiente exato */}
+          <svg width="32" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="metaReal" x1="0" y1="19" x2="60" y2="19" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#0099FF"/>
-                <stop offset="50%" stopColor="#0975F3"/>
-                <stop offset="100%" stopColor="#0250C5"/>
+              <linearGradient id="metaLogo" x1="0" y1="22" x2="64" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%"   stopColor="#0071ED"/>
+                <stop offset="45%"  stopColor="#0066E4"/>
+                <stop offset="100%" stopColor="#0082FA"/>
               </linearGradient>
             </defs>
-            <path fillRule="evenodd" clipRule="evenodd"
-              d="M30 14.5C26.8 10.2 23 7.5 19 7.5C12.1 7.5 6.5 14.2 6.5 19C6.5 23.8 9.8 27 13.5 27C16.5 27 18.8 25.5 22 21.5L24.5 18.5L22 15.5C19.5 12.5 17.5 11 15 11C12 11 10 13.5 10 16C10 17.2 10.5 18.2 11.5 19C10.5 18.2 10 17.2 10 16C10 13.5 12 11 15 11C17.5 11 19.5 12.5 22 15.5L24.5 18.5L22 21.5C18.8 25.5 16.5 27 13.5 27C9.8 27 6.5 23.8 6.5 19C6.5 14.2 12.1 7.5 19 7.5C23 7.5 26.8 10.2 30 14.5Z"
-              fill="url(#metaReal)" opacity="0"/>
-            {/* Lemniscate — forma correta do ∞ Meta */}
-            <path d="M30 19C26.5 13.5 22.5 10 18 10C11 10 5 14.5 5 19C5 23.5 9 27 14 27C17.5 27 20.5 25 24.5 20.5L30 14.5L35.5 20.5C39.5 25 42.5 27 46 27C51 27 55 23.5 55 19C55 14.5 49 10 42 10C37.5 10 33.5 13.5 30 19Z"
-              fill="none" stroke="url(#metaReal)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M32 22C28 14 21 8 14 8C6 8 0 14 0 22C0 30 6 36 14 36C20 36 25 32 30 26L32 23L34 26C39 32 44 36 50 36C58 36 64 30 64 22C64 14 58 8 50 8C43 8 36 14 32 22Z" fill="url(#metaLogo)"/>
+            <path d="M32 22C29 17 24 13 18 13C12 13 7 17 7 22C7 27 11 31 16 31C21 31 25 28 29 23L32 19L35 23C39 28 43 31 48 31C53 31 57 27 57 22C57 17 52 13 46 13C40 13 35 17 32 22Z" fill="#06080f"/>
           </svg>
           <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Meta Ads</span>
         </div>
