@@ -568,8 +568,9 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
 }
 
 // ── Block card ────────────────────────────────────────────────────────────────
-const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;stream?:boolean}) {
+const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
+  const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans',sans-serif";
   const M="'Inter',sans-serif";
   const MONO="'DM Mono',monospace";
@@ -579,8 +580,16 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,stream=fa
     setCopiedIdx(idx);
     setTimeout(()=>setCopiedIdx(null),1800);
   };
-  const useAsScript=(text:string)=>{
-    onNavigate("/dashboard/script",{product:text.slice(0,120)});
+  const useAsScript=(text:string,idx:number)=>{
+    if(!onSend) { onNavigate("/dashboard/script",{product:text.slice(0,120)}); return; }
+    setScriptLoadingIdx(idx);
+    // Build a [SCRIPT] command using the hook as the opening — AI will call generate-script inline
+    const product = accountCtx?.product||accountCtx?.niche||"";
+    const market  = accountCtx?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US");
+    const platform= accountCtx?.platform||"Meta";
+    const msg = `[SCRIPT] Escreva um roteiro completo de vídeo usando este hook de abertura exato: "${text}". Produto: ${product}. Mercado: ${market}. Plataforma: ${platform}. Formato: VO | ON-SCREEN | VISUAL. Mantenha o hook exatamente como está nas primeiras cenas.`;
+    setTimeout(()=>setScriptLoadingIdx(null),2000);
+    onSend(msg);
   };
 
   // ── NAVIGATE ──
@@ -636,11 +645,15 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,stream=fa
                   :<><Copy size={9}/><span>{lang==="pt"?"Copiar":lang==="es"?"Copiar":lang==="es"?"Copiar":"Copiar"}</span></>
                 }
               </button>
-              <button onClick={()=>useAsScript(item)}
-                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontSize:12,color:"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.12s",whiteSpace:"nowrap" as const}}
-                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.2)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}
-                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.1)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}>
-                {lang==="pt"?"Roteiro":lang==="es"?"Guión":"Script"}
+              <button onClick={()=>useAsScript(item,i)}
+                disabled={scriptLoadingIdx===i}
+                style={{display:"flex",alignItems:"center",gap:3,padding:"3px 8px",height:24,borderRadius:6,background:scriptLoadingIdx===i?"rgba(14,165,233,0.12)":"transparent",border:`1px solid ${scriptLoadingIdx===i?"rgba(14,165,233,0.3)":"rgba(255,255,255,0.1)"}`,cursor:scriptLoadingIdx===i?"default":"pointer",fontSize:12,color:scriptLoadingIdx===i?"rgba(14,165,233,0.8)":"rgba(255,255,255,0.5)",fontFamily:M,transition:"all 0.12s",whiteSpace:"nowrap" as const}}
+                onMouseEnter={e=>{if(scriptLoadingIdx!==i){(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.2)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}}
+                onMouseLeave={e=>{if(scriptLoadingIdx!==i){(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.1)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}}>
+                {scriptLoadingIdx===i
+                  ? <><span style={{width:8,height:8,borderRadius:"50%",border:"1.5px solid rgba(14,165,233,0.5)",borderTopColor:"#0ea5e9",animation:"lp-spin 0.7s linear infinite",display:"inline-block"}}/><span>{lang==="pt"?"Gerando...":lang==="es"?"Generando...":"Generating..."}</span></>
+                  : <>{lang==="pt"?"Roteiro":lang==="es"?"Guión":"Script"}</>
+                }
               </button>
             </div>
           </div>
@@ -3082,7 +3095,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                         </div>
                       ):
                       (b as any)._pendingTool?null:
-                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} stream={isLatest}/>
+                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                     )}
                     {/* Cursor piscando — só na última mensagem, desaparece após 3s */}
                     {isLatest && (
@@ -3101,7 +3114,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   /* Proactive — sem card, renderiza direto */
                   msg.blocks?.map((b,bi)=>
                     (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
-                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} stream={isLatest}/>
+                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                   )
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
