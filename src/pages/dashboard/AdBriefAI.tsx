@@ -409,49 +409,47 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   );
 }
 
-// ── Typewriter: revela linha por linha com stagger dramático ──────────────────
+// ── renderMarkdown — typing animation + tipografia hierárquica ───────────────
 function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   if (!text || typeof text !== "string") return [];
   const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
   const lines = normalized.split("\n");
   const nodes: React.ReactNode[] = [];
-  let listBuffer: string[] = [];
+  let listBuffer: { text: string; ordered: boolean; num?: number }[] = [];
+  let orderedCounter = 0;
   const F = "'Plus Jakarta Sans',sans-serif";
-  const M = "'Inter',sans-serif";
   const MONO = "'DM Mono',monospace";
-  // Stream: stagger mais dramático simula typing
-  const stagger = stream ? 0.12 : 0.055;
-  const dur = stream ? "0.3s" : "0.18s";
 
-  const flushList = (key: string) => {
-    if (listBuffer.length === 0) return;
-    nodes.push(
-      <ul key={key} style={{ margin: "8px 0 12px", paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>
-        {listBuffer.map((item, i) => (
-          <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(14,165,233,0.8)", flexShrink: 0, marginTop: 8 }} />
-            <span style={{ fontFamily: M, fontSize: 14, color: "rgba(240,242,248,0.88)", lineHeight: 1.7, letterSpacing: "-0.01em" }}>{inlineFormat(item)}</span>
-          </li>
-        ))}
-      </ul>
-    );
-    listBuffer = [];
-  };
+  // Stagger por nó — simula o cursor avançando bloco a bloco
+  const stagger = stream ? 0.09 : 0.045;
+  const typeDur = stream ? "0.35s" : "0.2s";
 
+  // Inline formatting — bold, code, italic
   const inlineFormat = (str: string): React.ReactNode => {
     const parts: React.ReactNode[] = [];
     let remaining = str;
     let idx = 0;
     while (remaining.length > 0) {
-      const boldMatch = remaining.match(/^(.*?)\*\*(.+?)\*\*(.*$)/s);
-      const codeMatch = remaining.match(/^(.*?)`([^`]+)`(.*$)/s);
-      if (boldMatch && (!codeMatch || boldMatch[1].length <= (codeMatch[1]?.length ?? Infinity))) {
-        if (boldMatch[1]) parts.push(<span key={idx++}>{boldMatch[1]}</span>);
-        parts.push(<strong key={idx++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.01em" }}>{boldMatch[2]}</strong>);
+      const boldMatch  = remaining.match(/^(.*?)\*\*(.+?)\*\*(.*$)/s);
+      const italicMatch = remaining.match(/^(.*?)_(.+?)_(.*$)/s);
+      const codeMatch  = remaining.match(/^(.*?)`([^`]+)`(.*$)/s);
+      const earliest = [
+        boldMatch  ? boldMatch[1].length  : Infinity,
+        italicMatch ? italicMatch[1].length : Infinity,
+        codeMatch  ? codeMatch[1].length  : Infinity,
+      ];
+      const minIdx = earliest.indexOf(Math.min(...earliest));
+      if (minIdx === 0 && boldMatch) {
+        if (boldMatch[1])  parts.push(<span key={idx++}>{boldMatch[1]}</span>);
+        parts.push(<strong key={idx++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.97)", letterSpacing: "-0.01em" }}>{boldMatch[2]}</strong>);
         remaining = boldMatch[3];
-      } else if (codeMatch) {
+      } else if (minIdx === 1 && italicMatch) {
+        if (italicMatch[1]) parts.push(<span key={idx++}>{italicMatch[1]}</span>);
+        parts.push(<em key={idx++} style={{ fontStyle: "italic", color: "rgba(255,255,255,0.7)" }}>{italicMatch[2]}</em>);
+        remaining = italicMatch[3];
+      } else if (minIdx === 2 && codeMatch) {
         if (codeMatch[1]) parts.push(<span key={idx++}>{codeMatch[1]}</span>);
-        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: 12, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 5px", color: "#67e8f9" }}>{codeMatch[2]}</code>);
+        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: "0.85em", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 6px", color: "#67e8f9" }}>{codeMatch[2]}</code>);
         remaining = codeMatch[3];
       } else {
         parts.push(<span key={idx++}>{remaining}</span>);
@@ -461,37 +459,110 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     return parts.length === 1 ? parts[0] : <>{parts}</>;
   };
 
+  const animStyle = (i: number): React.CSSProperties => stream ? {
+    // Typing: aparece palavra a palavra via clip-path expandindo da esquerda
+    animation: `typeIn ${typeDur} cubic-bezier(0.16,1,0.3,1) both`,
+    animationDelay: `${i * stagger}s`,
+  } : {
+    animation: `fadeUp ${typeDur} ease-out both`,
+    animationDelay: `${i * stagger}s`,
+  };
+
+  const flushList = (key: string) => {
+    if (listBuffer.length === 0) return;
+    const items = [...listBuffer];
+    const isOrdered = items[0]?.ordered;
+    nodes.push(
+      <div key={key} style={{ margin: "6px 0 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", ...animStyle(nodes.length + i * 0.3) }}>
+            {isOrdered
+              ? <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: "rgba(14,165,233,0.6)", flexShrink: 0, minWidth: 18, marginTop: 3, letterSpacing: "0.02em" }}>{item.num}.</span>
+              : <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(14,165,233,0.7)", flexShrink: 0, marginTop: 8 }} />
+            }
+            <span style={{ fontFamily: F, fontSize: 14.5, color: "rgba(240,242,248,0.88)", lineHeight: 1.7, letterSpacing: "-0.01em" }}>
+              {inlineFormat(item.text)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+    listBuffer = [];
+    orderedCounter = 0;
+  };
+
   lines.forEach((line, i) => {
     const trimmed = line.trim();
-    if (/^###\s/.test(trimmed)) {
+
+    // H1 — # título principal
+    if (/^#\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>{trimmed.replace(/^###\s/, "")}</p>);
+      nodes.push(
+        <p key={i} style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", margin: "20px 0 6px", lineHeight: 1.2, ...animStyle(nodes.length) }}>
+          {inlineFormat(trimmed.replace(/^#\s/, ""))}
+        </p>
+      );
       return;
     }
+
+    // H2 — ## subtítulo
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<p key={i} style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.02em", margin: "16px 0 6px", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>{trimmed.replace(/^##\s/, "")}</p>);
+      nodes.push(
+        <p key={i} style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.025em", margin: "16px 0 5px", lineHeight: 1.3, ...animStyle(nodes.length) }}>
+          {inlineFormat(trimmed.replace(/^##\s/, ""))}
+        </p>
+      );
       return;
     }
+
+    // H3 — ### label de seção
+    if (/^###\s/.test(trimmed)) {
+      flushList(`fl-${i}`);
+      nodes.push(
+        <p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.09em", textTransform: "uppercase", margin: "14px 0 4px", ...animStyle(nodes.length) }}>
+          {trimmed.replace(/^###\s/, "")}
+        </p>
+      );
+      return;
+    }
+
+    // Horizontal rule ---
+    if (/^---+$/.test(trimmed)) {
+      flushList(`fl-${i}`);
+      nodes.push(<div key={i} style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "12px 0", ...animStyle(nodes.length) }} />);
+      return;
+    }
+
+    // Unordered list
     if (/^[-*•]\s/.test(trimmed)) {
-      listBuffer.push(trimmed.replace(/^[-*•]\s/, ""));
+      listBuffer.push({ text: trimmed.replace(/^[-*•]\s/, ""), ordered: false });
       return;
     }
-    if (/^\d+\.\s/.test(trimmed)) {
-      listBuffer.push(trimmed.replace(/^\d+\.\s/, ""));
+
+    // Ordered list
+    const ordMatch = trimmed.match(/^(\d+)\.\s(.+)/);
+    if (ordMatch) {
+      orderedCounter++;
+      listBuffer.push({ text: ordMatch[2], ordered: true, num: parseInt(ordMatch[1]) });
       return;
     }
+
+    // Empty line
     if (!trimmed) {
       flushList(`fl-${i}`);
       return;
     }
+
+    // Paragraph
     flushList(`fl-${i}`);
     nodes.push(
-      <p key={i} style={{ fontFamily: M, fontSize: 14, color: "rgba(235,240,248,0.90)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", animation: `fadeUp ${dur} ease-out both`, animationDelay: `${nodes.length * stagger}s` }}>
+      <p key={i} style={{ fontFamily: F, fontSize: 14.5, color: "rgba(235,240,248,0.88)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", ...animStyle(nodes.length) }}>
         {inlineFormat(trimmed)}
       </p>
     );
   });
+
   flushList("final");
   return nodes;
 }
@@ -3272,6 +3343,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes cursorFade{0%,85%{opacity:1}100%{opacity:0}}
         .stream-cursor{animation:cursorBlink 0.7s step-end 4, cursorFade 3s linear 1 forwards!important;}
         /* Cursor pisca 4x em 2.8s depois faz fade */
+        @keyframes typeIn{from{opacity:0;transform:translateY(3px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
         @keyframes lp-sk{0%,100%{opacity:0.2}50%{opacity:0.5}}
