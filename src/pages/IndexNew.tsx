@@ -144,7 +144,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_p0_0: "Per-client accounts with Meta Ads connection", for_p0_1: "Real-time performance in chat", for_p0_2: "Brief generation tuned to each brand", for_p0_3: "AI that learns each client's patterns",
     for_p1_0: "Real spend and CTR in every answer", for_p1_1: "Pattern detection across performers", for_p1_2: "Competitor analysis and benchmarking", for_p1_3: "Account memory that improves over time",
     for_p2_0: "Connected to your real data", for_p2_1: "Accounts for each product line", for_p2_2: "Brand context baked in", for_p2_3: "Team-wide shared intelligence",
-    tools_label: "TOOLS", tools_h2: "Everything you need to scale.",
+    tools_label: "TOOLS", tools_h2: "Every tool a serious media buyer needs.",
     tools_sub: "Every tool connected to your real data. No copy-pasting.",
     ba_label: "BEFORE VS AFTER", ba_h2: "What changes when the AI knows your account.",
     ba_before_label: "Before AdBrief", ba_after_label: "With AdBrief",
@@ -198,9 +198,9 @@ const T: Record<Lang, Record<string, string>> = {
     stat_3: "7", stat_3_label: "Ferramentas integradas",
     stat_4: "Telegram", stat_4_label: "Alertas em tempo real",
     demo_label: "DEMO AO VIVO",
-    demo_q1_short: "Meu ROAS caiu 40%", demo_q1_full: "Meu ROAS de fitness caiu 40% essa semana. O que está acontecendo?",
-    demo_q2_short: "Quais anúncios pausar?", demo_q2_full: "Quais dos meus anúncios devo pausar imediatamente?",
-    demo_q3_short: "Hooks dos meus winners", demo_q3_full: "Escreve 3 hooks baseados nos meus melhores criativos",
+    demo_q1_short: "Por que o ROAS caiu?", demo_q1_full: "Por que o ROAS de FitCore caiu 40% essa semana?",
+    demo_q2_short: "O que pausar agora?", demo_q2_full: "Quais criativos de FitCore devo pausar agora?",
+    demo_q3_short: "Cria hooks dos winners", demo_q3_full: "Cria 3 hooks de academia dos meus criativos que mais convertem",
     demo_empty: "Selecione uma pergunta para ver o AdBrief em ação",
     demo_sample: "Conta de exemplo · Meta conectado",
     demo_connected: "conectado à FitCore Brasil",
@@ -210,7 +210,7 @@ const T: Record<Lang, Record<string, string>> = {
     how_sub: "Do zero à sua primeira resposta em menos de 2 minutos.",
     how_s1_title: "Crie sua conta", how_s1_desc: "30 segundos. Adicione o nome da marca, site e contexto — a IA usa isso para personalizar cada resposta com a identidade do seu negócio.",
     how_s2_title: "Conecte Meta Ads", how_s2_desc: "Um clique via OAuth. O AdBrief lê spend, CTR, frequência, criativos e performance dos últimos 90 dias — em tempo real, sem CSV.",
-    how_s3_title: "Pergunte. Receba diagnóstico.", how_s3_desc: "Interface de chat — mas com seus dados reais. Pergunte por que o ROAS caiu, o que pausar, quais hooks criar. A IA responde com contexto real.",
+    how_s3_title: "Pergunte. Receba diagnóstico.", how_s3_desc: "Digite qualquer pergunta sobre sua conta — a IA responde com dados reais, em segundos. Sem planilha, sem espera.",
     for_label: "PARA QUEM", for_h2: "Para quem gerencia anúncios a sério.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
@@ -220,8 +220,8 @@ const T: Record<Lang, Record<string, string>> = {
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
-    tools_label: "FERRAMENTAS", tools_h2: "Uma IA. Sete ferramentas.",
-    tools_sub: "Hooks, roteiros, análise, tradução — tudo com contexto dos seus dados reais.",
+    tools_label: "FERRAMENTAS", tools_h2: "Tudo que um gestor sério precisa.",
+    tools_sub: "Cada ferramenta lê sua conta antes de gerar qualquer output.",
     ba_label: "ANTES VS DEPOIS", ba_h2: "O que muda quando a IA conhece sua conta.",
     ba_before_label: "Antes do AdBrief", ba_after_label: "Com AdBrief",
     ba_1_before: "Exportar CSV do Meta toda segunda", ba_1_after: "Pergunte: \"O que corrigir essa semana?\" — 10s",
@@ -296,7 +296,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_p0_0: "Cuentas por cliente con Meta Ads", for_p0_1: "Performance en tiempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Datos reales en cada respuesta", for_p1_1: "Detección de patrones", for_p1_2: "Análisis de competidores", for_p1_3: "Memoria que mejora",
     for_p2_0: "Conectado a datos reales", for_p2_1: "Personas por producto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligencia compartida",
-    tools_label: "HERRAMIENTAS", tools_h2: "Todo para escalar.",
+    tools_label: "HERRAMIENTAS", tools_h2: "Todo lo que un gestor serio necesita.",
     tools_sub: "Cada herramienta conectada a tus datos reales.",
     ba_label: "ANTES VS DESPUÉS", ba_h2: "Qué cambia cuando la IA conoce tu cuenta.",
     ba_before_label: "Antes de AdBrief", ba_after_label: "Con AdBrief",
@@ -524,7 +524,7 @@ const TOOLS_DATA: ToolDef[] = [
     output:  {
       pt: ['"Creative_019 converteu 2.4x mais essa semana. Veja o padrão."', '"Hook rate 38% — seu melhor criativo prende atenção nos primeiros 3s."', '"Escale R$120 → R$400/dia. Frequência 1.3x — tem muito espaço ainda."'],
       es: ['"Creative_019 convirtió 2.4x más esta semana. Mira el patrón."', '"Hook rate 38% — tu mejor creativo retiene atención en los primeros 3s."', '"Escala $120 → $400/día. Frecuencia 1.3x — hay mucho espacio todavía."'],
-      en: ['"Creative_019 converted 2.4x more this week. Here\'s the pattern."', '"Hook rate 38% — your best creative holds attention in the first 3s."', '"Scale $120 → $400/day. Frequency 1.3x — still plenty of room to grow."'],
+      en: ['"You\'ve been training 3 months and the scale won\'t move — your ads already know why."', '"3 out of 4 transformations shown here came in under $18 CAC."', '"Your competitor is running the same angle as your best UGC — the one you paused 9 days ago."'],
     },
   },
   {
@@ -2257,7 +2257,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,46px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "12px 0 10px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
 
@@ -2294,59 +2294,46 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
             })}
           </div>
 
-          {/* Right — tool detail card */}
+          {/* Right — tool preview como resposta real da IA */}
           <AnimatePresence mode="wait">
             <motion.div key={active}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              style={{ borderRadius: 20, border: `1px solid ${tool.color}30`, background: `linear-gradient(135deg, ${tool.color}10 0%, rgba(255,255,255,0.04) 100%)`, overflow: "hidden" }}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", overflow: "hidden" }}
             >
-              {/* Card header */}
-              <div style={{ padding: "28px 28px 20px", borderBottom: `1px solid ${tool.color}15` }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: tool.color + "18", border: `1px solid ${tool.color}30`, display: "flex", alignItems: "center", justifyContent: "center", color: tool.color, flexShrink: 0 }}>
-                    {tool.icon}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" as const }}>
-                      <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>{tool.name[lang]}</h3>
-                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 20, background: tool.color + "18", color: tool.color, border: `1px solid ${tool.color}30`, letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{tool.badge[lang]}</span>
-                    </div>
-                    <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, margin: 0 }}>{tool.desc[lang]}</p>
-                  </div>
+              {/* Topbar mockado */}
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: tool.color + "18", border: `1px solid ${tool.color}25`, display: "flex", alignItems: "center", justifyContent: "center", color: tool.color, flexShrink: 0 }}>
+                  {tool.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#fff" }}>{tool.name[lang]}</span>
+                  <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 8 }}>·</span>
+                  <span style={{ fontFamily: F, fontSize: 12, color: tool.color, marginLeft: 8, opacity: 0.8 }}>{tool.badge[lang]}</span>
                 </div>
               </div>
 
-              {/* IO preview */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, minHeight: 220 }} className="tools-io-grid">
-
-                {/* Input */}
-                <div style={{ padding: "20px 24px", borderRight: `1px solid ${tool.color}12` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: 5, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{inputLabel[lang]}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: tool.color, flexShrink: 0, opacity: 0.7 }} />
-                    <span style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{tool.input[lang]}</span>
-                  </div>
+              {/* User message */}
+              <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ maxWidth: "75%", padding: "10px 14px", borderRadius: "14px 14px 4px 14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{tool.input[lang]}</span>
                 </div>
+              </div>
 
-                {/* Output */}
-                <div style={{ padding: "20px 24px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: 5, background: tool.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5h6M5 2l3 3-3 3" stroke={tool.color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              {/* AI response */}
+              <div style={{ padding: "8px 20px 20px" }}>
+                <div style={{ padding: "14px 16px", borderRadius: "4px 14px 14px 14px", background: tool.color + "0c", border: `1px solid ${tool.color}20` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 5, background: tool.color + "25", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke={tool.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: tool.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, opacity: 0.8 }}>{outputLabel[lang]}</span>
+                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: tool.color, letterSpacing: "0.06em", textTransform: "uppercase" as const, opacity: 0.85 }}>AdBrief AI</span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {tool.output[lang].map((line, i) => (
-                      <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start", padding: "9px 12px", borderRadius: 9, background: i === 0 ? tool.color + "0d" : "rgba(255,255,255,0.03)", border: `1px solid ${i === 0 ? tool.color + "22" : "rgba(255,255,255,0.06)"}` }}>
-                        <span style={{ fontFamily: F, fontSize: 12, color: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 1, fontWeight: 700 }}>{i + 1}</span>
-                        <span style={{ fontFamily: F, fontSize: 12, color: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{line}</span>
+                      <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === 0 ? tool.color : "rgba(255,255,255,0.2)", flexShrink: 0, marginTop: 6 }} />
+                        <span style={{ fontFamily: F, fontSize: 13, color: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>{line}</span>
                       </div>
                     ))}
                   </div>
@@ -2418,13 +2405,13 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       pains: [
         { icon: "⏳", text: "Você monta relatórios manualmente toda semana" },
         { icon: "📊", text: "Dados em 5 ferramentas diferentes que não se conversam" },
-        { icon: "❓", text: "Você não sabe exatamente o que pausar e escalar agora" },
+        { icon: "❓", text: "Você não sabe qual criativo pausar e qual escalar hoje" },
         { icon: "🔥", text: "Descobre fadiga criativa tarde demais — depois de queimar verba" },
       ],
       divider: "AdBrief resolve isso.",
       solutions: [
         { icon: "⚡", text: "Responde qualquer pergunta sobre sua conta em segundos" },
-        { icon: "🎯", text: "Diz exatamente o que pausar e o que escalar agora" },
+        { icon: "🎯", text: "Diagnóstico instantâneo de cada criativo ativo na conta" },
         { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
         { icon: "🔔", text: "Alertas proativos no Telegram antes de queimar verba" },
       ],
