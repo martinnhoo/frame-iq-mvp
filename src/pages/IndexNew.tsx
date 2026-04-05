@@ -2807,7 +2807,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
-        <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
+        <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
           {profiles.map((pr, i) => (
             <button key={i} onClick={() => setActive(i)} style={{
               fontFamily: F, fontSize: 13, fontWeight: active === i ? 600 : 400,
@@ -2823,7 +2823,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
         <AnimatePresence mode="wait">
           <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-            <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}10 0%, rgba(255,255,255,0.03) 100%)`, border: `1px solid ${p.color}25` }}>
+            <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}07 0%, rgba(255,255,255,0.02) 100%)`, border: `1px solid ${p.color}18` }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}>{p.emoji}</div>
               <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 10, color: "#fff" }}>{p.headline}</h3>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
@@ -2831,7 +2831,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {p.points.map((point) => (
-                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 16px", borderRadius: 12, background: `${p.color}08`, border: `1px solid ${p.color}18` }}>
+                <div key={point} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 16px", borderRadius: 12, background: `${p.color}04`, border: `1px solid ${p.color}12` }}>
                   <div style={{ width: 18, height: 18, borderRadius: "50%", background: `${p.color}20`, border: `1px solid ${p.color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                     <Check size={10} color={p.color} />
                   </div>
