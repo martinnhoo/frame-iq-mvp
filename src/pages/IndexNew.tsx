@@ -162,10 +162,10 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "FAQ", faq_h2: "Common questions",
     faq_q0: "How does the 3-day free trial work?", faq_a0: "When you sign up, you get full access for 3 days at no charge. If you cancel within that period, you won't be billed.",
     faq_q1: "Why do I need a card to start?", faq_a1: "Requiring a card filters for serious users and lets us give you genuine full access. We don't charge anything for 72 hours (3 days).",
-    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads — fully connected and reading your data in real time. Google Ads and TikTok Ads are coming soon.",
+    faq_q2: "What does AdBrief connect to?", faq_a2: "Meta Ads — fully connected and reading your data in real time.",
     faq_q3: "Is my data secure?", faq_a3: "Yes. We use OAuth — the same standard used by every major ad tool. We never store your credentials. Tokens are encrypted at rest.",
     faq_q4: "Can I use it for multiple clients?", faq_a4: "Yes. Pro supports 3 ad accounts, Studio unlimited. Most agencies use one persona per brand.",
-    faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to its ad accounts (Meta Ads, Google Ads). The AI uses this context to personalize every answer.",
+    faq_q5: "What is an Account?", faq_a5: "An Account is a brand profile connected to your Meta Ads account. The AI uses this context to personalize every answer.",
     faq_q6: "Works with catalog ads?", faq_a6: "Yes. AdBrief reads all campaign types from Meta — including DPA, catalog, and Advantage+ Shopping.",
     faq_q7: "What if it doesn't work?", faq_a7: "Cancel within 72h (3 days) and you won't be charged. On a paid plan, email us — we handle refunds case by case.",
     final_label: "START TODAY", final_h2: "Your ad account is full of insights.\nStart asking.",
@@ -173,7 +173,6 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Try free for 3 days", final_fine: "Any plan · 3-day free trial · Cancel before day 4, pay nothing",
     trust_1: "No credit card until day 4", trust_2: "Cancel anytime", trust_3: "Setup in 2 minutes",
     tiktok_soon: "SOON",
-    google_soon: "SOON",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "The AI that knows your ad account. Stop guessing, start scaling.",
     footer_product: "Product",
@@ -239,10 +238,10 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "FAQ", faq_h2: "Perguntas frequentes",
     faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
     faq_q1: "Por que preciso de cartão?", faq_a1: "Filtra usuários sérios e te dá acesso genuíno. Não cobramos nada em 72h.",
-    faq_q2: "O que conecta?", faq_a2: "Meta Ads — conectado e lendo seus dados em tempo real. Google Ads e TikTok Ads em breve.",
+    faq_q2: "O que conecta?", faq_a2: "Meta Ads — conectado e lendo seus dados em tempo real.",
     faq_q3: "Meus dados são seguros?", faq_a3: "Sim. Usamos OAuth. Nunca armazenamos suas credenciais. Tokens criptografados.",
     faq_q4: "Posso usar para vários clientes?", faq_a4: "Sim. Pro: 3 contas. Studio: ilimitado. A maioria usa uma persona por marca.",
-    faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado às suas contas de anúncios (Meta Ads, Google Ads). A IA usa esse contexto em cada resposta.",
+    faq_q5: "O que é uma Conta?", faq_a5: "Um perfil de marca conectado à sua conta Meta Ads. A IA usa esse contexto em cada resposta.",
     faq_q6: "Funciona com catálogo?", faq_a6: "Sim. Lê todos os tipos de campanha — DPA, catálogo, Advantage+.",
     faq_q7: "E se não funcionar?", faq_a7: "Cancele em 72h (3 dias), sem cobrança. Em plano pago, mande email — resolvemos caso a caso.",
     final_label: "COMECE AGORA", final_h2: "Sua conta tem dados.\nA IA tem as respostas.",
@@ -250,7 +249,6 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Testar grátis por 3 dias", final_fine: "Qualquer plano · 3 dias grátis · Cancele antes do 4º dia",
     trust_1: "Sem cartão até o 4º dia", trust_2: "Cancele quando quiser", trust_3: "Configure em 2 minutos",
     tiktok_soon: "EM BREVE",
-    google_soon: "EM BREVE",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "A IA que conhece sua conta de anúncios. Pare de adivinhar, comece a escalar.",
     footer_product: "Produto",
@@ -316,10 +314,10 @@ const T: Record<Lang, Record<string, string>> = {
     faq_label: "PREGUNTAS FRECUENTES", faq_h2: "Preguntas comunes",
     faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 3 días sin cargo. Cancela y no se te cobra.",
     faq_q1: "¿Por qué necesito tarjeta?", faq_a1: "Filtra usuarios serios y te da acceso completo. No cobramos nada en 72h (3 días).",
-    faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads y Google Ads — conectados y leyendo tus datos en tiempo real. TikTok Ads próximamente.",
+    faq_q2: "¿A qué se conecta?", faq_a2: "Meta Ads — conectado y leyendo tus datos en tiempo real.",
     faq_q3: "¿Mis datos son seguros?", faq_a3: "Sí. OAuth + tokens cifrados. Nunca almacenamos credenciales.",
     faq_q4: "¿Puedo usar para varios clientes?", faq_a4: "Sí. Pro: 3 cuentas. Studio: ilimitado.",
-    faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a tus cuentas de anuncios (Meta Ads, Google Ads). La IA personaliza cada respuesta.",
+    faq_q5: "¿Qué es una Cuenta?", faq_a5: "Un perfil de marca conectado a tu cuenta Meta Ads. La IA personaliza cada respuesta.",
     faq_q6: "¿Funciona con catálogo?", faq_a6: "Sí. Todos los tipos de campaña de Meta — DPA, catálogo, Advantage+.",
     faq_q7: "¿Si no funciona?", faq_a7: "Cancela en 72h (3 días), sin cargo. En plan pago, escríbenos.",
     final_label: "EMPIEZA HOY", final_h2: "Tu cuenta está llena de insights.\nEmpieza a preguntar.",
@@ -327,7 +325,6 @@ const T: Record<Lang, Record<string, string>> = {
     final_cta: "Probar gratis 3 días", final_fine: "Cualquier plan · 3 días gratis · Cancela antes del día 4",
     trust_1: "Sin tarjeta hasta el día 4", trust_2: "Cancela cuando quieras", trust_3: "Configura en 2 minutos",
     tiktok_soon: "PRONTO",
-    google_soon: "PRONTO",
     footer_copy: "© 2026 AdBrief",
     footer_tagline: "La IA que conoce tu cuenta de anuncios. Para de adivinar, empieza a escalar.",
     footer_product: "Producto",
@@ -655,7 +652,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
 // ─── Industries for demo ──────────────────────────────────────────────────────
 const INDUSTRIES_DEMO = [
   { id: "fitness",  emoji: "💪", label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#34d399", initial: "F" },
-  { id: "clinica",  emoji: "🏥", label: { pt: "Google · Clínica", es: "Google · Clínica", en: "Google · Clinic"  }, color: "#60a5fa", initial: "C" },
+  { id: "clinica",  emoji: "🏥", label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
   { id: "ecomm",    emoji: "🛍️", label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
   { id: "igaming",  emoji: "🎰", label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
   { id: "saas",     emoji: "⚡", label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
@@ -1140,7 +1137,7 @@ const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines:
         ],
       },
       {
-        q: "Cria headlines para o Google baseado no que funciona aqui",
+        q: "Cria variações de headline baseado no que funciona aqui",
         lines: [
           "Baseado nas suas keywords com menor CPA e maior CTR:",
           "**Headline 1:** 'Harmonização Facial em BH | Agende Hoje' (38 chars)",
@@ -1173,7 +1170,7 @@ const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines:
         ],
       },
       {
-        q: "Crea headlines para Google basados en lo que funciona aquí",
+        q: "Crea variaciones de headline basados en lo que funciona aquí",
         lines: [
           "Basado en tus keywords con menor CPA y mayor CTR:",
           "**Headline 1:** 'Harmonización Facial CDMX | Agenda Hoy' (38 chars)",
@@ -1206,7 +1203,7 @@ const DEMO_QA_BY_INDUSTRY: Record<string, Record<Lang, Array<{ q: string; lines:
         ],
       },
       {
-        q: "Write Google headlines based on what converts here",
+        q: "Write headline variations based on what converts here",
         lines: [
           "Based on your lowest-CPA, highest-CTR keywords:",
           "**Headline 1:** 'Facial Harmonization Miami | Book Today' (38 chars)",
@@ -1677,19 +1674,7 @@ function MetaBadge() {
     </div>
   );
 }
-function GoogleBadge() {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:5, background:'rgba(66,133,244,0.10)', border:'1px solid rgba(66,133,244,0.28)' }}>
-      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-      <span style={{ fontFamily:F, fontSize:9.5, color:'#7ab4f5', fontWeight:700, letterSpacing:'0.02em' }}>Google Ads</span>
-    </div>
-  );
-}
+// GoogleBadge removed
 
 // ─── Selling Point Demo — UAU moments ───────────────────────────────────────
 
@@ -2151,7 +2136,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-          <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Google Ads</span>
+          {/* Google Ads badge removed */}
         </div>
 
       </div>
