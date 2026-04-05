@@ -135,10 +135,4 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
   );
 };
 
-// CSS injected at mount
-const _style = document.createElement ? (() => {
-  const s = typeof document !== "undefined" && document.createElement("style");
-  if (s) { s.textContent = "@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes modalIn{from{opacity:0;transform:scale(0.93) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}"; document.head?.appendChild(s); }
-})() : null;
-
 export default AuthPromptModal;

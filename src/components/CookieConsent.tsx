@@ -21,7 +21,6 @@ const CookieConsent = () => {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[400] p-4 md:p-6"
       style={{ animation: "slideUp 0.3s ease" }}>
-      <style>{`@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
       <div className="max-w-3xl mx-auto rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
         style={{ background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(20px)', boxShadow: '0 -10px 40px rgba(0,0,0,0.5)' }}>
         <div className="flex-1">
