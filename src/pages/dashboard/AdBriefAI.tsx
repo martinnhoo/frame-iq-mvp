@@ -905,31 +905,30 @@ function Kpi({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false 
   label: string; value: string; sub?: string; trend?: "up" | "down" | "flat";
   spark?: number[]; color?: string; warn?: boolean;
 }) {
-  const vc = warn ? "#fb7185" : "rgba(255,255,255,0.92)";
-  const sc = warn ? "rgba(248,113,133,0.7)" : trend === "up" ? "rgba(34,211,238,0.8)" : trend === "down" ? "rgba(248,113,133,0.7)" : "rgba(255,255,255,0.28)";
+  const vc = warn ? "#fb7185" : "rgba(255,255,255,0.95)";
+  const sc = warn ? "rgba(248,113,133,0.65)" : trend === "up" ? "#22d3ee" : trend === "down" ? "rgba(248,113,133,0.65)" : "rgba(255,255,255,0.25)";
+  const trendIcon = trend === "up" ? "↑" : trend === "down" ? "↓" : null;
   return (
-    <div className="lp-kpi kpi-card" style={{
-      flex: 1, minWidth: 0, padding: "12px 14px",
-      background: warn ? "rgba(251,113,133,0.04)" : "rgba(255,255,255,0.03)",
-      border: `1px solid ${warn ? "rgba(251,113,133,0.14)" : "rgba(255,255,255,0.07)"}`,
-      borderRadius: 10, display: "flex", flexDirection: "column", gap: 8,
-      cursor: "default",
+    <div className="lp-kpi" style={{
+      flex: 1, minWidth: 0, padding: "14px 16px 12px",
+      background: warn ? "rgba(251,113,133,0.05)" : "rgba(255,255,255,0.025)",
+      borderRadius: 12,
+      borderTop: `2px solid ${warn ? "rgba(251,113,133,0.35)" : "rgba(255,255,255,0.06)"}`,
+      display: "flex", flexDirection: "column", gap: 6,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 10, fontWeight: 600,
-          color: "rgba(255,255,255,0.32)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{label}</span>
-        {spark && spark.length >= 2 && <Spark d={spark} c={warn ? "#fb7185" : color} />}
+          color: "rgba(255,255,255,0.28)", letterSpacing: "0.09em", textTransform: "uppercase" as const }}>{label}</span>
+        {spark && spark.length >= 2 && <Spark d={spark} c={warn ? "#fb7185" : color} w={48} h={24}/>}
       </div>
-      <div>
-        <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 700,
-          color: vc, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 3 }}>{value}</div>
-        {sub && (
-          <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 500,
-            color: sc, display: "flex", alignItems: "center", gap: 3 }}>
-            {trend === "up" && "↑"}{trend === "down" && "↓"}{sub}
-          </div>
-        )}
-      </div>
+      <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 24, fontWeight: 700,
+        color: vc, letterSpacing: "-0.035em", lineHeight: 1 }}>{value}</div>
+      {sub && (
+        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+          {trendIcon && <span style={{ fontSize: 10, color: sc, lineHeight: 1 }}>{trendIcon}</span>}
+          <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 11, fontWeight: 500, color: sc }}>{sub}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -937,25 +936,33 @@ function Kpi({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false 
 // ── Ad row ────────────────────────────────────────────────────────────────────
 const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; ask: (q: string) => void }) {
   const isW = kind === "winner", isR = kind === "risk";
-  const dot = isW ? "#34d399" : isR ? "#fb7185" : "rgba(255,255,255,0.15)";
   const ctr = parseFloat(a.ctr || 0).toFixed(2);
   const fr = a.freq != null ? parseFloat(a.freq).toFixed(1) : null;
   const sp = parseFloat(a.spend || 0).toFixed(0);
+  const accentColor = isW ? "#22d3ee" : isR ? "#fb7185" : "rgba(255,255,255,0.15)";
   return (
     <div className="lp-row" onClick={() => ask(`Analisa o criativo "${a.name}" — por que está ${isW ? "performando bem" : isR ? "em risco" : "assim"}?`)} style={{
-      display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, cursor: "pointer",
-      background: isW ? "rgba(52,211,153,0.03)" : isR ? "rgba(251,113,133,0.03)" : "transparent",
-      border: `1px solid ${isW ? "rgba(52,211,153,0.08)" : isR ? "rgba(251,113,133,0.08)" : "rgba(255,255,255,0.04)"}`,
+      display: "flex", alignItems: "center", gap: 10, padding: "9px 0", cursor: "pointer",
+      borderBottom: "1px solid rgba(255,255,255,0.04)",
     }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0, boxShadow: isW ? "0 0 5px rgba(52,211,153,0.6)" : isR ? "0 0 5px rgba(251,113,133,0.6)" : "none" }} />
+      <span style={{ width: 3, height: 28, borderRadius: 2, background: accentColor, flexShrink: 0, opacity: isW || isR ? 1 : 0.4 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ ...I, fontSize: 12, fontWeight: 500, color: "#cbd5e1", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || "—"}</p>
-        {a.campaign && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "1px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
+        <p style={{ ...I, fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.82)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || "—"}</p>
+        {a.campaign && <p style={{ ...I, fontSize: 11, color: "rgba(255,255,255,0.28)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.campaign}</p>}
       </div>
-      <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-        <span style={{ ...MONO, fontSize: 12, color: parseFloat(ctr) > 1.5 ? "rgba(34,211,238,0.85)" : parseFloat(ctr) < 0.5 ? "#fb7185" : "rgba(255,255,255,0.45)" }}>{ctr}%</span>
-        {fr && <span style={{ ...MONO, fontSize: 12, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.3)" }}>f{fr}</span>}
-        <span style={{ ...MONO, fontSize: 12, color: "rgba(255,255,255,0.42)" }}>R${sp}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+        <div style={{ textAlign: "right" as const }}>
+          <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: parseFloat(ctr) > 1.5 ? "#22d3ee" : parseFloat(ctr) < 0.5 ? "#fb7185" : "rgba(255,255,255,0.55)" }}>{ctr}%</span>
+          <span style={{ ...I, fontSize: 9, color: "rgba(255,255,255,0.2)", display: "block", letterSpacing: "0.05em" }}>CTR</span>
+        </div>
+        {fr && <div style={{ textAlign: "right" as const }}>
+          <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: parseFloat(fr) > 3.5 ? "#fb7185" : "rgba(255,255,255,0.35)" }}>{fr}x</span>
+          <span style={{ ...I, fontSize: 9, color: "rgba(255,255,255,0.2)", display: "block", letterSpacing: "0.05em" }}>FREQ</span>
+        </div>}
+        <div style={{ textAlign: "right" as const }}>
+          <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>R${sp}</span>
+          <span style={{ ...I, fontSize: 9, color: "rgba(255,255,255,0.2)", display: "block", letterSpacing: "0.05em" }}>SPEND</span>
+        </div>
       </div>
     </div>
   );
@@ -965,31 +972,35 @@ const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winne
 function CampRow({ c }: { c: any }) {
   const on = c.status === "ACTIVE" || c.status === "ENABLED";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: on ? "#34d399" : "rgba(255,255,255,0.15)", flexShrink: 0, boxShadow: on ? "0 0 4px rgba(52,211,153,0.5)" : "none" }} />
-      <span style={{ ...I, fontSize: 12, fontWeight: 400, color: on ? "#94a3b8" : "rgba(255,255,255,0.3)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-      {c.budget && <span style={{ ...MONO, fontSize: 12, color: "#475569", flexShrink: 0 }}>{c.budget}</span>}
-      {c.ctr && <span style={{ ...MONO, fontSize: 12, color: parseFloat(c.ctr) > 1.5 ? "#34d399" : "rgba(255,255,255,0.3)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ width: 3, height: 20, borderRadius: 2, background: on ? "#22d3ee" : "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+      <span style={{ ...I, fontSize: 12.5, fontWeight: 400, color: on ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+      {c.budget && <span style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{c.budget}</span>}
+      {c.ctr && <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: parseFloat(c.ctr) > 1.5 ? "#22d3ee" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
     </div>
   );
 }
 
 // ── Alert ─────────────────────────────────────────────────────────────────────
 function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; detail: string; q: string }; ask: (q: string) => void }) {
-  const c = a.t === "warn"
-    ? { bg: "rgba(251,113,133,0.04)", br: "rgba(251,113,133,0.12)", dot: "#fb7185", title: "#fb7185" }
-    : a.t === "ok"
-    ? { bg: "rgba(52,211,153,0.04)", br: "rgba(52,211,153,0.1)", dot: "#34d399", title: "#34d399" }
-    : { bg: "rgba(99,102,241,0.04)", br: "rgba(99,102,241,0.12)", dot: "#818cf8", title: "#818cf8" };
+  const isOk = a.t === "ok";
+  const isWarn = a.t === "warn";
+  const accent = isOk ? "#22d3ee" : isWarn ? "#fb7185" : "#818cf8";
+  const bg = isOk ? "rgba(34,211,238,0.05)" : isWarn ? "rgba(251,113,133,0.05)" : "rgba(129,140,248,0.05)";
   return (
     <div className="lp-alert" onClick={() => ask(a.q)} style={{
-      display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", borderRadius: 8,
-      cursor: "pointer", background: c.bg, border: `1px solid ${c.br}`,
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "10px 14px", borderRadius: 10,
+      cursor: "pointer", background: bg,
+      border: `1px solid ${accent}22`,
+      borderLeft: `3px solid ${accent}`,
+      transition: "opacity 0.12s",
     }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.dot, boxShadow: `0 0 8px ${c.dot}60`, flexShrink: 0 }} />
-      <span style={{ ...I, fontSize: 12, fontWeight: 600, color: c.title, whiteSpace: "nowrap" }}>{a.title}</span>
-      <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.45)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.detail}</span>
-      <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>perguntar →</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 12, fontWeight: 700, color: accent, display: "block" }}>{a.title}</span>
+        <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", display: "block", marginTop: 1 }}>{a.detail}</span>
+      </div>
+      <span style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize: 11, color: accent, opacity: 0.7, flexShrink: 0, whiteSpace: "nowrap" }}>Perguntar →</span>
     </div>
   );
 }
@@ -1027,11 +1038,14 @@ function mkAlerts(d: any, lang: string) {
 }
 
 // ── Divider ───────────────────────────────────────────────────────────────────
-const Div = () => <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "4px 0" }} />;
+const Div = () => <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "2px 0" }} />;
 
 // ── Section label ─────────────────────────────────────────────────────────────
 const Sec = ({ c, children }: { c: string; children: React.ReactNode }) => (
-  <p style={{ ...I, fontSize: 12, fontWeight: 600, color: c, letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 7px" }}>{children}</p>
+  <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "0 0 8px" }}>
+    <span style={{ width: 3, height: 12, borderRadius: 2, background: c, flexShrink: 0 }}/>
+    <p style={{ ...I, fontSize: 10, fontWeight: 700, color: c, letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: 0, opacity: 0.85 }}>{children}</p>
+  </div>
 );
 
 // ── Main LivePanel ────────────────────────────────────────────────────────────
@@ -1290,7 +1304,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
-    <div className="lp" style={{ borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-main)", backdropFilter: "blur(0px)", animation: "lp-in 0.18s ease" }}>
+    <div className="lp" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -1450,7 +1464,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ padding: "16px 20px" }}>
+      <div style={{ padding: "14px 20px 18px" }}>
 
         {/* Skeleton */}
         {busy && !pd && (
@@ -1495,17 +1509,17 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* ── Real data ── */}
         {data && !data.error && !fail && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-            {/* Alerts */}
+            {/* Alerts — destaque máximo, aparecem primeiro */}
             {alerts.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {alerts.map((a, i) => <Alert key={i} a={a} ask={onSend} />)}
               </div>
             )}
 
-            {/* KPIs */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+            {/* KPIs — sem border box individual, top accent bar */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }} className="lp-kpis-row">
               {tab === "meta" ? (
                 <>
                   <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#0ea5e9" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
@@ -1589,8 +1603,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             )}
 
             {/* Quick actions */}
-            <Div />
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingTop: 4 }}>
               {(lang === "pt" ? [
                 { l: "Resumo da semana",  q: "Qual o resumo da minha conta essa semana?" },
                 { l: "O que escalar?",    q: "O que posso escalar agora com segurança?" },
@@ -1611,9 +1624,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 { l: "Why did it drop?",  q: "Why did my ROAS drop? What's the root cause?" },
               ]).map(({ l, q }) => (
                 <button key={q} className="lp-chip" onClick={() => onSend(q)} style={{
-                  ...I, fontSize: 12, fontWeight: 400, padding: "5px 12px", borderRadius: 20,
-                  background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(255,255,255,0.35)", cursor: "pointer", transition: "all 0.15s",
+                  ...I, fontSize: 11, fontWeight: 500, padding: "5px 11px", borderRadius: 20,
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)",
+                  color: "rgba(255,255,255,0.5)", cursor: "pointer", transition: "all 0.15s",
                 }}>
                   {l}
                 </button>
@@ -3422,7 +3435,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .lp-row{transition:background 0.12s;}
         .lp-row:hover{background:rgba(148,163,184,0.05)!important;}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;box-shadow:0 0 0 3px rgba(14,165,233,0.08)!important;}
-        .lp-chip:hover{background:rgba(99,102,241,0.1)!important;border-color:rgba(99,102,241,0.25)!important;color:#a5b4fc!important;}
+        .lp-chip:hover{background:rgba(14,165,233,0.08)!important;border-color:rgba(14,165,233,0.2)!important;color:rgba(255,255,255,0.8)!important;}
         .lp-alert{transition:opacity 0.12s;}
         .lp-alert:hover{opacity:0.75;}
         .lp-btn:hover{color:rgba(255,255,255,0.7)!important;background:rgba(255,255,255,0.07)!important;}
