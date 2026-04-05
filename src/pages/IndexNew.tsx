@@ -453,10 +453,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#06080e",
-    subtle:  "#0c1018",
-    dark:    "#030407",
-    accent:  "#070d1a",
+    default: "#07090f",
+    subtle:  "#070a10",
+    dark:    "#07090f",
+    accent:  "#070a12",
   };
   return (
     <section
@@ -524,8 +524,8 @@ const TOOLS_DATA: ToolDef[] = [
     output:  {
       pt: [
         '1. "Você treina há 6 meses e o espelho ainda não mudou. O problema não é esforço."',
-        '2. "Em 30 dias, 847 mulheres no BR reduziram o abdômen sem cortar carboidrato."',
-        '3. "Por que sua academia cobra R$99/mês mas você não consegue ir mais de 3 vezes?"',
+        '2. "Em 30 dias, 847 mulheres reduziram o abdômen sem cortar carboidrato — aqui está o método."',
+        '3. "Seu concorrente está veiculando esse ângulo desde sexta. Você ainda não viu."',
       ],
       es: [
         '1. "Llevas 6 meses entrenando y el espejo no cambia. El problema no es el esfuerzo."',
@@ -545,23 +545,23 @@ const TOOLS_DATA: ToolDef[] = [
     name:    { pt: "Script de Vídeo", es: "Script de Video", en: "Video Script" },
     tagline: { pt: "UGC e DR prontos para gravar", es: "UGC y DR listos para grabar", en: "UGC & DR ready to record" },
     desc:    { pt: "Descreva o produto e o público. A IA gera um script completo com gancho, desenvolvimento e CTA — calibrado pelo tom dos seus criativos que já funcionaram.", es: "Describe el producto y el público. La IA genera un script completo calibrado por el tono de tus creativos que ya funcionaron.", en: "Describe the product and audience. The AI generates a full script calibrated by the tone of your creatives that already worked." },
-    input:   { pt: "Script UGC 30s para suplemento de emagrecimento, tom direto", es: "Script UGC 30s para suplemento para adelgazar, tono directo", en: "30s UGC script for weight loss supplement, direct tone" },
+    input:   { pt: "Script UGC 30s para loja de moda feminina, tom aspiracional", es: "Script UGC 30s para tienda de moda femenina, tono aspiracional", en: "30s UGC script for women's fashion store, aspirational tone" },
     badge:   { pt: "Script 30s completo", es: "Script 30s completo", en: "Full 30s script" },
     output:  {
       pt: [
-        'GANCHO [0–3s]   "Eu perdi 8kg em 6 semanas. Mas não foi academia."',
-        'CORPO  [4–22s]  "Esse suplemento controla a fome nas primeiras 2h — quando a maioria quebra a dieta. Sem cortar carboidrato."',
-        'CTA    [23–30s] "Arrasta o dedo. Só até domingo tem frete grátis."',
+        'GANCHO [0–3s]   "Gastei R$180 numa peça achando que ia usar. Nunca usei. Esse look custa R$89."',
+        'CORPO  [4–22s]  "Essa coleção vendeu em 48h no lançamento. Tecido premium, caimento real — sem filtro. Veja no meu corpo, tamanho M."',
+        'CTA    [23–30s] "Link na bio. Frete grátis hoje. Acaba antes do fim de semana."',
       ],
       es: [
-        'GANCHO [0–3s]   "Perdí 8kg en 6 semanas. Pero no fue el gym."',
-        'CUERPO [4–22s]  "Este suplemento controla el hambre en las primeras 2h — cuando la mayoría rompe la dieta."',
-        'CTA    [23–30s] "Desliza. Solo hasta el domingo hay envío gratis."',
+        'GANCHO [0–3s]   "Gasté $800 en una prenda pensando que la usaría. Nunca la usé. Este look cuesta $350."',
+        'CUERPO [4–22s]  "Esta colección se agotó en 48h en el lanzamiento. Tela premium, caída real — sin filtro. Míralo en mi cuerpo, talla M."',
+        'CTA    [23–30s] "Link en bio. Envío gratis hoy. Se acaba antes del fin de semana."',
       ],
       en: [
-        'HOOK   [0–3s]   "I lost 18lbs in 6 weeks. But it wasn\'t the gym."',
-        'BODY   [4–22s]  "This supplement controls hunger in the first 2h — when most people break their diet. No cutting, no counting."',
-        'CTA    [23–30s] "Swipe up. Free shipping only until Sunday."',
+        'HOOK   [0–3s]   "I spent $60 on a piece thinking I\'d wear it. Never did. This look costs $29."',
+        'BODY   [4–22s]  "This collection sold out in 48h at launch. Premium fabric, real fit — no filter. See it on my body, size M."',
+        'CTA    [23–30s] "Link in bio. Free shipping today. Gone before the weekend."',
       ],
     },
   },
@@ -571,29 +571,29 @@ const TOOLS_DATA: ToolDef[] = [
     name:    { pt: "Brief Criativo", es: "Brief Creativo", en: "Creative Brief" },
     tagline: { pt: "Manda pro editor, sem revisão", es: "Envíalo al editor, sin revisión", en: "Send to editor, no revision needed" },
     desc:    { pt: "A IA lê o seu criativo com melhor ROAS e gera um brief completo para o próximo vídeo — formato, ângulo, gancho de referência e direção de cena para o editor.", es: "La IA lee tu creativo con mejor ROAS y genera un brief completo para el próximo video.", en: "The AI reads your top ROAS creative and generates a complete brief for the next video — format, angle, reference hook, and scene direction." },
-    input:   { pt: "Gera o brief do próximo criativo baseado no meu melhor anúncio", es: "Genera el brief del próximo creativo basado en mi mejor anuncio", en: "Generate brief for the next creative based on my best ad" },
+    input:   { pt: "Gera o brief pra próxima campanha de skincare, público 25-40", es: "Genera el brief para la próxima campaña de skincare, público 25-40", en: "Generate brief for next skincare campaign, audience 25-40" },
     badge:   { pt: "Pronto para enviar", es: "Listo para enviar", en: "Ready to send" },
     output:  {
       pt: [
-        "FORMATO   Vídeo UGC vertical 9:16 · 30–45 segundos",
-        "ÂNGULO    Problema real → resultado concreto com dado",
-        "REFERÊNCIA  Creative_019 · hook rate 38% · ROAS 3.8x",
-        "GANCHO    Abrir com pergunta direta. Sem música nos 3s iniciais.",
-        "CENA 1    Close no rosto. Tom confessional. Sem câmera estática."
+        "FORMATO   Reels vertical 9:16 · 20–30 segundos · sem texto inicial",
+        "ÂNGULO    Antes/depois de rotina real — sem parecer propaganda",
+        "REFERÊNCIA  Ad_Skin_07 · hook rate 41% · CPA R$24 · menor da conta",
+        "GANCHO    Mostrar o produto no rosto sem falar. Resultado visual nos 3s.",
+        "CENA 1    Luz natural. Sem fundo branco de estúdio. Tom de dica de amiga."
       ],
       es: [
-        "FORMATO   Video UGC vertical 9:16 · 30–45 segundos",
-        "ÁNGULO    Problema real → resultado concreto con dato",
-        "REFERENCIA  Creative_019 · hook rate 38% · ROAS 3.8x",
-        "GANCHO    Abrir con pregunta directa. Sin música en los 3s iniciales.",
-        "ESCENA 1  Primer plano en el rostro. Tono confesional. Sin cámara estática."
+        "FORMATO   Reels vertical 9:16 · 20–30 segundos · sin texto inicial",
+        "ÁNGULO    Antes/después de rutina real — sin parecer publicidad",
+        "REFERENCIA  Ad_Skin_07 · hook rate 41% · CPA $24 · el menor de la cuenta",
+        "GANCHO    Mostrar el producto en el rostro sin hablar. Resultado visual en 3s.",
+        "ESCENA 1  Luz natural. Sin fondo blanco de estudio. Tono de consejo de amiga."
       ],
       en: [
-        "FORMAT    Vertical UGC 9:16 · 30–45 seconds",
-        "ANGLE     Real problem → concrete result with data",
-        "REFERENCE   Creative_019 · hook rate 38% · ROAS 3.8x",
-        "HOOK      Open with direct question. No music in first 3s.",
-        "SCENE 1   Close on face. Confessional tone. No static camera."
+        "FORMAT    Vertical Reels 9:16 · 20–30 seconds · no text overlay at start",
+        "ANGLE     Real before/after routine — doesn't look like an ad",
+        "REFERENCE   Ad_Skin_07 · hook rate 41% · CPA $24 · lowest in account",
+        "HOOK      Show product on face without speaking. Visual result in 3s.",
+        "SCENE 1   Natural light. No white studio background. Tone: advice from a friend."
       ],
     },
   },
@@ -603,29 +603,29 @@ const TOOLS_DATA: ToolDef[] = [
     name:    { pt: "Decodificador", es: "Decodificador", en: "Competitor Decode" },
     tagline: { pt: "Entende o que está funcionando", es: "Entiende qué está funcionando", en: "Understand what's working" },
     desc:    { pt: "Descreva ou cole o link de um anúncio concorrente. A IA desmonta a estrutura — gancho, ângulo, CTA — e explica por que está convertendo, para você replicar.", es: "Describe o pega el link de un anuncio rival. La IA desmonta la estructura y explica por qué está convirtiendo.", en: "Describe or paste a competitor ad link. The AI breaks down the structure and explains why it's converting." },
-    input:   { pt: "Analisa esse anúncio de suplemento que está com muito like", es: "Analiza este anuncio de suplemento que tiene muchos likes", en: "Analyze this supplement ad that's getting a lot of engagement" },
+    input:   { pt: "Analisa esse anúncio de investimento que está viralizando", es: "Analiza este anuncio de inversión que está viralizando", en: "Analyze this finance ad that's going viral" },
     badge:   { pt: "Análise completa", es: "Análisis completo", en: "Full analysis" },
     output:  {
       pt: [
-        'GANCHO    Estatística de impacto + problema imediato · "97% das pessoas não sabem que..."',
-        "ÂNGULO    Autoridade + medo de perder (FOMO de resultado)",
-        "FORMATO   Talking head com legenda no topo · sem corte nos 5s iniciais",
-        "CTA       Urgência de estoque implícita · sem prazo explícito",
-        "POR QUÊ FUNCIONA  Prova social + FOMO combinados — padrão de alta conversão"
+        'GANCHO    Dado financeiro chocante + contra-intuitivo · "Quem ganhou mais em 2024 não foi quem investiu mais."',
+        "ÂNGULO    Elite vs resto — posiciona o espectador como excluído de algo real",
+        "FORMATO   Tela preta + voz over + gráfico simples · sem rosto · sem música",
+        "CTA       Acesso limitado implícito · cria sensação de oportunidade única",
+        "POR QUÊ FUNCIONA  Curiosidade + exclusividade + dado real — combo de alta retenção"
       ],
       es: [
-        'GANCHO    Estadística de impacto + problema inmediato · "El 97% no sabe que..."',
-        "ÁNGULO    Autoridad + miedo a perder (FOMO de resultado)",
-        "FORMATO   Talking head con subtítulo arriba · sin corte en los 5s iniciales",
-        "CTA       Urgencia de stock implícita · sin fecha explícita",
-        "POR QUÉ FUNCIONA  Prueba social + FOMO combinados — patrón de alta conversión"
+        'GANCHO    Dato financiero impactante + contraintuitivo · "Quien más ganó en 2024 no fue quien más invirtió."',
+        "ÁNGULO    Élite vs resto — posiciona al espectador como excluido de algo real",
+        "FORMATO   Pantalla negra + voz en off + gráfico simple · sin rostro · sin música",
+        "CTA       Acceso limitado implícito · crea sensación de oportunidad única",
+        "POR QUÉ FUNCIONA  Curiosidad + exclusividad + dato real — combo de alta retención"
       ],
       en: [
-        'HOOK      Impact stat + immediate problem · "97% of people don\'t know that..."',
-        "ANGLE     Authority + fear of missing out (result FOMO)",
-        "FORMAT    Talking head with top caption · no cut in first 5s",
-        "CTA       Implied stock urgency · no explicit deadline",
-        "WHY IT WORKS  Social proof + FOMO combined — high-conversion pattern"
+        'HOOK      Shocking financial stat + counterintuitive · "The top earners in 2024 weren\'t who invested the most."',
+        "ANGLE     Elite vs everyone else — makes viewer feel excluded from something real",
+        "FORMAT    Black screen + voice over + simple chart · no face · no music",
+        "CTA       Implied limited access · creates feeling of a unique opportunity",
+        "WHY IT WORKS  Curiosity + exclusivity + real data — high-retention combo"
       ],
     },
   },
@@ -635,29 +635,29 @@ const TOOLS_DATA: ToolDef[] = [
     name:    { pt: "Tradutor de Anúncios", es: "Traductor de Anuncios", en: "Ad Translator" },
     tagline: { pt: "Adapta sem perder conversão", es: "Adapta sin perder conversión", en: "Adapt without losing conversion" },
     desc:    { pt: "Cole o anúncio e escolha o mercado. A IA adapta o tom, a gíria local e o CTA — não é tradução literal, é adaptação cultural para converter no novo mercado.", es: "Pega el anuncio y elige el mercado. La IA adapta el tono, la jerga local y el CTA.", en: "Paste the ad and choose the market. The AI adapts tone, local slang, and CTA — not literal translation, cultural adaptation." },
-    input:   { pt: "Adapta esse anúncio de academia do BR para o México", es: "Adapta este anuncio de gym del BR para México", en: "Adapt this gym ad from Brazil to Mexico" },
-    badge:   { pt: "BR → MX adaptado", es: "BR → MX adaptado", en: "BR → MX adapted" },
+    input:   { pt: "Adapta esse anúncio de delivery do BR para a Índia em inglês", es: "Adapta este anuncio de delivery del BR para India en inglés", en: "Adapt this delivery ad from Brazil to India in English" },
+    badge:   { pt: "BR → IN adaptado", es: "BR → IN adaptado", en: "BR → IN adapted" },
     output:  {
       pt: [
-        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
-        '🇲🇽 ADAPTADO  "Deja de tirar tu presupuesto en Meta sin ver resultados."',
-        'CTA  "Teste grátis" → "Pruébalo gratis" · urgência mantida',
-        'GÍRIA  "gestor de tráfego" → "media buyer" · tom direto preservado',
-        'NOTA  Evitado "dinero" isolado — soa formal no MX informal'
+        '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
+        '🇮🇳 ADAPTADO  "Ordered and delivered in 30 minutes. No stepping out."',
+        'CTA  "Peça agora" → "Order now" · senso de imediatismo preservado',
+        'NOTA  Evitado "fast food" — conotação negativa na Índia urbana',
+        'TOM  Informal brasileiro → inglês indiano informal (Hinglish-friendly)',
       ],
       es: [
-        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
-        '🇲🇽 ADAPTADO  "Deja de tirar tu presupuesto en Meta sin ver resultados."',
-        'CTA  "Teste grátis" → "Pruébalo gratis" · urgencia mantenida',
-        'JERGA  "gestor de tráfego" → "media buyer" · tono directo preservado',
-        'NOTA  Evitado "dinero" aislado — suena formal en el MX informal'
+        '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
+        '🇮🇳 ADAPTADO  "Ordered and delivered in 30 minutes. No stepping out."',
+        'CTA  "Pide ahora" → "Order now" · sentido de inmediatismo preservado',
+        'NOTA  Evitado "fast food" — connotación negativa en la India urbana',
+        'TONO  Informal brasileño → inglés indiano informal (Hinglish-friendly)',
       ],
       en: [
-        '🇧🇷 ORIGINAL  "Chega de queimar verba no Meta sem resultado."',
-        '🇲🇽 ADAPTED   "Deja de tirar tu presupuesto en Meta sin ver resultados."',
-        'CTA  "Teste grátis" → "Pruébalo gratis" · urgency preserved',
-        'SLANG  "gestor de tráfego" → "media buyer" · direct tone kept',
-        'NOTE  Avoided formal "dinero" alone — too stiff for informal MX tone'
+        '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
+        '🇮🇳 ADAPTED   "Ordered and delivered in 30 minutes. No stepping out."',
+        'CTA  "Peça agora" → "Order now" · immediacy preserved',
+        'NOTE  Avoided "fast food" — negative connotation in urban India',
+        'TONE  Brazilian informal → Indian English informal (Hinglish-friendly)',
       ],
     },
   },
@@ -667,26 +667,26 @@ const TOOLS_DATA: ToolDef[] = [
     name:    { pt: "Análise de Campanha", es: "Análisis de Campaña", en: "Campaign Analysis" },
     tagline: { pt: "Diagnóstico em segundos", es: "Diagnóstico en segundos", en: "Diagnosis in seconds" },
     desc:    { pt: "Pergunte qualquer coisa sobre seus dados. A IA lê suas campanhas em tempo real e responde com diagnóstico específico — sem planilha, sem exportar nada.", es: "Pregunta lo que quieras. La IA lee tus campañas en tiempo real y responde con diagnóstico específico.", en: "Ask anything. The AI reads your campaigns in real time and responds with a specific diagnosis — no spreadsheet, no export." },
-    input:   { pt: "O que está acontecendo com a minha conta essa semana?", es: "¿Qué está pasando con mi cuenta esta semana?", en: "What's happening with my account this week?" },
+    input:   { pt: "Por que meu custo por compra dobrou essa semana?", es: "¿Por qué mi costo por compra se duplicó esta semana?", en: "Why did my cost per purchase double this week?" },
     badge:   { pt: "Dados em tempo real", es: "Datos en tiempo real", en: "Real-time data" },
     output:  {
       pt: [
-        "⚠️  CPM subiu 34% — público BR-F-25-34 saturando. Troque a segmentação.",
-        "✅  Creative_021 com CTR 4.2% — melhor da semana. Suba de R$80 → R$280/dia.",
-        "🔴  3 campanhas com frequência acima de 4x. Pause hoje antes de queimar mais.",
-        "💡  Mova R$200/dia de retargeting para prospecting — ROAS histórico 2.8x lá."
+        "⚠️  CPM subiu 58% em BR-F-25-45 — Black Friday de concorrente entrou em leilão.",
+        "🔴  Campanha de prospecting com frequência 5.2x — público esgotado. Pause agora.",
+        "✅  Campanha de remarketing com ROAS 6.1x e freq. 1.4x — ainda muito espaço.",
+        "💡  Realoque R$300/dia de prospecting para remarketing. Custo por compra cai ~40%."
       ],
       es: [
-        "⚠️  CPM subió 34% — público MX-F-25-34 saturando. Cambia la segmentación.",
-        "✅  Creative_021 con CTR 4.2% — el mejor de la semana. Sube de $80 → $280/día.",
-        "🔴  3 campañas con frecuencia por encima de 4x. Pausa hoy antes de quemar más.",
-        "💡  Mueve $200/día de retargeting a prospecting — ROAS histórico 2.8x allá."
+        "⚠️  CPM subió 58% en MX-F-25-45 — Black Friday de competidor entró a subasta.",
+        "🔴  Campaña de prospecting con frecuencia 5.2x — público agotado. Pausa ahora.",
+        "✅  Campaña de remarketing con ROAS 6.1x y freq. 1.4x — todavía mucho espacio.",
+        "💡  Reasigna $300/día de prospecting a remarketing. CPA cae ~40%."
       ],
       en: [
-        "⚠️  CPM up 34% — US-F-25-34 audience saturating. Switch targeting now.",
-        "✅  Creative_021 at 4.2% CTR — best of the week. Scale from $80 → $280/day.",
-        "🔴  3 campaigns with frequency above 4x. Pause today before burning more.",
-        "💡  Move $200/day from retargeting to prospecting — historical ROAS 2.8x there."
+        "⚠️  CPM up 58% in US-F-25-45 — competitor's Black Friday entered auction.",
+        "🔴  Prospecting campaign at 5.2x frequency — audience exhausted. Pause now.",
+        "✅  Remarketing campaign at 6.1x ROAS, 1.4x freq — still lots of room.",
+        "💡  Reallocate $300/day from prospecting to remarketing. CPA drops ~40%."
       ],
     },
   },
@@ -2313,7 +2313,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
   };
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(14,165,233,0.07) 0%, transparent 65%), #06080e' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.06) 0%, transparent 60%), #07090f' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
@@ -3267,7 +3267,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
 function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   return (
-    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(160deg, #04060c 0%, #071020 50%, #04060c 100%)" }}>
+    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "#07090f" }}>
       {/* Grid pattern overlay */}
       <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
       {/* Top glow */}
