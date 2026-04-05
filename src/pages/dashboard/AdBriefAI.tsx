@@ -2694,9 +2694,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* Background — blueprint grid técnico */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
         {/* Blueprint grid — linhas horizontais */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.045) 1px, transparent 1px)",backgroundSize:"100% 44px",maskImage:"linear-gradient(to bottom,transparent 0%,black 8%,black 85%,transparent 100%)"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.045) 1px, transparent 1px)",backgroundSize:"100% 44px",maskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)"}}/>
         {/* Blueprint grid — linhas verticais */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px)",backgroundSize:"44px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 8%,black 85%,transparent 100%)"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px)",backgroundSize:"44px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)"}}/>
         {/* Bloom topo-direita — azul estático */}
         <div style={{position:"absolute",width:700,height:500,borderRadius:"50%",background:"radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.09) 0%,transparent 60%)",top:0,right:0,filter:"blur(40px)"}}/>
         {/* Bloom baixo-esquerda — indigo estático */}
@@ -2709,6 +2709,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
       {contextReady&&hasData&&(
+        <div style={{position:"relative",zIndex:2,flexShrink:0}}>
         <SectionBoundary label="LivePanel" inline>
         <LivePanel
           user={user}
@@ -2718,6 +2719,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           onSend={send}
         />
         </SectionBoundary>
+        </div>
       )}
 
       
@@ -2784,7 +2786,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.length===0&&proactiveLoading&&(
-          <div style={{maxWidth:720,margin:"0 auto",paddingTop:24,padding:"24px 16px 0"}}>
+          <div style={{maxWidth:720,margin:"0 auto",paddingTop:12,padding:"12px 16px 0"}}>
             <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:16}}>
               <div style={{width:28,height:28,borderRadius:8,background:"rgba(14,165,233,0.10)",flexShrink:0,animation:"skPulse 1.4s ease-in-out infinite"}}/>
               <div style={{flex:1}}>
@@ -2860,7 +2862,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {visibleMessages.map((msg, mi)=>{
           const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
           return (
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 24px",padding:"0 28px",boxSizing:"border-box" as const}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 28px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
@@ -2958,7 +2960,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 )}
                 {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
-                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:8,paddingLeft:0,opacity:0.6,transition:"opacity 0.15s",animation:"fadeUp 0.25s ease-out"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4,paddingLeft:0,opacity:0,transition:"opacity 0.15s",animation:"fadeUp 0.25s ease-out"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
                     style={{display:"flex",alignItems:"center",justifyContent:"center",width:24,height:22,borderRadius:6,background:feedback[msg.id]==="like"?"rgba(52,211,153,0.12)":"transparent",border:`1px solid ${feedback[msg.id]==="like"?"rgba(52,211,153,0.3)":"rgba(255,255,255,0.07)"}`,cursor:"pointer",color:feedback[msg.id]==="like"?"#34d399":"rgba(255,255,255,0.25)",transition:"all 0.12s"}}
                     onMouseEnter={e=>{if(feedback[msg.id]!=="like")(e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"}}
