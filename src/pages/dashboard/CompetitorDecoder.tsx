@@ -251,7 +251,7 @@ export default function CompetitorDecoder() {
   const canAnalyze = tab === "video" ? (transcript.length > 15) : tab === "brand" ? false : (adText.trim().length > 15);
 
   return (
-    <div style={{ padding: "20px 24px 60px", maxWidth: 720, margin: "0 auto" }}>
+    <div className="tool-page-wrap" style={{ maxWidth: 720, margin: "0 auto" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>

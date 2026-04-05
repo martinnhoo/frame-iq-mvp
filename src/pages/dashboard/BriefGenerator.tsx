@@ -122,7 +122,7 @@ export default function BriefGenerator() {
   const b = result?.brief;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="tool-page-wrap max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(96,165,250,0.15)" }}>
           <ClipboardList className="h-5 w-5" style={{ color: "#60a5fa" }} />

@@ -438,6 +438,12 @@ export default function DashboardLayout() {
         /* Scrollbar global oculta */
         .dashboard-main { scrollbar-width: none; }
         .dashboard-main::-webkit-scrollbar { display: none; }
+
+        /* Ferramentas: output cards responsivos */
+        .tool-output-card { overflow-x: hidden !important; word-break: break-word !important; }
+        
+        /* Botões de ação: touch target mínimo */
+        .tool-action-btn { min-height: 44px !important; }
       }
 
       @media (max-width: 480px) {

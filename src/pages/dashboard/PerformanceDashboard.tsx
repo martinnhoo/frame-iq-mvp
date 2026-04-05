@@ -478,7 +478,7 @@ export default function PerformanceDashboard() {
   };
 
   return (
-    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"24px 28px 100px"}} className="perf-page">
+    <div style={{minHeight:"100%",background:BG,fontFamily:F,padding:"clamp(16px,4vw,28px) clamp(14px,4vw,28px) 100px"}} className="perf-page">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -486,12 +486,25 @@ export default function PerformanceDashboard() {
         .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s}
         .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)!important;}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
-        @media(max-width:640px){
-          .perf-page{padding:16px 16px 100px!important}
-          .perf-header-actions{gap:6px!important}
+        @media(max-width:768px){
+          .perf-page{padding:14px 14px 80px!important}
+          .perf-header-actions{gap:6px!important;flex-wrap:wrap!important}
           .perf-platform-tabs button{padding:5px 10px!important;font-size:12px!important}
           .perf-action-btn{padding:6px 10px!important;font-size:12px!important}
+          /* Metric cards: 2 por linha */
+          .perf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
+          /* Header: empilha verticalmente */
+          .perf-header{flex-direction:column!important;align-items:flex-start!important;gap:12px!important}
+          /* Calendar: esconde texto do presets */
+          .perf-preset-label{display:none!important}
+          /* Tabs: menores */
+          .perf-tabs button{padding:5px 14px!important;font-size:12px!important}
+        }
+        @media(max-width:480px){
+          .perf-page{padding:12px 12px 80px!important}
+          .perf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
           .perf-new-btn span{display:none}
+          .perf-action-btn span{display:none}
         }
       `}</style>
 

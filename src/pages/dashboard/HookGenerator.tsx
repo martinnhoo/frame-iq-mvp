@@ -198,7 +198,7 @@ export default function HookGenerator() {
   const highCount = hooks.filter(h => h.hook_strength === "high").length;
 
   return (
-    <div className="page-enter p-5 lg:p-6 max-w-5xl mx-auto space-y-6">
+    <div className="tool-page-wrap page-enter max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
