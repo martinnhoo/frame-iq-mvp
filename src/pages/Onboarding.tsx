@@ -505,17 +505,15 @@ export default function Onboarding() {
                     <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
                     <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0, fontStyle: "italic" as const }}>{t.s2_generic}</p>
                   </div>
-                  <motion.div style={{ padding: "16px", borderRadius: 16 }}
-                    animate={{ background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)", borderWidth: "2px", borderStyle: "solid" }}
+                  <motion.div style={{ padding: "16px", borderRadius: 16, border: "2px solid" }}
+                    animate={{ background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)" }}
                     transition={{ duration: 0.5 }}>
-                    <motion.p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}
-                      animate={{ color: revealed ? BLUE : "rgba(255,255,255,0.25)" }} transition={{ duration: 0.3 }}>
+                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const, color: revealed ? BLUE : "rgba(255,255,255,0.25)", transition: "color 0.3s" }}>
                       {t.s2_adbrief_label}
-                    </motion.p>
-                    <motion.p style={{ fontFamily: M, fontSize: 12, lineHeight: 1.6, margin: 0 }}
-                      animate={{ color: revealed ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.15)" }} transition={{ duration: 0.5 }}>
+                    </p>
+                    <p style={{ fontFamily: M, fontSize: 12, lineHeight: 1.6, margin: 0, color: revealed ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.15)", transition: "color 0.5s" }}>
                       {revealed ? t.s2_adbrief : "..."}
-                    </motion.p>
+                    </p>
                   </motion.div>
                 </div>
 
