@@ -3305,40 +3305,40 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               })}
             </div>
 
-            {/* Usage — uma linha, zero ruído */}
-            {(profile?.plan==="free"||!profile?.plan)&&freeUsage!==null&&(()=>{
-              const used=freeUsage?.count??0, cap=3;
-              const isLocked=used>=cap;
+            {/* Usage — barra + count, funciona pra qualquer plano */}
+            {freeUsage!==null&&(()=>{
+              const planKey = profile?.plan||"free";
+              const CAPS: Record<string,number> = {free:3,maker:50,pro:200,studio:500};
+              const cap = CAPS[planKey]??3;
+              if(cap>=500) return null; // studio — sem limite, esconde
+              const used = freeUsage?.count??0;
+              const isLocked = used>=cap;
+              const pct = Math.min(100,(used/cap)*100);
+              const barColor = isLocked?"rgba(239,68,68,0.6)":pct>=80?"rgba(245,158,11,0.6)":"rgba(14,165,233,0.5)";
+              const textColor = isLocked?"rgba(239,68,68,0.5)":pct>=80?"rgba(245,158,11,0.5)":"rgba(255,255,255,0.2)";
               return(
-                <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:10,marginBottom:6}}>
-                  {/* dots */}
-                  <div style={{display:"flex",gap:4}}>
-                    {[0,1,2].map(i=>(
-                      <div key={i} style={{width:5,height:5,borderRadius:"50%",transition:"background 0.3s",
-                        background:i<used?(isLocked?"rgba(239,68,68,0.7)":"rgba(14,165,233,0.8)"):"rgba(255,255,255,0.1)"}}/>
-                    ))}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:8,marginBottom:6}}>
+                  {/* barra */}
+                  <div style={{width:40,height:2,borderRadius:99,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:99,width:`${pct}%`,background:barColor,transition:"width 0.4s"}}/>
                   </div>
                   {/* count */}
-                  <span style={{fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:"'Plus Jakarta Sans',sans-serif",letterSpacing:"0.01em"}}>
+                  <span style={{fontSize:11,color:textColor,fontFamily:"'Plus Jakarta Sans',sans-serif",fontVariantNumeric:"tabular-nums"}}>
                     {used}/{cap}
                   </span>
-                  {/* timer — só quando locked */}
+                  {/* timer quando locked */}
                   {isLocked&&countdown&&(
-                    <span style={{fontSize:11,color:"rgba(255,255,255,0.2)",fontFamily:"'Plus Jakarta Sans',sans-serif",letterSpacing:"0.02em",fontVariantNumeric:"tabular-nums"}}>
+                    <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Plus Jakarta Sans',sans-serif",fontVariantNumeric:"tabular-nums"}}>
                       {countdown}
                     </span>
                   )}
-                  {/* CTA — só quando locked */}
+                  {/* unlock */}
                   {isLocked&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
                       fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:500,
-                      padding:"3px 10px",borderRadius:6,
-                      border:"1px solid rgba(14,165,233,0.2)",
-                      background:"transparent",color:"rgba(56,189,248,0.7)",
-                      cursor:"pointer",letterSpacing:"0.01em",lineHeight:"18px",
-                    }}>
-                      Unlock
-                    </button>
+                      padding:"2px 9px",borderRadius:5,border:"1px solid rgba(14,165,233,0.2)",
+                      background:"transparent",color:"rgba(56,189,248,0.6)",cursor:"pointer",
+                    }}>Unlock</button>
                   )}
                 </div>
               );
