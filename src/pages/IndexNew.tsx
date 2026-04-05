@@ -573,7 +573,7 @@ const TOOLS_DATA: ToolDef[] = [
     },
   },
   {
-    id: "brief", color: "#34d399", accent: "rgba(52,211,153,0.10)",
+    id: "brief", color: "#06b6d4", accent: "rgba(6,182,212,0.10)",
     icon: <Layers size={20} />,
     name:    { pt: "Brief Criativo", es: "Brief Creativo", en: "Creative Brief" },
     tagline: { pt: "Manda pro editor, sem revisão", es: "Envíalo al editor, sin revisión", en: "Send to editor, no revision needed" },
@@ -751,7 +751,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
 // ─── Demo conversations data ──────────────────────────────────────────────────
 // ─── Industries for demo ──────────────────────────────────────────────────────
 const INDUSTRIES_DEMO = [
-  { id: "fitness",  emoji: "💪", label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#34d399", initial: "F" },
+  { id: "fitness",  emoji: "💪", label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#0ea5e9", initial: "F" },
   { id: "clinica",  emoji: "🏥", label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
   { id: "ecomm",    emoji: "🛍️", label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
   { id: "igaming",  emoji: "🎰", label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
@@ -1496,7 +1496,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
             {activeQ?.q.slice(0,52)}{activeQ?.q.length > 52 ? '…' : ''}
           </p>
           {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3, boxShadow: '0 0 5px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />}
-          {phase === 'done' && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34d399', flexShrink: 0, marginTop: 3 }} />}
+          {phase === 'done' && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3 }} />}
         </div>
       </div>
 
@@ -1672,9 +1672,9 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
-            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#34d399', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(52,211,153,0.9)', fontWeight: 600 }}>Meta</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.18)' }}>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#0ea5e9', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(14,165,233,0.9)', fontWeight: 600 }}>Meta</span>
           </div>
         </div>
 
@@ -2757,12 +2757,12 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const steps = [
     { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
     { n: "02", icon: <Users size={22} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
-    { n: "03", icon: <MessageSquare size={22} />, color: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
+    { n: "03", icon: <MessageSquare size={22} />, color: "#0ea5e9", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
   ];
   return (
     <Section id="how" bg="dark">
       <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(14,165,233,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(52,211,153,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(14,165,233,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
@@ -2794,7 +2794,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   const [active, setActive] = useState(0);
   const profiles = [
     { emoji: "🏢", label: t.for_tab0, color: "#0ea5e9", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
-    { emoji: "📈", label: t.for_tab1, color: "#34d399", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
+    { emoji: "📈", label: t.for_tab1, color: "#38bdf8", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
     { emoji: "⚡", label: t.for_tab2, color: "#a78bfa", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
   ];
   const p = profiles[active];
