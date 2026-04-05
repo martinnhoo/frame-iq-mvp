@@ -1,4 +1,4 @@
-// send-activation-email v2 — fires 24h after signup if Meta not connected
+// send-activation-email v3 — redesign bold, sem Google Ads — fires 24h after signup if Meta not connected
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -66,57 +66,70 @@ function detectLang(raw?: string | null): Lang {
 
 function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string {
   const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-  const M = "'Helvetica Neue',Arial,sans-serif";
 
   const bullets = t.bullets.map(b => `
-    <tr><td style="padding:0 0 8px;">
+    <tr><td style="padding:0 0 10px;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td width="20" valign="top" style="padding-top:1px;">
-          <span style="display:block;width:6px;height:6px;border-radius:50%;background:#0ea5e9;margin-top:5px;"></span>
+        <td width="28" valign="top" style="padding-top:2px;">
+          <div style="width:20px;height:20px;border-radius:6px;background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.35);text-align:center;line-height:20px;font-size:11px;">→</div>
         </td>
-        <td style="font-size:14px;color:rgba(238,240,246,0.75);line-height:1.55;font-family:${M};">${b}</td>
+        <td style="font-size:14px;color:rgba(200,215,240,0.8);line-height:1.55;font-family:${F};font-style:italic;">${b}</td>
       </tr></table>
     </td></tr>`).join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="dark"/><title>${t.subject}</title></head>
-<body style="margin:0;padding:0;background:#080c12;font-family:${M};-webkit-font-smoothing:antialiased;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;‌&nbsp;‌&nbsp;</span>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#080c12;">
-<tr><td align="center" style="padding:48px 16px 64px;">
+<body style="margin:0;padding:0;background:#050811;-webkit-font-smoothing:antialiased;">
+<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;&#8203;&nbsp;&#8203;&nbsp;</span>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050811;">
+<tr><td align="center" style="padding:40px 16px 56px;">
 <table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
 
   <!-- LOGO -->
-  <tr><td style="padding-bottom:36px;">
-    <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:22px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
+  <tr><td style="padding-bottom:32px;">
+    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
   </td></tr>
 
-  <!-- CARD -->
-  <tr><td style="background:#0d1320;border-radius:20px;border:1px solid rgba(255,255,255,0.09);padding:40px;">
-    <p style="margin:0 0 6px;font-size:14px;color:rgba(238,240,246,0.45);font-family:${M};">${firstName},</p>
-    <h1 style="margin:0 0 24px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.15;font-family:${F};">${t.headline}</h1>
-    <p style="margin:0 0 24px;font-size:15px;color:rgba(238,240,246,0.65);line-height:1.70;font-family:${M};">${t.body1}</p>
+  <!-- MAIN CARD -->
+  <tr><td style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#0e1628 0%,#0a1020 100%);border:1px solid rgba(14,165,233,0.2);">
+    <!-- top bar -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444,#ec4899);"></td></tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(245,158,11,0.06) 0%,transparent 50%);">
+    <tr><td style="padding:36px 40px 0;">
+      <p style="margin:0 0 8px;font-size:14px;color:rgba(150,180,220,0.6);font-family:${F};">${firstName},</p>
+      <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.15;font-family:${F};">${t.headline}</h1>
+      <p style="margin:0 0 28px;font-size:15px;color:rgba(200,215,240,0.7);line-height:1.75;font-family:${F};">${t.body1}</p>
 
-    <!-- Bullets with cyan dots -->
-    <div style="background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.15);border-radius:12px;padding:18px 20px;margin-bottom:24px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        ${bullets}
-      </table>
-    </div>
+      <!-- Questions block -->
+      <div style="background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.2);border-left:3px solid #0ea5e9;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+        <p style="margin:0 0 14px;font-size:10px;font-weight:800;color:#0ea5e9;letter-spacing:0.12em;text-transform:uppercase;font-family:${F};">PERGUNTAS QUE VOCÊ JÁ PODE FAZER</p>
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+          ${bullets}
+        </table>
+      </div>
 
-    <p style="margin:0 0 32px;font-size:15px;color:rgba(238,240,246,0.65);line-height:1.70;font-family:${M};">${t.body2}</p>
-
-    <table cellpadding="0" cellspacing="0" border="0" width="100%">
-    <tr><td align="center">
-      <a href="${appUrl}/dashboard/accounts" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:12px;font-family:${F};letter-spacing:-0.01em;box-shadow:0 8px 32px rgba(14,165,233,0.30);">${t.cta}</a>
+      <p style="margin:0 0 32px;font-size:15px;color:rgba(200,215,240,0.7);line-height:1.75;font-family:${F};">${t.body2}</p>
     </td></tr>
     </table>
-    <p style="margin:24px 0 0;font-size:12px;color:rgba(238,240,246,0.28);text-align:center;font-family:${M};">${t.ps}</p>
+
+    <!-- CTA -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="height:1px;background:rgba(14,165,233,0.1);"></td></tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(14,165,233,0.06) 0%,transparent 100%);">
+    <tr><td style="padding:28px 40px 36px;" align="center">
+      <a href="${appUrl}/dashboard/accounts" style="display:inline-block;padding:15px 44px;background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:14px;font-family:${F};box-shadow:0 8px 32px rgba(14,165,233,0.4);">${t.cta}</a>
+      <p style="margin:18px 0 0;font-size:12px;color:rgba(150,180,220,0.35);font-family:${F};">${t.ps}</p>
+    </td></tr>
+    </table>
   </td></tr>
 
-  <tr><td style="padding:24px 4px 0;text-align:center;">
-    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.18);font-family:${M};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(255,255,255,0.25);text-decoration:none;">adbrief.pro</a></p>
+  <!-- FOOTER -->
+  <tr><td style="padding:24px 8px 0;" align="center">
+    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:${F};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(14,165,233,0.5);text-decoration:none;">adbrief.pro</a></p>
   </td></tr>
 </table>
 </td></tr>

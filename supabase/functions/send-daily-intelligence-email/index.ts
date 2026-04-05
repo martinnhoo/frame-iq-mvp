@@ -1,4 +1,4 @@
-// send-daily-intelligence-email v2 — consolidated multi-account report
+// send-daily-intelligence-email v3 — redesign bold, sem Google Ads v2 — consolidated multi-account report
 // One email per user, all connected ad accounts together
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -96,7 +96,7 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
   const summaryRow = `
     <tr>
       <td style="padding:0 0 20px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:rgba(255,255,255,0.03);border-radius:14px;border:1px solid rgba(255,255,255,0.08);">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:rgba(14,165,233,0.04);border-radius:14px;border:1px solid rgba(14,165,233,0.15);">
         <tr>
           <td style="padding:18px 20px;">
             <p style="margin:0 0 14px;font-size:10px;font-weight:700;color:rgba(238,240,246,0.30);letter-spacing:0.12em;text-transform:uppercase;font-family:${F};">${l.summaryLabel} · ${snaps.length} ${snaps.length === 1 ? "conta" : (lang === "pt" ? "contas" : lang === "es" ? "cuentas" : "accounts")}</p>
@@ -174,10 +174,10 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
 
     return `
     <tr><td style="padding:0 0 16px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#0a1020;border-radius:14px;border:1px solid ${borderColor};overflow:hidden;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(160deg,#0e1628,#0a1020);border-radius:16px;border:1px solid ${borderColor};overflow:hidden;">
 
         <!-- Account header -->
-        <tr><td style="padding:14px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);">
+        <tr><td style="padding:14px 20px;background:rgba(14,165,233,0.05);border-bottom:1px solid rgba(14,165,233,0.1);">
           <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
             <td>
               <p style="margin:0;font-size:13px;font-weight:700;color:#eef0f6;font-family:${F};">${snap.account_name || "Conta"}</p>
@@ -218,9 +218,9 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="dark"/></head>
-<body style="margin:0;padding:0;background:#060a10;font-family:${M};-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#050811;font-family:${M};-webkit-font-smoothing:antialiased;">
 <span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${l.preheader(snaps[0]?.ai_insight || "")}&nbsp;‌&nbsp;‌&nbsp;</span>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#060a10;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050811;">
 <tr><td align="center" style="padding:40px 16px 56px;">
 <table width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;">
 
@@ -228,7 +228,7 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
   <tr><td style="padding-bottom:32px;">
     <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
       <td valign="middle">
-        <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:22px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
+        <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
       </td>
       <td align="right" valign="middle">
         <p style="margin:0;font-size:11px;color:rgba(238,240,246,0.25);font-family:${M};">${today}</p>
@@ -264,7 +264,7 @@ function buildHtml(l: typeof L["pt"], firstName: string, snaps: any[], appUrl: s
   </td></tr>
 
   <!-- Footer -->
-  <tr><td style="padding:28px 4px 0;text-align:center;border-top:1px solid rgba(255,255,255,0.06);margin-top:28px;">
+  <tr><td style="padding:28px 4px 0;text-align:center;border-top:1px solid rgba(14,165,233,0.1);margin-top:28px;">
     <p style="margin:0 0 4px;font-size:11px;color:rgba(255,255,255,0.18);font-family:${M};">${l.footer}</p>
     <a href="${appUrl}" style="font-size:11px;color:rgba(255,255,255,0.22);font-family:${M};text-decoration:none;">adbrief.pro</a>
   </td></tr>
