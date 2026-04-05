@@ -513,8 +513,16 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert:true });
       if (error) throw error;
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      setLogo(data.publicUrl);
-    } catch { toast.error("Upload failed"); }
+      const url = data.publicUrl;
+      setLogo(url);
+      // Auto-save logo_url immediately for existing accounts
+      if (account?.id) {
+        await supabase.from("personas").update({ logo_url: url }).eq("id", account.id);
+        toast.success("Logo salvo");
+      }
+    } catch (e: any) {
+      toast.error("Upload falhou: " + (e?.message || "tente novamente"));
+    }
     finally { setUp(false); }
   };
 

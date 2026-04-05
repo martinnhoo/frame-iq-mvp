@@ -273,32 +273,33 @@ export function DashboardSidebar({
                   {selectedPersona?.name || (pt ? "Sem conta" : "No account")}
                 </p>
                 {kpi != null ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                    {kpi.ads === 0 && kpi.ctr === 0 ? (
-                      <span style={{ fontSize: 11, color: "#22c55e", fontFamily: F }}>● {pt ? "Meta Ads conectado" : es ? "Meta Ads conectado" : "Meta Ads connected"}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                    {/* Meta ∞ icon — sempre mostra quando conectado */}
+                    <svg width="11" height="7" viewBox="0 0 56 32" fill="none" style={{ flexShrink: 0 }}>
+                      <defs><linearGradient id="sbMetaG" x1="0" y1="16" x2="56" y2="16" gradientUnits="userSpaceOnUse"><stop stopColor="#0082FB"/><stop offset="1" stopColor="#0064E0"/></linearGradient></defs>
+                      <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0z" fill="url(#sbMetaG)"/>
+                    </svg>
+                    {kpi.ads > 0 ? (
+                      <span style={{ fontSize: 10.5, color: "rgba(14,165,233,0.8)", fontFamily: F, fontWeight: 600 }}>
+                        {kpi.ads} {pt ? "ativos" : "active"}
+                      </span>
                     ) : (
+                      <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontFamily: F }}>live</span>
+                    )}
+                    {kpi.ctr > 0 && (
                       <>
-                        {kpi.ads > 0 && (
-                          <span style={{ fontSize: 11, color: "#22c55e", fontFamily: F }}>
-                            ● {kpi.ads} {pt ? "ativos" : "active"}
-                          </span>
-                        )}
-                        {kpi.ads > 0 && kpi.ctr > 0 && (
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>·</span>
-                        )}
-                        {kpi.ctr > 0 && (
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: F }}>
-                            {kpi.ctr.toFixed(2)}%
-                            {kpi.trend === "up" && <span style={{ color: "#22c55e", marginLeft: 2 }}>↑</span>}
-                            {kpi.trend === "down" && <span style={{ color: "#f87171", marginLeft: 2 }}>↓</span>}
-                          </span>
-                        )}
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.15)" }}>·</span>
+                        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: F }}>
+                          {kpi.ctr.toFixed(1)}%
+                          {kpi.trend === "up" && <span style={{ color: "#22c55e", marginLeft: 2 }}>↑</span>}
+                          {kpi.trend === "down" && <span style={{ color: "#f87171", marginLeft: 2 }}>↓</span>}
+                        </span>
                       </>
                     )}
                   </div>
                 ) : selectedPersona ? (
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F }}>
-                    {pt ? "conectar Meta Ads" : es ? "conectar Meta Ads" : "connect Meta Ads"}
+                  <p style={{ margin: "2px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.01em" }}>
+                    {pt ? "sem conexão" : es ? "sin conexión" : "no connection"}
                   </p>
                 ) : null}
               </div>
