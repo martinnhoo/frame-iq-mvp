@@ -2930,10 +2930,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               const cap=3,remaining=Math.max(0,cap-used);
               const col=remaining===0?"#ef4444":remaining===1?"#f59e0b":"rgba(255,255,255,0.18)";
               return(
-                <div style={{display:"flex",justifyContent:"flex-end",marginBottom:6}}>
+                <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8,marginBottom:6}}>
                   <span style={{fontSize:11.5,color:col,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:remaining===0?600:400}}>
                     {remaining===0?(lang==="pt"?"Limite atingido":lang==="es"?"Límite alcanzado":"Limit reached"):`${remaining}/${cap} ${lang==="pt"?"mensagens":"messages"}`}
                   </span>
+                  {remaining===0&&(
+                    <button onClick={()=>setShowUpgradeWall(true)} style={{
+                      fontSize:11.5,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
+                      padding:"2px 10px",borderRadius:6,border:"1px solid rgba(14,165,233,0.4)",
+                      background:"rgba(14,165,233,0.1)",color:"#38bdf8",cursor:"pointer"
+                    }}>
+                      {lang==="pt"?"Ver planos":lang==="es"?"Ver planes":"See plans"}
+                    </button>
+                  )}
                 </div>
               );
             })()}
@@ -2979,7 +2988,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <RotateCcw size={13}/>
                   </button>
                 )}
-                <button onClick={()=>send()} disabled={!input.trim()||loading||!contextReady}
+                <button onClick={()=>{
+                  const isFree=(profile?.plan==="free"||!profile?.plan);
+                  const used=messages.filter(m=>m.role==="user").length;
+                  if(isFree&&used>=3){setShowUpgradeWall(true);return;}
+                  send();
+                }} disabled={!input.trim()||loading||!contextReady}
                   style={{
                     width:34,height:34,borderRadius:10,border:"none",
                     background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.06)",
