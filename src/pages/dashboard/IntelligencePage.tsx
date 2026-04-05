@@ -311,7 +311,7 @@ export default function IntelligencePage() {
   const hasAny = memories.length > 0 || examples.length > 0 || patterns.length > 0;
 
   return (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"28px 24px 60px", fontFamily:F }}>
+    <div className="tool-page-wrap" style={{ maxWidth:720, margin:"0 auto", fontFamily:F }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* Header */}
