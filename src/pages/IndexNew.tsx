@@ -2111,18 +2111,23 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 18px', borderRadius: 10, background: 'rgba(0,130,251,0.08)', border: '1px solid rgba(0,130,251,0.22)', boxShadow: '0 0 20px rgba(0,130,251,0.07)' }}>
-          {/* Meta ∞ mark — official shape */}
-          <svg width="24" height="14" viewBox="0 0 56 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Meta ∞ — logo oficial */}
+          <svg width="28" height="18" viewBox="0 0 60 38" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="metaHeroGrad" x1="0" y1="14" x2="56" y2="14" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#0082FB"/>
-                <stop offset="1" stopColor="#0064E0"/>
+              <linearGradient id="metaReal" x1="0" y1="19" x2="60" y2="19" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#0099FF"/>
+                <stop offset="50%" stopColor="#0975F3"/>
+                <stop offset="100%" stopColor="#0250C5"/>
               </linearGradient>
             </defs>
-            <path d="M13.5 0C8.5 0 4.7 2.6 2.2 6.3 0.8 8.4 0 10.9 0 13.7 0 18.5 2.3 22.1 5.9 23.9c1.6 0.8 3.3 1.1 5 1.1 3.2 0 6.1-1.2 8.7-3.8L28 13.7l8.4 7.5c2.6 2.6 5.5 3.8 8.7 3.8 1.7 0 3.4-0.3 5-1.1 3.6-1.8 5.9-5.4 5.9-10.2 0-2.8-0.8-5.3-2.2-7.4C51.3 2.6 47.5 0 42.5 0c-3.8 0-7.2 1.7-10.3 5.1L28 9.8 23.8 5.1C20.7 1.7 17.3 0 13.5 0zm0 5c2.6 0 5 1.3 7.5 4.1l3.3 3.7-3.3 3.7c-2.5 2.8-4.9 4.1-7.5 4.1-1.9 0-3.7-0.6-5.1-1.8C6.6 17.4 5.5 15.7 5.5 13.5c0-2.2 1.1-3.9 2.9-5.3C9.8 7.4 11.6 5 13.5 5zm29 0c1.9 0 3.7 0.6 5.1 1.8 1.8 1.4 2.9 3.1 2.9 5.3 0 2.2-1.1 3.9-2.9 5.3C45.7 18.6 43.9 19 42 19c-2.6 0-5-1.3-7.5-4.1L31.2 11.2 34.5 7.5C37 4.7 39.4 5 42.5 5z" fill="url(#metaHeroGrad)"/>
+            <path fillRule="evenodd" clipRule="evenodd"
+              d="M30 14.5C26.8 10.2 23 7.5 19 7.5C12.1 7.5 6.5 14.2 6.5 19C6.5 23.8 9.8 27 13.5 27C16.5 27 18.8 25.5 22 21.5L24.5 18.5L22 15.5C19.5 12.5 17.5 11 15 11C12 11 10 13.5 10 16C10 17.2 10.5 18.2 11.5 19C10.5 18.2 10 17.2 10 16C10 13.5 12 11 15 11C17.5 11 19.5 12.5 22 15.5L24.5 18.5L22 21.5C18.8 25.5 16.5 27 13.5 27C9.8 27 6.5 23.8 6.5 19C6.5 14.2 12.1 7.5 19 7.5C23 7.5 26.8 10.2 30 14.5Z"
+              fill="url(#metaReal)" opacity="0"/>
+            {/* Lemniscate — forma correta do ∞ Meta */}
+            <path d="M30 19C26.5 13.5 22.5 10 18 10C11 10 5 14.5 5 19C5 23.5 9 27 14 27C17.5 27 20.5 25 24.5 20.5L30 14.5L35.5 20.5C39.5 25 42.5 27 46 27C51 27 55 23.5 55 19C55 14.5 49 10 42 10C37.5 10 33.5 13.5 30 19Z"
+              fill="none" stroke="url(#metaReal)" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: '#0082FB', letterSpacing: '-0.02em' }}>Meta</span>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '-0.01em' }}>Ads</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Meta Ads</span>
         </div>
       </div>
     </div>
