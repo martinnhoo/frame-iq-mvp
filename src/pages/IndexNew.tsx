@@ -2893,7 +2893,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="telegram-grid">
           {items.map((item, i) => (
-            <div key={i} style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.07)", border: "1px solid rgba(39,175,225,0.18)", display: "flex", gap: 16, alignItems: "flex-start" }}>
+            <div key={i} style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 16, alignItems: "flex-start" }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
               <div>
                 <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#e2f4ff", margin: "0 0 5px", letterSpacing: "-0.01em" }}>{item.title}</p>
@@ -2905,9 +2905,9 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 
         <div style={{ marginTop: 48, maxWidth: 480, margin: "48px auto 0" }}>
           {/* Telegram mock conversation */}
-          <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)", background: "#17212b" }}>
+          <div style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", background: "#0b1622" }}>
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", background: "#232e3c", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", background: "#0f1e2e", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
               <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(39,175,225,0.2)", border: "1px solid rgba(39,175,225,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
               </div>
@@ -2923,7 +2923,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(39,175,225,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
                 </div>
-                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#232e3c" }}>
+                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
                   <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>⚠️ Alerta AdBrief</p>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.55 }}>
                     <strong style={{ color: "#fff" }}>Creative_042</strong> com frequência 4.8x. CTR caiu de 2.1% → 0.4% nas últimas 6h.<br/>
@@ -2933,7 +2933,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
               </div>
               {/* User message */}
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <div style={{ maxWidth: "68%", padding: "9px 13px", borderRadius: "14px 14px 2px 14px", background: "#2b5278" }}>
+                <div style={{ maxWidth: "68%", padding: "9px 13px", borderRadius: "14px 14px 2px 14px", background: "#1a3d6b" }}>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "#fff", margin: 0 }}>/pausar Creative_042</p>
                 </div>
               </div>
@@ -2942,7 +2942,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(39,175,225,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginBottom: 2 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
                 </div>
-                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#232e3c" }}>
+                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.9)", margin: 0, lineHeight: 1.55 }}>
                     ✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>
                     Registrado no AdBrief às 14:32.<br/>
@@ -3226,7 +3226,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
         margin: "0 auto",
       }}>
         {/* Window chrome */}
-        <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.02)" }}>
           <div style={{ display: "flex", gap: 5 }}>
             {["#ff5f57","#febc2e","#28c840"].map(c => <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />)}
           </div>
