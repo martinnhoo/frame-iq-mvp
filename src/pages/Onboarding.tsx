@@ -200,6 +200,7 @@ export default function Onboarding() {
   const [connecting, setConnecting] = useState<"meta"|null>(null);
   const [name, setName]             = useState("");
   const [niche, setNiche]           = useState("");
+  const [customNiche, setCustomNiche] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountDesc, setAccountDesc] = useState("");
@@ -244,6 +245,7 @@ export default function Onboarding() {
   };
 
   const createFirstAccount = async (session: any): Promise<string | null> => {
+    const effectiveNiche = niche === "other" ? (customNiche.trim() || "other") : niche;
     const nicheObj = NICHES.find(n => n.value === niche);
     const personaName = accountName.trim() || (name ? name.split(" ")[0] : nicheObj?.label || "Minha conta");
 
@@ -253,7 +255,7 @@ export default function Onboarding() {
     
     if (existing?.length) {
       await supabase.from("personas").update({
-        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
+        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName },
       } as never).eq("id", (existing[0] as any).id);
       return (existing[0] as any).id as string;
     }
@@ -261,7 +263,7 @@ export default function Onboarding() {
     // 2. Insert new persona
     const { data: inserted, error: insertError } = await supabase.from("personas").insert({
       user_id: session.user.id,
-      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche, industry: niche, biz_description: accountDesc, name: personaName },
+      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName },
     } as never).select("id");
 
     
@@ -323,7 +325,15 @@ export default function Onboarding() {
       const session = await getSession();
       if (session) {
         await saveUserProfile(session);
-        if (step === 3) await createFirstAccount(session);
+        // Always create first account when skipping step 3, even without accountName
+        // createFirstAccount has fallback to name/niche if accountName is empty
+        if (step === 3) {
+          if (!accountName.trim()) {
+            // Use name from step 1 as fallback account name
+            setAccountName(name.trim().split(" ")[0] || "Minha conta");
+          }
+          await createFirstAccount(session);
+        }
       }
     } catch {}
     if (checkoutPlan) {
@@ -443,6 +453,26 @@ export default function Onboarding() {
                       );
                     })}
                   </div>
+                  {/* Custom niche input — aparece só quando "Outro" selecionado */}
+                  {niche === "other" && (
+                    <div style={{ marginTop: 10 }}>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={customNiche}
+                        onChange={e => setCustomNiche(e.target.value)}
+                        placeholder={lang === "pt" ? "Ex: Imóveis, Saúde, Jurídico..." : lang === "es" ? "Ej: Inmobiliaria, Salud..." : "E.g. Real estate, Health, Legal..."}
+                        style={{
+                          width: "100%", boxSizing: "border-box" as const,
+                          padding: "12px 16px", borderRadius: 12,
+                          background: "rgba(255,255,255,0.07)",
+                          border: "1.5px solid rgba(14,165,233,0.35)",
+                          color: "#fff", fontSize: 14, fontFamily: F,
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Terms */}
