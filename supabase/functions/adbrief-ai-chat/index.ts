@@ -436,9 +436,7 @@ Deno.serve(async (req) => {
             last_updated: new Date().toISOString(),
           },
           { onConflict: "user_id" },
-        )
-        .then(() => {})
-        .catch(() => {});
+        );
     }
 
     // Only trigger dashboard offer for explicit data/analytics requests
@@ -612,8 +610,7 @@ Deno.serve(async (req) => {
 
         await (supabase as any)
           .from("user_ai_profile")
-          .upsert({ user_id, pain_point: allNotes, last_updated: new Date().toISOString() }, { onConflict: "user_id" })
-          .catch(() => {});
+          .upsert({ user_id, pain_point: allNotes, last_updated: new Date().toISOString() }, { onConflict: "user_id" });
       }
     }
 
@@ -2165,16 +2162,16 @@ PROIBIDO:
           .join(" ")
           .slice(0, 800);
         if (assistantText && message && user_id) {
-          await supabase.functions
-            .invoke("extract-chat-memory", {
+          try {
+            await supabase.functions.invoke("extract-chat-memory", {
               body: {
                 user_id,
                 persona_id: persona_id || null,
                 user_message: message.slice(0, 400),
                 assistant_response: assistantText,
               },
-            })
-            .catch(() => {});
+            });
+          } catch (_) { /* silent */ }
         }
       } catch (_) {
         /* silent — never break the main flow */

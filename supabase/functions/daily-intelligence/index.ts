@@ -950,7 +950,7 @@ Retorne JSON:
     }
 
     if (alerts.length > 0) {
-      await sb.from('account_alerts' as any).insert(alerts).catch(() => {});
+      try { await sb.from('account_alerts' as any).insert(alerts); } catch(_e) {}
     }
   }
 

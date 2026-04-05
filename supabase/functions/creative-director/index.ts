@@ -129,7 +129,7 @@ async function runCreativeDirector(sb: any, anthropicKey: string | undefined, us
       user_id, ai_summary: decisions.resumo || '',
       ai_recommendations: { weekly_directive: decisions, generated_at: new Date().toISOString() },
       last_updated: new Date().toISOString(),
-    }, { onConflict: 'user_id' }).catch(() => {});
+    }, { onConflict: 'user_id' });
   }
 
   return {
