@@ -2337,6 +2337,130 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
   );
 }
 
+// ─── FeatureTabs ───────────────────────────────────────────────────────────────
+const featureTabsData = [
+  {
+    id: "diagnostico",
+    label: "Diagnóstico",
+    emoji: "🔍",
+    headline: "Sabe por que o ROAS caiu antes de você perceber.",
+    sub: "Você pergunta. A IA cruza CTR, frequência e CPM da sua conta real e entrega a causa — não um palpite.",
+    proof: "ROAS 5.1x → 4.2x identificado em 30s",
+    cta: "Quero saber agora →",
+    img: "/screenshots/adbrief_print_7.png",
+  },
+  {
+    id: "criativos",
+    label: "Criativos",
+    emoji: "🎯",
+    headline: "Para de gastar budget em criativo morto.",
+    sub: "A IA lista o que pausar e o que escalar — com CTR, frequência e ROAS de cada um. Decisão em segundos.",
+    proof: "Budget liberado pro ROAS 5.8x automaticamente",
+    cta: "Ver meus criativos →",
+    img: "/screenshots/adbrief_print_6.png",
+  },
+  {
+    id: "performance",
+    label: "Performance",
+    emoji: "📈",
+    headline: "90 dias de dados, uma tela só.",
+    sub: "Spend, CPC, CTR e tendência real da sua conta — sem exportar planilha, sem montar dashboard no achismo.",
+    proof: "R$47.832 · CTR 3.87% · 2.4M impressões",
+    cta: "Ver minha performance →",
+    img: "/screenshots/adbrief_print_5.png",
+  },
+  {
+    id: "hooks",
+    label: "Hooks",
+    emoji: "⚡",
+    headline: "Hooks com CTR estimado antes de gravar.",
+    sub: "A IA lê o que já funcionou na sua conta e gera hooks por tipo — urgência, prova social, curiosidade — com projeção de CTR.",
+    proof: "Baseado em Reels_v3 · CTR 5.1% · ROAS 5.8x",
+    cta: "Gerar meus hooks →",
+    img: "/screenshots/adbrief_print_1.png",
+  },
+  {
+    id: "diario",
+    label: "Diário",
+    emoji: "📋",
+    headline: "Cada anúncio com um veredicto claro.",
+    sub: "Vencedor, Ativo, Saturando ou Pausar. Sem ter que abrir o Ads Manager pra entender o que tá acontecendo.",
+    proof: "87% taxa de acerto · R$198.340 retorno estimado",
+    cta: "Ver meu diário →",
+    img: "/screenshots/adbrief_print_3.png",
+  },
+];
+
+function FeatureTabs() {
+  const [active, setActive] = React.useState(0);
+  const [visible, setVisible] = React.useState(true);
+
+  const handleTab = (idx: number) => {
+    if (idx === active) return;
+    setVisible(false);
+    setTimeout(() => { setActive(idx); setVisible(true); }, 180);
+  };
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setActive(prev => {
+        const next = (prev + 1) % featureTabsData.length;
+        setVisible(false);
+        setTimeout(() => setVisible(true), 180);
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const tab = featureTabsData[active];
+
+  return (
+    <section style={{ background: "#0d1117", padding: "96px 0", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(13,162,231,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(13,162,231,0.03) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
+      <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px", position: "relative" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p style={{ color: "#0da2e7", fontFamily: "monospace", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 16 }}>conta real · dados reais</p>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.15, letterSpacing: "-0.02em" }}>O que você ganha usando o AdBrief</h2>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 17, maxWidth: 480, margin: "0 auto", lineHeight: 1.5 }}>Resultados reais de gestores com conta conectada.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 52, flexWrap: "wrap" as const }}>
+          {featureTabsData.map((t, i) => (
+            <button key={t.id} onClick={() => handleTab(i)} style={{ padding: "9px 20px", borderRadius: 100, border: i === active ? "1px solid #0da2e7" : "1px solid rgba(255,255,255,0.1)", background: i === active ? "rgba(13,162,231,0.12)" : "transparent", color: i === active ? "#0da2e7" : "rgba(255,255,255,0.45)", fontSize: 14, fontWeight: i === active ? 600 : 400, cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap" as const }}>
+              {t.emoji} {t.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 56, alignItems: "center", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.2s ease, transform 0.2s ease" }}>
+          <div>
+            <div style={{ display: "inline-block", padding: "5px 12px", borderRadius: 6, background: "rgba(13,162,231,0.08)", border: "1px solid rgba(13,162,231,0.2)", color: "#0da2e7", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 20 }}>{tab.proof}</div>
+            <h3 style={{ fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{tab.headline}</h3>
+            <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 16, lineHeight: 1.65, margin: "0 0 32px" }}>{tab.sub}</p>
+            <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 8, background: "transparent", border: "1px solid rgba(13,162,231,0.4)", color: "#0da2e7", fontSize: 14, fontWeight: 600, textDecoration: "none", letterSpacing: "0.01em" }}>{tab.cta}</a>
+            <div style={{ display: "flex", gap: 6, marginTop: 40 }}>
+              {featureTabsData.map((_, i) => (
+                <button key={i} onClick={() => handleTab(i)} style={{ width: i === active ? 24 : 6, height: 6, borderRadius: 3, background: i === active ? "#0da2e7" : "rgba(255,255,255,0.15)", border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0 }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", inset: -20, background: "radial-gradient(ellipse at center, rgba(13,162,231,0.08) 0%, transparent 70%)", borderRadius: 20, pointerEvents: "none" }} />
+            <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid hsl(224,22%,20%)", boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}>
+              <div style={{ background: "hsl(224,18%,10%)", borderBottom: "1px solid hsl(224,20%,16%)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {["#ff5f57","#ffbd2e","#28c840"].map(c => (<div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />))}
+                </div>
+                <div style={{ flex: 1, background: "hsl(224,20%,14%)", borderRadius: 5, padding: "4px 10px", fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "monospace", maxWidth: 200, margin: "0 auto" }}>adbrief.pro</div>
+              </div>
+              <img src={tab.img} alt={tab.headline} style={{ width: "100%", display: "block", objectFit: "cover" }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Tools ─────────────────────────────────────────────────────────────────────
 function ToolLine({ text, color, delay }: { text: string; color: string; delay: number }) {
   const [visible, setVisible] = useState(false);
@@ -3580,6 +3704,7 @@ export default function IndexNew() {
       <SocialProofStrip lang={lang} />
       <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
       <HowItWorks t={t} lang={lang} />
+      <FeatureTabs />
       <Tools t={t} lang={lang} />
       <ForWho onCTA={handleCTA} t={t} ctaLoading={ctaLoading} />
       <TelegramSection t={t} lang={lang} />
