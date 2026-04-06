@@ -1,4 +1,5 @@
-// v8.6 — FeatureTabs section with real screenshots 2026-04-06 // build 5b84e3f
+// v8.7 — DemoTabs replaces HeroDemo with real screenshots 2026-04-06
+import { DemoTabs } from "@/components/DemoTabs";
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
@@ -2329,7 +2330,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
         {/* ── RIGHT — demo ── */}
         {/* ── RIGHT — Demo redesign ── */}
         <div className="hero-demo-col" style={{ position: 'relative' }}>
-          <HeroDemo lang={lang} onCTA={onCTA} />
+          <DemoTabs onCTA={onCTA} />
         </div>
 
       </div>
