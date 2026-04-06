@@ -2241,16 +2241,8 @@ function playPop(vol = 0.05) {
 
 
 function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: Record<string, string>; lang: Lang; ctaLoading?: boolean }) {
-  const [activeIndustry, setActiveIndustry] = React.useState('fitness');
-  const industry = INDUSTRIES_DEMO.find(i => i.id === activeIndustry) || INDUSTRIES_DEMO[2];
-  const account = INDUSTRY_ACCOUNTS[activeIndustry]?.[lang] || INDUSTRY_ACCOUNTS.fitness[lang];
-  const qa = DEMO_QA_BY_INDUSTRY[activeIndustry]?.[lang] || DEMO_QA_BY_INDUSTRY.fitness[lang];
-  const { qi, phase, typedQ, lines, activeLine, jump } = useStreaming(lang, qa);
+  // Streaming state removed — right column now uses DemoTabs with real screenshots
   const chatRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [lines, activeLine, phase]);
 
   const ctabtn = lang === 'pt' ? 'Testar com minha conta' : lang === 'es' ? 'Probar con mi cuenta' : 'Try with my account';
   const note = lang === 'pt' ? 'Pergunte qualquer coisa...' : lang === 'es' ? 'Pregunta lo que quieras...' : 'Ask anything...';
