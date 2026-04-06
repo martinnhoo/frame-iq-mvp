@@ -1,4 +1,4 @@
-// v8.5 — footer i18n + CTA smooth loading 2026-03-25
+// v8.6 — FeatureTabs section with real screenshots 2026-04-06 // build 5b84e3f
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
 import { ArrowRight, Check, MessageSquare, Plug, Users, ChevronDown, Globe, Play, Zap, BarChart3, Target, Layers } from "lucide-react";
