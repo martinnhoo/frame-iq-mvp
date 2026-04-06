@@ -1,200 +1,125 @@
 import React from "react";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DemoTabs — Hero visual right column
-// Standalone. Zero dependency on parent state.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const TABS = [
   {
     id: "chat",
     label: "IA Chat",
-    badge: "Diagnóstico ao vivo",
-    proof: "ROAS 5.1x → 4.2x · causa identificada em 30s",
-    images: [
-      "/screenshots/chat-diagnostico.png",
-      "/screenshots/chat-criativos.png",
-    ],
+    tag: "DIAGNÓSTICO",
+    headline: "ROAS caiu 5.1x → 4.2x",
+    sub: "causa identificada em 30s",
+    images: ["/screenshots/chat-diagnostico.png", "/screenshots/chat-criativos.png"],
   },
   {
     id: "hooks",
     label: "Hooks",
-    badge: "Baseado nos seus winners",
-    proof: "CTR estimado antes de gravar",
+    tag: "CRIATIVO",
+    headline: "CTR estimado antes de gravar",
+    sub: "gerado do seu criativo vencedor",
     images: ["/screenshots/chat-hooks.png"],
   },
   {
-    id: "performance",
+    id: "perf",
     label: "Performance",
-    badge: "Últimos 90 dias",
-    proof: "R$47.832 · CTR 3.87% · 2.4M impressões",
+    tag: "90 DIAS",
+    headline: "R$47.832 · CTR 3.87%",
+    sub: "2.4M impressões · CPC R$0,42",
     images: ["/screenshots/performance.png"],
   },
   {
-    id: "inteligencia",
+    id: "intel",
     label: "Inteligência",
-    badge: "Memória da conta",
-    proof: "Padrões salvos automaticamente",
+    tag: "MEMÓRIA",
+    headline: "A IA aprende com cada conversa",
+    sub: "padrões e contexto salvos automaticamente",
     images: ["/screenshots/inteligencia.png"],
   },
   {
     id: "diario",
     label: "Diário",
-    badge: "Classificação automática",
-    proof: "87% acerto · R$198.340 retorno estimado",
+    tag: "DECISÃO",
+    headline: "87% taxa de acerto",
+    sub: "R$198.340 retorno estimado",
     images: ["/screenshots/diario.png"],
   },
 ] as const;
 
-// Inject CSS once
-const CSS = `
-  @keyframes demoPulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)} 50%{opacity:0.5;box-shadow:0 0 0 4px rgba(34,197,94,0)} }
-  @keyframes demoFadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  .dt-tab-btn { transition: all 0.15s ease !important; }
-  .dt-tab-btn:hover { background: rgba(255,255,255,0.08) !important; color: rgba(255,255,255,0.85) !important; border-color: rgba(255,255,255,0.15) !important; }
-  .dt-cta-btn { transition: all 0.15s ease !important; }
-  .dt-cta-btn:hover { background: #0ea5e9 !important; box-shadow: 0 4px 20px rgba(13,162,231,0.6) !important; transform: translateY(-1px) !important; }
-`;
-
-let cssInjected = false;
-function injectCSS() {
-  if (cssInjected || typeof document === "undefined") return;
-  const s = document.createElement("style");
-  s.textContent = CSS;
-  document.head.appendChild(s);
-  cssInjected = true;
-}
-
 export function DemoTabs({ onCTA }: { onCTA: () => void }) {
-  injectCSS();
+  const [active, setActive] = React.useState(0);
+  const [imgIdx, setImgIdx] = React.useState(0);
+  const [opacity, setOpacity] = React.useState(1);
+  const [translateY, setTranslateY] = React.useState(0);
 
-  const [tab, setTab]       = React.useState(0);
-  const [img, setImg]       = React.useState(0);
-  const [show, setShow]     = React.useState(true);
-  const [key, setKey]       = React.useState(0);
+  const tab = TABS[active];
 
-  const current = TABS[tab];
-
-  // Auto-rotate images inside IA Chat every 3s
+  // Smooth crossfade between images within IA Chat
   React.useEffect(() => {
-    setImg(0);
-    if (current.images.length < 2) return;
+    setImgIdx(0);
+    if (tab.images.length < 2) return;
     const id = setInterval(() => {
-      setShow(false);
+      setOpacity(0);
+      setTranslateY(8);
       setTimeout(() => {
-        setImg(p => (p + 1) % current.images.length);
-        setShow(true);
-        setKey(k => k + 1);
-      }, 200);
-    }, 3000);
+        setImgIdx(p => (p + 1) % tab.images.length);
+        setOpacity(1);
+        setTranslateY(0);
+      }, 300);
+    }, 3500);
     return () => clearInterval(id);
-  }, [tab]);
+  }, [active]);
 
   function goTab(i: number) {
-    if (i === tab) return;
-    setShow(false);
+    if (i === active) return;
+    setOpacity(0);
+    setTranslateY(8);
     setTimeout(() => {
-      setTab(i);
-      setImg(0);
-      setShow(true);
-      setKey(k => k + 1);
-    }, 180);
+      setActive(i);
+      setImgIdx(0);
+      setOpacity(1);
+      setTranslateY(0);
+    }, 250);
   }
 
-  // ─── Styles ──────────────────────────────────────────────────────────────
-  const card: React.CSSProperties = {
-    borderRadius: 20,
-    background: "#080e1c",
-    border: "1px solid rgba(255,255,255,0.07)",
-    boxShadow: [
-      "0 0 0 1px rgba(13,162,231,0.05)",
-      "0 8px 16px rgba(0,0,0,0.4)",
-      "0 40px 100px rgba(0,0,0,0.6)",
-    ].join(", "),
-    overflow: "hidden",
-    position: "relative",
-  };
-
-  const topbar: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 18px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    background: "rgba(0,0,0,0.3)",
-  };
-
-  const tabsRow: React.CSSProperties = {
-    display: "flex",
-    gap: 6,
-    padding: "10px 16px",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-  };
-
-  const proofBar: React.CSSProperties = {
-    padding: "7px 18px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 36,
-  };
-
-  const imgWrap: React.CSSProperties = {
-    margin: "12px 14px 0",
-    borderRadius: 12,
-    overflow: "hidden",
-    border: "1px solid rgba(255,255,255,0.06)",
-    background: "#060b16",
-    opacity: show ? 1 : 0,
-    transform: show ? "translateY(0)" : "translateY(6px)",
-    transition: "opacity 0.2s ease, transform 0.2s ease",
-    lineHeight: 0,
-  };
-
-  const inputRow: React.CSSProperties = {
-    margin: "10px 14px 14px",
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "8px 8px 8px 14px",
-    borderRadius: 12,
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
-  };
-
   return (
-    <div style={{ position: "relative" }}>
-      {/* Glow behind card */}
+    <div style={{ position: "relative", userSelect: "none" }}>
+
+      {/* Ambient glow */}
       <div style={{
         position: "absolute",
-        bottom: -60, left: "15%", right: "15%", height: 120,
-        background: "radial-gradient(ellipse, rgba(13,162,231,0.25) 0%, transparent 70%)",
-        filter: "blur(32px)",
+        inset: "-20px -40px -60px -40px",
+        background: "radial-gradient(ellipse 80% 60% at 50% 80%, rgba(13,162,231,0.18) 0%, transparent 70%)",
         pointerEvents: "none",
         zIndex: 0,
       }} />
 
-      <div style={{ ...card, position: "relative", zIndex: 1 }}>
+      <div style={{
+        position: "relative",
+        zIndex: 1,
+        borderRadius: 20,
+        overflow: "hidden",
+        background: "#07101f",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 24px 80px rgba(0,0,0,0.7), 0 4px 0 rgba(255,255,255,0.03) inset",
+      }}>
 
-        {/* ── TOP BAR ────────────────────────────────────────────────── */}
-        <div style={topbar}>
+        {/* ── TOP BAR ── */}
+        <div style={{
+          padding: "13px 18px",
+          background: "rgba(0,0,0,0.35)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img
-              src="/ab-avatar.png" alt="AdBrief"
-              style={{ width: 28, height: 28, borderRadius: 8, display: "block", flexShrink: 0 }}
-            />
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                AdBrief
-              </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3, letterSpacing: "0.01em" }}>
-                Conectado · Meta Ads
+            <img src="/ab-avatar.png" alt=""
+              style={{ width: 28, height: 28, borderRadius: 8, display: "block" }} />
+            <div style={{ lineHeight: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>AdBrief</div>
+              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.3)", marginTop: 3, letterSpacing: "0.02em" }}>
+                Meta Ads · conectado
               </div>
             </div>
           </div>
-
-          {/* Live */}
           <div style={{
             display: "flex", alignItems: "center", gap: 5,
             padding: "4px 10px", borderRadius: 20,
@@ -204,123 +129,147 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
             <div style={{
               width: 6, height: 6, borderRadius: "50%",
               background: "#22c55e",
-              animation: "demoPulse 2s ease infinite",
+              boxShadow: "0 0 8px rgba(34,197,94,1)",
+              animation: "pulse 2s ease-in-out infinite",
             }} />
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: "#4ade80",
-              letterSpacing: "0.1em", textTransform: "uppercase" as const,
-            }}>LIVE</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+              LIVE
+            </span>
           </div>
         </div>
 
-        {/* ── TABS ───────────────────────────────────────────────────── */}
-        <div style={tabsRow}>
+        {/* ── TABS ── */}
+        <div style={{
+          display: "flex",
+          gap: 4,
+          padding: "12px 16px",
+          background: "rgba(0,0,0,0.15)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
           {TABS.map((t, i) => {
-            const active = i === tab;
+            const on = i === active;
             return (
-              <button
-                key={t.id}
-                onClick={() => goTab(i)}
-                className="dt-tab-btn"
-                style={{
-                  fontSize: 12,
-                  fontWeight: active ? 700 : 500,
-                  padding: "6px 14px",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap" as const,
-                  flexShrink: 0,
-                  background: active ? "rgba(13,162,231,0.15)" : "transparent",
-                  color: active ? "#38bdf8" : "rgba(255,255,255,0.38)",
-                  border: active
-                    ? "1px solid rgba(13,162,231,0.4)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  letterSpacing: "-0.01em",
-                  boxShadow: active ? "0 0 14px rgba(13,162,231,0.15)" : "none",
-                }}
-              >
+              <button key={t.id} onClick={() => goTab(i)} style={{
+                fontSize: 12,
+                fontWeight: on ? 700 : 500,
+                padding: "7px 14px",
+                borderRadius: 9,
+                cursor: "pointer",
+                border: on ? "1px solid rgba(13,162,231,0.45)" : "1px solid rgba(255,255,255,0.08)",
+                background: on ? "rgba(13,162,231,0.15)" : "rgba(255,255,255,0.03)",
+                color: on ? "#38bdf8" : "rgba(255,255,255,0.38)",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap" as const,
+                boxShadow: on ? "0 0 16px rgba(13,162,231,0.15)" : "none",
+                letterSpacing: on ? "-0.01em" : "0",
+              }}>
                 {t.label}
               </button>
             );
           })}
         </div>
 
-        {/* ── PROOF BAR ──────────────────────────────────────────────── */}
-        <div style={proofBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{
-              padding: "2px 8px", borderRadius: 5,
-              background: "rgba(13,162,231,0.1)",
-              border: "1px solid rgba(13,162,231,0.2)",
-            }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#0da2e7", letterSpacing: "0.05em", textTransform: "uppercase" as const }}>
-                {current.badge}
-              </span>
-            </div>
+        {/* ── META LINE ── */}
+        <div style={{
+          padding: "9px 18px",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
-              fontSize: 11, color: "rgba(255,255,255,0.38)", letterSpacing: "0.01em",
-              opacity: show ? 1 : 0, transition: "opacity 0.18s",
+              fontSize: 9.5, fontWeight: 800, letterSpacing: "0.1em",
+              padding: "2px 7px", borderRadius: 4,
+              background: "rgba(13,162,231,0.12)",
+              border: "1px solid rgba(13,162,231,0.25)",
+              color: "#0da2e7",
+              textTransform: "uppercase" as const,
             }}>
-              {current.proof}
+              {tab.tag}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.85)", letterSpacing: "-0.01em" }}>
+              {tab.headline}
+            </span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+              — {tab.sub}
             </span>
           </div>
 
-          {/* Image switcher dots */}
-          {current.images.length > 1 && (
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {current.images.map((_, i) => (
+          {tab.images.length > 1 && (
+            <div style={{ display: "flex", gap: 3 }}>
+              {tab.images.map((_, i) => (
                 <div key={i} style={{
                   height: 3, borderRadius: 2,
-                  width: i === img ? 16 : 4,
-                  background: i === img ? "#0da2e7" : "rgba(255,255,255,0.15)",
-                  transition: "all 0.35s ease",
+                  width: i === imgIdx ? 18 : 4,
+                  background: i === imgIdx ? "#0da2e7" : "rgba(255,255,255,0.15)",
+                  transition: "width 0.35s ease, background 0.35s ease",
                 }} />
               ))}
             </div>
           )}
         </div>
 
-        {/* ── SCREENSHOT ─────────────────────────────────────────────── */}
-        <div style={imgWrap}>
-          <img
-            key={key}
-            src={current.images[img]}
-            alt={current.label}
-            style={{
-              width: "100%",
-              display: "block",
-              maxHeight: 310,
-              objectFit: "cover",
-              objectPosition: "top center",
-              animation: "demoFadeUp 0.25s ease both",
-            }}
-          />
+        {/* ── SCREENSHOT ── */}
+        <div style={{ padding: "14px 14px 14px" }}>
+          <div style={{
+            borderRadius: 12,
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.07)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
+            background: "#060c18",
+            lineHeight: 0,
+          }}>
+            <img
+              src={tab.images[imgIdx]}
+              alt={tab.label}
+              style={{
+                width: "100%",
+                display: "block",
+                maxHeight: 320,
+                objectFit: "cover",
+                objectPosition: "top center",
+                opacity: opacity,
+                transform: `translateY(${translateY}px)`,
+                transition: "opacity 0.3s ease, transform 0.3s ease",
+              }}
+            />
+          </div>
         </div>
 
-        {/* ── INPUT BAR ──────────────────────────────────────────────── */}
-        <div style={inputRow}>
-          <span style={{
-            fontSize: 12, color: "rgba(255,255,255,0.18)",
-            fontStyle: "italic", flex: 1,
-          }}>
-            Pergunte sobre sua conta...
-          </span>
-          <button
-            onClick={onCTA}
-            className="dt-cta-btn"
-            style={{
-              fontSize: 12, fontWeight: 700,
-              padding: "8px 16px", borderRadius: 9,
-              background: "#0da2e7",
-              color: "#fff", border: "none",
-              cursor: "pointer",
-              whiteSpace: "nowrap" as const,
-              flexShrink: 0,
-              letterSpacing: "-0.01em",
-              boxShadow: "0 2px 16px rgba(13,162,231,0.4)",
+        {/* ── BOTTOM CTA ── */}
+        <div style={{
+          padding: "0 14px 14px",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}>
+          <button onClick={onCTA} style={{
+            fontSize: 12,
+            fontWeight: 700,
+            padding: "9px 20px",
+            borderRadius: 10,
+            background: "#0da2e7",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            letterSpacing: "-0.01em",
+            boxShadow: "0 2px 16px rgba(13,162,231,0.45)",
+            transition: "all 0.15s ease",
+          }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#0ea5e9";
+              el.style.transform = "translateY(-1px)";
+              el.style.boxShadow = "0 6px 24px rgba(13,162,231,0.6)";
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#0da2e7";
+              el.style.transform = "translateY(0)";
+              el.style.boxShadow = "0 2px 16px rgba(13,162,231,0.45)";
             }}
           >
-            Testar com minha conta →
+            Começar grátis →
           </button>
         </div>
 
