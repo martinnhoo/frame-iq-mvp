@@ -1790,7 +1790,8 @@ export default function AdBriefAI() {
       .eq("user_id",user.id)
       .eq("persona_id",pid)
       .eq("status","active")
-      .then(({data}: any)=>{
+      .then(({data,error}: any)=>{
+        console.log("[AdBriefAI] connections query:", {data, error, pid, uid: user.id});
         const platforms=((data||[]) as any[]).map((c:any)=>c.platform);
         setConnections(platforms);
       });
