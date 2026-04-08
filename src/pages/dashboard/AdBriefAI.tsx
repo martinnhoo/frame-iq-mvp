@@ -1742,6 +1742,8 @@ export default function AdBriefAI() {
   const [greetingKey,setGreetingKey]=useState(0);
   const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done, 0..N=step index
   const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
+  const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
+  const [completedAnswers,setCompletedAnswers]=useState<Record<string,string>>({});
   const [input,setInput]=useState("");
 
   // Session goal — persists 7 days, resets automatically
@@ -2081,7 +2083,9 @@ WHAT NOT TO DO:
 - Never use "Aproveite esta oportunidade única" (meaningless)
 - Never write a hook for a static ad — write a headline
 - Never suggest "create a hook" when the user needs copy for email or landing page
-- Avoid recommending "make a hook" as a default solution for every creative problem`;
+- Avoid recommending "make a hook" as a default solution for every creative problem
+- Only diagnose hook problems when there is actual evidence: hook_rate < 20%, CTR dropped suddenly with high frequency, or user specifically mentions bad video retention
+- If someone asks for a script with no retention data → write a great script directly. Don't default to "let's fix your hook first."`;
 
       setContext([
         `=== ACTIVE ACCOUNT ===`,
@@ -2350,7 +2354,10 @@ WHAT NOT TO DO:
         .update({ result: updated })
         .eq("id", selectedPersona.id)
         .eq("user_id", user.id);
-      // Refresh context with new data
+      // Reset proactive flag so welcome fires fresh after onboarding
+      proactiveFired.current = false;
+      setCompletedAnswers(answers);
+      setShowOnboardingWelcome(true);
       setGreetingKey(k => k + 1);
     } catch(e) { console.error("[onboarding save]", e); }
     setOnboardingStep(-1);
@@ -3287,6 +3294,90 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
                 {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
               </button>
+            </div>
+          );
+        })()}
+
+        {/* ── Post-onboarding welcome — fires once after questionnaire completes ── */}
+        {showOnboardingWelcome && messages.length === 0 && !proactiveLoading && (() => {
+          const pt = lang === "pt", es = lang === "es";
+          const F = "Inter,-apple-system,sans-serif";
+          const acc = "#0da2e7";
+          const niche = completedAnswers.niche || selectedPersona?.name || "";
+          const obj = completedAnswers.objective || "";
+          const mkt = (completedAnswers.market || "BR").replace(/\s*\(.*\)/, "");
+          const maturity = completedAnswers.maturity || "";
+          const isNew = maturity.toLowerCase().includes("zero") || maturity.toLowerCase().includes("nova") || maturity.toLowerCase().includes("new");
+
+          // Personalized headline based on answers
+          const headline = pt
+            ? `${selectedPersona?.name || "Sua conta"} está pronta.`
+            : es
+            ? `${selectedPersona?.name || "Tu cuenta"} está lista.`
+            : `${selectedPersona?.name || "Your account"} is ready.`;
+
+          const subline = pt
+            ? isNew
+              ? `Conta nova em ${niche}. Vou usar benchmarks do mercado para te orientar até os primeiros dados chegarem.`
+              : `${niche} · ${mkt} · Objetivo: ${obj.toLowerCase()}. Já sei o suficiente para começar a ajudar.`
+            : es
+            ? isNew
+              ? `Cuenta nueva en ${niche}. Voy a usar benchmarks del mercado hasta que lleguen los primeros datos.`
+              : `${niche} · ${mkt} · Objetivo: ${obj.toLowerCase()}.`
+            : `${niche} · ${mkt} · Goal: ${obj.toLowerCase()}.`;
+
+          const actions = pt ? [
+            { icon: "✍️", label: "Escrever roteiro", msg: `Escreva um roteiro de vídeo para minha conta de ${niche}` },
+            { icon: "🎯", label: "Gerar headlines", msg: `Gere 5 headlines de alto impacto para ${niche} com objetivo de ${obj.toLowerCase()}` },
+            { icon: "📊", label: "Ver benchmarks", msg: `Quais são os benchmarks de mercado para ${niche} no Meta Ads?` },
+            { icon: "🔍", label: "Analisar concorrentes", msg: `Analise o que os concorrentes de ${niche} estão fazendo no Meta Ads` },
+          ] : es ? [
+            { icon: "✍️", label: "Escribir guión", msg: `Escribe un guión de video para mi cuenta de ${niche}` },
+            { icon: "🎯", label: "Generar headlines", msg: `Genera 5 headlines de alto impacto para ${niche}` },
+            { icon: "📊", label: "Ver benchmarks", msg: `¿Cuáles son los benchmarks para ${niche} en Meta Ads?` },
+            { icon: "🔍", label: "Analizar competidores", msg: `Analiza qué hacen los competidores de ${niche} en Meta Ads` },
+          ] : [
+            { icon: "✍️", label: "Write a script", msg: `Write a video script for my ${niche} account` },
+            { icon: "🎯", label: "Generate headlines", msg: `Generate 5 high-impact headlines for ${niche}` },
+            { icon: "📊", label: "View benchmarks", msg: `What are the Meta Ads benchmarks for ${niche}?` },
+            { icon: "🔍", label: "Analyze competitors", msg: `Analyze what ${niche} competitors are doing on Meta Ads` },
+          ];
+
+          return (
+            <div style={{ maxWidth: 600, margin: "32px auto 0", padding: "0 20px", animation: "fadeInUp 0.4s ease" }}>
+              <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+              {/* Headline */}
+              <div style={{ marginBottom: 28 }}>
+                <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.2, margin: "0 0 10px" }}>
+                  {headline}
+                </h1>
+                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, margin: 0, maxWidth: 480 }}>
+                  {subline}
+                </p>
+              </div>
+
+              {/* What to do today */}
+              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+                {pt ? "O que fazer hoje" : es ? "Qué hacer hoy" : "What to do today"}
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 24 }}>
+                {actions.map((a, i) => (
+                  <button key={i} onClick={() => { setShowOnboardingWelcome(false); send(a.msg); }}
+                    style={{ fontFamily: F, display: "flex", alignItems: "center", gap: 10, padding: "13px 15px", borderRadius: 11, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "left", transition: "all 0.15s", color: "rgba(255,255,255,0.75)", fontSize: 13 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(13,162,231,0.09)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(13,162,231,0.22)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
+                  >
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{a.icon}</span>
+                    <span style={{ fontWeight: 500, lineHeight: 1.3 }}>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Or just type */}
+              <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.18)", margin: 0, textAlign: "center" }}>
+                {pt ? "ou escreva o que precisa abaixo →" : es ? "o escribe lo que necesitas abajo →" : "or type what you need below →"}
+              </p>
             </div>
           );
         })()}
