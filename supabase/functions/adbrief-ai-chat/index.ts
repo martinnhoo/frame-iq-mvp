@@ -1160,20 +1160,28 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
     }
 
     let liveMetaData = "";
-    const metaConn = (connections as any[]).find((c: any) => c.platform === "meta");
+    // Query connection directly with persona_id — same approach as live-metrics (bypasses any RLS/cache issues)
+    const { data: directConn } = await supabase
+      .from("platform_connections" as any)
+      .select("access_token, ad_accounts, selected_account_id, persona_id, platform")
+      .eq("user_id", user_id)
+      .eq("platform", "meta")
+      .eq("status", "active")
+      .eq("persona_id", persona_id)
+      .maybeSingle();
+
+    // Also update connections state if directConn found but platformConns query missed it
+    if (directConn && !(connections as any[]).find((c: any) => c.platform === "meta")) {
+      (connections as any[]).push({ platform: "meta", status: "active",
+        ad_accounts: directConn.ad_accounts, selected_account_id: directConn.selected_account_id,
+        persona_id: directConn.persona_id });
+    }
+
+    const metaConn = (connections as any[]).find((c: any) => c.platform === "meta") || directConn;
     if (metaConn) {
       try {
-        const { data: allConns } = await supabase
-          .from("platform_connections" as any)
-          .select("access_token, ad_accounts, selected_account_id, persona_id")
-          .eq("user_id", user_id)
-          .eq("platform", "meta")
-          .eq("status", "active");
-        const allC = (allConns as any[]) || [];
-        // Find connection: first try exact persona match, then fallback to any active connection
-        const tokenRow = persona_id
-          ? allC.find((c: any) => c.persona_id === persona_id) || null
-          : allC[0] || null;
+        const allC = directConn ? [directConn] : [];
+        const tokenRow = directConn || null;
 
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
