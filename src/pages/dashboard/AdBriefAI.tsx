@@ -1784,13 +1784,14 @@ export default function AdBriefAI() {
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
     if(!pid){setConnections([]);return;}
-    supabase.from("platform_connections" as any)
+    // Use platform_connections_safe view — authenticated users cannot SELECT raw table
+    (supabase as any).from("platform_connections_safe")
       .select("platform,status")
       .eq("user_id",user.id)
       .eq("persona_id",pid)
       .eq("status","active")
-      .then(({data})=>{
-        const platforms=((data||[]) as any[]).map(c=>c.platform);
+      .then(({data}: any)=>{
+        const platforms=((data||[]) as any[]).map((c:any)=>c.platform);
         setConnections(platforms);
       });
   },[user?.id,selectedPersona?.id]);
