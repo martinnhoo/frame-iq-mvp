@@ -418,10 +418,10 @@ function PlatformRow({ p, userId, accountId, t }: {
             <div style={{ marginBottom: 12 }}>
               <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
                 textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px" }}>
-                {ads.length} {language==="pt"?"contas disponíveis":language==="es"?"cuentas disponibles":"accounts available"}
+                {ads.length} {lang==="pt"?"contas disponíveis":lang==="es"?"cuentas disponibles":"accounts available"}
               </p>
               <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:0 }}>
-                {language==="pt"?"Troque de conta direto no painel do IA Chat →":language==="es"?"Cambia de cuenta en el panel del IA Chat →":"Switch accounts directly in the IA Chat panel →"}
+                {lang==="pt"?"Troque de conta direto no painel do IA Chat →":lang==="es"?"Cambia de cuenta en el panel del IA Chat →":"Switch accounts directly in the IA Chat panel →"}
               </p>
             </div>
           )}
