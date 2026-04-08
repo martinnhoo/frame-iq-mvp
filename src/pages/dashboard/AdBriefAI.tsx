@@ -1784,17 +1784,27 @@ export default function AdBriefAI() {
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
     if(!pid){setConnections([]);return;}
-    // Use platform_connections_safe view — authenticated users cannot SELECT raw table
-    (supabase as any).from("platform_connections_safe")
-      .select("platform,status")
-      .eq("user_id",user.id)
-      .eq("persona_id",pid)
-      .eq("status","active")
-      .then(({data,error}: any)=>{
-        console.log("[AdBriefAI] connections query: data=" + JSON.stringify(data) + " error=" + JSON.stringify(error) + " pid=" + pid);
-        const platforms=((data||[]) as any[]).map((c:any)=>c.platform);
-        setConnections(platforms);
-      });
+    // Query with 3-layer fallback — handles different RLS states
+    const loadConns = async () => {
+      // 1. Try raw table (works when SELECT policy exists)
+      const {data: d1} = await supabase.from("platform_connections" as any)
+        .select("platform,status")
+        .eq("user_id",user.id).eq("persona_id",pid).eq("status","active");
+      if (d1 && d1.length > 0) { setConnections((d1 as any[]).map(c=>c.platform)); return; }
+
+      // 2. Try safe view
+      const {data: d2} = await (supabase as any).from("platform_connections_safe")
+        .select("platform,status")
+        .eq("user_id",user.id).eq("persona_id",pid).eq("status","active");
+      if (d2 && d2.length > 0) { setConnections((d2 as any[]).map((c:any)=>c.platform)); return; }
+
+      // 3. Raw without status filter — find any connection for this persona
+      const {data: d3} = await supabase.from("platform_connections" as any)
+        .select("platform,status").eq("user_id",user.id).eq("persona_id",pid);
+      const active = ((d3||[]) as any[]).filter((c:any)=>c.status==="active");
+      setConnections(active.map((c:any)=>c.platform));
+    };
+    loadConns();
   },[user?.id,selectedPersona?.id]);
 
   // Proactive greeting — fires when connections are known (after context is ready)
