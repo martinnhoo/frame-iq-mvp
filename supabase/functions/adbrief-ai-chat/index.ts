@@ -676,7 +676,10 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id)
         .eq("status", "active")
         .then(async (r: any) => {
-          if (r.error?.code === "42P01") return { data: [], error: null };
+          if (r.error) {
+            console.error("[adbrief-ai-chat] platformConns error:", r.error.code, r.error.message);
+            if (r.error.code === "42P01") return { data: [], error: null };
+          }
           const all = (r.data || []) as any[];
           if (persona_id) {
             const scoped = all.filter((c: any) => c.persona_id === persona_id);
@@ -1160,268 +1163,57 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
     }
 
     let liveMetaData = "";
-    // Query connection directly with persona_id — same approach as live-metrics (bypasses any RLS/cache issues)
-    const { data: directConn, error: directErr } = await supabase
-      .from("platform_connections" as any)
-      .select("access_token, ad_accounts, selected_account_id, persona_id, platform")
-      .eq("user_id", user_id)
-      .eq("platform", "meta")
-      .eq("status", "active")
-      .eq("persona_id", persona_id)
-      .maybeSingle();
-    console.log("[adbrief-ai-chat] directConn query:", {
-      user_id, persona_id,
-      found: !!directConn,
-      hasToken: !!directConn?.access_token,
-      error: directErr?.message || null
-    });
+    let directConn: any = null;
 
-    // Also update connections state if directConn found but platformConns query missed it
-    if (directConn && !(connections as any[]).find((c: any) => c.platform === "meta")) {
-      (connections as any[]).push({ platform: "meta", status: "active",
-        ad_accounts: directConn.ad_accounts, selected_account_id: directConn.selected_account_id,
-        persona_id: directConn.persona_id });
-    }
-
-    const metaConn = (connections as any[]).find((c: any) => c.platform === "meta") || directConn;
-    if (metaConn) {
+    // Call live-metrics edge function — it already works, bypass all DB query issues
+    if (persona_id && user_id) {
       try {
-        const allC = directConn ? [directConn] : [];
-        const tokenRow = directConn || null;
+        const today = new Date().toISOString().split("T")[0];
+        const since90 = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
+        const lmRes = await supabase.functions.invoke("live-metrics", {
+          body: { user_id, persona_id, period: "90d", date_from: since90, date_to: today }
+        });
+        const lmData = lmRes.data;
+        console.log("[adbrief-ai-chat] live-metrics result:", { ok: lmData?.ok, hasMeta: !!lmData?.meta });
 
-        if (tokenRow?.access_token) {
-          const token = tokenRow.access_token;
-          const accs = (tokenRow.ad_accounts as any[]) || [];
-          const selId = tokenRow.selected_account_id;
-          const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
+        if (lmData?.ok && lmData?.meta && !lmData.meta.error) {
+          const m = lmData.meta;
+          directConn = { platform: "meta", ad_accounts: [], selected_account_id: null }; // mark as connected
 
-          if (activeAcc?.id) {
-            const since = historicalSince || new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString().split("T")[0];
-            const until = historicalUntil || new Date().toISOString().split("T")[0];
-            // Lifetime since (for all-time top performers)
-            const lifetimeSince = new Date(Date.now() - 3 * 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
+          const spend = (m.spend || 0).toFixed(2);
+          const ctr = ((m.ctr || 0) * 100).toFixed(2);
+          const cpm = (m.impressions > 0 ? (m.spend / m.impressions) * 1000 : 0).toFixed(2);
+          const cpc = m.clicks > 0 ? (m.spend / m.clicks).toFixed(2) : "0.00";
+          const impr = m.impressions ? (m.impressions / 1000).toFixed(0) + "k" : "0";
+          const conv = m.conversions || 0;
+          const roas = m.roas ? m.roas.toFixed(2) + "x" : "n/a";
 
-            // ── In-memory cache (15 min per account) ─────────────────────────
-            // Prevents redundant Meta API calls. Evicts expired keys on each write.
-            const cacheKey = `${activeAcc.id}:${since}:${until}`;
-            const now_ts = Date.now();
-            const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
-            if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
-            const cached = (globalThis as any).__metaCache[cacheKey];
-            let adsRaw: any = null,
-              campsRaw: any = null,
-              adsetsRaw: any = null,
-              timeSeriesRaw: any = null,
-              placementRaw: any = null,
-              lifetimeAdsRaw: any = null;
+          liveMetaData = `LIVE META ADS — Account: ${m.account_name || "conta"} (${since90} to ${today})\n` +
+            `SPEND: R$${spend} | CTR: ${ctr}% | CPM: R$${cpm} | CPC: R$${cpc} | IMPR: ${impr} | CONV: ${conv} | ROAS: ${roas}\n`;
 
-            if (cached && now_ts - cached.ts < CACHE_TTL) {
-              adsRaw = cached.adsRaw;
-              campsRaw = cached.campsRaw;
-              adsetsRaw = cached.adsetsRaw;
-              timeSeriesRaw = cached.timeSeriesRaw;
-              placementRaw = cached.placementRaw;
-              lifetimeAdsRaw = cached.lifetimeAdsRaw;
-            } else {
-              // Comprehensive Meta Ads data fetch: 90 days + lifetime top performers
-              const fields =
-                "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
-              const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
-                // 90-day ad insights sorted by spend
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`,
-                ),
-                // All campaigns including paused/ended — full history
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status,created_time,start_time,stop_time&limit=100&access_token=${token}`,
-                ),
-                // Adsets with targeting + budget + status
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=100&access_token=${token}`,
-                ),
-                // Monthly time series — last 90 days daily
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=12&access_token=${token}`,
-                ),
-                // Placement breakdown 90 days
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`,
-                ),
-                // Lifetime top ads — all-time best performers (3 years)
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`,
-                ),
-              ]);
-              adsRaw = r1.status === "fulfilled" ? await r1.value.json() : null;
-              campsRaw = r2.status === "fulfilled" ? await r2.value.json() : null;
-              adsetsRaw = r3.status === "fulfilled" ? await r3.value.json() : null;
-              timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
-              placementRaw = r5.status === "fulfilled" ? await r5.value.json() : null;
-              lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
-
-              // Cache results — evict stale entries first to prevent unbounded growth
-              const metaCache = (globalThis as any).__metaCache;
-              for (const k of Object.keys(metaCache)) {
-                if (now_ts - metaCache[k].ts >= CACHE_TTL) delete metaCache[k];
-              }
-              metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw, lifetimeAdsRaw };
-            }
-
-            liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
-
-            // Campaigns
-            if (campsRaw?.error) {
-              const isExpired =
-                campsRaw.error.code === 190 || String(campsRaw.error.type || "").includes("OAuthException");
-              liveMetaData += isExpired
-                ? `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`
-                : `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
-            } else if (campsRaw?.data?.length) {
-              const lines = campsRaw.data
-                .slice(0, 30)
-                .map(
-                  (c: any) =>
-                    `  ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
-                )
-                .join("\n");
-              liveMetaData += `CAMPAIGNS (${campsRaw.data.length}):\n${lines}\n`;
-            } else {
-              liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada.\n`;
-            }
-
-            // FIX 4: Adsets with targeting intel
-            if (adsetsRaw?.data?.length) {
-              const adsetLines = adsetsRaw.data
-                .slice(0, 20)
-                .map((s: any) => {
-                  const age =
-                    s.targeting?.age_min && s.targeting?.age_max
-                      ? `${s.targeting.age_min}-${s.targeting.age_max}`
-                      : null;
-                  const interests = (s.targeting?.flexible_spec?.[0]?.interests || [])
-                    .slice(0, 3)
-                    .map((i: any) => i.name)
-                    .join(", ");
-                  const geos = (s.targeting?.geo_locations?.countries || []).join(",");
-                  const budget = s.daily_budget
-                    ? `$${(parseInt(s.daily_budget) / 100).toFixed(0)}/day`
-                    : s.lifetime_budget
-                      ? `$${(parseInt(s.lifetime_budget) / 100).toFixed(0)} total`
-                      : "no budget";
-                  return `  ${s.name}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}${age ? ` | age ${age}` : ""}${geos ? ` | geo:${geos}` : ""}${interests ? ` | interests:${interests}` : ""}`;
-                })
-                .join("\n");
-              liveMetaData += `ADSETS (${adsetsRaw.data.length}):\n${adsetLines}\n`;
-            }
-
-            // Ads performance
-            if (adsRaw?.error) {
-              const isExpired =
-                adsRaw.error.code === 190 ||
-                String(adsRaw.error.message || "")
-                  .toLowerCase()
-                  .includes("token") ||
-                String(adsRaw.error.type || "").includes("OAuthException");
-              liveMetaData += isExpired
-                ? `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`
-                : `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
-            } else if (adsRaw?.data?.length) {
-              // FIX 1: Show all 50 with smarter truncation
-              const adLines = adsRaw.data
-                .slice(0, 50)
-                .map((ad: any) => {
-                  const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
-                  const leads = ad.actions?.find((a: any) => a.action_type === "lead")?.value || "";
-                  const hookRate = ad.video_play_actions?.find((a: any) => a.action_type === "video_play")?.value;
-                  const hr = hookRate
-                    ? ` hook=${((parseInt(hookRate) / Math.max(parseInt(ad.impressions || 1), 1)) * 100).toFixed(1)}%`
-                    : "";
-                  const conv = leads ? ` leads=${leads}` : purchases !== "0" ? ` purch=${purchases}` : "";
-                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm || 0).toFixed(1)} freq=${ad.frequency || "?"}${hr}${conv}`;
-                })
-                .join("\n");
-              liveMetaData += `ADS (${adsRaw.data.length} found, top by spend):\n${adLines}\n`;
-            } else {
-              liveMetaData += `ADS: Nenhum gasto de anúncio no período.\n`;
-            }
-
-            // ALL-TIME TOP PERFORMERS (3 years lifetime)
-            if (lifetimeAdsRaw?.data?.length) {
-              const lifetimeLines = lifetimeAdsRaw.data
-                .slice(0, 20)
-                .map((ad: any) => {
-                  const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
-                  const conv = purchases !== "0" ? ` purch=${purchases}` : "";
-                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions || 0).toLocaleString()}${conv} | ${ad.campaign_name}`;
-                })
-                .join("\n");
-              liveMetaData += `\nALL-TIME TOP ADS (últimos 3 anos):\n${lifetimeLines}\n`;
-            }
-
-            // Monthly breakdown — macro trends
-            if (timeSeriesRaw?.data?.length) {
-              const monthlyLines = timeSeriesRaw.data
-                .filter((d: any) => parseFloat(d.spend || 0) > 0)
-                .map((d: any) => {
-                  const purch = d.actions?.find((a: any) => a.action_type === "purchase")?.value || "";
-                  return `  ${d.date_start?.slice(0, 7)}: spend=$${parseFloat(d.spend || 0).toFixed(0)} ctr=${parseFloat(d.ctr || 0).toFixed(2)}% cpm=$${parseFloat(d.cpm || 0).toFixed(1)}${purch ? ` purch=${purch}` : ""}`;
-                })
-                .join("\n");
-              if (monthlyLines) liveMetaData += `MONTHLY BREAKDOWN:\n${monthlyLines}\n`;
-            }
-
-            // Daily trend
-            if (false && timeSeriesRaw?.data?.length) {
-              const series = timeSeriesRaw.data
-                .filter((d: any) => parseFloat(d.spend || 0) > 0)
-                .slice(-14)
-                .map((d: any) => {
-                  const purch = d.actions?.find((a: any) => a.action_type === "purchase")?.value || "";
-                  return `  ${d.date_start}: spend=$${parseFloat(d.spend || 0).toFixed(0)} ctr=${parseFloat(d.ctr || 0).toFixed(2)}% cpm=$${parseFloat(d.cpm || 0).toFixed(1)}${purch ? ` purch=${purch}` : ""}`;
-                })
-                .join("\n");
-              if (series) {
-                // Compute trend
-                const days = timeSeriesRaw.data.filter((d: any) => parseFloat(d.spend || 0) > 0);
-                const half = Math.floor(days.length / 2);
-                const firstHalf = days.slice(0, half);
-                const secondHalf = days.slice(half);
-                const avgCtr1 =
-                  firstHalf.reduce((s: number, d: any) => s + parseFloat(d.ctr || 0), 0) /
-                  Math.max(firstHalf.length, 1);
-                const avgCtr2 =
-                  secondHalf.reduce((s: number, d: any) => s + parseFloat(d.ctr || 0), 0) /
-                  Math.max(secondHalf.length, 1);
-                const trend =
-                  avgCtr2 > avgCtr1 * 1.05 ? "↑ melhorando" : avgCtr2 < avgCtr1 * 0.95 ? "↓ piorando" : "→ estável";
-                liveMetaData += `TENDÊNCIA DIÁRIA (${trend} CTR):\n${series}\n`;
-              }
-            }
-
-            // FIX 2: Placement breakdown
-            if (placementRaw?.data?.length) {
-              const placements = placementRaw.data
-                .filter((p: any) => parseFloat(p.spend || 0) > 0)
-                .slice(0, 10)
-                .map(
-                  (p: any) =>
-                    `  ${p.publisher_platform || ""}/${p.platform_position || ""}: spend=$${parseFloat(p.spend || 0).toFixed(0)} ctr=${parseFloat(p.ctr || 0).toFixed(2)}% cpm=$${parseFloat(p.cpm || 0).toFixed(1)}`,
-                )
-                .join("\n");
-              if (placements) liveMetaData += `PLACEMENT BREAKDOWN:\n${placements}\n`;
-            }
-          } else {
-            liveMetaData = `META CONNECTED — no ad account selected. Tell user to go to Contas and select an ad account.`;
+          // Top ads
+          if (m.top_ads?.length) {
+            const topAdsStr = m.top_ads.slice(0, 10).map((a: any) =>
+              `  - "${(a.ad_name || a.name || "ad").slice(0, 50)}" | CTR: ${((a.ctr || 0) * 100).toFixed(2)}% | Spend: R$${(a.spend || 0).toFixed(0)} | Conv: ${a.conversions || 0}${a.roas ? ` | ROAS: ${a.roas.toFixed(2)}x` : ""}`
+            ).join("\n");
+            liveMetaData += `TOP ADS (por spend):\n${topAdsStr}\n`;
           }
-        } else {
-          liveMetaData = `META CONNECTED — token missing. Tell user to reconnect Meta Ads in Contas.`;
+
+          // Daily trend
+          if (m.daily?.length) {
+            const days = m.daily.slice(-14);
+            const series = days.map((d: any) =>
+              `  ${d.date}: spend=R$${(d.spend || 0).toFixed(0)} ctr=${((d.ctr || 0) * 100).toFixed(2)}%`
+            ).join("\n");
+            liveMetaData += `TENDÊNCIA DIÁRIA:\n${series}\n`;
+          }
         }
-      } catch (_e) {
-        liveMetaData = `META CONNECTED — data fetch error: ${(_e as any)?.message || "unknown"}.`;
+      } catch (e: any) {
+        console.error("[adbrief-ai-chat] live-metrics call failed:", e?.message);
       }
     }
 
-    // Google Ads live data — disabled (see GOOGLE_ADS_BACKUP.md)
+        // Google Ads live data — disabled (see GOOGLE_ADS_BACKUP.md)
     const liveGoogleData = "";
 
         // Cross-platform synthesis — disabled (see GOOGLE_ADS_BACKUP.md)
