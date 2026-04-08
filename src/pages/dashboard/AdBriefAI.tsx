@@ -1360,10 +1360,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                   {accounts.map((acc: any) => {
                     const isSel = acc.id === selId || (!selId && acc === accounts[0]);
                     return (
-                      <button key={acc.id} onClick={() => {
+                      <button key={acc.id} onClick={async () => {
                         if (pid) {
                           localStorage.setItem(`meta_sel_${pid}`, acc.id);
-                          window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: pid, accountId: acc.id } }));
+                          // Update DB via adbrief-ai-chat service_role — so live-metrics picks up the change
+                          supabase.functions.invoke("adbrief-ai-chat", {
+                            body: { update_selected_account: true, user_id: user.id, persona_id: pid, account_id: acc.id }
+                          }).then(() => {
+                            window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: pid, accountId: acc.id } }));
+                          });
                         }
                         const el = document.querySelector(".acc-switcher-menu") as HTMLElement;
                         if (el) el.style.display = "none";

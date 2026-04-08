@@ -53,6 +53,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Update selected account — service_role bypasses trigger/RLS ──────────
+    if (body.update_selected_account && user_id && persona_id && body.account_id) {
+      await sbAuth.from("platform_connections" as any)
+        .update({ selected_account_id: body.account_id })
+        .eq("user_id", user_id)
+        .eq("persona_id", persona_id)
+        .eq("platform", "meta");
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     // ── Panel Data mode — skip Claude, return structured ad data for LivePanel ──
     if (panel_data && user_id && persona_id) {
       const sbPanel = sbAuth;
