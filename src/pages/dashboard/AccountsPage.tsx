@@ -318,7 +318,9 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const ads: any[] = conn?.ad_accounts || [];
-  const selId = conn?.selected_account_id;
+  // selected_account_id may not be in get_connections response (deployed March version)
+  // Default to first account so UI always shows a selection
+  const selId = conn?.selected_account_id || ads[0]?.id;
   const selAcc = ads.find(a => a.id === selId) || ads[0];
 
   if (loading) return (

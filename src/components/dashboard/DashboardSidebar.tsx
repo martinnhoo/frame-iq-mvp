@@ -144,30 +144,31 @@ export function DashboardSidebar({
 
   useEffect(() => {
     if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
-    (supabase as any).from("platform_connections")
-      .select("platform")
-      .eq("user_id", user.id).eq("persona_id", selectedPersona.id).eq("status", "active")
-      .limit(1)
-      .then(({ data }: any) => {
-        if (!data?.length) { setKpi(null); return; }
-        setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
-        return (supabase as any).from("daily_snapshots")
-          .select("total_spend, avg_ctr, active_ads")
-          .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
-          .order("date", { ascending: false }).limit(2)
-          .then(({ data }: any) => {
-            const rows = data || [];
-            const latest = rows[0], prev = rows[1];
-            if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
-            const ctr = (latest.avg_ctr || 0) * 100;
-            const prevCtr = prev ? (prev.avg_ctr || 0) * 100 : null;
-            const trend = prevCtr !== null && prevCtr > 0
-              ? ctr > prevCtr * 1.05 ? "up" : ctr < prevCtr * 0.95 ? "down" : "flat"
-              : null;
-            setKpi({ spend: latest.total_spend || 0, ctr, ads: latest.active_ads || 0, trend });
-          });
-      })
-      .catch(() => setKpi(null));
+    // Use meta-oauth get_connections (service_role) to check if connected
+    supabase.functions.invoke("meta-oauth", {
+      body: { action: "get_connections", user_id: user.id }
+    }).then(({ data }: any) => {
+      const all = (data?.connections || []) as any[];
+      const connected = all.some((c: any) => c.persona_id === selectedPersona.id && c.status === "active");
+      if (!connected) { setKpi(null); return; }
+      setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
+      // Load KPI from daily_snapshots
+      (supabase as any).from("daily_snapshots")
+        .select("total_spend, avg_ctr, active_ads")
+        .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
+        .order("date", { ascending: false }).limit(2)
+        .then(({ data }: any) => {
+          const rows = data || [];
+          const latest = rows[0], prev = rows[1];
+          if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
+          const ctr = (latest.avg_ctr || 0) * 100;
+          const prevCtr = prev ? (prev.avg_ctr || 0) * 100 : null;
+          const trend = prevCtr !== null && prevCtr > 0
+            ? ctr > prevCtr * 1.05 ? "up" : ctr < prevCtr * 0.95 ? "down" : "flat"
+            : null;
+          setKpi({ spend: latest.total_spend || 0, ctr, ads: latest.active_ads || 0, trend });
+        });
+    }).catch(() => setKpi(null));
   }, [user?.id, selectedPersona?.id]);
 
   const perfActive = isAt("/dashboard/performance") || isAt("/dashboard/diary");
