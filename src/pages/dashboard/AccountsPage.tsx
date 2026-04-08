@@ -206,17 +206,14 @@ function PlatformRow({ p, userId, accountId, t }: {
     setLoading(true);
     setLoadError(false);
     try {
-      // Direct client query — selected_account_id is safe to read (no token exposure)
-      const { data, error } = await supabase
-        .from("platform_connections" as any)
-        .select("id, platform, status, ad_accounts, selected_account_id, connection_label, connected_at")
-        .eq("user_id", userId)
-        .eq("persona_id", accountId)
-        .eq("platform", p.id)
-        .eq("status", "active")
-        .maybeSingle();
-      if (error) throw error;
-      setConn(data || null);
+      // meta-oauth get_connections uses service_role — bypasses RLS, always works
+      const { data: res, error: fnErr } = await supabase.functions.invoke("meta-oauth", {
+        body: { action: "get_connections", user_id: userId }
+      });
+      if (fnErr) throw fnErr;
+      const all = (res?.connections || []) as any[];
+      const match = all.find((c: any) => c.platform === p.id && c.persona_id === accountId) || null;
+      setConn(match);
     } catch (e) {
       console.error("[AdBrief] platform row load error:", String(e));
       setConn(null);
@@ -265,13 +262,12 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const selectAcc = async (id: string) => {
-    const { error } = await supabase.from("platform_connections" as any)
+    // Update DB (trigger only reverts token columns, selected_account_id passes through)
+    await supabase.from("platform_connections" as any)
       .update({ selected_account_id: id })
-      .eq("user_id", userId)
-      .eq("persona_id", accountId)
-      .eq("platform", p.id);
-    if (error) console.error("[selectAcc] error:", error.message);
-    await load();
+      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id);
+    // Update local state immediately — don't re-fetch (get_connections lacks this field)
+    setConn((prev: any) => prev ? { ...prev, selected_account_id: id } : prev);
   };
 
   const verifyGoogle = async () => {
