@@ -12,9 +12,10 @@ CREATE OR REPLACE FUNCTION public.guard_oauth_token_columns()
   SET search_path TO 'public'
 AS $$
 BEGIN
-  -- current_user = 'supabase_admin' or 'postgres' when called via service_role JWT
-  -- authenticated users have current_user = 'authenticator'
-  IF current_user NOT IN ('supabase_admin', 'postgres', 'service_role') THEN
+  -- auth.role() returns 'service_role' when called via service_role JWT (edge functions)
+  -- auth.role() returns 'authenticated' for logged-in users
+  -- current_user fallback covers direct postgres connections
+  IF auth.role() NOT IN ('service_role') AND current_user NOT IN ('supabase_admin', 'postgres', 'service_role') THEN
     NEW.access_token  := OLD.access_token;
     NEW.refresh_token := OLD.refresh_token;
   END IF;
