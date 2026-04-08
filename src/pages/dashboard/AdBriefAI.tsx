@@ -1784,27 +1784,18 @@ export default function AdBriefAI() {
     if(!user?.id){setConnections([]);return;}
     const pid=selectedPersona?.id||null;
     if(!pid){setConnections([]);return;}
-    // Query with 3-layer fallback — handles different RLS states
-    const loadConns = async () => {
-      // 1. Try raw table (works when SELECT policy exists)
-      const {data: d1} = await supabase.from("platform_connections" as any)
-        .select("platform,status")
-        .eq("user_id",user.id).eq("persona_id",pid).eq("status","active");
-      if (d1 && d1.length > 0) { setConnections((d1 as any[]).map(c=>c.platform)); return; }
-
-      // 2. Try safe view
-      const {data: d2} = await (supabase as any).from("platform_connections_safe")
-        .select("platform,status")
-        .eq("user_id",user.id).eq("persona_id",pid).eq("status","active");
-      if (d2 && d2.length > 0) { setConnections((d2 as any[]).map((c:any)=>c.platform)); return; }
-
-      // 3. Raw without status filter — find any connection for this persona
-      const {data: d3} = await supabase.from("platform_connections" as any)
-        .select("platform,status").eq("user_id",user.id).eq("persona_id",pid);
-      const active = ((d3||[]) as any[]).filter((c:any)=>c.status==="active");
-      setConnections(active.map((c:any)=>c.platform));
-    };
-    loadConns();
+    // Use live-metrics edge function (service_role) — bypasses RLS entirely
+    // Returns connected platforms based on what actually has tokens in the DB
+    supabase.functions.invoke("live-metrics", {
+      body: { user_id: user.id, persona_id: pid, period: "7d",
+        date_from: new Date(Date.now()-7*86400000).toISOString().split("T")[0],
+        date_to: new Date().toISOString().split("T")[0] }
+    }).then(({ data }: any) => {
+      const found: string[] = [];
+      if (data?.meta !== undefined) found.push("meta");
+      if (data?.google !== undefined) found.push("google");
+      setConnections(found);
+    }).catch(() => setConnections([]));
   },[user?.id,selectedPersona?.id]);
 
   // Proactive greeting — fires when connections are known (after context is ready)
