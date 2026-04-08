@@ -2270,42 +2270,6 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
     { bold: 'Proactive alerts', rest: ' when something critical happens' },
   ];
 
-  // Color palette — modern, no green/teal
-  // accent: indigo/violet for AI, amber for wins, slate for neutral
-  const WIN_COLOR = '#38bdf8';    // violet-300 — AI wins
-  const ACT_COLOR = '#0ea5e9';    // violet-400 — actions
-  const CARD_WIN = 'rgba(14,165,233,0.12)';
-  const CARD_WIN_B = 'rgba(14,165,233,0.28)';
-  const CARD_INS = 'rgba(255,255,255,0.07)';
-  const CARD_INS_B = 'rgba(255,255,255,0.14)';
-
-  const renderAI = () => {
-    if (phase === 'thinking') return <Dots />;
-    if (phase !== 'streaming' && phase !== 'done') return null;
-    const allLines = activeLine ? [...lines, activeLine] : lines;
-    if (!allLines.length) return null;
-    return (
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-        <img src="/ab-avatar.png" alt="AB" width={24} height={24}
-          style={{ width: 24, height: 24, borderRadius: 6, objectFit: 'cover', flexShrink: 0, marginTop: 2 }} />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
-          {allLines.map((line, i) => {
-            const isAction = /^(Fix:|Ação:|Action:|Acción:|→)/i.test(line.replace(/\*\*/g, ''));
-            const isLast = i === allLines.length - 1 && phase === 'streaming';
-            const isWin = /\+|↑|2\.4x|3\.8x|3\.2x|winner|melhor|dominando|escalando/i.test(line);
-            return (
-              <MdLine key={i} text={line} style={{
-                fontFamily: F, fontSize: 13, lineHeight: 1.6, margin: 0,
-                color: isAction ? ACT_COLOR : isWin ? WIN_COLOR : i === 0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.82)',
-                fontWeight: isAction ? 600 : 400, opacity: isLast ? 0.6 : 1,
-                animation: `lineEnter 0.35s cubic-bezier(0.16,1,0.3,1) ${i * 0.06}s both`,
-              }} />
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>

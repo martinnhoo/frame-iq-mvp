@@ -1744,7 +1744,7 @@ O frontend renderiza markdown. Use sempre. Nunca retorne texto corrido sem estru
 - `---` para separar seções distintas numa resposta longa
 
 **ESTRUTURA IDEAL para análise:**
-```
+
 ## Diagnóstico
 **CTR caiu 40%** nos últimos 3 dias.
 
@@ -1755,7 +1755,6 @@ Frequência chegou em **4.2x** — audiência esgotada.
 - Pause o conjunto agora
 - Crie variação com novo ângulo de hook
 - Reative com orçamento 20% menor para testar nova audiência
-```
 
 **ESTRUTURA IDEAL para resposta curta/direta:**
 Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\n\n Segunda linha se necessário.
