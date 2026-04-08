@@ -13,6 +13,7 @@ import {
   ChevronDown, Clock, BarChart2, Zap, Shield, MessageSquare,
   RefreshCw, Copy, Check, ArrowRight, TrendingUp, AlertCircle,
   Sparkles, Upload, FileVideo, FileText, X, History, ChevronRight,
+  Image, Type,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -204,6 +205,12 @@ export default function PreflightCheck() {
   const t = useDashT(language);  const [script, setScript] = useState("");
   const [hook, setHook] = useState("");
   const [cta, setCta] = useState("");
+  // Static ad mode
+  const [staticHeadline, setStaticHeadline] = useState("");
+  const [staticBody, setStaticBody] = useState("");
+  const [staticCta, setStaticCta] = useState("");
+  const [staticFormat, setStaticFormat] = useState("feed_1x1");
+  const [staticVisualDesc, setStaticVisualDesc] = useState("");
   const [platform, setPlatform] = useState("tiktok");
   const [market, setMarket] = useState("BR");
   const [duration, setDuration] = useState("30");
@@ -215,7 +222,7 @@ export default function PreflightCheck() {
   const [pendingRun, setPendingRun] = useState(false);
 
   // Input mode — "script" or "video"
-  const [inputMode, setInputMode] = useState<"script" | "video">("script");
+  const [inputMode, setInputMode] = useState<"script" | "video" | "static">("script");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -351,6 +358,43 @@ export default function PreflightCheck() {
           throw new Error(err.error || "Request failed");
         }
         data = await res.json();
+      } else if (inputMode === "static") {
+        // Static ad analysis mode — format as structured script for run-preflight
+        if (!staticHeadline.trim() && !staticBody.trim()) {
+          toast.error(lang === "pt" ? "Preencha pelo menos o Headline" : "Fill in at least the Headline");
+          setLoading(false); return;
+        }
+        const formatLabels: Record<string, string> = {
+          feed_1x1: "Feed 1:1 (1080×1080)",
+          feed_4x5: "Feed 4:5 (1080×1350)",
+          stories_9x16: "Stories/Reels 9:16 (1080×1920)",
+          carousel: "Carrossel",
+        };
+        const staticScript = [
+          `[STATIC AD ANALYSIS — NOT A VIDEO SCRIPT]`,
+          `Format: ${formatLabels[staticFormat] || staticFormat}`,
+          `Platform: ${platform}`,
+          `Market: ${market}`,
+          ``,
+          `HEADLINE: ${staticHeadline || "(not provided)"}`,
+          staticBody ? `BODY TEXT: ${staticBody}` : null,
+          staticCta ? `CTA BUTTON: ${staticCta}` : null,
+          staticVisualDesc ? `VISUAL: ${staticVisualDesc}` : null,
+          ``,
+          `Analyze this as a STATIC AD (image/carousel), not a video. Evaluate:`,
+          `1. Headline clarity, specificity, and stopping power (3-second rule)`,
+          `2. Body text density and readability`,
+          `3. CTA button copy effectiveness`,
+          `4. Format compliance (text overlay %, visual hierarchy)`,
+          `5. Platform fit for ${platform}`,
+          `6. Overall ad effectiveness and conversion potential`,
+        ].filter(Boolean).join("\n");
+        const { data: d, error } = await supabase.functions.invoke("run-preflight", {
+          body: { user_id: user?.id, script: staticScript, hook: staticHeadline, cta: staticCta, platform, market, duration: "static", format: `Static-${staticFormat}`, product, compliance_notes: complianceNotes, funnel_stage: funnelStage, persona_context: selectedPersona || undefined },
+        });
+        if (error) throw error;
+        if (d?.error) throw new Error(d.error);
+        data = d;
       } else {
         // JSON mode for script text
         const { data: d, error } = await supabase.functions.invoke("run-preflight", {
@@ -498,6 +542,7 @@ export default function PreflightCheck() {
             {[
               { mode: "script" as const, label: t("pf_script"), icon: <FileText className="h-3.5 w-3.5" /> },
               { mode: "video" as const,  label: t("pf_video"),  icon: <FileVideo className="h-3.5 w-3.5" /> },
+              { mode: "static" as const, label: lang === "pt" ? "Estático" : lang === "es" ? "Estático" : "Static", icon: <Image className="h-3.5 w-3.5" /> },
             ].map(({ mode, label, icon }) => (
               <button key={mode} onClick={() => setInputMode(mode)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -508,7 +553,7 @@ export default function PreflightCheck() {
               </button>
             ))}
             <span className="ml-2 text-[10px] text-white/40" style={mono}>
-              {inputMode === "video" ? "Whisper → Claude" : t("pf_script") + " → Claude"}
+              {inputMode === "video" ? "Whisper → Claude" : inputMode === "static" ? "Static Analysis → Claude" : t("pf_script") + " → Claude"}
             </span>
           </div>
 
@@ -573,6 +618,81 @@ export default function PreflightCheck() {
               <p className="text-[10px] text-white/40 mt-2 text-center" style={mono}>
                 Requires OPENAI_API_KEY for Whisper transcription
               </p>
+            </div>
+          )}
+
+          {inputMode === "static" && (
+            <div className="p-4 space-y-3">
+              {/* Format selector */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { val: "feed_1x1", label: "Feed 1:1", desc: "1080×1080" },
+                  { val: "feed_4x5", label: "Feed 4:5", desc: "1080×1350" },
+                  { val: "stories_9x16", label: "Stories/Reels", desc: "1080×1920" },
+                  { val: "carousel", label: "Carrossel", desc: "Múltiplos" },
+                ].map(f => (
+                  <button key={f.val} onClick={() => setStaticFormat(f.val)}
+                    className="p-2.5 rounded-xl text-left transition-all"
+                    style={staticFormat === f.val
+                      ? { background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)" }
+                      : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <p className="text-xs font-semibold" style={{ color: staticFormat === f.val ? "#fbbf24" : "rgba(255,255,255,0.6)" }}>{f.label}</p>
+                    <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)", fontFamily: "monospace" }}>{f.desc}</p>
+                  </button>
+                ))}
+              </div>
+              {/* Headline */}
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50 mb-1.5 block" style={mono}>
+                  Headline *
+                </label>
+                <input value={staticHeadline} onChange={e => setStaticHeadline(e.target.value)}
+                  placeholder={lang === "pt" ? "Texto principal do anúncio" : "Main ad headline"}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", fontFamily: "Inter,sans-serif" }}
+                  onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(251,191,36,0.35)"; }}
+                  onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+                />
+              </div>
+              {/* Body + CTA row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.18em] text-white/50 mb-1.5 block" style={mono}>
+                    {lang === "pt" ? "Texto do corpo" : "Body text"} <span className="text-white/20">{lang === "pt" ? "(opcional)" : "(optional)"}</span>
+                  </label>
+                  <textarea value={staticBody} onChange={e => setStaticBody(e.target.value)}
+                    rows={2}
+                    placeholder={lang === "pt" ? "Subtítulo ou descrição do produto/serviço" : "Subtitle or product description"}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", fontFamily: "Inter,sans-serif" }}
+                    onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(251,191,36,0.35)"; }}
+                    onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.18em] text-white/50 mb-1.5 block" style={mono}>CTA *</label>
+                  <input value={staticCta} onChange={e => setStaticCta(e.target.value)}
+                    placeholder="Ex: Saiba mais, Comprar agora, Jogue já"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", fontFamily: "Inter,sans-serif" }}
+                    onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(6,182,212,0.35)"; }}
+                    onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+                  />
+                </div>
+              </div>
+              {/* Visual description */}
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-white/50 mb-1.5 block" style={mono}>
+                  {lang === "pt" ? "Descrição visual" : "Visual description"} <span className="text-white/20">{lang === "pt" ? "(opcional)" : "(optional)"}</span>
+                </label>
+                <input value={staticVisualDesc} onChange={e => setStaticVisualDesc(e.target.value)}
+                  placeholder={lang === "pt" ? "Ex: Foto de produto com fundo branco, pessoa sorrindo..." : "Ex: Product shot on white background, smiling person..."}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#fff", fontFamily: "Inter,sans-serif" }}
+                  onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(14,165,233,0.35)"; }}
+                  onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+                />
+              </div>
             </div>
           )}
 

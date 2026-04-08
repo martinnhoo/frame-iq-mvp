@@ -1742,6 +1742,8 @@ export default function AdBriefAI() {
   const [greetingKey,setGreetingKey]=useState(0);
   const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done, 0..N=step index
   const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
+  const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string}|null>(null);
+  const [chatDragOver,setChatDragOver]=useState(false);
   const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
   const [completedAnswers,setCompletedAnswers]=useState<Record<string,string>>({});
   const [input,setInput]=useState("");
@@ -2126,8 +2128,9 @@ Testimonial/talking head: Best when trust or credibility is the main conversion 
 Demo: SaaS, apps, complex products — show, don't tell.
 Carousel: Education, product catalog, step-by-step. First card = headline, last card = CTA.
 
-── VIDEO SCRIPT STRUCTURE (30-line format, apply directly) ─────────────────────
-L1-2:  HOOK — Pattern interrupt. Polarizing statement or specific painful question. 5 words max.
+── VIDEO SCRIPT STRUCTURE (Reels/TikTok, apply directly) ──────────────────────
+L1-2:  HOOK — Pattern interrupt or polarizing question. 5 words max on screen.
+        Target: 60-70% viewers still watching at 3s (Mosseri confirmed: 1.7s decision window)
 L3-6:  AGITATE — Make the problem feel personal, real, urgent.
 L7-10: REFRAME — Counter-intuitive insight or credibility bridge.
 L11-18: DEMONSTRATE — Show/prove. Specific result + real context.
@@ -2135,6 +2138,30 @@ L19-22: SOCIAL PROOF — Named person + specific outcome + timeframe.
 L23-26: MECHANISM — What makes the solution work (proprietary angle if possible).
 L27-28: CTA — One action. Specific. Low-friction. ("Clica no link" > "Saiba mais")
 L29-30: REINFORCE — Restate the core promise in 5 words.
+
+── STATIC AD STRUCTURE (Feed/Stories/Carrossel) ────────────────────────────────
+STATIC 3-SECOND RULE: Can the offer be understood in 3 seconds without reading? If no → rewrite.
+VISUAL HIERARCHY (eye movement order): Hero image → Headline → Body → CTA button
+HEADLINE RULES for static (NOT a hook — different concept):
+  Feed 1:1/4:5: 5-8 words. Specific, not clever. Numbers > adjectives.
+  Stories 9:16: 3-5 words. Large type. Maximum contrast.
+  Carrossel card 1: Promise the payoff that's inside. Reason to swipe.
+TEXT OVERLAY: Meta recommends <20% of image area as text. More text = algorithmic penalty.
+CTA BUTTON COPY: "Saiba mais" → "Ver planos" → "Começar agora grátis" (specificity ladder)
+FACES IN STATIC: Ads with faces outperform by ~35%. Direct eye contact performs best.
+COLOR: CTA button = highest contrast element on the image. Must be instantly visible.
+FORMAT SPECS:
+  Feed 1:1: 1080×1080px. Feed 4:5: 1080×1350px (+20% vertical real estate, recommended).
+  Stories safe zone: center 1080×1420px (top/bottom 250px hidden by UI elements).
+CARROSSEL:
+  Card 1: Hook/promise. Cards 2-5: One proof or benefit each. Last: CTA + summary.
+STATIC FATIGUE: Headline exhaustion > visual exhaustion. Change headline angle first.
+  Signs: CTR declining + frequency >3. Solution: new headline angle, not just new image.
+WHEN STATIC OUTPERFORMS VIDEO:
+  - Retargeting (familiar audience, lower intent friction)
+  - Product catalog / e-commerce (visual + price clarity)
+  - Event or offer with clear deadline
+  - When production budget is limited (one strong image > weak video)
 
 ── WHAT NOT TO DO ────────────────────────────────────────────────────────────
 - Never open with "Você sabia que..." (oversaturated, zero pattern interrupt)
@@ -2689,6 +2716,16 @@ L29-30: REINFORCE — Restate the core promise in 5 words.
 
   const send=async(text?:string, displayText?:string)=>{
     let msg=(text??input).trim();
+    // If image attached in chat, prepend context note
+    if(chatImage && !text) {
+      const imgNote = lang==="pt"
+        ? `[CRIATIVO ESTÁTICO PARA ANÁLISE: ${chatImage.name}]
+`
+        : `[STATIC CREATIVE FOR ANALYSIS: ${chatImage.name}]
+`;
+      msg = imgNote + (msg || (lang==="pt"?"Analise este criativo estático e dê feedback detalhado sobre headline, CTA, hierarquia visual e potencial de conversão":lang==="es"?"Analiza este creativo estático y da retroalimentación detallada":"Analyze this static creative and give detailed feedback on headline, CTA, visual hierarchy and conversion potential"));
+      setChatImage(null);
+    }
     if(!msg||loading)return;
     const userText = displayText ?? msg;
     // Context ainda carregando — mostra feedback visual em vez de silêncio
@@ -3838,15 +3875,43 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
-              display:"flex",alignItems:"center",gap:10,
-              background:"rgba(255,255,255,0.04)",
+              display:"flex",flexDirection:"column",gap:0,
+              background: chatDragOver ? "rgba(13,162,231,0.06)" : "rgba(255,255,255,0.04)",
               backdropFilter:"blur(20px) saturate(180%)",
-              border:"1px solid var(--border-subtle)",
+              border: chatDragOver ? "1px solid rgba(13,162,231,0.4)" : "1px solid var(--border-subtle)",
               borderRadius:16,
               padding:"12px 12px 12px 18px",
               boxShadow:"0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
               transition:"border-color 0.2s, box-shadow 0.2s",
-            }}>
+            }}
+            onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
+            onDragLeave={() => setChatDragOver(false)}
+            onDrop={e => {
+              e.preventDefault(); setChatDragOver(false);
+              const file = e.dataTransfer.files[0];
+              if (file && file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                  const dataUrl = ev.target?.result as string;
+                  const base64 = dataUrl.split(",")[1];
+                  setChatImage({ base64, name: file.name, preview: dataUrl });
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+            >
+              {/* Image preview strip */}
+              {chatImage && (
+                <div style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 0 8px", borderBottom:"1px solid rgba(255,255,255,0.06)", marginBottom:8 }}>
+                  <img src={chatImage.preview} alt="criativo" style={{ width:44, height:44, borderRadius:8, objectFit:"cover", border:"1px solid rgba(255,255,255,0.1)" }} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.6)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{chatImage.name}</p>
+                    <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.7)" }}>{lang==="pt"?"Criativo anexado — descreva o que quer analisar":lang==="es"?"Creativo adjunto — describe qué quieres analizar":"Creative attached — describe what to analyze"}</p>
+                  </div>
+                  <button onClick={() => setChatImage(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.3)", padding:4, lineHeight:1 }}>✕</button>
+                </div>
+              )}
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
@@ -3855,6 +3920,27 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
               />
               <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,paddingBottom:1}}>
+                {/* Image attach button */}
+                <label title={lang==="pt"?"Anexar imagem de criativo":lang==="es"?"Adjuntar imagen":"Attach creative image"}
+                  style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
+                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(13,162,231,0.3)";el.style.color="rgba(13,162,231,0.7)";}}
+                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
+                  <input type="file" accept="image/*" className="hidden" style={{display:"none"}}
+                    onChange={e=>{
+                      const file=e.target.files?.[0];
+                      if(file){
+                        const reader=new FileReader();
+                        reader.onload=ev=>{
+                          const dataUrl=ev.target?.result as string;
+                          setChatImage({base64:dataUrl.split(",")[1],name:file.name,preview:dataUrl});
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value="";
+                      }
+                    }}
+                  />
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </label>
                 {messages.length>0&&(
                   <button onClick={()=>{
                     const confirmed = window.confirm(
@@ -3896,7 +3982,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   }
                 </button>
               </div>
-            </div>
+              </div>{/* close inner flex row */}
+            </div>{/* close input-box-wrap */}
 
           </div>
         </div>
