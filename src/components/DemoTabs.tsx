@@ -178,7 +178,7 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
       )}
 
       {/* ── CARD ── */}
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: "100%", overflow: "hidden" }}>
         <div style={{
           position: "absolute",
           bottom: -60, left: "5%", right: "5%", height: 140,
@@ -192,6 +192,7 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
           background: "#07101f",
           border: "1px solid rgba(255,255,255,0.09)",
           boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 40px 100px rgba(0,0,0,0.8)",
+          width: "100%", maxWidth: "100%",
         }}>
 
           {/* TOPBAR */}

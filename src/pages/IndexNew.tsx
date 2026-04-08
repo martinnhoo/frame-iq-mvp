@@ -2129,7 +2129,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%' }}>
       {/* Eyebrow */}
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content' }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
@@ -2189,7 +2189,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       </div>
 
       {/* Fine print */}
-      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', margin: '0 0 20px' }}>{finePrint}</p>
+      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', margin: '0 0 20px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '100%' }}>{finePrint}</p>
 
       {/* Platform badge — Meta Ads only, clean and prominent */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -2272,20 +2272,20 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(24px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>
 
       {/* Subtle radial glow — violet, not green */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Grid */}
-      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
+      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }} className="hero-grid">
 
         {/* ── LEFT ── */}
         <HeroLeft lang={lang} onCTA={onCTA} ctaLoading={ctaLoading} />
 
         {/* ── RIGHT — demo ── */}
         {/* ── RIGHT — Demo redesign ── */}
-        <div className="hero-demo-col" style={{ position: 'relative' }}>
+        <div className="hero-demo-col" style={{ position: 'relative', width: '100%', minWidth: 0, overflow: 'hidden' }}>
           <DemoTabs onCTA={onCTA} />
         </div>
 
@@ -3566,7 +3566,7 @@ export default function IndexNew() {
   if (!ready) return <div style={{ minHeight: "100vh", background: BG }} />;
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: F }}>
+    <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: F, overflowX: "hidden", maxWidth: "100vw" }}>
       <Helmet>
         <title>{titleMap[lang]}</title>
         <meta name="description" content={descMap[lang]} />
