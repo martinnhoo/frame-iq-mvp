@@ -2499,7 +2499,9 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // onboardingStep === -1 means already done/skipped this session — never show again on clear
     const r = selectedPersona?.result as any || {};
     const hasBasicProfile = r.niche || r.industry || r.product || r.objective || r.onboarding_completed;
-    if (!hasBasicProfile && selectedPersona?.id && !onboardingSessionDone.current) {
+    // Check sessionStorage to avoid re-showing for "skipped" users within same session
+    const sessionSkipped = (() => { try { return sessionStorage.getItem(`adbrief_onb_skip_${selectedPersona?.id}`) === "1"; } catch { return false; } })();
+    if (!hasBasicProfile && selectedPersona?.id && !onboardingSessionDone.current && !sessionSkipped) {
       setOnboardingStep(0);
       return; // skip normal greeting — onboarding takes over
     }
@@ -3439,7 +3441,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
 
               {/* Skip */}
-              <button onClick={() => { onboardingSessionDone.current = true; completeOnboarding(onboardingAnswers); }}
+              <button onClick={() => { onboardingSessionDone.current = true; try { sessionStorage.setItem(`adbrief_onb_skip_${selectedPersona?.id}`, "1"); } catch {} completeOnboarding(onboardingAnswers); }}
                 style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
                 {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
               </button>
