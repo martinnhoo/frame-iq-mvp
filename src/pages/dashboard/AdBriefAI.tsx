@@ -1743,7 +1743,7 @@ export default function AdBriefAI() {
   const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done/skipped, 0..N=step
   const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
   const onboardingSessionDone = React.useRef(false); // true once done/skipped this session
-  const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string}|null>(null);
+  const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string;mediaType:string}|null>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
   const [completedAnswers,setCompletedAnswers]=useState<Record<string,string>>({});
@@ -2759,6 +2759,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // If image attached in chat, prepend context note
     // Capture image before clearing
     const pendingImage = (chatImage && !text) ? chatImage : null;
+    // Store clean user message for display BEFORE modifying msg for AI
+    const cleanUserMsg = msg;
     if(pendingImage) {
       const imgNote = lang==="pt"
         ? `[CRIATIVO ESTÁTICO PARA ANÁLISE: ${pendingImage.name}]
@@ -2769,7 +2771,10 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       setChatImage(null);
     }
     if(!msg||loading)return;
-    const userText = displayText ?? msg;
+    // userText = what shows in the chat bubble (clean, no AI prefixes)
+    const userText = displayText ?? (pendingImage
+      ? (cleanUserMsg || (lang==="pt"?"Analise este criativo":lang==="es"?"Analiza este creativo":"Analyze this creative"))
+      : msg);
     // Context ainda carregando — mostra feedback visual em vez de silêncio
     if(!contextReady){
       const uid=Date.now();
@@ -2859,7 +2864,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     if(textareaRef.current)textareaRef.current.style.height="auto";
     setActiveTool(null);
     const uid=Date.now();
-    setMessages(prev=>[...prev,{role:"user",userText:userText,ts:uid,id:uid}]);
+    setMessages(prev=>[...prev,{role:"user",userText:userText,ts:uid,id:uid,imagePreview:pendingImage?.preview||undefined}]);
     // Scroll imediato ao enviar — não espera a resposta
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);
@@ -2890,7 +2895,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Pass image to vision-capable adbrief-ai-chat
       if(pendingImage) {
         invokeBody.image_base64 = pendingImage.base64;
-        invokeBody.image_media_type = "image/jpeg";
+        invokeBody.image_media_type = pendingImage.mediaType || "image/jpeg";
       }
       const selectedAccId2 = selectedPersona?.id ? (localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined) : undefined;
       if(selectedAccId2) invokeBody.account_id = selectedAccId2;
@@ -3628,17 +3633,27 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
                 <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"min(72%,calc(100vw - 80px))"}}>
                   <div style={{
-                    padding:"10px 16px",
                     borderRadius:"18px 18px 4px 18px",
                     background:"linear-gradient(135deg,#0ea5e9,#0891b2)",
                     boxShadow:"0 2px 12px rgba(14,165,233,0.25)",
-                    fontSize:14,fontWeight:400,
-                    color:"#fff",
-                    lineHeight:1.65,
+                    overflow:"hidden",
                     animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-                    ...m,
                   }}>
-                    {msg.userText}
+                    {(msg as any).imagePreview && (
+                      <div style={{padding:"8px 8px 4px"}}>
+                        <img src={(msg as any).imagePreview} alt="criativo"
+                          style={{width:"100%",maxWidth:260,height:"auto",borderRadius:10,display:"block",maxHeight:180,objectFit:"contain",background:"rgba(0,0,0,0.15)"}}/>
+                      </div>
+                    )}
+                    <div style={{
+                      padding:"10px 16px",
+                      fontSize:14,fontWeight:400,
+                      color:"#fff",
+                      lineHeight:1.65,
+                      ...m,
+                    }}>
+                      {msg.userText}
+                    </div>
                   </div>
                   {/* Ações no hover */}
                   <div className="user-msg-actions" style={{display:"flex",alignItems:"center",gap:4,opacity:0,transition:"opacity 0.15s",pointerEvents:"none" as const}}>
@@ -3944,7 +3959,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 reader.onload = ev => {
                   const dataUrl = ev.target?.result as string;
                   const base64 = dataUrl.split(",")[1];
-                  setChatImage({ base64, name: file.name, preview: dataUrl });
+                  const mediaType = dataUrl.split(",")[0].split(":")[1]?.split(";")[0] || "image/jpeg";
+                  setChatImage({ base64, name: file.name, preview: dataUrl, mediaType });
                 };
                 reader.readAsDataURL(file);
               }
@@ -3982,7 +3998,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                         const reader=new FileReader();
                         reader.onload=ev=>{
                           const dataUrl=ev.target?.result as string;
-                          setChatImage({base64:dataUrl.split(",")[1],name:file.name,preview:dataUrl});
+                          const mediaType=dataUrl.split(",")[0].split(":")[1]?.split(";")[0]||"image/jpeg";
+                          setChatImage({base64:dataUrl.split(",")[1],name:file.name,preview:dataUrl,mediaType});
                         };
                         reader.readAsDataURL(file);
                         e.target.value="";
