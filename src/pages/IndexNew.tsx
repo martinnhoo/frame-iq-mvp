@@ -469,7 +469,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
       className={className}
       style={noPadding
         ? { background: bgMap[bg], borderTop: borderMap[bg] }
-        : { padding: "clamp(48px,5vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
+        : { padding: "clamp(56px,7vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
       }
     >
       {children}
@@ -2141,7 +2141,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       {/* Headline — massive, bold */}
       <h1 style={{
         fontFamily: F, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05,
-        margin: '0 0 28px', color: '#fff',
+        margin: '0 0 20px', color: '#fff',
         fontSize: 'clamp(42px, 4.8vw, 68px)',
       }}>
         {line1}
@@ -3617,129 +3617,176 @@ export default function IndexNew() {
           .kpi-card:nth-child(1){animation-delay:0.2s}
           .kpi-card:nth-child(2){animation-delay:0.35s}
 
-          /* ══════════════════════════════════════════
-             MOBILE — redesign completo (mobile-first)
-             ══════════════════════════════════════════ */
+          /* ═══════════════════════════════════════════════════
+             MOBILE — pensado por screen, não por desktop shrink
+             Cada seção ocupa e respira na viewport.
+             ═══════════════════════════════════════════════════ */
 
           .mobile-demo-section{display:none}
 
-          /* ── 860px: tablet/mobile — colapsa hero grid ── */
           @media(max-width:860px){
-            .hero-grid{grid-template-columns:1fr!important;gap:32px!important}
+            .hero-grid{grid-template-columns:1fr!important;gap:0!important}
             .hero-demo-col{display:block!important;width:100%!important}
-            .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
-            .hero-main-section{
-              min-height:auto!important;
-              align-items:flex-start!important;
-              padding:80px 24px 32px!important;
-            }
           }
 
-          /* ── 768px: mobile principal ── */
           @media(max-width:768px){
-            /* overflow global */
-            *{box-sizing:border-box}
-            body,html{overflow-x:hidden!important}
-            .hero-main-section{overflow-x:hidden!important}
+            /* ── RESET global ── */
+            *{box-sizing:border-box!important}
+            html,body{overflow-x:hidden!important;max-width:100vw!important}
 
             /* ── NAV ── */
             .nav-links{display:none!important}
 
-            /* ── HERO ── */
-            h1,.hero-h1{
-              font-size:clamp(32px,8.5vw,44px)!important;
-              white-space:normal!important;
-              letter-spacing:-0.04em!important;
-              line-height:1.08!important;
+            /* ── HERO — tela cheia, conteúdo empilhado ── */
+            .hero-main-section{
+              min-height:100svh!important;
+              padding:72px 24px 40px!important;
+              align-items:flex-start!important;
+              overflow:hidden!important;
             }
-            .hero-sub-p{font-size:15px!important;white-space:normal!important;max-width:100%!important;line-height:1.55!important}
-            .hero-cta-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
-            .hero-cta-row button{width:100%!important;justify-content:center!important;min-height:48px!important}
-            .hero-social-proof,.hero-headline,.hero-sub,.hero-bullets,.hero-connects{margin-bottom:12px!important}
+            h1,.hero-h1{
+              font-size:clamp(34px,9vw,46px)!important;
+              line-height:1.05!important;
+              letter-spacing:-0.04em!important;
+              white-space:normal!important;
+              margin-bottom:16px!important;
+            }
+            .hero-sub-p{
+              font-size:15px!important;
+              line-height:1.6!important;
+              white-space:normal!important;
+              max-width:100%!important;
+              margin-bottom:24px!important;
+            }
+            /* CTAs: empilhados, full width, generosos */
+            .hero-cta-row{
+              flex-direction:column!important;
+              align-items:stretch!important;
+              gap:10px!important;
+              margin-bottom:20px!important;
+            }
+            .hero-cta-row > *{
+              width:100%!important;
+              min-height:52px!important;
+              justify-content:center!important;
+              font-size:16px!important;
+            }
+            /* DemoTabs: sem padding extra, full width */
+            .hero-demo-col{
+              padding:0!important;
+              width:100%!important;
+              min-width:0!important;
+              overflow:hidden!important;
+            }
 
-            /* ── DEMO TABS no hero ── */
-            .hero-demo-col{padding:0!important}
+            /* ── SOCIAL PROOF — 2 cols bem definidas ── */
+            .spstrip-grid{
+              grid-template-columns:1fr 1fr!important;
+            }
+            .spstrip-grid>div{
+              padding:24px 16px!important;
+              border-right:none!important;
+            }
+            .spstrip-grid>div:nth-child(odd){
+              border-right:1px solid rgba(255,255,255,0.06)!important;
+            }
+            .spstrip-grid>div:nth-child(3),
+            .spstrip-grid>div:nth-child(4){
+              border-top:1px solid rgba(255,255,255,0.06)!important;
+            }
 
-            /* ── SOCIAL PROOF STRIP ── */
-            .spstrip-grid{grid-template-columns:repeat(2,1fr)!important}
-            .spstrip-grid>div{padding:20px 16px!important}
-            .spstrip-grid>div:nth-child(2){border-right:none!important}
-            .spstrip-grid>div:nth-child(3),.spstrip-grid>div:nth-child(4){border-top:1px solid rgba(255,255,255,0.06)!important}
-            .spstrip-grid>div:nth-child(3){border-right:1px solid rgba(255,255,255,0.06)!important}
+            /* ── SECTIONS — padding por tela, não por pixel ── */
+            section{
+              padding-left:24px!important;
+              padding-right:24px!important;
+              padding-top:64px!important;
+              padding-bottom:64px!important;
+            }
 
-            /* ── PAIN SECTION ── */
-            .pain-grid{grid-template-columns:1fr!important;gap:16px!important}
-            .pain-grid>div:nth-child(2){display:none!important}
+            /* ── PAIN ── */
+            .pain-grid{grid-template-columns:1fr!important;gap:0!important}
             .pain-col-left,.pain-col-right{padding:0!important}
 
             /* ── HOW IT WORKS ── */
-            .how-grid{grid-template-columns:1fr!important;gap:12px!important}
+            .how-grid{grid-template-columns:1fr!important;gap:16px!important}
 
-            /* ── FEATURE TABS (entre How e Tools) ── */
-            .feature-tabs-grid{grid-template-columns:1fr!important;gap:24px!important}
+            /* ── FEATURE TABS ── */
+            .feature-tabs-grid{
+              grid-template-columns:1fr!important;
+              gap:32px!important;
+            }
 
             /* ── FOR WHO ── */
             .for-who-tabs{
               flex-wrap:nowrap!important;
               overflow-x:auto!important;
               -webkit-overflow-scrolling:touch!important;
-              width:100%!important;
-              box-sizing:border-box!important;
-              justify-content:flex-start!important;
               scrollbar-width:none!important;
+              justify-content:flex-start!important;
+              width:100%!important;
+              gap:8px!important;
               padding-bottom:4px!important;
             }
             .for-who-tabs::-webkit-scrollbar{display:none!important}
             .for-who-grid{grid-template-columns:1fr!important}
-            .for-who-card{padding:18px 16px!important}
+            .for-who-card{padding:20px 18px!important}
 
             /* ── TOOLS ── */
             .tools-bento{grid-template-columns:1fr!important}
             .tools-list{display:none!important}
-            .tools-io-grid{grid-template-columns:1fr!important;gap:10px!important}
+            .tools-io-grid{grid-template-columns:1fr!important;gap:12px!important}
 
             /* ── TELEGRAM ── */
-            .telegram-grid{grid-template-columns:1fr!important;gap:12px!important}
+            .telegram-grid{grid-template-columns:1fr!important;gap:16px!important}
 
-            /* ── PRICING ── */
+            /* ── PRICING — card único centrado ── */
             .pricing-grid{
               grid-template-columns:1fr!important;
-              gap:12px!important;
-              max-width:440px!important;
-              margin-left:auto!important;
-              margin-right:auto!important;
+              gap:16px!important;
+              max-width:100%!important;
             }
 
             /* ── FAQ ── */
-            .faq-item{padding:16px 0!important}
+            .faq-item{padding:20px 0!important}
 
             /* ── FINAL CTA ── */
-            .trust-badges{flex-direction:column!important;align-items:center!important;gap:10px!important}
+            .trust-badges{
+              flex-direction:column!important;
+              align-items:flex-start!important;
+              gap:12px!important;
+            }
 
             /* ── FOOTER ── */
-            .footer-inner{flex-direction:column!important;gap:28px!important}
-            .footer-links{gap:24px!important;flex-wrap:wrap!important}
-            .footer-bottom{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
-
-            /* ── GLOBAL sections padding ── */
-            section{padding-left:20px!important;padding-right:20px!important}
+            .footer-inner{flex-direction:column!important;gap:40px!important}
+            .footer-links{gap:32px!important;flex-wrap:wrap!important}
+            .footer-bottom{
+              flex-direction:column!important;
+              align-items:flex-start!important;
+              gap:8px!important;
+              font-size:12px!important;
+            }
           }
 
-          /* ── 480px: telefone pequeno ── */
+          /* ── 480px — telas menores, mais compacto ── */
           @media(max-width:480px){
-            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
-            .hero-main-section{padding:72px 20px 28px!important}
+            h1,.hero-h1{font-size:clamp(30px,8.5vw,40px)!important}
+            .hero-main-section{padding:68px 20px 32px!important}
+            section{padding-left:20px!important;padding-right:20px!important;padding-top:56px!important;padding-bottom:56px!important}
             .spstrip-grid{grid-template-columns:1fr!important}
-            .spstrip-grid>div{border-right:none!important;border-top:1px solid rgba(255,255,255,0.06)!important;padding:18px 16px!important}
+            .spstrip-grid>div{
+              border-right:none!important;
+              border-top:1px solid rgba(255,255,255,0.06)!important;
+              padding:20px!important;
+            }
             .spstrip-grid>div:first-child{border-top:none!important}
           }
 
-          /* ── 390px: iPhone SE / Mini ── */
+          /* ── 390px — iPhone SE / Mini ── */
           @media(max-width:390px){
+            .hero-main-section{padding:64px 16px 28px!important}
             section{padding-left:16px!important;padding-right:16px!important}
-            .hero-main-section{padding:68px 16px 24px!important}
-            h1,.hero-h1{font-size:clamp(26px,7.5vw,32px)!important}
+            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
