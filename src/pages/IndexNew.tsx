@@ -1,4 +1,4 @@
-// v8.7 — DemoTabs replaces HeroDemo with real screenshots 2026-04-06
+// v8.8 — meta-oauth fix: selected_account_id + SELECT policy + trigger removed 2026-04-08
 import { DemoTabs } from "@/components/DemoTabs";
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";

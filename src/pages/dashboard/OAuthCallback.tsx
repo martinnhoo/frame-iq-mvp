@@ -64,6 +64,7 @@ export default function OAuthCallback() {
         setPersonaId(pid);
         setMessage(`Connecting ${pl.name}...`);
 
+        console.log("[OAuth] Calling edge function:", pl.fn, { user_id: uid, persona_id: pid });
         const { data, error: fnError } = await supabase.functions.invoke(pl.fn, {
           body: { action: "exchange_code", code, user_id: uid, persona_id: pid, state },
         });
@@ -78,9 +79,14 @@ export default function OAuthCallback() {
               realMsg = body?.error || body?.message || realMsg;
             }
           } catch {}
+          console.error("[OAuth] Edge function error:", realMsg);
           throw new Error(realMsg);
         }
-        if (data?.error) throw new Error(data.error);
+        if (data?.error) {
+          console.error("[OAuth] Data error:", data.error);
+          throw new Error(data.error);
+        }
+        console.log("[OAuth] Success:", { accounts: data?.ad_accounts?.length, saved: true });
 
         const accs: any[] = data?.ad_accounts || data?.customers || 
           (data?.advertiser_ids || []).map((id: string) => ({ id, name: `Advertiser ${id}` }));
