@@ -210,11 +210,13 @@ function PlatformRow({ p, userId, accountId, t }: {
       const { data: res, error: fnErr } = await supabase.functions.invoke("get-connections", {
         body: { user_id: userId, persona_id: accountId }
       });
+      console.log("[PlatformRow] get-connections:", { res, fnErr, userId, accountId, platform: p.id });
       if (fnErr) throw fnErr;
+      if (res?.error) throw new Error(res.error);
       const match = (res?.connections || []).find((c: any) => c.platform === p.id) || null;
       setConn(match);
     } catch (e) {
-      console.error("[AdBrief] platform row load:", e);
+      console.error("[AdBrief] platform row load error:", String(e));
       setConn(null);
       setLoadError(true);
     } finally {
