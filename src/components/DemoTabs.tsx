@@ -5,56 +5,61 @@ const ITEMS = [
     id: "roas",
     tab: "ROAS caiu?",
     title: "Por que meu ROAS caiu essa semana?",
-    sub: "CTR 3.87% ↓  ·  Freq 1.8 ↑  ·  criativo saturando",
+    sub: "CTR 3.87% ↓  ·  Frequência 1.8 ↑  ·  criativo saturando — não é leilão",
     src: "/screenshots/chat-diagnostico.png",
+    w: 1647, h: 902,
   },
   {
     id: "pausar",
     tab: "O que pausar?",
-    title: "Quais criativos pausar primeiro?",
-    sub: "Video_Hook_Prova01 · ROAS 2.1x · Freq 3.4 → pausar já",
+    title: "Video_Hook_Prova01 pausar já · Reels_v3 escalar",
+    sub: "CTR 1.9% · Freq 3.4 · ROAS 2.1x → libera budget pro ROAS 5.8x",
     src: "/screenshots/chat-criativos.png",
+    w: 1647, h: 907,
   },
   {
     id: "hooks",
     tab: "Gera hooks",
-    title: "5 hooks do criativo vencedor — CTR estimado",
-    sub: "Urgência · Prova Social · Curiosidade · Dor · Resultado",
+    title: "5 hooks gerados do criativo vencedor · CTR estimado",
+    sub: "Urgência 4.8–5.4%  ·  Prova Social 4.2–4.9%  ·  Curiosidade 4.0–4.6%",
     src: "/screenshots/chat-hooks.png",
+    w: 1673, h: 908,
   },
   {
     id: "perf",
     tab: "Performance",
-    title: "R$47.832 investido · CTR 3.87% · 2.4M impressões",
-    sub: "Tendência Out→Fev · CPC R$0,42 · 92.4k cliques",
+    title: "R$47.832 · CTR 3.87% · CPC R$0,42 · 2.4M impressões",
+    sub: "Tendência Out → Fev · 92.4k cliques · Meta Ads · Últimos 90D",
     src: "/screenshots/performance.png",
+    w: 1673, h: 842,
   },
   {
     id: "intel",
     tab: "Inteligência",
-    title: "4 memórias · 7 padrões · 12 ações executadas",
-    sub: "ROAS cai quando freq > 2.5 — a IA já sabe disso",
+    title: "4 memórias · 7 padrões de ads · 12 ações executadas",
+    sub: "ROAS cai quando freq > 2.5 — a IA aprendeu isso das suas campanhas",
     src: "/screenshots/inteligencia.png",
+    w: 1673, h: 907,
   },
   {
     id: "diario",
     tab: "Diário",
-    title: "87% taxa de acerto · R$198.340 retorno estimado",
-    sub: "Reels_Hook_Urgencia_v3 · CTR 5.1% · Vencedor",
+    title: "87% taxa de acerto · R$198.340 retorno · ROAS 4.2x",
+    sub: "7 vencedores de 12 anúncios · Reels_Hook_Urgencia_v3 · CTR 5.1%",
     src: "/screenshots/diario.png",
+    w: 1673, h: 906,
   },
 ] as const;
 
 export function DemoTabs({ onCTA }: { onCTA: () => void }) {
   const [idx, setIdx] = React.useState(0);
+  const item = ITEMS[idx];
 
-  // Auto-avança sem nenhum setTimeout
+  // Auto-avança a cada 5s
   React.useEffect(() => {
-    const id = setInterval(() => setIdx(p => (p + 1) % ITEMS.length), 4000);
+    const id = setInterval(() => setIdx(p => (p + 1) % ITEMS.length), 5000);
     return () => clearInterval(id);
   }, []);
-
-  const item = ITEMS[idx];
 
   return (
     <div style={{ position: "relative" }}>
@@ -62,25 +67,26 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
       {/* Glow */}
       <div style={{
         position: "absolute",
-        bottom: -50, left: "8%", right: "8%", height: 120,
-        background: "radial-gradient(ellipse, rgba(13,162,231,0.22) 0%, transparent 70%)",
-        filter: "blur(32px)", pointerEvents: "none", zIndex: 0,
+        bottom: -60, left: "5%", right: "5%", height: 140,
+        background: "radial-gradient(ellipse, rgba(13,162,231,0.25) 0%, transparent 70%)",
+        filter: "blur(40px)", pointerEvents: "none", zIndex: 0,
       }} />
 
       <div style={{
         position: "relative", zIndex: 1,
-        borderRadius: 16, overflow: "hidden",
+        borderRadius: 14,
+        overflow: "hidden",
         background: "#07101f",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 32px 80px rgba(0,0,0,0.75)",
+        border: "1px solid rgba(255,255,255,0.09)",
+        boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 40px 100px rgba(0,0,0,0.8)",
       }}>
 
-        {/* TOPBAR */}
+        {/* ── TOPBAR ── */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "10px 16px",
-          background: "rgba(0,0,0,0.4)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.5)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img src="/ab-avatar.png" alt=""
@@ -88,11 +94,21 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
             <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>
               AdBrief
             </span>
+            <span style={{
+              fontSize: 10.5, color: "rgba(255,255,255,0.3)",
+              padding: "2px 7px", borderRadius: 5,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              letterSpacing: "0.02em",
+            }}>
+              Meta Ads
+            </span>
           </div>
           <div style={{
             display: "flex", alignItems: "center", gap: 5,
             padding: "3px 9px", borderRadius: 20,
-            background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.22)",
+            background: "rgba(34,197,94,0.07)",
+            border: "1px solid rgba(34,197,94,0.22)",
           }}>
             <div style={{
               width: 5, height: 5, borderRadius: "50%", background: "#22c55e",
@@ -105,13 +121,42 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
           </div>
         </div>
 
-        {/* SCREENSHOT — todas as imagens no DOM, só troca opacity */}
+        {/* ── TABS ── */}
+        <div style={{
+          display: "flex", gap: 4, padding: "10px 12px",
+          background: "rgba(0,0,0,0.2)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          overflowX: "auto" as const,
+        }}>
+          {ITEMS.map((it, i) => {
+            const on = i === idx;
+            return (
+              <button key={it.id} onClick={() => setIdx(i)} style={{
+                fontSize: 11.5, fontWeight: on ? 700 : 500,
+                padding: "6px 13px", borderRadius: 8,
+                cursor: "pointer", whiteSpace: "nowrap" as const, flexShrink: 0,
+                background: on ? "rgba(13,162,231,0.16)" : "rgba(255,255,255,0.04)",
+                color: on ? "#38bdf8" : "rgba(255,255,255,0.38)",
+                border: on ? "1px solid rgba(13,162,231,0.42)" : "1px solid rgba(255,255,255,0.08)",
+                transition: "all 0.15s ease",
+                letterSpacing: on ? "-0.01em" : "0",
+                boxShadow: on ? "0 0 14px rgba(13,162,231,0.15)" : "none",
+              }}>
+                {it.tab}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── SCREENSHOT — todas no DOM, só opacity muda ── */}
         <div style={{
           position: "relative",
           width: "100%",
-          aspectRatio: "1673 / 908",
+          // ratio do maior print, sem corte
+          aspectRatio: `${item.w} / ${item.h}`,
+          background: "#050c1a",
           overflow: "hidden",
-          background: "#060c18",
+          lineHeight: 0,
         }}>
           {ITEMS.map((it, i) => (
             <img
@@ -121,85 +166,78 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
               style={{
                 position: "absolute", inset: 0,
                 width: "100%", height: "100%",
-                objectFit: "cover", objectPosition: "top center",
+                objectFit: "fill",  // sem corte — imagem inteira
                 display: "block",
                 opacity: i === idx ? 1 : 0,
-                transition: "opacity 0.35s ease",
-                // sem transform, sem scale — só opacity
+                transition: "opacity 0.4s ease",
               }}
             />
           ))}
 
-          {/* Gradiente inferior para suavizar */}
+          {/* Gradiente embaixo — suaviza a transição para o texto */}
           <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: "28%",
+            position: "absolute", bottom: 0, left: 0, right: 0, height: "20%",
             background: "linear-gradient(0deg, #07101f 0%, transparent 100%)",
             pointerEvents: "none", zIndex: 2,
           }} />
         </div>
 
-        {/* LABEL — sincronizado com idx, sem delay */}
-        <div style={{ padding: "12px 18px 8px" }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em", marginBottom: 3 }}>
+        {/* ── LABEL — mesmo idx da imagem, sem delay ── */}
+        <div style={{
+          padding: "12px 16px 8px",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
+          <div style={{
+            fontSize: 13, fontWeight: 700, color: "#e2e8f0",
+            letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: 4,
+          }}>
             {item.title}
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.01em" }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
             {item.sub}
           </div>
         </div>
 
-        {/* TABS + CTA */}
+        {/* ── FOOTER: dots + CTA ── */}
         <div style={{
-          padding: "8px 14px 12px",
-          display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" as const,
-          borderTop: "1px solid rgba(255,255,255,0.05)",
+          padding: "10px 16px 12px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          {ITEMS.map((it, i) => {
-            const on = i === idx;
-            return (
-              <button key={it.id} onClick={() => setIdx(i)} style={{
-                fontSize: 11, fontWeight: on ? 700 : 500,
-                padding: "5px 11px", borderRadius: 7,
-                cursor: "pointer", whiteSpace: "nowrap" as const,
-                background: on ? "rgba(13,162,231,0.15)" : "rgba(255,255,255,0.04)",
-                color: on ? "#38bdf8" : "rgba(255,255,255,0.35)",
-                border: on ? "1px solid rgba(13,162,231,0.4)" : "1px solid rgba(255,255,255,0.08)",
-                transition: "all 0.15s ease",
-                letterSpacing: "-0.01em",
-              }}>
-                {it.tab}
-              </button>
-            );
-          })}
-
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Progress dots */}
-            <div style={{ display: "flex", gap: 3 }}>
-              {ITEMS.map((_, i) => (
-                <div key={i} onClick={() => setIdx(i)} style={{
-                  height: 3, borderRadius: 2, cursor: "pointer",
-                  width: i === idx ? 16 : 3,
-                  background: i === idx ? "#0da2e7" : "rgba(255,255,255,0.15)",
-                  transition: "width 0.35s ease, background 0.35s ease",
-                }} />
-              ))}
-            </div>
-            <button onClick={onCTA} style={{
-              fontSize: 11.5, fontWeight: 700,
-              padding: "7px 14px", borderRadius: 8,
-              background: "#0da2e7", color: "#fff",
-              border: "none", cursor: "pointer",
-              letterSpacing: "-0.01em",
-              boxShadow: "0 2px 12px rgba(13,162,231,0.4)",
-              transition: "all 0.15s ease",
-              whiteSpace: "nowrap" as const,
-            }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "#0ea5e9"; el.style.boxShadow = "0 4px 20px rgba(13,162,231,0.6)"; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "#0da2e7"; el.style.boxShadow = "0 2px 12px rgba(13,162,231,0.4)"; }}
-            >
-              Começar grátis →
-            </button>
+          <div style={{ display: "flex", gap: 4 }}>
+            {ITEMS.map((_, i) => (
+              <div key={i} onClick={() => setIdx(i)} style={{
+                height: 3, borderRadius: 2, cursor: "pointer",
+                width: i === idx ? 20 : 4,
+                background: i === idx ? "#0da2e7" : "rgba(255,255,255,0.15)",
+                transition: "width 0.35s ease, background 0.35s ease",
+              }} />
+            ))}
           </div>
+          <button onClick={onCTA} style={{
+            fontSize: 12, fontWeight: 700,
+            padding: "8px 18px", borderRadius: 9,
+            background: "#0da2e7", color: "#fff",
+            border: "none", cursor: "pointer",
+            letterSpacing: "-0.01em",
+            boxShadow: "0 2px 14px rgba(13,162,231,0.45)",
+            transition: "all 0.15s ease",
+            whiteSpace: "nowrap" as const,
+          }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#0ea5e9";
+              el.style.boxShadow = "0 4px 22px rgba(13,162,231,0.65)";
+              el.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#0da2e7";
+              el.style.boxShadow = "0 2px 14px rgba(13,162,231,0.45)";
+              el.style.transform = "translateY(0)";
+            }}
+          >
+            Começar grátis →
+          </button>
         </div>
 
       </div>
