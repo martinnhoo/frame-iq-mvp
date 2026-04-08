@@ -29,18 +29,11 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
 
   const loadConnections = async () => {
     if (!personaId) { setLoading(false); return; }
-    // Try with selected_account_id first, fall back without it
-    let data: any[] | null = null;
-    const { data: d1, error: e1 } = await supabase.from("platform_connections" as any)
-      .select("platform, ad_accounts, selected_account_id").eq("user_id", userId);
-    if (!e1) {
-      data = d1;
-    } else {
-      // Column might not exist yet — query without it
-      const { data: d2 } = await supabase.from("platform_connections" as any)
-        .select("platform, ad_accounts").eq("user_id", userId);
-      data = d2;
-    }
+    // Use meta-oauth get_connections (service_role) — bypasses RLS
+    const { data: gcRes } = await supabase.functions.invoke("meta-oauth", {
+      body: { action: "get_connections", user_id: userId }
+    });
+    let data: any[] | null = (gcRes?.connections || []) as any[];
     const map: Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }> = {};
     (data || []).forEach((r: any) => {
       const accounts = (r.ad_accounts as any[]) || [];

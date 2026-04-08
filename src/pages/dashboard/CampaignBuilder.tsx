@@ -190,10 +190,13 @@ export default function CampaignBuilder() {
 
   useEffect(()=>{
     if(!userId||!persona?.id) return;
-    supabase.from("platform_connections" as any)
-      .select("platform,status,ad_accounts,selected_account_id")
-      .eq("user_id",userId).eq("status","active")
-      .then(({data})=>{setConns((data||[]) as any[]);setConnsReady(true);});
+    supabase.functions.invoke("meta-oauth", {
+      body: { action: "get_connections", user_id: userId }
+    }).then(({data}: any) => {
+      const conns = (data?.connections || []).filter((c:any) => c.status === "active");
+      setConns(conns as any[]);
+      setConnsReady(true);
+    });
   },[userId,persona?.id]);
 
   const isConnected = (p:Platform) => conns.some(c=>c.platform===p&&(c.ad_accounts?.length??0)>0);
