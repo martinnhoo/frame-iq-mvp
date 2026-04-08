@@ -1084,52 +1084,24 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     if (!user?.id || !selectedPersona?.id) return;
     setBusy(true); setFail(null);
     try {
-      const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
-      const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
       const selectedAccId = localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined;
-      const { data: r, error: e } = await (supabase.functions.invoke as any)("live-metrics", {
-        body: { user_id: user.id, persona_id: selectedPersona.id, period,
-          date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to),
-          account_id: selectedAccId }
+      // Use adbrief-ai-chat panel_data mode — deployed by Lovable, supports account_id override
+      const { data: r, error: e } = await supabase.functions.invoke("adbrief-ai-chat", {
+        body: {
+          panel_data: true,
+          user_id: user.id,
+          persona_id: selectedPersona.id,
+          platforms: connections.filter(c => c === "meta" || c === "google"),
+          date_from: fmtAI(dateRange.from),
+          date_to: fmtAI(dateRange.to),
+          account_id: selectedAccId,
+        }
       });
       if (e) throw new Error(e.message || "Erro");
-      if (r?.ok) {
-        // Adaptar formato do live-metrics para o formato esperado pelo LivePanel
-        const adapted: any = {};
-        if (r.meta && !r.meta.error) {
-          const m = r.meta;
-          adapted.meta = {
-            account_name: m.account_name,
-            currency_symbol: "R$",
-            period: `${fmtAI(dateRange.from)} → ${fmtAI(dateRange.to)}`,
-            kpis: {
-              spend: m.spend?.toFixed(2) || "0.00",
-              ctr: ((m.ctr || 0) * 100).toFixed(2),
-              cpm: m.impressions > 0 ? ((m.spend / m.impressions) * 1000).toFixed(2) : "0.00",
-              frequency: "0.0",
-              conversions: (m.conversions || 0).toFixed(0),
-              active_ads: m.top_ads?.length || 0,
-            },
-            top_ads: (m.top_ads || []).map((a: any) => ({
-              name: a.ad_name || a.name, campaign: a.campaign_name,
-              spend: a.spend, ctr: (a.ctr || 0) * 100,
-              cpm: a.cpm || 0, freq: 0, conv: a.conversions || 0,
-              isWinner: (a.ctr || 0) * 100 > 1.5 && a.spend > 5,
-              isRisk: (a.ctr || 0) * 100 < 0.5 && a.spend > 20,
-            })),
-            winners: [],
-            at_risk: [],
-            campaigns: [],
-            time_series: (m.daily || []).map((d: any) => ({
-              date: d.date, spend: d.spend, ctr: (d.ctr || 0) * 100, cpm: 0
-            })),
-          };
-          adapted.meta.winners = adapted.meta.top_ads.filter((a: any) => a.isWinner).slice(0, 5);
-          adapted.meta.at_risk = adapted.meta.top_ads.filter((a: any) => a.isRisk).slice(0, 5);
-        }
-        // google result handling — disabled (see GOOGLE_ADS_BACKUP.md)
-        setPd(adapted); setTs(new Date());
-      } else throw new Error(r?.error || "Resposta inválida");
+      if (r) {
+        // panel_data response is already in the right format for LivePanel
+        setPd(r); setTs(new Date());
+      } else throw new Error("Resposta inválida");
     } catch (e: any) { setFail(e.message || "Falha"); }
     finally { setBusy(false); }
   }, [user?.id, selectedPersona?.id, connections.join(","), dateRange.from.getTime(), dateRange.to.getTime()]);

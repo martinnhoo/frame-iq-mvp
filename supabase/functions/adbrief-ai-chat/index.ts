@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
 
       // Meta Ads
       if (platforms.includes("meta")) {
+        const panelAccountId = body.account_id || null; // override from frontend localStorage
         const { data: mcAll } = await sbPanel
           .from("platform_connections" as any)
           .select("access_token, ad_accounts, selected_account_id, persona_id")
@@ -75,8 +76,10 @@ Deno.serve(async (req) => {
           : mcList[0] || null;
         if (mc?.access_token) {
           const token = mc.access_token;
+          // Use account_id override (from localStorage) first, then DB value, then first
+          const effectiveId = panelAccountId || mc.selected_account_id;
           const acc =
-            (mc.ad_accounts || []).find((a: any) => a.id === mc.selected_account_id) || (mc.ad_accounts || [])[0];
+            (mc.ad_accounts || []).find((a: any) => a.id === effectiveId) || (mc.ad_accounts || [])[0];
           if (acc) {
             const fields =
               "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
