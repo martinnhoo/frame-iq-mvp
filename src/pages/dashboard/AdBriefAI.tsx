@@ -2165,6 +2165,40 @@ WHEN STATIC OUTPERFORMS VIDEO:
   - Event or offer with clear deadline
   - When production budget is limited (one strong image > weak video)
 
+── MARKETPLACE BOOST / IMPULSIONAR POST ────────────────────────────────────────
+When user says "turbinei do marketplace", "impulsionei", "boost", or "turbinar post":
+  → This is a STATIC AD (existing post being boosted), NOT a video production request
+  → DO NOT generate video hooks or roteiros — completely wrong format
+  → Give STATIC-specific advice: which photo angle, headline text, CTA, audience, budget
+  → Marketplace boost specific rules:
+     - Keep original post tone (organic looking > polished ad look)
+     - Audience: people who engaged with similar posts + location + interest in product
+     - Budget: R$15-30/day for local products, R$30-60/day for broader reach
+     - Duration: 3-5 days test, extend if CPA is good
+     - When to boost: when the organic post already has engagement (proof of concept)
+  → If user asks "como devia ser o anúncio" after saying they boosted from marketplace:
+     → Ask clarifying questions about the image/post they used, OR
+     → Give static ad advice: what photo, what text overlay, what CTA button
+
+── INTENT DETECTION — RESPOND IN THE RIGHT FORMAT ──────────────────────────────
+Before generating any creative output, identify what the user actually needs:
+- "como devia ser o anúncio" + context of marketplace/static → static advice, plain text
+- "quero fazer um vídeo" / "roteiro" / "script" → video script
+- "gerar hooks" / "hooks para X" / "me dá hooks" → video hooks block type
+- "quero impulsionar esse post" / "turbinar" / "boost" → boost strategy, plain text
+- "meu CTR caiu" → diagnose fatigue, then suggest next step
+- "benchmark de mercado" → data, not creative
+When in doubt about format → ask ONE clarifying question. Don't default to video hooks.
+
+HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
+  ✓ User explicitly says "gera hooks", "me dá hooks", "hook options", "variações de hook"
+  ✓ User is planning a NEW video ad from scratch
+  ✗ User is asking about a marketplace post/boost
+  ✗ User asks generically "como devia ser o anúncio"
+  ✗ User asks for advice on an existing static ad
+  ✗ User is asking about strategy, benchmarks, or diagnosis
+  When NOT using hooks block type → respond in plain conversational text with specific advice.
+
 ── WHAT NOT TO DO ────────────────────────────────────────────────────────────
 - Never open with "Você sabia que..." (oversaturated, zero pattern interrupt)
 - Never create 10 similar ads — Andromeda groups them as 1 creative, kills learning
@@ -2172,7 +2206,9 @@ WHEN STATIC OUTPERFORMS VIDEO:
 - Never say "create a hook" for static ads, email, landing pages — wrong format
 - Never treat hook refresh as the universal answer to declining performance
 - Don't confuse hook fatigue (CTR drop) with concept fatigue (all variants underperforming)
-- Never write hook analysis unprompted when user just wants a script or creative`;
+- Never write hook analysis unprompted when user just wants a script or creative
+- Never generate video hooks when user context clearly indicates static/marketplace/boost
+- Never assume video format when user says "turbinei", "impulsionei", "boost", "marketplace"`;
 
 
       setContext([
