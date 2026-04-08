@@ -2027,6 +2027,62 @@ NOTE: Use these ONLY when the account has no real spend data. When real data exi
         } catch (benchErr) { /* silent — benchmarks are optional */ }
       }
 
+      // ── Creative Intelligence — always injected, context-dependent usage ──
+      const creativeIntelligence = `=== CREATIVE INTELLIGENCE ===
+IMPORTANT: This is knowledge you USE when creating/analyzing content — not a topic to discuss.
+Apply these principles automatically. Never say "I'll use the PAS framework" — just write it.
+
+AD ENTRY POINTS BY FORMAT (not everything is a "hook"):
+- Video/Reel: First 3s = hook (what stops the scroll). Specific question or visual disruption.
+- Static/carrossel: Headline = entry point. Specificity beats cleverness. Numbers beat adjectives.
+- Stories: Opening frame visual. Text is secondary.
+- Email: Subject line + preheader. Curiosity gap or concrete benefit.
+- Landing page: Above-fold headline + subheadline. Promise + credibility.
+Only use the word "hook" when talking specifically about video opening seconds.
+
+COPY FRAMEWORKS (choose based on objective — never announce which one you're using):
+- PAS (Problem → Agitation → Solution): best for pain-aware audiences, direct response
+- AIDA (Attention → Interest → Desire → Action): for cold audiences, awareness campaigns
+- BAB (Before → After → Bridge): testimonials, transformation stories, UGC style
+- 4U (Useful, Urgent, Unique, Ultra-specific): for headlines and short-form copy
+- Star-Story-Solution: for long-form video scripts with case study structure
+
+SPECIFICITY RULE (most important principle):
+Bad: "Emagreça rápido" Good: "Perdi 7kg em 21 dias sem academia"
+Bad: "Economize dinheiro" Good: "Economizei R$1.847 em 3 meses com esse método"
+Bad: "Resultado garantido" Good: "87% dos alunos fecharam o primeiro contrato em 30 dias"
+Numbers, timeframes, names, and places always outperform adjectives and generalities.
+
+EMOTIONAL TRIGGERS BY OBJECTIVE:
+- Lead gen: Fear of missing out, exclusivity, social proof from peers
+- E-commerce: Urgency (scarcity/deadline), aspiration (identity), loss aversion
+- Info products: Status, transformation, belonging to a community
+- Services: Trust, risk removal (guarantee), authority/credentials
+- iGaming: Excitement, win possibility, FOMO on bonuses
+
+CREATIVE FORMAT SELECTION:
+- New audience (cold): Problem-agitation story or "before/after" transformation
+- Retargeting: Objection handling, social proof, urgency/scarcity
+- UGC style: Works best for e-commerce and infoproducts — authentic, low-production feel
+- Talking head: Works for authority positioning and services
+- Demo/Tutorial: Works for SaaS, apps, complex products
+- Testimonial: Works when trust is the main barrier
+
+SCRIPT STRUCTURE FOR VIDEO (apply, don't narrate):
+Line 1-3: Hook — disruptive question or contrarian statement (max 5 words on screen)
+Line 4-8: Problem — agitate the pain they already feel
+Line 9-15: Bridge — transition to solution, build credibility
+Line 16-22: Solution — show/demonstrate, not just tell
+Line 23-27: Social proof — specific result, name, time
+Line 28-30: CTA — one action, specific, low-friction
+
+WHAT NOT TO DO:
+- Never start with "Você sabia que..." (everybody does this)
+- Never use "Aproveite esta oportunidade única" (meaningless)
+- Never write a hook for a static ad — write a headline
+- Never suggest "create a hook" when the user needs copy for email or landing page
+- Avoid recommending "make a hook" as a default solution for every creative problem`;
+
       setContext([
         `=== ACTIVE ACCOUNT ===`,
         accountInfo,
@@ -2055,6 +2111,8 @@ NOTE: Use these ONLY when the account has no real spend data. When real data exi
         edSummary || "None",
         ``,
         benchmarkCtx,
+        ``,
+        creativeIntelligence,
       ].filter(s => s !== undefined).join("\n").replace(/\n{3,}/g, "\n\n").trim());
       setContextReady(true);
       }catch(ctxErr){
