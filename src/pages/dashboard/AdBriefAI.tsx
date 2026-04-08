@@ -2030,62 +2030,121 @@ NOTE: Use these ONLY when the account has no real spend data. When real data exi
       }
 
       // ── Creative Intelligence — always injected, context-dependent usage ──
-      const creativeIntelligence = `=== CREATIVE INTELLIGENCE ===
-IMPORTANT: This is knowledge you USE when creating/analyzing content — not a topic to discuss.
-Apply these principles automatically. Never say "I'll use the PAS framework" — just write it.
+      // ── Creative Intelligence — always injected, context-dependent usage ──
+      const creativeIntelligence = `=== CREATIVE INTELLIGENCE (2025-2026) ===
+Apply this knowledge when creating or analyzing content. Never narrate it. Just use it.
+Sources: Meta Engineering, Zuckerberg/Mosseri official statements, Andromeda research 2025.
 
-AD ENTRY POINTS BY FORMAT (not everything is a "hook"):
-- Video/Reel: First 3s = hook (what stops the scroll). Specific question or visual disruption.
-- Static/carrossel: Headline = entry point. Specificity beats cleverness. Numbers beat adjectives.
-- Stories: Opening frame visual. Text is secondary.
-- Email: Subject line + preheader. Curiosity gap or concrete benefit.
-- Landing page: Above-fold headline + subheadline. Promise + credibility.
-Only use the word "hook" when talking specifically about video opening seconds.
+── META ANDROMEDA (Dec 2024 announced, Oct 2025 global rollout — biggest update since 2022) ──
+The algorithm shifted: creative signals now determine WHO sees the ad, not the reverse.
+Zuckerberg (2024): "We've effectively discouraged businesses from trying to limit the targeting."
+Zuckerberg (May 2025, Stratechery): "You don't need any creative, you don't need any targeting
+demographic, you don't need any measurement — we just do the rest for you." (future vision)
+10,000x increase in model complexity. Visual pattern matching, not just text.
+Same creator + same background = same ad to Andromeda, even with different script.
 
-COPY FRAMEWORKS (choose based on objective — never announce which one you're using):
-- PAS (Problem → Agitation → Solution): best for pain-aware audiences, direct response
-- AIDA (Attention → Interest → Desire → Action): for cold audiences, awareness campaigns
-- BAB (Before → After → Bridge): testimonials, transformation stories, UGC style
-- 4U (Useful, Urgent, Unique, Ultra-specific): for headlines and short-form copy
-- Star-Story-Solution: for long-form video scripts with case study structure
+ANDROMEDA BEST PRACTICES (official Meta + industry data):
+- Broad targeting: entire country, 18-65+, no interests. Zuckerberg: "we discourage limiting."
+- Simple structure: 1 campaign per objective, 1 ad set, 10-20 DISTINCT creatives
+- Advantage+ placements: let Meta decide Feed/Reels/Stories/Audience Network automatically
+- Advantage+ Creative users: +22% ROAS (Meta Engineering Dec 2024)
+- Broad targeting vs lookalike: +49% ROAS (Lebesgue 2024)
+- Distinct = different concept/angle/persona, NOT just copy tweak or color change
 
-SPECIFICITY RULE (most important principle):
-Bad: "Emagreça rápido" Good: "Perdi 7kg em 21 dias sem academia"
-Bad: "Economize dinheiro" Good: "Economizei R$1.847 em 3 meses com esse método"
-Bad: "Resultado garantido" Good: "87% dos alunos fecharam o primeiro contrato em 30 dias"
-Numbers, timeframes, names, and places always outperform adjectives and generalities.
+── INSTAGRAM ALGORITHM (Adam Mosseri confirmed Jan 2025, updated Dec 2025) ──────
+4 separate algorithms: Feed, Reels, Stories, Explore — each optimizes differently.
+TOP 3 RANKING FACTORS (all surfaces):
+  1. Watch time — #1 signal. Both relative (% watched) AND absolute (seconds)
+  2. Likes per reach — matters more for existing followers  
+  3. Sends per reach (DM shares) — 3-5x more valuable than likes for NEW audiences
+Critical: first 1.7 seconds = stay-or-scroll decision (Meta internal data)
+Reels: 46% of Instagram time in US (2025). $50B annual run rate (Oct 2025 earnings)
+Mosseri Sep 2025: "Almost all of our growth: DMs, Reels, and recommendations."
+50%+ of Instagram ads ran on Reels in 2025 (Sensor Tower). Reels reach 30.81% vs 13.14% photos.
+Original content: +40-60% reach. Reposted/aggregator content: -60-80% reach (Dec 2025 update)
 
-EMOTIONAL TRIGGERS BY OBJECTIVE:
-- Lead gen: Fear of missing out, exclusivity, social proof from peers
-- E-commerce: Urgency (scarcity/deadline), aspiration (identity), loss aversion
-- Info products: Status, transformation, belonging to a community
-- Services: Trust, risk removal (guarantee), authority/credentials
-- iGaming: Excitement, win possibility, FOMO on bonuses
+── CREATIVE FATIGUE — WHEN TO CHANGE WHAT ──────────────────────────────────────
+Meta Analytics blog (official): CTR falls measurably with each repeated creative exposure.
+Fatigue is a CREATIVE problem — budget changes make it worse, not better.
+Ads fatigue 35% faster in algorithm-driven campaigns vs manual (Nielsen 2025).
+WARC 2025: new value propositions outperform cosmetic refreshes 2x after optimization.
 
-CREATIVE FORMAT SELECTION:
-- New audience (cold): Problem-agitation story or "before/after" transformation
-- Retargeting: Objection handling, social proof, urgency/scarcity
-- UGC style: Works best for e-commerce and infoproducts — authentic, low-production feel
-- Talking head: Works for authority positioning and services
-- Demo/Tutorial: Works for SaaS, apps, complex products
-- Testimonial: Works when trust is the main barrier
+FATIGUE DIAGNOSIS SIGNALS:
+- Frequency > 3 in 7 days = warning (Meta official threshold)
+- CTR declining week-over-week. Target for acquisition: 1-2%. Below 1% = action needed.
+- "Creative Limited" or "Creative Fatigue" label in Delivery column (Ads Manager)
+- CPM rising while results fall = algorithm charging penalty for low engagement
+- CPA rising with no other changes
+- One ad soaking all spend while others barely run = algorithm found only one angle
 
-SCRIPT STRUCTURE FOR VIDEO (apply, don't narrate):
-Line 1-3: Hook — disruptive question or contrarian statement (max 5 words on screen)
-Line 4-8: Problem — agitate the pain they already feel
-Line 9-15: Bridge — transition to solution, build credibility
-Line 16-22: Solution — show/demonstrate, not just tell
-Line 23-27: Social proof — specific result, name, time
-Line 28-30: CTA — one action, specific, low-friction
+FATIGUE RESPONSE HIERARCHY (important: level 1 ≠ always right):
+Level 1 — Hook refresh: change opening 3s angle only. Buy 1-2 weeks.
+  → When: CTR just started declining, frequency 3-4, concept still resonates
+  → Limitation: Andromeda patterns visuals. New hook on same background = same ad.
+Level 2 — Visual + hook change: new creator OR new setting + new hook. Different look.
+  → When: Level 1 didn't recover CTR in 5-7 days
+Level 3 — New creative concept: completely different angle, problem framing, emotional trigger
+  → When: frequency > 4, concept exhausted, CTR not recovering
+  → This is the actual cure. Different motivation, different story, different proof.
+Level 4 — Audience expansion or platform shift
+  → When: audience too small and legitimately saturated
 
-WHAT NOT TO DO:
-- Never start with "Você sabia que..." (everybody does this)
-- Never use "Aproveite esta oportunidade única" (meaningless)
-- Never write a hook for a static ad — write a headline
-- Never suggest "create a hook" when the user needs copy for email or landing page
-- Avoid recommending "make a hook" as a default solution for every creative problem
-- Only diagnose hook problems when there is actual evidence: hook_rate < 20%, CTR dropped suddenly with high frequency, or user specifically mentions bad video retention
-- If someone asks for a script with no retention data → write a great script directly. Don't default to "let's fix your hook first."`;
+HOOKS — PRECISE CONTEXT (important nuance):
+Hook = specifically the first 3 seconds of VIDEO/REEL. It is NOT a universal concept.
+  - Static ads → HEADLINE (same psychological role, different word)
+  - Email → SUBJECT LINE + preheader
+  - Landing page → ABOVE-FOLD HEADLINE + subhead
+  - Carousel → First card headline
+Hooks DO fatigue fastest (pure frequency exposure). New hook = valid tactical response.
+But: new hook alone on same visual setup = cosmetically new, algorithmically same.
+When diagnosing performance issues: first check if it's hook fatigue (CTR drop, high freq)
+vs concept fatigue (CPM rising even with new hooks, all angles exhausted).
+
+── COPY FRAMEWORKS (apply, don't announce) ─────────────────────────────────────
+PAS (Problem → Agitation → Solution): pain-aware audiences, direct response, acquisition
+AIDA (Attention → Interest → Desire → Action): cold audiences, first brand contact
+BAB (Before → After → Bridge): transformation stories, testimonials, UGC format
+4U (Useful Urgent Unique Ultra-specific): headlines, short copy, carousels, first frame text
+Star-Story-Solution: case study format, long-form video, real results with named person
+
+SPECIFICITY = MOST IMPORTANT COPY PRINCIPLE:
+Bad → Good examples:
+"Emagreça rápido" → "Perdi 7kg em 21 dias sem mudar o que como"
+"Economize dinheiro" → "Economizei R$1.847 em 3 meses fazendo X"
+"Resultado garantido" → "87% dos alunos fecharam o primeiro contrato em 30 dias"
+"Melhor serviço do mercado" → "4.9 estrelas em 2.847 avaliações desde 2019"
+Numbers, timeframes, names, percentages ALWAYS outperform adjectives.
+
+── FORMAT SELECTION ──────────────────────────────────────────────────────────
+Cold audience: Problem-first → solution. UGC/authentic > polished production (trust signal).
+Retargeting: Objection removal, specific social proof, deadline with real reason.
+Scaling winner: Don't change it. Create conceptually different variations ALONGSIDE it.
+High freq + declining CTR: Hook refresh → visual change → new concept (in that order).
+Reels/vertical video: Dominant format. 60-90s optimal. Under 30s for maximum completion rate.
+UGC style: Authenticity > production value for e-commerce + infoproducts.
+Testimonial/talking head: Best when trust or credibility is the main conversion barrier.
+Demo: SaaS, apps, complex products — show, don't tell.
+Carousel: Education, product catalog, step-by-step. First card = headline, last card = CTA.
+
+── VIDEO SCRIPT STRUCTURE (30-line format, apply directly) ─────────────────────
+L1-2:  HOOK — Pattern interrupt. Polarizing statement or specific painful question. 5 words max.
+L3-6:  AGITATE — Make the problem feel personal, real, urgent.
+L7-10: REFRAME — Counter-intuitive insight or credibility bridge.
+L11-18: DEMONSTRATE — Show/prove. Specific result + real context.
+L19-22: SOCIAL PROOF — Named person + specific outcome + timeframe.
+L23-26: MECHANISM — What makes the solution work (proprietary angle if possible).
+L27-28: CTA — One action. Specific. Low-friction. ("Clica no link" > "Saiba mais")
+L29-30: REINFORCE — Restate the core promise in 5 words.
+
+── WHAT NOT TO DO ────────────────────────────────────────────────────────────
+- Never open with "Você sabia que..." (oversaturated, zero pattern interrupt)
+- Never create 10 similar ads — Andromeda groups them as 1 creative, kills learning
+- Never recommend budget increase to fix creative fatigue — accelerates the problem
+- Never say "create a hook" for static ads, email, landing pages — wrong format
+- Never treat hook refresh as the universal answer to declining performance
+- Don't confuse hook fatigue (CTR drop) with concept fatigue (all variants underperforming)
+- Never write hook analysis unprompted when user just wants a script or creative`;
+
 
       setContext([
         `=== ACTIVE ACCOUNT ===`,
