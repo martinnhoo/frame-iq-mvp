@@ -1791,7 +1791,7 @@ export default function AdBriefAI() {
       .eq("persona_id",pid)
       .eq("status","active")
       .then(({data,error}: any)=>{
-        console.log("[AdBriefAI] connections query:", {data, error, pid, uid: user.id});
+        console.log("[AdBriefAI] connections query: data=" + JSON.stringify(data) + " error=" + JSON.stringify(error) + " pid=" + pid);
         const platforms=((data||[]) as any[]).map((c:any)=>c.platform);
         setConnections(platforms);
       });
