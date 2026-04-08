@@ -262,12 +262,16 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const selectAcc = async (id: string) => {
-    // Update DB (trigger only reverts token columns, selected_account_id passes through)
+    // Update DB
     await supabase.from("platform_connections" as any)
       .update({ selected_account_id: id })
       .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id);
-    // Update local state immediately — don't re-fetch (get_connections lacks this field)
+    // Persist locally so UI remembers after page reload
+    localStorage.setItem(`meta_sel_${accountId}`, id);
+    // Update local state immediately
     setConn((prev: any) => prev ? { ...prev, selected_account_id: id } : prev);
+    // Notify LivePanel and AI to reload with new account
+    window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: accountId, accountId: id } }));
   };
 
   const verifyGoogle = async () => {
@@ -318,9 +322,8 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const ads: any[] = conn?.ad_accounts || [];
-  // selected_account_id may not be in get_connections response (deployed March version)
-  // Default to first account so UI always shows a selection
-  const selId = conn?.selected_account_id || ads[0]?.id;
+  // Read from localStorage first (persisted selection), then DB field, then first account
+  const selId = localStorage.getItem(`meta_sel_${accountId}`) || conn?.selected_account_id || ads[0]?.id;
   const selAcc = ads.find(a => a.id === selId) || ads[0];
 
   if (loading) return (

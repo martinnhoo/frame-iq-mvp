@@ -1136,6 +1136,13 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // Recarregar automaticamente quando período muda
   React.useEffect(() => { load(); }, [dateRange.from.getTime(), dateRange.to.getTime()]);
 
+  // Recarregar quando usuário troca de conta Meta
+  React.useEffect(() => {
+    const onAccChanged = () => load();
+    window.addEventListener("meta-account-changed", onAccChanged);
+    return () => window.removeEventListener("meta-account-changed", onAccChanged);
+  }, [load]);
+
   const data = pd?.[tab];
   const k = data?.kpis || {};
   const spS = (data?.time_series || []).map((d: any) => d.spend);
@@ -1802,7 +1809,13 @@ export default function AdBriefAI() {
   useEffect(() => {
     const onVisible = () => { if(document.visibilityState === "visible") loadConnections(); };
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    // Also reload when user changes Meta ad account in AccountsPage
+    const onAccChanged = () => { loadConnections(); setGreetingKey(k => k+1); };
+    window.addEventListener("meta-account-changed", onAccChanged);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("meta-account-changed", onAccChanged);
+    };
   }, [loadConnections]);
 
   // Proactive greeting — fires when connections are known (after context is ready)
