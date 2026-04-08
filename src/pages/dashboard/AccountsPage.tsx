@@ -262,9 +262,9 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const selectAcc = async (id: string) => {
-    await supabase.from("platform_connections" as any)
-      .update({ selected_account_id: id })
-      .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id);
+    await supabase.functions.invoke("meta-oauth", {
+      body: { action: "set_selected_account", user_id: userId, persona_id: accountId, platform: p.id, selected_account_id: id }
+    });
     load();
   };
 

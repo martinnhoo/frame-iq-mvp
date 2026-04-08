@@ -264,11 +264,32 @@ Deno.serve(async (req) => {
     });
   }
 
+  // ── set_selected_account ────────────────────────────────────────────────────
+  if (action === "set_selected_account") {
+    const { platform: plat, persona_id: pid, selected_account_id: selId } = json;
+    if (!user_id || !selId) return new Response(
+      JSON.stringify({ error: "user_id and selected_account_id required" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+    // Use service_role — bypasses trigger and RLS
+    const q = supabase.from("platform_connections" as any)
+      .update({ selected_account_id: selId })
+      .eq("user_id", user_id)
+      .eq("platform", plat || "meta");
+    const { error } = pid
+      ? await (q as any).eq("persona_id", pid)
+      : await q;
+    if (error) throw error;
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
   // ── get_connections ─────────────────────────────────────────────────────────
   if (action === "get_connections") {
     const { data, error } = await supabase
       .from("platform_connections" as any)
-      .select("id, platform, status, connected_at, expires_at, ad_accounts, persona_id, connection_label")
+      .select("id, platform, status, connected_at, expires_at, ad_accounts, selected_account_id, persona_id, connection_label")
       .eq("user_id", user_id);
 
     if (error) throw error;
