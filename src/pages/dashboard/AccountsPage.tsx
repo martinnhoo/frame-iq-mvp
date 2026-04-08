@@ -206,14 +206,13 @@ function PlatformRow({ p, userId, accountId, t }: {
     setLoading(true);
     setLoadError(false);
     try {
-      // Use get-connections edge function (service_role) — bypasses RLS
-      const { data: res, error: fnErr } = await supabase.functions.invoke("get-connections", {
-        body: { user_id: userId, persona_id: accountId }
+      // Use meta-oauth get_connections action (service_role, already deployed)
+      const { data: res, error: fnErr } = await supabase.functions.invoke("meta-oauth", {
+        body: { action: "get_connections", user_id: userId }
       });
-      console.log("[PlatformRow] get-connections:", { res, fnErr, userId, accountId, platform: p.id });
       if (fnErr) throw fnErr;
-      if (res?.error) throw new Error(res.error);
-      const match = (res?.connections || []).find((c: any) => c.platform === p.id) || null;
+      const all = (res?.connections || []) as any[];
+      const match = all.find((c: any) => c.platform === p.id && c.persona_id === accountId) || null;
       setConn(match);
     } catch (e) {
       console.error("[AdBrief] platform row load error:", String(e));

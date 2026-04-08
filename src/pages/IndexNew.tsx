@@ -1,4 +1,4 @@
-// v9.0 — get-connections edge function: bypassa RLS para leitura de conexões
+// v9.1 — usa meta-oauth get_connections para leitura de conexões
 import { DemoTabs } from "@/components/DemoTabs";
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
