@@ -1091,7 +1091,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           panel_data: true,
           user_id: user.id,
           persona_id: selectedPersona.id,
-          platforms: connections.filter(c => c === "meta" || c === "google"),
+          platforms: ["meta"], // always try — backend handles no-connection gracefully
           date_from: fmtAI(dateRange.from),
           date_to: fmtAI(dateRange.to),
           account_id: selectedAccId,
@@ -2862,7 +2862,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   };
 
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
-  const hasData=connections.length>0;
+  const hasData = connections.length > 0 || !!(selectedPersona?.id && localStorage.getItem(`meta_sel_${selectedPersona.id}`)) || !!(pd?.meta);
 
   const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
 
