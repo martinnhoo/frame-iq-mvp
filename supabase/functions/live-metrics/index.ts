@@ -22,7 +22,7 @@ serve(async (req) => {
     // Use a separate client with anon key for user token validation
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
     const body = await req.json();
-    const { user_id, persona_id, period = "7d", date_from, date_to } = body;
+    const { user_id, persona_id, period = "7d", date_from, date_to, account_id: accountIdOverride } = body;
 
     if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
 
@@ -54,7 +54,9 @@ serve(async (req) => {
     if (metaConn?.access_token) {
       try {
         const accs = (metaConn.ad_accounts || []) as any[];
-        const acc  = (metaConn.selected_account_id && accs.find((a: any) => a.id === metaConn.selected_account_id)) || accs[0];
+        // Use override if passed (from localStorage selection), else DB value, else first account
+        const effectiveAccId = accountIdOverride || metaConn.selected_account_id;
+        const acc  = (effectiveAccId && accs.find((a: any) => a.id === effectiveAccId)) || accs[0];
 
         if (acc?.id) {
           const token = metaConn.access_token;

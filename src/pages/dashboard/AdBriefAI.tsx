@@ -1086,9 +1086,11 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     try {
       const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
       const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
+      const selectedAccId = localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined;
       const { data: r, error: e } = await (supabase.functions.invoke as any)("live-metrics", {
         body: { user_id: user.id, persona_id: selectedPersona.id, period,
-          date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to) }
+          date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to),
+          account_id: selectedAccId }
       });
       if (e) throw new Error(e.message || "Erro");
       if (r?.ok) {
@@ -2556,7 +2558,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       });
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
       const aiTonePref = (() => { return storage.get("adbrief_ai_tone", "") })();
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}}});
+      const selectedAccId = selectedPersona?.id ? (localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined) : undefined;
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined},account_id:selectedAccId}});
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
       if(error) {

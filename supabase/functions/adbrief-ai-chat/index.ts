@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
+    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data, account_id: accountIdOverride } = body;
 
     // ── Auth check — runs first for ALL modes including panel_data ────────────
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -1184,7 +1184,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
           const accs = (tokenRow.ad_accounts as any[]) || [];
-          const selId = tokenRow.selected_account_id;
+          // Use account_id override (from frontend localStorage) first, then DB value, then first
+          const selId = accountIdOverride || tokenRow.selected_account_id;
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
