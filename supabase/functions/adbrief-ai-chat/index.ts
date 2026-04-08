@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
 
       // Meta Ads
       if (platforms.includes("meta")) {
+        const panelAccId = body.account_id || null;
         const { data: mcAll } = await sbPanel
           .from("platform_connections" as any)
           .select("access_token, ad_accounts, selected_account_id, persona_id")
@@ -87,8 +88,9 @@ Deno.serve(async (req) => {
           : mcList[0] || null;
         if (mc?.access_token) {
           const token = mc.access_token;
+          const effectivePanelAccId = panelAccId || mc.selected_account_id;
           const acc =
-            (mc.ad_accounts || []).find((a: any) => a.id === mc.selected_account_id) || (mc.ad_accounts || [])[0];
+            (mc.ad_accounts || []).find((a: any) => a.id === effectivePanelAccId) || (mc.ad_accounts || [])[0];
           if (acc) {
             const fields =
               "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
@@ -1196,7 +1198,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
           const accs = (tokenRow.ad_accounts as any[]) || [];
-          const selId = tokenRow.selected_account_id;
+          // Use account_id from frontend (localStorage selection) over DB value
+          const selId = (body.account_id as string) || tokenRow.selected_account_id;
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
