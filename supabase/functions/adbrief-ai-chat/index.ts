@@ -1490,7 +1490,17 @@ IDIOMA DO USUÁRIO: ${uiLang === "pt" ? "Português — responda SEMPRE em portu
 REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre planos. NUNCA invente limitações de features baseado no plano.`;
       })(),
       personaCtx,
-      `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
+      (() => {
+        // connectedPlatforms is built before directConn — add directConn if missing
+        const allPlatforms = [...connectedPlatforms];
+        if (directConn && !allPlatforms.some(p => p.startsWith("meta"))) {
+          const accs = (directConn.ad_accounts as any[]) || [];
+          const sel = directConn.selected_account_id;
+          const acc = (sel && accs.find((a:any)=>a.id===sel)) || accs[0];
+          allPlatforms.push(`meta(active:${acc?.name || acc?.id || "account"})`);
+        }
+        return `CONNECTED PLATFORMS: ${allPlatforms.length ? allPlatforms.join(", ") : "none"}`;
+      })(),
       liveMetaData || "",
       // liveGoogleData — disabled
       // crossPlatformCtx — disabled
