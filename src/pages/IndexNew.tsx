@@ -2606,47 +2606,130 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 // ─── How It Works ─────────────────────────────────────────────────────────────
 // ─── Pain → Solution section ──────────────────────────────────────────────────
 function SocialProofStrip({ lang }: { lang: Lang }) {
-  const F = "'Plus Jakarta Sans', sans-serif";
+  const MONO = "'DM Mono', 'Fira Code', monospace";
+  const SANS = "'Plus Jakarta Sans', sans-serif";
+
   const stats = lang === "pt"
     ? [
-        { n: "30s", label: "Para conectar sua conta" },
-        { n: "90 dias", label: "De dados reais analisados" },
-        { n: "7", label: "Ferramentas de IA integradas" },
-        { n: "24h", label: "Monitoramento via Telegram" },
+        { value: "30s",    label: "Da pergunta ao diagnóstico",         sub: "com dados reais da sua conta" },
+        { value: "90 dias", label: "Absorvidos na primeira conexão",     sub: "sem CSV, sem configuração manual" },
+        { value: "Zero",   label: "Planilhas para entender sua conta",  sub: "a IA lê tudo por você" },
+        { value: "Antes",  label: "Você é avisado antes do problema",   sub: "alerta no Telegram em tempo real" },
       ]
     : lang === "es"
     ? [
-        { n: "30s", label: "Para conectar tu cuenta" },
-        { n: "90 días", label: "De datos reales analizados" },
-        { n: "7", label: "Herramientas integradas" },
-        { n: "24h", label: "Monitoreo vía Telegram" },
+        { value: "30s",    label: "De la pregunta al diagnóstico",      sub: "con datos reales de tu cuenta" },
+        { value: "90 días", label: "Absorbidos en la primera conexión", sub: "sin CSV, sin configuración manual" },
+        { value: "Cero",   label: "Hojas de cálculo para tu cuenta",    sub: "la IA lo lee todo por ti" },
+        { value: "Antes",  label: "Recibes la alerta antes del problema",sub: "notificación en Telegram en tiempo real" },
       ]
     : [
-        { n: "30s", label: "To connect your account" },
-        { n: "90 days", label: "Of real data analyzed" },
-        { n: "7", label: "Integrated AI tools" },
-        { n: "24h", label: "Telegram monitoring" },
+        { value: "30s",    label: "From question to full diagnosis",    sub: "with your real account data" },
+        { value: "90 days", label: "Absorbed on first connection",      sub: "no CSV, no manual setup" },
+        { value: "Zero",   label: "Spreadsheets to understand your account", sub: "the AI reads everything for you" },
+        { value: "Before", label: "You're alerted before the problem hits", sub: "real-time Telegram notification" },
       ];
 
   return (
     <div style={{
-      background: "rgba(14,165,233,0.06)",
-      borderTop: "1px solid rgba(14,165,233,0.18)",
-      borderBottom: "1px solid rgba(14,165,233,0.18)",
-      padding: "28px clamp(20px,5vw,80px)",
+      background: "#070d1a",
+      borderTop: "1px solid rgba(255,255,255,0.06)",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      padding: "0 clamp(20px,5vw,80px)",
+      position: "relative",
+      overflow: "hidden",
     }}>
+      {/* Subtle top accent line */}
       <div style={{
-        maxWidth: 960, margin: "0 auto",
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        flexWrap: "wrap" as const, gap: 24,
-      }}>
-        {stats.map(({ n, label }, i) => (
-          <div key={i} style={{ textAlign: "center", flex: "1 1 140px", padding: "0 8px", borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
-            <div style={{ fontFamily: F, fontSize: "clamp(24px,3vw,34px)", fontWeight: 900, color: "#38bdf8", letterSpacing: "-0.04em", lineHeight: 1 }}>{n}</div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 6, lineHeight: 1.4 }}>{label}</div>
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: "linear-gradient(90deg, transparent 0%, rgba(13,162,231,0.4) 30%, rgba(13,162,231,0.4) 70%, transparent 100%)",
+      }} />
+
+      <div style={{
+        maxWidth: 1100, margin: "0 auto",
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+      }} className="spstrip-grid">
+        {stats.map(({ value, label, sub }, i) => (
+          <div key={i} style={{
+            padding: "32px 28px",
+            borderRight: i < 3 ? "1px solid rgba(255,255,255,0.06)" : "none",
+            position: "relative",
+          }}>
+            {/* Left accent bar */}
+            <div style={{
+              position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+              width: 2, height: 32, borderRadius: 1,
+              background: i === 0 ? "#0da2e7" : "rgba(13,162,231,0.25)",
+            }} />
+
+            {/* Value */}
+            <div style={{
+              fontFamily: MONO,
+              fontSize: "clamp(20px, 2.2vw, 28px)",
+              fontWeight: 700,
+              color: i === 0 ? "#0da2e7" : "rgba(255,255,255,0.9)",
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+              marginBottom: 10,
+              paddingLeft: 14,
+            }}>{value}</div>
+
+            {/* Label */}
+            <div style={{
+              fontFamily: SANS,
+              fontSize: 13,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.75)",
+              letterSpacing: "-0.01em",
+              lineHeight: 1.3,
+              marginBottom: 5,
+              paddingLeft: 14,
+            }}>{label}</div>
+
+            {/* Sub */}
+            <div style={{
+              fontFamily: SANS,
+              fontSize: 11.5,
+              color: "rgba(255,255,255,0.3)",
+              letterSpacing: "0.01em",
+              lineHeight: 1.4,
+              paddingLeft: 14,
+            }}>{sub}</div>
           </div>
         ))}
       </div>
+
+      {/* Mobile: 2×2 grid */}
+      <style>{`
+        @media (max-width: 768px) {
+          .spstrip-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .spstrip-grid > div:nth-child(2) {
+            border-right: none !important;
+          }
+          .spstrip-grid > div:nth-child(3),
+          .spstrip-grid > div:nth-child(4) {
+            border-top: 1px solid rgba(255,255,255,0.06);
+          }
+          .spstrip-grid > div:nth-child(3) {
+            border-right: 1px solid rgba(255,255,255,0.06) !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .spstrip-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .spstrip-grid > div {
+            border-right: none !important;
+            border-top: 1px solid rgba(255,255,255,0.06) !important;
+          }
+          .spstrip-grid > div:first-child {
+            border-top: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
