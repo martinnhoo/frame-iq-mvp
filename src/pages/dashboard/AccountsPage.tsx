@@ -262,10 +262,12 @@ function PlatformRow({ p, userId, accountId, t }: {
   };
 
   const selectAcc = async (id: string) => {
-    await supabase.functions.invoke("meta-oauth", {
+    const { data, error } = await supabase.functions.invoke("meta-oauth", {
       body: { action: "set_selected_account", user_id: userId, persona_id: accountId, platform: p.id, selected_account_id: id }
     });
-    load();
+    console.log("[selectAcc] result:", { data, error, id, accountId, platform: p.id });
+    if (error) { toast.error("Erro ao selecionar conta"); return; }
+    await load();
   };
 
   const verifyGoogle = async () => {
