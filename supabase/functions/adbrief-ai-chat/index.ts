@@ -71,10 +71,7 @@ Deno.serve(async (req) => {
           .eq("status", "active");
         const mcList = (mcAll as any[]) || [];
         const mc = persona_id
-          ? mcList.find((c: any) => c.persona_id === persona_id) ||
-            mcList.find((c: any) => !c.persona_id) ||
-            mcList[0] ||
-            null
+          ? mcList.find((c: any) => c.persona_id === persona_id) || null
           : mcList[0] || null;
         if (mc?.access_token) {
           const token = mc.access_token;
@@ -1175,10 +1172,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         const allC = (allConns as any[]) || [];
         // Find connection: first try exact persona match, then fallback to any active connection
         const tokenRow = persona_id
-          ? allC.find((c: any) => c.persona_id === persona_id) ||
-            allC.find((c: any) => !c.persona_id) ||
-            allC[0] ||
-            null
+          ? allC.find((c: any) => c.persona_id === persona_id) || null
           : allC[0] || null;
 
         if (tokenRow?.access_token) {

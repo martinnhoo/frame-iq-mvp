@@ -127,15 +127,20 @@ export default function OAuthCallback() {
   }, []);
 
   const saveSelectedAccount = async (uid: string, accountId: string, pid: string | null) => {
-    const query = supabase.from("platform_connections" as any)
-      .update({ selected_account_id: accountId })
-      .eq("user_id", uid)
-      .eq("platform", platform!);
-    // Scope to the correct row: persona-specific or global
-    if (pid) {
-      await query.eq("persona_id", pid);
-    } else {
-      await query.is("persona_id", null);
+    try {
+      const query = supabase.from("platform_connections" as any)
+        .update({ selected_account_id: accountId })
+        .eq("user_id", uid)
+        .eq("platform", platform!);
+      // Scope to the correct row: persona-specific or global
+      const result = pid
+        ? await query.eq("persona_id", pid)
+        : await query.is("persona_id", null);
+      if (result.error) {
+        console.error("[AdBrief] saveSelectedAccount error:", result.error);
+      }
+    } catch (e) {
+      console.error("[AdBrief] saveSelectedAccount exception:", e);
     }
   };
 

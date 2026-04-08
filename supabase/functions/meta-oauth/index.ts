@@ -105,6 +105,8 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
 
     // Build upsert payload — ALWAYS scoped to persona_id
+    // Auto-select: first active account, or first account if none active
+    const firstActiveAcc = adAccounts.find((a: any) => a.account_status === 1) || adAccounts[0] || null;
     const upsertPayload: Record<string, any> = {
       user_id: storedUserId,
       platform: "meta",
@@ -113,6 +115,7 @@ Deno.serve(async (req) => {
       access_token: accessToken,
       expires_at: expiresAt,
       ad_accounts: adAccounts,
+      selected_account_id: firstActiveAcc?.id || null, // auto-select on connect/reconnect
       status: "active",
       connected_at: new Date().toISOString(),
     };
