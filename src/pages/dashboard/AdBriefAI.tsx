@@ -1740,8 +1740,9 @@ export default function AdBriefAI() {
   const hasOlderMessages = messages.length > visibleCount;
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
-  const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done, 0..N=step index
+  const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done/skipped, 0..N=step
   const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
+  const onboardingSessionDone = React.useRef(false); // true once done/skipped this session
   const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string}|null>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
@@ -1842,6 +1843,7 @@ export default function AdBriefAI() {
       } catch { setSessionGoal(""); }
       // Reset context so greeting fires for this account
       proactiveFired.current = false;
+      onboardingSessionDone.current = false; // new persona = check onboarding again
       setContextReady(false);
       setConnections([]);
       setGreetingKey(k => k + 1);
@@ -2444,6 +2446,7 @@ WHEN STATIC OUTPERFORMS VIDEO:
       setShowOnboardingWelcome(true);
       // Keep proactiveFired = true so the proactive greeting doesn't override the welcome screen
     } catch(e) { console.error("[onboarding save]", e); }
+    onboardingSessionDone.current = true;
     setOnboardingStep(-1);
   }, [selectedPersona?.id, selectedPersona?.result, user?.id]);
 
@@ -2457,9 +2460,10 @@ WHEN STATIC OUTPERFORMS VIDEO:
     if (hasRealHistory) return;
 
     // ── Onboarding check: if persona has no niche/product/objective, start questionnaire ──
+    // onboardingStep === -1 means already done/skipped this session — never show again on clear
     const r = selectedPersona?.result as any || {};
     const hasBasicProfile = r.niche || r.industry || r.product || r.objective || r.onboarding_completed;
-    if (!hasBasicProfile && selectedPersona?.id) {
+    if (!hasBasicProfile && selectedPersona?.id && !onboardingSessionDone.current) {
       setOnboardingStep(0);
       return; // skip normal greeting — onboarding takes over
     }
@@ -3384,7 +3388,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
 
               {/* Skip */}
-              <button onClick={() => completeOnboarding(onboardingAnswers)}
+              <button onClick={() => { onboardingSessionDone.current = true; completeOnboarding(onboardingAnswers); }}
                 style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
                 {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
               </button>
