@@ -1740,6 +1740,8 @@ export default function AdBriefAI() {
   const hasOlderMessages = messages.length > visibleCount;
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
+  const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done, 0..N=step index
+  const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
   const [input,setInput]=useState("");
 
   // Session goal — persists 7 days, resets automatically
@@ -2015,7 +2017,12 @@ export default function AdBriefAI() {
             const bLines = (benchmarks as any[]).map((b: any) =>
               `${b.metric}: avg ${b.value_avg}${b.unit} (range ${b.value_min}–${b.value_max}${b.unit})`
             ).join("\n");
-            benchmarkCtx = `=== MARKET BENCHMARKS (${personaNiche}/${personaMarket} — use when no real data) ===\n${bLines}\nNOTE: These are industry averages. Real account data always takes priority.`;
+            benchmarkCtx = `=== MARKET BENCHMARKS (${personaNiche}/${personaMarket}) ===
+Source: WordStream 2024 + Meta Business Industry Reports + DataReportal Brazil 2024
+Reference period: Jan–Dec 2024
+Important: These are industry averages for context only. Real account data always takes priority. When asked about sources, cite: WordStream Facebook Ads Benchmarks 2024 and Meta Business Industry Data 2024.
+${bLines}
+NOTE: Use these ONLY when the account has no real spend data. When real data exists, ignore benchmarks entirely.`;
           }
         } catch (benchErr) { /* silent — benchmarks are optional */ }
       }
@@ -2266,6 +2273,31 @@ export default function AdBriefAI() {
   };
 
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
+  // ── Onboarding: save answers to personas.result and complete ──────────────
+  const completeOnboarding = React.useCallback(async (answers: Record<string,string>) => {
+    if (!selectedPersona?.id || !user?.id) return;
+    const existing = (selectedPersona?.result as any) || {};
+    const updated = {
+      ...existing,
+      niche: answers.niche || existing.niche,
+      product: answers.product || existing.product,
+      objective: answers.objective || existing.objective,
+      market: answers.market || existing.market,
+      avg_ticket: answers.avg_ticket || existing.avg_ticket,
+      maturity: answers.maturity || existing.maturity,
+      onboarding_completed: true,
+    };
+    try {
+      await (supabase as any).from("personas")
+        .update({ result: updated })
+        .eq("id", selectedPersona.id)
+        .eq("user_id", user.id);
+      // Refresh context with new data
+      setGreetingKey(k => k + 1);
+    } catch(e) { console.error("[onboarding save]", e); }
+    setOnboardingStep(-1);
+  }, [selectedPersona?.id, selectedPersona?.result, user?.id]);
+
   const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean) => {
     if (proactiveFired.current) return;
     proactiveFired.current = true;
@@ -2274,6 +2306,14 @@ export default function AdBriefAI() {
     const existing = (() => { try { return storage.getJSON(SK, []); } catch { return []; } })();
     const hasRealHistory = existing.some((m: any) => m.role === "user");
     if (hasRealHistory) return;
+
+    // ── Onboarding check: if persona has no niche/product/objective, start questionnaire ──
+    const r = selectedPersona?.result as any || {};
+    const hasBasicProfile = r.niche || r.industry || r.product || r.objective || r.onboarding_completed;
+    if (!hasBasicProfile && selectedPersona?.id) {
+      setOnboardingStep(0);
+      return; // skip normal greeting — onboarding takes over
+    }
 
     setProactiveLoading(true);
     try {
@@ -3082,6 +3122,116 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             })}
           </div>
         )}
+
+        {/* ── Onboarding Questionnaire — fires once when persona has no profile ── */}
+        {onboardingStep !== null && onboardingStep >= 0 && (() => {
+          const pt = lang === "pt", es = lang === "es";
+          const steps = [
+            {
+              key: "niche",
+              q: pt ? "O que essa conta vende ou promove?" : es ? "¿Qué vende o promueve esta cuenta?" : "What does this account sell or promote?",
+              opts: pt
+                ? ["E-commerce / Loja", "Imóveis", "Veículos / Autos", "Infoprodutos / Cursos", "Serviços locais", "iGaming / Apostas", "Outro"]
+                : es
+                ? ["E-commerce / Tienda", "Inmuebles", "Vehículos / Autos", "Infoproductos / Cursos", "Servicios locales", "iGaming / Apuestas", "Otro"]
+                : ["E-commerce / Store", "Real Estate", "Vehicles / Autos", "Info products / Courses", "Local services", "iGaming / Betting", "Other"],
+            },
+            {
+              key: "objective",
+              q: pt ? "Qual é o objetivo principal dos anúncios?" : es ? "¿Cuál es el objetivo principal de los anuncios?" : "What is the main advertising objective?",
+              opts: pt
+                ? ["Gerar leads / cadastros", "Vender direto (compras)", "Tráfego para o site", "Reconhecimento de marca", "Instalações de app"]
+                : es
+                ? ["Generar leads / registros", "Ventas directas", "Tráfico al sitio", "Reconocimiento de marca", "Instalaciones de app"]
+                : ["Generate leads / sign-ups", "Direct sales", "Website traffic", "Brand awareness", "App installs"],
+            },
+            {
+              key: "market",
+              q: pt ? "Qual é o mercado principal?" : es ? "¿Cuál es el mercado principal?" : "What is the main market?",
+              opts: ["Brasil (BR)", "México (MX)", "Índia (IN)", "Outro país"],
+            },
+            {
+              key: "avg_ticket",
+              q: pt ? "Qual é o ticket médio do produto/serviço?" : es ? "¿Cuál es el ticket promedio?" : "What is the average ticket value?",
+              opts: pt
+                ? ["Até R$100", "R$100 – R$500", "R$500 – R$2.000", "R$2.000 – R$10.000", "Acima de R$10.000"]
+                : es
+                ? ["Hasta $100", "$100 – $500", "$500 – $2.000", "$2.000 – $10.000", "Más de $10.000"]
+                : ["Under $100", "$100 – $500", "$500 – $2,000", "$2,000 – $10,000", "Over $10,000"],
+            },
+            {
+              key: "maturity",
+              q: pt ? "Como está a conta hoje?" : es ? "¿Cómo está la cuenta hoy?" : "How is the account doing today?",
+              opts: pt
+                ? ["Conta nova — zero histórico", "Rodando há menos de 3 meses", "Rodando há 3–12 meses", "Conta madura (1+ ano de dados)"]
+                : es
+                ? ["Cuenta nueva — sin historial", "Rodando menos de 3 meses", "Rodando 3–12 meses", "Cuenta madura (1+ año de datos)"]
+                : ["New account — no history", "Running less than 3 months", "Running 3–12 months", "Mature account (1+ year of data)"],
+            },
+          ];
+          const step = steps[onboardingStep];
+          const totalSteps = steps.length;
+          const progress = ((onboardingStep) / totalSteps) * 100;
+          const F = "Inter,-apple-system,sans-serif";
+          const accentColor = "#0da2e7";
+
+          const handleOpt = (opt: string) => {
+            const newAnswers = { ...onboardingAnswers, [step.key]: opt };
+            setOnboardingAnswers(newAnswers);
+            if (onboardingStep < totalSteps - 1) {
+              setOnboardingStep(onboardingStep + 1);
+            } else {
+              completeOnboarding(newAnswers);
+            }
+          };
+
+          return (
+            <div style={{ maxWidth: 560, margin: "24px auto 0", padding: "0 16px" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(13,162,231,0.12)", border: "1px solid rgba(13,162,231,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", margin: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    AdBrief AI · {pt ? "Configuração inicial" : es ? "Configuración inicial" : "Initial setup"} · {onboardingStep + 1}/{totalSteps}
+                  </p>
+                  {/* Progress bar */}
+                  <div style={{ height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${progress + (100/totalSteps)}%`, background: `linear-gradient(90deg, ${accentColor}, #38bdf8)`, borderRadius: 2, transition: "width 0.3s ease" }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Question */}
+              <p style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.02em", lineHeight: 1.4, margin: "0 0 20px" }}>
+                {step.q}
+              </p>
+
+              {/* Options */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {step.opts.map((opt, i) => (
+                  <button key={i} onClick={() => handleOpt(opt)}
+                    style={{ fontFamily: F, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", width: "100%", color: "rgba(255,255,255,0.75)", fontSize: 14 }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(13,162,231,0.08)`; (e.currentTarget as HTMLElement).style.borderColor = `rgba(13,162,231,0.25)`; (e.currentTarget as HTMLElement).style.color = "#f0f2f8"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
+                  >
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{String.fromCharCode(65 + i)}</span>
+                    </div>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+
+              {/* Skip */}
+              <button onClick={() => completeOnboarding(onboardingAnswers)}
+                style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
+                {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
+              </button>
+            </div>
+          );
+        })()}
 
         {messages.length===0&&proactiveLoading&&(
           <div style={{maxWidth:720,margin:"0 auto",paddingTop:12,padding:"12px 16px 0"}}>
