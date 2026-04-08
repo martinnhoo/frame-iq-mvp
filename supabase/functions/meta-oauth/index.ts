@@ -120,40 +120,32 @@ Deno.serve(async (req) => {
       connected_at: new Date().toISOString(),
     };
 
-    // Upsert scoped to (user_id, platform, persona_id, connection_label)
-    // For multi-facebook: different connection_label = different row
-    let { error: upsertError } = await supabase
+    // Save connection — explicit UPDATE or INSERT (never rely on upsert/onConflict)
+    const { data: existing } = await supabase
       .from("platform_connections" as any)
-      .upsert(upsertPayload, {
-        onConflict: "user_id,platform,persona_id",
-        ignoreDuplicates: false,
-      });
+      .select("id")
+      .eq("user_id", storedUserId)
+      .eq("platform", "meta")
+      .eq("persona_id", storedPersonaId)
+      .maybeSingle();
 
-    if (upsertError) {
-      // If constraint doesn't exist yet, do manual update/insert
-      const { data: existing } = await supabase
+    let saveError = null;
+    if (existing?.id) {
+      const { error } = await supabase
         .from("platform_connections" as any)
-        .select("id")
-        .eq("user_id", storedUserId)
-        .eq("platform", "meta")
-        .eq("persona_id", storedPersonaId)
-        .maybeSingle();
-
-      if (existing?.id) {
-        const { error: updateError } = await supabase
-          .from("platform_connections" as any)
-          .update(upsertPayload)
-          .eq("id", existing.id);
-        upsertError = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from("platform_connections" as any)
-          .insert(upsertPayload);
-        upsertError = insertError;
-      }
+        .update(upsertPayload)
+        .eq("id", existing.id);
+      saveError = error;
+      console.log("[meta-oauth] UPDATE existing row:", existing.id, error ? "ERROR:" + error.message : "OK");
+    } else {
+      const { error } = await supabase
+        .from("platform_connections" as any)
+        .insert(upsertPayload);
+      saveError = error;
+      console.log("[meta-oauth] INSERT new row:", saveError ? "ERROR:" + saveError.message : "OK");
     }
 
-    if (upsertError) throw upsertError;
+    if (saveError) throw saveError;
 
     // Seed historical data async
     (async () => {
