@@ -65,6 +65,104 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_diary: {
+        Row: {
+          ad_id: string
+          ad_name: string | null
+          adset_name: string | null
+          campaign_name: string | null
+          clicks: number | null
+          conv_value: number | null
+          conversions: number | null
+          cpc: number | null
+          created_at: string | null
+          ctr: number | null
+          days_running: number | null
+          frequency: number | null
+          id: string
+          impressions: number | null
+          launched_at: string | null
+          paused_at: string | null
+          peak_ctr: number | null
+          peak_date: string | null
+          persona_id: string | null
+          platform: string
+          roas: number | null
+          spend: number | null
+          status: string | null
+          synced_at: string | null
+          user_id: string
+          verdict: string | null
+          verdict_reason: string | null
+        }
+        Insert: {
+          ad_id: string
+          ad_name?: string | null
+          adset_name?: string | null
+          campaign_name?: string | null
+          clicks?: number | null
+          conv_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          days_running?: number | null
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          launched_at?: string | null
+          paused_at?: string | null
+          peak_ctr?: number | null
+          peak_date?: string | null
+          persona_id?: string | null
+          platform: string
+          roas?: number | null
+          spend?: number | null
+          status?: string | null
+          synced_at?: string | null
+          user_id: string
+          verdict?: string | null
+          verdict_reason?: string | null
+        }
+        Update: {
+          ad_id?: string
+          ad_name?: string | null
+          adset_name?: string | null
+          campaign_name?: string | null
+          clicks?: number | null
+          conv_value?: number | null
+          conversions?: number | null
+          cpc?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          days_running?: number | null
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          launched_at?: string | null
+          paused_at?: string | null
+          peak_ctr?: number | null
+          peak_date?: string | null
+          persona_id?: string | null
+          platform?: string
+          roas?: number | null
+          spend?: number | null
+          status?: string | null
+          synced_at?: string | null
+          user_id?: string
+          verdict?: string | null
+          verdict_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_diary_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads_data_imports: {
         Row: {
           created_at: string | null
@@ -383,6 +481,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      checkout_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string
+        }
+        Relationships: []
       }
       companies: {
         Row: {
@@ -1061,6 +1177,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          current_period_end: string | null
           dashboard_count: number | null
           dashboard_reset_date: string | null
           email: string | null
@@ -1074,11 +1191,15 @@ export type Database = {
           preferred_language: string | null
           preferred_market: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
+          trial_end: string | null
           usage_alert_flags: Json | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          current_period_end?: string | null
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
@@ -1092,11 +1213,15 @@ export type Database = {
           preferred_language?: string | null
           preferred_market?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trial_end?: string | null
           usage_alert_flags?: Json | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          current_period_end?: string | null
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
@@ -1110,6 +1235,9 @@ export type Database = {
           preferred_language?: string | null
           preferred_market?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trial_end?: string | null
           usage_alert_flags?: Json | null
         }
         Relationships: []
