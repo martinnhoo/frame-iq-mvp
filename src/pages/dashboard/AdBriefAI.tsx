@@ -1333,8 +1333,58 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               </button>
             );
           })}
-          {/* Account name */}
-          {accName && <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>}
+          {/* Account switcher — click to switch ad account */}
+          {accName && (() => {
+            const pid = selectedPersona?.id;
+            const rawAccounts = pid ? localStorage.getItem(`meta_accounts_${pid}`) : null;
+            const accounts: any[] = rawAccounts ? JSON.parse(rawAccounts) : [];
+            const selId = pid ? (localStorage.getItem(`meta_sel_${pid}`) || "") : "";
+            if (accounts.length <= 1) {
+              return <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>;
+            }
+            return (
+              <div style={{ position: "relative", marginLeft: 8 }} className="acc-switcher">
+                <button
+                  onClick={() => {
+                    const el = document.querySelector(".acc-switcher-menu") as HTMLElement;
+                    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+                  }}
+                  style={{ ...I, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: "2px 6px", borderRadius: 6, color: "rgba(255,255,255,0.45)", fontSize: 12, transition: "background 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "none"}
+                >
+                  · {accName}
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </button>
+                <div className="acc-switcher-menu" style={{ display: "none", position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 100, background: "#111827", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "6px 4px", minWidth: 200, boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}>
+                  {accounts.map((acc: any) => {
+                    const isSel = acc.id === selId || (!selId && acc === accounts[0]);
+                    return (
+                      <button key={acc.id} onClick={() => {
+                        if (pid) {
+                          localStorage.setItem(`meta_sel_${pid}`, acc.id);
+                          window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: pid, accountId: acc.id } }));
+                        }
+                        const el = document.querySelector(".acc-switcher-menu") as HTMLElement;
+                        if (el) el.style.display = "none";
+                      }}
+                      style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", borderRadius: 7, background: isSel ? "rgba(14,162,231,0.12)" : "transparent", border: "none", cursor: "pointer", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "inherit", textAlign: "left", transition: "background 0.12s" }}
+                      onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+                      onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: isSel ? "#0da2e7" : "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontWeight: isSel ? 600 : 400 }}>{acc.name || acc.id}</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>{acc.id}</div>
+                        </div>
+                        {isSel && <svg style={{ marginLeft: "auto", flexShrink: 0 }} width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#0da2e7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right controls */}
@@ -1799,6 +1849,11 @@ export default function AdBriefAI() {
       const all = (data?.connections || []) as any[];
       const scoped = all.filter((c: any) => c.persona_id === pid && c.status === "active");
       setConnections(scoped.map((c: any) => c.platform));
+      // Save ad_accounts list to localStorage for account switcher in LivePanel
+      const metaConn = scoped.find((c: any) => c.platform === "meta");
+      if (metaConn?.ad_accounts?.length) {
+        localStorage.setItem(`meta_accounts_${pid}`, JSON.stringify(metaConn.ad_accounts));
+      }
     }).catch(() => setConnections([]));
   }, [user?.id, selectedPersona?.id]);
 

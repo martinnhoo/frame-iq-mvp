@@ -412,39 +412,16 @@ function PlatformRow({ p, userId, accountId, t }: {
       {/* Expanded panel */}
       {isConnected && expanded && (
         <div style={{ borderTop:`1px solid ${pc}18`, padding:"16px 16px 18px", background:"rgba(0,0,0,0.15)" }}>
-          {/* Ad accounts */}
-          {ads.length > 0 && (
-            <div style={{ marginBottom: p.id==="google" ? 16 : 0 }}>
+          {/* Ad accounts — shown as info only; switch account from LivePanel */}
+          {ads.length > 0 && p.id === "meta" && (
+            <div style={{ marginBottom: 12 }}>
               <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
-                textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>{t.select_account}</p>
-              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                {ads.map((acc:any) => {
-                  const isSel = acc.id === selId;
-                  return (
-                    <button key={acc.id} onClick={() => selectAcc(acc.id)}
-                      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10,
-                        background: isSel ? `${pc}12` : "rgba(255,255,255,0.04)",
-                        border:`1px solid ${isSel ? pc+"30" : "rgba(255,255,255,0.08)"}`,
-                        cursor:"pointer", textAlign:"left", transition:"all 0.12s", width:"100%" }}>
-                      <div style={{ width:16, height:16, borderRadius:"50%",
-                        border:`2px solid ${isSel ? pc : "rgba(255,255,255,0.2)"}`,
-                        background: isSel ? pc : "transparent",
-                        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                        {isSel && <Check size={9} color="#fff" strokeWidth={3}/>}
-                      </div>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontFamily:F, fontSize:13, fontWeight:isSel?600:400,
-                          color: isSel?"#f0f2f8":"rgba(255,255,255,0.55)", margin:0,
-                          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                          {acc.name || acc.id}
-                        </p>
-                        <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.28)", margin:"1px 0 0" }}>{acc.id}</p>
-                      </div>
-                      {isSel && <CheckCircle2 size={13} color={pc}/>}
-                    </button>
-                  );
-                })}
-              </div>
+                textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px" }}>
+                {ads.length} {lang==="pt"?"contas disponíveis":lang==="es"?"cuentas disponibles":"accounts available"}
+              </p>
+              <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:0 }}>
+                {lang==="pt"?"Troque de conta direto no painel do IA Chat →":lang==="es"?"Cambia de cuenta en el panel del IA Chat →":"Switch accounts directly in the IA Chat panel →"}
+              </p>
             </div>
           )}
 
