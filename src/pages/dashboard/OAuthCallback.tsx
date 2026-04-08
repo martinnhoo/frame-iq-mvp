@@ -92,7 +92,7 @@ export default function OAuthCallback() {
           setMessage(platform === "google"
             ? `Google Ads conectado${savedId ? " ✓" : ""}. Vá em Contas → Google Ads → insira seu Customer ID.`
             : `${pl.name} connected.`);
-          setTimeout(() => navigate(dest), 2800);
+          setTimeout(() => navigate(dest), 2500);
           return;
         }
 
@@ -101,7 +101,7 @@ export default function OAuthCallback() {
           await saveSelectedAccount(uid, accs[0].id, pid);
           setStatus("success");
           setMessage(`${pl.name} connected with ${accs[0].name || accs[0].id}.`);
-          setTimeout(() => navigate(`/dashboard/accounts?connected=${platform || ""}`), 2000);
+          setTimeout(() => navigate(`/dashboard/accounts?connected=${platform || ""}`), 2500);
           return;
         }
 

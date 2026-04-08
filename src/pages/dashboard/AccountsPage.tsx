@@ -658,6 +658,7 @@ export default function AccountsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);     // which is in edit mode
   const [creating, setCreating]   = useState(false);
   const [deleting, setDeleting]   = useState<string | null>(null);
+  const [platformRefreshKey, setPlatformRefreshKey] = useState(0);
 
   useEffect(() => {
     if (selectedPersona?.id && !openId) setOpenId(selectedPersona.id);
@@ -702,8 +703,9 @@ export default function AccountsPage() {
     const connected = searchParams.get("connected");
     if (connected) {
       setTimeout(() => {
-        // Reload accounts to reflect fresh connection
+        // Reload accounts AND force PlatformRow to re-fetch connection state
         load();
+        setPlatformRefreshKey(k => k + 1);
         if (connected === "google") {
           toast.success("Google Ads conectado! Expanda a conta e insira seu Customer ID para finalizar.", { duration: 7000 });
         }
@@ -968,7 +970,7 @@ export default function AccountsPage() {
                           textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 10px" }}>{t.platforms}</p>
                         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                           {PLATFORMS.map(p => (
-                            <PlatformRow key={`${p.id}-${acc.id}`} p={p}
+                            <PlatformRow key={`${p.id}-${acc.id}-${platformRefreshKey}`} p={p}
                               userId={user.id} accountId={acc.id} t={t}/>
                           ))}
                         </div>
