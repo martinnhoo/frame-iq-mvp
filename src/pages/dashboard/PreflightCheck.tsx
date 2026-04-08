@@ -201,8 +201,8 @@ const Select = ({ value, onChange, options }: {
 export default function PreflightCheck() {
   const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
 
-  const { language } = useLanguage();
-  const t = useDashT(language);  const [script, setScript] = useState("");
+  const { language: lang } = useLanguage();
+  const t = useDashT(lang);  const [script, setScript] = useState("");
   const [hook, setHook] = useState("");
   const [cta, setCta] = useState("");
   // Static ad mode

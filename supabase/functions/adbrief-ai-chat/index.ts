@@ -2062,7 +2062,15 @@ PROIBIDO:
         ? `\n\nUSER STYLE PREFERENCES:\n${user_prefs?.liked?.length ? `Liked: ${user_prefs.liked.join(" | ")}` : ""}\n${user_prefs?.disliked?.length ? `Disliked: ${user_prefs.disliked.join(" | ")}` : ""}${toneInstruction}`
         : toneInstruction;
 
-    const aiMessages = [...historyMessages, { role: "user" as const, content: message }];
+    // Build user content — support vision (image_base64 + image_media_type)
+    const userContent = body.image_base64 && body.image_media_type
+      ? [
+          { type: "image" as const, source: { type: "base64" as const, media_type: body.image_media_type, data: body.image_base64 } },
+          { type: "text" as const, text: message },
+        ]
+      : message;
+
+    const aiMessages = [...historyMessages, { role: "user" as const, content: userContent }];
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
