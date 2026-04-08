@@ -349,10 +349,15 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
         </div>
       </div>
 
-      {/* CSS animations */}
+      {/* CSS animations + mobile */}
       <style>{`
         @keyframes dtFadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes dtZoomIn { from { opacity: 0; transform: scale(0.94) } to { opacity: 1; transform: scale(1) } }
+        @media (max-width: 768px) {
+          .dt-tabs-row { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; scrollbar-width: none !important; padding-bottom: 2px !important; }
+          .dt-tabs-row::-webkit-scrollbar { display: none !important; }
+          .dt-footer { flex-direction: row !important; align-items: center !important; }
+        }
       `}</style>
     </>
   );

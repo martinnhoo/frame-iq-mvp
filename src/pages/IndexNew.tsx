@@ -2388,7 +2388,7 @@ function FeatureTabs() {
             </button>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 56, alignItems: "center", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.2s ease, transform 0.2s ease" }}>
+        <div className="feature-tabs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 56, alignItems: "center", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.2s ease, transform 0.2s ease" }}>
           <div>
             <div style={{ display: "inline-block", padding: "5px 12px", borderRadius: 6, background: "rgba(13,162,231,0.08)", border: "1px solid rgba(13,162,231,0.2)", color: "#0da2e7", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 20 }}>{tab.proof}</div>
             <h3 style={{ fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{tab.headline}</h3>
@@ -3617,110 +3617,129 @@ export default function IndexNew() {
           .kpi-card:nth-child(1){animation-delay:0.2s}
           .kpi-card:nth-child(2){animation-delay:0.35s}
 
-          /* ── Mobile ── */
+          /* ══════════════════════════════════════════
+             MOBILE — redesign completo (mobile-first)
+             ══════════════════════════════════════════ */
+
           .mobile-demo-section{display:none}
+
+          /* ── 860px: tablet/mobile — colapsa hero grid ── */
           @media(max-width:860px){
-            .hero-grid{grid-template-columns:1fr!important;gap:24px!important}
-            .hero-demo-col{display:block!important;padding:0 0 8px}
+            .hero-grid{grid-template-columns:1fr!important;gap:32px!important}
+            .hero-demo-col{display:block!important;width:100%!important}
             .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
-            .hero-main-section{min-height:auto!important;align-items:flex-start!important;padding-top:72px!important;padding-bottom:24px!important}
-            .mobile-demo-section{display:block}
+            .hero-main-section{
+              min-height:auto!important;
+              align-items:flex-start!important;
+              padding:80px 24px 32px!important;
+            }
           }
-          @media(max-width:480px){
-            .hero-main-section{padding:80px 20px 24px!important;min-height:auto!important;align-items:flex-start!important}
-            .hero-cta-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
-            .hero-cta-row button{width:100%!important;justify-content:center!important}
-          }
+
+          /* ── 768px: mobile principal ── */
           @media(max-width:768px){
-            /* Fix hero section overflow */
+            /* overflow global */
+            *{box-sizing:border-box}
+            body,html{overflow-x:hidden!important}
             .hero-main-section{overflow-x:hidden!important}
-            /* Nav */
+
+            /* ── NAV ── */
             .nav-links{display:none!important}
 
-            /* Hero text — wrap naturally, smaller size */
-            h1,.hero-h1{font-size:clamp(28px,7vw,38px)!important;white-space:normal!important;letter-spacing:-0.04em!important;line-height:1.1!important}
-            .hero-sub-p{font-size:14px!important;white-space:normal!important;max-width:100%!important}
+            /* ── HERO ── */
+            h1,.hero-h1{
+              font-size:clamp(32px,8.5vw,44px)!important;
+              white-space:normal!important;
+              letter-spacing:-0.04em!important;
+              line-height:1.08!important;
+            }
+            .hero-sub-p{font-size:15px!important;white-space:normal!important;max-width:100%!important;line-height:1.55!important}
+            .hero-cta-row{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+            .hero-cta-row button{width:100%!important;justify-content:center!important;min-height:48px!important}
+            .hero-social-proof,.hero-headline,.hero-sub,.hero-bullets,.hero-connects{margin-bottom:12px!important}
 
-            /* Demo: hide desktop frame, show mobile card */
-            .demo-desktop-only{display:none!important}
-            .demo-mobile-card{display:block!important}
+            /* ── DEMO TABS no hero ── */
+            .hero-demo-col{padding:0!important}
 
-            /* Sections */
-            .how-grid{grid-template-columns:1fr!important}
-            .for-who-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;justify-content:flex-start!important;scrollbar-width:none!important}
-            .for-who-tabs::-webkit-scrollbar{display:none!important}
-            .for-who-grid{grid-template-columns:1fr!important}
-            .for-who-card{padding:20px 18px!important}
-            .pricing-grid{grid-template-columns:1fr!important}
-            .tools-bento{grid-template-columns:1fr!important}
-            .tools-io-grid{grid-template-columns:1fr!important}
-          }
-          @media(max-width:480px){
-            h1,.hero-h1{font-size:clamp(22px,7vw,30px)!important}
-          }
+            /* ── SOCIAL PROOF STRIP ── */
+            .spstrip-grid{grid-template-columns:repeat(2,1fr)!important}
+            .spstrip-grid>div{padding:20px 16px!important}
+            .spstrip-grid>div:nth-child(2){border-right:none!important}
+            .spstrip-grid>div:nth-child(3),.spstrip-grid>div:nth-child(4){border-top:1px solid rgba(255,255,255,0.06)!important}
+            .spstrip-grid>div:nth-child(3){border-right:1px solid rgba(255,255,255,0.06)!important}
 
-          @media(max-width:480px){
-            .hero-social-proof{margin-bottom:10px!important}
-            .hero-headline{margin-bottom:10px!important}
-            .hero-sub{margin-bottom:16px!important}
-            .hero-bullets{margin-bottom:16px!important}
-            .hero-connects{margin-bottom:16px!important}
-          }
-
-          /* ── Comprehensive mobile fixes 640px ── */
-          @media(max-width:640px){
-            /* Pain section */
-            .pain-grid{grid-template-columns:1fr!important;gap:20px!important}
+            /* ── PAIN SECTION ── */
+            .pain-grid{grid-template-columns:1fr!important;gap:16px!important}
             .pain-grid>div:nth-child(2){display:none!important}
             .pain-col-left,.pain-col-right{padding:0!important}
 
-            /* How */
+            /* ── HOW IT WORKS ── */
             .how-grid{grid-template-columns:1fr!important;gap:12px!important}
 
-            /* For who */
-            .for-who-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;box-sizing:border-box!important;justify-content:flex-start!important;scrollbar-width:none!important}
+            /* ── FEATURE TABS (entre How e Tools) ── */
+            .feature-tabs-grid{grid-template-columns:1fr!important;gap:24px!important}
+
+            /* ── FOR WHO ── */
+            .for-who-tabs{
+              flex-wrap:nowrap!important;
+              overflow-x:auto!important;
+              -webkit-overflow-scrolling:touch!important;
+              width:100%!important;
+              box-sizing:border-box!important;
+              justify-content:flex-start!important;
+              scrollbar-width:none!important;
+              padding-bottom:4px!important;
+            }
             .for-who-tabs::-webkit-scrollbar{display:none!important}
             .for-who-grid{grid-template-columns:1fr!important}
-            .for-who-card{padding:20px 18px!important}
+            .for-who-card{padding:18px 16px!important}
 
-            /* Pricing */
-            .pricing-grid{grid-template-columns:1fr!important;gap:12px!important;max-width:420px!important;margin-left:auto!important;margin-right:auto!important}
-
-            /* Tools */
+            /* ── TOOLS ── */
             .tools-bento{grid-template-columns:1fr!important}
             .tools-list{display:none!important}
-            .tools-io-grid{grid-template-columns:1fr!important;gap:12px!important}
+            .tools-io-grid{grid-template-columns:1fr!important;gap:10px!important}
 
-            /* Telegram */
+            /* ── TELEGRAM ── */
             .telegram-grid{grid-template-columns:1fr!important;gap:12px!important}
 
-            /* FAQ: texto menor */
+            /* ── PRICING ── */
+            .pricing-grid{
+              grid-template-columns:1fr!important;
+              gap:12px!important;
+              max-width:440px!important;
+              margin-left:auto!important;
+              margin-right:auto!important;
+            }
+
+            /* ── FAQ ── */
             .faq-item{padding:16px 0!important}
 
-            /* Footer */
-            .footer-inner{flex-direction:column!important;gap:32px!important}
-            .footer-links{gap:32px!important}
+            /* ── FINAL CTA ── */
+            .trust-badges{flex-direction:column!important;align-items:center!important;gap:10px!important}
+
+            /* ── FOOTER ── */
+            .footer-inner{flex-direction:column!important;gap:28px!important}
+            .footer-links{gap:24px!important;flex-wrap:wrap!important}
             .footer-bottom{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
 
-            /* FinalCTA */
-            .trust-badges{flex-direction:column!important;align-items:center!important;gap:12px!important}
-
-            /* SocialProof: 2 cols */
-            .social-proof-strip{flex-wrap:wrap!important;gap:20px 0!important}
-            .social-proof-strip>div{flex:0 0 50%!important;border-left:none!important;border-bottom:1px solid rgba(255,255,255,0.05)!important}
-
-            /* Sections: reduce padding */
+            /* ── GLOBAL sections padding ── */
             section{padding-left:20px!important;padding-right:20px!important}
-            
-            /* Nav CTA: menor */
-            nav button[class*="cta"],nav a[class*="cta"]{padding:8px 14px!important;font-size:12px!important}
           }
-          
+
+          /* ── 480px: telefone pequeno ── */
+          @media(max-width:480px){
+            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
+            .hero-main-section{padding:72px 20px 28px!important}
+            .spstrip-grid{grid-template-columns:1fr!important}
+            .spstrip-grid>div{border-right:none!important;border-top:1px solid rgba(255,255,255,0.06)!important;padding:18px 16px!important}
+            .spstrip-grid>div:first-child{border-top:none!important}
+          }
+
+          /* ── 390px: iPhone SE / Mini ── */
           @media(max-width:390px){
-            /* iPhone SE / Mini */
             section{padding-left:16px!important;padding-right:16px!important}
-            .hero-main-section{padding:72px 16px 20px!important}
+            .hero-main-section{padding:68px 16px 24px!important}
+            h1,.hero-h1{font-size:clamp(26px,7.5vw,32px)!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
