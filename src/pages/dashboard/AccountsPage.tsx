@@ -206,14 +206,17 @@ function PlatformRow({ p, userId, accountId, t }: {
     setLoading(true);
     setLoadError(false);
     try {
-      // Use meta-oauth get_connections action (service_role, already deployed)
-      const { data: res, error: fnErr } = await supabase.functions.invoke("meta-oauth", {
-        body: { action: "get_connections", user_id: userId }
-      });
-      if (fnErr) throw fnErr;
-      const all = (res?.connections || []) as any[];
-      const match = all.find((c: any) => c.platform === p.id && c.persona_id === accountId) || null;
-      setConn(match);
+      // Direct client query — selected_account_id is safe to read (no token exposure)
+      const { data, error } = await supabase
+        .from("platform_connections" as any)
+        .select("id, platform, status, ad_accounts, selected_account_id, connection_label, connected_at")
+        .eq("user_id", userId)
+        .eq("persona_id", accountId)
+        .eq("platform", p.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (error) throw error;
+      setConn(data || null);
     } catch (e) {
       console.error("[AdBrief] platform row load error:", String(e));
       setConn(null);
