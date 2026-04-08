@@ -193,6 +193,7 @@ function PlatformIcon({ id }: { id:string }) {
 function PlatformRow({ p, userId, accountId, t }: {
   p: typeof PLATFORMS[0]; userId:string; accountId:string; t: TStrings;
 }) {
+  const { language: lang } = useLanguage();
   const [conn, setConn]           = useState<any>(null);
   const [loading, setLoading]     = useState(true);
   const [loadError, setLoadError] = useState(false);
