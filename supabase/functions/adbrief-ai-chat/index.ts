@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data, account_id: accountIdOverride } = body;
+    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
 
     // ── Auth check — runs first for ALL modes including panel_data ────────────
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -63,7 +63,6 @@ Deno.serve(async (req) => {
 
       // Meta Ads
       if (platforms.includes("meta")) {
-        const panelAccountId = body.account_id || null; // override from frontend localStorage
         const { data: mcAll } = await sbPanel
           .from("platform_connections" as any)
           .select("access_token, ad_accounts, selected_account_id, persona_id")
@@ -76,10 +75,8 @@ Deno.serve(async (req) => {
           : mcList[0] || null;
         if (mc?.access_token) {
           const token = mc.access_token;
-          // Use account_id override (from localStorage) first, then DB value, then first
-          const effectiveId = panelAccountId || mc.selected_account_id;
           const acc =
-            (mc.ad_accounts || []).find((a: any) => a.id === effectiveId) || (mc.ad_accounts || [])[0];
+            (mc.ad_accounts || []).find((a: any) => a.id === mc.selected_account_id) || (mc.ad_accounts || [])[0];
           if (acc) {
             const fields =
               "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
@@ -1187,8 +1184,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         if (tokenRow?.access_token) {
           const token = tokenRow.access_token;
           const accs = (tokenRow.ad_accounts as any[]) || [];
-          // Use account_id override (from frontend localStorage) first, then DB value, then first
-          const selId = accountIdOverride || tokenRow.selected_account_id;
+          const selId = tokenRow.selected_account_id;
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
