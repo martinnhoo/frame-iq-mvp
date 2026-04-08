@@ -1780,23 +1780,30 @@ export default function AdBriefAI() {
   },[selectedPersona?.id]);
 
   // Load connections — STRICT: only scoped to this account, NO global fallback
-  useEffect(()=>{
-    if(!user?.id){setConnections([]);return;}
-    const pid=selectedPersona?.id||null;
-    if(!pid){setConnections([]);return;}
-    // Use live-metrics edge function (service_role) — bypasses RLS entirely
-    // Returns connected platforms based on what actually has tokens in the DB
-    supabase.functions.invoke("live-metrics", {
-      body: { user_id: user.id, persona_id: pid, period: "7d",
-        date_from: new Date(Date.now()-7*86400000).toISOString().split("T")[0],
-        date_to: new Date().toISOString().split("T")[0] }
+  // Load connections — runs on persona change AND when tab becomes visible
+  // (user may have connected/disconnected in Accounts tab)
+  const loadConnections = React.useCallback(() => {
+    if(!user?.id) { setConnections([]); return; }
+    const pid = selectedPersona?.id || null;
+    if(!pid) { setConnections([]); return; }
+    supabase.functions.invoke("meta-oauth", {
+      body: { action: "get_connections", user_id: user.id }
     }).then(({ data }: any) => {
-      const found: string[] = [];
-      if (data?.meta !== undefined) found.push("meta");
-      if (data?.google !== undefined) found.push("google");
-      setConnections(found);
+      const all = (data?.connections || []) as any[];
+      const scoped = all.filter((c: any) => c.persona_id === pid && c.status === "active");
+      setConnections(scoped.map((c: any) => c.platform));
     }).catch(() => setConnections([]));
-  },[user?.id,selectedPersona?.id]);
+  }, [user?.id, selectedPersona?.id]);
+
+  useEffect(() => {
+    loadConnections();
+  }, [loadConnections]);
+
+  useEffect(() => {
+    const onVisible = () => { if(document.visibilityState === "visible") loadConnections(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [loadConnections]);
 
   // Proactive greeting — fires when connections are known (after context is ready)
   useEffect(()=>{
