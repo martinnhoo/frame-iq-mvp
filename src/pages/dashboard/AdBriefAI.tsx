@@ -1683,6 +1683,7 @@ export default function AdBriefAI() {
   const hasOlderMessages = messages.length > visibleCount;
   const [alertsDismissing,setAlertsDismissing]=useState<Set<string>>(new Set());
   const [greetingKey,setGreetingKey]=useState(0);
+  const [livePanelKey,setLivePanelKey]=useState(0);
   const [input,setInput]=useState("");
 
   // Session goal — persists 7 days, resets automatically
@@ -1804,13 +1805,15 @@ export default function AdBriefAI() {
 
   useEffect(() => {
     loadConnections();
+    // On mount, always bump livePanelKey so LivePanel re-fetches with latest selected_account_id from DB
+    setLivePanelKey(k => k + 1);
   }, [loadConnections]);
 
   useEffect(() => {
     const onVisible = () => { if(document.visibilityState === "visible") loadConnections(); };
     document.addEventListener("visibilitychange", onVisible);
     // Also reload when user changes Meta ad account in AccountsPage
-    const onAccChanged = () => { loadConnections(); setGreetingKey(k => k+1); };
+    const onAccChanged = () => { loadConnections(); setGreetingKey(k => k+1); setLivePanelKey(k => k+1); };
     window.addEventListener("meta-account-changed", onAccChanged);
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
@@ -2918,6 +2921,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{position:"relative",zIndex:2,flexShrink:0}}>
         <SectionBoundary label="LivePanel" inline>
         <LivePanel
+          key={livePanelKey}
           user={user}
           selectedPersona={selectedPersona}
           connections={connections}
