@@ -1161,7 +1161,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
 
     let liveMetaData = "";
     // Query connection directly with persona_id — same approach as live-metrics (bypasses any RLS/cache issues)
-    const { data: directConn } = await supabase
+    const { data: directConn, error: directErr } = await supabase
       .from("platform_connections" as any)
       .select("access_token, ad_accounts, selected_account_id, persona_id, platform")
       .eq("user_id", user_id)
@@ -1169,6 +1169,12 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
       .eq("status", "active")
       .eq("persona_id", persona_id)
       .maybeSingle();
+    console.log("[adbrief-ai-chat] directConn query:", {
+      user_id, persona_id,
+      found: !!directConn,
+      hasToken: !!directConn?.access_token,
+      error: directErr?.message || null
+    });
 
     // Also update connections state if directConn found but platformConns query missed it
     if (directConn && !(connections as any[]).find((c: any) => c.platform === "meta")) {
@@ -2223,4 +2229,4 @@ PROIBIDO:
 // force-sync 2026-03-24T23:23:48Z
 // force-redeploy 2026-03-27T14:52:19Z
 
-// force-redeploy 2026-04-03T17:30:00Z — fix richContext priority + 90d + daily-intelligence fallback
+// force-redeploy 2026-04-08T04:00:00Z — direct persona_id query + connections fix v9
