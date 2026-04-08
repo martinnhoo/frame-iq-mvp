@@ -206,24 +206,13 @@ function PlatformRow({ p, userId, accountId, t }: {
     setLoading(true);
     setLoadError(false);
     try {
-      const { data, error } = await withTimeout(
-        supabase.from("platform_connections" as any)
-          .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
-          .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
-          .maybeSingle()
-      );
-      if (error) {
-        const { data: fallback, error: fallbackError } = await withTimeout(
-          supabase.from("platform_connections_safe" as any)
-            .select("id,platform,ad_accounts,selected_account_id,connection_label,connected_at,status")
-            .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id).eq("status","active")
-            .maybeSingle()
-        );
-        if (fallbackError) throw fallbackError;
-        setConn(fallback || null);
-      } else {
-        setConn(data || null);
-      }
+      // Use get-connections edge function (service_role) — bypasses RLS
+      const { data: res, error: fnErr } = await supabase.functions.invoke("get-connections", {
+        body: { user_id: userId, persona_id: accountId }
+      });
+      if (fnErr) throw fnErr;
+      const match = (res?.connections || []).find((c: any) => c.platform === p.id) || null;
+      setConn(match);
     } catch (e) {
       console.error("[AdBrief] platform row load:", e);
       setConn(null);

@@ -1,4 +1,4 @@
-// v8.9 — force apply migration: platform_connections SELECT policy 2026-04-08
+// v9.0 — get-connections edge function: bypassa RLS para leitura de conexões
 import { DemoTabs } from "@/components/DemoTabs";
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
