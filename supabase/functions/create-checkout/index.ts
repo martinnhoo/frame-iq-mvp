@@ -122,7 +122,7 @@ async function hasUsedTrialBefore(stripe: Stripe, email: string): Promise<{ used
         customer: customer.id,
         limit: 5,
       });
-      const hasDispute = paymentIntents.data.some(pi =>
+      const hasDispute = paymentIntents.data.some((pi: any) =>
         pi.status === "canceled" || (pi.last_payment_error?.code === "card_declined")
       );
       if (hasDispute) {

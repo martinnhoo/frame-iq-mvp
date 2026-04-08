@@ -1219,7 +1219,8 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
               campsRaw: any = null,
               adsetsRaw: any = null,
               timeSeriesRaw: any = null,
-              placementRaw: any = null;
+              placementRaw: any = null,
+              lifetimeAdsRaw: any = null;
 
             if (cached && now_ts - cached.ts < CACHE_TTL) {
               adsRaw = cached.adsRaw;
@@ -1262,7 +1263,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
               adsetsRaw = r3.status === "fulfilled" ? await r3.value.json() : null;
               timeSeriesRaw = r4.status === "fulfilled" ? await r4.value.json() : null;
               placementRaw = r5.status === "fulfilled" ? await r5.value.json() : null;
-              const lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
+              lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
 
               // Cache results — evict stale entries first to prevent unbounded growth
               const metaCache = (globalThis as any).__metaCache;
@@ -1430,7 +1431,7 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
     const liveGoogleData = "";
 
         // Cross-platform synthesis — disabled (see GOOGLE_ADS_BACKUP.md)
-    const crossPlatformCtx = "";
+    let crossPlatformCtx = "";
     if (false) {
       crossPlatformCtx = `
 === CROSS-PLATFORM INTELLIGENCE — MESMA CONTA ===
