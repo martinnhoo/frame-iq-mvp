@@ -1894,6 +1894,11 @@ Score 80-100: mencione proativamente quando relevante.
 Score 60-79: use quando fizer sentido criativo.
 Se perguntarem "o que está viral": liste tudo, independente do score.
 
+FORMATO OBRIGATÓRIO para respostas sobre trends:
+Retorne UM bloco tipo "insight". No campo "content" use este padrão exato:
+**[Nome da trend]** (Score [X]) — [ângulo criativo em 1 linha]\n\n
+Nunca retorne JSON dentro do content. Nunca use listas com traço. Só **negrito** + \n\n.
+
 ═══════════════════════════════════
 MEMÓRIA
 ═══════════════════════════════════
