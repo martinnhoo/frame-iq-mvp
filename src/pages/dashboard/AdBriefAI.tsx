@@ -2354,11 +2354,9 @@ WHAT NOT TO DO:
         .update({ result: updated })
         .eq("id", selectedPersona.id)
         .eq("user_id", user.id);
-      // Reset proactive flag so welcome fires fresh after onboarding
-      proactiveFired.current = false;
       setCompletedAnswers(answers);
       setShowOnboardingWelcome(true);
-      setGreetingKey(k => k + 1);
+      // Keep proactiveFired = true so the proactive greeting doesn't override the welcome screen
     } catch(e) { console.error("[onboarding save]", e); }
     setOnboardingStep(-1);
   }, [selectedPersona?.id, selectedPersona?.result, user?.id]);
@@ -3299,7 +3297,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         })()}
 
         {/* ── Post-onboarding welcome — fires once after questionnaire completes ── */}
-        {showOnboardingWelcome && messages.length === 0 && !proactiveLoading && (() => {
+        {showOnboardingWelcome && messages.length === 0 && (() => {
           const pt = lang === "pt", es = lang === "es";
           const F = "Inter,-apple-system,sans-serif";
           const acc = "#0da2e7";
@@ -3327,56 +3325,75 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             : `${niche} · ${mkt} · Goal: ${obj.toLowerCase()}.`;
 
           const actions = pt ? [
-            { icon: "✍️", label: "Escrever roteiro", msg: `Escreva um roteiro de vídeo para minha conta de ${niche}` },
-            { icon: "🎯", label: "Gerar headlines", msg: `Gere 5 headlines de alto impacto para ${niche} com objetivo de ${obj.toLowerCase()}` },
-            { icon: "📊", label: "Ver benchmarks", msg: `Quais são os benchmarks de mercado para ${niche} no Meta Ads?` },
-            { icon: "🔍", label: "Analisar concorrentes", msg: `Analise o que os concorrentes de ${niche} estão fazendo no Meta Ads` },
+            { icon: "✍️", label: "Roteiro de vídeo", desc: "30 segundos, direto ao ponto", msg: `Escreva um roteiro de vídeo para minha conta de ${niche} com objetivo de ${obj.toLowerCase() || "conversão"}` },
+            { icon: "🎯", label: "Headlines de impacto", desc: "5 variações para testar", msg: `Gere 5 headlines de alto impacto para ${niche} com objetivo de ${obj.toLowerCase() || "gerar leads"}` },
+            { icon: "📊", label: "Benchmarks do nicho", desc: "CTR, CPM, ROAS esperados", msg: `Quais são os benchmarks de mercado para ${niche} no Meta Ads no Brasil?` },
+            { icon: "🔍", label: "O que a concorrência faz", desc: "Análise de criativos do setor", msg: `Analise o que os concorrentes de ${niche} estão fazendo no Meta Ads e o que costuma funcionar` },
           ] : es ? [
-            { icon: "✍️", label: "Escribir guión", msg: `Escribe un guión de video para mi cuenta de ${niche}` },
-            { icon: "🎯", label: "Generar headlines", msg: `Genera 5 headlines de alto impacto para ${niche}` },
-            { icon: "📊", label: "Ver benchmarks", msg: `¿Cuáles son los benchmarks para ${niche} en Meta Ads?` },
-            { icon: "🔍", label: "Analizar competidores", msg: `Analiza qué hacen los competidores de ${niche} en Meta Ads` },
+            { icon: "✍️", label: "Guión de video", desc: "30 segundos, directo al punto", msg: `Escribe un guión de video para mi cuenta de ${niche}` },
+            { icon: "🎯", label: "Headlines de impacto", desc: "5 variaciones para probar", msg: `Genera 5 headlines de alto impacto para ${niche}` },
+            { icon: "📊", label: "Benchmarks del nicho", desc: "CTR, CPM, ROAS esperados", msg: `¿Cuáles son los benchmarks para ${niche} en Meta Ads?` },
+            { icon: "🔍", label: "Qué hace la competencia", desc: "Análisis de creativos del sector", msg: `Analiza qué hacen los competidores de ${niche} en Meta Ads` },
           ] : [
-            { icon: "✍️", label: "Write a script", msg: `Write a video script for my ${niche} account` },
-            { icon: "🎯", label: "Generate headlines", msg: `Generate 5 high-impact headlines for ${niche}` },
-            { icon: "📊", label: "View benchmarks", msg: `What are the Meta Ads benchmarks for ${niche}?` },
-            { icon: "🔍", label: "Analyze competitors", msg: `Analyze what ${niche} competitors are doing on Meta Ads` },
+            { icon: "✍️", label: "Video script", desc: "30 seconds, straight to the point", msg: `Write a video script for my ${niche} account with goal: ${obj.toLowerCase() || "conversions"}` },
+            { icon: "🎯", label: "Headlines", desc: "5 variations to test", msg: `Generate 5 high-impact headlines for ${niche}` },
+            { icon: "📊", label: "Niche benchmarks", desc: "Expected CTR, CPM, ROAS", msg: `What are the Meta Ads benchmarks for ${niche}?` },
+            { icon: "🔍", label: "Competitor analysis", desc: "What's working in the sector", msg: `Analyze what ${niche} competitors are doing on Meta Ads` },
           ];
 
           return (
-            <div style={{ maxWidth: 600, margin: "32px auto 0", padding: "0 20px", animation: "fadeInUp 0.4s ease" }}>
-              <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            <div style={{ maxWidth: 580, margin: "20px auto 0", padding: "0 20px", animation: "fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
+              <style>{`@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
-              {/* Headline */}
-              <div style={{ marginBottom: 28 }}>
-                <h1 style={{ fontFamily: F, fontSize: 28, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.2, margin: "0 0 10px" }}>
-                  {headline}
-                </h1>
-                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, margin: 0, maxWidth: 480 }}>
-                  {subline}
-                </p>
+              {/* AdBrief AI badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: acc, boxShadow: `0 0 8px ${acc}` }} />
+                <span style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" }}>AdBrief AI</span>
               </div>
 
-              {/* What to do today */}
-              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
-                {pt ? "O que fazer hoje" : es ? "Qué hacer hoy" : "What to do today"}
+              {/* Main headline — large */}
+              <h1 style={{ fontFamily: F, fontSize: 32, fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.15, margin: "0 0 6px" }}>
+                {headline}
+              </h1>
+
+              {/* Subheadline — medium, accent color */}
+              <p style={{ fontFamily: F, fontSize: 15, fontWeight: 500, color: acc, letterSpacing: "-0.01em", margin: "0 0 12px", opacity: 0.85 }}>
+                {niche}{mkt && mkt !== "BR" && niche ? ` · ${mkt}` : mkt && mkt !== "BR" ? mkt : ""}
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 24 }}>
+
+              {/* Description — small, muted */}
+              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 460 }}>
+                {subline}
+              </p>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 20 }} />
+
+              {/* What to do today label */}
+              <p style={{ fontFamily: F, fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.22)", textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 10px" }}>
+                {pt ? "Começar agora" : es ? "Empezar ahora" : "Start now"}
+              </p>
+
+              {/* Action grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 20 }}>
                 {actions.map((a, i) => (
                   <button key={i} onClick={() => { setShowOnboardingWelcome(false); send(a.msg); }}
-                    style={{ fontFamily: F, display: "flex", alignItems: "center", gap: 10, padding: "13px 15px", borderRadius: 11, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "left", transition: "all 0.15s", color: "rgba(255,255,255,0.75)", fontSize: 13 }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(13,162,231,0.09)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(13,162,231,0.22)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
+                    style={{ fontFamily: F, display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", textAlign: "left", transition: "all 0.14s", color: "rgba(255,255,255,0.65)", fontSize: 13, lineHeight: 1.35 }}
+                    onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = `rgba(13,162,231,0.10)`; el.style.borderColor = `rgba(13,162,231,0.25)`; el.style.color = "#fff"; el.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.03)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.color = "rgba(255,255,255,0.65)"; el.style.transform = "none"; }}
                   >
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{a.icon}</span>
-                    <span style={{ fontWeight: 500, lineHeight: 1.3 }}>{a.label}</span>
+                    <span style={{ fontSize: 17, flexShrink: 0, marginTop: 1 }}>{a.icon}</span>
+                    <div>
+                      <div style={{ fontWeight: 600, marginBottom: 2 }}>{a.label}</div>
+                      {a.desc && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>{a.desc}</div>}
+                    </div>
                   </button>
                 ))}
               </div>
 
               {/* Or just type */}
-              <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.18)", margin: 0, textAlign: "center" }}>
-                {pt ? "ou escreva o que precisa abaixo →" : es ? "o escribe lo que necesitas abajo →" : "or type what you need below →"}
+              <p style={{ fontFamily: F, fontSize: 11.5, color: "rgba(255,255,255,0.15)", margin: 0, textAlign: "center" }}>
+                {pt ? "ou descreva o que precisa no campo abaixo" : es ? "o describe lo que necesitas abajo" : "or describe what you need below"}
               </p>
             </div>
           );
