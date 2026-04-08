@@ -1992,6 +1992,34 @@ export default function AdBriefAI() {
       const goalNote = sessionGoal.trim()
         ? `Objetivo desta semana: ${sessionGoal.trim()}`
         : "";
+      // ── Market Intelligence: load benchmarks when account has no/low data ──
+      const hasRealData = lastSnap && (parseFloat(lastSnap.total_spend || 0) > 0 || lastSnap.active_ads > 0);
+      let benchmarkCtx = "";
+      if (!hasRealData && connections.includes("meta")) {
+        try {
+          const personaNiche = ((selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "geral")
+            .toLowerCase().replace(/imóvel|imobiliário|imóveis/i, "imoveis")
+            .replace(/automóvel|automobilismo|veículos/i, "autos")
+            .replace(/e-commerce|loja|varejo/i, "ecommerce")
+            .replace(/curso|treinamento|mentoria/i, "infoprodutos")
+            .replace(/casino|apostas|betting/i, "igaming");
+          const personaMarket = ((selectedPersona?.result as any)?.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "BR")).toUpperCase();
+          const { data: benchmarks } = await (supabase as any)
+            .from("market_intelligence")
+            .select("metric, value_avg, value_min, value_max, unit")
+            .eq("platform", "meta")
+            .eq("market", personaMarket)
+            .in("niche", [personaNiche, "geral"])
+            .order("niche", { ascending: false }); // niche-specific first
+          if (benchmarks?.length) {
+            const bLines = (benchmarks as any[]).map((b: any) =>
+              `${b.metric}: avg ${b.value_avg}${b.unit} (range ${b.value_min}–${b.value_max}${b.unit})`
+            ).join("\n");
+            benchmarkCtx = `=== MARKET BENCHMARKS (${personaNiche}/${personaMarket} — use when no real data) ===\n${bLines}\nNOTE: These are industry averages. Real account data always takes priority.`;
+          }
+        } catch (benchErr) { /* silent — benchmarks are optional */ }
+      }
+
       setContext([
         `=== ACTIVE ACCOUNT ===`,
         accountInfo,
@@ -2018,6 +2046,8 @@ export default function AdBriefAI() {
         ``,
         `=== EDITORS PERFORMANCE ===`,
         edSummary || "None",
+        ``,
+        benchmarkCtx,
       ].filter(s => s !== undefined).join("\n").replace(/\n{3,}/g, "\n\n").trim());
       setContextReady(true);
       }catch(ctxErr){
