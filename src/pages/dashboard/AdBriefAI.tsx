@@ -3470,12 +3470,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           const subline = pt
             ? isNew
               ? `Conta nova em ${niche}. Vou usar benchmarks do mercado para te orientar até os primeiros dados chegarem.`
-              : `${niche} · ${mkt} · Objetivo: ${obj.toLowerCase()}. Já sei o suficiente para começar a ajudar.`
+              : [niche, mkt, obj ? `Objetivo: ${obj.toLowerCase()}` : ""].filter(Boolean).join(" · ") + (obj ? "." : ". Já sei o suficiente para começar a ajudar.")
             : es
             ? isNew
               ? `Cuenta nueva en ${niche}. Voy a usar benchmarks del mercado hasta que lleguen los primeros datos.`
-              : `${niche} · ${mkt} · Objetivo: ${obj.toLowerCase()}.`
-            : `${niche} · ${mkt} · Goal: ${obj.toLowerCase()}.`;
+              : [niche, mkt, obj ? `Objetivo: ${obj.toLowerCase()}` : ""].filter(Boolean).join(" · ") + "."
+            : [niche, mkt, obj ? `Goal: ${obj.toLowerCase()}` : ""].filter(Boolean).join(" · ") + ".";
 
           const actions = pt ? [
             { icon: "✍️", label: "Roteiro de vídeo", desc: "30 segundos, direto ao ponto", msg: `Escreva um roteiro de vídeo para minha conta de ${niche} com objetivo de ${obj.toLowerCase() || "conversão"}` },
