@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
 
   const json = await req.json().catch(() => ({}));
   const { action, code, user_id, state, persona_id, connection_label } = json;
+  console.log("[meta-oauth] action received:", action, "user_id:", !!user_id);
 
   // ── get_auth_url ────────────────────────────────────────────────────────────
   if (action === "get_auth_url") {
@@ -267,8 +268,9 @@ Deno.serve(async (req) => {
   // ── set_selected_account ────────────────────────────────────────────────────
   if (action === "set_selected_account") {
     const { platform: plat, persona_id: pid, selected_account_id: selId } = json;
+    console.log("[set_selected_account] received:", { user_id, selId, plat, pid });
     if (!user_id || !selId) return new Response(
-      JSON.stringify({ error: "user_id and selected_account_id required" }),
+      JSON.stringify({ error: "user_id and selected_account_id required", received: { user_id: !!user_id, selId: !!selId, plat, pid } }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
     // Use service_role — bypasses trigger and RLS
