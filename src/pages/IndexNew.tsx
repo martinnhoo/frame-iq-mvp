@@ -1,4 +1,4 @@
-// v8.8 — meta-oauth fix: selected_account_id + SELECT policy + trigger removed 2026-04-08
+// v8.9 — force apply migration: platform_connections SELECT policy 2026-04-08
 import { DemoTabs } from "@/components/DemoTabs";
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
