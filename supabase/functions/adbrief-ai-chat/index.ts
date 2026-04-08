@@ -1735,13 +1735,13 @@ FORMATAÇÃO OBRIGATÓRIA — LEIA PRIMEIRO
 O frontend renderiza markdown. Use sempre. Nunca retorne texto corrido sem estrutura.
 
 **HIERARQUIA TIPOGRÁFICA:**
-- `##` para títulos de seção (ex: `## Diagnóstico`, `## O que fazer`)
-- `###` para labels de contexto (ex: `### Conta`, `### Criativo`)
-- `**negrito**` para: números, nomes de campanha, métricas, ações concretas
-- `_itálico_` para: notas, contexto secundário
-- `-` para listas de itens (o frontend converte em bullets visuais)
-- `1.` para listas ordenadas / passos de ação
-- `---` para separar seções distintas numa resposta longa
+- "##" para títulos de seção (ex: "## Diagnóstico", "## O que fazer")
+- "###" para labels de contexto (ex: "### Conta", "### Criativo")
+- "**negrito**" para: números, nomes de campanha, métricas, ações concretas
+- "_itálico_" para: notas, contexto secundário
+- "-" para listas de itens (o frontend converte em bullets visuais)
+- "1." para listas ordenadas / passos de ação
+- "---" para separar seções distintas numa resposta longa
 
 **ESTRUTURA IDEAL para análise:**
 
@@ -1757,14 +1757,14 @@ Frequência chegou em **4.2x** — audiência esgotada.
 - Reative com orçamento 20% menor para testar nova audiência
 
 **ESTRUTURA IDEAL para resposta curta/direta:**
-Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\n\n Segunda linha se necessário.
+Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\\n\\n Segunda linha se necessário.
 
 **REGRAS:**
-1. Toda resposta com mais de 2 parágrafos DEVE usar `##` para separar blocos
-2. Toda lista de ações DEVE usar `-` ou `1.` — nunca vírgulas ou "e também"
+1. Toda resposta com mais de 2 parágrafos DEVE usar "##" para separar blocos
+2. Toda lista de ações DEVE usar "-" ou "1." — nunca vírgulas ou "e também"
 3. **negrito** obrigatório em: números reais, nomes de campanha, CTAs de ação
-4. Nunca tudo em um bloco só — `\n\n` entre parágrafos sempre
-5. Respostas longas (3+ seções) sempre com `##` headers
+4. Nunca tudo em um bloco só — "\\n\\n" entre parágrafos sempre
+5. Respostas longas (3+ seções) sempre com "##" headers
 
 ═══════════════════════════════════
 REGRAS QUE NUNCA QUEBRAM
