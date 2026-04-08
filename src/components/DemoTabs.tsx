@@ -53,194 +53,307 @@ const ITEMS = [
 
 export function DemoTabs({ onCTA }: { onCTA: () => void }) {
   const [idx, setIdx] = React.useState(0);
+  const [zoomed, setZoomed] = React.useState(false);
+
   const item = ITEMS[idx];
 
-  // Auto-avança a cada 5s
+  // Auto-avança a cada 5s, pausa quando zoomed
   React.useEffect(() => {
+    if (zoomed) return;
     const id = setInterval(() => setIdx(p => (p + 1) % ITEMS.length), 5000);
     return () => clearInterval(id);
-  }, []);
+  }, [zoomed]);
+
+  // Fecha lightbox com ESC
+  React.useEffect(() => {
+    if (!zoomed) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomed(false); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [zoomed]);
+
+  // Previne scroll quando lightbox aberto
+  React.useEffect(() => {
+    document.body.style.overflow = zoomed ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [zoomed]);
 
   return (
-    <div style={{ position: "relative" }}>
-
-      {/* Glow */}
-      <div style={{
-        position: "absolute",
-        bottom: -60, left: "5%", right: "5%", height: 140,
-        background: "radial-gradient(ellipse, rgba(13,162,231,0.25) 0%, transparent 70%)",
-        filter: "blur(40px)", pointerEvents: "none", zIndex: 0,
-      }} />
-
-      <div style={{
-        position: "relative", zIndex: 1,
-        borderRadius: 14,
-        overflow: "hidden",
-        background: "#07101f",
-        border: "1px solid rgba(255,255,255,0.09)",
-        boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 40px 100px rgba(0,0,0,0.8)",
-      }}>
-
-        {/* ── TOPBAR ── */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 16px",
-          background: "rgba(0,0,0,0.5)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img src="/ab-avatar.png" alt=""
-              style={{ width: 24, height: 24, borderRadius: 6, display: "block" }} />
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>
-              AdBrief
-            </span>
-            <span style={{
-              fontSize: 10.5, color: "rgba(255,255,255,0.3)",
-              padding: "2px 7px", borderRadius: 5,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              letterSpacing: "0.02em",
-            }}>
-              Meta Ads
-            </span>
-          </div>
-          <div style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: "3px 9px", borderRadius: 20,
-            background: "rgba(34,197,94,0.07)",
-            border: "1px solid rgba(34,197,94,0.22)",
-          }}>
-            <div style={{
-              width: 5, height: 5, borderRadius: "50%", background: "#22c55e",
-              boxShadow: "0 0 6px rgba(34,197,94,1)",
-              animation: "pulse 2s ease-in-out infinite",
-            }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
-              LIVE
-            </span>
-          </div>
-        </div>
-
-        {/* ── TABS ── */}
-        <div style={{
-          display: "flex", gap: 4, padding: "10px 12px",
-          background: "rgba(0,0,0,0.2)",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-          overflowX: "auto" as const,
-        }}>
-          {ITEMS.map((it, i) => {
-            const on = i === idx;
-            return (
-              <button key={it.id} onClick={() => setIdx(i)} style={{
-                fontSize: 11.5, fontWeight: on ? 700 : 500,
-                padding: "6px 13px", borderRadius: 8,
-                cursor: "pointer", whiteSpace: "nowrap" as const, flexShrink: 0,
-                background: on ? "rgba(13,162,231,0.16)" : "rgba(255,255,255,0.04)",
-                color: on ? "#38bdf8" : "rgba(255,255,255,0.38)",
-                border: on ? "1px solid rgba(13,162,231,0.42)" : "1px solid rgba(255,255,255,0.08)",
-                transition: "all 0.15s ease",
-                letterSpacing: on ? "-0.01em" : "0",
-                boxShadow: on ? "0 0 14px rgba(13,162,231,0.15)" : "none",
-              }}>
-                {it.tab}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── SCREENSHOT — todas no DOM, só opacity muda ── */}
-        <div style={{
-          position: "relative",
-          width: "100%",
-          // ratio do maior print, sem corte
-          aspectRatio: `${item.w} / ${item.h}`,
-          background: "#050c1a",
-          overflow: "hidden",
-          lineHeight: 0,
-        }}>
-          {ITEMS.map((it, i) => (
-            <img
-              key={it.id}
-              src={it.src}
-              alt={it.tab}
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                objectFit: "fill",  // sem corte — imagem inteira
-                display: "block",
-                opacity: i === idx ? 1 : 0,
-                transition: "opacity 0.4s ease",
-              }}
-            />
-          ))}
-
-          {/* Gradiente embaixo — suaviza a transição para o texto */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: "20%",
-            background: "linear-gradient(0deg, #07101f 0%, transparent 100%)",
-            pointerEvents: "none", zIndex: 2,
-          }} />
-        </div>
-
-        {/* ── LABEL — mesmo idx da imagem, sem delay ── */}
-        <div style={{
-          padding: "12px 16px 8px",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-        }}>
-          <div style={{
-            fontSize: 13, fontWeight: 700, color: "#e2e8f0",
-            letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: 4,
-          }}>
-            {item.title}
-          </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
-            {item.sub}
-          </div>
-        </div>
-
-        {/* ── FOOTER: dots + CTA ── */}
-        <div style={{
-          padding: "10px 16px 12px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ display: "flex", gap: 4 }}>
-            {ITEMS.map((_, i) => (
-              <div key={i} onClick={() => setIdx(i)} style={{
-                height: 3, borderRadius: 2, cursor: "pointer",
-                width: i === idx ? 20 : 4,
-                background: i === idx ? "#0da2e7" : "rgba(255,255,255,0.15)",
-                transition: "width 0.35s ease, background 0.35s ease",
-              }} />
-            ))}
-          </div>
-          <button onClick={onCTA} style={{
-            fontSize: 12, fontWeight: 700,
-            padding: "8px 18px", borderRadius: 9,
-            background: "#0da2e7", color: "#fff",
-            border: "none", cursor: "pointer",
-            letterSpacing: "-0.01em",
-            boxShadow: "0 2px 14px rgba(13,162,231,0.45)",
-            transition: "all 0.15s ease",
-            whiteSpace: "nowrap" as const,
+    <>
+      {/* ── LIGHTBOX ── */}
+      {zoomed && (
+        <div
+          onClick={() => setZoomed(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(0,0,0,0.92)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+            animation: "dtFadeIn 0.2s ease",
+            cursor: "zoom-out",
           }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "#0ea5e9";
-              el.style.boxShadow = "0 4px 22px rgba(13,162,231,0.65)";
-              el.style.transform = "translateY(-1px)";
+        >
+          {/* Botão fechar */}
+          <button
+            onClick={() => setZoomed(false)}
+            style={{
+              position: "absolute", top: 20, right: 20,
+              width: 36, height: 36, borderRadius: "50%",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "#fff", fontSize: 18, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s",
+              zIndex: 1,
             }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "#0da2e7";
-              el.style.boxShadow = "0 2px 14px rgba(13,162,231,0.45)";
-              el.style.transform = "translateY(0)";
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.2)"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"}
+          >
+            ✕
+          </button>
+
+          {/* Nav anterior */}
+          <button
+            onClick={e => { e.stopPropagation(); setIdx(p => (p - 1 + ITEMS.length) % ITEMS.length); }}
+            style={{
+              position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
+              width: 40, height: 40, borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.7)", fontSize: 20, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+          >
+            ‹
+          </button>
+
+          {/* Imagem expandida */}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: "90vw", maxHeight: "88vh",
+              borderRadius: 12, overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 40px 120px rgba(0,0,0,0.8)",
+              animation: "dtZoomIn 0.25s cubic-bezier(0.16,1,0.3,1)",
+              cursor: "default",
+              lineHeight: 0,
             }}
           >
-            Começar grátis →
-          </button>
-        </div>
+            <img
+              src={item.src}
+              alt={item.tab}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            />
+          </div>
 
+          {/* Nav próxima */}
+          <button
+            onClick={e => { e.stopPropagation(); setIdx(p => (p + 1) % ITEMS.length); }}
+            style={{
+              position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",
+              width: 40, height: 40, borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.7)", fontSize: 20, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+          >
+            ›
+          </button>
+
+          {/* Label embaixo */}
+          <div style={{
+            position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
+            textAlign: "center", pointerEvents: "none",
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{item.title}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.sub}</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CARD ── */}
+      <div style={{ position: "relative" }}>
+        <div style={{
+          position: "absolute",
+          bottom: -60, left: "5%", right: "5%", height: 140,
+          background: "radial-gradient(ellipse, rgba(13,162,231,0.25) 0%, transparent 70%)",
+          filter: "blur(40px)", pointerEvents: "none", zIndex: 0,
+        }} />
+
+        <div style={{
+          position: "relative", zIndex: 1,
+          borderRadius: 14, overflow: "hidden",
+          background: "#07101f",
+          border: "1px solid rgba(255,255,255,0.09)",
+          boxShadow: "0 0 0 1px rgba(13,162,231,0.06), 0 40px 100px rgba(0,0,0,0.8)",
+        }}>
+
+          {/* TOPBAR */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 16px",
+            background: "rgba(0,0,0,0.5)",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <img src="/ab-avatar.png" alt=""
+                style={{ width: 24, height: 24, borderRadius: 6, display: "block" }} />
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>AdBrief</span>
+              <span style={{
+                fontSize: 10.5, color: "rgba(255,255,255,0.3)",
+                padding: "2px 7px", borderRadius: 5,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+              }}>Meta Ads</span>
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "3px 9px", borderRadius: 20,
+              background: "rgba(34,197,94,0.07)",
+              border: "1px solid rgba(34,197,94,0.22)",
+            }}>
+              <div style={{
+                width: 5, height: 5, borderRadius: "50%", background: "#22c55e",
+                boxShadow: "0 0 6px rgba(34,197,94,1)",
+                animation: "pulse 2s ease-in-out infinite",
+              }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>LIVE</span>
+            </div>
+          </div>
+
+          {/* TABS */}
+          <div style={{
+            display: "flex", gap: 4, padding: "10px 12px",
+            background: "rgba(0,0,0,0.2)",
+            borderBottom: "1px solid rgba(255,255,255,0.05)",
+            overflowX: "auto" as const,
+          }}>
+            {ITEMS.map((it, i) => {
+              const on = i === idx;
+              return (
+                <button key={it.id} onClick={() => setIdx(i)} style={{
+                  fontSize: 11.5, fontWeight: on ? 700 : 500,
+                  padding: "6px 13px", borderRadius: 8,
+                  cursor: "pointer", whiteSpace: "nowrap" as const, flexShrink: 0,
+                  background: on ? "rgba(13,162,231,0.16)" : "rgba(255,255,255,0.04)",
+                  color: on ? "#38bdf8" : "rgba(255,255,255,0.38)",
+                  border: on ? "1px solid rgba(13,162,231,0.42)" : "1px solid rgba(255,255,255,0.08)",
+                  transition: "all 0.15s ease",
+                  boxShadow: on ? "0 0 14px rgba(13,162,231,0.15)" : "none",
+                }}>
+                  {it.tab}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* SCREENSHOT — clicável para zoom */}
+          <div
+            onClick={() => setZoomed(true)}
+            title="Clique para ampliar"
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: `${item.w} / ${item.h}`,
+              background: "#050c1a",
+              overflow: "hidden",
+              lineHeight: 0,
+              cursor: "zoom-in",
+            }}
+          >
+            {ITEMS.map((it, i) => (
+              <img
+                key={it.id}
+                src={it.src}
+                alt={it.tab}
+                style={{
+                  position: "absolute", inset: 0,
+                  width: "100%", height: "100%",
+                  objectFit: "fill",
+                  display: "block",
+                  opacity: i === idx ? 1 : 0,
+                  transition: "opacity 0.4s ease",
+                }}
+              />
+            ))}
+
+            {/* Gradiente inferior */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "20%",
+              background: "linear-gradient(0deg, #07101f 0%, transparent 100%)",
+              pointerEvents: "none", zIndex: 2,
+            }} />
+
+            {/* Hint de zoom — aparece no hover */}
+            <div style={{
+              position: "absolute", top: 10, right: 10, zIndex: 3,
+              padding: "4px 8px", borderRadius: 6,
+              background: "rgba(0,0,0,0.6)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              fontSize: 10, color: "rgba(255,255,255,0.5)",
+              pointerEvents: "none",
+              display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <span style={{ fontSize: 11 }}>⊕</span> ampliar
+            </div>
+          </div>
+
+          {/* LABEL */}
+          <div style={{ padding: "12px 16px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0", letterSpacing: "-0.02em", lineHeight: 1.4, marginBottom: 4 }}>
+              {item.title}
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", lineHeight: 1.5 }}>
+              {item.sub}
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div style={{
+            padding: "10px 16px 12px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              {ITEMS.map((_, i) => (
+                <div key={i} onClick={() => setIdx(i)} style={{
+                  height: 3, borderRadius: 2, cursor: "pointer",
+                  width: i === idx ? 20 : 4,
+                  background: i === idx ? "#0da2e7" : "rgba(255,255,255,0.15)",
+                  transition: "width 0.35s ease, background 0.35s ease",
+                }} />
+              ))}
+            </div>
+            <button onClick={onCTA} style={{
+              fontSize: 12, fontWeight: 700,
+              padding: "8px 18px", borderRadius: 9,
+              background: "#0da2e7", color: "#fff",
+              border: "none", cursor: "pointer",
+              letterSpacing: "-0.01em",
+              boxShadow: "0 2px 14px rgba(13,162,231,0.45)",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap" as const,
+            }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "#0ea5e9"; el.style.boxShadow = "0 4px 22px rgba(13,162,231,0.65)"; el.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "#0da2e7"; el.style.boxShadow = "0 2px 14px rgba(13,162,231,0.45)"; el.style.transform = "translateY(0)"; }}
+            >
+              Começar grátis →
+            </button>
+          </div>
+
+        </div>
       </div>
-    </div>
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes dtFadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes dtZoomIn { from { opacity: 0; transform: scale(0.94) } to { opacity: 1; transform: scale(1) } }
+      `}</style>
+    </>
   );
 }

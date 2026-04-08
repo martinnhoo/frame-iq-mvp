@@ -3573,8 +3573,8 @@ export default function IndexNew() {
           /* ── Mobile ── */
           .mobile-demo-section{display:none}
           @media(max-width:860px){
-            .hero-grid{grid-template-columns:1fr!important;gap:0!important}
-            .hero-demo-col{display:none!important}
+            .hero-grid{grid-template-columns:1fr!important;gap:24px!important}
+            .hero-demo-col{display:block!important;padding:0 0 8px}
             .pain-grid{grid-template-columns:1fr!important}
             .pain-grid>div:nth-child(2){display:none!important}
             .hero-main-section{min-height:auto!important;align-items:flex-start!important;padding-top:72px!important;padding-bottom:24px!important}
