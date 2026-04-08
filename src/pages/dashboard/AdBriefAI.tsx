@@ -2757,11 +2757,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   const send=async(text?:string, displayText?:string)=>{
     let msg=(text??input).trim();
     // If image attached in chat, prepend context note
-    if(chatImage && !text) {
+    // Capture image before clearing
+    const pendingImage = (chatImage && !text) ? chatImage : null;
+    if(pendingImage) {
       const imgNote = lang==="pt"
-        ? `[CRIATIVO ESTÁTICO PARA ANÁLISE: ${chatImage.name}]
+        ? `[CRIATIVO ESTÁTICO PARA ANÁLISE: ${pendingImage.name}]
 `
-        : `[STATIC CREATIVE FOR ANALYSIS: ${chatImage.name}]
+        : `[STATIC CREATIVE FOR ANALYSIS: ${pendingImage.name}]
 `;
       msg = imgNote + (msg || (lang==="pt"?"Analise este criativo estático e dê feedback detalhado sobre headline, CTA, hierarquia visual e potencial de conversão":lang==="es"?"Analiza este creativo estático y da retroalimentación detallada":"Analyze this static creative and give detailed feedback on headline, CTA, visual hierarchy and conversion potential"));
       setChatImage(null);
@@ -2884,7 +2886,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       });
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
       const aiTonePref = (() => { return storage.get("adbrief_ai_tone", "") })();
-      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:{message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}}});
+      const invokeBody: any = {message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}};
+      // Pass image to vision-capable adbrief-ai-chat
+      if(pendingImage) {
+        invokeBody.image_base64 = pendingImage.base64;
+        invokeBody.image_media_type = "image/jpeg";
+      }
+      const selectedAccId2 = selectedPersona?.id ? (localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined) : undefined;
+      if(selectedAccId2) invokeBody.account_id = selectedAccId2;
+      const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:invokeBody});
 
       // Handle rate limit errors (429) — supabase returns them as errors with context
       if(error) {
