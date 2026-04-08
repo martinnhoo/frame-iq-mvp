@@ -531,10 +531,26 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
     setSaving(true);
     try {
       const payload = { name:name.trim(), website:website.trim()||null, description:desc.trim()||null, logo_url:logo||null };
+      let personaId = account?.id || null;
       if (account?.id) {
         await supabase.from("personas").update(payload).eq("id", account.id);
       } else {
-        await supabase.from("personas").insert({ ...payload, user_id:userId });
+        const { data: inserted } = await supabase.from("personas").insert({ ...payload, user_id:userId }).select("id");
+        personaId = inserted?.[0]?.id || null;
+      }
+      // Fire business-profiler when website is set — gives the AI real context about this business
+      if (personaId && (website.trim() || name.trim())) {
+        supabase.functions.invoke("business-profiler", {
+          body: {
+            user_id: userId,
+            persona_id: personaId,
+            product_name: name.trim(),
+            website: website.trim() || "",
+            market: "BR",
+            niche: desc.trim() || "",
+            force_refresh: !!account?.id, // force refresh on edit so website change is picked up
+          }
+        }).catch(() => {});
       }
       onSave();
     } catch { toast.error("Error saving"); }
