@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
 
         // Check if user has Meta connection
         const { count: metaCount } = await supabase
-          .from("ad_connections")
+          .from("platform_connections")
           .select("*", { count: "exact", head: true })
           .eq("user_id", profile.id)
           .eq("platform", "meta");
