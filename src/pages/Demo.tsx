@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -134,10 +134,9 @@ interface AnalysisResult {
 
 /* ── Inline keyframes ──────────────────────────────────────────────────── */
 const KEYFRAMES = `
-@keyframes demoPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
-@keyframes demoProgress{0%{width:5%}50%{width:75%}100%{width:92%}}
 @keyframes demoFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes demoShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
 @keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
@@ -403,49 +402,41 @@ export default function Demo() {
         {/* ── Analyzing Phase ── */}
         {phase === "analyzing" && (
           <div style={{
-            textAlign: "center", padding: "48px 24px",
+            textAlign: "center", padding: "56px 24px",
             animation: "demoFadeUp 0.35s ease-out",
           }}>
             {preview && (
               <div style={{
-                position: "relative", display: "inline-block", marginBottom: 32,
+                position: "relative", display: "inline-block", marginBottom: 36,
               }}>
                 <img src={preview} alt="Ad" style={{
-                  maxWidth: 240, maxHeight: 180, borderRadius: 16,
+                  maxWidth: 200, maxHeight: 160, borderRadius: 14,
                   border: `1px solid ${C.border}`,
-                  objectFit: "cover",
+                  objectFit: "cover", opacity: 0.7,
                 }} />
-                {/* Scanning overlay */}
+                {/* Scanning line */}
                 <div style={{
-                  position: "absolute", inset: 0, borderRadius: 16,
-                  background: "linear-gradient(180deg, transparent 0%, rgba(14,165,233,0.08) 50%, transparent 100%)",
-                  backgroundSize: "100% 200%",
-                  animation: "demoShimmer 2s ease-in-out infinite",
+                  position: "absolute", left: 0, right: 0, height: 2,
+                  background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
+                  animation: "scanLine 2s ease-in-out infinite",
+                  borderRadius: 1,
                 }} />
               </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 }}>
-              <Sparkles size={16} color={C.accent} style={{ animation: "demoPulse 1.5s ease-in-out infinite" }} />
+            {/* Minimal spinner + text */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: "50%",
+                border: `2px solid ${C.border}`, borderTopColor: C.accent,
+                animation: "spin 0.8s linear infinite",
+              }} />
               <span style={{
-                fontFamily: BODY, fontSize: 15, fontWeight: 700,
-                color: C.text, letterSpacing: "-0.02em",
+                fontFamily: BODY, fontSize: 14, fontWeight: 600,
+                color: C.textSoft, letterSpacing: "-0.01em",
               }}>
                 {t.analyzing}
               </span>
-            </div>
-
-            {/* Progress bar */}
-            <div style={{
-              width: 180, height: 2, borderRadius: 99,
-              background: "rgba(255,255,255,0.06)",
-              margin: "0 auto", overflow: "hidden",
-            }}>
-              <div style={{
-                height: "100%", borderRadius: 99,
-                background: `linear-gradient(90deg, ${C.accent}, #38bdf8)`,
-                animation: "demoProgress 3s ease-in-out infinite",
-              }} />
             </div>
           </div>
         )}
@@ -454,202 +445,170 @@ export default function Demo() {
         {phase === "result" && result && (
           <div style={{ animation: "demoFadeUp 0.4s ease-out" }}>
 
-            {/* ── Score Card ── */}
-            <div style={{
-              display: "flex", gap: 20, padding: 24, borderRadius: 20,
-              background: C.surface, border: `1px solid ${C.border}`,
-              marginBottom: 16, alignItems: "center",
-              flexWrap: "wrap",
-            }}>
+            {/* ── Score + Image row ── */}
+            <div style={{ display: "flex", gap: 20, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
               {preview && (
                 <img src={preview} alt="Ad" style={{
-                  width: 120, height: 120, borderRadius: 14,
+                  width: 100, height: 100, borderRadius: 12,
                   border: `1px solid ${C.border}`,
                   objectFit: "cover", flexShrink: 0,
                 }} />
               )}
-              <div style={{ flex: 1, minWidth: 180 }}>
-                {/* Score number */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
                   <span style={{
-                    fontFamily: BODY, fontSize: 44, fontWeight: 800,
+                    fontFamily: BODY, fontSize: 40, fontWeight: 800,
                     color: scoreColor(result.score),
                     letterSpacing: "-0.04em", lineHeight: 1,
                   }}>
                     {result.score}
                   </span>
-                  <span style={{
-                    fontFamily: BODY, fontSize: 15, fontWeight: 500,
-                    color: C.textMuted,
-                  }}>/10</span>
+                  <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.textMuted }}>/10</span>
                 </div>
-                {/* Verdict pill */}
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 14px", borderRadius: 8,
-                  background: scoreBg(result.score),
-                  border: `1px solid ${scoreColor(result.score)}22`,
+                <span style={{
+                  fontFamily: BODY, fontSize: 13, fontWeight: 600,
+                  color: scoreColor(result.score), opacity: 0.8,
                 }}>
-                  <span style={{
-                    fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                    color: scoreColor(result.score),
-                  }}>
-                    {result.verdict}
-                  </span>
-                </div>
+                  {result.verdict}
+                </span>
               </div>
             </div>
 
-            {/* ── Hook (always visible) ── */}
-            <ResultCard label={t.hook} content={result.hook} />
-
-            {/* ── Locked section OR full results ── */}
-            {!result.full ? (
-              <div style={{
-                padding: "28px 24px", borderRadius: 20,
-                background: C.surface, border: `1px solid ${C.border}`,
-                marginBottom: 16,
+            {/* ── Hook (visible teaser) ── */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{
+                fontFamily: BODY, fontSize: 11, fontWeight: 600,
+                color: C.textMuted, textTransform: "uppercase",
+                letterSpacing: "0.08em", marginBottom: 8,
               }}>
-                {/* Locked previews */}
-                {[t.message_label, t.cta_label, t.actions_label].map((label) => (
-                  <div key={label} style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "12px 16px", borderRadius: 12,
-                    background: "rgba(255,255,255,0.02)",
-                    border: `1px solid ${C.border}`,
-                    marginBottom: 8,
-                  }}>
-                    <Lock size={12} color={C.textMuted} />
-                    <span style={{ fontFamily: BODY, fontSize: 13, fontWeight: 500, color: C.textMuted }}>{label}</span>
-                  </div>
-                ))}
+                {t.hook}
+              </p>
+              <p style={{
+                fontFamily: BODY, fontSize: 14, fontWeight: 400,
+                color: C.textSoft, lineHeight: 1.6,
+              }}>
+                {result.hook}
+              </p>
+            </div>
 
-                {/* Email gate */}
-                <div style={{ marginTop: 24, textAlign: "center" }}>
-                  <p style={{
-                    fontFamily: BODY, fontSize: 15, fontWeight: 700,
-                    color: C.text, marginBottom: 6, letterSpacing: "-0.02em",
+            {/* ── Divider ── */}
+            <div style={{ height: 1, background: C.border, marginBottom: 20 }} />
+
+            {/* ── Locked → Signup funnel OR full results ── */}
+            {!result.full ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                {/* Blurred locked items */}
+                <div style={{ position: "relative", marginBottom: 28 }}>
+                  {[t.message_label, t.cta_label, t.actions_label].map((label) => (
+                    <div key={label} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 0", borderBottom: `1px solid ${C.border}`,
+                      filter: "blur(4px)", userSelect: "none",
+                    }}>
+                      <span style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", width: 70 }}>{label}</span>
+                      <span style={{ fontFamily: BODY, fontSize: 13, color: C.textMuted }}>Lorem ipsum dolor sit amet consectetur...</span>
+                    </div>
+                  ))}
+                  {/* Overlay */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    {t.locked_title}
-                  </p>
-                  <p style={{
-                    fontFamily: BODY, fontSize: 13, fontWeight: 400,
-                    color: C.textSoft, marginBottom: 18, lineHeight: 1.5,
-                  }}>
-                    {t.locked_sub}
-                  </p>
-                  <div style={{ display: "flex", gap: 8, maxWidth: 380, margin: "0 auto" }}>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && unlockFull()}
-                      placeholder={t.email_placeholder}
-                      style={{
-                        flex: 1, fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                        padding: "12px 16px", borderRadius: 12,
-                        background: "rgba(255,255,255,0.04)",
-                        border: `1px solid ${C.border}`, color: C.text,
-                        outline: "none", transition: "border-color 0.15s",
-                      }}
-                      onFocus={e => e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"}
-                      onBlur={e => e.currentTarget.style.borderColor = C.border}
-                    />
-                    <button
-                      onClick={unlockFull}
-                      disabled={unlocking || !email.includes("@")}
-                      style={{
-                        fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                        padding: "12px 22px", borderRadius: 12,
-                        background: C.text, color: C.bg, border: "none",
-                        cursor: email.includes("@") ? "pointer" : "not-allowed",
-                        opacity: email.includes("@") ? 1 : 0.5,
-                        whiteSpace: "nowrap",
-                        display: "flex", alignItems: "center", gap: 6,
-                        transition: "opacity 0.15s",
-                      }}
-                    >
-                      {unlocking ? <Loader2 size={14} className="animate-spin" /> : t.unlock_cta}
-                    </button>
+                    <Lock size={16} color={C.textMuted} style={{ opacity: 0.5 }} />
                   </div>
                 </div>
+
+                {/* Soft CTA — signup, not payment */}
+                <p style={{
+                  fontFamily: BODY, fontSize: 15, fontWeight: 700,
+                  color: C.text, marginBottom: 8, letterSpacing: "-0.02em",
+                }}>
+                  {t.locked_title}
+                </p>
+                <p style={{
+                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
+                  color: C.textMuted, marginBottom: 24, lineHeight: 1.5,
+                }}>
+                  {t.signup_sub}
+                </p>
+                <button
+                  onClick={() => navigate("/signup")}
+                  style={{
+                    fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                    padding: "13px 32px", borderRadius: 12,
+                    background: C.text, color: C.bg,
+                    border: "none", cursor: "pointer",
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  {t.signup_cta} <ArrowRight size={14} />
+                </button>
               </div>
             ) : (
               <>
-                <ResultCard label={t.message_label} content={result.message || ""} />
-                <ResultCard label={t.cta_label} content={result.cta || ""} />
+                {/* Message */}
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                    {t.message_label}
+                  </p>
+                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
+                    {result.message}
+                  </p>
+                </div>
+
+                {/* CTA */}
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                    {t.cta_label}
+                  </p>
+                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
+                    {result.cta}
+                  </p>
+                </div>
 
                 {/* Actions */}
-                <div style={{
-                  padding: "20px 24px", borderRadius: 18,
-                  background: C.accentSoft,
-                  border: "1px solid rgba(14,165,233,0.12)",
-                  marginBottom: 16,
-                }}>
-                  <p style={{
-                    fontFamily: MONO, fontSize: 10, fontWeight: 500,
-                    color: C.accent, textTransform: "uppercase",
-                    letterSpacing: "0.1em", marginBottom: 14,
-                  }}>
+                <div style={{ marginBottom: 24 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
                     {t.actions_label}
                   </p>
                   {result.actions?.map((action, i) => (
                     <div key={i} style={{
-                      display: "flex", gap: 12, marginBottom: i < (result.actions?.length || 0) - 1 ? 12 : 0,
-                      alignItems: "flex-start",
+                      display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start",
                     }}>
-                      <div style={{
-                        width: 22, height: 22, borderRadius: 7,
-                        background: "rgba(14,165,233,0.15)",
-                        border: "1px solid rgba(14,165,233,0.25)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, marginTop: 1,
-                      }}>
-                        <span style={{
-                          fontFamily: MONO, fontSize: 11, fontWeight: 500, color: C.accent,
-                        }}>{i + 1}</span>
-                      </div>
-                      <p style={{
-                        fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                        color: C.textSoft, lineHeight: 1.55,
-                      }}>
+                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.textMuted, marginTop: 2, flexShrink: 0 }}>{i + 1}.</span>
+                      <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.55 }}>
                         {action}
                       </p>
                     </div>
                   ))}
                 </div>
+
+                {/* Signup CTA */}
+                <div style={{ textAlign: "center", paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+                  <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, color: C.textMuted, marginBottom: 16 }}>
+                    {t.signup_sub}
+                  </p>
+                  <button
+                    onClick={() => navigate("/signup")}
+                    style={{
+                      fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                      padding: "13px 32px", borderRadius: 12,
+                      background: C.text, color: C.bg,
+                      border: "none", cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    {t.signup_cta} <ArrowRight size={14} />
+                  </button>
+                </div>
               </>
             )}
-
-            {/* ── CTA to signup ── */}
-            <div style={{
-              textAlign: "center", padding: "28px 24px", marginTop: 8,
-              borderRadius: 20,
-              background: C.surface, border: `1px solid ${C.border}`,
-            }}>
-              <p style={{
-                fontFamily: MONO, fontSize: 12, fontWeight: 400,
-                color: C.textMuted, marginBottom: 16,
-                letterSpacing: "0.02em",
-              }}>
-                {t.signup_sub}
-              </p>
-              <button
-                onClick={() => navigate("/signup")}
-                style={{
-                  fontFamily: BODY, fontSize: 15, fontWeight: 700,
-                  padding: "14px 36px", borderRadius: 14,
-                  background: C.text, color: C.bg,
-                  border: "none", cursor: "pointer",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(255,255,255,0.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-              >
-                {t.signup_cta} <ArrowRight size={15} />
-              </button>
-            </div>
 
             {/* Try another */}
             <button
@@ -664,38 +623,11 @@ export default function Demo() {
               onMouseEnter={e => e.currentTarget.style.color = C.textSoft}
               onMouseLeave={e => e.currentTarget.style.color = C.textMuted}
             >
-              {lang === "pt" ? "Analisar outro criativo" : lang === "es" ? "Analizar otro creativo" : "Analyze another creative"}
+              {lang === "pt" ? "Analisar outro" : lang === "es" ? "Analizar otro" : "Analyze another"}
             </button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-/* ── Result Card Component ─────────────────────────────────────────────── */
-function ResultCard({ label, content }: { label: string; content: string }) {
-  return (
-    <div style={{
-      padding: "18px 22px", borderRadius: 18,
-      background: "rgba(255,255,255,0.025)",
-      border: "1px solid rgba(255,255,255,0.06)",
-      marginBottom: 12,
-    }}>
-      <p style={{
-        fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 500,
-        color: "rgba(255,255,255,0.3)", textTransform: "uppercase",
-        letterSpacing: "0.1em", marginBottom: 8,
-      }}>
-        {label}
-      </p>
-      <p style={{
-        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-        fontSize: 14, fontWeight: 400,
-        color: "rgba(255,255,255,0.6)", lineHeight: 1.6,
-      }}>
-        {content}
-      </p>
     </div>
   );
 }
