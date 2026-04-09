@@ -3858,7 +3858,7 @@ export default function IndexNew() {
       <SocialProofStrip lang={lang} />
       <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
       <HowItWorks t={t} lang={lang} />
-      <FeatureTabs />
+      {/* FeatureTabs removed */}
       <Tools t={t} lang={lang} />
       <ForWho onCTA={handleCTA} t={t} ctaLoading={ctaLoading} />
       <TelegramSection t={t} lang={lang} />
