@@ -2166,67 +2166,94 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
-      {/* Eyebrow */}
-      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)' }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
-        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
+      {/* ── Premium Eyebrow Badge ── */}
+      <div className="eyebrow-badge" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        marginBottom: 32, width: 'fit-content',
+        padding: '7px 16px', borderRadius: 100,
+      }}>
+        <div className="eyebrow-dot" style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: '#34d399', flexShrink: 0,
+        }} />
+        <span style={{
+          fontFamily: "'DM Mono', 'Plus Jakarta Sans', monospace",
+          fontSize: 11, fontWeight: 500,
+          letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+          color: 'rgba(52,211,153,0.9)',
+        }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
       </div>
 
-      {/* Headline — massive, bold, with glow */}
-      <h1 style={{
-        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
-        margin: '0 0 24px', color: '#fff',
-        fontSize: 'clamp(42px, 5vw, 72px)',
+      {/* ── Headline — Syne display, massive, tight ── */}
+      <h1 className="hero-headline-display" style={{
+        margin: '0 0 28px',
+        fontSize: 'clamp(46px, 5.5vw, 80px)',
       }}>
         {line1}
         <br />
         {line2}
         <br />
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+          <span className="muted-prefix">{line3prefix}</span>
           <span className="hero-text-shimmer" style={{
             display: 'inline-block',
             fontWeight: 800,
             opacity: fade ? 1 : 0,
-            transform: fade ? 'translateY(0)' : 'translateY(6px)',
-            transition: 'opacity 0.22s ease, transform 0.22s ease',
+            transform: fade ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.16,1,0.3,1)',
           }}>
             {verbs[verbIdx]}
           </span>
         </span>
       </h1>
 
-      {/* Subline — single sentence, max impact */}
+      {/* ── Subline — clean, readable ── */}
       <p style={{
-        fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)',
-        color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
-        margin: '0 0 36px', maxWidth: 430,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        fontSize: 'clamp(15px, 1.15vw, 18px)',
+        fontWeight: 400,
+        color: 'rgba(255,255,255,0.5)',
+        lineHeight: 1.65,
+        margin: '0 0 40px', maxWidth: 460,
+        letterSpacing: '-0.01em',
       }}>
         {sub}
       </p>
 
-      {/* CTA row */}
-      <div className="hero-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, flexWrap: 'wrap' as const }}>
+      {/* ── CTA Row ── */}
+      <div className="hero-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32, flexWrap: 'wrap' as const }}>
         <CTAButton
           onClick={onCTA}
           loading={ctaLoading}
           label={lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
-          size="md"
+          size="lg"
           variant="primary"
         />
         <button
           onClick={() => window.location.href = '/demo'}
-          style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.15s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.25)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}>
+          style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 500,
+            padding: '16px 24px', borderRadius: 14,
+            background: 'transparent', color: 'rgba(255,255,255,0.35)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+          }}
+          onMouseEnter={e => { const el = e.currentTarget; el.style.color='rgba(255,255,255,0.8)'; el.style.borderColor='rgba(255,255,255,0.2)'; el.style.background='rgba(255,255,255,0.03)'; }}
+          onMouseLeave={e => { const el = e.currentTarget; el.style.color='rgba(255,255,255,0.35)'; el.style.borderColor='rgba(255,255,255,0.08)'; el.style.background='transparent'; }}>
           {t.hero_see}
         </button>
       </div>
 
-      {/* Fine print */}
-      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', margin: '0 0 20px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '100%' }}>{finePrint}</p>
+      {/* ── Fine print ── */}
+      <p style={{
+        fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 400,
+        color: 'rgba(255,255,255,0.25)', margin: '0 0 24px',
+        letterSpacing: '0.02em',
+        overflow: 'hidden', textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap' as const, maxWidth: '100%',
+      }}>{finePrint}</p>
 
       {/* Platform badge — Meta Ads only, clean and prominent */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
